@@ -1,0 +1,16 @@
+﻿[*.{cs,vb}]
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_event = false:none
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_field = false:none
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_method = false:none
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_property = false:none
+
+# IDE0060: Remove unused parameter
+dotnet_code_quality_unused_parameters = non_public:suggestion

@@ -1,0 +1,31 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build_and_test:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Download latest Dalamud build
+      run: |
+        cd ..
+        curl -O https://goatcorp.github.io/dalamud-distrib/latest.zip
+        mkdir Dalamud
+        unzip latest.zip -d ./Dalamud/bin
+    - uses: actions/checkout@v2
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
