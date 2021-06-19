@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <Version>1.0.0.0</Version>
   </PropertyGroup>
@@ -52,6 +52,9 @@
       <HintPath Condition="Exists('..\Dalamud\bin')">..\Dalamud\bin\Newtonsoft.Json.dll</HintPath>
       <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
+    </Reference>
+    <Reference Include="SDL2-CS">
+      <HintPath>M:\Users\lokin\AppData\Roaming\XIVLauncher\addon\Hooks\dev\SDL2-CS.dll</HintPath>
     </Reference>
   </ItemGroup>
 

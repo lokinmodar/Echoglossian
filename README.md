@@ -1,4 +1,4 @@
-# DalamudPluginProjectTemplate
+# Echoglossian
 An opinionated Visual Studio project template for Dalamud plugins, with attributes for more maintainable command setup and teardown.
 
 ## Attributes

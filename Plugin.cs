@@ -1,8 +1,8 @@
 ﻿using System;
 using Dalamud.Plugin;
-using DalamudPluginProjectTemplate.Attributes;
+using Echoglossian.Attributes;
 
-namespace DalamudPluginProjectTemplate
+namespace Echoglossian
 {
     public class Plugin : IDalamudPlugin
     {
@@ -11,7 +11,7 @@ namespace DalamudPluginProjectTemplate
         private Configuration config;
         private PluginUI ui;
 
-        public string Name => "Your Plugin's Display Name";
+        public string Name => "Echoglossian";
 
         public void Initialize(DalamudPluginInterface pluginInterface)
         {
@@ -26,9 +26,9 @@ namespace DalamudPluginProjectTemplate
             this.commandManager = new PluginCommandManager<Plugin>(this, this.pluginInterface);
         }
 
-        [Command("/example1")]
-        [HelpMessage("Example help message.")]
-        public void ExampleCommand1(string command, string args)
+        [Command("/eglo")]
+        [HelpMessage("A helpful message...")]
+        public void Eglo(string command, string args)
         {
             // You may want to assign these references to private variables for convenience.
             // Keep in mind that the local player does not exist until after logging in.
@@ -36,6 +36,21 @@ namespace DalamudPluginProjectTemplate
             var world = this.pluginInterface.ClientState.LocalPlayer.CurrentWorld.GameData;
             chat.Print($"Hello {world.Name}!");
             PluginLog.Log("Message sent successfully.");
+        }
+
+        [Command("/eglotest")]
+        [HelpMessage("Another helpful message...")]
+        public void EgloTest(string command, string args)
+        {
+            // You may want to assign these references to private variables for convenience.
+            // Keep in mind that the local player does not exist until after logging in.
+            var dialogBox = this.pluginInterface.Framework.Gui.GetAddonByName("Text", 1);
+
+
+            var chat = this.pluginInterface.Framework.Gui.Chat;
+            //var world = this.pluginInterface.ClientState.LocalPlayer.CurrentWorld.GameData;
+            chat.Print($"Address: {dialogBox.Address}!");
+            PluginLog.Log("Opa!");
         }
 
         #region IDisposable Support

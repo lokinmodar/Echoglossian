@@ -1,0 +1,7 @@
+﻿{
+  "Name": "Echoglossian",
+  "Author": "Dante Souza e Souza",
+  "Description": "Realtime dialogue textbox translator",
+  "RepoUrl": "https://github.com/lokinmodar/Echoglossian",
+  "Tags": [ "ffxiv", "Dalamud", "plugin", "translation" ]
+}
