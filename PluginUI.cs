@@ -1,6 +1,4 @@
-﻿using ImGuiNET;
-
-namespace Echoglossian
+﻿namespace Echoglossian
 {
     public class PluginUI
     {

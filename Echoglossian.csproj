@@ -53,8 +53,8 @@
       <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="SDL2-CS">
-      <HintPath>M:\Users\lokin\AppData\Roaming\XIVLauncher\addon\Hooks\dev\SDL2-CS.dll</HintPath>
+    <Reference Include="XivCommon">
+      <HintPath>..\XivCommon\XivCommon\obj\Debug\net48\XivCommon.dll</HintPath>
     </Reference>
   </ItemGroup>
 

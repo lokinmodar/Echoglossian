@@ -1,15 +1,18 @@
 ﻿using System;
 using Dalamud.Plugin;
 using Echoglossian.Attributes;
+using XivCommon;
 
 namespace Echoglossian
 {
     public class Plugin : IDalamudPlugin
     {
-        private DalamudPluginInterface pluginInterface;
+        internal DalamudPluginInterface pluginInterface;
         private PluginCommandManager<Plugin> commandManager;
-        private Configuration config;
-        private PluginUI ui;
+        internal Configuration config;
+        internal PluginUI ui;
+        private Glossian Glossian { get; set; } = null!;
+
 
         public string Name => "Echoglossian";
 
@@ -20,10 +23,14 @@ namespace Echoglossian
             this.config = (Configuration)this.pluginInterface.GetPluginConfig() ?? new Configuration();
             this.config.Initialize(this.pluginInterface);
 
+            this.Glossian = new Glossian(this);
+
             this.ui = new PluginUI();
             this.pluginInterface.UiBuilder.OnBuildUi += this.ui.Draw;
 
             this.commandManager = new PluginCommandManager<Plugin>(this, this.pluginInterface);
+
+
         }
 
         [Command("/eglo")]
@@ -44,12 +51,12 @@ namespace Echoglossian
         {
             // You may want to assign these references to private variables for convenience.
             // Keep in mind that the local player does not exist until after logging in.
-            var dialogBox = this.pluginInterface.Framework.Gui.GetAddonByName("Text", 1);
-
+            var dialogBox = this.Glossian;
+            
 
             var chat = this.pluginInterface.Framework.Gui.Chat;
             //var world = this.pluginInterface.ClientState.LocalPlayer.CurrentWorld.GameData;
-            chat.Print($"Address: {dialogBox.Address}!");
+            chat.Print($"Address: {dialogBox}!");
             PluginLog.Log("Opa!");
         }
 
