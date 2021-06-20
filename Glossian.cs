@@ -13,38 +13,46 @@ namespace Echoglossian
 
         public Glossian(Plugin plugin)
         {
-            this.Plugin = plugin;
+            Plugin = plugin;
 
-            this.Common = new XivCommonBase(this.Plugin.pluginInterface, Hooks.Talk | Hooks.BattleTalk);
-            this.Common.Functions.Talk.OnTalk += MessWithText;
-            this.Common.Functions.BattleTalk.OnBattleTalk += MessWithText;
-
-
-
+            Common = new XivCommonBase(Plugin.pluginInterface, Hooks.Talk | Hooks.BattleTalk);
+            Common.Functions.Talk.OnTalk += MessWithText;
+            Common.Functions.BattleTalk.OnBattleTalk += MessWithText;
         }
 
         private static void MessWithText(ref SeString name, ref SeString text, ref TalkStyle style)
         {
-            PluginLog.Log(name.TextValue + text.TextValue);
-            //throw new NotImplementedException();
+            try
+            {
+                PluginLog.Log(name.TextValue + ": " + text.TextValue);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
-        private static void MessWithText(ref SeString sender, ref SeString message, ref BattleTalkOptions options, ref bool ishandled)
+        private static void MessWithText(ref SeString sender, ref SeString message, ref BattleTalkOptions options,
+            ref bool ishandled)
         {
-            PluginLog.Log(sender.TextValue + message.TextValue);
-            //throw new NotImplementedException();
+            try
+            {
+                PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public void Dispose()
         {
-            this.Common.Functions.Talk.OnTalk -= MessWithText;
-            this.Common.Functions.BattleTalk.OnBattleTalk -= MessWithText;
+            Common.Functions.Talk.OnTalk -= MessWithText;
+            Common.Functions.BattleTalk.OnBattleTalk -= MessWithText;
             Plugin?.Dispose();
             Common?.Dispose();
         }
     }
-
-
-    
-    
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using Dalamud.Plugin;
 using Echoglossian.Attributes;
-using XivCommon;
 
 namespace Echoglossian
 {
@@ -20,17 +19,15 @@ namespace Echoglossian
         {
             this.pluginInterface = pluginInterface;
 
-            this.config = (Configuration)this.pluginInterface.GetPluginConfig() ?? new Configuration();
-            this.config.Initialize(this.pluginInterface);
+            config = (Configuration) this.pluginInterface.GetPluginConfig() ?? new Configuration();
+            config.Initialize(this.pluginInterface);
 
-            this.Glossian = new Glossian(this);
+            Glossian = new Glossian(this);
 
-            this.ui = new PluginUI();
-            this.pluginInterface.UiBuilder.OnBuildUi += this.ui.Draw;
+            ui = new PluginUI();
+            this.pluginInterface.UiBuilder.OnBuildUi += ui.Draw;
 
-            this.commandManager = new PluginCommandManager<Plugin>(this, this.pluginInterface);
-
-
+            commandManager = new PluginCommandManager<Plugin>(this, this.pluginInterface);
         }
 
         [Command("/eglo")]
@@ -39,8 +36,8 @@ namespace Echoglossian
         {
             // You may want to assign these references to private variables for convenience.
             // Keep in mind that the local player does not exist until after logging in.
-            var chat = this.pluginInterface.Framework.Gui.Chat;
-            var world = this.pluginInterface.ClientState.LocalPlayer.CurrentWorld.GameData;
+            var chat = pluginInterface.Framework.Gui.Chat;
+            var world = pluginInterface.ClientState.LocalPlayer.CurrentWorld.GameData;
             chat.Print($"Hello {world.Name}!");
             PluginLog.Log("Message sent successfully.");
         }
@@ -51,27 +48,28 @@ namespace Echoglossian
         {
             // You may want to assign these references to private variables for convenience.
             // Keep in mind that the local player does not exist until after logging in.
-            var dialogBox = this.Glossian;
-            
+            var dialogBox = Glossian;
 
-            var chat = this.pluginInterface.Framework.Gui.Chat;
+
+            var chat = pluginInterface.Framework.Gui.Chat;
             //var world = this.pluginInterface.ClientState.LocalPlayer.CurrentWorld.GameData;
             chat.Print($"Address: {dialogBox}!");
             PluginLog.Log("Opa!");
         }
 
         #region IDisposable Support
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;
 
-            this.commandManager.Dispose();
+            commandManager.Dispose();
 
-            this.pluginInterface.SavePluginConfig(this.config);
+            pluginInterface.SavePluginConfig(config);
 
-            this.pluginInterface.UiBuilder.OnBuildUi -= this.ui.Draw;
+            pluginInterface.UiBuilder.OnBuildUi -= ui.Draw;
 
-            this.pluginInterface.Dispose();
+            pluginInterface.Dispose();
         }
 
         public void Dispose()
@@ -79,6 +77,7 @@ namespace Echoglossian
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         #endregion
     }
 }

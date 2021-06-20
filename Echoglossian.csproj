@@ -55,6 +55,7 @@
     </Reference>
     <Reference Include="XivCommon">
       <HintPath>..\XivCommon\XivCommon\obj\Debug\net48\XivCommon.dll</HintPath>
+      <Private>true</Private>
     </Reference>
   </ItemGroup>
 
