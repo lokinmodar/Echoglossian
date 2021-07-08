@@ -12,16 +12,16 @@ namespace Echoglossian
 {
     public class PluginCommandManager<THost> : IDisposable
     {
-        private readonly DalamudPluginInterface pluginInterface;
-        private readonly (string, CommandInfo)[] pluginCommands;
-        private readonly THost host;
+        private readonly DalamudPluginInterface _pluginInterface;
+        private readonly (string, CommandInfo)[] _pluginCommands;
+        private readonly THost _host;
 
         public PluginCommandManager(THost host, DalamudPluginInterface pluginInterface)
         {
-            this.pluginInterface = pluginInterface;
-            this.host = host;
+            this._pluginInterface = pluginInterface;
+            this._host = host;
 
-            this.pluginCommands = host.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
+            this._pluginCommands = host.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                 .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
                 .SelectMany(GetCommandInfoTuple)
                 .ToArray();
@@ -35,25 +35,25 @@ namespace Echoglossian
         // It's usually sub-1 millisecond anyways, though. It probably doesn't matter at all.
         private void AddCommandHandlers()
         {
-            for (var i = 0; i < this.pluginCommands.Length; i++)
+            for (var i = 0; i < this._pluginCommands.Length; i++)
             {
-                var (command, commandInfo) = this.pluginCommands[i];
-                this.pluginInterface.CommandManager.AddHandler(command, commandInfo);
+                var (command, commandInfo) = this._pluginCommands[i];
+                this._pluginInterface.CommandManager.AddHandler(command, commandInfo);
             }
         }
 
         private void RemoveCommandHandlers()
         {
-            for (var i = 0; i < this.pluginCommands.Length; i++)
+            for (var i = 0; i < this._pluginCommands.Length; i++)
             {
-                var (command, _) = this.pluginCommands[i];
-                this.pluginInterface.CommandManager.RemoveHandler(command);
+                var (command, _) = this._pluginCommands[i];
+                this._pluginInterface.CommandManager.RemoveHandler(command);
             }
         }
 
         private IEnumerable<(string, CommandInfo)> GetCommandInfoTuple(MethodInfo method)
         {
-            var handlerDelegate = (HandlerDelegate)Delegate.CreateDelegate(typeof(HandlerDelegate), this.host, method);
+            var handlerDelegate = (HandlerDelegate)Delegate.CreateDelegate(typeof(HandlerDelegate), this._host, method);
 
             var command = handlerDelegate.Method.GetCustomAttribute<CommandAttribute>();
             var aliases = handlerDelegate.Method.GetCustomAttribute<AliasesAttribute>();
@@ -76,7 +76,6 @@ namespace Echoglossian
                     commandInfoTuples.Add((aliases.Aliases[i], commandInfo));
                 }
             }
-
             return commandInfoTuples;
         }
 
