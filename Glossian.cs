@@ -62,6 +62,7 @@ namespace Echoglossian
                 PluginLog.LogDebug($"Detected Language: {detectedLanguage}");
                 var translatedText = _echoglossian.Translate(textToTranslate);
                 PluginLog.LogWarning(translatedText);
+
             }
             catch (Exception e)
             {
