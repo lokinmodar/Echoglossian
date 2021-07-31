@@ -11,21 +11,10 @@ namespace Echoglossian
 
         // Add any other properties or methods here.
         [JsonIgnore] private DalamudPluginInterface _pluginInterface;
-
-        //public List<XivChatType> Channels { get; set; } = new List<XivChatType>();
         public int Lang { get; set; } = 16;
-        public Plugin.UiColorPick[] TextColour { get; set; } =
-        {
-            new Plugin.UiColorPick { Choice = 0, Option =0 }
-        };
-        public bool NotSelf { get; set; }
-        public bool Whitelist { get; set; }
-        public List<int> ChosenLanguages { get; set; } = new List<int>();
-        public bool OneChan { get; set; }
-        public int OneInt { get; set; }
-        //public List<string> Blacklist { get; set; } = new List<string>();
-        public int TranMode { get; set; }
 
+        public int ChosenLangCode { get; set; }
+        public List<int> ChosenLanguages { get; set; } = new();
 
         public bool AffectCutscenes { get; set; }
 
@@ -34,8 +23,7 @@ namespace Echoglossian
             this._pluginInterface = pluginInterface;
         }
 
-        public void Save()
-        {
+        public void Save()        {
             
             this._pluginInterface.SavePluginConfig(this);
         }

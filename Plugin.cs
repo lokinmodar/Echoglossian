@@ -10,68 +10,52 @@ namespace Echoglossian
 {
     public class Plugin : IDalamudPlugin
     {
+        public string Name => "Echoglossian";
+
         internal DalamudPluginInterface PluginInterface;
         private PluginCommandManager<Plugin> _commandManager;
         internal Configuration Config;
         internal PluginUi Ui;
-        private Glossian Glossian { get; set; } = null!;
-
-        internal Echoglossian Echoglossian { get; set; } = null!;
-
+        internal Glossian Glossian { get; set; } = null!;
 
         internal bool _config;
         internal int _languageInt = 16;
-        internal int _languageInt2; 
-        internal UiColorPick[] _textColour;
-        internal UiColorPick _chooser;
+        internal int _languageInt2;
         internal bool _picker;
-        internal int _tranMode;
-        internal int _oneInt;
-        internal bool _oneChan;
-        internal readonly string[] _tranModeOptions = { "Append", "Replace", "Additional" };
+
+        internal UiColorPick _chooser;
+
         internal ExcelSheet<UIColor> _uiColours;
-        internal bool _notSelf;
-        internal bool _whitelist;
-        internal List<string> _blacklist;
+        internal int ChosenLangCode;
+
         internal List<int> _chosenLanguages;
-        internal List<XivChatType> _channels = new();
-        internal readonly List<string> _lastTranslations = new();
 
 
-        public string Name => "Echoglossian";
 
         public void Initialize(DalamudPluginInterface pluginInterface)
         {
             this.PluginInterface = pluginInterface;
 
-            Config = (Configuration) this.PluginInterface.GetPluginConfig() ?? new Configuration();
-            Config.Initialize(this.PluginInterface);
-            if (Config != null)
+            this.Config = (Configuration)this.PluginInterface.GetPluginConfig() ?? new Configuration();
+            this.Config.Initialize(this.PluginInterface);
+
+            this.Ui = new PluginUi(this);
+            this.PluginInterface.UiBuilder.OnBuildUi += this.Ui.Draw;
+
+            this._commandManager = new PluginCommandManager<Plugin>(this, this.PluginInterface);
+
+            if (this.Config != null)
             {
-                _config = true;
+                this._config = true;
             }
 
-            Glossian = new Glossian(this);
+            this.Glossian = new Glossian(this);           
 
-            Echoglossian = new Echoglossian(this);
+            this._uiColours = pluginInterface.Data.Excel.GetSheet<UIColor>();
 
-            Ui = new PluginUi(this);
-            this.PluginInterface.UiBuilder.OnBuildUi += Ui.Draw;
+            this._languageInt = Config.Lang;
 
-            _commandManager = new PluginCommandManager<Plugin>(this, this.PluginInterface);
-
-            _uiColours = pluginInterface.Data.Excel.GetSheet<UIColor>();
-            //_channels = Config.Channels;
-            _textColour = Config.TextColour;
-            _tranMode = Config.TranMode;
-            _languageInt = Config.Lang;
-            _whitelist = Config.Whitelist;
-            _notSelf = Config.NotSelf;
-            _oneChan = Config.OneChan;
-            _oneInt = Config.OneInt;
-            _chosenLanguages = Config.ChosenLanguages;
-            //_blacklist = Config.Blacklist;
-
+            this._chosenLanguages = this.Config.ChosenLanguages;
         }
 
         [Command("/eglo")]
@@ -94,13 +78,20 @@ namespace Echoglossian
             // Keep in mind that the local player does not exist until after logging in.
             this.Ui.Draw();
 
-        
+
             //var chat = PluginInterface.Framework.Gui.Chat;
             //var world = this.pluginInterface.ClientState.LocalPlayer.CurrentWorld.GameData;
             //chat.Print($"Address: {dialogBox}!");
             PluginLog.Log("Opa!");
         }
 
+
+        public void SaveConfig()
+        {
+            this.Config.Lang = _languageInt;
+            this.Config.ChosenLanguages = _chosenLanguages;
+            this.PluginInterface.SavePluginConfig(this.Config);
+        }
 
         public class UiColorPick
         {
@@ -114,15 +105,17 @@ namespace Echoglossian
         {
             if (!disposing) return;
 
-            _commandManager.Dispose();
+            this.Glossian?.Dispose();
 
-            PluginInterface.SavePluginConfig(Config);
+            this._commandManager.Dispose();
 
-            PluginInterface.UiBuilder.OnBuildUi -= Ui.Draw;
+            this.PluginInterface.SavePluginConfig(this.Config);
 
-            PluginInterface.Dispose();
+            this.PluginInterface.UiBuilder.OnBuildUi -= this.Ui.Draw;
 
-            Glossian.Dispose();
+            this.Ui.Dispose();
+
+            this.PluginInterface.Dispose();
         }
 
         public void Dispose()

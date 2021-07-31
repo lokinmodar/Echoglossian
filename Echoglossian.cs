@@ -9,6 +9,8 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Plugin;
 using System.IO;
 using System.Net;
+using System.Reflection;
+using System.Resources;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using NTextCat;
@@ -17,9 +19,18 @@ namespace Echoglossian
 {
     public class Echoglossian : IDisposable
     {
-        private Plugin Plugin;
+        private Plugin _plugin;
 
-        internal readonly List<XivChatType> _order = new List<XivChatType>
+        private const string GTranslateUrl =
+            "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=";
+
+        private const string UaString =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36";
+
+        internal string LangIdentErrorMessage =
+            "The language could not be identified with an acceptable degree of certainty";
+
+        /*internal readonly List<XivChatType> _order = new()
         {
             XivChatType.None,
             XivChatType.Debug,
@@ -116,7 +127,7 @@ namespace Echoglossian
             true, true, true, true
         };
 
-
+        */
         internal readonly string[] _codes = {
             "af", "an", "ar", "az", "be_x_old",
             "bg", "bn", "br", "bs",
@@ -137,7 +148,8 @@ namespace Echoglossian
             "zh_classical", "zh_yue"
         };
 
-        internal readonly string[] _languages = {
+        internal readonly string[] Languages =
+        {
             "Afrikaans", "Aragonese", "Arabic", "Azerbaijani", "Belarusian",
             "Bulgarian", "Bengali", "Breton", "Bosnian",
             "Catalan; Valencian", "Cebuano", "Czech", "Welsh", "Danish",
@@ -148,7 +160,8 @@ namespace Echoglossian
             "Japanese", "Javanese", "Georgian", "Kazakh", "Korean",
             "Latin", "Luxembourgish; Letzeburgesch", "Lithuanian", "Latvian",
             "Malagasy", "Macedonian", "Malayalam", "Marathi", "Malay",
-            "Nepal Bhasa; Newari", "Dutch; Flemish", "Norwegian Nynorsk; Nynorsk, Norwegian", "Norwegian", "Occitan (post 1500)",
+            "Nepal Bhasa; Newari", "Dutch; Flemish", "Norwegian Nynorsk; Nynorsk, Norwegian", "Norwegian",
+            "Occitan (post 1500)",
             "Polish", "Portuguese", "Romanian; Moldavian; Moldovan", "Romance languages",
             "Russian", "Slovak", "Slovenian",
             "Albanian", "Serbian", "Swedish", "Swahili", "Tamil",
@@ -159,11 +172,15 @@ namespace Echoglossian
 
         // NCat
         private static readonly RankedLanguageIdentifierFactory Factory = new();
-        private static readonly RankedLanguageIdentifier Identifier = Factory.Load(Path.Combine(AssemblyDirectory, "Wiki82.profile.xml"));
+
+        private static readonly RankedLanguageIdentifier Identifier =
+            Factory.Load(Path.Combine(AssemblyDirectory, "Wiki82.profile.xml"));
+
+
 
         public Echoglossian(Plugin plugin)
         {
-            this.Plugin = plugin;
+            this._plugin = plugin;
         }
 
         private static string AssemblyDirectory
@@ -179,52 +196,65 @@ namespace Echoglossian
 
         public string Lang(string message)
         {
+            PluginLog.LogInformation($"message in Lang Method {message}");
             var languages = Identifier.Identify(message);
             var mostCertainLanguage = languages.FirstOrDefault();
-            return mostCertainLanguage != null ? mostCertainLanguage.Item1.Iso639_2T : "The language could not be identified with an acceptable degree of certainty";
+            PluginLog.LogInformation($"most Certain language: {mostCertainLanguage?.ToString()}");
+            return mostCertainLanguage != null
+                ? mostCertainLanguage.Item1.Iso639_2T
+                : LangIdentErrorMessage;
         }
 
         public string Translate(string text)
         {
             try
             {
-                var lang = "pt";
-                var url = "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=" + lang + "&q=" + text;
-                PluginLog.LogDebug($"URL {url}");
-                var request = (HttpWebRequest)WebRequest.Create(url);
-                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36";
+                var lang = _codes[_plugin._languageInt];
 
+                PluginLog.LogInformation($"LANG: {lang}");
+
+                var url = $"{GTranslateUrl}{lang}&q={text}";
+
+                PluginLog.LogInformation($"URL: {url}");
+
+                var request = (HttpWebRequest) WebRequest.Create(url);
+                request.UserAgent = UaString;
                 var requestResult = request.GetResponse();
+
                 var reader = new StreamReader(requestResult.GetResponseStream() ?? throw new Exception());
                 var read = reader.ReadToEnd();
-                PluginLog.LogError($"read: {read}");
+
                 var parsed = JObject.Parse(read);
-                var trans = ((JArray)parsed["sentences"])?[0]["trans"];
 
-                //TODO: Join all "trans" sentences
+                var dialogueSentenceList = parsed.SelectTokens("sentences[*].trans").Select(i => (string) i).ToList();
 
+                var finalDialogueText = dialogueSentenceList.Aggregate("", (current, dialogueSentence) => current + dialogueSentence);
+                
+                var src = ((JValue) parsed["src"]);
+                Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
+                PluginLog.LogInformation($"FinalDialogueText: {finalDialogueText}");
+                PluginLog.LogInformation($"SRC {src}");
+                PluginLog.LogInformation($"SRC Cultureinfo {src?.ToString(CultureInfo.InvariantCulture)}");
+                PluginLog.LogInformation($"LANG {lang}");
 
-                PluginLog.Fatal($"trans {trans.ToString()}");
-                var src = ((JValue)parsed["src"]);
-                Debug.Assert(trans != null, nameof(trans) + " != null");
-                if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || trans.ToString() == text))
+                if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || finalDialogueText == text))
                 {
-                    return "LOOP";
+                    return text;
                 }
-                return trans.ToString();
+                return finalDialogueText;
             }
             catch (Exception e)
             {
                 PluginLog.Error(e.ToString());
                 throw;
             }
-            
         }
 
         public void Dispose()
         {
-            Plugin?.Dispose();
-            throw new NotImplementedException();
+            _plugin.Glossian?.Dispose();
+            _plugin?.Dispose();
+            //throw new NotImplementedException();
         }
     }
 }

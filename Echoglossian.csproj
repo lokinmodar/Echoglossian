@@ -16,7 +16,7 @@
     <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
   </PropertyGroup>
 
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -26,22 +26,20 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  
-  <ItemGroup>
-    <None Remove="Wiki82.profile.xml" />
-  </ItemGroup>
 
-  
   <ItemGroup>
-    <Resource Include="Wiki82.profile.xml">
+    <EmbeddedResource Include="Wiki82.profile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="1.2.1" />
+    <PackageReference Include="DalamudPackager" Version="1.2.2" />
     <PackageReference Include="ILRepack" Version="2.0.18" GeneratePathProperty="true" />
     <PackageReference Include="NTextCat" Version="0.3.65" />
+    <PackageReference Include="XivCommon" Version="2.3.0">
+      <GeneratePathProperty>True</GeneratePathProperty>
+    </PackageReference>
   </ItemGroup>
 
 
@@ -55,7 +53,17 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="FFXIVClientStructs">
-      <HintPath>M:\Users\lokin\AppData\Roaming\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
+      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.dll</HintPath>
+      <Private>false</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="FFXIVClientStructs.Common">
+      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.Common.dll</HintPath>
+          <Private>false</Private>
+    </Reference>
+    <Reference Include="FFXIVClientStructs.Generators">
+      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.Generators.dll</HintPath>
+          <Private>false</Private>
     </Reference>
     <Reference Include="ImGui.NET">
       <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>
@@ -92,10 +100,7 @@
       <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="XivCommon">
-      <HintPath>..\XivCommon\XivCommon\obj\Debug\net48\XivCommon.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
+
   </ItemGroup>
   <Target Name="ILRepack" AfterTargets="Build">
     <ItemGroup>
