@@ -6,8 +6,8 @@
     <TargetFramework>net48</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <Version>1.0.0.0</Version>
-    <Description></Description>
-    <Copyright></Copyright>
+    <Description>Final Fantasy XIV game text translator</Description>
+    <Copyright>Dante Souza e Souza - aka lokinmodar - 2021</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>
   </PropertyGroup>
 
@@ -26,7 +26,19 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  
+  <ItemGroup>
+    <Compile Remove="_old\**" />
+    <EmbeddedResource Remove="_old\**" />
+    <None Remove="_old\**" />
+  </ItemGroup>
 
+  
+  <ItemGroup>
+    <None Remove="Wiki82.profile.xml" />
+  </ItemGroup>
+
+  
   <ItemGroup>
     <EmbeddedResource Include="Wiki82.profile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

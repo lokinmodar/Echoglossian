@@ -1,36 +1,44 @@
-﻿using System;
-using System.Linq;
+﻿// TODOS
+// Publish
+
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
+using Dalamud.Configuration;
+using Dalamud.Game.Command;
 using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Plugin;
-using System.IO;
-using System.Net;
-using System.Reflection;
-using System.Resources;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using NTextCat;
+using Lumina.Excel.GeneratedSheets;
+using XivCommon;
+using XivCommon.Functions;
 
 namespace Echoglossian
 {
-    public class Echoglossian : IDisposable
+    public partial class Echoglossian : IDalamudPlugin
     {
-        private Plugin _plugin;
+        public string Name => "Echoglossian";
+        private const string SlashCommand = "/eglo";
+        private DalamudPluginInterface _pluginInterface;
+        private Config _configuration;
+        private bool _config;
+        
+        private static int _languageInt = 16;
+        //private int _languageInt2;
+        private UiColorPick[] _textColour;
+        private UiColorPick _chooser;
+        private bool _picker;
+        private int _tranMode;
+        private int _oneInt;
+        private bool _oneChan;
+        //private readonly string[] _tranModeOptions = { "Append", "Replace", "Additional" };
+        private Lumina.Excel.ExcelSheet<UIColor> _uiColours;
+        private bool _notSelf;
+        private bool _whitelist;
+        private List<string> _blacklist;
+        private List<int> _chosenLanguages;
+        private List<XivChatType> _channels = new List<XivChatType>();
+        //private readonly List<string> _lastTranslations = new List<string>();
 
-        private const string GTranslateUrl =
-            "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=";
-
-        private const string UaString =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36";
-
-        internal string LangIdentErrorMessage =
-            "The language could not be identified with an acceptable degree of certainty";
-
-        /*internal readonly List<XivChatType> _order = new()
+     /*   private readonly List<XivChatType> _order = new List<XivChatType>
         {
             XivChatType.None,
             XivChatType.Debug,
@@ -71,9 +79,9 @@ namespace Echoglossian
             XivChatType.CrossLinkShell6,
             XivChatType.CrossLinkShell7,
             XivChatType.CrossLinkShell8
-        };
+        };*/
 
-        internal readonly string[] _orderString =
+      /*  private readonly string[] _orderString =
         {
             "None",
             "Debug",
@@ -116,7 +124,7 @@ namespace Echoglossian
             "CrossLinkShell8"
         };
 
-        internal readonly bool[] _yesNo = {
+        private readonly bool[] _yesNo = {
             false, false, false, false, true,
             true, false, true, true, true,
             true, true, true, true, true,
@@ -125,10 +133,9 @@ namespace Echoglossian
             true, true, false, false, false,
             false, false, true, true, true,
             true, true, true, true
-        };
+        };*/
 
-        */
-        internal readonly string[] _codes = {
+        private static readonly string[] _codes = {
             "af", "an", "ar", "az", "be_x_old",
             "bg", "bn", "br", "bs",
             "ca", "ceb", "cs", "cy", "da",
@@ -148,8 +155,7 @@ namespace Echoglossian
             "zh_classical", "zh_yue"
         };
 
-        internal readonly string[] Languages =
-        {
+        private readonly string[] _languages = {
             "Afrikaans", "Aragonese", "Arabic", "Azerbaijani", "Belarusian",
             "Bulgarian", "Bengali", "Breton", "Bosnian",
             "Catalan; Valencian", "Cebuano", "Czech", "Welsh", "Danish",
@@ -160,8 +166,7 @@ namespace Echoglossian
             "Japanese", "Javanese", "Georgian", "Kazakh", "Korean",
             "Latin", "Luxembourgish; Letzeburgesch", "Lithuanian", "Latvian",
             "Malagasy", "Macedonian", "Malayalam", "Marathi", "Malay",
-            "Nepal Bhasa; Newari", "Dutch; Flemish", "Norwegian Nynorsk; Nynorsk, Norwegian", "Norwegian",
-            "Occitan (post 1500)",
+            "Nepal Bhasa; Newari", "Dutch; Flemish", "Norwegian Nynorsk; Nynorsk, Norwegian", "Norwegian", "Occitan (post 1500)",
             "Polish", "Portuguese", "Romanian; Moldavian; Moldovan", "Romance languages",
             "Russian", "Slovak", "Slovenian",
             "Albanian", "Serbian", "Swedish", "Swahili", "Tamil",
@@ -170,91 +175,75 @@ namespace Echoglossian
             "Chinese Classical", "Chinese yue"
         };
 
-        // NCat
-        private static readonly RankedLanguageIdentifierFactory Factory = new();
-
-        private static readonly RankedLanguageIdentifier Identifier =
-            Factory.Load(Path.Combine(AssemblyDirectory, "Wiki82.profile.xml"));
-
-
-
-        public Echoglossian(Plugin plugin)
+        public void Initialize(DalamudPluginInterface pluginInterface)
         {
-            this._plugin = plugin;
-        }
 
-        private static string AssemblyDirectory
-        {
-            get
+            _pluginInterface = pluginInterface;
+            _configuration = pluginInterface.GetPluginConfig() as Config ?? new Config();
+
+            Common = new XivCommonBase(_pluginInterface, Hooks.Talk | Hooks.BattleTalk);
+
+            Common.Functions.Talk.OnTalk += GetText;
+            Common.Functions.BattleTalk.OnBattleTalk += GetBattleText;
+
+
+            //_pluginInterface.Framework.Gui.Chat.OnChatMessage += Chat_OnChatMessage;
+            _pluginInterface.UiBuilder.OnBuildUi += EchoglossianConfigUi;
+            _pluginInterface.UiBuilder.OnOpenConfigUi += EchoglossianConfig;
+            _pluginInterface.CommandManager.AddHandler(SlashCommand, new CommandInfo(Command)
             {
-                var codeBase = typeof(Echoglossian).Assembly.CodeBase;
-                var uri = new UriBuilder(codeBase);
-                var path = Uri.UnescapeDataString(uri.Path);
-                return Path.GetDirectoryName(path);
-            }
-        }
-
-        public string Lang(string message)
-        {
-            PluginLog.LogInformation($"message in Lang Method {message}");
-            var languages = Identifier.Identify(message);
-            var mostCertainLanguage = languages.FirstOrDefault();
-            PluginLog.LogInformation($"most Certain language: {mostCertainLanguage?.ToString()}");
-            return mostCertainLanguage != null
-                ? mostCertainLanguage.Item1.Iso639_2T
-                : LangIdentErrorMessage;
-        }
-
-        public string Translate(string text)
-        {
-            try
-            {
-                var lang = _codes[_plugin._languageInt];
-
-                PluginLog.LogInformation($"LANG: {lang}");
-
-                var url = $"{GTranslateUrl}{lang}&q={text}";
-
-                PluginLog.LogInformation($"URL: {url}");
-
-                var request = (HttpWebRequest) WebRequest.Create(url);
-                request.UserAgent = UaString;
-                var requestResult = request.GetResponse();
-
-                var reader = new StreamReader(requestResult.GetResponseStream() ?? throw new Exception());
-                var read = reader.ReadToEnd();
-
-                var parsed = JObject.Parse(read);
-
-                var dialogueSentenceList = parsed.SelectTokens("sentences[*].trans").Select(i => (string) i).ToList();
-
-                var finalDialogueText = dialogueSentenceList.Aggregate("", (current, dialogueSentence) => current + dialogueSentence);
-                
-                var src = ((JValue) parsed["src"]);
-                Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
-                PluginLog.LogInformation($"FinalDialogueText: {finalDialogueText}");
-                PluginLog.LogInformation($"SRC {src}");
-                PluginLog.LogInformation($"SRC Cultureinfo {src?.ToString(CultureInfo.InvariantCulture)}");
-                PluginLog.LogInformation($"LANG {lang}");
-
-                if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || finalDialogueText == text))
-                {
-                    return text;
-                }
-                return finalDialogueText;
-            }
-            catch (Exception e)
-            {
-                PluginLog.Error(e.ToString());
-                throw;
-            }
+                HelpMessage = "Opens Echoglossian config window"
+            });
+            _uiColours = pluginInterface.Data.Excel.GetSheet<UIColor>();
+            _channels = _configuration.Channels;
+            _textColour = _configuration.TextColour;
+            _tranMode = _configuration.TranMode;
+            _languageInt = _configuration.Lang;
+            _whitelist = _configuration.Whitelist;
+            _notSelf = _configuration.NotSelf;
+            _oneChan = _configuration.OneChan;
+            _oneInt = _configuration.OneInt;
+            _chosenLanguages = _configuration.ChosenLanguages;
+            _blacklist = _configuration.Blacklist;
         }
 
         public void Dispose()
         {
-            _plugin.Glossian?.Dispose();
-            _plugin?.Dispose();
-            //throw new NotImplementedException();
+            Common.Functions.Talk.OnTalk -= GetText;
+            Common.Functions.BattleTalk.OnBattleTalk -= GetBattleText;
+            //_pluginInterface.Framework.Gui.Chat.OnChatMessage -= Chat_OnChatMessage;
+            _pluginInterface.UiBuilder.OnBuildUi -= EchoglossianConfigUi;
+            _pluginInterface.UiBuilder.OnOpenConfigUi -= EchoglossianConfig;
+            _pluginInterface.CommandManager.RemoveHandler(SlashCommand);
         }
+
+        private void Command(string command, string arguments) => _config = true;
+
+        // What to do when plugin install config button is pressed
+        private void EchoglossianConfig(object sender, EventArgs args) => _config = true;
+    }
+
+    public class UiColorPick
+    {
+        public uint Choice { get; set; }
+        public uint Option { get; set; }
+    }
+
+    public class Config : IPluginConfiguration
+    {
+        public int Version { get; set; } = 0;
+        public List<XivChatType> Channels { get; set; } = new List<XivChatType>();
+        public int Lang { get; set; } = 16;
+        public UiColorPick[] TextColour { get; set; } =
+        {
+            new UiColorPick { Choice = 0, Option =0 }
+        };
+        public bool NotSelf { get; set; }
+        public bool Whitelist { get; set; }
+        public List<int> ChosenLanguages { get; set; } = new List<int>();
+        public bool OneChan { get; set; }
+        public int OneInt { get; set; }
+        public List<string> Blacklist { get; set; } = new List<string>();
+        public int TranMode { get; set; }
     }
 }
