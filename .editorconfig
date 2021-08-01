@@ -14,3 +14,6 @@ dotnet_style_qualification_for_property = false:none
 
 # IDE0060: Remove unused parameter
 dotnet_code_quality_unused_parameters = non_public:suggestion
+indent_style=tab
+tab_width=2
+indent_size=2
