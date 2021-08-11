@@ -24,6 +24,18 @@ namespace Echoglossian
                         ImGui.Text("(?)");
                         if (ImGui.IsItemHovered()) ImGui.SetTooltip("Which language to translate to.");
 
+                        ImGui.Checkbox("Translate talk", ref _configuration.TranslateTalk);
+                        if (_configuration.TranslateTalk)
+                        {
+                            ImGui.Checkbox("Display translated text above message instead of replacing it", ref _configuration.UseImGui);
+                            if (_configuration.UseImGui)
+                            {
+                                ImGui.DragFloat("Width multiplier", ref _configuration.ImGuiWindowWidthMult, 0.001f, 0.1f, 2f);
+                                ImGui.TextWrapped("Please adjust position if your overlay is not centered relative to talk popup.");
+                                ImGui.DragFloat2("Position adjustment", ref _configuration.ImGuiWindowPosCorrection);
+                            }
+                        }
+                        ImGui.Checkbox("Translate battle talk", ref _configuration.TranslateBattleTalk);
 
                         ImGui.EndTabItem();
                     }
