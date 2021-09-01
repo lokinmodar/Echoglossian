@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using Dalamud.Plugin;
 using Newtonsoft.Json.Linq;
 using NTextCat;
@@ -13,7 +14,7 @@ namespace Echoglossian
 {
     public partial class Echoglossian
     {
-        private static XivCommonBase Common { get; set; }
+        
 
         private const string GTranslateUrl =
             "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=";
@@ -72,6 +73,8 @@ namespace Echoglossian
 
                 var reader = new StreamReader(requestResult.GetResponseStream() ?? throw new Exception());
                 var read = reader.ReadToEnd();
+
+                //Task.Delay(TimeSpan.FromMilliseconds(1500)).Wait();
 
                 var parsed = JObject.Parse(read);
 

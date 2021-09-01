@@ -25,6 +25,7 @@ namespace Echoglossian
         private const string SlashCommand = "/eglo";
         private DalamudPluginInterface _pluginInterface;
         private Config _configuration;
+        private static XivCommonBase Common { get; set; }
         private bool _config;
         private static int _languageInt = 16;
         private UiColorPick _chooser;
