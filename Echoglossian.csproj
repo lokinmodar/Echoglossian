@@ -1,17 +1,46 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AssemblyName>Echoglossian</AssemblyName>
+    <Platforms>x64</Platforms>
     <Authors>lokinmodar</Authors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <NoWarn>IDE0003</NoWarn>    
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Company>-</Company>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <LangVersion>9.0</LangVersion>
-    <Version>1.0.1.1</Version>
+    <Version>2.0.0.0</Version>
     <Description>Final Fantasy XIV game text translator</Description>
     <Copyright>Dante Souza e Souza - aka lokinmodar - 2021</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>
   </PropertyGroup>
 
-  
+
+  <PropertyGroup Label="Documentation">
+    <DocumentationFile></DocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+
+  <PropertyGroup Label="Build">
+    <OutputPath>I:\Dante\tataru-to-dalamud\Echoglossian\obj\x64\Debug</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <AdditionalFiles Include=".\stylecop.json" />
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
+
+
   <PropertyGroup>
     <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
   </PropertyGroup>
@@ -21,42 +50,51 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  
+
   <ItemGroup>
+    <Compile Remove="NewFolder\**" />
     <Compile Remove="_old\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
     <EmbeddedResource Remove="_old\**" />
+    <None Remove="NewFolder\**" />
     <None Remove="_old\**" />
   </ItemGroup>
 
-  
+
   <ItemGroup>
     <None Remove="Font\NotoSans-Regular.ttf" />
+    <None Remove="stylecop.json" />
     <None Remove="Wiki82.profile.xml" />
   </ItemGroup>
 
-  
+
   <ItemGroup>
     <Content Include="Wiki82.profile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
+
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="1.2.2" />
-    <PackageReference Include="ILRepack" Version="2.0.18" GeneratePathProperty="true" />
+    <PackageReference Include="Lumina" Version="3.3.0" />
+    <PackageReference Include="Lumina.Excel" Version="5.50.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="ILRepack" Version="2.0.18" GeneratePathProperty="true" />
     <PackageReference Include="NTextCat" Version="0.3.65" />
-    <PackageReference Include="XivCommon" Version="2.3.0">
+    <PackageReference Include="XivCommon" Version="3.0.1">
       <GeneratePathProperty>True</GeneratePathProperty>
     </PackageReference>
+    <PackageReference Include="DalamudPackager" Version="2.1.2" />
   </ItemGroup>
-
-
 
   <ItemGroup>
     <Reference Include="Dalamud">
@@ -73,14 +111,7 @@
     </Reference>
     <Reference Include="FFXIVClientStructs.Common">
       <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.Common.dll</HintPath>
-          <Private>false</Private>
-    </Reference>
-    <Reference Include="FFXIVClientStructs.Generators">
-      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.Generators.dll</HintPath>
-          <Private>false</Private>
-    </Reference>
-    <Reference Include="GTranslate">
-      <HintPath>..\GTranslate\src\GTranslate\bin\Debug\net48\GTranslate.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="ImGui.NET">
       <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>
@@ -110,10 +141,8 @@
       <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\Lumina.Excel.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="System.Web" />
 
   </ItemGroup>
-
 
 
   <ItemGroup>

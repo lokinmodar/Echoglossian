@@ -1,14 +1,18 @@
-﻿namespace Echoglossian
+﻿// <copyright file="Utils.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Echoglossian
 {
   public partial class Echoglossian
   {
     private void SaveConfig()
     {
-      _configuration.Lang = _languageInt;
+      this.configuration.Lang = languageInt;
 
-      _configuration.ChosenLanguages = _chosenLanguages;
+      this.configuration.ChosenLanguages = this.chosenLanguages;
 
-      _pluginInterface.SavePluginConfig(_configuration);
+      this.pluginInterface.SavePluginConfig(this.configuration);
     }
   }
 }

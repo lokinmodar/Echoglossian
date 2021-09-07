@@ -1,230 +1,237 @@
-﻿using System;
+﻿// <copyright file="Echoglossian.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
-using Dalamud.Configuration;
+
+using Dalamud.Game;
 using Dalamud.Game.Command;
-using Dalamud.Game.Internal;
+using Dalamud.Game.Gui;
 using Dalamud.Interface;
 using Dalamud.Plugin;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
+using Lumina;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using XivCommon;
 
 namespace Echoglossian
 {
-  //TODO: Handle polish alphabet correctly. 
-  //TODO: Add translation database history.
-  //TODO: implement multiple fallback translation engines.
+  // TODO: Handle polish alphabet correctly.
+  // TODO: Add translation database history.
+  // TODO: implement multiple fallback translation engines.
   public unsafe partial class Echoglossian : IDalamudPlugin
   {
     private const string SlashCommand = "/eglo";
-    private static int _languageInt = 16;
-
+    private static int languageInt = 16;
 
     private static readonly string[] Codes =
     {
-      "af", "an", "ar", "az", "be_x_old",
-      "bg", "bn", "br", "bs",
-      "ca", "ceb", "cs", "cy", "da",
-      "de", "el", "en", "eo", "es",
-      "et", "eu", "fa", "fi", "fr",
-      "gl", "he", "hi", "hr", "ht",
-      "hu", "hy", "id", "is", "it",
-      "ja", "jv", "ka", "kk", "ko",
-      "la", "lb", "lt", "lv",
-      "mg", "mk", "ml", "mr", "ms",
-      "new", "nl", "nn", "no", "oc",
-      "pl", "pt", "ro", "roa_rup",
-      "ru", "sk", "sl",
-      "sq", "sr", "sv", "sw", "ta",
-      "te", "th", "tl", "tr", "uk",
-      "ur", "vi", "vo", "war", "zh",
-      "zh_classical", "zh_yue"
+        "af", "an", "ar", "az", "be_x_old",
+        "bg", "bn", "br", "bs",
+        "ca", "ceb", "cs", "cy", "da",
+        "de", "el", "en", "eo", "es",
+        "et", "eu", "fa", "fi", "fr",
+        "gl", "he", "hi", "hr", "ht",
+        "hu", "hy", "id", "is", "it",
+        "ja", "jv", "ka", "kk", "ko",
+        "la", "lb", "lt", "lv",
+        "mg", "mk", "ml", "mr", "ms",
+        "new", "nl", "nn", "no", "oc",
+        "pl", "pt", "ro", "roa_rup",
+        "ru", "sk", "sl",
+        "sq", "sr", "sv", "sw", "ta",
+        "te", "th", "tl", "tr", "uk",
+        "ur", "vi", "vo", "war", "zh",
+        "zh_classical", "zh_yue",
     };
 
-    private readonly string[] _languages =
+    private readonly string[] languages =
     {
-      "Afrikaans", "Aragonese", "Arabic", "Azerbaijani", "Belarusian",
-      "Bulgarian", "Bengali", "Breton", "Bosnian",
-      "Catalan; Valencian", "Cebuano", "Czech", "Welsh", "Danish",
-      "German", "Greek, Modern", "English", "Esperanto", "Spanish; Castilian",
-      "Estonian", "Basque", "Persian", "Finnish", "French",
-      "Galician", "Hebrew", "Hindi", "Croatian", "Haitian; Haitian Creole",
-      "Hungarian", "Armenian", "Indonesian", "Icelandic", "Italian",
-      "Japanese", "Javanese", "Georgian", "Kazakh", "Korean",
-      "Latin", "Luxembourgish; Letzeburgesch", "Lithuanian", "Latvian",
-      "Malagasy", "Macedonian", "Malayalam", "Marathi", "Malay",
-      "Nepal Bhasa; Newari", "Dutch; Flemish", "Norwegian Nynorsk; Nynorsk, Norwegian", "Norwegian",
-      "Occitan (post 1500)",
-      "Polish", "Portuguese", "Romanian; Moldavian; Moldovan", "Romance languages",
-      "Russian", "Slovak", "Slovenian",
-      "Albanian", "Serbian", "Swedish", "Swahili", "Tamil",
-      "Telugu", "Thai", "Tagalog", "Turkish", "Ukrainian",
-      "Urdu", "Vietnamese", "Volapük", "Waray", "Chinese",
-      "Chinese Classical", "Chinese yue"
+        "Afrikaans", "Aragonese", "Arabic", "Azerbaijani", "Belarusian",
+        "Bulgarian", "Bengali", "Breton", "Bosnian",
+        "Catalan; Valencian", "Cebuano", "Czech", "Welsh", "Danish",
+        "German", "Greek, Modern", "English", "Esperanto", "Spanish; Castilian",
+        "Estonian", "Basque", "Persian", "Finnish", "French",
+        "Galician", "Hebrew", "Hindi", "Croatian", "Haitian; Haitian Creole",
+        "Hungarian", "Armenian", "Indonesian", "Icelandic", "Italian",
+        "Japanese", "Javanese", "Georgian", "Kazakh", "Korean",
+        "Latin", "Luxembourgish; Letzeburgesch", "Lithuanian", "Latvian",
+        "Malagasy", "Macedonian", "Malayalam", "Marathi", "Malay",
+        "Nepal Bhasa; Newari", "Dutch; Flemish", "Norwegian Nynorsk; Nynorsk, Norwegian", "Norwegian",
+        "Occitan (post 1500)",
+        "Polish", "Portuguese", "Romanian; Moldavian; Moldovan", "Romance languages",
+        "Russian", "Slovak", "Slovenian",
+        "Albanian", "Serbian", "Swedish", "Swahili", "Tamil",
+        "Telugu", "Thai", "Tagalog", "Turkish", "Ukrainian",
+        "Urdu", "Vietnamese", "Volapük", "Waray", "Chinese",
+        "Chinese Classical", "Chinese yue",
     };
 
-    private UiColorPick _chooser;
-    private List<int> _chosenLanguages;
-    private bool _config;
-    private Config _configuration;
-    private bool _picker;
-    private DalamudPluginInterface _pluginInterface;
-    private ExcelSheet<UIColor> _uiColours;
-    private string talkCurrentTranslation = "";
+    private Framework framework;
+    private GameGui gameGui;
+    /*private GameData gameData;*/
+
+#pragma warning disable 649
+    private readonly UiColorPick chooser;
+#pragma warning restore 649
+    private List<int> chosenLanguages;
+    private bool config;
+    private Config configuration;
+    private bool picker;
+    private DalamudPluginInterface pluginInterface;
+    private ExcelSheet<UIColor> uiColours;
+    private string talkCurrentTranslation = string.Empty;
     private volatile int talkCurrentTranslationId;
     private bool talkDisplayTranslation;
     private Vector2 talkTextDimensions = Vector2.Zero;
     private Vector2 talkTextImguiSize = Vector2.Zero;
     private Vector2 talkTextPosition = Vector2.Zero;
+    private CommandManager commandManager;
 
     private SemaphoreSlim talkTranslationSemaphore;
+
+    /// <inheritdoc/>
+    public string Name => "Echoglossian";
 
     // When loaded by LivePluginLoader, the executing assembly will be wrong.
     // Supplying this property allows LivePluginLoader to supply the correct location, so that
     // you have full compatibility when loaded normally and through LPL.
     public string AssemblyLocation { get; set; } = Assembly.GetExecutingAssembly().Location;
-    public string Name => "Echoglossian";
 
-    public void Initialize(DalamudPluginInterface pluginInterface)
+    private static XivCommonBase Common { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Echoglossian"/> class.
+    /// </summary>
+    /// <param name="dalamudPluginInterface">Plugin Interface.</param>
+    /// <param name="pframework">Framework.</param>
+    /// <param name="pCommandManager">Command Manager.</param>
+    /// <param name="pGameData">Game Data.</param>
+    /// <param name="pGameGui">Game Gui object.</param>
+    public Echoglossian(DalamudPluginInterface dalamudPluginInterface, Framework pframework, CommandManager pCommandManager, /*GameData pGameData,*/ GameGui pGameGui)
     {
-      _pluginInterface = pluginInterface;
-      _configuration = pluginInterface.GetPluginConfig() as Config ?? new Config();
+      this.framework = pframework;
+      this.pluginInterface = dalamudPluginInterface;
+      this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
+     /* this.gameData = pGameData;*/
+      this.gameGui = pGameGui;
+      Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
+      this.commandManager = pCommandManager;
 
-      Common = new XivCommonBase(_pluginInterface, Hooks.Talk | Hooks.BattleTalk);
+      Common.Functions.Talk.OnTalk += this.GetText;
+      Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleText;
 
-      Common.Functions.Talk.OnTalk += GetText;
-      Common.Functions.BattleTalk.OnBattleTalk += GetBattleText;
-
-      _pluginInterface.UiBuilder.OnBuildUi += EchoglossianConfigUi;
-      _pluginInterface.UiBuilder.OnOpenConfigUi += EchoglossianConfig;
-      _pluginInterface.CommandManager.AddHandler(SlashCommand, new CommandInfo(Command)
+      this.pluginInterface.UiBuilder.OpenConfigUi += this.EchoglossianConfigUi;
+      // this.pluginInterface.UiBuilder.OnOpenConfigUi += this.EchoglossianConfig;
+      this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
       {
-        HelpMessage = "Opens Echoglossian config window"
+        HelpMessage = "Opens Echoglossian config window",
       });
-      _uiColours = pluginInterface.Data.Excel.GetSheet<UIColor>();
-      _languageInt = _configuration.Lang;
-      _chosenLanguages = _configuration.ChosenLanguages;
+      //this.uiColours = this.gameData.Excel.GetSheet<UIColor>();
+      languageInt = this.configuration.Lang;
+      this.chosenLanguages = this.configuration.ChosenLanguages;
 
-      _pluginInterface.Framework.OnUpdateEvent += Tick;
-      _pluginInterface.UiBuilder.OnBuildUi += DrawTranslatedText;
-      talkTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.framework.Update += this.Tick;
+      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedText;
+      this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
-      Common.Functions.Talk.OnTalk -= GetText;
-      Common.Functions.BattleTalk.OnBattleTalk -= GetBattleText;
-      //_pluginInterface.Framework.Gui.Chat.OnChatMessage -= Chat_OnChatMessage;
-      _pluginInterface.UiBuilder.OnBuildUi -= EchoglossianConfigUi;
-      _pluginInterface.UiBuilder.OnOpenConfigUi -= EchoglossianConfig;
-      _pluginInterface.CommandManager.RemoveHandler(SlashCommand);
+      Common.Functions.Talk.OnTalk -= this.GetText;
+      Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleText;
 
-      _pluginInterface.Framework.OnUpdateEvent -= Tick;
-      _pluginInterface.UiBuilder.OnBuildUi -= DrawTranslatedText;
-      _pluginInterface.Dispose();
+      // _pluginInterface.Framework.Gui.Chat.OnChatMessage -= Chat_OnChatMessage;
+      this.pluginInterface.UiBuilder.OpenConfigUi -= this.EchoglossianConfigUi;
+      // this.pluginInterface.UiBuilder.OpenConfigUi -= this.EchoglossianConfig;
+      this.commandManager.RemoveHandler(SlashCommand);
+
+      this.framework.Update -= this.Tick;
+      this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedText;
+      this.pluginInterface.Dispose();
     }
 
     private void DrawTranslatedText()
     {
-      if (_configuration.UseImGui && _configuration.TranslateTalk && talkDisplayTranslation)
+      if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
       {
         ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-          talkTextPosition.X + talkTextDimensions.X / 2 - talkTextImguiSize.X / 2,
-          talkTextPosition.Y - talkTextImguiSize.Y - 20
-        ) + _configuration.ImGuiWindowPosCorrection);
-        var size = Math.Min(talkTextDimensions.X * _configuration.ImGuiWindowWidthMult,
-          ImGui.CalcTextSize(talkCurrentTranslation).X + ImGui.GetStyle().WindowPadding.X * 2);
-        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, talkTextDimensions.Y));
-        ImGui.Begin("Battle talk translation",
-          ImGuiWindowFlags.NoTitleBar
+          this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
+          this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+        var size = Math.Min(
+            this.talkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
+            ImGui.CalcTextSize(this.talkCurrentTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
+        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y));
+        ImGui.Begin(
+            "Battle talk translation",
+            ImGuiWindowFlags.NoTitleBar
           | ImGuiWindowFlags.NoNav
           | ImGuiWindowFlags.AlwaysAutoResize
           | ImGuiWindowFlags.NoFocusOnAppearing
-          | ImGuiWindowFlags.NoMouseInputs
-        );
-        if (talkTranslationSemaphore.Wait(0))
+          | ImGuiWindowFlags.NoMouseInputs);
+        if (this.talkTranslationSemaphore.Wait(0))
         {
-          ImGui.TextWrapped(talkCurrentTranslation);
-          talkTranslationSemaphore.Release();
+          ImGui.TextWrapped(this.talkCurrentTranslation);
+          this.talkTranslationSemaphore.Release();
         }
         else
         {
           ImGui.Text("Awaiting translation...");
         }
 
-        talkTextImguiSize = ImGui.GetWindowSize();
+        this.talkTextImguiSize = ImGui.GetWindowSize();
         ImGui.End();
       }
     }
 
     private void Tick(Framework framework)
     {
-      if (_configuration.UseImGui)
+      if (this.configuration.UseImGui)
       {
-        var talk = _pluginInterface.Framework.Gui.GetUiObjectByName("Talk", 1);
+        var talk = this.gameGui.GetAddonByName("Talk", 1);
         if (talk != IntPtr.Zero)
         {
-          var talkMaster = (AtkUnitBase*) talk;
+          var talkMaster = (AtkUnitBase*)talk;
           if (talkMaster->IsVisible)
           {
-            talkDisplayTranslation = true;
-            talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
-            talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
-            talkTextPosition.X = talkMaster->RootNode->X;
-            talkTextPosition.Y = talkMaster->RootNode->Y;
+            this.talkDisplayTranslation = true;
+            this.talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
+            this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
+            this.talkTextPosition.X = talkMaster->RootNode->X;
+            this.talkTextPosition.Y = talkMaster->RootNode->Y;
           }
           else
           {
-            talkDisplayTranslation = false;
+            this.talkDisplayTranslation = false;
           }
         }
         else
         {
-          talkDisplayTranslation = false;
+          this.talkDisplayTranslation = false;
         }
       }
       else
       {
-        talkDisplayTranslation = false;
+        this.talkDisplayTranslation = false;
       }
     }
 
-
     private void Command(string command, string arguments)
     {
-      _config = true;
+      this.config = true;
     }
 
     // What to do when plugin install config button is pressed
     private void EchoglossianConfig(object sender, EventArgs args)
     {
-      _config = true;
+      this.config = true;
     }
-  }
-
-  public class UiColorPick
-  {
-    public uint Choice { get; set; }
-    public uint Option { get; set; }
-  }
-
-  public class Config : IPluginConfiguration
-  {
-    public Vector2 ImGuiWindowPosCorrection = Vector2.Zero;
-    public float ImGuiWindowWidthMult = 0.85f;
-    public bool TranslateBattleTalk = true;
-    public bool TranslateTalk = true;
-
-    public bool UseImGui = false;
-
-    public int Lang { get; set; } = 16;
-
-    public List<int> ChosenLanguages { get; set; } = new();
-    public int Version { get; set; } = 0;
   }
 }

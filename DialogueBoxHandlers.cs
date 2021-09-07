@@ -1,23 +1,35 @@
-﻿using System;
+﻿// <copyright file="DialogueBoxHandlers.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using System;
 using System.Threading.Tasks;
+
 using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Plugin;
+using Dalamud.Logging;
 using XivCommon.Functions;
 
 namespace Echoglossian
 {
+  /// <summary>
+  /// Dialogue box handling.
+  /// </summary>
   public partial class Echoglossian
   {
     private void GetText(ref SeString name, ref SeString text, ref TalkStyle style)
     {
-      if (!_configuration.TranslateTalk) return;
+      if (!this.configuration.TranslateTalk)
+      {
+        return;
+      }
+
       try
       {
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
         var textToTranslate = text.TextValue;
         var detectedLanguage = Lang(textToTranslate);
         PluginLog.LogDebug($"Detected Language: {detectedLanguage}");
-        if (!_configuration.UseImGui)
+        if (!this.configuration.UseImGui)
         {
           var translatedText = Translate(textToTranslate);
           PluginLog.LogWarning(translatedText);
@@ -27,15 +39,19 @@ namespace Echoglossian
         }
         else
         {
-          talkCurrentTranslationId = Environment.TickCount;
-          talkCurrentTranslation = "Awaiting translation...";
-          Task.Run(delegate
+          this.talkCurrentTranslationId = Environment.TickCount;
+          this.talkCurrentTranslation = "Awaiting translation...";
+          Task.Run(() =>
           {
-            var id = talkCurrentTranslationId;
-            var text = Translate(textToTranslate);
-            talkTranslationSemaphore.Wait();
-            if (id == talkCurrentTranslationId) talkCurrentTranslation = text;
-            talkTranslationSemaphore.Release();
+            var id = this.talkCurrentTranslationId;
+            var translation = Translate(textToTranslate);
+            this.talkTranslationSemaphore.Wait();
+            if (id == this.talkCurrentTranslationId)
+            {
+              this.talkCurrentTranslation = translation;
+            }
+
+            this.talkTranslationSemaphore.Release();
           });
         }
       }
@@ -46,11 +62,14 @@ namespace Echoglossian
       }
     }
 
-
     private void GetBattleText(ref SeString sender, ref SeString message, ref BattleTalkOptions options,
       ref bool ishandled)
     {
-      if (!_configuration.TranslateBattleTalk) return;
+      if (!this.configuration.TranslateBattleTalk)
+      {
+        return;
+      }
+
       try
       {
         PluginLog.Log(sender.TextValue + ": " + message.TextValue);

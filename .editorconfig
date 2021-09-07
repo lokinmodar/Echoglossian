@@ -14,3 +14,54 @@ dotnet_style_qualification_for_property = false:none
 
 # IDE0060: Remove unused parameter
 dotnet_code_quality_unused_parameters = non_public:suggestion
+
+# S1135: Track uses of "TODO" tags
+dotnet_diagnostic.S1135.severity = none
+
+# SA1117: Parameters should be on same line or separate lines
+dotnet_diagnostic.SA1117.severity = suggestion
+
+# SA1601: Partial elements should be documented
+dotnet_diagnostic.SA1601.severity = suggestion
+
+# SA1515: Single-line comment should be preceded by blank line
+dotnet_diagnostic.SA1515.severity = suggestion
+
+# CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = suggestion
+
+# S1104: Fields should not have public accessibility
+dotnet_diagnostic.S1104.severity = suggestion
+
+# SA1401: Fields should be private
+dotnet_diagnostic.SA1401.severity = suggestion
+
+# SA1600: Elements should be documented
+dotnet_diagnostic.SA1600.severity = suggestion
+
+# S125: Sections of code should not be commented out
+dotnet_diagnostic.S125.severity = suggestion
+
+# SA1118: Parameter should not span multiple lines
+dotnet_diagnostic.SA1118.severity = suggestion
+
+# SA1214: Readonly fields should appear before non-readonly fields
+dotnet_diagnostic.SA1214.severity = suggestion
+
+# SA1201: Elements should appear in the correct order
+dotnet_diagnostic.SA1201.severity = suggestion
+
+# S3459: Unassigned members should be removed
+dotnet_diagnostic.S3459.severity = suggestion
+
+# IDE0044: Add readonly modifier
+dotnet_diagnostic.IDE0044.severity = suggestion
+
+# S3010: Static fields should not be updated in constructors
+dotnet_diagnostic.S3010.severity = suggestion
+
+# S1075: URIs should not be hardcoded
+dotnet_diagnostic.S1075.severity = suggestion
+
+# S3881: "IDisposable" should be implemented correctly
+dotnet_diagnostic.S3881.severity = suggestion
