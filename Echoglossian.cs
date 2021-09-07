@@ -83,9 +83,9 @@ namespace Echoglossian
     private List<int> chosenLanguages;
     private bool config;
     private Config configuration;
-    private bool picker;
+    //private bool picker;
     private DalamudPluginInterface pluginInterface;
-    private ExcelSheet<UIColor> uiColours;
+    //private ExcelSheet<UIColor> uiColours;
     private string talkCurrentTranslation = string.Empty;
     private volatile int talkCurrentTranslationId;
     private bool talkDisplayTranslation;
@@ -112,9 +112,8 @@ namespace Echoglossian
     /// <param name="dalamudPluginInterface">Plugin Interface.</param>
     /// <param name="pframework">Framework.</param>
     /// <param name="pCommandManager">Command Manager.</param>
-    /// <param name="pGameData">Game Data.</param>
     /// <param name="pGameGui">Game Gui object.</param>
-    public Echoglossian(DalamudPluginInterface dalamudPluginInterface, Framework pframework, CommandManager pCommandManager, /*GameData pGameData,*/ GameGui pGameGui)
+    public Echoglossian(DalamudPluginInterface dalamudPluginInterface, Framework pframework, CommandManager pCommandManager, GameGui pGameGui)
     {
       this.framework = pframework;
       this.pluginInterface = dalamudPluginInterface;
@@ -127,7 +126,8 @@ namespace Echoglossian
       Common.Functions.Talk.OnTalk += this.GetText;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleText;
 
-      this.pluginInterface.UiBuilder.OpenConfigUi += this.EchoglossianConfigUi;
+      this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
+      this.pluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
       // this.pluginInterface.UiBuilder.OnOpenConfigUi += this.EchoglossianConfig;
       this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
       {
@@ -191,7 +191,7 @@ namespace Echoglossian
       }
     }
 
-    private void Tick(Framework framework)
+    private void Tick(Framework tFramework)
     {
       if (this.configuration.UseImGui)
       {
@@ -223,15 +223,16 @@ namespace Echoglossian
       }
     }
 
+    private void ConfigWindow()
+    {
+      this.config = true;
+    }
+
+
     private void Command(string command, string arguments)
     {
       this.config = true;
     }
 
-    // What to do when plugin install config button is pressed
-    private void EchoglossianConfig(object sender, EventArgs args)
-    {
-      this.config = true;
-    }
   }
 }

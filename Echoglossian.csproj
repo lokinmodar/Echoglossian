@@ -150,6 +150,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="images\logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Target Name="ILRepack" AfterTargets="Build">
     <ItemGroup>
       <InputAssemblies Include="$(TargetPath)" />
