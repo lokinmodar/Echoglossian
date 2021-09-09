@@ -1,5 +1,6 @@
-﻿// <copyright file="Echoglossian.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="Echoglossian.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 using System;
@@ -17,7 +18,6 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using Lumina;
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
 using XivCommon;
 
 namespace Echoglossian
@@ -29,6 +29,7 @@ namespace Echoglossian
   {
     private const string SlashCommand = "/eglo";
     private static int languageInt = 16;
+    private static int fontSize = 20;
 
     private static readonly string[] Codes =
     {
@@ -75,17 +76,14 @@ namespace Echoglossian
 
     private Framework framework;
     private GameGui gameGui;
-    /*private GameData gameData;*/
-
-#pragma warning disable 649
-    private readonly UiColorPick chooser;
-#pragma warning restore 649
+    // private GameData gameData;
+    // private readonly UiColorPick chooser;
     private List<int> chosenLanguages;
     private bool config;
     private Config configuration;
-    //private bool picker;
+    // private bool picker;
     private DalamudPluginInterface pluginInterface;
-    //private ExcelSheet<UIColor> uiColours;
+    // private ExcelSheet<UIColor> uiColours;
     private string talkCurrentTranslation = string.Empty;
     private volatile int talkCurrentTranslationId;
     private bool talkDisplayTranslation;
@@ -96,12 +94,11 @@ namespace Echoglossian
 
     private SemaphoreSlim talkTranslationSemaphore;
 
-    /// <inheritdoc/>
     public string Name => "Echoglossian";
 
-    // When loaded by LivePluginLoader, the executing assembly will be wrong.
-    // Supplying this property allows LivePluginLoader to supply the correct location, so that
-    // you have full compatibility when loaded normally and through LPL.
+    /// <summary>
+    /// Gets or sets AssemblyLocation. When loaded by LivePluginLoader, the executing assembly will be wrong. Supplying this property allows LivePluginLoader to supply the correct location, so that you have full compatibility when loaded normally and through LPL.
+    /// </summary>
     public string AssemblyLocation { get; set; } = Assembly.GetExecutingAssembly().Location;
 
     private static XivCommonBase Common { get; set; }
@@ -118,7 +115,7 @@ namespace Echoglossian
       this.framework = pframework;
       this.pluginInterface = dalamudPluginInterface;
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
-     /* this.gameData = pGameData;*/
+      // this.gameData = pGameData;
       this.gameGui = pGameGui;
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
       this.commandManager = pCommandManager;
@@ -133,9 +130,10 @@ namespace Echoglossian
       {
         HelpMessage = "Opens Echoglossian config window",
       });
-      //this.uiColours = this.gameData.Excel.GetSheet<UIColor>();
+      // this.uiColours = this.gameData.Excel.GetSheet<UIColor>();
       languageInt = this.configuration.Lang;
       this.chosenLanguages = this.configuration.ChosenLanguages;
+      fontSize = this.configuration.FontSize;
 
       this.framework.Update += this.Tick;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedText;
@@ -145,6 +143,8 @@ namespace Echoglossian
     /// <inheritdoc/>
     public void Dispose()
     {
+      GC.SuppressFinalize(this);
+
       Common.Functions.Talk.OnTalk -= this.GetText;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleText;
 
@@ -176,6 +176,7 @@ namespace Echoglossian
           | ImGuiWindowFlags.AlwaysAutoResize
           | ImGuiWindowFlags.NoFocusOnAppearing
           | ImGuiWindowFlags.NoMouseInputs);
+
         if (this.talkTranslationSemaphore.Wait(0))
         {
           ImGui.TextWrapped(this.talkCurrentTranslation);
@@ -228,11 +229,9 @@ namespace Echoglossian
       this.config = true;
     }
 
-
     private void Command(string command, string arguments)
     {
       this.config = true;
     }
-
   }
 }

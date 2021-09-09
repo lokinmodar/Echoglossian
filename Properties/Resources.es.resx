@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Configuración</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Configuración de Echoglossian</value>
+    <comment>Config Window title bar</comment>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Abre la ventana de configuración de Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>A qué idioma traducir.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Idioma al que traducir</value>
+  </data>
+  <data name="Overlay name" xml:space="preserve">
+    <value>Traducción de charlas de batalla</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Ajuste la posición si su superposición no está centrada en relación con la ventana emergente de conversación.</value>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Ajuste de posición</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la interfaz de usuario del juego en lugar de reemplazar su texto con la traducción</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador de ancho</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Comprar lokinmodar a Coffee</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Guardar y cerrar ventana de configuración</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Traducir charla de batalla</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Traducir charla</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>A la espera de traducción...</value>
+  </data>
+</root>

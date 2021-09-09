@@ -1,5 +1,6 @@
-﻿// <copyright file="Config.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="Config.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 using System.Collections.Generic;
@@ -20,9 +21,10 @@ namespace Echoglossian
 
     public int Lang { get; set; } = 16;
 
+    public int FontSize = 20;
+
     public List<int> ChosenLanguages { get; set; } = new();
 
-    /// <inheritdoc/>
     public int Version { get; set; } = 0;
   }
 }
