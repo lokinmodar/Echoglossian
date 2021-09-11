@@ -20,7 +20,7 @@
           <target state="translated" state-qualifier="mt-suggestion">Abre janela de configuração do Echoglossian</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Shown in plugin install window</note>
         </trans-unit>
-        <trans-unit id="HoverTooltipIndicator" translate="yes" xml:space="preserve">
+        <trans-unit id="HoverTooltipIndicator" translate="no" xml:space="preserve">
           <source>(?)</source>
           <target state="final" state-qualifier="mt-suggestion">(?)</target>
         </trans-unit>
@@ -38,8 +38,8 @@
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
-          <source>Please adjust position if your overlay is not centered relative to talk popup.</source>
-          <target state="translated" state-qualifier="mt-suggestion">Ajuste a posição se a sobreposição não estiver centrada em relação ao popup de conversa.</target>
+          <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
+          <target state="translated">Ajuste a posição se a sobreposição não estiver centrada em relação à caixa de conversa da UI do jogo.</target>
         </trans-unit>
         <trans-unit id="OverlayPositionAdjustmentLabel" translate="yes" xml:space="preserve">
           <source>Position adjustment</source>
@@ -72,6 +72,38 @@
         <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
           <source>Awaiting translation...</source>
           <target state="translated" state-qualifier="mt-suggestion">Aguardando tradução...</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeLabel" translate="yes" xml:space="preserve">
+          <source>Overlay Font Size</source>
+          <target state="translated">Tamanho da fonte da sobreposição</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
+          <source>Select the font size for the dialogue text overlay</source>
+          <target state="translated" state-qualifier="mt-suggestion">Selecione o tamanho da fonte para a sobreposição de texto de diálogo</target>
+        </trans-unit>
+        <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
+          <source>Adjust translation overlay width</source>
+          <target state="translated">Ajuste a largura da sobreposição de tradução</target>
+        </trans-unit>
+        <trans-unit id="SendPixButton" translate="yes" xml:space="preserve">
+          <source>Send me a PIX donation!</source>
+          <target state="translated" state-qualifier="mt-suggestion">Mande-me um PIX!</target>
+        </trans-unit>
+        <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
+          <source>Select what kind of text you want to be translated</source>
+          <target state="translated">Selecione que tipo de texto deseja que seja traduzido</target>
+        </trans-unit>
+        <trans-unit id="Name" translate="no" xml:space="preserve">
+          <source>Echoglossian</source>
+          <target state="final">Echoglossian</target>
+        </trans-unit>
+        <trans-unit id="pix" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="PixText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
+          <target state="new">Scan the QR code to send me a PIX - only valid in Brazil</target>
         </trans-unit>
       </group>
     </body>

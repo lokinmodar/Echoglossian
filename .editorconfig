@@ -65,3 +65,6 @@ dotnet_diagnostic.S1075.severity = suggestion
 
 # S3881: "IDisposable" should be implemented correctly
 dotnet_diagnostic.S3881.severity = suggestion
+
+# SA1202: Elements should be ordered by access
+dotnet_diagnostic.SA1202.severity = suggestion

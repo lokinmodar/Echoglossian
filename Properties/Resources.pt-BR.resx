@@ -23,9 +23,6 @@
     <value>Abre janela de configuração do Echoglossian</value>
     <comment>Shown in plugin install window</comment>
   </data>
-  <data name="HoverTooltipIndicator" xml:space="preserve">
-    <value>(?)</value>
-  </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>Para qual língua traduzir.</value>
   </data>
@@ -37,7 +34,7 @@
     <comment>Translation overlay window name</comment>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Ajuste a posição se a sobreposição não estiver centrada em relação ao popup de conversa.</value>
+    <value>Ajuste a posição se a sobreposição não estiver centrada em relação à caixa de conversa da UI do jogo.</value>
   </data>
   <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
     <value>Ajuste de posição</value>
@@ -62,5 +59,20 @@
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Aguardando tradução...</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Tamanho da fonte da sobreposição</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Selecione o tamanho da fonte para a sobreposição de texto de diálogo</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuste a largura da sobreposição de tradução</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Mande-me um PIX!</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Selecione que tipo de texto deseja que seja traduzido</value>
   </data>
 </root>

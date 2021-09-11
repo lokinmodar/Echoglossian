@@ -115,6 +115,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Echoglossian.
+        /// </summary>
+        internal static string Name {
+            get {
+                return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Battle talk translation.
         /// </summary>
         internal static string Overlay_name {
@@ -124,11 +133,29 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please adjust position if your overlay is not centered relative to talk popup..
+        ///   Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI dialogue box..
         /// </summary>
         internal static string OverlayAdjustmentOrientations {
             get {
                 return ResourceManager.GetString("OverlayAdjustmentOrientations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overlay Font Size.
+        /// </summary>
+        internal static string OverlayFontSizeLabel {
+            get {
+                return ResourceManager.GetString("OverlayFontSizeLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the font size for the dialogue text overlay.
+        /// </summary>
+        internal static string OverlayFontSizeOrientations {
+            get {
+                return ResourceManager.GetString("OverlayFontSizeOrientations", resourceCulture);
             }
         }
         
@@ -151,6 +178,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adjust translation overlay width.
+        /// </summary>
+        internal static string OverlayWidthMultiplierOrientations {
+            get {
+                return ResourceManager.GetString("OverlayWidthMultiplierOrientations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Width multiplier.
         /// </summary>
         internal static string OverlayWidthScrollLabel {
@@ -169,11 +205,39 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] pix {
+            get {
+                object obj = ResourceManager.GetObject("pix", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+        /// </summary>
+        internal static string PixText {
+            get {
+                return ResourceManager.GetString("PixText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save and Close Config Window.
         /// </summary>
         internal static string SaveCloseButtonLabel {
             get {
                 return ResourceManager.GetString("SaveCloseButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send me a PIX donation!.
+        /// </summary>
+        internal static string SendPixButton {
+            get {
+                return ResourceManager.GetString("SendPixButton", resourceCulture);
             }
         }
         
@@ -201,6 +265,15 @@ namespace Echoglossian.Properties {
         internal static string WaitingForTranslation {
             get {
                 return ResourceManager.GetString("WaitingForTranslation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select what kind of text you want to be translated.
+        /// </summary>
+        internal static string WhatToTranslateText {
+            get {
+                return ResourceManager.GetString("WhatToTranslateText", resourceCulture);
             }
         }
     }

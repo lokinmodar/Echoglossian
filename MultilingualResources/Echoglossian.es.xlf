@@ -20,7 +20,7 @@
           <target state="translated" state-qualifier="mt-suggestion">Abre la ventana de configuración de Echoglossian</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Shown in plugin install window</note>
         </trans-unit>
-        <trans-unit id="HoverTooltipIndicator" translate="yes" xml:space="preserve">
+        <trans-unit id="HoverTooltipIndicator" translate="no" xml:space="preserve">
           <source>(?)</source>
           <target state="final" state-qualifier="mt-suggestion">(?)</target>
         </trans-unit>
@@ -38,7 +38,7 @@
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
-          <source>Please adjust position if your overlay is not centered relative to talk popup.</source>
+          <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
           <target state="translated" state-qualifier="mt-suggestion">Ajuste la posición si su superposición no está centrada en relación con la ventana emergente de conversación.</target>
         </trans-unit>
         <trans-unit id="OverlayPositionAdjustmentLabel" translate="yes" xml:space="preserve">
@@ -72,6 +72,38 @@
         <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
           <source>Awaiting translation...</source>
           <target state="translated" state-qualifier="mt-suggestion">A la espera de traducción...</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeLabel" translate="yes" xml:space="preserve">
+          <source>Overlay Font Size</source>
+          <target state="translated" state-qualifier="mt-suggestion">Tamaño de fuente de superposición</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
+          <source>Select the font size for the dialogue text overlay</source>
+          <target state="translated" state-qualifier="mt-suggestion">Seleccione el tamaño de fuente para la superposición de texto del diálogo</target>
+        </trans-unit>
+        <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
+          <source>Adjust translation overlay width</source>
+          <target state="translated" state-qualifier="mt-suggestion">Ajustar el ancho de la superposición de traducción</target>
+        </trans-unit>
+        <trans-unit id="SendPixButton" translate="yes" xml:space="preserve">
+          <source>Send me a PIX donation!</source>
+          <target state="translated" state-qualifier="mt-suggestion">¡Envíame un PIX!</target>
+        </trans-unit>
+        <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
+          <source>Select what kind of text you want to be translated</source>
+          <target state="translated" state-qualifier="mt-suggestion">Seleccione qué tipo de texto desea traducir</target>
+        </trans-unit>
+        <trans-unit id="Name" translate="no" xml:space="preserve">
+          <source>Echoglossian</source>
+          <target state="final">Echoglossian</target>
+        </trans-unit>
+        <trans-unit id="pix" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="PixText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
+          <target state="new">Scan the QR code to send me a PIX - only valid in Brazil</target>
         </trans-unit>
       </group>
     </body>

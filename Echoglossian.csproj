@@ -73,8 +73,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Font\NotoSans-Regular.ttf" />
+    <None Remove="images\logo.png" />
+    <None Remove="images\pix.png" />
     <None Remove="MultilingualResources\Echoglossian.es.xlf" />
     <None Remove="MultilingualResources\Echoglossian.pt-BR.xlf" />
+    <None Remove="Resources\pix.png" />
     <None Remove="stylecop.json" />
     <None Remove="Wiki82.profile.xml" />
   </ItemGroup>
@@ -84,6 +87,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DalamudLinter" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354">
       <PrivateAssets>all</PrivateAssets>
@@ -148,6 +152,12 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="images\logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\pix.png" />
+  </ItemGroup>
+  <ItemGroup>
     <XliffResource Include="MultilingualResources\Echoglossian.es.xlf" />
     <XliffResource Include="MultilingualResources\Echoglossian.pt-BR.xlf" />
   </ItemGroup>
@@ -163,11 +173,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="images\logo.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <Target Name="ILRepack" AfterTargets="Build">
     <ItemGroup>

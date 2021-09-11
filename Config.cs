@@ -18,6 +18,7 @@ namespace Echoglossian
     public bool TranslateTalk = true;
 
     public bool UseImGui = false;
+    public bool ShowInCutscenes = true;
 
     public int Lang { get; set; } = 16;
 

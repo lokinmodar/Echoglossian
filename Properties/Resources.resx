@@ -137,12 +137,21 @@
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Language to translate to</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
   <data name="Overlay name" xml:space="preserve">
     <value>Battle talk translation</value>
     <comment>Translation overlay window name</comment>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Please adjust position if your overlay is not centered relative to talk popup.</value>
+    <value>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Overlay Font Size</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Select the font size for the dialogue text overlay</value>
   </data>
   <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
     <value>Position adjustment</value>
@@ -150,14 +159,27 @@
   <data name="OverlayToggleLabel" xml:space="preserve">
     <value>Display translated text overlay above game UI dialogue box instead of replacing its text with the translation</value>
   </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Adjust translation overlay width</value>
+  </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
     <value>Width multiplier</value>
   </data>
   <data name="PatronButtonLabel" xml:space="preserve">
     <value>Buy lokinmodar a Coffee</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="pix" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Scan the QR code to send me a PIX - only valid in Brazil</value>
+  </data>
   <data name="SaveCloseButtonLabel" xml:space="preserve">
     <value>Save and Close Config Window</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Send me a PIX donation!</value>
   </data>
   <data name="TransLateBattletalkToggle" xml:space="preserve">
     <value>Translate battle talk</value>
@@ -167,5 +189,8 @@
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Awaiting translation...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Select what kind of text you want to be translated</value>
   </data>
 </root>

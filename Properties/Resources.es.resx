@@ -23,9 +23,6 @@
     <value>Abre la ventana de configuración de Echoglossian</value>
     <comment>Shown in plugin install window</comment>
   </data>
-  <data name="HoverTooltipIndicator" xml:space="preserve">
-    <value>(?)</value>
-  </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>A qué idioma traducir.</value>
   </data>
@@ -62,5 +59,20 @@
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>A la espera de traducción...</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Tamaño de fuente de superposición</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Seleccione el tamaño de fuente para la superposición de texto del diálogo</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajustar el ancho de la superposición de traducción</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>¡Envíame un PIX!</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Seleccione qué tipo de texto desea traducir</value>
   </data>
 </root>
