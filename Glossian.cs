@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net;
 
 using Dalamud.Logging;
+using Echoglossian.Properties;
 using Newtonsoft.Json.Linq;
 using NTextCat;
 
@@ -23,8 +24,6 @@ namespace Echoglossian
 
     private const string UaString =
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36";
-
-    private const string LangIdentErrorMessage = "The language could not be identified with an acceptable degree of certainty";
 
     private static readonly RankedLanguageIdentifierFactory Factory = new();
 
@@ -45,12 +44,12 @@ namespace Echoglossian
 
     public static string Lang(string message)
     {
-      PluginLog.LogInformation($"message in Lang Method {message}");
+      // PluginLog.LogInformation($"message in Lang Method {message}");
       var mostCertainLanguage = Identifier.Identify(message).FirstOrDefault();
-      PluginLog.LogInformation($"most Certain language: {mostCertainLanguage}");
+      // PluginLog.LogInformation($"most Certain language: {mostCertainLanguage}");
       return mostCertainLanguage != null
         ? mostCertainLanguage.Item1.Iso639_2T
-        : LangIdentErrorMessage;
+        : Resources.LangIdentError;
     }
 
     public static string Translate(string text)
@@ -58,11 +57,11 @@ namespace Echoglossian
       try
       {
         var lang = Codes[languageInt];
-        PluginLog.LogInformation($"LANG: {lang}");
+        // PluginLog.LogInformation($"LANG: {lang}");
 
         var url = $"{GTranslateUrl}{lang}&q={text}";
 
-        PluginLog.LogInformation($"URL: {url}");
+        // PluginLog.LogInformation($"URL: {url}");
 
         var request = (HttpWebRequest)WebRequest.Create(url);
         request.UserAgent = UaString;
@@ -80,10 +79,10 @@ namespace Echoglossian
 
         var src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
-        PluginLog.LogInformation($"FinalDialogueText: {finalDialogueText}");
+/*        PluginLog.LogInformation($"FinalDialogueText: {finalDialogueText}");
         PluginLog.LogInformation($"SRC: {src}");
         PluginLog.LogInformation($"SRC Cultureinfo: {src?.ToString(CultureInfo.InvariantCulture)}");
-        PluginLog.LogInformation($"LANG: {lang}");
+        PluginLog.LogInformation($"LANG: {lang}");*/
 
         if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || finalDialogueText == text))
         {

@@ -89,14 +89,7 @@ namespace Echoglossian
     private readonly DalamudPluginInterface pluginInterface;
     private TextureWrap pixImage;
 
-
     private ToastGui toastGui;
-
-/*    public event ToastGui.OnNormalToastDelegate Toast;
-
-    public event ToastGui.OnQuestToastDelegate QuestToast;
-
-    public event ToastGui.OnErrorToastDelegate ErrorToast;*/
 
     private string talkCurrentTranslation = string.Empty;
     private volatile int talkCurrentTranslationId;
@@ -131,18 +124,12 @@ namespace Echoglossian
       });
 
       this.gameGui = pGameGui;
-      // this.gameGui.Enable();
+
       this.toastGui = pToastGui;
-      // this.toastGui.Enable();
 
       this.toastGui.Toast += this.OnToast;
       this.toastGui.ErrorToast += this.OnToast;
       this.toastGui.QuestToast += this.OnToast;
-
-      /*this.Toast += this.OnToast;
-      this.QuestToast += this.OnToast;
-      this.ErrorToast += this.OnToast;*/
-
 
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
 
@@ -154,8 +141,6 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
       this.pluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
-
-      // this.pixImage = this.scene.LoadImage(Resources.pix);
       languageInt = this.configuration.Lang;
       this.chosenLanguages = this.configuration.ChosenLanguages;
       fontSize = this.configuration.FontSize;
@@ -184,14 +169,9 @@ namespace Echoglossian
       Common.Functions.Talk.OnTalk -= this.GetText;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleText;
 
-      /*      this.Toast -= this.OnToast;
-            this.QuestToast -= this.OnToast;
-            this.ErrorToast -= this.OnToast;*/
       this.toastGui.Toast -= this.OnToast;
       this.toastGui.ErrorToast -= this.OnToast;
       this.toastGui.QuestToast -= this.OnToast;
-
-
 
       this.pluginInterface.UiBuilder.OpenConfigUi -= this.EchoglossianConfigUi;
 
@@ -200,11 +180,10 @@ namespace Echoglossian
       this.toastGui.Dispose();
       this.gameGui.Dispose();
 
-
       this.framework.Update -= this.Tick;
 
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedText;
-      // this.pixImage?.Dispose();
+
       this.pluginInterface.Dispose();
     }
 
@@ -261,6 +240,53 @@ namespace Echoglossian
           else
           {
             this.talkDisplayTranslation = false;
+            // _TextError toast window
+
+            var toast = this.gameGui.GetAddonByName("_TextError", 1);
+            if (toast != IntPtr.Zero)
+            {
+              var toastMaster = (AtkUnitBase*)toast;
+              if (toastMaster->IsVisible)
+              {
+                this.talkDisplayTranslation = true;
+                this.talkTextDimensions.X = toastMaster->RootNode->Width * toastMaster->Scale;
+                this.talkTextDimensions.Y = toastMaster->RootNode->Height * toastMaster->Scale;
+                this.talkTextPosition.X = toastMaster->RootNode->X;
+                this.talkTextPosition.Y = toastMaster->RootNode->Y;
+              }
+              else
+              {
+                this.talkDisplayTranslation = false;
+
+                // _WideText toast
+
+                var toastW = this.gameGui.GetAddonByName("_WideText", 1);
+                if (toastW != IntPtr.Zero)
+                {
+                  var toastWMaster = (AtkUnitBase*)toastW;
+                  if (toastWMaster->IsVisible)
+                  {
+                    this.talkDisplayTranslation = true;
+                    this.talkTextDimensions.X = toastWMaster->RootNode->Width * toastWMaster->Scale;
+                    this.talkTextDimensions.Y = toastWMaster->RootNode->Height * toastWMaster->Scale;
+                    this.talkTextPosition.X = toastWMaster->RootNode->X;
+                    this.talkTextPosition.Y = toastWMaster->RootNode->Y;
+                  }
+                  else
+                  {
+                    this.talkDisplayTranslation = false;
+                  }
+                }
+                else
+                {
+                  this.talkDisplayTranslation = false;
+                }
+              }
+            }
+            else
+            {
+              this.talkDisplayTranslation = false;
+            }
           }
         }
         else

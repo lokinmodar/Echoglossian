@@ -121,6 +121,10 @@
           <source>Translate in-game Toast Messages</source>
           <target state="translated">Traduzir mensagens Toast no jogo</target>
         </trans-unit>
+        <trans-unit id="LangIdentError" translate="yes" xml:space="preserve">
+          <source>The language could not be identified with an acceptable degree of certainty</source>
+          <target state="new">The language could not be identified with an acceptable degree of certainty</target>
+        </trans-unit>
       </group>
     </body>
   </file>

@@ -106,6 +106,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The language could not be identified with an acceptable degree of certainty.
+        /// </summary>
+        internal static string LangIdentError {
+            get {
+                return ResourceManager.GetString("LangIdentError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Which language to translate to..
         /// </summary>
         internal static string LanguageSelectionTooltip {

@@ -28,12 +28,40 @@ namespace Echoglossian
       {
         return;
       }
-      // PluginLog.Information("Hello!");
-      var textToTranslate = message.TextValue;
 
-      var translatedText = Translate(textToTranslate);
+      try
+      {
+        var textToTranslate = message.TextValue;
 
-      message = translatedText;
+        if (!this.configuration.UseImGui)
+        {
+          var translatedText = Translate(textToTranslate);
+
+          message = translatedText;
+        }
+        else
+        {
+          this.talkCurrentTranslationId = Environment.TickCount;
+          this.talkCurrentTranslation = Resources.WaitingForTranslation;
+          Task.Run(() =>
+          {
+            var id = this.talkCurrentTranslationId;
+            var translation = Translate(textToTranslate);
+            this.talkTranslationSemaphore.Wait();
+            if (id == this.talkCurrentTranslationId)
+            {
+              this.talkCurrentTranslation = translation;
+            }
+
+            this.talkTranslationSemaphore.Release();
+          });
+        }
+      }
+      catch (Exception e)
+      {
+        PluginLog.Log("Exception: " + e.StackTrace);
+        throw;
+      }
     }
 
     private void OnToast(ref SeString message, ref bool ishandled)
@@ -42,12 +70,41 @@ namespace Echoglossian
       {
         return;
       }
-      // PluginLog.Information("Hello!");
-      var textToTranslate = message.TextValue;
 
-      var translatedText = Translate(textToTranslate);
+      try
+      {
 
-      message = translatedText;
+        var textToTranslate = message.TextValue;
+
+        if (!this.configuration.UseImGui)
+        {
+          var translatedText = Translate(textToTranslate);
+
+          message = translatedText;
+        }
+        else
+        {
+          this.talkCurrentTranslationId = Environment.TickCount;
+          this.talkCurrentTranslation = Resources.WaitingForTranslation;
+          Task.Run(() =>
+          {
+            var id = this.talkCurrentTranslationId;
+            var translation = Translate(textToTranslate);
+            this.talkTranslationSemaphore.Wait();
+            if (id == this.talkCurrentTranslationId)
+            {
+              this.talkCurrentTranslation = translation;
+            }
+
+            this.talkTranslationSemaphore.Release();
+          });
+        }
+      }
+      catch (Exception e)
+      {
+        PluginLog.Log("Exception: " + e.StackTrace);
+        throw;
+      }
     }
 
     private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
@@ -56,12 +113,41 @@ namespace Echoglossian
       {
         return;
       }
-      // PluginLog.Information("Hello!");
-      var textToTranslate = message.TextValue;
 
-      var translatedText = Translate(textToTranslate);
+      try
+      {
 
-      message = translatedText;
+        var textToTranslate = message.TextValue;
+
+        if (!this.configuration.UseImGui)
+        {
+          var translatedText = Translate(textToTranslate);
+
+          message = translatedText;
+        }
+        else
+        {
+          this.talkCurrentTranslationId = Environment.TickCount;
+          this.talkCurrentTranslation = Resources.WaitingForTranslation;
+          Task.Run(() =>
+          {
+            var id = this.talkCurrentTranslationId;
+            var translation = Translate(textToTranslate);
+            this.talkTranslationSemaphore.Wait();
+            if (id == this.talkCurrentTranslationId)
+            {
+              this.talkCurrentTranslation = translation;
+            }
+
+            this.talkTranslationSemaphore.Release();
+          });
+        }
+      }
+      catch (Exception e)
+      {
+        PluginLog.Log("Exception: " + e.StackTrace);
+        throw;
+      }
     }
 
     private void GetText(ref SeString name, ref SeString text, ref TalkStyle style)

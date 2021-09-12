@@ -78,4 +78,16 @@
   <data name="PixText" xml:space="preserve">
     <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
   </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>QRCODE PIX</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens Toast no jogo</value>
+  </data>
 </root>

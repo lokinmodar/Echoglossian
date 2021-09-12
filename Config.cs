@@ -29,5 +29,6 @@ namespace Echoglossian
     public int Version { get; set; } = 0;
 
     public bool TranslateToast = true;
+    public bool TranslateNPCNames = true;
   }
 }
