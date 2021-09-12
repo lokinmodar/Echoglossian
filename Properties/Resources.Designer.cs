@@ -61,6 +61,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Close.
+        /// </summary>
+        internal static string CloseButtonLabel {
+            get {
+                return ResourceManager.GetString("CloseButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Configuration.
         /// </summary>
         internal static string ConfigTab1Name {
@@ -215,11 +224,29 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PIX qrcode.
+        /// </summary>
+        internal static string PixQrWindowLabel {
+            get {
+                return ResourceManager.GetString("PixQrWindowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
         /// </summary>
         internal static string PixText {
             get {
                 return ResourceManager.GetString("PixText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+        /// </summary>
+        internal static string QRCodeInstructionsText {
+            get {
+                return ResourceManager.GetString("QRCodeInstructionsText", resourceCulture);
             }
         }
         
@@ -256,6 +283,15 @@ namespace Echoglossian.Properties {
         internal static string TranslateTalkToggleLabel {
             get {
                 return ResourceManager.GetString("TranslateTalkToggleLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate in-game Toast Messages.
+        /// </summary>
+        internal static string TranslateToastToggleText {
+            get {
+                return ResourceManager.GetString("TranslateToastToggleText", resourceCulture);
             }
         }
         

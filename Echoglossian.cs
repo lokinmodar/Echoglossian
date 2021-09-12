@@ -12,12 +12,16 @@ using System.Threading;
 using Dalamud.Game;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
+using Dalamud.Game.Gui.Toast;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Echoglossian.Properties;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
+using ImGuiScene;
 using XivCommon;
 
 namespace Echoglossian
@@ -83,7 +87,16 @@ namespace Echoglossian
     private readonly GameGui gameGui;
 
     private readonly DalamudPluginInterface pluginInterface;
-    // private UiBuilder uiBuilder;
+    private TextureWrap pixImage;
+
+
+    private ToastGui toastGui;
+
+/*    public event ToastGui.OnNormalToastDelegate Toast;
+
+    public event ToastGui.OnQuestToastDelegate QuestToast;
+
+    public event ToastGui.OnErrorToastDelegate ErrorToast;*/
 
     private string talkCurrentTranslation = string.Empty;
     private volatile int talkCurrentTranslationId;
@@ -102,15 +115,36 @@ namespace Echoglossian
     /// <param name="pCommandManager">Command Manager.</param>
     /// <param name="pGameGui">Game Gui object.</param>
     public Echoglossian([RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface, Framework pframework,
-      [RequiredVersion("1.0")] CommandManager pCommandManager, GameGui pGameGui)
+      [RequiredVersion("1.0")] CommandManager pCommandManager, GameGui pGameGui, ToastGui pToastGui)
     {
       this.framework = pframework;
+
       this.pluginInterface = dalamudPluginInterface;
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
 
-      this.gameGui = pGameGui;
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
+
       this.commandManager = pCommandManager;
+      this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
+      {
+        HelpMessage = Resources.HelpMessage,
+      });
+
+      this.gameGui = pGameGui;
+      // this.gameGui.Enable();
+      this.toastGui = pToastGui;
+      // this.toastGui.Enable();
+
+      this.toastGui.Toast += this.OnToast;
+      this.toastGui.ErrorToast += this.OnToast;
+      this.toastGui.QuestToast += this.OnToast;
+
+      /*this.Toast += this.OnToast;
+      this.QuestToast += this.OnToast;
+      this.ErrorToast += this.OnToast;*/
+
+
+      this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
 
       this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
 
@@ -120,10 +154,7 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
       this.pluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
-      this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
-      {
-        HelpMessage = Resources.HelpMessage,
-      });
+
       // this.pixImage = this.scene.LoadImage(Resources.pix);
       languageInt = this.configuration.Lang;
       this.chosenLanguages = this.configuration.ChosenLanguages;
@@ -153,11 +184,25 @@ namespace Echoglossian
       Common.Functions.Talk.OnTalk -= this.GetText;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleText;
 
+      /*      this.Toast -= this.OnToast;
+            this.QuestToast -= this.OnToast;
+            this.ErrorToast -= this.OnToast;*/
+      this.toastGui.Toast -= this.OnToast;
+      this.toastGui.ErrorToast -= this.OnToast;
+      this.toastGui.QuestToast -= this.OnToast;
+
+
+
       this.pluginInterface.UiBuilder.OpenConfigUi -= this.EchoglossianConfigUi;
 
       this.commandManager.RemoveHandler(SlashCommand);
 
+      this.toastGui.Dispose();
+      this.gameGui.Dispose();
+
+
       this.framework.Update -= this.Tick;
+
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedText;
       // this.pixImage?.Dispose();
       this.pluginInterface.Dispose();

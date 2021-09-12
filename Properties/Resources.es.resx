@@ -75,4 +75,7 @@
   <data name="WhatToTranslateText" xml:space="preserve">
     <value>Seleccione qué tipo de texto desea traducir</value>
   </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Escanea el código QR para enviarme un PIX - solo válido en Brasil</value>
+  </data>
 </root>

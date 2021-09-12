@@ -26,7 +26,6 @@ namespace Echoglossian
     /*private TextureWrap? pixImage;
     private SimpleImGuiScene? scene;*/
 
-
     public string[] FontSizes = Array.ConvertAll(Enumerable.Range(4, 72).ToArray(), x => x.ToString());
 
     private void BuildFont(string fontFileName)
@@ -67,6 +66,7 @@ namespace Echoglossian
             ImGui.Text(Resources.WhatToTranslateText);
             ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk);
             ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk);
+            ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast);
             ImGui.Spacing();
             ImGui.Separator();
             if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languages, this.languages.Length))
@@ -153,17 +153,17 @@ namespace Echoglossian
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Num.Vector4(4, 7.0f, 0.8f, 0.8f));
         if (ImGui.Button(Resources.SendPixButton))
         {
-          ImGui.OpenPopup("test");
+          ImGui.OpenPopup(Resources.PixQrWindowLabel);
         }
 
         // Always center this window when appearing
         var center = ImGui.GetMainViewport().GetCenter();
-        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Num.Vector2(0.5f, 0.5f));
-        if (ImGui.BeginPopupModal("test"))
+        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Num.Vector2(0.5f, 0.5f)); 
+        if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
         {
-          ImGui.Text("Scan the QR code to send me a PIX - only valid in Brazil");
-          // ImGui.Image(this.pixImage!.ImGuiHandle, new Num.Vector2(512, 512));
-          if (ImGui.Button("Ok!"))
+          ImGui.Text(Resources.QRCodeInstructionsText);
+          ImGui.Image(this.pixImage.ImGuiHandle, new Num.Vector2(512, 512));
+          if (ImGui.Button(Resources.CloseButtonLabel))
           {
             ImGui.CloseCurrentPopup();
           }

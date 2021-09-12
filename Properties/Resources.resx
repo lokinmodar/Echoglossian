@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Close</value>
+  </data>
   <data name="ConfigTab1Name" xml:space="preserve">
     <value>Configuration</value>
   </data>
@@ -172,7 +175,13 @@
   <data name="pix" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
   <data name="PixText" xml:space="preserve">
+    <value>Scan the QR code to send me a PIX - only valid in Brazil</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
     <value>Scan the QR code to send me a PIX - only valid in Brazil</value>
   </data>
   <data name="SaveCloseButtonLabel" xml:space="preserve">
@@ -186,6 +195,9 @@
   </data>
   <data name="TranslateTalkToggleLabel" xml:space="preserve">
     <value>Translate talk</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Translate in-game Toast Messages</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Awaiting translation...</value>

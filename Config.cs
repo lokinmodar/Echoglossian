@@ -27,5 +27,7 @@ namespace Echoglossian
     public List<int> ChosenLanguages { get; set; } = new();
 
     public int Version { get; set; } = 0;
+
+    public bool TranslateToast = true;
   }
 }

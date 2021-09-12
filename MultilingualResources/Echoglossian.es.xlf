@@ -103,7 +103,23 @@
         </trans-unit>
         <trans-unit id="PixText" translate="yes" xml:space="preserve">
           <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
-          <target state="new">Scan the QR code to send me a PIX - only valid in Brazil</target>
+          <target state="translated" state-qualifier="mt-suggestion">Escanea el código QR para enviarme un PIX - solo válido en Brasil</target>
+        </trans-unit>
+        <trans-unit id="CloseButtonLabel" translate="yes" xml:space="preserve">
+          <source>Close</source>
+          <target state="final" state-qualifier="tm-suggestion">Cerrar</target>
+        </trans-unit>
+        <trans-unit id="PixQrWindowLabel" translate="yes" xml:space="preserve">
+          <source>PIX qrcode</source>
+          <target state="translated" state-qualifier="mt-suggestion">PIX qrcode</target>
+        </trans-unit>
+        <trans-unit id="QRCodeInstructionsText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
+          <target state="translated" state-qualifier="mt-suggestion">Escanea el código QR para enviarme un PIX - solo válido en Brasil</target>
+        </trans-unit>
+        <trans-unit id="TranslateToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Toast Messages</source>
+          <target state="translated" state-qualifier="mt-suggestion">Traducir mensajes del sistema en el juego</target>
         </trans-unit>
       </group>
     </body>

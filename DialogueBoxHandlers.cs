@@ -7,6 +7,8 @@ using System;
 using System.Resources;
 using System.Threading.Tasks;
 
+using Dalamud.Game.Gui;
+using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
 using Echoglossian.Properties;
@@ -19,6 +21,49 @@ namespace Echoglossian
   /// </summary>
   public partial class Echoglossian
   {
+
+    private void OnToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
+    {
+      if (!this.configuration.TranslateToast)
+      {
+        return;
+      }
+      // PluginLog.Information("Hello!");
+      var textToTranslate = message.TextValue;
+
+      var translatedText = Translate(textToTranslate);
+
+      message = translatedText;
+    }
+
+    private void OnToast(ref SeString message, ref bool ishandled)
+    {
+      if (!this.configuration.TranslateToast)
+      {
+        return;
+      }
+      // PluginLog.Information("Hello!");
+      var textToTranslate = message.TextValue;
+
+      var translatedText = Translate(textToTranslate);
+
+      message = translatedText;
+    }
+
+    private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
+    {
+      if (!this.configuration.TranslateToast)
+      {
+        return;
+      }
+      // PluginLog.Information("Hello!");
+      var textToTranslate = message.TextValue;
+
+      var translatedText = Translate(textToTranslate);
+
+      message = translatedText;
+    }
+
     private void GetText(ref SeString name, ref SeString text, ref TalkStyle style)
     {
       if (!this.configuration.TranslateTalk)
@@ -30,15 +75,14 @@ namespace Echoglossian
       {
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
         var textToTranslate = text.TextValue;
-        var detectedLanguage = Lang(textToTranslate);
-        PluginLog.LogDebug($"Detected Language: {detectedLanguage}");
+
         if (!this.configuration.UseImGui)
         {
           var translatedText = Translate(textToTranslate);
-          PluginLog.LogWarning(translatedText);
+          // PluginLog.LogWarning(translatedText);
 
           text = translatedText;
-          PluginLog.Log(name.TextValue + ": " + text.TextValue);
+          // PluginLog.Log(name.TextValue + ": " + text.TextValue);
         }
         else
         {
