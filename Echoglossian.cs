@@ -234,7 +234,6 @@ namespace Echoglossian
           }
           else
           {
-            this.talkDisplayTranslation = false;
             this.addonDisplayTranslation = true;
             this.translationTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale;
             this.translationTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;

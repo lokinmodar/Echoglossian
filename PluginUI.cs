@@ -47,7 +47,7 @@ namespace Echoglossian
 
     public string[] FontSizes = Array.ConvertAll(Enumerable.Range(4, 72).ToArray(), x => x.ToString());
 
-    private void BuildFont(string fontFileName, int fontSize)
+    private void LoadFont(string fontFileName, int imguiFontSize)
     {
       var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}\Font\{fontFileName}";
       this.FontLoaded = false;
@@ -55,7 +55,7 @@ namespace Echoglossian
       {
         try
         {
-          this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, fontSize);
+          this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, imguiFontSize);
           this.FontLoaded = true;
         }
         catch (Exception ex)
@@ -84,7 +84,7 @@ namespace Echoglossian
           ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.talkTextDimensions.Y));
         ImGui.Begin(
-          "Battle talk translation",
+          "Talk translation",
           ImGuiWindowFlags.NoTitleBar
           | ImGuiWindowFlags.NoNav
           | ImGuiWindowFlags.AlwaysAutoResize
