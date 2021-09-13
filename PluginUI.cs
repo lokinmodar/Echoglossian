@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
+using Dalamud.Interface;
 using Dalamud.Logging;
 using Echoglossian.Properties;
 using ImGuiNET;
@@ -23,12 +24,30 @@ namespace Echoglossian
     public bool FontLoaded;
     public bool FontLoadFailed;
     public ImFontPtr UiFont;
-    /*private TextureWrap? pixImage;
-    private SimpleImGuiScene? scene;*/
+
+
+
+    private string currentTalkTranslation = string.Empty;
+    private volatile int currentTalkTranslationId;
+
+    private bool talkDisplayTranslation;
+
+    private Num.Vector2 talkTextDimensions = Num.Vector2.Zero;
+    private Num.Vector2 talkTextImguiSize = Num.Vector2.Zero;
+    private Num.Vector2 talkTextPosition = Num.Vector2.Zero;
+
+    private string currentAddonTranslation = string.Empty;
+    private volatile int currentAddonTranslationId;
+
+    private bool addonDisplayTranslation;
+
+    private Num.Vector2 translationTextDimensions = Num.Vector2.Zero;
+    private Num.Vector2 translationTextImguiSize = Num.Vector2.Zero;
+    private Num.Vector2 translationTextPosition = Num.Vector2.Zero;
 
     public string[] FontSizes = Array.ConvertAll(Enumerable.Range(4, 72).ToArray(), x => x.ToString());
 
-    private void BuildFont(string fontFileName)
+    private void BuildFont(string fontFileName, int fontSize)
     {
       var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}\Font\{fontFileName}";
       this.FontLoaded = false;
@@ -36,7 +55,7 @@ namespace Echoglossian
       {
         try
         {
-          this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize);
+          this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, fontSize);
           this.FontLoaded = true;
         }
         catch (Exception ex)
@@ -50,6 +69,73 @@ namespace Echoglossian
       {
         PluginLog.Log($"Font doesn't exist. {fontFile}");
         this.FontLoadFailed = true;
+      }
+    }
+
+    private void DrawTranslatedDialogueWindow()
+    {
+      if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
+      {
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Num.Vector2(
+          this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
+          this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+        var size = Math.Min(
+          this.talkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
+          ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.talkTextDimensions.Y));
+        ImGui.Begin(
+          "Battle talk translation",
+          ImGuiWindowFlags.NoTitleBar
+          | ImGuiWindowFlags.NoNav
+          | ImGuiWindowFlags.AlwaysAutoResize
+          | ImGuiWindowFlags.NoFocusOnAppearing
+          | ImGuiWindowFlags.NoMouseInputs);
+        if (this.talkTranslationSemaphore.Wait(0))
+        {
+          ImGui.TextWrapped(this.currentTalkTranslation);
+          this.talkTranslationSemaphore.Release();
+        }
+        else
+        {
+          ImGui.Text(Resources.WaitingForTranslation);
+        }
+
+        this.talkTextImguiSize = ImGui.GetWindowSize();
+        ImGui.End();
+      }
+    }
+
+    private void DrawTranslatedToastWindow()
+    {
+      if (this.configuration.UseImGui && this.configuration.TranslateToast && this.addonDisplayTranslation)
+      {
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Num.Vector2(
+          this.translationTextPosition.X + (this.translationTextDimensions.X / 2) - (this.translationTextImguiSize.X / 2),
+          this.translationTextPosition.Y - this.translationTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+        var size = Math.Min(
+          this.translationTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
+          ImGui.CalcTextSize(this.currentAddonTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.translationTextDimensions.Y));
+        ImGui.Begin(
+          "Toast Translation",
+          ImGuiWindowFlags.NoTitleBar
+          | ImGuiWindowFlags.NoNav
+          | ImGuiWindowFlags.AlwaysAutoResize
+          | ImGuiWindowFlags.NoFocusOnAppearing
+          | ImGuiWindowFlags.NoMouseInputs);
+
+        if (this.TranslationSemaphore.Wait(0))
+        {
+          ImGui.TextWrapped(this.currentAddonTranslation);
+          this.TranslationSemaphore.Release();
+        }
+        else
+        {
+          ImGui.Text(Resources.WaitingForTranslation);
+        }
+
+        this.translationTextImguiSize = ImGui.GetWindowSize();
+        ImGui.End();
       }
     }
 
@@ -158,7 +244,7 @@ namespace Echoglossian
 
         // Always center this window when appearing
         var center = ImGui.GetMainViewport().GetCenter();
-        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Num.Vector2(0.5f, 0.5f)); 
+        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Num.Vector2(0.5f, 0.5f));
         if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
         {
           ImGui.Text(Resources.QRCodeInstructionsText);

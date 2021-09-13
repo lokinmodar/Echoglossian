@@ -41,19 +41,19 @@ namespace Echoglossian
         }
         else
         {
-          this.talkCurrentTranslationId = Environment.TickCount;
-          this.talkCurrentTranslation = Resources.WaitingForTranslation;
+          this.currentAddonTranslationId = Environment.TickCount;
+          this.currentAddonTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var id = this.talkCurrentTranslationId;
+            var id = this.currentAddonTranslationId;
             var translation = Translate(textToTranslate);
-            this.talkTranslationSemaphore.Wait();
-            if (id == this.talkCurrentTranslationId)
+            this.TranslationSemaphore.Wait();
+            if (id == this.currentAddonTranslationId)
             {
-              this.talkCurrentTranslation = translation;
+              this.currentAddonTranslation = translation;
             }
 
-            this.talkTranslationSemaphore.Release();
+            this.TranslationSemaphore.Release();
           });
         }
       }
@@ -73,7 +73,6 @@ namespace Echoglossian
 
       try
       {
-
         var textToTranslate = message.TextValue;
 
         if (!this.configuration.UseImGui)
@@ -84,19 +83,19 @@ namespace Echoglossian
         }
         else
         {
-          this.talkCurrentTranslationId = Environment.TickCount;
-          this.talkCurrentTranslation = Resources.WaitingForTranslation;
+          this.currentAddonTranslationId = Environment.TickCount;
+          this.currentAddonTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var id = this.talkCurrentTranslationId;
+            var id = this.currentAddonTranslationId;
             var translation = Translate(textToTranslate);
-            this.talkTranslationSemaphore.Wait();
-            if (id == this.talkCurrentTranslationId)
+            this.TranslationSemaphore.Wait();
+            if (id == this.currentAddonTranslationId)
             {
-              this.talkCurrentTranslation = translation;
+              this.currentAddonTranslation = translation;
             }
 
-            this.talkTranslationSemaphore.Release();
+            this.TranslationSemaphore.Release();
           });
         }
       }
@@ -116,7 +115,6 @@ namespace Echoglossian
 
       try
       {
-
         var textToTranslate = message.TextValue;
 
         if (!this.configuration.UseImGui)
@@ -127,19 +125,19 @@ namespace Echoglossian
         }
         else
         {
-          this.talkCurrentTranslationId = Environment.TickCount;
-          this.talkCurrentTranslation = Resources.WaitingForTranslation;
+          this.currentAddonTranslationId = Environment.TickCount;
+          this.currentAddonTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var id = this.talkCurrentTranslationId;
+            var id = this.currentAddonTranslationId;
             var translation = Translate(textToTranslate);
-            this.talkTranslationSemaphore.Wait();
-            if (id == this.talkCurrentTranslationId)
+            this.TranslationSemaphore.Wait();
+            if (id == this.currentAddonTranslationId)
             {
-              this.talkCurrentTranslation = translation;
+              this.currentAddonTranslation = translation;
             }
 
-            this.talkTranslationSemaphore.Release();
+            this.TranslationSemaphore.Release();
           });
         }
       }
@@ -159,7 +157,7 @@ namespace Echoglossian
 
       try
       {
-        PluginLog.Log(name.TextValue + ": " + text.TextValue);
+        // PluginLog.Log(name.TextValue + ": " + text.TextValue);
         var textToTranslate = text.TextValue;
 
         if (!this.configuration.UseImGui)
@@ -172,16 +170,16 @@ namespace Echoglossian
         }
         else
         {
-          this.talkCurrentTranslationId = Environment.TickCount;
-          this.talkCurrentTranslation = Resources.WaitingForTranslation;
+          this.currentTalkTranslationId = Environment.TickCount;
+          this.currentTalkTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var id = this.talkCurrentTranslationId;
+            var id = this.currentTalkTranslationId;
             var translation = Translate(textToTranslate);
             this.talkTranslationSemaphore.Wait();
-            if (id == this.talkCurrentTranslationId)
+            if (id == this.currentTalkTranslationId)
             {
-              this.talkCurrentTranslation = translation;
+              this.currentTalkTranslation = translation;
             }
 
             this.talkTranslationSemaphore.Release();
@@ -205,16 +203,16 @@ namespace Echoglossian
 
       try
       {
-        PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+        // PluginLog.Log(sender.TextValue + ": " + message.TextValue);
         var textToTranslate = message.TextValue;
-        var detectedLanguage = Lang(textToTranslate);
-        PluginLog.LogDebug($"Detected Language: {detectedLanguage}");
+        // var detectedLanguage = Lang(textToTranslate);
+        // PluginLog.LogDebug($"Detected Language: {detectedLanguage}");
         var translatedText = Translate(textToTranslate);
-        PluginLog.LogWarning(translatedText);
+        // PluginLog.LogWarning(translatedText);
 
         message = translatedText;
 
-        PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+        // PluginLog.Log(sender.TextValue + ": " + message.TextValue);
       }
       catch (Exception e)
       {

@@ -90,4 +90,7 @@
   <data name="TranslateToastToggleText" xml:space="preserve">
     <value>Traduzir mensagens Toast no jogo</value>
   </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>A linguagem não pôde ser identificada com um grau aceitável de certeza</value>
+  </data>
 </root>

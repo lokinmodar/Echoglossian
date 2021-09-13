@@ -14,6 +14,7 @@ using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Hooking;
 using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -78,7 +79,6 @@ namespace Echoglossian
       "Chinese Classical", "Chinese yue",
     };
 
-    private readonly List<int> chosenLanguages;
     private readonly CommandManager commandManager;
     private bool config;
     private readonly Config configuration;
@@ -91,13 +91,7 @@ namespace Echoglossian
 
     private ToastGui toastGui;
 
-    private string talkCurrentTranslation = string.Empty;
-    private volatile int talkCurrentTranslationId;
-    private bool talkDisplayTranslation;
-    private Vector2 talkTextDimensions = Vector2.Zero;
-    private Vector2 talkTextImguiSize = Vector2.Zero;
-    private Vector2 talkTextPosition = Vector2.Zero;
-
+    private readonly SemaphoreSlim TranslationSemaphore;
     private readonly SemaphoreSlim talkTranslationSemaphore;
 
     /// <summary>
@@ -107,6 +101,7 @@ namespace Echoglossian
     /// <param name="pframework">Framework.</param>
     /// <param name="pCommandManager">Command Manager.</param>
     /// <param name="pGameGui">Game Gui object.</param>
+    /// <param name="pToastGui">Toast Gui Object</param>
     public Echoglossian([RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface, Framework pframework,
       [RequiredVersion("1.0")] CommandManager pCommandManager, GameGui pGameGui, ToastGui pToastGui)
     {
@@ -127,27 +122,31 @@ namespace Echoglossian
 
       this.toastGui = pToastGui;
 
-      this.toastGui.Toast += this.OnToast;
-      this.toastGui.ErrorToast += this.OnToast;
-      this.toastGui.QuestToast += this.OnToast;
-
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
 
       this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
-
-      Common.Functions.Talk.OnTalk += this.GetText;
-      Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleText;
 
       this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
       this.pluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
       languageInt = this.configuration.Lang;
-      this.chosenLanguages = this.configuration.ChosenLanguages;
+
       fontSize = this.configuration.FontSize;
 
       this.framework.Update += this.Tick;
-      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedText;
+
+      this.TranslationSemaphore = new SemaphoreSlim(1, 1);
       this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
+
+      this.toastGui.Toast += this.OnToast;
+      this.toastGui.ErrorToast += this.OnToast;
+      this.toastGui.QuestToast += this.OnToast;
+
+      Common.Functions.Talk.OnTalk += this.GetText;
+      Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleText;
+      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
+      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;
+
     }
 
     /// <summary>
@@ -168,134 +167,90 @@ namespace Echoglossian
 
       Common.Functions.Talk.OnTalk -= this.GetText;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleText;
+      Common?.Dispose();
 
       this.toastGui.Toast -= this.OnToast;
       this.toastGui.ErrorToast -= this.OnToast;
       this.toastGui.QuestToast -= this.OnToast;
 
-      this.pluginInterface.UiBuilder.OpenConfigUi -= this.EchoglossianConfigUi;
+      this.pluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
       this.commandManager.RemoveHandler(SlashCommand);
 
-      this.toastGui.Dispose();
-      this.gameGui.Dispose();
+      this.toastGui?.Dispose();
+      this.gameGui?.Dispose();
+
+      this.TranslationSemaphore?.Dispose();
+      this.talkTranslationSemaphore?.Dispose();
+
+      this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
+      this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
+      this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;
+
+      this.pixImage?.Dispose();
 
       this.framework.Update -= this.Tick;
 
-      this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedText;
 
-      this.pluginInterface.Dispose();
+      this.pluginInterface?.Dispose();
     }
 
-    private void DrawTranslatedText()
-    {
-      if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
-      {
-        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-          this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
-          this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
-        var size = Math.Min(
-          this.talkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
-          ImGui.CalcTextSize(this.talkCurrentTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y));
-        ImGui.Begin(
-          "Battle talk translation",
-          ImGuiWindowFlags.NoTitleBar
-          | ImGuiWindowFlags.NoNav
-          | ImGuiWindowFlags.AlwaysAutoResize
-          | ImGuiWindowFlags.NoFocusOnAppearing
-          | ImGuiWindowFlags.NoMouseInputs);
-
-        if (this.talkTranslationSemaphore.Wait(0))
-        {
-          ImGui.TextWrapped(this.talkCurrentTranslation);
-          this.talkTranslationSemaphore.Release();
-        }
-        else
-        {
-          ImGui.Text("Awaiting translation...");
-        }
-
-        this.talkTextImguiSize = ImGui.GetWindowSize();
-        ImGui.End();
-      }
-    }
-
-    private unsafe void Tick(Framework tFramework)
+    private void Tick(Framework tFramework)
     {
       if (this.configuration.UseImGui)
       {
-        var talk = this.gameGui.GetAddonByName("Talk", 1);
-        if (talk != IntPtr.Zero)
+        this.AddonHandlers("Talk", 1);
+        this.AddonHandlers("_TextError", 1);
+        this.AddonHandlers("_TextError", 2);
+        this.AddonHandlers("_WideText", 1);
+        this.AddonHandlers("_WideText", 2);
+        this.AddonHandlers("_ScreenText", 1);
+        this.AddonHandlers("_ScreenText", 2);
+        this.AddonHandlers("_AreaText", 1);
+        this.AddonHandlers("_AreaText", 2);
+      }
+      else
+      {
+        this.addonDisplayTranslation = false;
+        this.talkDisplayTranslation = false;
+      }
+    }
+
+    private unsafe void AddonHandlers(string addonName, int index)
+    {
+      var addonByName = this.gameGui.GetAddonByName(addonName, index);
+      if (addonByName != IntPtr.Zero)
+      {
+        var addonByNameMaster = (AtkUnitBase*)addonByName;
+        if (addonByNameMaster->IsVisible)
         {
-          var talkMaster = (AtkUnitBase*)talk;
-          if (talkMaster->IsVisible)
+          if (addonName == "Talk")
           {
             this.talkDisplayTranslation = true;
-            this.talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
-            this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
-            this.talkTextPosition.X = talkMaster->RootNode->X;
-            this.talkTextPosition.Y = talkMaster->RootNode->Y;
+            this.talkTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale;
+            this.talkTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
+            this.talkTextPosition.X = addonByNameMaster->RootNode->X;
+            this.talkTextPosition.Y = addonByNameMaster->RootNode->Y;
           }
           else
           {
             this.talkDisplayTranslation = false;
-            // _TextError toast window
-
-            var toast = this.gameGui.GetAddonByName("_TextError", 1);
-            if (toast != IntPtr.Zero)
-            {
-              var toastMaster = (AtkUnitBase*)toast;
-              if (toastMaster->IsVisible)
-              {
-                this.talkDisplayTranslation = true;
-                this.talkTextDimensions.X = toastMaster->RootNode->Width * toastMaster->Scale;
-                this.talkTextDimensions.Y = toastMaster->RootNode->Height * toastMaster->Scale;
-                this.talkTextPosition.X = toastMaster->RootNode->X;
-                this.talkTextPosition.Y = toastMaster->RootNode->Y;
-              }
-              else
-              {
-                this.talkDisplayTranslation = false;
-
-                // _WideText toast
-
-                var toastW = this.gameGui.GetAddonByName("_WideText", 1);
-                if (toastW != IntPtr.Zero)
-                {
-                  var toastWMaster = (AtkUnitBase*)toastW;
-                  if (toastWMaster->IsVisible)
-                  {
-                    this.talkDisplayTranslation = true;
-                    this.talkTextDimensions.X = toastWMaster->RootNode->Width * toastWMaster->Scale;
-                    this.talkTextDimensions.Y = toastWMaster->RootNode->Height * toastWMaster->Scale;
-                    this.talkTextPosition.X = toastWMaster->RootNode->X;
-                    this.talkTextPosition.Y = toastWMaster->RootNode->Y;
-                  }
-                  else
-                  {
-                    this.talkDisplayTranslation = false;
-                  }
-                }
-                else
-                {
-                  this.talkDisplayTranslation = false;
-                }
-              }
-            }
-            else
-            {
-              this.talkDisplayTranslation = false;
-            }
+            this.addonDisplayTranslation = true;
+            this.translationTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale;
+            this.translationTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
+            this.translationTextPosition.X = addonByNameMaster->RootNode->X;
+            this.translationTextPosition.Y = addonByNameMaster->RootNode->Y;
           }
         }
         else
         {
           this.talkDisplayTranslation = false;
+          this.addonDisplayTranslation = false;
         }
       }
       else
       {
+        this.addonDisplayTranslation = false;
         this.talkDisplayTranslation = false;
       }
     }

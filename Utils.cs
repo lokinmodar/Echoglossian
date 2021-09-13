@@ -11,8 +11,6 @@ namespace Echoglossian
     {
       this.configuration.Lang = languageInt;
 
-      this.configuration.ChosenLanguages = this.chosenLanguages;
-
       this.pluginInterface.SavePluginConfig(this.configuration);
     }
   }

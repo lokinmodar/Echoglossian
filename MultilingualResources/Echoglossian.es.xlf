@@ -123,7 +123,7 @@
         </trans-unit>
         <trans-unit id="LangIdentError" translate="yes" xml:space="preserve">
           <source>The language could not be identified with an acceptable degree of certainty</source>
-          <target state="new">The language could not be identified with an acceptable degree of certainty</target>
+          <target state="translated" state-qualifier="mt-suggestion">El idioma no pudo ser identificado con un grado aceptable de certeza</target>
         </trans-unit>
       </group>
     </body>
