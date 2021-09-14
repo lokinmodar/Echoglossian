@@ -7,8 +7,8 @@
     <body>
       <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
         <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
-          <source>Configuration</source>
-          <target state="translated" state-qualifier="tm-suggestion">Configuración</target>
+          <source>Main Configuration</source>
+          <target state="translated">Configuraciones principales</target>
         </trans-unit>
         <trans-unit id="ConfigWindowTitle" translate="yes" xml:space="preserve">
           <source>Echoglossian Configuration</source>
@@ -124,6 +124,22 @@
         <trans-unit id="LangIdentError" translate="yes" xml:space="preserve">
           <source>The language could not be identified with an acceptable degree of certainty</source>
           <target state="translated" state-qualifier="mt-suggestion">El idioma no pudo ser identificado con un grado aceptable de certeza</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab2Name" translate="yes" xml:space="preserve">
+          <source>Toast configurations</source>
+          <target state="translated">Configuraciones de mensajes de sistema</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
+          <source>Adjust toast translation overlay width</source>
+          <target state="translated">Ajustar el ancho de la superposición de traducción de mensajes sistema</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayWidthScrollLabel" translate="yes" xml:space="preserve">
+          <source>Width multiplier</source>
+          <target state="translated" state-qualifier="mt-suggestion">Multiplicador de ancho</target>
+        </trans-unit>
+        <trans-unit id="WhichToastsToTranslateText" translate="yes" xml:space="preserve">
+          <source>Select which in-game Toast messages to translate</source>
+          <target state="translated">Selecciona los mensajes de sistema que quieres traducir</target>
         </trans-unit>
       </group>
     </body>

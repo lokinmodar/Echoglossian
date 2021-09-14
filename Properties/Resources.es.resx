@@ -13,7 +13,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ConfigTab1Name" xml:space="preserve">
-    <value>Configuración</value>
+    <value>Configuraciones principales</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
     <value>Configuración de Echoglossian</value>
@@ -92,5 +92,17 @@
   </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>El idioma no pudo ser identificado con un grado aceptable de certeza</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Configuraciones de mensajes de sistema</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajustar el ancho de la superposición de traducción de mensajes sistema</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador de ancho</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Selecciona los mensajes de sistema que quieres traducir</value>
   </data>
 </root>

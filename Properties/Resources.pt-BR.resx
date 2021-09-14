@@ -93,4 +93,16 @@
   <data name="LangIdentError" xml:space="preserve">
     <value>A linguagem não pôde ser identificada com um grau aceitável de certeza</value>
   </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Configurações de Toasts</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuste a largura de sobreposição de tradução de Toasts</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador de largura</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Selecione quais mensagens Toast devem ser traduzidas</value>
+  </data>
 </root>
