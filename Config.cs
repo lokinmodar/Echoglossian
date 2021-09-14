@@ -14,6 +14,7 @@ namespace Echoglossian
   {
     public Vector2 ImGuiWindowPosCorrection = Vector2.Zero;
     public float ImGuiWindowWidthMult = 0.85f;
+    public float ImGuiToastWindowWidthMult = 1.20f;
     public bool TranslateBattleTalk = true;
     public bool TranslateTalk = true;
 

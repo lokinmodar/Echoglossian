@@ -20,7 +20,7 @@ namespace Echoglossian
   public partial class Echoglossian
   {
     private const string GTranslateUrl =
-      "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=";
+      "https://clients5.google.com/translate_a/t?client=dict-chrome-ex";
 
     private const string UaString =
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36";
@@ -42,11 +42,15 @@ namespace Echoglossian
       }
     }
 
-    public static string Lang(string message)
+    public static string LangIdentify(string message)
     {
-      // PluginLog.LogInformation($"message in Lang Method {message}");
+#if DEBUG
+      PluginLog.LogInformation($"Message in Lang Method: {message}");
+#endif
       var mostCertainLanguage = Identifier.Identify(message).FirstOrDefault();
-      // PluginLog.LogInformation($"most Certain language: {mostCertainLanguage}");
+#if DEBUG
+      PluginLog.LogInformation($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
+#endif
       return mostCertainLanguage != null
         ? mostCertainLanguage.Item1.Iso639_2T
         : Resources.LangIdentError;
@@ -57,12 +61,14 @@ namespace Echoglossian
       try
       {
         var lang = Codes[languageInt];
-        // PluginLog.LogInformation($"LANG: {lang}");
-
-        var url = $"{GTranslateUrl}{lang}&q={text}";
-
-        // PluginLog.LogInformation($"URL: {url}");
-
+        var detectedLanguage = LangIdentify(text);
+#if DEBUG
+        PluginLog.LogInformation($"LANG: {lang}");
+#endif
+        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={text}";
+#if DEBUG
+        PluginLog.LogInformation($"URL: {url}");
+#endif
         var request = (HttpWebRequest)WebRequest.Create(url);
         request.UserAgent = UaString;
         var requestResult = request.GetResponse();
@@ -79,11 +85,10 @@ namespace Echoglossian
 
         var src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
-/*        PluginLog.LogInformation($"FinalDialogueText: {finalDialogueText}");
-        PluginLog.LogInformation($"SRC: {src}");
-        PluginLog.LogInformation($"SRC Cultureinfo: {src?.ToString(CultureInfo.InvariantCulture)}");
-        PluginLog.LogInformation($"LANG: {lang}");*/
-
+#if DEBUG
+        PluginLog.LogInformation($"FinalTranslatedText: {finalDialogueText}");
+        PluginLog.LogInformation($"LANG: {lang}");
+#endif
         if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || finalDialogueText == text))
         {
           return text;

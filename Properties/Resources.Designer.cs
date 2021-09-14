@@ -70,11 +70,20 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Configuration.
+        ///   Looks up a localized string similar to Main Configuration.
         /// </summary>
         internal static string ConfigTab1Name {
             get {
                 return ResourceManager.GetString("ConfigTab1Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toast configurations.
+        /// </summary>
+        internal static string ConfigTab2Name {
+            get {
+                return ResourceManager.GetString("ConfigTab2Name", resourceCulture);
             }
         }
         
@@ -278,6 +287,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adjust toast translation overlay width.
+        /// </summary>
+        internal static string ToastOverlayWidthMultiplierOrientations {
+            get {
+                return ResourceManager.GetString("ToastOverlayWidthMultiplierOrientations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Width multiplier.
+        /// </summary>
+        internal static string ToastOverlayWidthScrollLabel {
+            get {
+                return ResourceManager.GetString("ToastOverlayWidthScrollLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Translate battle talk.
         /// </summary>
         internal static string TransLateBattletalkToggle {
@@ -319,6 +346,15 @@ namespace Echoglossian.Properties {
         internal static string WhatToTranslateText {
             get {
                 return ResourceManager.GetString("WhatToTranslateText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select which in-game Toast messages to translate.
+        /// </summary>
+        internal static string WhichToastsToTranslateText {
+            get {
+                return ResourceManager.GetString("WhichToastsToTranslateText", resourceCulture);
             }
         }
     }

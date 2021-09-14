@@ -91,7 +91,7 @@ namespace Echoglossian
 
     private ToastGui toastGui;
 
-    private readonly SemaphoreSlim TranslationSemaphore;
+    private readonly SemaphoreSlim translationSemaphore;
     private readonly SemaphoreSlim talkTranslationSemaphore;
 
     /// <summary>
@@ -101,7 +101,7 @@ namespace Echoglossian
     /// <param name="pframework">Framework.</param>
     /// <param name="pCommandManager">Command Manager.</param>
     /// <param name="pGameGui">Game Gui object.</param>
-    /// <param name="pToastGui">Toast Gui Object</param>
+    /// <param name="pToastGui">Toast Gui Object.</param>
     public Echoglossian([RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface, Framework pframework,
       [RequiredVersion("1.0")] CommandManager pCommandManager, GameGui pGameGui, ToastGui pToastGui)
     {
@@ -135,7 +135,7 @@ namespace Echoglossian
 
       this.framework.Update += this.Tick;
 
-      this.TranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.translationSemaphore = new SemaphoreSlim(1, 1);
       this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
 
       this.toastGui.Toast += this.OnToast;
@@ -146,7 +146,6 @@ namespace Echoglossian
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleText;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;
-
     }
 
     /// <summary>
@@ -180,7 +179,7 @@ namespace Echoglossian
       this.toastGui?.Dispose();
       this.gameGui?.Dispose();
 
-      this.TranslationSemaphore?.Dispose();
+      this.translationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
 
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
@@ -191,7 +190,6 @@ namespace Echoglossian
 
       this.framework.Update -= this.Tick;
 
-
       this.pluginInterface?.Dispose();
     }
 
@@ -199,7 +197,7 @@ namespace Echoglossian
     {
       if (this.configuration.UseImGui)
       {
-        this.AddonHandlers("Talk", 1);
+        this.TalkHandler("Talk", 1);
         this.AddonHandlers("_TextError", 1);
         this.AddonHandlers("_TextError", 2);
         this.AddonHandlers("_WideText", 1);
@@ -216,6 +214,31 @@ namespace Echoglossian
       }
     }
 
+    private unsafe void TalkHandler(string addonName, int index)
+    {
+      var talk = this.gameGui.GetAddonByName(addonName, index);
+      if (talk != IntPtr.Zero)
+      {
+        var talkMaster = (AtkUnitBase*)talk;
+        if (talkMaster->IsVisible)
+        {
+          this.talkDisplayTranslation = true;
+          this.talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
+          this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
+          this.talkTextPosition.X = talkMaster->RootNode->X;
+          this.talkTextPosition.Y = talkMaster->RootNode->Y;
+        }
+        else
+        {
+          this.talkDisplayTranslation = false;
+        }
+      }
+      else
+      {
+        this.talkDisplayTranslation = false;
+      }
+    }
+
     private unsafe void AddonHandlers(string addonName, int index)
     {
       var addonByName = this.gameGui.GetAddonByName(addonName, index);
@@ -224,33 +247,20 @@ namespace Echoglossian
         var addonByNameMaster = (AtkUnitBase*)addonByName;
         if (addonByNameMaster->IsVisible)
         {
-          if (addonName == "Talk")
-          {
-            this.talkDisplayTranslation = true;
-            this.talkTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale;
-            this.talkTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
-            this.talkTextPosition.X = addonByNameMaster->RootNode->X;
-            this.talkTextPosition.Y = addonByNameMaster->RootNode->Y;
-          }
-          else
-          {
-            this.addonDisplayTranslation = true;
-            this.translationTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale;
-            this.translationTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
-            this.translationTextPosition.X = addonByNameMaster->RootNode->X;
-            this.translationTextPosition.Y = addonByNameMaster->RootNode->Y;
-          }
+          this.addonDisplayTranslation = true;
+          this.translationTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale;
+          this.translationTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
+          this.translationTextPosition.X = addonByNameMaster->RootNode->X;
+          this.translationTextPosition.Y = addonByNameMaster->RootNode->Y;
         }
         else
         {
-          this.talkDisplayTranslation = false;
           this.addonDisplayTranslation = false;
         }
       }
       else
       {
         this.addonDisplayTranslation = false;
-        this.talkDisplayTranslation = false;
       }
     }
 

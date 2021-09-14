@@ -121,7 +121,10 @@
     <value>Close</value>
   </data>
   <data name="ConfigTab1Name" xml:space="preserve">
-    <value>Configuration</value>
+    <value>Main Configuration</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Toast configurations</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
     <value>Echoglossian Configuration</value>
@@ -193,6 +196,12 @@
   <data name="SendPixButton" xml:space="preserve">
     <value>Send me a PIX donation!</value>
   </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Adjust toast translation overlay width</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Width multiplier</value>
+  </data>
   <data name="TransLateBattletalkToggle" xml:space="preserve">
     <value>Translate battle talk</value>
   </data>
@@ -207,5 +216,8 @@
   </data>
   <data name="WhatToTranslateText" xml:space="preserve">
     <value>Select what kind of text you want to be translated</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Select which in-game Toast messages to translate</value>
   </data>
 </root>

@@ -21,7 +21,6 @@ namespace Echoglossian
   /// </summary>
   public partial class Echoglossian
   {
-
     private void OnToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
     {
       if (!this.configuration.TranslateToast)
@@ -47,13 +46,13 @@ namespace Echoglossian
           {
             var id = this.currentAddonTranslationId;
             var translation = Translate(textToTranslate);
-            this.TranslationSemaphore.Wait();
+            this.translationSemaphore.Wait();
             if (id == this.currentAddonTranslationId)
             {
               this.currentAddonTranslation = translation;
             }
 
-            this.TranslationSemaphore.Release();
+            this.translationSemaphore.Release();
           });
         }
       }
@@ -89,13 +88,13 @@ namespace Echoglossian
           {
             var id = this.currentAddonTranslationId;
             var translation = Translate(textToTranslate);
-            this.TranslationSemaphore.Wait();
+            this.translationSemaphore.Wait();
             if (id == this.currentAddonTranslationId)
             {
               this.currentAddonTranslation = translation;
             }
 
-            this.TranslationSemaphore.Release();
+            this.translationSemaphore.Release();
           });
         }
       }
@@ -131,13 +130,13 @@ namespace Echoglossian
           {
             var id = this.currentAddonTranslationId;
             var translation = Translate(textToTranslate);
-            this.TranslationSemaphore.Wait();
+            this.translationSemaphore.Wait();
             if (id == this.currentAddonTranslationId)
             {
               this.currentAddonTranslation = translation;
             }
 
-            this.TranslationSemaphore.Release();
+            this.translationSemaphore.Release();
           });
         }
       }
@@ -157,16 +156,21 @@ namespace Echoglossian
 
       try
       {
-        // PluginLog.Log(name.TextValue + ": " + text.TextValue);
+#if DEBUG
+        PluginLog.Log(name.TextValue + ": " + text.TextValue);
+#endif
         var textToTranslate = text.TextValue;
 
         if (!this.configuration.UseImGui)
         {
           var translatedText = Translate(textToTranslate);
-          // PluginLog.LogWarning(translatedText);
-
+#if DEBUG
+          PluginLog.LogWarning(translatedText);
+#endif
           text = translatedText;
-          // PluginLog.Log(name.TextValue + ": " + text.TextValue);
+#if DEBUG
+          PluginLog.Log(name.TextValue + ": " + text.TextValue);
+#endif
         }
         else
         {
@@ -203,16 +207,23 @@ namespace Echoglossian
 
       try
       {
-        // PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+#if DEBUG
+        PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+#endif
         var textToTranslate = message.TextValue;
-        // var detectedLanguage = Lang(textToTranslate);
-        // PluginLog.LogDebug($"Detected Language: {detectedLanguage}");
+#if DEBUG
+        var detectedLanguage = LangIdentify(textToTranslate);
+        PluginLog.LogDebug($"Detected Language: {detectedLanguage}");
+#endif
         var translatedText = Translate(textToTranslate);
-        // PluginLog.LogWarning(translatedText);
+#if DEBUG
+        PluginLog.LogWarning(translatedText);
+#endif
 
         message = translatedText;
-
-        // PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+#if DEBUG
+        PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+#endif
       }
       catch (Exception e)
       {
