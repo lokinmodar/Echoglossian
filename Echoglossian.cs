@@ -94,6 +94,7 @@ namespace Echoglossian
     {
       _pluginInterface = pluginInterface;
       _configuration = pluginInterface.GetPluginConfig() as Config ?? new Config();
+      _pluginInterface.UiBuilder.DisableCutsceneUiHide = true;
 
       Common = new XivCommonBase(_pluginInterface, Hooks.Talk | Hooks.BattleTalk);
 
@@ -119,7 +120,7 @@ namespace Echoglossian
     {
       Common.Functions.Talk.OnTalk -= GetText;
       Common.Functions.BattleTalk.OnBattleTalk -= GetBattleText;
-      //_pluginInterface.Framework.Gui.Chat.OnChatMessage -= Chat_OnChatMessage;
+      
       _pluginInterface.UiBuilder.OnBuildUi -= EchoglossianConfigUi;
       _pluginInterface.UiBuilder.OnOpenConfigUi -= EchoglossianConfig;
       _pluginInterface.CommandManager.RemoveHandler(SlashCommand);

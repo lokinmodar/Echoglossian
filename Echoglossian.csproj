@@ -5,7 +5,7 @@
     <Company>-</Company>
     <TargetFramework>net48</TargetFramework>
     <LangVersion>9.0</LangVersion>
-    <Version>1.0.1.1</Version>
+    <Version>1.0.1.2</Version>
     <Description>Final Fantasy XIV game text translator</Description>
     <Copyright>Dante Souza e Souza - aka lokinmodar - 2021</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>
@@ -67,20 +67,8 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="FFXIVClientStructs">
-      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.dll</HintPath>
-      <Private>false</Private>
-      <CopyLocal>True</CopyLocal>
-    </Reference>
-    <Reference Include="FFXIVClientStructs.Common">
-      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.Common.dll</HintPath>
-          <Private>false</Private>
-    </Reference>
-    <Reference Include="FFXIVClientStructs.Generators">
-      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.Generators.dll</HintPath>
-          <Private>false</Private>
-    </Reference>
-    <Reference Include="GTranslate">
-      <HintPath>..\GTranslate\src\GTranslate\bin\Debug\net48\GTranslate.dll</HintPath>
+      <HintPath>..\..\FFXIVClientStructs\bin\Release\FFXIVClientStructs.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="ImGui.NET">
       <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>

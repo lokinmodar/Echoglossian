@@ -14,3 +14,6 @@ dotnet_style_qualification_for_property = false:none
 
 # IDE0060: Remove unused parameter
 dotnet_code_quality_unused_parameters = non_public:suggestion
+
+# S3881: "IDisposable" should be implemented correctly
+dotnet_diagnostic.S3881.severity = suggestion
