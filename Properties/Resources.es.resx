@@ -43,7 +43,7 @@
     <value>Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la interfaz de usuario del juego en lugar de reemplazar su texto con la traducción</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicador de ancho</value>
+    <value>Multiplicador de ancho de diálogo</value>
   </data>
   <data name="PatronButtonLabel" xml:space="preserve">
     <value>Comprar lokinmodar a Coffee</value>
@@ -100,9 +100,33 @@
     <value>Ajustar el ancho de la superposición de traducción de mensajes sistema</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicador de ancho</value>
+    <value>Multiplicador de ancho de mensajes de sistema</value>
   </data>
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Selecciona los mensajes de sistema que quieres traducir</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Color de fuente de la superposición:</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Haga clic para elegir el color de fuente de la superposición</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Traducir Mensajes del sistema del nombre del área</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Traducir Mensajes de notificación del sistema de cambio de clase/job</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Traducir mensajes del sistema de error en el juego</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Traducir nombres de NPC en cuadros de diálogo</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Traducir mensajes de Quest Toast en el juego</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Traducir en el juego otros mensajes misceláneos de toast</value>
   </data>
 </root>

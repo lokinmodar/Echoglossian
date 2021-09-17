@@ -130,6 +130,9 @@
     <value>Echoglossian Configuration</value>
     <comment>Config Window title bar</comment>
   </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Overlay font color:</value>
+  </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Opens Echoglossian config window</value>
     <comment>Shown in plugin install window</comment>
@@ -156,6 +159,12 @@
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
     <value>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</value>
   </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Click to choose the overlay font color</value>
+  </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
     <value>Overlay Font Size</value>
   </data>
@@ -172,7 +181,7 @@
     <value>Adjust translation overlay width</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Width multiplier</value>
+    <value>Dialogue Width multiplier</value>
   </data>
   <data name="PatronButtonLabel" xml:space="preserve">
     <value>Buy lokinmodar a Coffee</value>
@@ -200,10 +209,28 @@
     <value>Adjust toast translation overlay width</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Width multiplier</value>
+    <value>Toast Overlay Width multiplier</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Translate in-game Area name Toast Messages</value>
   </data>
   <data name="TransLateBattletalkToggle" xml:space="preserve">
     <value>Translate battle talk</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Translate in-game Class/Job change Toast Messages</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Translate in-game Error Toast Messages</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Translate NPCs names in dialogue boxes</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Translate in-game Quest Toast Messages</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Translate in-game other miscellaneous Toast Messages</value>
   </data>
   <data name="TranslateTalkToggleLabel" xml:space="preserve">
     <value>Translate talk</value>

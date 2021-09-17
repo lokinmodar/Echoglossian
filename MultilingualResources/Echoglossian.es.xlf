@@ -50,8 +50,8 @@
           <target state="translated" state-qualifier="mt-suggestion">Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la interfaz de usuario del juego en lugar de reemplazar su texto con la traducción</target>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Width multiplier</source>
-          <target state="translated" state-qualifier="mt-suggestion">Multiplicador de ancho</target>
+          <source>Dialogue Width multiplier</source>
+          <target state="translated">Multiplicador de ancho de diálogo</target>
         </trans-unit>
         <trans-unit id="PatronButtonLabel" translate="yes" xml:space="preserve">
           <source>Buy lokinmodar a Coffee</source>
@@ -134,12 +134,49 @@
           <target state="translated">Ajustar el ancho de la superposición de traducción de mensajes sistema</target>
         </trans-unit>
         <trans-unit id="ToastOverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Width multiplier</source>
-          <target state="translated" state-qualifier="mt-suggestion">Multiplicador de ancho</target>
+          <source>Toast Overlay Width multiplier</source>
+          <target state="translated">Multiplicador de ancho de mensajes de sistema</target>
         </trans-unit>
         <trans-unit id="WhichToastsToTranslateText" translate="yes" xml:space="preserve">
           <source>Select which in-game Toast messages to translate</source>
           <target state="translated">Selecciona los mensajes de sistema que quieres traducir</target>
+        </trans-unit>
+        <trans-unit id="FontColorSelectLabel" translate="yes" xml:space="preserve">
+          <source>Overlay font color:</source>
+          <target state="translated">Color de fuente de la superposición:</target>
+        </trans-unit>
+        <trans-unit id="OverlayColorSelectName" translate="no" xml:space="preserve">
+          <source>OverlayColorSelect</source>
+          <target state="final">OverlayColorSelect</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontColorOrientations" translate="yes" xml:space="preserve">
+          <source>Click to choose the overlay font color</source>
+          <target state="translated">Haga clic para elegir el color de fuente de la superposición</target>
+        </trans-unit>
+        <trans-unit id="TranslateAreaToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Area name Toast Messages</source>
+          <target state="translated">Traducir Mensajes del sistema del nombre del área</target>
+        </trans-unit>
+        <trans-unit id="TranslateClassChangeToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Class/Job change Toast Messages</source>
+          <target state="needs-review-translation">Traducir Mensajes de notificación del sistema de cambio de clase/job</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+        </trans-unit>
+        <trans-unit id="TranslateErrorToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Error Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir mensajes del sistema de error en el juego</target>
+        </trans-unit>
+        <trans-unit id="TranslateNpcNamesToggle" translate="yes" xml:space="preserve">
+          <source>Translate NPCs names in dialogue boxes</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir nombres de NPC en cuadros de diálogo</target>
+        </trans-unit>
+        <trans-unit id="TranslateQuestToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Quest Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir mensajes de Quest Toast en el juego</target>
+        </trans-unit>
+        <trans-unit id="TranslateScreenInfoToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game other miscellaneous Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir en el juego otros mensajes misceláneos de toast</target>
         </trans-unit>
       </group>
     </body>

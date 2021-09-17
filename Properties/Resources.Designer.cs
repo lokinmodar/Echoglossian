@@ -97,6 +97,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Overlay font color:.
+        /// </summary>
+        internal static string FontColorSelectLabel {
+            get {
+                return ResourceManager.GetString("FontColorSelectLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Opens Echoglossian config window.
         /// </summary>
         internal static string HelpMessage {
@@ -169,6 +178,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to OverlayColorSelect.
+        /// </summary>
+        internal static string OverlayColorSelectName {
+            get {
+                return ResourceManager.GetString("OverlayColorSelectName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click to choose the overlay font color.
+        /// </summary>
+        internal static string OverlayFontColorOrientations {
+            get {
+                return ResourceManager.GetString("OverlayFontColorOrientations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overlay Font Size.
         /// </summary>
         internal static string OverlayFontSizeLabel {
@@ -214,7 +241,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Width multiplier.
+        ///   Looks up a localized string similar to Dialogue Width multiplier.
         /// </summary>
         internal static string OverlayWidthScrollLabel {
             get {
@@ -296,11 +323,20 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Width multiplier.
+        ///   Looks up a localized string similar to Toast Overlay Width multiplier.
         /// </summary>
         internal static string ToastOverlayWidthScrollLabel {
             get {
                 return ResourceManager.GetString("ToastOverlayWidthScrollLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate in-game Area name Toast Messages.
+        /// </summary>
+        internal static string TranslateAreaToastToggleText {
+            get {
+                return ResourceManager.GetString("TranslateAreaToastToggleText", resourceCulture);
             }
         }
         
@@ -310,6 +346,51 @@ namespace Echoglossian.Properties {
         internal static string TransLateBattletalkToggle {
             get {
                 return ResourceManager.GetString("TransLateBattletalkToggle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate in-game Class/Job change Toast Messages.
+        /// </summary>
+        internal static string TranslateClassChangeToastToggleText {
+            get {
+                return ResourceManager.GetString("TranslateClassChangeToastToggleText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate in-game Error Toast Messages.
+        /// </summary>
+        internal static string TranslateErrorToastToggleText {
+            get {
+                return ResourceManager.GetString("TranslateErrorToastToggleText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate NPCs names in dialogue boxes.
+        /// </summary>
+        internal static string TranslateNpcNamesToggle {
+            get {
+                return ResourceManager.GetString("TranslateNpcNamesToggle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate in-game Quest Toast Messages.
+        /// </summary>
+        internal static string TranslateQuestToastToggleText {
+            get {
+                return ResourceManager.GetString("TranslateQuestToastToggleText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate in-game other miscellaneous Toast Messages.
+        /// </summary>
+        internal static string TranslateScreenInfoToastToggleText {
+            get {
+                return ResourceManager.GetString("TranslateScreenInfoToastToggleText", resourceCulture);
             }
         }
         

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 using Dalamud.Game;
@@ -17,6 +18,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Interface;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 using Echoglossian.Properties;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -86,13 +88,14 @@ namespace Echoglossian
     private readonly Framework framework;
     private readonly GameGui gameGui;
 
+    private readonly SemaphoreSlim toastTranslationSemaphore;
+    private readonly SemaphoreSlim talkTranslationSemaphore;
+    private readonly SemaphoreSlim nameTranslationSemaphore;
+
     private readonly DalamudPluginInterface pluginInterface;
     private TextureWrap pixImage;
 
     private ToastGui toastGui;
-
-    private readonly SemaphoreSlim translationSemaphore;
-    private readonly SemaphoreSlim talkTranslationSemaphore;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
@@ -135,7 +138,8 @@ namespace Echoglossian
 
       this.framework.Update += this.Tick;
 
-      this.translationSemaphore = new SemaphoreSlim(1, 1);
+      this.nameTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.toastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
 
       this.toastGui.Toast += this.OnToast;
@@ -166,6 +170,7 @@ namespace Echoglossian
 
       Common.Functions.Talk.OnTalk -= this.GetText;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleText;
+      Common?.Functions.Dispose();
       Common?.Dispose();
 
       this.toastGui.Toast -= this.OnToast;
@@ -179,7 +184,8 @@ namespace Echoglossian
       this.toastGui?.Dispose();
       this.gameGui?.Dispose();
 
-      this.translationSemaphore?.Dispose();
+      this.nameTranslationSemaphore?.Dispose();
+      this.toastTranslationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
 
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
@@ -189,7 +195,6 @@ namespace Echoglossian
       this.pixImage?.Dispose();
 
       this.framework.Update -= this.Tick;
-
       this.pluginInterface?.Dispose();
     }
 
@@ -198,18 +203,18 @@ namespace Echoglossian
       if (this.configuration.UseImGui)
       {
         this.TalkHandler("Talk", 1);
-        this.AddonHandlers("_TextError", 1);
-        this.AddonHandlers("_TextError", 2);
-        this.AddonHandlers("_WideText", 1);
-        this.AddonHandlers("_WideText", 2);
-        this.AddonHandlers("_ScreenText", 1);
-        this.AddonHandlers("_ScreenText", 2);
-        this.AddonHandlers("_AreaText", 1);
-        this.AddonHandlers("_AreaText", 2);
+        this.ToastHandler("_TextError", 1);
+        this.ToastHandler("_TextError", 2);
+        this.ToastHandler("_WideText", 1);
+        this.ToastHandler("_WideText", 2);
+        this.ToastHandler("_ScreenText", 1);
+        this.ToastHandler("_ScreenText", 2);
+        this.ToastHandler("_AreaText", 1);
+        this.ToastHandler("_AreaText", 2);
       }
       else
       {
-        this.addonDisplayTranslation = false;
+        this.toastDisplayTranslation = false;
         this.talkDisplayTranslation = false;
       }
     }
@@ -239,6 +244,32 @@ namespace Echoglossian
       }
     }
 
+    private unsafe void ToastHandler(string toastName, int index)
+    {
+      var toastByName = this.gameGui.GetAddonByName(toastName, index);
+      if (toastByName != IntPtr.Zero)
+      {
+        var toastByNameMaster = (AtkUnitBase*)toastByName;
+        if (toastByNameMaster->IsVisible)
+        {
+          this.toastDisplayTranslation = true;
+          this.toastTranslationTextDimensions.X = toastByNameMaster->RootNode->Width * toastByNameMaster->Scale * 2;
+          this.toastTranslationTextDimensions.Y = toastByNameMaster->RootNode->Height * toastByNameMaster->Scale;
+          this.toastTranslationTextPosition.X = toastByNameMaster->RootNode->X;
+          this.toastTranslationTextPosition.Y = toastByNameMaster->RootNode->Y;
+        }
+        else
+        {
+          this.toastDisplayTranslation = false;
+        }
+      }
+      else
+      {
+        this.toastDisplayTranslation = false;
+      }
+    }
+
+
     private unsafe void AddonHandlers(string addonName, int index)
     {
       var addonByName = this.gameGui.GetAddonByName(addonName, index);
@@ -248,10 +279,10 @@ namespace Echoglossian
         if (addonByNameMaster->IsVisible)
         {
           this.addonDisplayTranslation = true;
-          this.translationTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale;
-          this.translationTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
-          this.translationTextPosition.X = addonByNameMaster->RootNode->X;
-          this.translationTextPosition.Y = addonByNameMaster->RootNode->Y;
+          this.addonTranslationTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale * 2;
+          this.addonTranslationTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
+          this.addonTranslationTextPosition.X = addonByNameMaster->RootNode->X;
+          this.addonTranslationTextPosition.Y = addonByNameMaster->RootNode->Y;
         }
         else
         {

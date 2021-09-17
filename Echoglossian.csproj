@@ -21,7 +21,15 @@
     <Company>lokinmodar</Company>
     <TargetFramework>net5.0-windows7.0</TargetFramework>
     <LangVersion>9.0</LangVersion>
-    <Version>2.0.0.0</Version>
+
+
+    <VersionMajor>2</VersionMajor>
+    <VersionMinor>0</VersionMinor>
+    <VersionPatch Condition="'$(VersionPatch)' == ''">$([System.DateTime]::UtcNow.ToString("yyMM"))</VersionPatch>
+    <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
+    <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
+
+
     <Description>Final Fantasy XIV game text translator</Description>
     <Copyright>Dante Souza e Souza - aka lokinmodar - 2021</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>

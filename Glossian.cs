@@ -12,6 +12,7 @@ using System.Net;
 
 using Dalamud.Logging;
 using Echoglossian.Properties;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json.Linq;
 using NTextCat;
 
@@ -82,6 +83,8 @@ namespace Echoglossian
 
         var finalDialogueText =
           dialogueSentenceList.Aggregate(string.Empty, (current, dialogueSentence) => current + dialogueSentence);
+
+        finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
 
         var src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");

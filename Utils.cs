@@ -10,8 +10,18 @@ namespace Echoglossian
     private void SaveConfig()
     {
       this.configuration.Lang = languageInt;
+      this.configuration.Version++;
 
       this.pluginInterface.SavePluginConfig(this.configuration);
+    }
+
+    private enum TransEngines
+    {
+      Google,
+      Deepl,
+      Bing,
+      Yandex,
+      GTranslate
     }
   }
 }

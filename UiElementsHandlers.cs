@@ -21,6 +21,8 @@ namespace Echoglossian
   /// </summary>
   public partial class Echoglossian
   {
+
+
     private void OnToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
     {
       if (!this.configuration.TranslateToast)
@@ -30,29 +32,29 @@ namespace Echoglossian
 
       try
       {
-        var textToTranslate = message.TextValue;
+        var messageTextToTranslate = message.TextValue;
 
         if (!this.configuration.UseImGui)
         {
-          var translatedText = Translate(textToTranslate);
+          var messageTranslatedText = Translate(messageTextToTranslate);
 
-          message = translatedText;
+          message = messageTranslatedText;
         }
         else
         {
-          this.currentAddonTranslationId = Environment.TickCount;
-          this.currentAddonTranslation = Resources.WaitingForTranslation;
+          this.currentToastTranslationId = Environment.TickCount;
+          this.currentToastTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var id = this.currentAddonTranslationId;
-            var translation = Translate(textToTranslate);
-            this.translationSemaphore.Wait();
-            if (id == this.currentAddonTranslationId)
+            var messageId = this.currentToastTranslationId;
+            var messageTranslation = Translate(messageTextToTranslate);
+            this.toastTranslationSemaphore.Wait();
+            if (messageId == this.currentToastTranslationId)
             {
-              this.currentAddonTranslation = translation;
+              this.currentToastTranslation = messageTranslation;
             }
 
-            this.translationSemaphore.Release();
+            this.toastTranslationSemaphore.Release();
           });
         }
       }
@@ -72,29 +74,29 @@ namespace Echoglossian
 
       try
       {
-        var textToTranslate = message.TextValue;
+        var messageTextToTranslate = message.TextValue;
 
         if (!this.configuration.UseImGui)
         {
-          var translatedText = Translate(textToTranslate);
+          var messageTranslatedText = Translate(messageTextToTranslate);
 
-          message = translatedText;
+          message = messageTranslatedText;
         }
         else
         {
-          this.currentAddonTranslationId = Environment.TickCount;
-          this.currentAddonTranslation = Resources.WaitingForTranslation;
+          this.currentToastTranslationId = Environment.TickCount;
+          this.currentToastTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var id = this.currentAddonTranslationId;
-            var translation = Translate(textToTranslate);
-            this.translationSemaphore.Wait();
-            if (id == this.currentAddonTranslationId)
+            var messageId = this.currentToastTranslationId;
+            var messageTranslation = Translate(messageTextToTranslate);
+            this.toastTranslationSemaphore.Wait();
+            if (messageId == this.currentToastTranslationId)
             {
-              this.currentAddonTranslation = translation;
+              this.currentToastTranslation = messageTranslation;
             }
 
-            this.translationSemaphore.Release();
+            this.toastTranslationSemaphore.Release();
           });
         }
       }
@@ -114,29 +116,29 @@ namespace Echoglossian
 
       try
       {
-        var textToTranslate = message.TextValue;
+        var messageTextToTranslate = message.TextValue;
 
         if (!this.configuration.UseImGui)
         {
-          var translatedText = Translate(textToTranslate);
+          var messageTranslatedText = Translate(messageTextToTranslate);
 
-          message = translatedText;
+          message = messageTranslatedText;
         }
         else
         {
-          this.currentAddonTranslationId = Environment.TickCount;
-          this.currentAddonTranslation = Resources.WaitingForTranslation;
+          this.currentToastTranslationId = Environment.TickCount;
+          this.currentToastTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var id = this.currentAddonTranslationId;
-            var translation = Translate(textToTranslate);
-            this.translationSemaphore.Wait();
-            if (id == this.currentAddonTranslationId)
+            var messageId = this.currentToastTranslationId;
+            var messageTranslation = Translate(messageTextToTranslate);
+            this.toastTranslationSemaphore.Wait();
+            if (messageId == this.currentToastTranslationId)
             {
-              this.currentAddonTranslation = translation;
+              this.currentToastTranslation = messageTranslation;
             }
 
-            this.translationSemaphore.Release();
+            this.toastTranslationSemaphore.Release();
           });
         }
       }
@@ -159,21 +161,49 @@ namespace Echoglossian
 #if DEBUG
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
+        var nameToTranslate = name.TextValue;
         var textToTranslate = text.TextValue;
 
         if (!this.configuration.UseImGui)
         {
           var translatedText = Translate(textToTranslate);
+          var nameTranslation = Translate(nameToTranslate);
 #if DEBUG
           PluginLog.LogWarning(translatedText);
 #endif
-          text = translatedText;
+          if (this.configuration.TranslateNPCNames)
+          {
+            name = nameTranslation;
+            text = translatedText;
+          }
+          else
+          {
+            text = translatedText;
+          }
 #if DEBUG
           PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
         }
         else
         {
+          if (this.configuration.TranslateNPCNames)
+          {
+            this.currentNameTranslationId = Environment.TickCount;
+            this.currentNameTranslation = Resources.WaitingForTranslation;
+            Task.Run(() =>
+            {
+              var nameId = this.currentNameTranslationId;
+              var nameTranslation = Translate(nameToTranslate);
+              this.nameTranslationSemaphore.Wait();
+              if (nameId == this.currentNameTranslationId)
+              {
+                this.currentNameTranslation = nameTranslation;
+              }
+
+              this.nameTranslationSemaphore.Release();
+            });
+          }
+
           this.currentTalkTranslationId = Environment.TickCount;
           this.currentTalkTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>

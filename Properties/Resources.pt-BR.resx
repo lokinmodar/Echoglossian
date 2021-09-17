@@ -13,7 +13,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ConfigTab1Name" xml:space="preserve">
-    <value>Configuração</value>
+    <value>Configurações principais</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
     <value>Configuração do Echoglossian</value>
@@ -43,7 +43,7 @@
     <value>Exibir sobreposição com texto traduzido acima da caixa de diálogo de interface do jogo em vez de substituir seu texto pela tradução</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicador de largura</value>
+    <value>Multiplicador de largura da sobreposição de tradução de diálogo</value>
   </data>
   <data name="PatronButtonLabel" xml:space="preserve">
     <value>Comprar um café para lokinmodar</value>
@@ -100,9 +100,33 @@
     <value>Ajuste a largura de sobreposição de tradução de Toasts</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicador de largura</value>
+    <value>Multiplicador de largura para Toasts</value>
   </data>
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Selecione quais mensagens Toast devem ser traduzidas</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Cor da fonte da sobreposição:</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Clique para escolher a cor da fonte da sobreposição</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de nome de área</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de troca de classe/job</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de erro no jogo</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Traduzir nomes de NPCs em caixas de diálogo</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de quest</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Traduzir no jogo outras mensagens de Toast diversas</value>
   </data>
 </root>
