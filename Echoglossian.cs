@@ -182,10 +182,7 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
       this.commandManager.RemoveHandler(SlashCommand);
-
-      this.toastGui?.Dispose();
-      this.gameGui?.Dispose();
-
+      
       this.nameTranslationSemaphore?.Dispose();
       this.toastTranslationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
@@ -194,9 +191,16 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
       this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;
 
+
+      this.pluginInterface.UiBuilder.Dispose();
+
       this.pixImage?.Dispose();
 
       this.framework.Update -= this.Tick;
+
+      this.toastGui?.Dispose();
+      this.gameGui?.Dispose();
+      //this.framework?.Dispose();
       this.pluginInterface?.Dispose();
     }
 

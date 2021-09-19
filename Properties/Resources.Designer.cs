@@ -151,6 +151,36 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] logo {
+            get {
+                object obj = ResourceManager.GetObject("logo", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] milfilia {
+            get {
+                object obj = ResourceManager.GetObject("milfilia", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] minfilia {
+            get {
+                object obj = ResourceManager.GetObject("minfilia", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Echoglossian.
         /// </summary>
         internal static string Name {

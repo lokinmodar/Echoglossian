@@ -177,6 +177,18 @@
           <source>Translate in-game other miscellaneous Toast Messages</source>
           <target state="translated">Traduzir no jogo outras mensagens de Toast diversas</target>
         </trans-unit>
+        <trans-unit id="logo" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
+          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="milfilia" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
+          <source>..\..\..\..\Downloads\milfilia.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\..\..\..\Downloads\milfilia.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="minfilia" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
+          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
       </group>
     </body>
   </file>

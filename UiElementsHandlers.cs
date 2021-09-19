@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
+using Dalamud.Utility;
 using Echoglossian.Properties;
+using EFCoreSqlite.Models;
 using XivCommon.Functions;
 
 namespace Echoglossian
@@ -157,8 +159,11 @@ namespace Echoglossian
 #if DEBUG
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
-        if (this.dbOperations.FindTalkMessage(
-          this.FormatTalkMessage(name.TextValue, text.TextValue)).TranslatedTalkMessage != string.Empty)
+        var talkMessage = this.FormatTalkMessage(name.TextValue, text.TextValue);
+        var findings = this.dbOperations.FindTalkMessage(talkMessage);
+
+        // If the dialogue is not saved
+        if (findings.TranslatedTalkMessage.IsNullOrEmpty())
         {
           var nameToTranslate = name.TextValue;
           var textToTranslate = text.TextValue;
@@ -174,10 +179,18 @@ namespace Echoglossian
             {
               name = nameTranslation == string.Empty ? name : nameTranslation;
               text = translatedText;
+              var translatedTalkData = new TalkMessage(name.TextValue, text.TextValue, LangIdentify(text.TextValue),
+                LangIdentify(name.TextValue), nameTranslation, translatedText, Codes[languageInt]);
+              var result = this.dbOperations.InsertTalkData(translatedTalkData);
+              PluginLog.LogError(result);
             }
             else
             {
               text = translatedText;
+              var translatedTalkData = new TalkMessage(name.TextValue, text.TextValue, LangIdentify(text.TextValue),
+                LangIdentify(name.TextValue), string.Empty, translatedText, Codes[languageInt]);
+              var result = this.dbOperations.InsertTalkData(translatedTalkData);
+              PluginLog.LogError(result);
             }
 #if DEBUG
             PluginLog.Log(name.TextValue + ": " + text.TextValue);
@@ -209,6 +222,64 @@ namespace Echoglossian
             {
               var id = this.currentTalkTranslationId;
               var translation = Translate(textToTranslate);
+              this.talkTranslationSemaphore.Wait();
+              if (id == this.currentTalkTranslationId)
+              {
+                this.currentTalkTranslation = translation;
+              }
+
+              this.talkTranslationSemaphore.Release();
+            });
+          }
+        }
+        else
+        {
+          if (!this.configuration.UseImGui)
+          {
+            var translatedText = talkMessage.TranslatedTalkMessage;
+            var nameTranslation = talkMessage.TranslatedSenderName;
+#if DEBUG
+            PluginLog.LogWarning($"From database - Name: {nameTranslation}, Message: {translatedText}");
+#endif
+            if (this.configuration.TranslateNPCNames)
+            {
+              name = nameTranslation == string.Empty ? name : nameTranslation;
+              text = translatedText;
+            }
+            else
+            {
+              text = translatedText;
+            }
+#if DEBUG
+            PluginLog.Log(name.TextValue + ": " + text.TextValue);
+#endif
+          }
+          else
+          {
+            if (this.configuration.TranslateNPCNames)
+            {
+              this.currentNameTranslationId = Environment.TickCount;
+              this.currentNameTranslation = Resources.WaitingForTranslation;
+              Task.Run(() =>
+              {
+                var nameId = this.currentNameTranslationId;
+                var nameTranslation = talkMessage.TranslatedSenderName;
+                this.nameTranslationSemaphore.Wait();
+                if (nameId == this.currentNameTranslationId)
+                {
+                  this.currentNameTranslation = nameTranslation;
+                }
+
+                this.nameTranslationSemaphore.Release();
+              });
+            }
+
+            this.currentTalkTranslationId = Environment.TickCount;
+            this.currentTalkTranslation = Resources.WaitingForTranslation;
+            Task.Run(() =>
+            {
+              var id = this.currentTalkTranslationId;
+              var translation = talkMessage.TranslatedTalkMessage;
               this.talkTranslationSemaphore.Wait();
               if (id == this.currentTalkTranslationId)
               {

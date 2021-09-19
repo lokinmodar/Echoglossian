@@ -149,6 +149,16 @@
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Language to translate to</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="milfilia" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\Downloads\milfilia.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="minfilia" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="Name" xml:space="preserve">
     <value>Echoglossian</value>
   </data>
@@ -186,7 +196,6 @@
   <data name="PatronButtonLabel" xml:space="preserve">
     <value>Buy lokinmodar a Coffee</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="pix" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
