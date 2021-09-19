@@ -159,24 +159,23 @@
         </trans-unit>
         <trans-unit id="TranslateClassChangeToastToggleText" translate="yes" xml:space="preserve">
           <source>Translate in-game Class/Job change Toast Messages</source>
-          <target state="needs-review-translation">Traducir Mensajes de notificación del sistema de cambio de clase/job</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Traducir Mensajes de notificación del sistema de cambio de clase/job</target>
         </trans-unit>
         <trans-unit id="TranslateErrorToastToggleText" translate="yes" xml:space="preserve">
           <source>Translate in-game Error Toast Messages</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir mensajes del sistema de error en el juego</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traducir mensajes del sistema de error en el juego</target>
         </trans-unit>
         <trans-unit id="TranslateNpcNamesToggle" translate="yes" xml:space="preserve">
           <source>Translate NPCs names in dialogue boxes</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir nombres de NPC en cuadros de diálogo</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traducir nombres de NPC en cuadros de diálogo</target>
         </trans-unit>
         <trans-unit id="TranslateQuestToastToggleText" translate="yes" xml:space="preserve">
           <source>Translate in-game Quest Toast Messages</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir mensajes de Quest Toast en el juego</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traducir mensajes de Quest Toast en el juego</target>
         </trans-unit>
         <trans-unit id="TranslateScreenInfoToastToggleText" translate="yes" xml:space="preserve">
           <source>Translate in-game other miscellaneous Toast Messages</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir en el juego otros mensajes misceláneos de toast</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traducir en el juego otros mensajes misceláneos de toast</target>
         </trans-unit>
       </group>
     </body>

@@ -68,3 +68,6 @@ dotnet_diagnostic.S3881.severity = suggestion
 
 # SA1202: Elements should be ordered by access
 dotnet_diagnostic.SA1202.severity = suggestion
+
+# CA1416: Validate platform compatibility
+dotnet_diagnostic.CA1416.severity = suggestion

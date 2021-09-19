@@ -12,7 +12,6 @@ using System.Net;
 
 using Dalamud.Logging;
 using Echoglossian.Properties;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json.Linq;
 using NTextCat;
 

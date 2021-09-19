@@ -4,26 +4,18 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
-using System.Numerics;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 using Dalamud.Game;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Hooking;
-using Dalamud.Interface;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using Echoglossian.Properties;
-using FFXIVClientStructs.FFXIV.Client.UI;
+using EFCoreSqlite;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using ImGuiNET;
 using ImGuiScene;
 using XivCommon;
 
@@ -97,6 +89,8 @@ namespace Echoglossian
 
     private ToastGui toastGui;
 
+    private DbOperations dbOperations;
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
     /// </summary>
@@ -125,6 +119,10 @@ namespace Echoglossian
 
       this.toastGui = pToastGui;
 
+      this.dbOperations = new DbOperations();
+
+      this.dbOperations.CreateOrUseDb();
+
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
 
       this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
@@ -146,8 +144,8 @@ namespace Echoglossian
       this.toastGui.ErrorToast += this.OnToast;
       this.toastGui.QuestToast += this.OnToast;
 
-      Common.Functions.Talk.OnTalk += this.GetText;
-      Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleText;
+      Common.Functions.Talk.OnTalk += this.GetTalk;
+      Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;
     }
@@ -166,10 +164,14 @@ namespace Echoglossian
     /// <inheritdoc />
     public void Dispose()
     {
+      this.Dispose(true);
       GC.SuppressFinalize(this);
+    }
 
-      Common.Functions.Talk.OnTalk -= this.GetText;
-      Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleText;
+    protected virtual void Dispose(bool disposing)
+    {
+      Common.Functions.Talk.OnTalk -= this.GetTalk;
+      Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleTalk;
       Common?.Functions.Dispose();
       Common?.Dispose();
 
@@ -268,7 +270,6 @@ namespace Echoglossian
         this.toastDisplayTranslation = false;
       }
     }
-
 
     private unsafe void AddonHandlers(string addonName, int index)
     {

@@ -1,13 +1,11 @@
-﻿// <copyright file="DialogueBoxHandlers.cs" company="lokinmodar">
+﻿// <copyright file="UiElementsHandlers.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 using System;
-using System.Resources;
 using System.Threading.Tasks;
 
-using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
@@ -21,8 +19,6 @@ namespace Echoglossian
   /// </summary>
   public partial class Echoglossian
   {
-
-
     private void OnToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
     {
       if (!this.configuration.TranslateToast)
@@ -149,7 +145,7 @@ namespace Echoglossian
       }
     }
 
-    private void GetText(ref SeString name, ref SeString text, ref TalkStyle style)
+    private void GetTalk(ref SeString name, ref SeString text, ref TalkStyle style)
     {
       if (!this.configuration.TranslateTalk)
       {
@@ -161,63 +157,67 @@ namespace Echoglossian
 #if DEBUG
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
-        var nameToTranslate = name.TextValue;
-        var textToTranslate = text.TextValue;
-
-        if (!this.configuration.UseImGui)
+        if (this.dbOperations.FindTalkMessage(
+          this.FormatTalkMessage(name.TextValue, text.TextValue)).TranslatedTalkMessage != string.Empty)
         {
-          var translatedText = Translate(textToTranslate);
-          var nameTranslation = Translate(nameToTranslate);
-#if DEBUG
-          PluginLog.LogWarning(translatedText);
-#endif
-          if (this.configuration.TranslateNPCNames)
+          var nameToTranslate = name.TextValue;
+          var textToTranslate = text.TextValue;
+
+          if (!this.configuration.UseImGui)
           {
-            name = nameTranslation;
-            text = translatedText;
+            var translatedText = Translate(textToTranslate);
+            var nameTranslation = Translate(nameToTranslate);
+#if DEBUG
+            PluginLog.LogWarning(translatedText);
+#endif
+            if (this.configuration.TranslateNPCNames)
+            {
+              name = nameTranslation == string.Empty ? name : nameTranslation;
+              text = translatedText;
+            }
+            else
+            {
+              text = translatedText;
+            }
+#if DEBUG
+            PluginLog.Log(name.TextValue + ": " + text.TextValue);
+#endif
           }
           else
           {
-            text = translatedText;
-          }
-#if DEBUG
-          PluginLog.Log(name.TextValue + ": " + text.TextValue);
-#endif
-        }
-        else
-        {
-          if (this.configuration.TranslateNPCNames)
-          {
-            this.currentNameTranslationId = Environment.TickCount;
-            this.currentNameTranslation = Resources.WaitingForTranslation;
-            Task.Run(() =>
+            if (this.configuration.TranslateNPCNames)
             {
-              var nameId = this.currentNameTranslationId;
-              var nameTranslation = Translate(nameToTranslate);
-              this.nameTranslationSemaphore.Wait();
-              if (nameId == this.currentNameTranslationId)
+              this.currentNameTranslationId = Environment.TickCount;
+              this.currentNameTranslation = Resources.WaitingForTranslation;
+              Task.Run(() =>
               {
-                this.currentNameTranslation = nameTranslation;
-              }
+                var nameId = this.currentNameTranslationId;
+                var nameTranslation = Translate(nameToTranslate);
+                this.nameTranslationSemaphore.Wait();
+                if (nameId == this.currentNameTranslationId)
+                {
+                  this.currentNameTranslation = nameTranslation;
+                }
 
-              this.nameTranslationSemaphore.Release();
-            });
-          }
-
-          this.currentTalkTranslationId = Environment.TickCount;
-          this.currentTalkTranslation = Resources.WaitingForTranslation;
-          Task.Run(() =>
-          {
-            var id = this.currentTalkTranslationId;
-            var translation = Translate(textToTranslate);
-            this.talkTranslationSemaphore.Wait();
-            if (id == this.currentTalkTranslationId)
-            {
-              this.currentTalkTranslation = translation;
+                this.nameTranslationSemaphore.Release();
+              });
             }
 
-            this.talkTranslationSemaphore.Release();
-          });
+            this.currentTalkTranslationId = Environment.TickCount;
+            this.currentTalkTranslation = Resources.WaitingForTranslation;
+            Task.Run(() =>
+            {
+              var id = this.currentTalkTranslationId;
+              var translation = Translate(textToTranslate);
+              this.talkTranslationSemaphore.Wait();
+              if (id == this.currentTalkTranslationId)
+              {
+                this.currentTalkTranslation = translation;
+              }
+
+              this.talkTranslationSemaphore.Release();
+            });
+          }
         }
       }
       catch (Exception e)
@@ -227,7 +227,7 @@ namespace Echoglossian
       }
     }
 
-    private void GetBattleText(ref SeString sender, ref SeString message, ref BattleTalkOptions options,
+    private void GetBattleTalk(ref SeString sender, ref SeString message, ref BattleTalkOptions options,
       ref bool ishandled)
     {
       if (!this.configuration.TranslateBattleTalk)

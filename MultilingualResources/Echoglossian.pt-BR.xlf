@@ -159,8 +159,7 @@
         </trans-unit>
         <trans-unit id="TranslateClassChangeToastToggleText" translate="yes" xml:space="preserve">
           <source>Translate in-game Class/Job change Toast Messages</source>
-          <target state="needs-review-translation">Traduzir mensagens de troca de classe/job</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Traduzir mensagens de troca de classe/job</target>
         </trans-unit>
         <trans-unit id="TranslateErrorToastToggleText" translate="yes" xml:space="preserve">
           <source>Translate in-game Error Toast Messages</source>

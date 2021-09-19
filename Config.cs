@@ -3,12 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Collections.Generic;
 using System.Numerics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
+
 using Dalamud.Configuration;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace Echoglossian
 {

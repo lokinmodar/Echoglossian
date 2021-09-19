@@ -21,7 +21,7 @@ namespace Echoglossian
       Deepl,
       Bing,
       Yandex,
-      GTranslate
+      GTranslate,
     }
   }
 }

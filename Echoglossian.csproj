@@ -95,13 +95,19 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DalamudLinter" Version="1.0.1" />
+    <PackageReference Include="DalamudLinter" Version="1.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="ILRepack" Version="2.0.18" GeneratePathProperty="true" />
+    <PackageReference Include="ILRepack" Version="2.1.0-beta1" GeneratePathProperty="true" />
     <PackageReference Include="NTextCat" Version="0.3.65" />
     <PackageReference Include="XivCommon" Version="3.0.2">
       <GeneratePathProperty>True</GeneratePathProperty>
@@ -164,6 +170,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\pix.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EFCoreSqLite\EFCoreSqlite\EFCoreSqlite\EFCoreSqlite.csproj">
+      <Private>true</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <XliffResource Include="MultilingualResources\Echoglossian.es.xlf" />

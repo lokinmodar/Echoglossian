@@ -7,15 +7,12 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 
 using Dalamud.Interface;
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
 using ImGuiNET;
-using ImGuiScene;
 
 using Num = System.Numerics;
 
@@ -36,7 +33,6 @@ namespace Echoglossian
     private string currentToastTranslation = string.Empty;
     private volatile int currentToastTranslationId;
 
-
     private bool talkDisplayTranslation;
 
     private Num.Vector2 talkTextDimensions = Num.Vector2.Zero;
@@ -48,7 +44,6 @@ namespace Echoglossian
     private Num.Vector2 addonTranslationTextDimensions = Num.Vector2.Zero;
     private Num.Vector2 addonTranslationTextImguiSize = Num.Vector2.Zero;
     private Num.Vector2 addonTranslationTextPosition = Num.Vector2.Zero;
-
 
     private bool toastDisplayTranslation;
 
@@ -315,7 +310,6 @@ namespace Echoglossian
               {
                 ImGui.SetTooltip(Resources.ToastOverlayWidthMultiplierOrientations);
               }
-
             }
 
             ImGui.EndTabItem();
@@ -324,8 +318,9 @@ namespace Echoglossian
           ImGui.EndTabBar();
         }
 
-        var posx = ImGui.GetWindowContentRegionMin().X;
+        var pos = new Num.Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y);
         ImGui.Separator();
+        ImGui.SetCursorPos(pos);
         ImGui.BeginGroup();
         if (ImGui.Button(Resources.SaveCloseButtonLabel))
         {
