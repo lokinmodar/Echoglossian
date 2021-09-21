@@ -71,3 +71,6 @@ dotnet_diagnostic.SA1202.severity = suggestion
 
 # CA1416: Validate platform compatibility
 dotnet_diagnostic.CA1416.severity = suggestion
+
+# SA1602: Enumeration items should be documented
+dotnet_diagnostic.SA1602.severity = suggestion

@@ -115,6 +115,7 @@ namespace Echoglossian
             ImGui.Begin(
               name,
               ImGuiWindowFlags.NoNav
+              | ImGuiWindowFlags.NoCollapse
               | ImGuiWindowFlags.AlwaysAutoResize
               | ImGuiWindowFlags.NoFocusOnAppearing
               | ImGuiWindowFlags.NoMouseInputs

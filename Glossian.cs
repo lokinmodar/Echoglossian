@@ -89,7 +89,7 @@ namespace Echoglossian
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
 #if DEBUG
         PluginLog.LogInformation($"FinalTranslatedText: {finalDialogueText}");
-        PluginLog.LogInformation($"LANG: {lang}");
+        PluginLog.LogInformation($"Translation LANG: {lang}");
 #endif
         if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || finalDialogueText == text))
         {

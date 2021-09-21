@@ -65,17 +65,15 @@
     <Warning Text="$(MSBuildProjectFile) is Multilingual build enabled, but the Multilingual App Toolkit is unavailable during the build. If building with Visual Studio, please check to ensure that toolkit is properly installed." />
   </Target>
   <ItemGroup>
-    <Compile Remove="NewFolder\**" />
     <Compile Remove="_old\**" />
-    <EmbeddedResource Remove="NewFolder\**" />
     <EmbeddedResource Remove="_old\**" />
-    <None Remove="NewFolder\**" />
     <None Remove="_old\**" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Font\NotoSans-Regular.ttf" />
     <None Remove="images\logo.png" />
     <None Remove="images\pix.png" />
+    <None Remove="minfilia.ico" />
     <None Remove="MultilingualResources\Echoglossian.es.xlf" />
     <None Remove="MultilingualResources\Echoglossian.pt-BR.xlf" />
     <None Remove="Resources\pix.png" />
@@ -88,7 +86,15 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.0.68" />
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
+    <PackageReference Include="DeepL" Version="0.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354">
       <PrivateAssets>all</PrivateAssets>
@@ -158,9 +164,7 @@
     <EmbeddedResource Include="Resources\pix.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EFCoreSqLite\EFCoreSqlite\EFCoreSqlite\EFCoreSqlite.csproj">
-      <Private>true</Private>
-    </ProjectReference>
+    <Resource Include="minfilia.ico" />
   </ItemGroup>
   <ItemGroup>
     <XliffResource Include="MultilingualResources\Echoglossian.es.xlf" />
@@ -181,7 +185,7 @@
   </ItemGroup>
   <!--  <ItemGroup>
 Dot not internalize any types inside this assembly 
-    <InternalizeExcludeAssemblies Include="EFCoreSqlite.dll" />
+    <InternalizeExcludeAssemblies Include="Echoglossian.EFCoreSqlite.dll" />
   </ItemGroup><Target Name="ILRepack" AfterTargets="Build">
     <ItemGroup>
       <InternalizeExcludeAssemblies Include="@(InternalizeExcludeAssemblies)"/>

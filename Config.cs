@@ -32,6 +32,7 @@ namespace Echoglossian
     public bool TranslateSelectOk = true;
     public bool TranslateToDoList = true;
     public bool UseImGui = false;
+    public bool InvertTranslationAndOriginalTextsWhenUsingImGui = false;
 
     public int ChosenTransEngine = 0;
 

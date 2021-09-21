@@ -13,8 +13,9 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Echoglossian.EFCoreSqlite;
 using Echoglossian.Properties;
-using EFCoreSqlite;
+
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiScene;
 using XivCommon;
@@ -29,49 +30,8 @@ namespace Echoglossian
     private const string SlashCommand = "/eglo";
     private static int languageInt = 16;
     private static int fontSize = 20;
-
-    private static readonly string[] Codes =
-    {
-      "af", "an", "ar", "az", "be_x_old",
-      "bg", "bn", "br", "bs",
-      "ca", "ceb", "cs", "cy", "da",
-      "de", "el", "en", "eo", "es",
-      "et", "eu", "fa", "fi", "fr",
-      "gl", "he", "hi", "hr", "ht",
-      "hu", "hy", "id", "is", "it",
-      "ja", "jv", "ka", "kk", "ko",
-      "la", "lb", "lt", "lv",
-      "mg", "mk", "ml", "mr", "ms",
-      "new", "nl", "nn", "no", "oc",
-      "pl", "pt", "ro", "roa_rup",
-      "ru", "sk", "sl",
-      "sq", "sr", "sv", "sw", "ta",
-      "te", "th", "tl", "tr", "uk",
-      "ur", "vi", "vo", "war", "zh",
-      "zh_classical", "zh_yue",
-    };
-
-    private readonly string[] languages =
-    {
-      "Afrikaans", "Aragonese", "Arabic", "Azerbaijani", "Belarusian",
-      "Bulgarian", "Bengali", "Breton", "Bosnian",
-      "Catalan; Valencian", "Cebuano", "Czech", "Welsh", "Danish",
-      "German", "Greek, Modern", "English", "Esperanto", "Spanish; Castilian",
-      "Estonian", "Basque", "Persian", "Finnish", "French",
-      "Galician", "Hebrew", "Hindi", "Croatian", "Haitian; Haitian Creole",
-      "Hungarian", "Armenian", "Indonesian", "Icelandic", "Italian",
-      "Japanese", "Javanese", "Georgian", "Kazakh", "Korean",
-      "Latin", "Luxembourgish; Letzeburgesch", "Lithuanian", "Latvian",
-      "Malagasy", "Macedonian", "Malayalam", "Marathi", "Malay",
-      "Nepal Bhasa; Newari", "Dutch; Flemish", "Norwegian Nynorsk; Nynorsk, Norwegian", "Norwegian",
-      "Occitan (post 1500)",
-      "Polish", "Portuguese", "Romanian; Moldavian; Moldovan", "Romance languages",
-      "Russian", "Slovak", "Slovenian",
-      "Albanian", "Serbian", "Swedish", "Swahili", "Tamil",
-      "Telugu", "Thai", "Tagalog", "Turkish", "Ukrainian",
-      "Urdu", "Vietnamese", "Volapük", "Waray", "Chinese",
-      "Chinese Classical", "Chinese yue",
-    };
+    private static int chosenTransEngine = 0;
+    private static string transEngineName;
 
     private readonly CommandManager commandManager;
     private bool config;
@@ -85,11 +45,9 @@ namespace Echoglossian
     private readonly SemaphoreSlim nameTranslationSemaphore;
 
     private readonly DalamudPluginInterface pluginInterface;
-    private TextureWrap pixImage;
+    private readonly TextureWrap pixImage;
 
-    private ToastGui toastGui;
-
-    private DbOperations dbOperations;
+    private readonly ToastGui toastGui;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
@@ -119,9 +77,7 @@ namespace Echoglossian
 
       this.toastGui = pToastGui;
 
-      this.dbOperations = new DbOperations();
-
-      this.dbOperations.CreateOrUseDb();
+      this.CreateOrUseDb();
 
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
 
@@ -133,6 +89,10 @@ namespace Echoglossian
       languageInt = this.configuration.Lang;
 
       fontSize = this.configuration.FontSize;
+
+      chosenTransEngine = this.configuration.ChosenTransEngine;
+
+      transEngineName = ((TransEngines)chosenTransEngine).ToString();
 
       this.framework.Update += this.Tick;
 
@@ -182,7 +142,7 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
       this.commandManager.RemoveHandler(SlashCommand);
-      
+
       this.nameTranslationSemaphore?.Dispose();
       this.toastTranslationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
@@ -191,16 +151,16 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
       this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;
 
-
       this.pluginInterface.UiBuilder.Dispose();
 
       this.pixImage?.Dispose();
 
       this.framework.Update -= this.Tick;
 
+      this.UiFont.Destroy();
       this.toastGui?.Dispose();
       this.gameGui?.Dispose();
-      //this.framework?.Dispose();
+
       this.pluginInterface?.Dispose();
     }
 
