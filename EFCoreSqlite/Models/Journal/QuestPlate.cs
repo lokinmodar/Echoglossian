@@ -44,12 +44,13 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
     [Required]
     public int TranslationEngine { get; set; }
 
-    [Timestamp]
     [Required]
     public DateTime CreatedDate { get; set; }
 
-    [Timestamp]
     public DateTime? UpdatedDate { get; set; }
+
+    [Timestamp]
+    public byte[] RowVersion { get; set; }
 
     public QuestPlate(string questName, string originalQuestMessage, string originalLang,
       string translatedQuestMessage, string translationLang, int translationEngine, string questId,

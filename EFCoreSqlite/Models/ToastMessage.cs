@@ -35,15 +35,16 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Required]
     public int TranslationEngine { get; set; }
 
-    [Timestamp]
     [Required]
     public DateTime CreatedDate { get; set; }
 
-    [Timestamp]
     public DateTime? UpdatedDate { get; set; }
 
+    [Timestamp]
+    public byte[] RowVersion { get; set; }
+
     public ToastMessage(string toastType, string originalToastMessage, string originalLang,
-  string translatedToastMessage, string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)
+      string translatedToastMessage, string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)
     {
       this.ToastType = toastType;
       this.OriginalToastMessage = originalToastMessage;

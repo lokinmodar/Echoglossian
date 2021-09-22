@@ -26,37 +26,33 @@ namespace Echoglossian.EFCoreSqlite
 
     public string DbPath { get; }
 
-    // private Logger log;
-
-    private StreamWriter logStream { get; set; }
+    private StreamWriter LogStream { get; set; }
 
     public EchoglossianDbContext()
     {
       var dbPath = Directory.GetParent(Assembly.GetExecutingAssembly().Location)?.ToString();
       this.DbPath = $"{dbPath}{Path.DirectorySeparatorChar}Echoglossian.db";
-      this.logStream = new StreamWriter($"{dbPath}{Path.DirectorySeparatorChar}dantecontextlog.txt", append: true);
+      this.LogStream = new StreamWriter($"{dbPath}{Path.DirectorySeparatorChar}dantecontextlog.txt", append: true);
     }
 
     // The following configures EF to create a Sqlite database file in the
     // special "local" folder for your platform.
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
       optionsBuilder.UseSqlite($"Data Source={this.DbPath}");
-      optionsBuilder.LogTo(this.logStream.WriteLine).EnableSensitiveDataLogging().EnableDetailedErrors();
+      optionsBuilder.LogTo(this.LogStream.WriteLine).EnableSensitiveDataLogging().EnableDetailedErrors();
     }
 
     public override void Dispose()
     {
       base.Dispose();
-      this.logStream.Dispose();
+      this.LogStream.Dispose();
     }
-
 
     public override async ValueTask DisposeAsync()
     {
       await base.DisposeAsync();
-      await this.logStream.DisposeAsync();
+      await this.LogStream.DisposeAsync();
     }
 
     /*public override int SaveChanges()

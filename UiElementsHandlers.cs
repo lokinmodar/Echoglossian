@@ -21,7 +21,6 @@ namespace Echoglossian
   // TODO: Add logic to invert translation and original texts
   public partial class Echoglossian
   {
-
     private void OnToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
     {
       if (!this.configuration.TranslateToast)

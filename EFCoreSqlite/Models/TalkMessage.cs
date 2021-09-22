@@ -41,12 +41,13 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Required]
     public int TranslationEngine { get; set; }
 
-    [Timestamp]
     [Required]
     public DateTime CreatedDate { get; set; }
 
-    [Timestamp]
     public DateTime? UpdatedDate { get; set; }
+
+    [Timestamp]
+    public byte[] RowVersion { get; set; }
 
     public TalkMessage(string senderName, string originalTalkMessage, string originalTalkMessageLang, string originalSenderNameLang, string translatedSenderName, string translatedTalkMessage, string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)
     {
@@ -68,6 +69,5 @@ namespace Echoglossian.EFCoreSqlite.Models
       return
         $"Id: {this.Id}, Sender: {this.SenderName}, OriginalMsg: {this.OriginalTalkMessage}, OriginalLang: {this.OriginalTalkMessageLang}, OriginalSenderNameLang: {this.OriginalSenderNameLang}, TranslatedName: {this.TranslatedSenderName}, TranslMsg: {this.TranslatedTalkMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}";
     }
-
   }
 }
