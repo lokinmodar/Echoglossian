@@ -26,13 +26,17 @@ namespace Echoglossian.EFCoreSqlite
 
     public string DbPath { get; }
 
+#if DEBUG
     private StreamWriter LogStream { get; set; }
 
+#endif
     public EchoglossianDbContext()
     {
       var dbPath = Directory.GetParent(Assembly.GetExecutingAssembly().Location)?.ToString();
       this.DbPath = $"{dbPath}{Path.DirectorySeparatorChar}Echoglossian.db";
-      this.LogStream = new StreamWriter($"{dbPath}{Path.DirectorySeparatorChar}dantecontextlog.txt", append: true);
+#if DEBUG
+      this.LogStream = new StreamWriter($"{dbPath}{Path.DirectorySeparatorChar}DBContextLog.txt", append: true);
+#endif
     }
 
     // The following configures EF to create a Sqlite database file in the
@@ -40,44 +44,25 @@ namespace Echoglossian.EFCoreSqlite
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
       optionsBuilder.UseSqlite($"Data Source={this.DbPath}");
+#if DEBUG
       optionsBuilder.LogTo(this.LogStream.WriteLine).EnableSensitiveDataLogging().EnableDetailedErrors();
+#endif
     }
 
     public override void Dispose()
     {
       base.Dispose();
+#if DEBUG
       this.LogStream.Dispose();
+#endif
     }
 
     public override async ValueTask DisposeAsync()
     {
       await base.DisposeAsync();
+#if DEBUG
       await this.LogStream.DisposeAsync();
+#endif
     }
-
-    /*public override int SaveChanges()
-    {
-      var entries = this.ChangeTracker
-        .Entries()
-        .Where(e => e.Entity is BaseEntity && (
-          e.State == EntityState.Added
-          || e.State == EntityState.Modified));
-      var enumerable = entries as EntityEntry[] ?? entries.ToArray();
-      var entityEntries = entries as EntityEntry[] ?? enumerable.ToArray();
-      File.AppendAllLines($"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}dantelog.txt", new[] { "entries antes do foreach", entityEntries.ToString() });
-      foreach (var entityEntry in entityEntries)
-      {
-        ((BaseEntity)entityEntry.Entity).UpdatedDate = DateTime.Now;
-
-        if (entityEntry.State == EntityState.Added)
-        {
-          ((BaseEntity)entityEntry.Entity).CreatedDate = DateTime.Now;
-        }
-      }
-
-      var entityEntries2 = entries as EntityEntry[] ?? enumerable.ToArray();
-      File.AppendAllLines($"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}dantelog.txt", new[] { "entries depois do foreach", entityEntries2.ToString() });
-      return base.SaveChanges();
-    }*/
   }
 }

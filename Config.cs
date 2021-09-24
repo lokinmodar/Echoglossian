@@ -11,6 +11,8 @@ namespace Echoglossian
 {
   public class Config : IPluginConfiguration
   {
+    public string PluginCulture = "en";
+
     public int Lang { get; set; } = 16;
 
     public int FontSize = 20;
@@ -40,7 +42,7 @@ namespace Echoglossian
     public Vector2 ImGuiToastWindowPosCorrection = Vector2.Zero;
     public float ImGuiWindowWidthMult = 0.85f;
     public float ImGuiToastWindowWidthMult = 1.20f;
-    public Vector4 OverlayTextColor = Vector4.Zero;
+    public Vector3 OverlayTextColor = Vector3.Zero;
 
     public int Version { get; set; } = 0;
   }

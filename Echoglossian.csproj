@@ -26,6 +26,7 @@
     <VersionPatch Condition="'$(VersionPatch)' == ''">$([System.DateTime]::UtcNow.ToString("yyMM"))</VersionPatch>
     <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
     <Description>Final Fantasy XIV game text translator</Description>
     <Copyright>Dante Souza e Souza - aka lokinmodar - 2021</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>
@@ -72,7 +73,6 @@
   <ItemGroup>
     <None Remove="Font\NotoSans-Regular.ttf" />
     <None Remove="images\logo.png" />
-    <None Remove="images\pix.png" />
     <None Remove="minfilia.ico" />
     <None Remove="MultilingualResources\Echoglossian.es.xlf" />
     <None Remove="MultilingualResources\Echoglossian.pt-BR.xlf" />

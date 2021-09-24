@@ -62,8 +62,10 @@ namespace Echoglossian
       {
         var lang = Codes[languageInt];
         var detectedLanguage = LangIdentify(text);
+
 #if DEBUG
-        PluginLog.LogInformation($"LANG: {lang}");
+        PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
+        PluginLog.LogInformation($"Chosen Translation Language: {lang}");
 #endif
         var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={text}";
 #if DEBUG
@@ -89,7 +91,6 @@ namespace Echoglossian
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
 #if DEBUG
         PluginLog.LogInformation($"FinalTranslatedText: {finalDialogueText}");
-        PluginLog.LogInformation($"Translation LANG: {lang}");
 #endif
         if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || finalDialogueText == text))
         {

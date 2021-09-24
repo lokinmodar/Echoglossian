@@ -107,6 +107,9 @@ namespace Echoglossian
 
     private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
     {
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetToastLog.txt", append: true);
+#endif
       if (!this.configuration.TranslateToast)
       {
         return;
@@ -153,6 +156,9 @@ namespace Echoglossian
       {
         return;
       }
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetTalkLog.txt", append: true);
+#endif
 
       try
       {
@@ -163,14 +169,14 @@ namespace Echoglossian
         var nameToTranslate = name.TextValue;
         var textToTranslate = text.TextValue;
 
-        var talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
+        TalkMessage talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
 
 #if DEBUG
-        PluginLog.LogFatal($"Antes de tentar consultar: {talkMessage}");
+        PluginLog.LogFatal($"Before DB Query attempt: {talkMessage}");
 #endif
         var findings = this.FindTalkMessage(talkMessage);
 #if DEBUG
-        PluginLog.LogFatal($"Antes de tentar consultar: {findings}");
+        PluginLog.LogFatal($"After DB Query attempt: {(findings ? "Message found in Db." : "Message not found in Db")}");
 #endif
         // If the dialogue is not saved
         if (!findings)
@@ -190,10 +196,11 @@ namespace Echoglossian
               var translatedTalkData = new TalkMessage(nameToTranslate, textToTranslate, LangIdentify(textToTranslate),
                 LangIdentify(nameToTranslate), nameTranslation, translatedText, Codes[languageInt], this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
 #if DEBUG
-              File.AppendAllLines($"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}dantelog.txt", new[] { "dados da talk antes de salvar", translatedTalkData.ToString() });
-
+              logStream.WriteLineAsync($"Before Talk Messages table data insertion:  {translatedTalkData}");
+#endif
               var result = this.InsertTalkData(translatedTalkData);
-              PluginLog.LogError(result);
+#if DEBUG
+              PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
 #endif
             }
             else
@@ -208,7 +215,7 @@ namespace Echoglossian
 #endif
             }
 #if DEBUG
-            PluginLog.Log(name.TextValue + ": " + text.TextValue);
+            PluginLog.Log($"Using Talk Overlay- {name.TextValue}: {text.TextValue}");
 #endif
           }
           else
@@ -284,6 +291,9 @@ namespace Echoglossian
                 if (nameId == this.currentNameTranslationId)
                 {
                   this.currentNameTranslation = nameTranslation;
+#if DEBUG
+                  PluginLog.Error($"Using overlay - name found in DB: {nameTranslation} ");
+#endif
                 }
 
                 this.nameTranslationSemaphore.Release();
@@ -295,11 +305,14 @@ namespace Echoglossian
             Task.Run(() =>
             {
               var id = this.currentTalkTranslationId;
-              var translation = this.FoundTalkMessage.TranslatedTalkMessage;
+              var translatedTalkMessage = this.FoundTalkMessage.TranslatedTalkMessage;
               this.talkTranslationSemaphore.Wait();
               if (id == this.currentTalkTranslationId)
               {
-                this.currentTalkTranslation = translation;
+                this.currentTalkTranslation = translatedTalkMessage;
+#if DEBUG
+                PluginLog.Error($"Using overlay - message found in DB: {translatedTalkMessage} ");
+#endif
               }
 
               this.talkTranslationSemaphore.Release();

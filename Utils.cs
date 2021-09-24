@@ -3,10 +3,24 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Globalization;
+using System.IO;
+
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
+    public void ListCultureInfos()
+    {
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "CultureInfos.txt", append: true);
+
+      var cus = CultureInfo.GetCultures(CultureTypes.AllCultures);
+      foreach (var cu in cus)
+      {
+        logStream.WriteLine(cu.ToString());
+      }
+    }
+
     private static readonly string[] Codes =
     {
       "af", "an", "ar", "az", "be_x_old",

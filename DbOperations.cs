@@ -4,22 +4,32 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.EFCoreSqlite.Models.Journal;
 using Microsoft.EntityFrameworkCore;
 
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private static readonly string V = $"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}dantelog.txt";
-    public string DbPath = V;
+#if DEBUG
+    private static readonly string V = $"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}";
+    public string DbOperationsLogPath = V;
+#endif
 
     public TalkMessage FoundTalkMessage { get; set; }
+
+    public ToastMessage FoundToastMessage { get; set; }
+
+    public BattleTalkMessage FoundbattleTalkMessage { get; set; }
+
+    public QuestPlate FoundQuestPlate { get; set; }
 
     public void CreateOrUseDb()
     {
@@ -30,18 +40,23 @@ namespace Echoglossian
     public bool FindTalkMessage(TalkMessage talkMessage)
     {
       using var context = new EchoglossianDbContext();
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbFindTalkOperationsLog.txt", append: true);
+#endif
       try
       {
-        File.AppendAllLines(this.DbPath, new[] { "antes da consulta: ", talkMessage.ToString() });
+#if DEBUG
+        logStream.WriteLineAsync($"Before Talk Messages table query: {talkMessage}");
+#endif
+
         var existingTalkMessage =
           context.TalkMessage.Where(t =>
             t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
             t.TranslationLang == talkMessage.TranslationLang);
         var localFoundTalkMessage = existingTalkMessage.FirstOrDefault();
-
-        File.AppendAllLines(
-            this.DbPath,
-            new[] { "depois da consulta: ", localFoundTalkMessage?.ToString() });
+#if DEBUG
+        logStream.WriteLineAsync($"After Talk Messages table query: {localFoundTalkMessage}");
+#endif
         if (existingTalkMessage.FirstOrDefault() == null ||
             localFoundTalkMessage?.OriginalTalkMessage != talkMessage.OriginalTalkMessage)
         {
@@ -54,7 +69,9 @@ namespace Echoglossian
       }
       catch (Exception e)
       {
-        File.AppendAllLinesAsync(this.DbPath, new[] { "Query operation error:", e.ToString() });
+#if DEBUG
+        logStream.WriteLineAsync($"Query operation error: {e}");
+#endif
         return false;
       }
     }
@@ -78,23 +95,29 @@ namespace Echoglossian
     public string InsertTalkData(TalkMessage talkMessage)
     {
       using var context = new EchoglossianDbContext();
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertTalkOperationsLog.txt", append: true);
+#endif
       try
       {
-        File.AppendAllLines(this.DbPath, new[] { "antes de inserir:", talkMessage.ToString() });
-
+#if DEBUG
+        logStream.WriteLineAsync($"Before SaveChanges: {talkMessage}");
+#endif
         // 1. Attach an entity to context with Added EntityState
         context.TalkMessage.Attach(talkMessage);
-
-        File.AppendAllLines(this.DbPath, new[] { "dentro do context:", context.TalkMessage.Local.ToString() });
-
+#if DEBUG
+        logStream.WriteLineAsync($"Inside Context: {context.TalkMessage.Local}");
+#endif
         // or the followings are also valid
         // context.Students.Add(std);
         // context.Entry<Student>(std).State = EntityState.Added;
         // context.Attach<Student>(std);
 
         // 2. Calling SaveChanges to insert a new record into table
-        context.SaveChanges();
-        File.AppendAllLines(this.DbPath, new[] { "depois do save changes:", context.TalkMessage.Local.ToString() });
+        context.SaveChangesAsync();
+#if DEBUG
+        logStream.WriteLineAsync($"After 'SaveChanges': {context.TalkMessage.Local}");
+#endif
         return "Data inserted to TalkMessages table.";
       }
       catch (Exception e)

@@ -7,6 +7,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using Dalamud.Interface;
 using Dalamud.Logging;
@@ -71,9 +73,15 @@ namespace Echoglossian
       return name;
     }
 
-    private void LoadFont(string fontFileName, int imguiFontSize)
+    private Tuple<string, int> LoadFontHelper(int chosenLanguage)
     {
-      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}\Font\{fontFileName}";
+      return new Tuple<string, int>("a", chosenLanguage);
+    }
+
+    private void LoadFont(/*string fontFileName, */int imguiFontSize)
+    {
+      // TODO: Get font by languageint
+      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}\Font\"/*{fontFileName}*/;
       this.FontLoaded = false;
       if (File.Exists(fontFile))
       {
@@ -107,6 +115,8 @@ namespace Echoglossian
           this.talkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
           ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.talkTextDimensions.Y));
+        // ImGui.PushFont(this.UiFont);
+        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
         if (this.configuration.TranslateNPCNames)
         {
           var name = this.GetTranslatedNpcNameForWindow();
@@ -147,6 +157,7 @@ namespace Echoglossian
 
         if (this.talkTranslationSemaphore.Wait(0))
         {
+          // ImGui.TextColored(new Vector4(this.configuration.OverlayTextColor, 255), this.currentTalkTranslation);
           ImGui.TextWrapped(this.currentTalkTranslation);
 
           this.talkTranslationSemaphore.Release();
@@ -157,6 +168,8 @@ namespace Echoglossian
         }
 
         this.talkTextImguiSize = ImGui.GetWindowSize();
+        ImGui.PopStyleColor(1);
+        // ImGui.PopFont();
         ImGui.End();
       }
     }
@@ -179,6 +192,7 @@ namespace Echoglossian
           | ImGuiWindowFlags.AlwaysAutoResize
           | ImGuiWindowFlags.NoFocusOnAppearing
           | ImGuiWindowFlags.NoMouseInputs);
+        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
         if (this.toastTranslationSemaphore.Wait(0))
         {
           ImGui.TextWrapped(this.currentToastTranslation);
@@ -190,6 +204,7 @@ namespace Echoglossian
         }
 
         this.toastTranslationTextImguiSize = ImGui.GetWindowSize();
+        ImGui.PopStyleColor(1);
         ImGui.End();
       }
     }
@@ -205,9 +220,21 @@ namespace Echoglossian
           if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
           {
             ImGui.Text(Resources.WhatToTranslateText);
-            ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk);
-            ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk);
-            ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames);
+            if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
+            {
+              this.SaveConfig();
+            }
+
+            if (ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk))
+            {
+              this.SaveConfig();
+            }
+
+            if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
+            {
+              this.SaveConfig();
+            }
+
             ImGui.Spacing();
             ImGui.Separator();
             if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languages, this.languages.Length))
@@ -234,6 +261,7 @@ namespace Echoglossian
                 if (ImGui.Combo(Resources.OverlayFontSizeLabel, ref this.configuration.FontSize, this.FontSizes, this.FontSizes.Length))
                 {
                   this.SaveConfig();
+                  this.LoadFont(this.configuration.FontSize);
                 }
 
                 ImGui.SameLine();
@@ -246,9 +274,15 @@ namespace Echoglossian
                 ImGui.Separator();
                 ImGui.SameLine();
                 ImGui.Text(Resources.FontColorSelectLabel);
-                if (ImGui.ColorEdit4(Resources.OverlayColorSelectName, ref this.configuration.OverlayTextColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
+                if (ImGui.ColorEdit3(Resources.OverlayColorSelectName, ref this.configuration.OverlayTextColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
                 {
+#if DEBUG
+                  PluginLog.Information($"Color selected before save: {this.configuration.OverlayTextColor}");
+#endif
                   this.SaveConfig();
+#if DEBUG
+                  PluginLog.Information($"Color selected before save: {this.configuration.OverlayTextColor}");
+#endif
                 }
 
                 ImGui.SameLine();
@@ -259,7 +293,11 @@ namespace Echoglossian
                 }
 
                 ImGui.Separator();
-                ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiWindowWidthMult, 0.001f, 0.1f, 2f);
+                if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiWindowWidthMult, 0.001f, 0.1f, 2f))
+                {
+                  this.SaveConfig();
+                }
+
                 ImGui.SameLine();
                 ImGui.Text(Resources.HoverTooltipIndicator);
                 if (ImGui.IsItemHovered())
@@ -269,7 +307,11 @@ namespace Echoglossian
 
                 ImGui.Separator();
                 ImGui.Spacing();
-                ImGui.DragFloat2(Resources.OverlayPositionAdjustmentLabel, ref this.configuration.ImGuiWindowPosCorrection);
+                if (ImGui.DragFloat2(Resources.OverlayPositionAdjustmentLabel, ref this.configuration.ImGuiWindowPosCorrection))
+                {
+                  this.SaveConfig();
+                }
+
                 ImGui.SameLine();
                 ImGui.Text(Resources.HoverTooltipIndicator);
                 if (ImGui.IsItemHovered())
@@ -304,7 +346,11 @@ namespace Echoglossian
             if (this.configuration.UseImGui)
             {
               ImGui.Separator();
-              ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel, ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.1f, 2f);
+              if (ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel, ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.1f, 2f))
+              {
+                this.SaveConfig();
+              }
+
               ImGui.SameLine();
               ImGui.Text(Resources.HoverTooltipIndicator);
               if (ImGui.IsItemHovered())
@@ -319,7 +365,7 @@ namespace Echoglossian
           ImGui.EndTabBar();
         }
 
-        var pos = new Num.Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y);
+        var pos = new Num.Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 25);
         ImGui.Separator();
         ImGui.SetCursorPos(pos);
         ImGui.BeginGroup();

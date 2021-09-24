@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Globalization;
 using System.Reflection;
 using System.Threading;
 
@@ -46,8 +47,12 @@ namespace Echoglossian
 
     private readonly DalamudPluginInterface pluginInterface;
     private readonly TextureWrap pixImage;
+    private readonly TextureWrap choiceImage;
+    private readonly TextureWrap cutsceneChoiceImage;
+    private readonly TextureWrap talkImage;
 
     private readonly ToastGui toastGui;
+    private CultureInfo cultureInfo;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
@@ -57,13 +62,18 @@ namespace Echoglossian
     /// <param name="pCommandManager">Command Manager.</param>
     /// <param name="pGameGui">Game Gui object.</param>
     /// <param name="pToastGui">Toast Gui Object.</param>
-    public Echoglossian([RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface, Framework pframework,
-      [RequiredVersion("1.0")] CommandManager pCommandManager, GameGui pGameGui, ToastGui pToastGui)
+    public Echoglossian(
+      [RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface,
+      Framework pframework,
+      [RequiredVersion("1.0")] CommandManager pCommandManager,
+      GameGui pGameGui,
+      ToastGui pToastGui)
     {
       this.framework = pframework;
 
       this.pluginInterface = dalamudPluginInterface;
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
+      this.cultureInfo = new CultureInfo(this.configuration.PluginCulture);
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
 
@@ -78,8 +88,12 @@ namespace Echoglossian
       this.toastGui = pToastGui;
 
       this.CreateOrUseDb();
+      this.ListCultureInfos();
 
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
+      this.choiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.choice);
+      this.cutsceneChoiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.cutscenechoice);
+      this.talkImage = this.pluginInterface.UiBuilder.LoadImage(Resources.prttws);
 
       this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
 
@@ -141,8 +155,6 @@ namespace Echoglossian
 
       this.pluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
-      this.commandManager.RemoveHandler(SlashCommand);
-
       this.nameTranslationSemaphore?.Dispose();
       this.toastTranslationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
@@ -151,17 +163,22 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
       this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;
 
-      this.pluginInterface.UiBuilder.Dispose();
-
       this.pixImage?.Dispose();
+      this.choiceImage?.Dispose();
+      this.cutsceneChoiceImage?.Dispose();
+      this.talkImage?.Dispose();
 
       this.framework.Update -= this.Tick;
 
       this.UiFont.Destroy();
-      this.toastGui?.Dispose();
-      this.gameGui?.Dispose();
 
-      this.pluginInterface?.Dispose();
+      this.commandManager.RemoveHandler(SlashCommand);
+      /*this.toastGui?.Dispose();
+      this.gameGui?.Dispose();*/
+
+      // this.pluginInterface.UiBuilder.Dispose();
+
+      // this.pluginInterface?.Dispose();
     }
 
     private void Tick(Framework tFramework)
