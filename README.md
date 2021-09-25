@@ -40,6 +40,8 @@ Enable the desired translations and configure the various options through the Co
 
 
 
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J35HJVY)
 ###### Final Fantasy XIV © 2010-2021 SQUARE ENIX CO., LTD. All Rights Reserved. I am not affiliated with SQUARE ENIX CO., LTD. in any way.
 
 

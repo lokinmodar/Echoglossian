@@ -174,8 +174,9 @@
           <target state="translated">Traduzir mensagens de quest</target>
         </trans-unit>
         <trans-unit id="TranslateScreenInfoToastToggleText" translate="yes" xml:space="preserve">
-          <source>Translate in-game other miscellaneous Toast Messages</source>
-          <target state="translated">Traduzir no jogo outras mensagens de Toast diversas</target>
+          <source>Translate other in-game miscellaneous Toast Messages</source>
+          <target state="needs-review-translation">Traduzir no jogo outras mensagens de Toast diversas</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="logo" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
           <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
@@ -196,6 +197,14 @@
         <trans-unit id="prttws" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
           <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="PluginInterfaceLanguage" translate="yes" xml:space="preserve">
+          <source>Choose the language for the plugin configuration window</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Escolha o idioma para a janela de configuração do plugin</target>
+        </trans-unit>
+        <trans-unit id="PluginInterfaceLanguageSelectorText" translate="yes" xml:space="preserve">
+          <source>Config Window Language:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Linguagem de janela de config:</target>
         </trans-unit>
       </group>
     </body>

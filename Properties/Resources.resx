@@ -208,6 +208,12 @@
   <data name="PixText" xml:space="preserve">
     <value>Scan the QR code to send me a PIX - only valid in Brazil</value>
   </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Choose the language for the plugin configuration window</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Config Window Language:</value>
+  </data>
   <data name="prttws" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -245,7 +251,7 @@
     <value>Translate in-game Quest Toast Messages</value>
   </data>
   <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
-    <value>Translate in-game other miscellaneous Toast Messages</value>
+    <value>Translate other in-game miscellaneous Toast Messages</value>
   </data>
   <data name="TranslateTalkToggleLabel" xml:space="preserve">
     <value>Translate talk</value>

@@ -327,6 +327,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choose the language for the plugin configuration window.
+        /// </summary>
+        internal static string PluginInterfaceLanguage {
+            get {
+                return ResourceManager.GetString("PluginInterfaceLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Config Window Language:.
+        /// </summary>
+        internal static string PluginInterfaceLanguageSelectorText {
+            get {
+                return ResourceManager.GetString("PluginInterfaceLanguageSelectorText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] prttws {
@@ -436,7 +454,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Translate in-game other miscellaneous Toast Messages.
+        ///   Looks up a localized string similar to Translate other in-game miscellaneous Toast Messages.
         /// </summary>
         internal static string TranslateScreenInfoToastToggleText {
             get {

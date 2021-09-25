@@ -144,4 +144,10 @@
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Escolha o idioma para a janela de configuração do plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Linguagem de janela de config:</value>
+  </data>
 </root>

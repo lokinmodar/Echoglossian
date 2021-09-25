@@ -26,6 +26,12 @@ namespace Echoglossian
     public bool FontLoadFailed;
     public ImFontPtr UiFont;
 
+    private string currentBattleTalkTranslation = string.Empty;
+    private volatile int currentBattleTalkTranslationId;
+
+    private string currentSenderTranslation = string.Empty;
+    private volatile int currentSenderTranslationId;
+
     private string currentTalkTranslation = string.Empty;
     private volatile int currentTalkTranslationId;
 
@@ -40,6 +46,12 @@ namespace Echoglossian
     private Num.Vector2 talkTextDimensions = Num.Vector2.Zero;
     private Num.Vector2 talkTextImguiSize = Num.Vector2.Zero;
     private Num.Vector2 talkTextPosition = Num.Vector2.Zero;
+
+    private bool battleTalkDisplayTranslation;
+
+    private Num.Vector2 battleTalkTextDimensions = Num.Vector2.Zero;
+    private Num.Vector2 battleTalkTextImguiSize = Num.Vector2.Zero;
+    private Num.Vector2 battleTalkTextPosition = Num.Vector2.Zero;
 
     private bool addonDisplayTranslation;
 
@@ -64,6 +76,24 @@ namespace Echoglossian
         name = this.currentNameTranslation;
 
         this.nameTranslationSemaphore.Release();
+      }
+      else
+      {
+        name = Resources.WaitingForTranslation;
+      }
+
+      return name;
+    }
+
+    public string GetTranslateSenderNameForWindow()
+    {
+      string name;
+
+      if (this.senderTranslationSemaphore.Wait(0))
+      {
+        name = this.currentSenderTranslation;
+
+        this.senderTranslationSemaphore.Release();
       }
       else
       {
@@ -104,6 +134,78 @@ namespace Echoglossian
       }
     }
 
+    private void DrawTranslatedBattleDialogueWindow()
+    {
+      if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
+      {
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Num.Vector2(
+          this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
+          this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+        var size = Math.Min(
+          this.battleTalkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
+          ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.battleTalkTextDimensions.Y));
+
+        // ImGui.PushFont(this.UiFont);
+        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
+        if (this.configuration.TranslateNPCNames)
+        {
+          var name = this.GetTranslateSenderNameForWindow();
+          if (!name.IsNullOrEmpty())
+          {
+            ImGui.Begin(
+              name,
+              ImGuiWindowFlags.NoNav
+              | ImGuiWindowFlags.NoCollapse
+              | ImGuiWindowFlags.AlwaysAutoResize
+              | ImGuiWindowFlags.NoFocusOnAppearing
+              | ImGuiWindowFlags.NoMouseInputs
+              | ImGuiWindowFlags.NoScrollbar);
+          }
+          else
+          {
+            ImGui.Begin(
+              "Talk translation",
+              ImGuiWindowFlags.NoTitleBar
+              | ImGuiWindowFlags.NoNav
+              | ImGuiWindowFlags.AlwaysAutoResize
+              | ImGuiWindowFlags.NoFocusOnAppearing
+              | ImGuiWindowFlags.NoMouseInputs
+              | ImGuiWindowFlags.NoScrollbar);
+          }
+        }
+        else
+        {
+          ImGui.Begin(
+            "Talk translation",
+            ImGuiWindowFlags.NoTitleBar
+            | ImGuiWindowFlags.NoNav
+            | ImGuiWindowFlags.AlwaysAutoResize
+            | ImGuiWindowFlags.NoFocusOnAppearing
+            | ImGuiWindowFlags.NoMouseInputs
+            | ImGuiWindowFlags.NoScrollbar);
+        }
+
+        if (this.battleTalkTranslationSemaphore.Wait(0))
+        {
+          // ImGui.TextColored(new Vector4(this.configuration.OverlayTextColor, 255), this.currentTalkTranslation);
+          ImGui.TextWrapped(this.currentBattleTalkTranslation);
+
+          this.battleTalkTranslationSemaphore.Release();
+        }
+        else
+        {
+          ImGui.Text(Resources.WaitingForTranslation);
+        }
+
+        this.battleTalkTextImguiSize = ImGui.GetWindowSize();
+        ImGui.PopStyleColor(1);
+
+        // ImGui.PopFont();
+        ImGui.End();
+      }
+    }
+
     private void DrawTranslatedDialogueWindow()
     {
       if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
@@ -115,6 +217,7 @@ namespace Echoglossian
           this.talkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
           ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.talkTextDimensions.Y));
+
         // ImGui.PushFont(this.UiFont);
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
         if (this.configuration.TranslateNPCNames)
@@ -169,6 +272,7 @@ namespace Echoglossian
 
         this.talkTextImguiSize = ImGui.GetWindowSize();
         ImGui.PopStyleColor(1);
+
         // ImGui.PopFont();
         ImGui.End();
       }
@@ -184,7 +288,7 @@ namespace Echoglossian
         var size = Math.Min(
           this.toastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
           ImGui.CalcTextSize(this.currentToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.toastTranslationTextDimensions.Y));
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size * 1.5f, this.toastTranslationTextDimensions.Y));
         ImGui.Begin(
           "Toast Translation",
           ImGuiWindowFlags.NoTitleBar
@@ -195,7 +299,7 @@ namespace Echoglossian
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
         if (this.toastTranslationSemaphore.Wait(0))
         {
-          ImGui.TextWrapped(this.currentToastTranslation);
+          ImGui.Text(this.currentToastTranslation);
           this.toastTranslationSemaphore.Release();
         }
         else
@@ -219,7 +323,14 @@ namespace Echoglossian
         {
           if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
           {
+            ImGui.Text(Resources.PluginInterfaceLanguage);
+            if (ImGui.Combo(Resources.PluginInterfaceLanguageSelectorText, ref this.configuration.PluginCultureInt, this.languages, this.languages.Length))
+            {
+              this.SaveConfig();
+            }
+
             ImGui.Text(Resources.WhatToTranslateText);
+            ImGui.SameLine();
             if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
             {
               this.SaveConfig();

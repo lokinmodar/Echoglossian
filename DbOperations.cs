@@ -27,7 +27,7 @@ namespace Echoglossian
 
     public ToastMessage FoundToastMessage { get; set; }
 
-    public BattleTalkMessage FoundbattleTalkMessage { get; set; }
+    public BattleTalkMessage FoundBattleTalkMessage { get; set; }
 
     public QuestPlate FoundQuestPlate { get; set; }
 
@@ -81,15 +81,45 @@ namespace Echoglossian
       using var context = new EchoglossianDbContext();
       var existingToastMessage =
         context.ToastMessage.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage);
-      return existingToastMessage.First().TranslatedToastMessage != null ? existingToastMessage.First() : toastMessage;
+      return existingToastMessage.FirstOrDefault().TranslatedToastMessage != null ? existingToastMessage.First() : toastMessage;
     }
 
-    public BattleTalkMessage FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
+    public bool FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
     {
       using var context = new EchoglossianDbContext();
-      var existingBattleTalkMessage =
-        context.BattleTalkMessage.Where(t => t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage);
-      return existingBattleTalkMessage.First().TranslatedBattleTalkMessage != string.Empty ? existingBattleTalkMessage.First() : battleTalkMessage;
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbFindBattleTalkOperationsLog.txt", append: true);
+#endif
+      try
+      {
+#if DEBUG
+        logStream.WriteLineAsync($"Before BattleTalk Messages table query: {battleTalkMessage}");
+#endif
+
+        var existingBattleTalkMessage =
+          context.BattleTalkMessage.Where(t => t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage);
+
+        var localFoundBattleTalkMessage = existingBattleTalkMessage.FirstOrDefault();
+#if DEBUG
+        logStream.WriteLineAsync($"After BattleTalk Messages table query: {localFoundBattleTalkMessage}");
+#endif
+        if (existingBattleTalkMessage.FirstOrDefault() == null ||
+            localFoundBattleTalkMessage?.OriginalBattleTalkMessage != battleTalkMessage.OriginalBattleTalkMessage)
+        {
+          this.FoundBattleTalkMessage = battleTalkMessage;
+          return false;
+        }
+
+        this.FoundBattleTalkMessage = localFoundBattleTalkMessage;
+        return true;
+      }
+      catch (Exception e)
+      {
+#if DEBUG
+        logStream.WriteLineAsync($"Query operation error: {e}");
+#endif
+        return false;
+      }
     }
 
     public string InsertTalkData(TalkMessage talkMessage)
@@ -103,11 +133,13 @@ namespace Echoglossian
 #if DEBUG
         logStream.WriteLineAsync($"Before SaveChanges: {talkMessage}");
 #endif
+
         // 1. Attach an entity to context with Added EntityState
         context.TalkMessage.Attach(talkMessage);
 #if DEBUG
         logStream.WriteLineAsync($"Inside Context: {context.TalkMessage.Local}");
 #endif
+
         // or the followings are also valid
         // context.Students.Add(std);
         // context.Entry<Student>(std).State = EntityState.Added;
@@ -129,10 +161,16 @@ namespace Echoglossian
     public string InsertBattleTalkData(BattleTalkMessage battleTalkMessage)
     {
       using var context = new EchoglossianDbContext();
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertBattleTalkOperationsLog.txt", append: true);
+#endif
       try
       {
         // 1. Attach an entity to context with Added EntityState
-        context.Add(battleTalkMessage);
+        context.BattleTalkMessage.Attach(battleTalkMessage);
+#if DEBUG
+        logStream.WriteLineAsync($"Inside Context: {context.BattleTalkMessage.Local}");
+#endif
 
         // or the followings are also valid
         // context.Students.Add(std);
@@ -140,12 +178,15 @@ namespace Echoglossian
         // context.Attach<Student>(std);
 
         // 2. Calling SaveChanges to insert a new record into Students table
-        context.SaveChanges();
+        context.SaveChangesAsync();
+#if DEBUG
+        logStream.WriteLineAsync($"After 'SaveChanges': {context.BattleTalkMessage.Local}");
+#endif
         return "Data inserted to BattleTalkMessages table.";
       }
       catch (Exception e)
       {
-        return $"Error: {e.StackTrace}";
+        return $"ErrorSavingData: {e}";
       }
     }
 

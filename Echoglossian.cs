@@ -44,6 +44,8 @@ namespace Echoglossian
     private readonly SemaphoreSlim toastTranslationSemaphore;
     private readonly SemaphoreSlim talkTranslationSemaphore;
     private readonly SemaphoreSlim nameTranslationSemaphore;
+    private readonly SemaphoreSlim battleTalkTranslationSemaphore;
+    private readonly SemaphoreSlim senderTranslationSemaphore;
 
     private readonly DalamudPluginInterface pluginInterface;
     private readonly TextureWrap pixImage;
@@ -88,8 +90,8 @@ namespace Echoglossian
       this.toastGui = pToastGui;
 
       this.CreateOrUseDb();
-      this.ListCultureInfos();
 
+      // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
       this.choiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.choice);
       this.cutsceneChoiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.cutscenechoice);
@@ -113,14 +115,17 @@ namespace Echoglossian
       this.nameTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.toastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.battleTalkTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.senderTranslationSemaphore = new SemaphoreSlim(1, 1);
 
       this.toastGui.Toast += this.OnToast;
-      this.toastGui.ErrorToast += this.OnToast;
-      this.toastGui.QuestToast += this.OnToast;
+      this.toastGui.ErrorToast += this.OnErrorToast;
+      this.toastGui.QuestToast += this.OnQuestToast;
 
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
+      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;
     }
 
@@ -150,15 +155,18 @@ namespace Echoglossian
       Common?.Dispose();
 
       this.toastGui.Toast -= this.OnToast;
-      this.toastGui.ErrorToast -= this.OnToast;
-      this.toastGui.QuestToast -= this.OnToast;
+      this.toastGui.ErrorToast -= this.OnErrorToast;
+      this.toastGui.QuestToast -= this.OnQuestToast;
 
       this.pluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
       this.nameTranslationSemaphore?.Dispose();
       this.toastTranslationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
+      this.battleTalkTranslationSemaphore?.Dispose();
+      this.senderTranslationSemaphore?.Dispose();
 
+      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
       this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;
@@ -173,12 +181,6 @@ namespace Echoglossian
       this.UiFont.Destroy();
 
       this.commandManager.RemoveHandler(SlashCommand);
-      /*this.toastGui?.Dispose();
-      this.gameGui?.Dispose();*/
-
-      // this.pluginInterface.UiBuilder.Dispose();
-
-      // this.pluginInterface?.Dispose();
     }
 
     private void Tick(Framework tFramework)
@@ -186,94 +188,24 @@ namespace Echoglossian
       if (this.configuration.UseImGui)
       {
         this.TalkHandler("Talk", 1);
-        this.ToastHandler("_TextError", 1);
-        this.ToastHandler("_TextError", 2);
-        this.ToastHandler("_WideText", 1);
-        this.ToastHandler("_WideText", 2);
-        this.ToastHandler("_ScreenText", 1);
-        this.ToastHandler("_ScreenText", 2);
-        this.ToastHandler("_AreaText", 1);
-        this.ToastHandler("_AreaText", 2);
+        this.BattleTalkHandler("BattleTalk", 1);
+        this.ErrorToastHandler("_TextError", 1);
+        this.ErrorToastHandler("_TextError", 2);
+        this.ErrorToastHandler("_TextError", 3);
+        this.ErrorToastHandler("_TextError", 4);
+        this.WideTextToastHandler("_WideText", 1);
+        this.WideTextToastHandler("_WideText", 2);
+        this.WideTextToastHandler("_WideText", 3);
+        this.WideTextToastHandler("_WideText", 4);
+        this.ToastHandler("_TextClassChange", 1);
+        this.ToastHandler("_TextClassChange", 2);
+        this.AreaToastHandler("_AreaText", 1);
+        this.AreaToastHandler("_AreaText", 2);
       }
       else
       {
         this.toastDisplayTranslation = false;
         this.talkDisplayTranslation = false;
-      }
-    }
-
-    private unsafe void TalkHandler(string addonName, int index)
-    {
-      var talk = this.gameGui.GetAddonByName(addonName, index);
-      if (talk != IntPtr.Zero)
-      {
-        var talkMaster = (AtkUnitBase*)talk;
-        if (talkMaster->IsVisible)
-        {
-          this.talkDisplayTranslation = true;
-          this.talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
-          this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
-          this.talkTextPosition.X = talkMaster->RootNode->X;
-          this.talkTextPosition.Y = talkMaster->RootNode->Y;
-        }
-        else
-        {
-          this.talkDisplayTranslation = false;
-        }
-      }
-      else
-      {
-        this.talkDisplayTranslation = false;
-      }
-    }
-
-    private unsafe void ToastHandler(string toastName, int index)
-    {
-      var toastByName = this.gameGui.GetAddonByName(toastName, index);
-      if (toastByName != IntPtr.Zero)
-      {
-        var toastByNameMaster = (AtkUnitBase*)toastByName;
-        if (toastByNameMaster->IsVisible)
-        {
-          this.toastDisplayTranslation = true;
-          this.toastTranslationTextDimensions.X = toastByNameMaster->RootNode->Width * toastByNameMaster->Scale * 2;
-          this.toastTranslationTextDimensions.Y = toastByNameMaster->RootNode->Height * toastByNameMaster->Scale;
-          this.toastTranslationTextPosition.X = toastByNameMaster->RootNode->X;
-          this.toastTranslationTextPosition.Y = toastByNameMaster->RootNode->Y;
-        }
-        else
-        {
-          this.toastDisplayTranslation = false;
-        }
-      }
-      else
-      {
-        this.toastDisplayTranslation = false;
-      }
-    }
-
-    private unsafe void AddonHandlers(string addonName, int index)
-    {
-      var addonByName = this.gameGui.GetAddonByName(addonName, index);
-      if (addonByName != IntPtr.Zero)
-      {
-        var addonByNameMaster = (AtkUnitBase*)addonByName;
-        if (addonByNameMaster->IsVisible)
-        {
-          this.addonDisplayTranslation = true;
-          this.addonTranslationTextDimensions.X = addonByNameMaster->RootNode->Width * addonByNameMaster->Scale * 2;
-          this.addonTranslationTextDimensions.Y = addonByNameMaster->RootNode->Height * addonByNameMaster->Scale;
-          this.addonTranslationTextPosition.X = addonByNameMaster->RootNode->X;
-          this.addonTranslationTextPosition.Y = addonByNameMaster->RootNode->Y;
-        }
-        else
-        {
-          this.addonDisplayTranslation = false;
-        }
-      }
-      else
-      {
-        this.addonDisplayTranslation = false;
       }
     }
 
