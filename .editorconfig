@@ -74,3 +74,9 @@ dotnet_diagnostic.CA1416.severity = suggestion
 
 # SA1602: Enumeration items should be documented
 dotnet_diagnostic.SA1602.severity = suggestion
+
+# CS0168: Variable is declared but never used
+dotnet_diagnostic.CS0168.severity = suggestion
+
+# S1481: Unused local variables should be removed
+dotnet_diagnostic.S1481.severity = suggestion

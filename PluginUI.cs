@@ -8,15 +8,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 
 using Dalamud.Interface;
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
 using ImGuiNET;
-
-using Num = System.Numerics;
 
 namespace Echoglossian
 {
@@ -141,7 +138,7 @@ namespace Echoglossian
     private void LoadFont(/*string fontFileName, */int imguiFontSize)
     {
       // TODO: Get font by languageint
-      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}\Font\"/*{fontFileName}*/;
+      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation) !)}\Font\"/*{fontFileName}*/;
       this.FontLoaded = false;
       if (File.Exists(fontFile))
       {

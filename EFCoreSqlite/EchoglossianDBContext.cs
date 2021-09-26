@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Echoglossian.EFCoreSqlite
 {

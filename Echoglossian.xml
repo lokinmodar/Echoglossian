@@ -1,0 +1,289 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Echoglossian</name>
+    </assembly>
+    <members>
+        <member name="M:Echoglossian.Echoglossian.#ctor(Dalamud.Plugin.DalamudPluginInterface,Dalamud.Game.Framework,Dalamud.Game.Command.CommandManager,Dalamud.Game.Gui.GameGui,Dalamud.Game.Gui.Toast.ToastGui)">
+            <summary>
+              Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian" /> class.
+            </summary>
+            <param name="dalamudPluginInterface">Plugin Interface.</param>
+            <param name="pframework">Framework.</param>
+            <param name="pCommandManager">Command Manager.</param>
+            <param name="pGameGui">Game Gui object.</param>
+            <param name="pToastGui">Toast Gui Object.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.AssemblyLocation">
+            <summary>
+              Gets or sets AssemblyLocation. When loaded by LivePluginLoader, the executing assembly will be wrong. Supplying this
+              property allows LivePluginLoader to supply the correct location, so that you have full compatibility when loaded
+              normally and through LPL.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.choice">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.CloseButtonLabel">
+            <summary>
+              Looks up a localized string similar to Close.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab1Name">
+            <summary>
+              Looks up a localized string similar to Main Configuration.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab2Name">
+            <summary>
+              Looks up a localized string similar to Toast configurations.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigWindowTitle">
+            <summary>
+              Looks up a localized string similar to Echoglossian Configuration.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.cutscenechoice">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">
+            <summary>
+              Looks up a localized string similar to Overlay font color:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HelpMessage">
+            <summary>
+              Looks up a localized string similar to Opens Echoglossian config window.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipIndicator">
+            <summary>
+              Looks up a localized string similar to (?).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LangIdentError">
+            <summary>
+              Looks up a localized string similar to The language could not be identified with an acceptable degree of certainty.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LanguageSelectionTooltip">
+            <summary>
+              Looks up a localized string similar to Which language to translate to..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LanguageSelectLabelText">
+            <summary>
+              Looks up a localized string similar to Language to translate to.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.logo">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.minfilia">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Name">
+            <summary>
+              Looks up a localized string similar to Echoglossian.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Overlay_name">
+            <summary>
+              Looks up a localized string similar to Battle talk translation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayAdjustmentOrientations">
+            <summary>
+              Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI dialogue box..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayColorSelectName">
+            <summary>
+              Looks up a localized string similar to OverlayColorSelect.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayFontColorOrientations">
+            <summary>
+              Looks up a localized string similar to Click to choose the overlay font color.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayFontSizeLabel">
+            <summary>
+              Looks up a localized string similar to Overlay Font Size.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayFontSizeOrientations">
+            <summary>
+              Looks up a localized string similar to Select the font size for the dialogue text overlay.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayPositionAdjustmentLabel">
+            <summary>
+              Looks up a localized string similar to Position adjustment.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayToggleLabel">
+            <summary>
+              Looks up a localized string similar to Display translated text overlay above game UI dialogue box instead of replacing its text with the translation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWidthMultiplierOrientations">
+            <summary>
+              Looks up a localized string similar to Adjust translation overlay width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWidthScrollLabel">
+            <summary>
+              Looks up a localized string similar to Dialogue Width multiplier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PatronButtonLabel">
+            <summary>
+              Looks up a localized string similar to Buy lokinmodar a Coffee.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.pix">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PixQrWindowLabel">
+            <summary>
+              Looks up a localized string similar to PIX qrcode.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PixText">
+            <summary>
+              Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PluginInterfaceLanguage">
+            <summary>
+              Looks up a localized string similar to Choose the language for the plugin configuration window.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PluginInterfaceLanguageSelectorText">
+            <summary>
+              Looks up a localized string similar to Config Window Language:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.prttws">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.QRCodeInstructionsText">
+            <summary>
+              Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SaveCloseButtonLabel">
+            <summary>
+              Looks up a localized string similar to Save and Close Config Window.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SendPixButton">
+            <summary>
+              Looks up a localized string similar to Send me a PIX donation!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthMultiplierOrientations">
+            <summary>
+              Looks up a localized string similar to Adjust toast translation overlay width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthScrollLabel">
+            <summary>
+              Looks up a localized string similar to Toast Overlay Width multiplier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateAreaToastToggleText">
+            <summary>
+              Looks up a localized string similar to Translate in-game Area name Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TransLateBattletalkToggle">
+            <summary>
+              Looks up a localized string similar to Translate battle talk.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateClassChangeToastToggleText">
+            <summary>
+              Looks up a localized string similar to Translate in-game Class/Job change Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateErrorToastToggleText">
+            <summary>
+              Looks up a localized string similar to Translate in-game Error Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateNpcNamesToggle">
+            <summary>
+              Looks up a localized string similar to Translate NPCs names in dialogue boxes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateQuestToastToggleText">
+            <summary>
+              Looks up a localized string similar to Translate in-game Quest Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateScreenInfoToastToggleText">
+            <summary>
+              Looks up a localized string similar to Translate other in-game miscellaneous Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateTalkToggleLabel">
+            <summary>
+              Looks up a localized string similar to Translate talk.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateToastToggleText">
+            <summary>
+              Looks up a localized string similar to Translate in-game Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.WaitingForTranslation">
+            <summary>
+              Looks up a localized string similar to Awaiting translation....
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.WhatToTranslateText">
+            <summary>
+              Looks up a localized string similar to Select what kind of text you want to be translated.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslateText">
+            <summary>
+              Looks up a localized string similar to Select which in-game Toast messages to translate.
+            </summary>
+        </member>
+    </members>
+</doc>

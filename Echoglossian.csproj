@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Label="MultilingualAppToolkit">
     <MultilingualAppToolkitVersion>4.0</MultilingualAppToolkitVersion>
     <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
@@ -7,19 +6,11 @@
     <SuppressPseudoWarning Condition="'$(Configuration)' == 'Debug'">true</SuppressPseudoWarning>
   </PropertyGroup>
   <PropertyGroup>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <AssemblyName>Echoglossian</AssemblyName>
     <Platforms>x64</Platforms>
     <Authors>lokinmodar</Authors>
     <NeutralLanguage>en</NeutralLanguage>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <NoWarn>IDE0003</NoWarn>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <Company>lokinmodar</Company>
-    <TargetFramework>net5.0-windows7.0</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <VersionMajor>2</VersionMajor>
     <VersionMinor>0</VersionMinor>
@@ -27,48 +18,34 @@
     <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <NoWarn>IDE0003</NoWarn>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Company>lokinmodar</Company>
     <Description>Final Fantasy XIV game text translator</Description>
     <Copyright>Dante Souza e Souza - aka lokinmodar - 2021</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>
-  </PropertyGroup>
-  <PropertyGroup Label="Documentation">
-    <DocumentationFile></DocumentationFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Label="Build">
-    <OutputPath>I:\Dante\tataru-to-dalamud\Echoglossian\obj\x64\Debug</OutputPath>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-  <ItemGroup>
-    <AdditionalFiles Include=".\stylecop.json" />
-    <AdditionalFiles Include="stylecop.json" />
-  </ItemGroup>
-  <PropertyGroup>
     <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     <ApplicationIcon>minfilia.ico</ApplicationIcon>
     <PackageLicenseExpression>Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License</PackageLicenseExpression>
-    <PackageIcon>milfilia.png</PackageIcon>
-    <PackageIconUrl />
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageIconUrl>https://github.com/lokinmodar/Echoglossian/blob/APIv4/images/logo.png?raw=true</PackageIconUrl> 
     <RepositoryUrl>https://github.com/lokinmodar/Echoglossian</RepositoryUrl>
     <PackageTags>ffxiv, translation, dll, plugin, XIVLauncher</PackageTags>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets" Label="MultilingualAppToolkit" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\v$(MultilingualAppToolkitVersion)\Microsoft.Multilingual.ResxResources.targets')" />
   <Target Name="MATPrerequisite" BeforeTargets="PrepareForBuild" Condition="!Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets')" Label="MultilingualAppToolkit">
     <Warning Text="$(MSBuildProjectFile) is Multilingual build enabled, but the Multilingual App Toolkit is unavailable during the build. If building with Visual Studio, please check to ensure that toolkit is properly installed." />
   </Target>
+  <PropertyGroup>
+    <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+  </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="_old\**" />
-    <EmbeddedResource Remove="_old\**" />
-    <None Remove="_old\**" />
+    <AdditionalFiles Include=".\stylecop.json" />
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Font\NotoSans-Regular.ttf" />
@@ -86,8 +63,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.0.68" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.0.71" />
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
+    <PackageReference Include="DalamudPackager" Version="2.1.2" />
     <PackageReference Include="DeepL" Version="0.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.10" />
@@ -96,61 +74,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354">
+    <PackageReference Include="NTextCat" Version="0.3.65" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NTextCat" Version="0.3.65" />
-    <PackageReference Include="XivCommon" Version="3.0.2">
-      <GeneratePathProperty>True</GeneratePathProperty>
-    </PackageReference>
-    <PackageReference Include="DalamudPackager" Version="2.1.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Dalamud">
-      <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
-      <HintPath Condition="Exists('$(DalamudHooks)')">$(DalamudHooks)\Dalamud.dll</HintPath>
-      <HintPath Condition="Exists('..\Dalamud\bin')">..\Dalamud\bin\Dalamud.dll</HintPath>
-      <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\Dalamud.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="FFXIVClientStructs">
-      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.dll</HintPath>
-      <Private>false</Private>
-      <CopyLocal>True</CopyLocal>
-    </Reference>
-    <Reference Include="FFXIVClientStructs.Common">
-      <HintPath>..\FFXIVClientStructs\bin\Debug\FFXIVClientStructs.Common.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ImGui.NET">
-      <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>
-      <HintPath Condition="Exists('$(DalamudHooks)')">$(DalamudHooks)\ImGuiScene.dll</HintPath>
-      <HintPath Condition="Exists('..\Dalamud\bin')">..\Dalamud\bin\ImGui.NET.dll</HintPath>
-      <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\ImGui.NET.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ImGuiScene">
-      <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\ImGuiScene.dll</HintPath>
-      <HintPath Condition="Exists('$(DalamudHooks)')">$(DalamudHooks)\ImGuiScene.dll</HintPath>
-      <HintPath Condition="Exists('..\Dalamud\bin')">..\Dalamud\bin\ImGuiScene.dll</HintPath>
-      <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\ImGuiScene.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Lumina">
-      <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\Lumina.dll</HintPath>
-      <HintPath Condition="Exists('$(DalamudHooks)')">$(DalamudHooks)\Lumina.dll</HintPath>
-      <HintPath Condition="Exists('..\Dalamud\bin')">..\Dalamud\bin\Lumina.dll</HintPath>
-      <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\Lumina.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Lumina.Excel">
-      <HintPath Condition="Exists('$(AppData)\XIVLauncher\addon\Hooks\dev')">$(AppData)\XIVLauncher\addon\Hooks\dev\Lumina.Excel.dll</HintPath>
-      <HintPath Condition="Exists('$(DalamudHooks)')">$(DalamudHooks)\Lumina.Excel.dll</HintPath>
-      <HintPath Condition="Exists('..\Dalamud\bin')">..\Dalamud\bin\Lumina.Excel.dll</HintPath>
-      <HintPath Condition="Exists('..\..\Dalamud\bin')">..\..\Dalamud\bin\Lumina.Excel.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
+    <PackageReference Include="XivCommon" Version="3.0.2" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">
@@ -162,11 +91,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\pix.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="minfilia.ico" />
-  </ItemGroup>
-  <ItemGroup>
+    <EmbeddedResource Include="Resources\minfilia.ico" />
     <XliffResource Include="MultilingualResources\Echoglossian.es.xlf" />
     <XliffResource Include="MultilingualResources\Echoglossian.pt-BR.xlf" />
   </ItemGroup>
@@ -183,15 +108,38 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <!--  <ItemGroup>
-Dot not internalize any types inside this assembly 
-    <InternalizeExcludeAssemblies Include="Echoglossian.EFCoreSqlite.dll" />
-  </ItemGroup><Target Name="ILRepack" AfterTargets="Build">
-    <ItemGroup>
-      <InternalizeExcludeAssemblies Include="@(InternalizeExcludeAssemblies)"/>
-      <InputAssemblies Include="$(TargetPath)" />
-      <InputAssemblies Include="$(TargetDir)*.dll" Exclude="$(TargetPath)" />
-    </ItemGroup>
-    <Exec Command="$(PkgILRepack)\tools\ILRepack.exe /lib:$(DalamudLibPath) /out:$(TargetDir)$(TargetFileName) @(InputAssemblies, ' ')" />
-  </Target>-->
+  <ItemGroup>
+    <Reference Include="Dalamud">
+      <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="FFXIVClientStructs">
+      <HintPath>I:\Dante\tataru-to-dalamud\FFXIVClientStructs\bin\Release\FFXIVClientStructs.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="FFXIVClientStructs.Common">
+      <HintPath>I:\Dante\tataru-to-dalamud\FFXIVClientStructs\bin\Release\FFXIVClientStructs.Common.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="GTranslate">
+      <HintPath>I:\Dante\tataru-to-dalamud\GTranslate\src\GTranslate\obj\Debug\net5.0-windows7.0\GTranslate.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="ImGui.NET">
+      <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="ImGuiScene">
+      <HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Lumina">
+      <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Lumina.Excel">
+      <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
 </Project>

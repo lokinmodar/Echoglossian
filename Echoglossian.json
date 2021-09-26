@@ -3,7 +3,7 @@
   "Author": "Dante Souza e Souza - aka lokinmodar",
   "Contributors": "Eternita",
   "InternalName": "Echoglossian",
-  "AssemblyVersion": "2.0.0.0",
+  "AssemblyVersion": "2.0.2109.1305",
   "ApplicableVersion": "any",
   "Description": "Realtime game text translator",
   "RepoUrl": "https://github.com/lokinmodar/Echoglossian",
@@ -12,7 +12,7 @@
   "Disabled": true,
   "Testing": false,
   "InstalledFromUrl": null,
-  "Punchline": "Dialogue translations? Yes we have!",
+  "Punchline": "Dialogue and other in-game text translations? Yes we have!",
   "IsHide": false,
   "TestingAssemblyVersion": null,
   "IsTestingExclusive": false,
@@ -23,7 +23,7 @@
   "DownloadLinkTesting": null,
   "LoadPriority": 0,
   "ImageUrls": [
-    "https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/logo.png"
+    ""
   ],
   "IconUrl": "https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/logo.png"
 }

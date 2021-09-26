@@ -14,10 +14,7 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Echoglossian.EFCoreSqlite;
 using Echoglossian.Properties;
-
-using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiScene;
 using XivCommon;
 
