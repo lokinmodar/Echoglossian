@@ -19,7 +19,9 @@ namespace Echoglossian
   public partial class Echoglossian
   {
 #if DEBUG
-    private static readonly string V = $"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}";
+    private static readonly string V =
+      $"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}";
+
     public string DbOperationsLogPath = V;
 #endif
 
@@ -76,12 +78,42 @@ namespace Echoglossian
       }
     }
 
-    public ToastMessage FindToastMessage(ToastMessage toastMessage)
+    public bool FindToastMessage(ToastMessage toastMessage)
     {
       using var context = new EchoglossianDbContext();
-      var existingToastMessage =
-        context.ToastMessage.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage);
-      return existingToastMessage.FirstOrDefault().TranslatedToastMessage != null ? existingToastMessage.First() : toastMessage;
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbFindToastOperationsLog.txt", append: true);
+#endif
+      try
+      {
+#if DEBUG
+        logStream.WriteLineAsync($"Before Toast Messages table query: {toastMessage}");
+#endif
+
+        var existingToastMessage =
+          context.ToastMessage.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage);
+
+        var localFoundToastMessage = existingToastMessage.FirstOrDefault();
+#if DEBUG
+        logStream.WriteLineAsync($"After Toast Messages table query: {localFoundToastMessage}");
+#endif
+        if (existingToastMessage.FirstOrDefault() == null ||
+            localFoundToastMessage?.OriginalToastMessage != toastMessage.OriginalToastMessage)
+        {
+          this.FoundToastMessage = toastMessage;
+          return false;
+        }
+
+        this.FoundToastMessage = localFoundToastMessage;
+        return true;
+      }
+      catch (Exception e)
+      {
+#if DEBUG
+        logStream.WriteLineAsync($"Query operation error: {e}");
+#endif
+        return false;
+      }
     }
 
     public bool FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
@@ -97,7 +129,8 @@ namespace Echoglossian
 #endif
 
         var existingBattleTalkMessage =
-          context.BattleTalkMessage.Where(t => t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage);
+          context.BattleTalkMessage.Where(t =>
+            t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage);
 
         var localFoundBattleTalkMessage = existingBattleTalkMessage.FirstOrDefault();
 #if DEBUG
@@ -131,13 +164,19 @@ namespace Echoglossian
       try
       {
 #if DEBUG
-        logStream.WriteLineAsync($"Before SaveChanges: {talkMessage}");
+        if (!this.configuration.UseImGui)
+        {
+          logStream.WriteLineAsync($"Before SaveChanges: {talkMessage}");
+        }
 #endif
 
         // 1. Attach an entity to context with Added EntityState
         context.TalkMessage.Attach(talkMessage);
 #if DEBUG
-        logStream.WriteLineAsync($"Inside Context: {context.TalkMessage.Local}");
+        if (!this.configuration.UseImGui)
+        {
+          logStream.WriteLineAsync($"Inside Context: {context.TalkMessage.Local}");
+        }
 #endif
 
         // or the followings are also valid
@@ -148,7 +187,10 @@ namespace Echoglossian
         // 2. Calling SaveChanges to insert a new record into table
         context.SaveChangesAsync();
 #if DEBUG
-        logStream.WriteLineAsync($"After 'SaveChanges': {context.TalkMessage.Local}");
+        if (!this.configuration.UseImGui)
+        {
+          logStream.WriteLineAsync($"After 'SaveChanges': {context.TalkMessage.Local}");
+        }
 #endif
         return "Data inserted to TalkMessages table.";
       }
@@ -162,14 +204,18 @@ namespace Echoglossian
     {
       using var context = new EchoglossianDbContext();
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertBattleTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertBattleTalkOperationsLog.txt",
+        append: true);
 #endif
       try
       {
         // 1. Attach an entity to context with Added EntityState
         context.BattleTalkMessage.Attach(battleTalkMessage);
 #if DEBUG
-        logStream.WriteLineAsync($"Inside Context: {context.BattleTalkMessage.Local}");
+        if (!this.configuration.UseImGui)
+        {
+          logStream.WriteLineAsync($"Inside Context: {context.BattleTalkMessage.Local}");
+        }
 #endif
 
         // or the followings are also valid
@@ -180,7 +226,10 @@ namespace Echoglossian
         // 2. Calling SaveChanges to insert a new record into Students table
         context.SaveChangesAsync();
 #if DEBUG
-        logStream.WriteLineAsync($"After 'SaveChanges': {context.BattleTalkMessage.Local}");
+        if (!this.configuration.UseImGui)
+        {
+          logStream.WriteLineAsync($"After 'SaveChanges': {context.BattleTalkMessage.Local}");
+        }
 #endif
         return "Data inserted to BattleTalkMessages table.";
       }
@@ -193,23 +242,38 @@ namespace Echoglossian
     public string InsertToastMessageData(ToastMessage toastMessage)
     {
       using var context = new EchoglossianDbContext();
+#if DEBUG
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertToastOperationsLog.txt", append: true);
+#endif
       try
       {
         // 1. Attach an entity to context with Added EntityState
-        context.Add(toastMessage);
+        context.ToastMessage.Attach(toastMessage);
+#if DEBUG
+        if (!this.configuration.UseImGui)
+        {
+          logStream.WriteLineAsync($"Inside Context: {context.ToastMessage.Local}");
+        }
+#endif
 
-        /* or the followings are also valid
-         context.Students.Add(std);
-         context.Entry<Student>(std).State = EntityState.Added;
-         context.Attach<Student>(std); */
+        // or the followings are also valid
+        // context.Students.Add(std);
+        // context.Entry<Student>(std).State = EntityState.Added;
+        // context.Attach<Student>(std);
 
         // 2. Calling SaveChanges to insert a new record into Students table
-        context.SaveChanges();
+        context.SaveChangesAsync();
+#if DEBUG
+        if (!this.configuration.UseImGui)
+        {
+          logStream.WriteLineAsync($"After 'SaveChanges': {context.ToastMessage.Local}");
+        }
+#endif
         return "Data inserted to ToastMessages table.";
       }
       catch (Exception e)
       {
-        return $"Error: {e.StackTrace}";
+        return $"ErrorSavingData: {e}";
       }
     }
   }

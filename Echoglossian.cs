@@ -24,7 +24,6 @@ using XivCommon;
 namespace Echoglossian
 {
   // TODO: Handle weird alphabets correctly.
-  // TODO: Add translation database history.
   // TODO: implement multiple fallback translation engines.
   public partial class Echoglossian : IDalamudPlugin
   {
@@ -197,15 +196,20 @@ namespace Echoglossian
         this.WideTextToastHandler("_WideText", 2);
         this.WideTextToastHandler("_WideText", 3);
         this.WideTextToastHandler("_WideText", 4);
-        this.ToastHandler("_TextClassChange", 1);
-        this.ToastHandler("_TextClassChange", 2);
+        this.ClassChangeToastHandler("_TextClassChange", 1);
+        this.ClassChangeToastHandler("_TextClassChange", 2);
         this.AreaToastHandler("_AreaText", 1);
         this.AreaToastHandler("_AreaText", 2);
+        this.QuestToastHandler("_AreaText", 1);
+        this.QuestToastHandler("_AreaText", 2);
+        this.QuestToastHandler("_AreaText", 3);
+        this.QuestToastHandler("_AreaText", 4);
       }
       else
       {
         this.toastDisplayTranslation = false;
         this.talkDisplayTranslation = false;
+        this.battleTalkDisplayTranslation = false;
       }
     }
 

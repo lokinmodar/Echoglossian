@@ -43,27 +43,57 @@ namespace Echoglossian
 
     private bool talkDisplayTranslation;
 
-    private Num.Vector2 talkTextDimensions = Num.Vector2.Zero;
-    private Num.Vector2 talkTextImguiSize = Num.Vector2.Zero;
-    private Num.Vector2 talkTextPosition = Num.Vector2.Zero;
+    private Vector2 talkTextDimensions = Vector2.Zero;
+    private Vector2 talkTextImguiSize = Vector2.Zero;
+    private Vector2 talkTextPosition = Vector2.Zero;
 
     private bool battleTalkDisplayTranslation;
 
-    private Num.Vector2 battleTalkTextDimensions = Num.Vector2.Zero;
-    private Num.Vector2 battleTalkTextImguiSize = Num.Vector2.Zero;
-    private Num.Vector2 battleTalkTextPosition = Num.Vector2.Zero;
+    private Vector2 battleTalkTextDimensions = Vector2.Zero;
+    private Vector2 battleTalkTextImguiSize = Vector2.Zero;
+    private Vector2 battleTalkTextPosition = Vector2.Zero;
 
     private bool addonDisplayTranslation;
 
-    private Num.Vector2 addonTranslationTextDimensions = Num.Vector2.Zero;
-    private Num.Vector2 addonTranslationTextImguiSize = Num.Vector2.Zero;
-    private Num.Vector2 addonTranslationTextPosition = Num.Vector2.Zero;
+    private Vector2 addonTranslationTextDimensions = Vector2.Zero;
+    private Vector2 addonTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 addonTranslationTextPosition = Vector2.Zero;
 
     private bool toastDisplayTranslation;
 
-    private Num.Vector2 toastTranslationTextDimensions = Num.Vector2.Zero;
-    private Num.Vector2 toastTranslationTextImguiSize = Num.Vector2.Zero;
-    private Num.Vector2 toastTranslationTextPosition = Num.Vector2.Zero;
+    private Vector2 toastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 toastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 toastTranslationTextPosition = Vector2.Zero;
+
+    private bool questToastDisplayTranslation;
+
+    private Vector2 questToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 questToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 questToastTranslationTextPosition = Vector2.Zero;
+
+    private bool classChangeToastDisplayTranslation;
+
+    private Vector2 classChangeToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 classChangeToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 classChangeToastTranslationTextPosition = Vector2.Zero;
+
+    private bool wideTextToastDisplayTranslation;
+
+    private Vector2 wideTextToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 wideTextToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 wideTextToastTranslationTextPosition = Vector2.Zero;
+
+    private bool areaToastDisplayTranslation;
+
+    private Vector2 areaToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 areaToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 areaToastTranslationTextPosition = Vector2.Zero;
+
+    private bool errorToastDisplayTranslation;
+
+    private Vector2 errorToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 errorToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 errorToastTranslationTextPosition = Vector2.Zero;
 
     public string[] FontSizes = Array.ConvertAll(Enumerable.Range(4, 72).ToArray(), x => x.ToString());
 
@@ -85,7 +115,7 @@ namespace Echoglossian
       return name;
     }
 
-    public string GetTranslateSenderNameForWindow()
+    public string GetTranslatedSenderNameForWindow()
     {
       string name;
 
@@ -138,19 +168,19 @@ namespace Echoglossian
     {
       if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
       {
-        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Num.Vector2(
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
           this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
         var size = Math.Min(
           this.battleTalkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
           ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.battleTalkTextDimensions.Y));
+        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y));
 
         // ImGui.PushFont(this.UiFont);
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
         if (this.configuration.TranslateNPCNames)
         {
-          var name = this.GetTranslateSenderNameForWindow();
+          var name = this.GetTranslatedSenderNameForWindow();
           if (!name.IsNullOrEmpty())
           {
             ImGui.Begin(
@@ -165,7 +195,7 @@ namespace Echoglossian
           else
           {
             ImGui.Begin(
-              "Talk translation",
+              "BattleTalk translation",
               ImGuiWindowFlags.NoTitleBar
               | ImGuiWindowFlags.NoNav
               | ImGuiWindowFlags.AlwaysAutoResize
@@ -177,7 +207,7 @@ namespace Echoglossian
         else
         {
           ImGui.Begin(
-            "Talk translation",
+            "BattleTalk translation",
             ImGuiWindowFlags.NoTitleBar
             | ImGuiWindowFlags.NoNav
             | ImGuiWindowFlags.AlwaysAutoResize
@@ -210,13 +240,13 @@ namespace Echoglossian
     {
       if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
       {
-        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Num.Vector2(
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
           this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
         var size = Math.Min(
           this.talkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
           ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size, this.talkTextDimensions.Y));
+        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y));
 
         // ImGui.PushFont(this.UiFont);
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
@@ -282,13 +312,13 @@ namespace Echoglossian
     {
       if (this.configuration.UseImGui && this.configuration.TranslateToast && this.toastDisplayTranslation)
       {
-        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Num.Vector2(
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.toastTranslationTextPosition.X + (this.toastTranslationTextDimensions.X / 2) - (this.toastTranslationTextImguiSize.X / 2),
           this.toastTranslationTextPosition.Y - this.toastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
         var size = Math.Min(
           this.toastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
           ImGui.CalcTextSize(this.currentToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(size, 0), new Num.Vector2(size * 1.5f, this.toastTranslationTextDimensions.Y));
+        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 1.5f, this.toastTranslationTextDimensions.Y));
         ImGui.Begin(
           "Toast Translation",
           ImGuiWindowFlags.NoTitleBar
@@ -317,20 +347,19 @@ namespace Echoglossian
     {
       if (this.config)
       {
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(500, 500), new Num.Vector2(1920, 1080));
+        ImGui.SetNextWindowSizeConstraints(new Vector2(500, 500), new Vector2(1920, 1080));
         ImGui.Begin(Resources.ConfigWindowTitle, ref this.config);
         if (ImGui.BeginTabBar("Tabs", ImGuiTabBarFlags.None))
         {
           if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
           {
-            ImGui.Text(Resources.PluginInterfaceLanguage);
+            /*ImGui.Text(Resources.PluginInterfaceLanguage);
             if (ImGui.Combo(Resources.PluginInterfaceLanguageSelectorText, ref this.configuration.PluginCultureInt, this.languages, this.languages.Length))
             {
               this.SaveConfig();
-            }
+            }*/
 
             ImGui.Text(Resources.WhatToTranslateText);
-            ImGui.SameLine();
             if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
             {
               this.SaveConfig();
@@ -392,7 +421,7 @@ namespace Echoglossian
 #endif
                   this.SaveConfig();
 #if DEBUG
-                  PluginLog.Information($"Color selected before save: {this.configuration.OverlayTextColor}");
+                  PluginLog.Information($"Color selected after save: {this.configuration.OverlayTextColor}");
 #endif
                 }
 
@@ -450,7 +479,7 @@ namespace Echoglossian
               ImGui.Checkbox(Resources.TranslateQuestToastToggleText, ref this.configuration.TranslateQuestToast);
               ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref this.configuration.TranslateAreaToast);
               ImGui.Checkbox(Resources.TranslateClassChangeToastToggleText, ref this.configuration.TranslateClassChangeToast);
-              ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText, ref this.configuration.TranslateScreenInfoToast);
+              ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText, ref this.configuration.TranslateWideTextToast);
             }
 
             ImGui.Separator();
@@ -476,7 +505,7 @@ namespace Echoglossian
           ImGui.EndTabBar();
         }
 
-        var pos = new Num.Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 25);
+        var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 25);
         ImGui.Separator();
         ImGui.SetCursorPos(pos);
         ImGui.BeginGroup();
@@ -499,9 +528,9 @@ namespace Echoglossian
         ImGui.PopStyleColor(3);
         ImGui.SameLine();
         ImGui.PushID(4);
-        ImGui.PushStyleColor(ImGuiCol.Button, new Num.Vector4(4, 7.0f, 0.6f, 0.6f));
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Num.Vector4(4, 7.0f, 0.7f, 0.7f));
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Num.Vector4(4, 7.0f, 0.8f, 0.8f));
+        ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 7.0f, 0.6f, 0.6f));
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
         if (ImGui.Button(Resources.SendPixButton))
         {
           ImGui.OpenPopup(Resources.PixQrWindowLabel);
@@ -509,11 +538,11 @@ namespace Echoglossian
 
         // Always center this window when appearing
         var center = ImGui.GetMainViewport().GetCenter();
-        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Num.Vector2(0.5f, 0.5f));
+        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
         if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
         {
           ImGui.Text(Resources.QRCodeInstructionsText);
-          ImGui.Image(this.pixImage.ImGuiHandle, new Num.Vector2(512, 512));
+          ImGui.Image(this.pixImage.ImGuiHandle, new Vector2(512, 512));
           if (ImGui.Button(Resources.CloseButtonLabel))
           {
             ImGui.CloseCurrentPopup();

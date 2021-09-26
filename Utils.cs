@@ -10,6 +10,7 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
+#if DEBUG
     public void ListCultureInfos()
     {
       using StreamWriter logStream = new(this.DbOperationsLogPath + "CultureInfos.txt", append: true);
@@ -20,6 +21,7 @@ namespace Echoglossian
         logStream.WriteLine(cu.ToString());
       }
     }
+#endif
 
     private static readonly string[] Codes =
     {

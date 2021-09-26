@@ -28,12 +28,14 @@ namespace Echoglossian
     public bool TranslateQuestToast = true;
     public bool TranslateAreaToast = true;
     public bool TranslateClassChangeToast = true;
-    public bool TranslateScreenInfoToast = true;
+    public bool TranslateWideTextToast = true;
     public bool TranslateYesNoScreen = true;
     public bool TranslateCutSceneSelectString = true;
     public bool TranslateSelectString = true;
     public bool TranslateSelectOk = true;
     public bool TranslateToDoList = true;
+    public bool TranslateScenarioTree = true;
+
     public bool UseImGui = false;
     public bool InvertTranslationAndOriginalTextsWhenUsingImGui = false;
 

@@ -97,78 +97,128 @@ namespace Echoglossian
       }
     }
 
+    private unsafe void QuestToastHandler(string questToastName, int index)
+    {
+      var questToastByName = this.gameGui.GetAddonByName(questToastName, index);
+      if (questToastByName != IntPtr.Zero)
+      {
+        var questToastByNameMaster = (AtkUnitBase*)questToastByName;
+        if (questToastByNameMaster->IsVisible)
+        {
+          this.questToastDisplayTranslation = true;
+          this.questToastTranslationTextDimensions.X = questToastByNameMaster->RootNode->Width * questToastByNameMaster->Scale * 2;
+          this.questToastTranslationTextDimensions.Y = questToastByNameMaster->RootNode->Height * questToastByNameMaster->Scale;
+          this.questToastTranslationTextPosition.X = questToastByNameMaster->RootNode->X;
+          this.questToastTranslationTextPosition.Y = questToastByNameMaster->RootNode->Y;
+        }
+        else
+        {
+          this.questToastDisplayTranslation = false;
+        }
+      }
+      else
+      {
+        this.questToastDisplayTranslation = false;
+      }
+    }
+
+    private unsafe void ClassChangeToastHandler(string classChangeToastName, int index)
+    {
+      var classChangeToastByName = this.gameGui.GetAddonByName(classChangeToastName, index);
+      if (classChangeToastByName != IntPtr.Zero)
+      {
+        var classChangeToastByNameMaster = (AtkUnitBase*)classChangeToastByName;
+        if (classChangeToastByNameMaster->IsVisible)
+        {
+          this.classChangeToastDisplayTranslation = true;
+          this.classChangeToastTranslationTextDimensions.X = classChangeToastByNameMaster->RootNode->Width * classChangeToastByNameMaster->Scale * 2;
+          this.classChangeToastTranslationTextDimensions.Y = classChangeToastByNameMaster->RootNode->Height * classChangeToastByNameMaster->Scale;
+          this.classChangeToastTranslationTextPosition.X = classChangeToastByNameMaster->RootNode->X;
+          this.classChangeToastTranslationTextPosition.Y = classChangeToastByNameMaster->RootNode->Y;
+        }
+        else
+        {
+          this.classChangeToastDisplayTranslation = false;
+        }
+      }
+      else
+      {
+        this.classChangeToastDisplayTranslation = false;
+      }
+    }
+
     private unsafe void ErrorToastHandler(string toastName, int index)
     {
-      var toastByName = this.gameGui.GetAddonByName(toastName, index);
-      if (toastByName != IntPtr.Zero)
+      var errorToastByName = this.gameGui.GetAddonByName(toastName, index);
+      if (errorToastByName != IntPtr.Zero)
       {
-        var toastByNameMaster = (AtkUnitBase*)toastByName;
-        if (toastByNameMaster->IsVisible)
+        var errorToastByNameMaster = (AtkUnitBase*)errorToastByName;
+        if (errorToastByNameMaster->IsVisible)
         {
-          this.toastDisplayTranslation = true;
-          this.toastTranslationTextDimensions.X = toastByNameMaster->RootNode->Width * toastByNameMaster->Scale * 2;
-          this.toastTranslationTextDimensions.Y = toastByNameMaster->RootNode->Height * toastByNameMaster->Scale;
-          this.toastTranslationTextPosition.X = toastByNameMaster->RootNode->X;
-          this.toastTranslationTextPosition.Y = toastByNameMaster->RootNode->Y;
+          this.errorToastDisplayTranslation = true;
+          this.errorToastTranslationTextDimensions.X = errorToastByNameMaster->RootNode->Width * errorToastByNameMaster->Scale * 2;
+          this.errorToastTranslationTextDimensions.Y = errorToastByNameMaster->RootNode->Height * errorToastByNameMaster->Scale;
+          this.errorToastTranslationTextPosition.X = errorToastByNameMaster->RootNode->X;
+          this.errorToastTranslationTextPosition.Y = errorToastByNameMaster->RootNode->Y;
         }
         else
         {
-          this.toastDisplayTranslation = false;
+          this.errorToastDisplayTranslation = false;
         }
       }
       else
       {
-        this.toastDisplayTranslation = false;
+        this.errorToastDisplayTranslation = false;
       }
     }
 
-    private unsafe void AreaToastHandler(string toastName, int index)
+    private unsafe void AreaToastHandler(string areaToastName, int index)
     {
-      var toastByName = this.gameGui.GetAddonByName(toastName, index);
-      if (toastByName != IntPtr.Zero)
+      var areaToastByName = this.gameGui.GetAddonByName(areaToastName, index);
+      if (areaToastByName != IntPtr.Zero)
       {
-        var toastByNameMaster = (AtkUnitBase*)toastByName;
-        if (toastByNameMaster->IsVisible)
+        var areaToastByNameMaster = (AtkUnitBase*)areaToastByName;
+        if (areaToastByNameMaster->IsVisible)
         {
-          this.toastDisplayTranslation = true;
-          this.toastTranslationTextDimensions.X = toastByNameMaster->RootNode->Width * toastByNameMaster->Scale * 2;
-          this.toastTranslationTextDimensions.Y = toastByNameMaster->RootNode->Height * toastByNameMaster->Scale;
-          this.toastTranslationTextPosition.X = toastByNameMaster->RootNode->X;
-          this.toastTranslationTextPosition.Y = toastByNameMaster->RootNode->Y;
+          this.areaToastDisplayTranslation = true;
+          this.areaToastTranslationTextDimensions.X = areaToastByNameMaster->RootNode->Width * areaToastByNameMaster->Scale * 2;
+          this.areaToastTranslationTextDimensions.Y = areaToastByNameMaster->RootNode->Height * areaToastByNameMaster->Scale;
+          this.areaToastTranslationTextPosition.X = areaToastByNameMaster->RootNode->X;
+          this.areaToastTranslationTextPosition.Y = areaToastByNameMaster->RootNode->Y;
         }
         else
         {
-          this.toastDisplayTranslation = false;
+          this.areaToastDisplayTranslation = false;
         }
       }
       else
       {
-        this.toastDisplayTranslation = false;
+        this.areaToastDisplayTranslation = false;
       }
     }
 
-    private unsafe void WideTextToastHandler(string toastName, int index)
+    private unsafe void WideTextToastHandler(string wideTextToastName, int index)
     {
-      var toastByName = this.gameGui.GetAddonByName(toastName, index);
-      if (toastByName != IntPtr.Zero)
+      var wideTextToastByName = this.gameGui.GetAddonByName(wideTextToastName, index);
+      if (wideTextToastByName != IntPtr.Zero)
       {
-        var toastByNameMaster = (AtkUnitBase*)toastByName;
-        if (toastByNameMaster->IsVisible)
+        var wideTextToastByNameMaster = (AtkUnitBase*)wideTextToastByName;
+        if (wideTextToastByNameMaster->IsVisible)
         {
-          this.toastDisplayTranslation = true;
-          this.toastTranslationTextDimensions.X = toastByNameMaster->RootNode->Width * toastByNameMaster->Scale * 2;
-          this.toastTranslationTextDimensions.Y = toastByNameMaster->RootNode->Height * toastByNameMaster->Scale;
-          this.toastTranslationTextPosition.X = toastByNameMaster->RootNode->X;
-          this.toastTranslationTextPosition.Y = toastByNameMaster->RootNode->Y;
+          this.wideTextToastDisplayTranslation = true;
+          this.wideTextToastTranslationTextDimensions.X = wideTextToastByNameMaster->RootNode->Width * wideTextToastByNameMaster->Scale * 2;
+          this.wideTextToastTranslationTextDimensions.Y = wideTextToastByNameMaster->RootNode->Height * wideTextToastByNameMaster->Scale;
+          this.wideTextToastTranslationTextPosition.X = wideTextToastByNameMaster->RootNode->X;
+          this.wideTextToastTranslationTextPosition.Y = wideTextToastByNameMaster->RootNode->Y;
         }
         else
         {
-          this.toastDisplayTranslation = false;
+          this.wideTextToastDisplayTranslation = false;
         }
       }
       else
       {
-        this.toastDisplayTranslation = false;
+        this.wideTextToastDisplayTranslation = false;
       }
     }
 
@@ -288,7 +338,7 @@ namespace Echoglossian
 #endif
       if (!this.configuration.TranslateToast && (!this.configuration.TranslateAreaToast ||
                                                  !this.configuration.TranslateClassChangeToast ||
-                                                 !this.configuration.TranslateScreenInfoToast))
+                                                 !this.configuration.TranslateWideTextToast))
       {
         return;
       }
@@ -391,8 +441,9 @@ namespace Echoglossian
               var translatedTalkData = new TalkMessage(nameToTranslate, textToTranslate, LangIdentify(textToTranslate),
                 LangIdentify(nameToTranslate), string.Empty, translatedText, Codes[languageInt],
                 this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
-#if DEBUG
+
               var result = this.InsertTalkData(translatedTalkData);
+#if DEBUG
               PluginLog.LogError(result);
 #endif
             }
@@ -434,6 +485,23 @@ namespace Echoglossian
               }
 
               this.talkTranslationSemaphore.Release();
+
+#if DEBUG
+              PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
+#endif
+              if (this.currentNameTranslation != Resources.WaitingForTranslation && this.currentTalkTranslation != Resources.WaitingForTranslation)
+              {
+                var translatedTalkData = new TalkMessage(nameToTranslate, textToTranslate,
+                  LangIdentify(textToTranslate),
+                  LangIdentify(nameToTranslate),
+                  this.configuration.TranslateNPCNames ? this.currentNameTranslation : string.Empty,
+                  this.currentTalkTranslation, Codes[languageInt],
+                  this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+                var result = this.InsertTalkData(translatedTalkData);
+#if DEBUG
+                PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+#endif
+              }
             });
           }
         }
@@ -575,8 +643,9 @@ namespace Echoglossian
                 LangIdentify(battleTextToTranslate),
                 LangIdentify(senderToTranslate), string.Empty, translatedBattleTalkMessage, Codes[languageInt],
                 this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
-#if DEBUG
+
               var result = this.InsertBattleTalkData(translatedBattleTalkData);
+#if DEBUG
               PluginLog.LogError($"Using BattleTalk Overlay - BattleTalk Message DB Insert operation result: {result}");
 #endif
             }
@@ -618,11 +687,27 @@ namespace Echoglossian
               }
 
               this.battleTalkTranslationSemaphore.Release();
+#if DEBUG
+              PluginLog.LogError($"Before if BattleTalk translation: {this.currentBattleTalkTranslation}");
+#endif
+              if (this.currentSenderTranslation != Resources.WaitingForTranslation && this.currentBattleTalkTranslation != Resources.WaitingForTranslation)
+              {
+                var translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
+                  LangIdentify(battleTextToTranslate),
+                  LangIdentify(senderToTranslate),
+                  this.configuration.TranslateNPCNames ? this.currentSenderTranslation : string.Empty,
+                  this.currentBattleTalkTranslation, Codes[languageInt],
+                  this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+                var result = this.InsertBattleTalkData(translatedBattleTalkData);
+#if DEBUG
+                PluginLog.LogError($"BattleTalk Message DB Insert operation result: {result}");
+#endif
+              }
             });
           }
         }
         else
-        {
+        { // if the data is already in the DB
           if (!this.configuration.UseImGui)
           {
             var translatedBattleMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;

@@ -129,21 +129,6 @@
   <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
     <value>Traducir en el juego otros mensajes misceláneos de toast</value>
   </data>
-  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="PluginInterfaceLanguage" xml:space="preserve">
     <value>Elija el idioma para la ventana de configuración del plugin</value>
   </data>
