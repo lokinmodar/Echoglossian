@@ -382,6 +382,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Original text in Overlay and Translated in Game UI box.
+        /// </summary>
+        internal static string SwapTranslationTextToggle {
+            get {
+                return ResourceManager.GetString("SwapTranslationTextToggle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adjust toast translation overlay width.
         /// </summary>
         internal static string ToastOverlayWidthMultiplierOrientations {

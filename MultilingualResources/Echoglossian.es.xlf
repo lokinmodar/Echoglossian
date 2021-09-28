@@ -205,6 +205,10 @@
           <source>Config Window Language:</source>
           <target state="translated" state-qualifier="mt-suggestion">Idioma de la ventana de configuración:</target>
         </trans-unit>
+        <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
+          <source>Show Original text in Overlay and Translated in Game UI box</source>
+          <target state="new">Show Original text in Overlay and Translated in Game UI box</target>
+        </trans-unit>
       </group>
     </body>
   </file>

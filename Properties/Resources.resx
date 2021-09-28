@@ -226,6 +226,9 @@
   <data name="SendPixButton" xml:space="preserve">
     <value>Send me a PIX donation!</value>
   </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Show Original text in Overlay and Translated in Game UI box</value>
+  </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Adjust toast translation overlay width</value>
   </data>

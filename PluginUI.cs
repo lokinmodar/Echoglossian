@@ -350,24 +350,28 @@ namespace Echoglossian
         {
           if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
           {
-            /*ImGui.Text(Resources.PluginInterfaceLanguage);
+            ImGui.Text(Resources.PluginInterfaceLanguage);
             if (ImGui.Combo(Resources.PluginInterfaceLanguageSelectorText, ref this.configuration.PluginCultureInt, this.languages, this.languages.Length))
             {
               this.SaveConfig();
-            }*/
+            }
 
             ImGui.Text(Resources.WhatToTranslateText);
             if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
             {
               this.SaveConfig();
             }
-
             if (ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk))
             {
               this.SaveConfig();
             }
 
             if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
+            {
+              this.SaveConfig();
+            }
+
+            if (ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast))
             {
               this.SaveConfig();
             }
@@ -455,20 +459,23 @@ namespace Echoglossian
                 {
                   ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
                 }
+
+                if (this.configuration.TranslateTalk)
+                {
+                  if (ImGui.Checkbox(Resources.SwapTranslationTextToggle, ref this.configuration.SwapTextsUsingImGui))
+                  {
+                    this.SaveConfig();
+                  }
+                }
               }
             }
 
             ImGui.EndTabItem();
           }
 
-          if (ImGui.BeginTabItem(Resources.ConfigTab2Name))
+          if (this.configuration.TranslateToast)
           {
-            if (ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast))
-            {
-              this.SaveConfig();
-            }
-
-            if (this.configuration.TranslateToast)
+            if (ImGui.BeginTabItem(Resources.ConfigTab2Name))
             {
               ImGui.Separator();
               ImGui.Text(Resources.WhichToastsToTranslateText);
@@ -477,26 +484,27 @@ namespace Echoglossian
               ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref this.configuration.TranslateAreaToast);
               ImGui.Checkbox(Resources.TranslateClassChangeToastToggleText, ref this.configuration.TranslateClassChangeToast);
               ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText, ref this.configuration.TranslateWideTextToast);
-            }
 
-            ImGui.Separator();
-            if (this.configuration.UseImGui)
-            {
+
               ImGui.Separator();
-              if (ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel, ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.1f, 2f))
+              if (this.configuration.UseImGui)
               {
-                this.SaveConfig();
+                ImGui.Separator();
+                if (ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel, ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.1f, 2f))
+                {
+                  this.SaveConfig();
+                }
+
+                ImGui.SameLine();
+                ImGui.Text(Resources.HoverTooltipIndicator);
+                if (ImGui.IsItemHovered())
+                {
+                  ImGui.SetTooltip(Resources.ToastOverlayWidthMultiplierOrientations);
+                }
               }
 
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.ToastOverlayWidthMultiplierOrientations);
-              }
+              ImGui.EndTabItem();
             }
-
-            ImGui.EndTabItem();
           }
 
           ImGui.EndTabBar();

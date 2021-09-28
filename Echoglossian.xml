@@ -215,6 +215,11 @@
               Looks up a localized string similar to Send me a PIX donation!.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.SwapTranslationTextToggle">
+            <summary>
+              Looks up a localized string similar to Show Original text in Overlay and Translated in Game UI box.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthMultiplierOrientations">
             <summary>
               Looks up a localized string similar to Adjust toast translation overlay width.
