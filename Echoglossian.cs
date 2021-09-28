@@ -42,6 +42,10 @@ namespace Echoglossian
     private readonly SemaphoreSlim nameTranslationSemaphore;
     private readonly SemaphoreSlim battleTalkTranslationSemaphore;
     private readonly SemaphoreSlim senderTranslationSemaphore;
+    private readonly SemaphoreSlim errorToastTranslationSemaphore;
+    private readonly SemaphoreSlim areaToastTranslationSemaphore;
+    private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
+    private readonly SemaphoreSlim questToastTranslationSemaphore;
 
     private readonly DalamudPluginInterface pluginInterface;
     private readonly TextureWrap pixImage;
@@ -108,11 +112,16 @@ namespace Echoglossian
 
       this.framework.Update += this.Tick;
 
-      this.nameTranslationSemaphore = new SemaphoreSlim(1, 1);
-      this.toastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.nameTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.battleTalkTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.senderTranslationSemaphore = new SemaphoreSlim(1, 1);
+
+      this.toastTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.areaToastTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
+
 
       this.toastGui.Toast += this.OnToast;
       this.toastGui.ErrorToast += this.OnErrorToast;
@@ -157,10 +166,13 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
       this.nameTranslationSemaphore?.Dispose();
-      this.toastTranslationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
       this.battleTalkTranslationSemaphore?.Dispose();
       this.senderTranslationSemaphore?.Dispose();
+      this.toastTranslationSemaphore?.Dispose();
+      this.areaToastTranslationSemaphore?.Dispose();
+      this.wideTextToastTranslationSemaphore?.Dispose();
+      this.questToastTranslationSemaphore?.Dispose();
 
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
@@ -197,14 +209,25 @@ namespace Echoglossian
         this.ClassChangeToastHandler("_TextClassChange", 2);
         this.AreaToastHandler("_AreaText", 1);
         this.AreaToastHandler("_AreaText", 2);
-        this.QuestToastHandler("_AreaText", 1);
-        this.QuestToastHandler("_AreaText", 2);
-        this.QuestToastHandler("_AreaText", 3);
-        this.QuestToastHandler("_AreaText", 4);
+        this.QuestToastHandler("_ScreenText", 1);
+        this.QuestToastHandler("_ScreenText", 2);
+        this.QuestToastHandler("_ScreenText", 3);
+        this.QuestToastHandler("_ScreenText", 4);
+        this.QuestToastHandler("_ScreenText", 5);
+        this.QuestToastHandler("_ScreenText", 6);
+        this.QuestToastHandler("_ScreenText", 7);
+        this.QuestToastHandler("_ScreenText", 8);
+        this.QuestToastHandler("_ScreenText", 9);
+
       }
       else
       {
         this.toastDisplayTranslation = false;
+        this.questToastDisplayTranslation = false;
+        this.wideTextToastDisplayTranslation = false;
+        this.errorToastDisplayTranslation = false;
+        this.areaToastDisplayTranslation = false;
+        this.classChangeToastDisplayTranslation = false;
         this.talkDisplayTranslation = false;
         this.battleTalkDisplayTranslation = false;
       }

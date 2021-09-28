@@ -3,14 +3,25 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System;
+using System.Globalization;
+using System.IO;
+
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
+
+    private Tuple<string, int> LoadFontHelper(int chosenLanguage)
+    {
+      return new Tuple<string, int>("a", chosenLanguage);
+    }
+
+
 #if DEBUG
     public void ListCultureInfos()
     {
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "CultureInfos.txt", append: true);
+      using StreamWriter logStream = new (this.DbOperationsLogPath + "CultureInfos.txt", append: true);
 
       var cus = CultureInfo.GetCultures(CultureTypes.AllCultures);
       foreach (var cu in cus)

@@ -23,28 +23,25 @@ namespace Echoglossian
     public bool FontLoadFailed;
     public ImFontPtr UiFont;
 
-    private string currentBattleTalkTranslation = string.Empty;
-    private volatile int currentBattleTalkTranslationId;
-
-    private string currentSenderTranslation = string.Empty;
-    private volatile int currentSenderTranslationId;
-
-    private string currentTalkTranslation = string.Empty;
-    private volatile int currentTalkTranslationId;
+    private bool talkDisplayTranslation;
 
     private string currentNameTranslation = string.Empty;
     private volatile int currentNameTranslationId;
 
-    private string currentToastTranslation = string.Empty;
-    private volatile int currentToastTranslationId;
-
-    private bool talkDisplayTranslation;
+    private string currentTalkTranslation = string.Empty;
+    private volatile int currentTalkTranslationId;
 
     private Vector2 talkTextDimensions = Vector2.Zero;
     private Vector2 talkTextImguiSize = Vector2.Zero;
     private Vector2 talkTextPosition = Vector2.Zero;
 
     private bool battleTalkDisplayTranslation;
+
+    private string currentSenderTranslation = string.Empty;
+    private volatile int currentSenderTranslationId;
+
+    private string currentBattleTalkTranslation = string.Empty;
+    private volatile int currentBattleTalkTranslationId;
 
     private Vector2 battleTalkTextDimensions = Vector2.Zero;
     private Vector2 battleTalkTextImguiSize = Vector2.Zero;
@@ -58,9 +55,15 @@ namespace Echoglossian
 
     private bool toastDisplayTranslation;
 
+    private string currentToastTranslation = string.Empty;
+    private volatile int currentToastTranslationId;
+
     private Vector2 toastTranslationTextDimensions = Vector2.Zero;
     private Vector2 toastTranslationTextImguiSize = Vector2.Zero;
     private Vector2 toastTranslationTextPosition = Vector2.Zero;
+
+    private string currentQuestToastTranslation = string.Empty;
+    private volatile int currentQuestToastTranslationId;
 
     private bool questToastDisplayTranslation;
 
@@ -130,15 +133,12 @@ namespace Echoglossian
       return name;
     }
 
-    private Tuple<string, int> LoadFontHelper(int chosenLanguage)
-    {
-      return new Tuple<string, int>("a", chosenLanguage);
-    }
+
 
     private void LoadFont(/*string fontFileName, */int imguiFontSize)
     {
       // TODO: Get font by languageint
-      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation) !)}\Font\"/*{fontFileName}*/;
+      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation) !)}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}"/*{fontFileName}*/;
       this.FontLoaded = false;
       if (File.Exists(fontFile))
       {
@@ -502,7 +502,7 @@ namespace Echoglossian
           ImGui.EndTabBar();
         }
 
-        var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 25);
+        var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 30);
         ImGui.Separator();
         ImGui.SetCursorPos(pos);
         ImGui.BeginGroup();

@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 using Dalamud.Game.Gui.Toast;
@@ -255,7 +256,7 @@ namespace Echoglossian
       {
         var messageTextToTranslate = message.TextValue;
 
-        if (!this.configuration.UseImGui)
+        if (!this.configuration.UseImGui && this.configuration.TranslateQuestToast)
         {
           var messageTranslatedText = Translate(messageTextToTranslate);
 
@@ -263,19 +264,19 @@ namespace Echoglossian
         }
         else
         {
-          this.currentToastTranslationId = Environment.TickCount;
-          this.currentToastTranslation = Resources.WaitingForTranslation;
+          this.currentQuestToastTranslationId = Environment.TickCount;
+          this.currentQuestToastTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var messageId = this.currentToastTranslationId;
+            var messageId = this.currentQuestToastTranslationId;
             var messageTranslation = Translate(messageTextToTranslate);
-            this.toastTranslationSemaphore.Wait();
-            if (messageId == this.currentToastTranslationId)
+            this.questToastTranslationSemaphore.Wait();
+            if (messageId == this.currentQuestToastTranslationId)
             {
-              this.currentToastTranslation = messageTranslation;
+              this.currentQuestToastTranslation = messageTranslation;
             }
 
-            this.toastTranslationSemaphore.Release();
+            this.questToastTranslationSemaphore.Release();
           });
         }
       }
@@ -331,7 +332,7 @@ namespace Echoglossian
     private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
     {
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetToastLog.txt", append: true);
+      using StreamWriter logStream = new (this.DbOperationsLogPath + "GetToastLog.txt", append: true);
 #endif
       if (!this.configuration.TranslateToast && (!this.configuration.TranslateAreaToast ||
                                                  !this.configuration.TranslateClassChangeToast ||
@@ -382,7 +383,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetTalkLog.txt", append: true);
+      using StreamWriter logStream = new (this.DbOperationsLogPath + "GetTalkLog.txt", append: true);
 #endif
 
       try
@@ -445,7 +446,7 @@ namespace Echoglossian
 #endif
             }
 #if DEBUG
-            PluginLog.Log($"Using Talk Overlay- {name.TextValue}: {text.TextValue}");
+            PluginLog.Log($"Using Talk Replace - {name.TextValue}: {text.TextValue}");
 #endif
           }
           else
@@ -582,7 +583,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetBattleTalkLog.txt", append: true);
+      using StreamWriter logStream = new (this.DbOperationsLogPath + "GetBattleTalkLog.txt", append: true);
 #endif
 
       try
@@ -647,7 +648,7 @@ namespace Echoglossian
 #endif
             }
 #if DEBUG
-            PluginLog.Log($"Using BattleTalk Overlay - {sender.TextValue}: {message.TextValue}");
+            PluginLog.Log($"Using BattleTalk Replace - {sender.TextValue}: {message.TextValue}");
 #endif
           }
           else
