@@ -135,4 +135,10 @@
   <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
     <value>Idioma de la ventana de configuración:</value>
   </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Mostrar texto de diálogo original en Superposición y traducido en el cuadro de diálogo Interfaz de usuario del juego</value>
+  </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>No utilice la superposición para mostrar las traducciones de Toasts</value>
+  </data>
 </root>

@@ -70,6 +70,11 @@
               Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.DoNotUseImGuiForToastsToggle">
+            <summary>
+              Looks up a localized string similar to Do not use overlay to show Toasts translations.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">
             <summary>
               Looks up a localized string similar to Overlay font color:.
@@ -92,7 +97,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageSelectionTooltip">
             <summary>
-              Looks up a localized string similar to Which language to translate to..
+              Looks up a localized string similar to Which language to translate the in-game dialogue boxes to..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageSelectLabelText">
@@ -117,7 +122,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.Overlay_name">
             <summary>
-              Looks up a localized string similar to Battle talk translation.
+              Looks up a localized string similar to Battle talk (Enenies dialogue lines) translation.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayAdjustmentOrientations">
@@ -152,7 +157,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayToggleLabel">
             <summary>
-              Looks up a localized string similar to Display translated text overlay above game UI dialogue box instead of replacing its text with the translation.
+              Looks up a localized string similar to Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayWidthMultiplierOrientations">
@@ -217,7 +222,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.SwapTranslationTextToggle">
             <summary>
-              Looks up a localized string similar to Show Original text in Overlay and Translated in Game UI box.
+              Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthMultiplierOrientations">
@@ -267,7 +272,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateTalkToggleLabel">
             <summary>
-              Looks up a localized string similar to Translate talk.
+              Looks up a localized string similar to Translate in-game dialogues.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateToastToggleText">

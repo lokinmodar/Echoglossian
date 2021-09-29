@@ -122,7 +122,6 @@ namespace Echoglossian
       this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
 
-
       this.toastGui.Toast += this.OnToast;
       this.toastGui.ErrorToast += this.OnErrorToast;
       this.toastGui.QuestToast += this.OnQuestToast;
@@ -218,7 +217,6 @@ namespace Echoglossian
         this.QuestToastHandler("_ScreenText", 7);
         this.QuestToastHandler("_ScreenText", 8);
         this.QuestToastHandler("_ScreenText", 9);
-
       }
       else
       {

@@ -71,11 +71,17 @@ namespace Echoglossian
     private Vector2 questToastTranslationTextImguiSize = Vector2.Zero;
     private Vector2 questToastTranslationTextPosition = Vector2.Zero;
 
+    private string currentClassChangeToastTranslation = string.Empty;
+    private volatile int currentClassChangeToastTranslationId;
+
     private bool classChangeToastDisplayTranslation;
 
     private Vector2 classChangeToastTranslationTextDimensions = Vector2.Zero;
     private Vector2 classChangeToastTranslationTextImguiSize = Vector2.Zero;
     private Vector2 classChangeToastTranslationTextPosition = Vector2.Zero;
+
+    private string currentWideTextToastTranslation = string.Empty;
+    private volatile int currentWideTextToastTranslationId;
 
     private bool wideTextToastDisplayTranslation;
 
@@ -83,11 +89,17 @@ namespace Echoglossian
     private Vector2 wideTextToastTranslationTextImguiSize = Vector2.Zero;
     private Vector2 wideTextToastTranslationTextPosition = Vector2.Zero;
 
+    private string currentAreaToastTranslation = string.Empty;
+    private volatile int currentAreaToastTranslationId;
+
     private bool areaToastDisplayTranslation;
 
     private Vector2 areaToastTranslationTextDimensions = Vector2.Zero;
     private Vector2 areaToastTranslationTextImguiSize = Vector2.Zero;
     private Vector2 areaToastTranslationTextPosition = Vector2.Zero;
+
+    private string currentErrorToastTranslation = string.Empty;
+    private volatile int currentErrorToastTranslationId;
 
     private bool errorToastDisplayTranslation;
 
@@ -132,8 +144,6 @@ namespace Echoglossian
 
       return name;
     }
-
-
 
     private void LoadFont(/*string fontFileName, */int imguiFontSize)
     {
@@ -361,6 +371,7 @@ namespace Echoglossian
             {
               this.SaveConfig();
             }
+
             if (ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk))
             {
               this.SaveConfig();
@@ -484,10 +495,14 @@ namespace Echoglossian
               ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref this.configuration.TranslateAreaToast);
               ImGui.Checkbox(Resources.TranslateClassChangeToastToggleText, ref this.configuration.TranslateClassChangeToast);
               ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText, ref this.configuration.TranslateWideTextToast);
-
+              ImGui.Separator();
+              if (ImGui.Checkbox(Resources.DoNotUseImGuiForToastsToggle, ref this.configuration.DoNotUseImGuiForToasts))
+              {
+                this.SaveConfig();
+              }
 
               ImGui.Separator();
-              if (this.configuration.UseImGui)
+              if (this.configuration.UseImGui && !this.configuration.DoNotUseImGuiForToasts)
               {
                 ImGui.Separator();
                 if (ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel, ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.1f, 2f))

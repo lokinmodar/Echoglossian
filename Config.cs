@@ -37,6 +37,7 @@ namespace Echoglossian
     public bool TranslateScenarioTree = true;
 
     public bool UseImGui = false;
+    public bool DoNotUseImGuiForToasts = true;
     public bool SwapTextsUsingImGui = false;
 
     public int ChosenTransEngine = 0;

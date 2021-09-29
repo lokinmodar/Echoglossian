@@ -24,13 +24,13 @@
     <comment>Shown in plugin install window</comment>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
-    <value>Para qual língua traduzir.</value>
+    <value>Para qual língua traduzir os diálogos do jogo.</value>
   </data>
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Linguagem para traduzir para</value>
   </data>
   <data name="Overlay name" xml:space="preserve">
-    <value>Tradução de conversa de batalha</value>
+    <value>Tradução de conversa de batalha (falas dos inimigos)</value>
     <comment>Translation overlay window name</comment>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
@@ -40,7 +40,7 @@
     <value>Ajuste de posição</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Exibir sobreposição com texto traduzido acima da caixa de diálogo de interface do jogo em vez de substituir seu texto pela tradução</value>
+    <value>Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
     <value>Multiplicador de largura da sobreposição de tradução de diálogo</value>
@@ -55,7 +55,7 @@
     <value>Traduzir conversas de batalha</value>
   </data>
   <data name="TranslateTalkToggleLabel" xml:space="preserve">
-    <value>Traduzir conversas</value>
+    <value>Traduzir diálogos do jogo</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Aguardando tradução...</value>
@@ -134,5 +134,11 @@
   </data>
   <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
     <value>Linguagem de janela de config:</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Mostrar texto de diálogo original no Overlay e o texto traduzido na caixa de diálogo da IU do jogo</value>
+  </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Não use as Overlays para mostrar traduções de mensagens de Toast</value>
   </data>
 </root>

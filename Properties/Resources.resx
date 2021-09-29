@@ -137,6 +137,9 @@
   <data name="cutscenechoice" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Do not use overlay to show Toasts translations</value>
+  </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
     <value>Overlay font color:</value>
   </data>
@@ -151,7 +154,7 @@
     <value>The language could not be identified with an acceptable degree of certainty</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
-    <value>Which language to translate to.</value>
+    <value>Which language to translate the in-game dialogue boxes to.</value>
   </data>
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Language to translate to</value>
@@ -166,7 +169,7 @@
     <value>Echoglossian</value>
   </data>
   <data name="Overlay name" xml:space="preserve">
-    <value>Battle talk translation</value>
+    <value>Battle talk (Enenies dialogue lines) translation</value>
     <comment>Translation overlay window name</comment>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
@@ -188,7 +191,7 @@
     <value>Position adjustment</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Display translated text overlay above game UI dialogue box instead of replacing its text with the translation</value>
+    <value>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Adjust translation overlay width</value>
@@ -227,7 +230,7 @@
     <value>Send me a PIX donation!</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Show Original text in Overlay and Translated in Game UI box</value>
+    <value>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Adjust toast translation overlay width</value>
@@ -257,7 +260,7 @@
     <value>Translate other in-game miscellaneous Toast Messages</value>
   </data>
   <data name="TranslateTalkToggleLabel" xml:space="preserve">
-    <value>Translate talk</value>
+    <value>Translate in-game dialogues</value>
   </data>
   <data name="TranslateToastToggleText" xml:space="preserve">
     <value>Translate in-game Toast Messages</value>

@@ -248,16 +248,16 @@ namespace Echoglossian
 
     private void OnQuestToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
     {
-      if (!this.configuration.TranslateToast && !this.configuration.TranslateQuestToast)
+      if (!this.configuration.TranslateToast || !this.configuration.TranslateQuestToast || !this.configuration.TranslateWideTextToast)
       {
         return;
       }
-
+      
       try
       {
         var messageTextToTranslate = message.TextValue;
 
-        if (!this.configuration.UseImGui && this.configuration.TranslateQuestToast)
+        if (this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateQuestToast && this.configuration.TranslateWideTextToast)
         {
           var messageTranslatedText = Translate(messageTextToTranslate);
 
@@ -295,38 +295,48 @@ namespace Echoglossian
         return;
       }
 
-      try
+      ToastMessage toastToSave = this.FormatToastMessage("Error", message.TextValue);
+      var findings = this.FindToastMessage(toastToSave);
+
+      if (!findings)
       {
-        var messageTextToTranslate = message.TextValue;
-
-        if (!this.configuration.UseImGui)
+        try
         {
-          var messageTranslatedText = Translate(messageTextToTranslate);
+          var messageTextToTranslate = message.TextValue;
 
-          message = messageTranslatedText;
-        }
-        else
-        {
-          this.currentToastTranslationId = Environment.TickCount;
-          this.currentToastTranslation = Resources.WaitingForTranslation;
-          Task.Run(() =>
+          if (this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast)
           {
-            var messageId = this.currentToastTranslationId;
-            var messageTranslation = Translate(messageTextToTranslate);
-            this.toastTranslationSemaphore.Wait();
-            if (messageId == this.currentToastTranslationId)
-            {
-              this.currentToastTranslation = messageTranslation;
-            }
+            var messageTranslatedText = Translate(messageTextToTranslate);
 
-            this.toastTranslationSemaphore.Release();
-          });
+            message = messageTranslatedText;
+          }
+          else
+          {
+            this.currentErrorToastTranslationId = Environment.TickCount;
+            this.currentErrorToastTranslation = Resources.WaitingForTranslation;
+            Task.Run(() =>
+            {
+              var messageId = this.currentErrorToastTranslationId;
+              var messageTranslation = Translate(messageTextToTranslate);
+              this.errorToastTranslationSemaphore.Wait();
+              if (messageId == this.currentErrorToastTranslationId)
+              {
+                this.currentErrorToastTranslation = messageTranslation;
+              }
+
+              this.errorToastTranslationSemaphore.Release();
+            });
+          }
+        }
+        catch (Exception e)
+        {
+          PluginLog.Log("Exception: " + e.StackTrace);
+          throw;
         }
       }
-      catch (Exception e)
+      else
       {
-        PluginLog.Log("Exception: " + e.StackTrace);
-        throw;
+        PluginLog.Log("Exception: ");
       }
     }
 
@@ -346,7 +356,7 @@ namespace Echoglossian
       {
         var messageTextToTranslate = message.TextValue;
 
-        if (!this.configuration.UseImGui)
+        if (this.configuration.DoNotUseImGuiForToasts)
         {
           var messageTranslatedText = Translate(messageTextToTranslate);
 

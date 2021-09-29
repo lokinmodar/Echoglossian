@@ -25,17 +25,19 @@
           <target state="final" state-qualifier="mt-suggestion">(?)</target>
         </trans-unit>
         <trans-unit id="LanguageSelectionTooltip" translate="yes" xml:space="preserve">
-          <source>Which language to translate to.</source>
-          <target state="translated" state-qualifier="mt-suggestion">A qué idioma traducir.</target>
+          <source>Which language to translate the in-game dialogue boxes to.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">A qué idioma traducir.</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="LanguageSelectLabelText" translate="yes" xml:space="preserve">
           <source>Language to translate to</source>
           <target state="translated" state-qualifier="mt-suggestion">Idioma al que traducir</target>
         </trans-unit>
         <trans-unit id="Overlay name" translate="yes" xml:space="preserve">
-          <source>Battle talk translation</source>
-          <target state="translated" state-qualifier="mt-suggestion">Traducción de charlas de batalla</target>
+          <source>Battle talk (Enenies dialogue lines) translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducción de charlas de batalla</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
           <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
@@ -46,8 +48,9 @@
           <target state="translated" state-qualifier="mt-suggestion">Ajuste de posición</target>
         </trans-unit>
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
-          <source>Display translated text overlay above game UI dialogue box instead of replacing its text with the translation</source>
-          <target state="translated" state-qualifier="mt-suggestion">Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la interfaz de usuario del juego en lugar de reemplazar su texto con la traducción</target>
+          <source>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la interfaz de usuario del juego en lugar de reemplazar su texto con la traducción</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
           <source>Dialogue Width multiplier</source>
@@ -66,8 +69,9 @@
           <target state="translated" state-qualifier="mt-suggestion">Traducir charla de batalla</target>
         </trans-unit>
         <trans-unit id="TranslateTalkToggleLabel" translate="yes" xml:space="preserve">
-          <source>Translate talk</source>
-          <target state="translated" state-qualifier="mt-suggestion">Traducir charla</target>
+          <source>Translate in-game dialogues</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir charla</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
           <source>Awaiting translation...</source>
@@ -206,8 +210,12 @@
           <target state="translated" state-qualifier="mt-suggestion">Idioma de la ventana de configuración:</target>
         </trans-unit>
         <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
-          <source>Show Original text in Overlay and Translated in Game UI box</source>
-          <target state="new">Show Original text in Overlay and Translated in Game UI box</target>
+          <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Mostrar texto de diálogo original en Superposición y traducido en el cuadro de diálogo Interfaz de usuario del juego</target>
+        </trans-unit>
+        <trans-unit id="DoNotUseImGuiForToastsToggle" translate="yes" xml:space="preserve">
+          <source>Do not use overlay to show Toasts translations</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">No utilice la superposición para mostrar las traducciones de Toasts</target>
         </trans-unit>
       </group>
     </body>

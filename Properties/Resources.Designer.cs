@@ -117,6 +117,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not use overlay to show Toasts translations.
+        /// </summary>
+        internal static string DoNotUseImGuiForToastsToggle {
+            get {
+                return ResourceManager.GetString("DoNotUseImGuiForToastsToggle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overlay font color:.
         /// </summary>
         internal static string FontColorSelectLabel {
@@ -153,7 +162,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Which language to translate to..
+        ///   Looks up a localized string similar to Which language to translate the in-game dialogue boxes to..
         /// </summary>
         internal static string LanguageSelectionTooltip {
             get {
@@ -200,7 +209,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Battle talk translation.
+        ///   Looks up a localized string similar to Battle talk (Enenies dialogue lines) translation.
         /// </summary>
         internal static string Overlay_name {
             get {
@@ -263,7 +272,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Display translated text overlay above game UI dialogue box instead of replacing its text with the translation.
+        ///   Looks up a localized string similar to Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation.
         /// </summary>
         internal static string OverlayToggleLabel {
             get {
@@ -382,7 +391,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Show Original text in Overlay and Translated in Game UI box.
+        ///   Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
         /// </summary>
         internal static string SwapTranslationTextToggle {
             get {
@@ -472,7 +481,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Translate talk.
+        ///   Looks up a localized string similar to Translate in-game dialogues.
         /// </summary>
         internal static string TranslateTalkToggleLabel {
             get {

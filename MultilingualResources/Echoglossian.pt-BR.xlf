@@ -25,16 +25,16 @@
           <target state="final" state-qualifier="mt-suggestion">(?)</target>
         </trans-unit>
         <trans-unit id="LanguageSelectionTooltip" translate="yes" xml:space="preserve">
-          <source>Which language to translate to.</source>
-          <target state="translated" state-qualifier="mt-suggestion">Para qual língua traduzir.</target>
+          <source>Which language to translate the in-game dialogue boxes to.</source>
+          <target state="translated">Para qual língua traduzir os diálogos do jogo.</target>
         </trans-unit>
         <trans-unit id="LanguageSelectLabelText" translate="yes" xml:space="preserve">
           <source>Language to translate to</source>
           <target state="translated" state-qualifier="mt-suggestion">Linguagem para traduzir para</target>
         </trans-unit>
         <trans-unit id="Overlay name" translate="yes" xml:space="preserve">
-          <source>Battle talk translation</source>
-          <target state="translated" state-qualifier="mt-suggestion">Tradução de conversa de batalha</target>
+          <source>Battle talk (Enenies dialogue lines) translation</source>
+          <target state="translated">Tradução de conversa de batalha (falas dos inimigos)</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
@@ -46,8 +46,8 @@
           <target state="translated" state-qualifier="mt-suggestion">Ajuste de posição</target>
         </trans-unit>
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
-          <source>Display translated text overlay above game UI dialogue box instead of replacing its text with the translation</source>
-          <target state="translated" state-qualifier="mt-suggestion">Exibir sobreposição com texto traduzido acima da caixa de diálogo de interface do jogo em vez de substituir seu texto pela tradução</target>
+          <source>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</source>
+          <target state="translated">Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</target>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
           <source>Dialogue Width multiplier</source>
@@ -66,8 +66,8 @@
           <target state="translated" state-qualifier="mt-suggestion">Traduzir conversas de batalha</target>
         </trans-unit>
         <trans-unit id="TranslateTalkToggleLabel" translate="yes" xml:space="preserve">
-          <source>Translate talk</source>
-          <target state="translated" state-qualifier="mt-suggestion">Traduzir conversas</target>
+          <source>Translate in-game dialogues</source>
+          <target state="translated">Traduzir diálogos do jogo</target>
         </trans-unit>
         <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
           <source>Awaiting translation...</source>
@@ -206,8 +206,12 @@
           <target state="translated" state-qualifier="mt-suggestion">Linguagem de janela de config:</target>
         </trans-unit>
         <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
-          <source>Show Original text in Overlay and Translated in Game UI box</source>
-          <target state="new">Show Original text in Overlay and Translated in Game UI box</target>
+          <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
+          <target state="translated">Mostrar texto de diálogo original no Overlay e o texto traduzido na caixa de diálogo da IU do jogo</target>
+        </trans-unit>
+        <trans-unit id="DoNotUseImGuiForToastsToggle" translate="yes" xml:space="preserve">
+          <source>Do not use overlay to show Toasts translations</source>
+          <target state="translated">Não use as Overlays para mostrar traduções de mensagens de Toast</target>
         </trans-unit>
       </group>
     </body>

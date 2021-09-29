@@ -11,12 +11,10 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-
     private Tuple<string, int> LoadFontHelper(int chosenLanguage)
     {
       return new Tuple<string, int>("a", chosenLanguage);
     }
-
 
 #if DEBUG
     public void ListCultureInfos()
@@ -82,16 +80,16 @@ namespace Echoglossian
       this.pluginInterface.SavePluginConfig(this.configuration);
     }
 
+    [Flags]
     public enum TransEngines
     {
-      Google, // Google Translator (free engine)
-      Deepl, // DeepL Translator
-      Bing, // Microsoft Bing Translator (free engine)
-      Yandex, // Yandex Translator
-      GTranslate, // Uses Google, Bing and Yandex (free engines)
-      Amazon, // Amazon Translate
-      Azure, // Microsoft Azure Translate
+      Google = 1 << 0, // Google Translator (free engine)
+      Deepl = 1 << 1, // DeepL Translator
+      Bing = 1 << 2, // Microsoft Bing Translator (free engine)
+      Yandex = 1 << 3, // Yandex Translator
+      GTranslate = 1 << 4, // Uses Google, Bing and Yandex (free engines)
+      Amazon = 1 << 5, // Amazon Translate
+      Azure = 1 << 6, // Microsoft Azure Translate
     }
   }
-
 }
