@@ -90,7 +90,8 @@ namespace Echoglossian
 #endif
 
         var existingToastMessage =
-          context.ToastMessage.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage);
+          context.ToastMessage.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
+                                          t.TranslationLang == toastMessage.TranslationLang && t.ToastType == toastMessage.ToastType);
 
         var localFoundToastMessage = existingToastMessage.FirstOrDefault();
 #if DEBUG
@@ -129,7 +130,8 @@ namespace Echoglossian
 
         var existingBattleTalkMessage =
           context.BattleTalkMessage.Where(t =>
-            t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage);
+            t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage &&
+            t.TranslationLang == battleTalkMessage.TranslationLang);
 
         var localFoundBattleTalkMessage = existingBattleTalkMessage.FirstOrDefault();
 #if DEBUG

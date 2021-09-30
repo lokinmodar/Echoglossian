@@ -145,16 +145,16 @@ namespace Echoglossian
       return name;
     }
 
-    private void LoadFont(/*string fontFileName, */int imguiFontSize)
+    private void LoadFont(/*string fontFileName,int imguiFontSize */)
     {
       // TODO: Get font by languageint
-      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation) !)}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}"/*{fontFileName}*/;
+      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation) !)}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
       this.FontLoaded = false;
       if (File.Exists(fontFile))
       {
         try
         {
-          this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, imguiFontSize);
+          this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize /*imguiFontSize*/);
           this.FontLoaded = true;
         }
         catch (Exception ex)
@@ -413,7 +413,7 @@ namespace Echoglossian
                 if (ImGui.Combo(Resources.OverlayFontSizeLabel, ref this.configuration.FontSize, this.FontSizes, this.FontSizes.Length))
                 {
                   this.SaveConfig();
-                  this.LoadFont(this.configuration.FontSize);
+                  this.LoadFont(/*this.configuration.FontSize*/);
                 }
 
                 ImGui.SameLine();

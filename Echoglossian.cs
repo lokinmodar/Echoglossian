@@ -91,6 +91,8 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
+      this.pluginInterface.UiBuilder.RebuildFonts();
+
       // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
       this.choiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.choice);
@@ -118,6 +120,7 @@ namespace Echoglossian
       this.senderTranslationSemaphore = new SemaphoreSlim(1, 1);
 
       this.toastTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.errorToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.areaToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
@@ -168,7 +171,9 @@ namespace Echoglossian
       this.talkTranslationSemaphore?.Dispose();
       this.battleTalkTranslationSemaphore?.Dispose();
       this.senderTranslationSemaphore?.Dispose();
+
       this.toastTranslationSemaphore?.Dispose();
+      this.errorToastTranslationSemaphore?.Dispose();
       this.areaToastTranslationSemaphore?.Dispose();
       this.wideTextToastTranslationSemaphore?.Dispose();
       this.questToastTranslationSemaphore?.Dispose();
