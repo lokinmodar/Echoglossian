@@ -181,6 +181,9 @@
   <data name="OverlayFontColorOrientations" xml:space="preserve">
     <value>Click to choose the overlay font color</value>
   </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Adjust the Overlay font scale</value>
+  </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
     <value>Overlay Font Size</value>
   </data>

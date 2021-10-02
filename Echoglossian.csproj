@@ -63,9 +63,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.0.71" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.0.75" />
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
-    <PackageReference Include="DalamudPackager" Version="2.1.2" />
+    <PackageReference Include="DalamudPackager" Version="2.1.3" />
     <PackageReference Include="DeepL" Version="0.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.10" />

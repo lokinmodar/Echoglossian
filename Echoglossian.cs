@@ -9,10 +9,12 @@ using System.Reflection;
 using System.Threading;
 
 using Dalamud.Game;
+using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 using Echoglossian.Properties;
 using ImGuiScene;
@@ -36,6 +38,7 @@ namespace Echoglossian
 
     private readonly Framework framework;
     private readonly GameGui gameGui;
+    private readonly ClientState ci;
 
     private readonly SemaphoreSlim toastTranslationSemaphore;
     private readonly SemaphoreSlim talkTranslationSemaphore;
@@ -54,7 +57,7 @@ namespace Echoglossian
     private readonly TextureWrap talkImage;
 
     private readonly ToastGui toastGui;
-    private CultureInfo cultureInfo;
+    private readonly CultureInfo cultureInfo;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
@@ -64,14 +67,17 @@ namespace Echoglossian
     /// <param name="pCommandManager">Command Manager.</param>
     /// <param name="pGameGui">Game Gui object.</param>
     /// <param name="pToastGui">Toast Gui Object.</param>
+    /// <param name="clientState">This class represents the state of the game client at the time of access.</param>
     public Echoglossian(
       [RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface,
       Framework pframework,
       [RequiredVersion("1.0")] CommandManager pCommandManager,
       GameGui pGameGui,
-      ToastGui pToastGui)
+      ToastGui pToastGui,
+      ClientState clientState)
     {
       this.framework = pframework;
+      this.ci = clientState;
 
       this.pluginInterface = dalamudPluginInterface;
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
@@ -91,7 +97,7 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
-      this.pluginInterface.UiBuilder.RebuildFonts();
+      this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
 
       // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
@@ -101,7 +107,7 @@ namespace Echoglossian
 
       this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
 
-      this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
+      
       this.pluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
       languageInt = this.configuration.Lang;
@@ -131,9 +137,11 @@ namespace Echoglossian
 
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
+      this.pluginInterface.UiBuilder.Draw += this.BuildUI;
+/*      this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
       this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
-      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;
+      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;*/
     }
 
     /// <summary>
@@ -178,10 +186,11 @@ namespace Echoglossian
       this.wideTextToastTranslationSemaphore?.Dispose();
       this.questToastTranslationSemaphore?.Dispose();
 
-      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
+      this.pluginInterface.UiBuilder.Draw -= this.BuildUI;
+      /*this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedBattleDialogueWindow;
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
-      this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;
+      this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;*/
 
       this.pixImage?.Dispose();
       this.choiceImage?.Dispose();
@@ -190,50 +199,107 @@ namespace Echoglossian
 
       this.framework.Update -= this.Tick;
 
-      this.UiFont.Destroy();
+      this.pluginInterface.UiBuilder.BuildFonts -= this.LoadFont;
+
+      this.pluginInterface.UiBuilder.RebuildFonts();
 
       this.commandManager.RemoveHandler(SlashCommand);
     }
 
     private void Tick(Framework tFramework)
     {
-      if (this.configuration.UseImGui)
+      switch (this.configuration.UseImGui)
       {
-        this.TalkHandler("Talk", 1);
-        this.BattleTalkHandler("BattleTalk", 1);
-        this.ErrorToastHandler("_TextError", 1);
-        this.ErrorToastHandler("_TextError", 2);
-        this.ErrorToastHandler("_TextError", 3);
-        this.ErrorToastHandler("_TextError", 4);
-        this.WideTextToastHandler("_WideText", 1);
-        this.WideTextToastHandler("_WideText", 2);
-        this.WideTextToastHandler("_WideText", 3);
-        this.WideTextToastHandler("_WideText", 4);
-        this.ClassChangeToastHandler("_TextClassChange", 1);
-        this.ClassChangeToastHandler("_TextClassChange", 2);
-        this.AreaToastHandler("_AreaText", 1);
-        this.AreaToastHandler("_AreaText", 2);
-        this.QuestToastHandler("_ScreenText", 1);
-        this.QuestToastHandler("_ScreenText", 2);
-        this.QuestToastHandler("_ScreenText", 3);
-        this.QuestToastHandler("_ScreenText", 4);
-        this.QuestToastHandler("_ScreenText", 5);
-        this.QuestToastHandler("_ScreenText", 6);
-        this.QuestToastHandler("_ScreenText", 7);
-        this.QuestToastHandler("_ScreenText", 8);
-        this.QuestToastHandler("_ScreenText", 9);
+        case true when !this.FontLoaded || this.FontLoadFailed:
+          return;
+        case true:
+          {
+            switch (this.ci.IsLoggedIn)
+            {
+              case true:
+                this.TalkHandler("Talk", 1);
+                this.BattleTalkHandler("BattleTalk", 1);
+                this.ErrorToastHandler("_TextError", 1);
+                this.ErrorToastHandler("_TextError", 2);
+                this.ErrorToastHandler("_TextError", 3);
+                this.ErrorToastHandler("_TextError", 4);
+                this.WideTextToastHandler("_WideText", 1);
+                this.WideTextToastHandler("_WideText", 2);
+                this.WideTextToastHandler("_WideText", 3);
+                this.WideTextToastHandler("_WideText", 4);
+                this.ClassChangeToastHandler("_TextClassChange", 1);
+                this.ClassChangeToastHandler("_TextClassChange", 2);
+                this.AreaToastHandler("_AreaText", 1);
+                this.AreaToastHandler("_AreaText", 2);
+                this.QuestToastHandler("_ScreenText", 1);
+                this.QuestToastHandler("_ScreenText", 2);
+                this.QuestToastHandler("_ScreenText", 3);
+                this.QuestToastHandler("_ScreenText", 4);
+                this.QuestToastHandler("_ScreenText", 5);
+                this.QuestToastHandler("_ScreenText", 6);
+                this.QuestToastHandler("_ScreenText", 7);
+                this.QuestToastHandler("_ScreenText", 8);
+                this.QuestToastHandler("_ScreenText", 9);
+                break;
+            }
+
+            break;
+          }
+
+        default:
+          this.toastDisplayTranslation = false;
+          this.questToastDisplayTranslation = false;
+          this.wideTextToastDisplayTranslation = false;
+          this.errorToastDisplayTranslation = false;
+          this.areaToastDisplayTranslation = false;
+          this.classChangeToastDisplayTranslation = false;
+          this.talkDisplayTranslation = false;
+          this.battleTalkDisplayTranslation = false;
+          break;
       }
-      else
+    }
+
+    private void BuildUI()
+    {
+      if (!this.FontLoaded && !this.FontLoadFailed)
       {
-        this.toastDisplayTranslation = false;
-        this.questToastDisplayTranslation = false;
-        this.wideTextToastDisplayTranslation = false;
-        this.errorToastDisplayTranslation = false;
-        this.areaToastDisplayTranslation = false;
-        this.classChangeToastDisplayTranslation = false;
-        this.talkDisplayTranslation = false;
-        this.battleTalkDisplayTranslation = false;
+        PluginLog.LogVerbose("bugabugabuga!");
+        this.pluginInterface.UiBuilder.RebuildFonts();
+        return;
       }
+
+      if (this.config)
+      {
+        PluginLog.LogVerbose("configluglu!");
+        this.EchoglossianConfigUi();
+      }
+
+      if (this.configuration.FontChangeTime > 0)
+      {
+        PluginLog.LogVerbose("fontchangetime!");
+        if (DateTime.Now.Ticks - 10000000 > this.configuration.FontChangeTime)
+        {
+          PluginLog.LogVerbose("fontchangetime drento!");
+          this.configuration.FontChangeTime = 0;
+          this.FontLoadFailed = false;
+          // windowSize = Vector2.Zero;
+          this.ReloadFont();
+        }
+      }
+
+      if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
+      {
+        PluginLog.LogVerbose("transbattle!");
+        this.DrawTranslatedBattleDialogueWindow();
+      }
+
+      if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
+      {
+        PluginLog.LogVerbose("transtalk!");
+        this.DrawTranslatedDialogueWindow();
+      }
+
+
     }
 
     private void ConfigWindow()

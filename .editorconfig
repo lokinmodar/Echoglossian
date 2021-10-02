@@ -80,3 +80,9 @@ dotnet_diagnostic.CS0168.severity = suggestion
 
 # S1481: Unused local variables should be removed
 dotnet_diagnostic.S1481.severity = suggestion
+
+# SA1000: Keywords should be spaced correctly
+dotnet_diagnostic.SA1000.severity = suggestion
+
+# SA1009: Closing parenthesis should be spaced correctly
+dotnet_diagnostic.SA1009.severity = suggestion

@@ -24,13 +24,13 @@
     <comment>Shown in plugin install window</comment>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
-    <value>A qué idioma traducir.</value>
+    <value>A qué idioma traducir las charlas in-game</value>
   </data>
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Idioma al que traducir</value>
   </data>
   <data name="Overlay name" xml:space="preserve">
-    <value>Traducción de charlas de batalla</value>
+    <value>Traducción de charlas de batalla (charlas de enemigos en batallas)</value>
     <comment>Translation overlay window name</comment>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
@@ -40,7 +40,7 @@
     <value>Ajuste de posición</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la interfaz de usuario del juego en lugar de reemplazar su texto con la traducción</value>
+    <value>Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la IU del juego en lugar de reemplazar su texto con la traducción</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
     <value>Multiplicador de ancho de diálogo</value>
@@ -136,9 +136,12 @@
     <value>Idioma de la ventana de configuración:</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Mostrar texto de diálogo original en Superposición y traducido en el cuadro de diálogo Interfaz de usuario del juego</value>
+    <value>Mostrar texto de diálogo original en Superposición y traducido en el cuadro de diálogo de la IU del juego</value>
   </data>
   <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
     <value>No utilice la superposición para mostrar las traducciones de Toasts</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Ajustar la escala de fuentes de superposición</value>
   </data>
 </root>

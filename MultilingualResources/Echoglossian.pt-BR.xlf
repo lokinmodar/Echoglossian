@@ -213,6 +213,10 @@
           <source>Do not use overlay to show Toasts translations</source>
           <target state="translated">Não use as Overlays para mostrar traduções de mensagens de Toast</target>
         </trans-unit>
+        <trans-unit id="OverlayFontScaleLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the Overlay font scale</source>
+          <target state="translated">Ajuste a escala de fonte da Overlay</target>
+        </trans-unit>
       </group>
     </body>
   </file>

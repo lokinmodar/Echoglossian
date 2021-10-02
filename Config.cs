@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System;
 using System.Numerics;
 
 using Dalamud.Configuration;
@@ -47,6 +48,8 @@ namespace Echoglossian
     public float ImGuiWindowWidthMult = 0.85f;
     public float ImGuiToastWindowWidthMult = 1.20f;
     public Vector3 OverlayTextColor = Vector3.Zero;
+    public float FontScale = 0;
+    [NonSerialized] public long FontChangeTime = DateTime.Now.Ticks;
 
     public int Version { get; set; } = 0;
   }

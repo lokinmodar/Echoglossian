@@ -4,12 +4,10 @@
 // </copyright>
 
 using System;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite.Models;
@@ -79,7 +77,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new (this.DbOperationsLogPath + "GetTalkLog.txt", append: true);
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetTalkLog.txt", append: true);
 #endif
 
       try
@@ -385,7 +383,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new (this.DbOperationsLogPath + "GetBattleTalkLog.txt", append: true);
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetBattleTalkLog.txt", append: true);
 #endif
 
       try

@@ -4,7 +4,6 @@
 // </copyright>
 
 using System;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,11 +14,9 @@ using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using XivCommon.Functions;
 
 namespace Echoglossian
 {
-  // TODO: Add logic to invert translation and original texts
   public partial class Echoglossian
   {
     private unsafe void ToastHandler(string toastName, int index)
@@ -297,7 +294,7 @@ namespace Echoglossian
     private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
     {
 #if DEBUG
-      using StreamWriter logStream = new (this.DbOperationsLogPath + "GetToastLog.txt", append: true);
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetToastLog.txt", append: true);
 #endif
       if (!this.configuration.TranslateToast && (!this.configuration.TranslateAreaToast ||
                                                  !this.configuration.TranslateClassChangeToast ||

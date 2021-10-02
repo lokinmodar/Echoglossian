@@ -4,7 +4,7 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
-        <member name="M:Echoglossian.Echoglossian.#ctor(Dalamud.Plugin.DalamudPluginInterface,Dalamud.Game.Framework,Dalamud.Game.Command.CommandManager,Dalamud.Game.Gui.GameGui,Dalamud.Game.Gui.Toast.ToastGui)">
+        <member name="M:Echoglossian.Echoglossian.#ctor(Dalamud.Plugin.DalamudPluginInterface,Dalamud.Game.Framework,Dalamud.Game.Command.CommandManager,Dalamud.Game.Gui.GameGui,Dalamud.Game.Gui.Toast.ToastGui,Dalamud.Game.ClientState.ClientState)">
             <summary>
               Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian" /> class.
             </summary>
@@ -13,6 +13,7 @@
             <param name="pCommandManager">Command Manager.</param>
             <param name="pGameGui">Game Gui object.</param>
             <param name="pToastGui">Toast Gui Object.</param>
+            <param name="clientState">This class represents the state of the game client at the time of access.</param>
         </member>
         <member name="P:Echoglossian.Echoglossian.AssemblyLocation">
             <summary>
@@ -138,6 +139,11 @@
         <member name="P:Echoglossian.Properties.Resources.OverlayFontColorOrientations">
             <summary>
               Looks up a localized string similar to Click to choose the overlay font color.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayFontScaleLabel">
+            <summary>
+              Looks up a localized string similar to Adjust the Overlay font scale.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayFontSizeLabel">

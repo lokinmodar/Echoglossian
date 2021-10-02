@@ -245,6 +245,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adjust the Overlay font scale.
+        /// </summary>
+        internal static string OverlayFontScaleLabel {
+            get {
+                return ResourceManager.GetString("OverlayFontScaleLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overlay Font Size.
         /// </summary>
         internal static string OverlayFontSizeLabel {

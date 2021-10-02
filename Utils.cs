@@ -19,7 +19,7 @@ namespace Echoglossian
 #if DEBUG
     public void ListCultureInfos()
     {
-      using StreamWriter logStream = new (this.DbOperationsLogPath + "CultureInfos.txt", append: true);
+      using StreamWriter logStream = new(this.DbOperationsLogPath + "CultureInfos.txt", append: true);
 
       var cus = CultureInfo.GetCultures(CultureTypes.AllCultures);
       foreach (var cu in cus)

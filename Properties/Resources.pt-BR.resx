@@ -141,4 +141,7 @@
   <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
     <value>Não use as Overlays para mostrar traduções de mensagens de Toast</value>
   </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Ajuste a escala de fonte da Overlay</value>
+  </data>
 </root>
