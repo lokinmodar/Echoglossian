@@ -49,7 +49,8 @@ namespace Echoglossian
     public float ImGuiToastWindowWidthMult = 1.20f;
     public Vector3 OverlayTextColor = Vector3.Zero;
     public float FontScale = 0;
-    [NonSerialized] public long FontChangeTime = DateTime.Now.Ticks;
+    [NonSerialized]
+    public long FontChangeTime = DateTime.Now.Ticks;
 
     public int Version { get; set; } = 0;
   }

@@ -107,7 +107,6 @@ namespace Echoglossian
 
       this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
 
-      
       this.pluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
       languageInt = this.configuration.Lang;
@@ -137,11 +136,11 @@ namespace Echoglossian
 
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
-      this.pluginInterface.UiBuilder.Draw += this.BuildUI;
-/*      this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
-      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
-      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
-      this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;*/
+      this.pluginInterface.UiBuilder.Draw += this.BuildUi;
+      /*      this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
+            this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
+            this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
+            this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;*/
     }
 
     /// <summary>
@@ -186,7 +185,7 @@ namespace Echoglossian
       this.wideTextToastTranslationSemaphore?.Dispose();
       this.questToastTranslationSemaphore?.Dispose();
 
-      this.pluginInterface.UiBuilder.Draw -= this.BuildUI;
+      this.pluginInterface.UiBuilder.Draw -= this.BuildUi;
       /*this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedBattleDialogueWindow;
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
       this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
@@ -217,8 +216,16 @@ namespace Echoglossian
             switch (this.ci.IsLoggedIn)
             {
               case true:
+#if DEBUG
+                // PluginLog.LogVerbose("Monitoring Framework Tick");
+#endif
                 this.TalkHandler("Talk", 1);
-                this.BattleTalkHandler("BattleTalk", 1);
+                this.TalkSubtitleHandler("TalkSubtitle", 1);
+                this.TalkSubtitleHandler("TalkSubtitle", 2);
+                this.TalkSubtitleHandler("TalkSubtitle", 3);
+                this.TalkSubtitleHandler("TalkSubtitle", 4);
+                this.TalkSubtitleHandler("TalkSubtitle", 5);
+                this.BattleTalkHandler("_BattleTalk", 1);
                 this.ErrorToastHandler("_TextError", 1);
                 this.ErrorToastHandler("_TextError", 2);
                 this.ErrorToastHandler("_TextError", 3);
@@ -259,47 +266,45 @@ namespace Echoglossian
       }
     }
 
-    private void BuildUI()
+    private void BuildUi()
     {
       if (!this.FontLoaded && !this.FontLoadFailed)
       {
-        PluginLog.LogVerbose("bugabugabuga!");
         this.pluginInterface.UiBuilder.RebuildFonts();
         return;
       }
 
       if (this.config)
       {
-        PluginLog.LogVerbose("configluglu!");
         this.EchoglossianConfigUi();
       }
 
       if (this.configuration.FontChangeTime > 0)
       {
-        PluginLog.LogVerbose("fontchangetime!");
         if (DateTime.Now.Ticks - 10000000 > this.configuration.FontChangeTime)
         {
-          PluginLog.LogVerbose("fontchangetime drento!");
           this.configuration.FontChangeTime = 0;
           this.FontLoadFailed = false;
-          // windowSize = Vector2.Zero;
+
           this.ReloadFont();
         }
       }
 
       if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
       {
-        PluginLog.LogVerbose("transbattle!");
         this.DrawTranslatedBattleDialogueWindow();
+#if DEBUG
+        PluginLog.LogVerbose("Showing BattleTalk Translation Overlay.");
+#endif
       }
 
       if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
       {
-        PluginLog.LogVerbose("transtalk!");
         this.DrawTranslatedDialogueWindow();
+#if DEBUG
+        PluginLog.LogVerbose("Showing Talk Translation Overlay.");
+#endif
       }
-
-
     }
 
     private void ConfigWindow()

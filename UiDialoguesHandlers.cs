@@ -5,6 +5,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,6 +34,9 @@ namespace Echoglossian
           this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
           this.talkTextPosition.X = talkMaster->RootNode->X;
           this.talkTextPosition.Y = talkMaster->RootNode->Y;
+#if DEBUG
+          PluginLog.LogVerbose("Inside Talk Handler.");
+#endif
         }
         else
         {
@@ -42,6 +46,52 @@ namespace Echoglossian
       else
       {
         this.talkDisplayTranslation = false;
+      }
+    }
+
+    public static unsafe string GetNodeText(AtkResNode* maybeTextNode)
+    {
+      if (maybeTextNode != null && maybeTextNode->Type == NodeType.Text)
+      {
+        var textNode = (AtkTextNode*)maybeTextNode;
+        var text = Marshal.PtrToStringUTF8(new IntPtr(textNode->NodeText.StringPtr));
+        return text;
+      }
+
+      return "This went wrong...";
+    }
+
+    private unsafe void TalkSubtitleHandler(string addonName, int index)
+    {
+      // Pointer: 23FDB6C9040 or 23FDB6C91C0
+      var talkSubtitle = this.gameGui.GetAddonByName(addonName, index);
+      if (talkSubtitle != IntPtr.Zero)
+      {
+        var talkSubtitleMaster = (AtkUnitBase*)talkSubtitle;
+        if (talkSubtitleMaster->IsVisible)
+        {
+          var textNode = talkSubtitleMaster->UldManager.NodeList[2];
+          var ttFinal = GetNodeText(textNode);
+
+          this.talkSubtitleDisplayTranslation = true;
+          this.talkSubtitleTextDimensions.X = talkSubtitleMaster->RootNode->Width * talkSubtitleMaster->Scale;
+          this.talkSubtitleTextDimensions.Y = talkSubtitleMaster->RootNode->Height * talkSubtitleMaster->Scale;
+          this.talkSubtitleTextPosition.X = talkSubtitleMaster->RootNode->X;
+          this.talkSubtitleTextPosition.Y = talkSubtitleMaster->RootNode->Y;
+#if DEBUG
+          var childCount = talkSubtitleMaster->RootNode->ChildCount;
+          PluginLog.Fatal("Node Count: " + childCount.ToString());
+          PluginLog.LogFatal("Text using NodeList: " + ttFinal);
+#endif
+        }
+        else
+        {
+          this.talkSubtitleDisplayTranslation = false;
+        }
+      }
+      else
+      {
+        this.talkSubtitleDisplayTranslation = false;
       }
     }
 
@@ -147,7 +197,6 @@ namespace Echoglossian
           {
             if (!this.configuration.SwapTextsUsingImGui)
             {
-              // TODO: format element to insert whenTranslation Overlay is active
               if (this.configuration.TranslateNPCNames)
               {
                 this.currentNameTranslationId = Environment.TickCount;
@@ -453,7 +502,6 @@ namespace Echoglossian
           }
           else
           {
-            // TODO: format element to insert whenTranslation Overlay is active
             if (this.configuration.TranslateNPCNames)
             {
               this.currentSenderTranslationId = Environment.TickCount;
