@@ -186,10 +186,6 @@ namespace Echoglossian
       this.questToastTranslationSemaphore?.Dispose();
 
       this.pluginInterface.UiBuilder.Draw -= this.BuildUi;
-      /*this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedBattleDialogueWindow;
-      this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedDialogueWindow;
-      this.pluginInterface.UiBuilder.Draw -= this.DrawTranslatedToastWindow;
-      this.pluginInterface.UiBuilder.Draw -= this.EchoglossianConfigUi;*/
 
       this.pixImage?.Dispose();
       this.choiceImage?.Dispose();
@@ -294,7 +290,7 @@ namespace Echoglossian
       {
         this.DrawTranslatedBattleDialogueWindow();
 #if DEBUG
-        PluginLog.LogVerbose("Showing BattleTalk Translation Overlay.");
+        // PluginLog.LogVerbose("Showing BattleTalk Translation Overlay.");
 #endif
       }
 
@@ -302,7 +298,15 @@ namespace Echoglossian
       {
         this.DrawTranslatedDialogueWindow();
 #if DEBUG
-        PluginLog.LogVerbose("Showing Talk Translation Overlay.");
+        // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
+#endif
+      }
+
+      if (this.configuration.UseImGui && this.configuration.TranslateToast && this.errorToastDisplayTranslation)
+      {
+        this.DrawTranslatedErrorToastWindow();
+#if DEBUG
+        PluginLog.LogVerbose("Showing Error Toast Translation Overlay.");
 #endif
       }
     }

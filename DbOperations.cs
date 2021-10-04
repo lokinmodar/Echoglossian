@@ -7,7 +7,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
+using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
@@ -18,12 +18,8 @@ namespace Echoglossian
   public partial class Echoglossian
   {
 #if DEBUG
-    private static readonly string V =
-      $"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}";
-
-    public string DbOperationsLogPath = V;
+    public string DbOperationsLogPath = $"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}";
 #endif
-
     public TalkMessage FoundTalkMessage { get; set; }
 
     public ToastMessage FoundToastMessage { get; set; }
@@ -42,11 +38,12 @@ namespace Echoglossian
     {
       using var context = new EchoglossianDbContext();
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbFindTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbFindTalkOperationsLog.txt", append: true);
 #endif
       try
       {
 #if DEBUG
+        PluginLog.Error(this.DbOperationsLogPath);
         logStream.WriteLineAsync($"Before Talk Messages table query: {talkMessage}");
 #endif
 
@@ -81,7 +78,7 @@ namespace Echoglossian
     {
       using var context = new EchoglossianDbContext();
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbFindToastOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbFindToastOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -120,7 +117,7 @@ namespace Echoglossian
     {
       using var context = new EchoglossianDbContext();
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbFindBattleTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbFindBattleTalkOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -160,7 +157,7 @@ namespace Echoglossian
     {
       using var context = new EchoglossianDbContext();
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbInsertTalkOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -205,8 +202,7 @@ namespace Echoglossian
     {
       using var context = new EchoglossianDbContext();
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertBattleTalkOperationsLog.txt",
-        append: true);
+      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbInsertBattleTalkOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -244,7 +240,7 @@ namespace Echoglossian
     {
       using var context = new EchoglossianDbContext();
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "DbInsertToastOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbInsertToastOperationsLog.txt", append: true);
 #endif
       try
       {

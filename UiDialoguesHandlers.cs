@@ -35,7 +35,7 @@ namespace Echoglossian
           this.talkTextPosition.X = talkMaster->RootNode->X;
           this.talkTextPosition.Y = talkMaster->RootNode->Y;
 #if DEBUG
-          PluginLog.LogVerbose("Inside Talk Handler.");
+          // PluginLog.LogVerbose("Inside Talk Handler.");
 #endif
         }
         else
@@ -80,8 +80,8 @@ namespace Echoglossian
           this.talkSubtitleTextPosition.Y = talkSubtitleMaster->RootNode->Y;
 #if DEBUG
           var childCount = talkSubtitleMaster->RootNode->ChildCount;
-          PluginLog.Fatal("Node Count: " + childCount.ToString());
-          PluginLog.LogFatal("Text using NodeList: " + ttFinal);
+          // PluginLog.Fatal("Node Count: " + childCount.ToString());
+          // PluginLog.LogFatal("Text using NodeList: " + ttFinal);
 #endif
         }
         else

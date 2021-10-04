@@ -137,7 +137,7 @@ namespace Echoglossian
               }
 
               ImGui.Separator();
-              if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiWindowWidthMult, 0.001f, 0.1f, 2f))
+              if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiWindowWidthMult, 0.001f, 0.01f, 3f))
               {
                 this.SaveConfig();
               }
@@ -197,7 +197,7 @@ namespace Echoglossian
             if (this.configuration.UseImGui && !this.configuration.DoNotUseImGuiForToasts)
             {
               ImGui.Separator();
-              if (ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel, ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.1f, 2f))
+              if (ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel, ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.01f, 3f))
               {
                 this.SaveConfig();
               }

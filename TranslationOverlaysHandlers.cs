@@ -148,18 +148,22 @@ namespace Echoglossian
 
     private void DrawTranslatedBattleDialogueWindow()
     {
-      /*if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
-      {*/
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
         this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
       var size = Math.Min(
         this.battleTalkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
         ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y));
-
-      // ImGui.PushFont(this.UiFont);
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y * 2));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
+      if (this.FontLoaded)
+      {
+#if DEBUG
+        // PluginLog.LogVerbose("Pushing font");
+#endif
+        ImGui.PushFont(this.UiFont);
+      }
+
       if (this.configuration.TranslateNPCNames)
       {
         var name = this.GetTranslatedSenderNameForWindow();
@@ -197,10 +201,9 @@ namespace Echoglossian
           | ImGuiWindowFlags.NoMouseInputs
           | ImGuiWindowFlags.NoScrollbar);
       }
-
+      ImGui.SetWindowFontScale(this.configuration.FontScale);
       if (this.battleTalkTranslationSemaphore.Wait(0))
       {
-        // ImGui.TextColored(new Vector4(this.configuration.OverlayTextColor, 255), this.currentTalkTranslation);
         ImGui.TextWrapped(this.currentBattleTalkTranslation);
 
         this.battleTalkTranslationSemaphore.Release();
@@ -213,17 +216,20 @@ namespace Echoglossian
       this.battleTalkTextImguiSize = ImGui.GetWindowSize();
       ImGui.PopStyleColor(1);
 
-      // ImGui.PopFont();
       ImGui.End();
-      /*}*/
+      if (this.FontLoaded)
+      {
+#if DEBUG
+        // PluginLog.LogVerbose("Popping font!");
+#endif
+        ImGui.PopFont();
+      }
     }
 
     private void DrawTranslatedDialogueWindow()
     {
-      /*if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
-      {*/
 #if DEBUG
-      PluginLog.LogVerbose("blurgh!");
+      // PluginLog.LogVerbose("Inside DrawTranslatedDialogueWindow method!");
 #endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
@@ -235,7 +241,9 @@ namespace Echoglossian
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
       {
-        PluginLog.LogVerbose("blargh!");
+#if DEBUG
+        // PluginLog.LogVerbose("Pushing font");
+#endif
         ImGui.PushFont(this.UiFont);
       }
 
@@ -297,13 +305,10 @@ namespace Echoglossian
       if (this.FontLoaded)
       {
 #if DEBUG
-        PluginLog.LogVerbose("blergh!");
+        // PluginLog.LogVerbose("Popping font!");
 #endif
-
         ImGui.PopFont();
       }
-
-      /*}*/
     }
 
     private void DrawTranslatedToastWindow()
@@ -317,6 +322,14 @@ namespace Echoglossian
           this.toastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
           ImGui.CalcTextSize(this.currentToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
         ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 1.5f, this.toastTranslationTextDimensions.Y));
+        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
+        if (this.FontLoaded)
+        {
+#if DEBUG
+          // PluginLog.LogVerbose("Pushing font");
+#endif
+          ImGui.PushFont(this.UiFont);
+        }
         ImGui.Begin(
           "Toast Translation",
           ImGuiWindowFlags.NoTitleBar
@@ -324,7 +337,7 @@ namespace Echoglossian
           | ImGuiWindowFlags.AlwaysAutoResize
           | ImGuiWindowFlags.NoFocusOnAppearing
           | ImGuiWindowFlags.NoMouseInputs);
-        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
+
         if (this.toastTranslationSemaphore.Wait(0))
         {
           ImGui.Text(this.currentToastTranslation);
@@ -338,6 +351,55 @@ namespace Echoglossian
         this.toastTranslationTextImguiSize = ImGui.GetWindowSize();
         ImGui.PopStyleColor(1);
         ImGui.End();
+      }
+    }
+
+    private void DrawTranslatedErrorToastWindow()
+    {
+      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
+        this.errorToastTranslationTextPosition.X + (this.errorToastTranslationTextDimensions.X / 2) - (this.errorToastTranslationTextImguiSize.X / 2),
+        this.errorToastTranslationTextPosition.Y - this.errorToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
+      var size = Math.Min(
+        this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
+        ImGui.CalcTextSize(this.currentErrorToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 1.5f, this.errorToastTranslationTextDimensions.Y));
+      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
+      if (this.FontLoaded)
+      {
+#if DEBUG
+        // PluginLog.LogVerbose("Pushing font");
+#endif
+        ImGui.PushFont(this.UiFont);
+      }
+
+      ImGui.Begin(
+        "Error Toast Translation",
+        ImGuiWindowFlags.NoTitleBar
+        | ImGuiWindowFlags.NoNav
+        | ImGuiWindowFlags.AlwaysAutoResize
+        | ImGuiWindowFlags.NoFocusOnAppearing
+        | ImGuiWindowFlags.NoMouseInputs);
+
+      if (this.errorToastTranslationSemaphore.Wait(0))
+      {
+        ImGui.Text(this.currentErrorToastTranslation);
+        this.errorToastTranslationSemaphore.Release();
+      }
+      else
+      {
+        ImGui.Text(Resources.WaitingForTranslation);
+      }
+
+      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      this.errorToastTranslationTextImguiSize = ImGui.GetWindowSize();
+      ImGui.PopStyleColor(1);
+      ImGui.End();
+      if (this.FontLoaded)
+      {
+#if DEBUG
+        // PluginLog.LogVerbose("Popping font!");
+#endif
+        ImGui.PopFont();
       }
     }
   }

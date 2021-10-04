@@ -24,7 +24,7 @@ namespace Echoglossian
     private void LoadFont(/*string fontFileName,int imguiFontSize */)
     {
       // TODO: Get font by languageint
-      PluginLog.LogVerbose("feefifoom!");
+      PluginLog.LogVerbose("Inside LoadFont method");
       var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
       this.FontLoaded = false;
       if (File.Exists(fontFile))

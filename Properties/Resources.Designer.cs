@@ -22,7 +22,7 @@ namespace Echoglossian.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Echoglossian.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Echoglossian.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Echoglossian.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] choice {
+        public static byte[] choice {
             get {
                 object obj = ResourceManager.GetObject("choice", resourceCulture);
                 return ((byte[])(obj));
@@ -73,7 +73,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
-        internal static string CloseButtonLabel {
+        public static string CloseButtonLabel {
             get {
                 return ResourceManager.GetString("CloseButtonLabel", resourceCulture);
             }
@@ -82,7 +82,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Main Configuration.
         /// </summary>
-        internal static string ConfigTab1Name {
+        public static string ConfigTab1Name {
             get {
                 return ResourceManager.GetString("ConfigTab1Name", resourceCulture);
             }
@@ -91,7 +91,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Toast configurations.
         /// </summary>
-        internal static string ConfigTab2Name {
+        public static string ConfigTab2Name {
             get {
                 return ResourceManager.GetString("ConfigTab2Name", resourceCulture);
             }
@@ -100,7 +100,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Echoglossian Configuration.
         /// </summary>
-        internal static string ConfigWindowTitle {
+        public static string ConfigWindowTitle {
             get {
                 return ResourceManager.GetString("ConfigWindowTitle", resourceCulture);
             }
@@ -109,7 +109,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] cutscenechoice {
+        public static byte[] cutscenechoice {
             get {
                 object obj = ResourceManager.GetObject("cutscenechoice", resourceCulture);
                 return ((byte[])(obj));
@@ -119,7 +119,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Do not use overlay to show Toasts translations.
         /// </summary>
-        internal static string DoNotUseImGuiForToastsToggle {
+        public static string DoNotUseImGuiForToastsToggle {
             get {
                 return ResourceManager.GetString("DoNotUseImGuiForToastsToggle", resourceCulture);
             }
@@ -128,7 +128,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Overlay font color:.
         /// </summary>
-        internal static string FontColorSelectLabel {
+        public static string FontColorSelectLabel {
             get {
                 return ResourceManager.GetString("FontColorSelectLabel", resourceCulture);
             }
@@ -137,7 +137,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Opens Echoglossian config window.
         /// </summary>
-        internal static string HelpMessage {
+        public static string HelpMessage {
             get {
                 return ResourceManager.GetString("HelpMessage", resourceCulture);
             }
@@ -146,7 +146,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to (?).
         /// </summary>
-        internal static string HoverTooltipIndicator {
+        public static string HoverTooltipIndicator {
             get {
                 return ResourceManager.GetString("HoverTooltipIndicator", resourceCulture);
             }
@@ -155,7 +155,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The language could not be identified with an acceptable degree of certainty.
         /// </summary>
-        internal static string LangIdentError {
+        public static string LangIdentError {
             get {
                 return ResourceManager.GetString("LangIdentError", resourceCulture);
             }
@@ -164,7 +164,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Which language to translate the in-game dialogue boxes to..
         /// </summary>
-        internal static string LanguageSelectionTooltip {
+        public static string LanguageSelectionTooltip {
             get {
                 return ResourceManager.GetString("LanguageSelectionTooltip", resourceCulture);
             }
@@ -173,7 +173,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Language to translate to.
         /// </summary>
-        internal static string LanguageSelectLabelText {
+        public static string LanguageSelectLabelText {
             get {
                 return ResourceManager.GetString("LanguageSelectLabelText", resourceCulture);
             }
@@ -182,7 +182,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] logo {
+        public static byte[] logo {
             get {
                 object obj = ResourceManager.GetObject("logo", resourceCulture);
                 return ((byte[])(obj));
@@ -192,7 +192,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] minfilia {
+        public static byte[] minfilia {
             get {
                 object obj = ResourceManager.GetObject("minfilia", resourceCulture);
                 return ((byte[])(obj));
@@ -202,7 +202,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Echoglossian.
         /// </summary>
-        internal static string Name {
+        public static string Name {
             get {
                 return ResourceManager.GetString("Name", resourceCulture);
             }
@@ -211,7 +211,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Battle talk (Enenies dialogue lines) translation.
         /// </summary>
-        internal static string Overlay_name {
+        public static string Overlay_name {
             get {
                 return ResourceManager.GetString("Overlay name", resourceCulture);
             }
@@ -220,7 +220,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI dialogue box..
         /// </summary>
-        internal static string OverlayAdjustmentOrientations {
+        public static string OverlayAdjustmentOrientations {
             get {
                 return ResourceManager.GetString("OverlayAdjustmentOrientations", resourceCulture);
             }
@@ -229,7 +229,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to OverlayColorSelect.
         /// </summary>
-        internal static string OverlayColorSelectName {
+        public static string OverlayColorSelectName {
             get {
                 return ResourceManager.GetString("OverlayColorSelectName", resourceCulture);
             }
@@ -238,7 +238,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Click to choose the overlay font color.
         /// </summary>
-        internal static string OverlayFontColorOrientations {
+        public static string OverlayFontColorOrientations {
             get {
                 return ResourceManager.GetString("OverlayFontColorOrientations", resourceCulture);
             }
@@ -247,7 +247,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Adjust the Overlay font scale.
         /// </summary>
-        internal static string OverlayFontScaleLabel {
+        public static string OverlayFontScaleLabel {
             get {
                 return ResourceManager.GetString("OverlayFontScaleLabel", resourceCulture);
             }
@@ -256,7 +256,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Overlay Font Size.
         /// </summary>
-        internal static string OverlayFontSizeLabel {
+        public static string OverlayFontSizeLabel {
             get {
                 return ResourceManager.GetString("OverlayFontSizeLabel", resourceCulture);
             }
@@ -265,7 +265,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Select the font size for the dialogue text overlay.
         /// </summary>
-        internal static string OverlayFontSizeOrientations {
+        public static string OverlayFontSizeOrientations {
             get {
                 return ResourceManager.GetString("OverlayFontSizeOrientations", resourceCulture);
             }
@@ -274,7 +274,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Position adjustment.
         /// </summary>
-        internal static string OverlayPositionAdjustmentLabel {
+        public static string OverlayPositionAdjustmentLabel {
             get {
                 return ResourceManager.GetString("OverlayPositionAdjustmentLabel", resourceCulture);
             }
@@ -283,7 +283,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation.
         /// </summary>
-        internal static string OverlayToggleLabel {
+        public static string OverlayToggleLabel {
             get {
                 return ResourceManager.GetString("OverlayToggleLabel", resourceCulture);
             }
@@ -292,7 +292,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Adjust translation overlay width.
         /// </summary>
-        internal static string OverlayWidthMultiplierOrientations {
+        public static string OverlayWidthMultiplierOrientations {
             get {
                 return ResourceManager.GetString("OverlayWidthMultiplierOrientations", resourceCulture);
             }
@@ -301,7 +301,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Dialogue Width multiplier.
         /// </summary>
-        internal static string OverlayWidthScrollLabel {
+        public static string OverlayWidthScrollLabel {
             get {
                 return ResourceManager.GetString("OverlayWidthScrollLabel", resourceCulture);
             }
@@ -310,7 +310,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Buy lokinmodar a Coffee.
         /// </summary>
-        internal static string PatronButtonLabel {
+        public static string PatronButtonLabel {
             get {
                 return ResourceManager.GetString("PatronButtonLabel", resourceCulture);
             }
@@ -319,7 +319,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] pix {
+        public static byte[] pix {
             get {
                 object obj = ResourceManager.GetObject("pix", resourceCulture);
                 return ((byte[])(obj));
@@ -329,7 +329,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to PIX qrcode.
         /// </summary>
-        internal static string PixQrWindowLabel {
+        public static string PixQrWindowLabel {
             get {
                 return ResourceManager.GetString("PixQrWindowLabel", resourceCulture);
             }
@@ -338,7 +338,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
         /// </summary>
-        internal static string PixText {
+        public static string PixText {
             get {
                 return ResourceManager.GetString("PixText", resourceCulture);
             }
@@ -347,7 +347,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Choose the language for the plugin configuration window.
         /// </summary>
-        internal static string PluginInterfaceLanguage {
+        public static string PluginInterfaceLanguage {
             get {
                 return ResourceManager.GetString("PluginInterfaceLanguage", resourceCulture);
             }
@@ -356,7 +356,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Config Window Language:.
         /// </summary>
-        internal static string PluginInterfaceLanguageSelectorText {
+        public static string PluginInterfaceLanguageSelectorText {
             get {
                 return ResourceManager.GetString("PluginInterfaceLanguageSelectorText", resourceCulture);
             }
@@ -365,7 +365,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] prttws {
+        public static byte[] prttws {
             get {
                 object obj = ResourceManager.GetObject("prttws", resourceCulture);
                 return ((byte[])(obj));
@@ -375,7 +375,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
         /// </summary>
-        internal static string QRCodeInstructionsText {
+        public static string QRCodeInstructionsText {
             get {
                 return ResourceManager.GetString("QRCodeInstructionsText", resourceCulture);
             }
@@ -384,7 +384,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Save and Close Config Window.
         /// </summary>
-        internal static string SaveCloseButtonLabel {
+        public static string SaveCloseButtonLabel {
             get {
                 return ResourceManager.GetString("SaveCloseButtonLabel", resourceCulture);
             }
@@ -393,7 +393,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Send me a PIX donation!.
         /// </summary>
-        internal static string SendPixButton {
+        public static string SendPixButton {
             get {
                 return ResourceManager.GetString("SendPixButton", resourceCulture);
             }
@@ -402,7 +402,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
         /// </summary>
-        internal static string SwapTranslationTextToggle {
+        public static string SwapTranslationTextToggle {
             get {
                 return ResourceManager.GetString("SwapTranslationTextToggle", resourceCulture);
             }
@@ -411,7 +411,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Adjust toast translation overlay width.
         /// </summary>
-        internal static string ToastOverlayWidthMultiplierOrientations {
+        public static string ToastOverlayWidthMultiplierOrientations {
             get {
                 return ResourceManager.GetString("ToastOverlayWidthMultiplierOrientations", resourceCulture);
             }
@@ -420,7 +420,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Toast Overlay Width multiplier.
         /// </summary>
-        internal static string ToastOverlayWidthScrollLabel {
+        public static string ToastOverlayWidthScrollLabel {
             get {
                 return ResourceManager.GetString("ToastOverlayWidthScrollLabel", resourceCulture);
             }
@@ -429,7 +429,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate in-game Area name Toast Messages.
         /// </summary>
-        internal static string TranslateAreaToastToggleText {
+        public static string TranslateAreaToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateAreaToastToggleText", resourceCulture);
             }
@@ -438,7 +438,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate battle talk.
         /// </summary>
-        internal static string TransLateBattletalkToggle {
+        public static string TransLateBattletalkToggle {
             get {
                 return ResourceManager.GetString("TransLateBattletalkToggle", resourceCulture);
             }
@@ -447,7 +447,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate in-game Class/Job change Toast Messages.
         /// </summary>
-        internal static string TranslateClassChangeToastToggleText {
+        public static string TranslateClassChangeToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateClassChangeToastToggleText", resourceCulture);
             }
@@ -456,7 +456,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate in-game Error Toast Messages.
         /// </summary>
-        internal static string TranslateErrorToastToggleText {
+        public static string TranslateErrorToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateErrorToastToggleText", resourceCulture);
             }
@@ -465,7 +465,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate NPCs names in dialogue boxes.
         /// </summary>
-        internal static string TranslateNpcNamesToggle {
+        public static string TranslateNpcNamesToggle {
             get {
                 return ResourceManager.GetString("TranslateNpcNamesToggle", resourceCulture);
             }
@@ -474,7 +474,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate in-game Quest Toast Messages.
         /// </summary>
-        internal static string TranslateQuestToastToggleText {
+        public static string TranslateQuestToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateQuestToastToggleText", resourceCulture);
             }
@@ -483,7 +483,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate other in-game miscellaneous Toast Messages.
         /// </summary>
-        internal static string TranslateScreenInfoToastToggleText {
+        public static string TranslateScreenInfoToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateScreenInfoToastToggleText", resourceCulture);
             }
@@ -492,7 +492,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate in-game dialogues.
         /// </summary>
-        internal static string TranslateTalkToggleLabel {
+        public static string TranslateTalkToggleLabel {
             get {
                 return ResourceManager.GetString("TranslateTalkToggleLabel", resourceCulture);
             }
@@ -501,7 +501,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Translate in-game Toast Messages.
         /// </summary>
-        internal static string TranslateToastToggleText {
+        public static string TranslateToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateToastToggleText", resourceCulture);
             }
@@ -510,7 +510,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Awaiting translation....
         /// </summary>
-        internal static string WaitingForTranslation {
+        public static string WaitingForTranslation {
             get {
                 return ResourceManager.GetString("WaitingForTranslation", resourceCulture);
             }
@@ -519,7 +519,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Select what kind of text you want to be translated.
         /// </summary>
-        internal static string WhatToTranslateText {
+        public static string WhatToTranslateText {
             get {
                 return ResourceManager.GetString("WhatToTranslateText", resourceCulture);
             }
@@ -528,7 +528,7 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Select which in-game Toast messages to translate.
         /// </summary>
-        internal static string WhichToastsToTranslateText {
+        public static string WhichToastsToTranslateText {
             get {
                 return ResourceManager.GetString("WhichToastsToTranslateText", resourceCulture);
             }
