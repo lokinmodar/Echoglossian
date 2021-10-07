@@ -126,6 +126,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attention!.
+        /// </summary>
+        public static string EchoglossianPathModal {
+            get {
+                return ResourceManager.GetString("EchoglossianPathModal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overlay font color:.
         /// </summary>
         public static string FontColorSelectLabel {
@@ -304,6 +313,24 @@ namespace Echoglossian.Properties {
         public static string OverlayWidthScrollLabel {
             get {
                 return ResourceManager.GetString("OverlayWidthScrollLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder).
+        /// </summary>
+        public static string PathInputInstructions {
+            get {
+                return ResourceManager.GetString("PathInputInstructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please type the path and save so the plugin can work properly!.
+        /// </summary>
+        public static string PathTypeInstructions {
+            get {
+                return ResourceManager.GetString("PathTypeInstructions", resourceCulture);
             }
         }
         

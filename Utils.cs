@@ -6,6 +6,11 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Numerics;
+
+using Dalamud.Logging;
+using Echoglossian.Properties;
+using ImGuiNET;
 
 namespace Echoglossian
 {
@@ -19,7 +24,7 @@ namespace Echoglossian
 #if DEBUG
     public void ListCultureInfos()
     {
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "CultureInfos.txt", append: true);
+      using StreamWriter logStream = new(this.ConfigDir + "CultureInfos.txt", append: true);
 
       var cus = CultureInfo.GetCultures(CultureTypes.AllCultures);
       foreach (var cu in cus)
@@ -28,6 +33,67 @@ namespace Echoglossian
       }
     }
 #endif
+
+
+    public static string MovePathUp(string path, int noOfLevels)
+    {
+      string parentPath = path.TrimEnd(new[] { '/', '\\' });
+      for (int i = 0; i < noOfLevels; i++)
+      {
+        parentPath = Directory.GetParent(parentPath).ToString();
+      }
+
+      return parentPath;
+    }
+
+    public string FixAssemblyPath()
+    {
+      var path = $"{this.pluginInterface.ConfigDirectory}{Path.DirectorySeparatorChar}";
+#if DEBUG
+      PluginLog.LogWarning($"Path info in FixAssemblyLocation method: {path}");
+#endif
+
+      if (path == string.Empty)
+      {
+        if (this.configuration.ConfigurationDirectory == string.Empty)
+        {
+          this.linuxPathFix = true;
+          path = this.configuration.ConfigurationDirectory;
+        }
+        else
+        {
+          path = this.configuration.ConfigurationDirectory;
+        }
+      }
+
+      return path;
+    }
+
+    public void ShowAssemblyPathPopup()
+    {
+      var center = ImGui.GetMainViewport().GetCenter();
+      ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+      if (ImGui.BeginPopupModal(Resources.EchoglossianPathModal))
+      {
+        ImGui.Text(Resources.PathInputInstructions);
+        var path = this.configuration.ConfigurationDirectory;
+        ImGui.InputText(Resources.PathTypeInstructions, ref path, 256, ImGuiInputTextFlags.EnterReturnsTrue);
+        if (ImGui.Button(Resources.SaveCloseButtonLabel))
+        {
+          if (path == string.Empty)
+          {
+            ImGui.SetWindowFocus(Resources.PathInputInstructions);
+          }
+
+          ImGui.CloseCurrentPopup();
+          this.SaveConfig();
+          this.linuxPathFix = false;
+        }
+
+        ImGui.EndPopup();
+        ImGui.SetItemDefaultFocus();
+      }
+    }
 
     private static readonly string[] Codes =
     {

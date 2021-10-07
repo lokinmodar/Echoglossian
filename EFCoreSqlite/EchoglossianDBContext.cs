@@ -4,7 +4,6 @@
 // </copyright>
 
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 
 using Echoglossian.EFCoreSqlite.Models;
@@ -29,12 +28,11 @@ namespace Echoglossian.EFCoreSqlite
     private StreamWriter LogStream { get; set; }
 
 #endif
-    public EchoglossianDbContext()
+    public EchoglossianDbContext(string configDir)
     {
-      var dbPath = Directory.GetParent(Assembly.GetExecutingAssembly().Location)?.ToString();
-      this.DbPath = $"{dbPath}{Path.DirectorySeparatorChar}Echoglossian.db";
+      this.DbPath = $"{configDir}Echoglossian.db";
 #if DEBUG
-      this.LogStream = new StreamWriter($"{dbPath}{Path.DirectorySeparatorChar}DBContextLog.txt", append: true);
+      this.LogStream = new StreamWriter($"{this.DbPath}DBContextLog.txt", append: true);
 #endif
     }
 

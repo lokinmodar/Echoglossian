@@ -140,6 +140,9 @@
   <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
     <value>Do not use overlay to show Toasts translations</value>
   </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Attention!</value>
+  </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
     <value>Overlay font color:</value>
   </data>
@@ -201,6 +204,12 @@
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
     <value>Dialogue Width multiplier</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Please type the path and save so the plugin can work properly!</value>
   </data>
   <data name="PatronButtonLabel" xml:space="preserve">
     <value>Buy lokinmodar a Coffee</value>

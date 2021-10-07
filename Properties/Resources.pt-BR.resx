@@ -144,4 +144,13 @@
   <data name="OverlayFontScaleLabel" xml:space="preserve">
     <value>Ajuste a escala de fonte da Overlay</value>
   </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Atenção!</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Caminho absoluto para a pasta Echoglossian (dentro da pasta XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Digite o caminho e salve para que o plugin possa funcionar corretamente!</value>
+  </data>
 </root>

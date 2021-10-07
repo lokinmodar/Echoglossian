@@ -17,7 +17,7 @@ namespace Echoglossian
 
     public int Lang { get; set; } = 16;
 
-    public int FontSize = 20;
+    public int FontSize = 24;
 
     public bool ShowInCutscenes = true;
 
@@ -43,15 +43,17 @@ namespace Echoglossian
 
     public int ChosenTransEngine = 0;
 
-    public Vector2 ImGuiWindowPosCorrection = Vector2.Zero;
-    public Vector2 ImGuiToastWindowPosCorrection = Vector2.Zero;
-    public float ImGuiWindowWidthMult = 0.85f;
-    public float ImGuiToastWindowWidthMult = 1.20f;
-    public Vector3 OverlayTextColor = Vector3.Zero;
-    public float FontScale = 0;
+    public Vector2 ImGuiWindowPosCorrection = new Vector2(0.0f, 0.0f);
+    public Vector2 ImGuiToastWindowPosCorrection = new Vector2(0.0f, 0.0f);
+    public float ImGuiWindowWidthMult = 1f;
+    public float ImGuiToastWindowWidthMult = 1f;
+    public Vector3 OverlayTextColor = new Vector3(1.0f, 1.0f, 1.0f);
+    public float FontScale = 1;
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 
     public int Version { get; set; } = 0;
+
+    public string ConfigurationDirectory { get; set; } = string.Empty;
   }
 }

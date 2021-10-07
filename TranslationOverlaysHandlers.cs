@@ -4,11 +4,9 @@
 // </copyright>
 
 using System;
-using System.IO;
 using System.Numerics;
 
 using Dalamud.Interface;
-using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
 using ImGuiNET;
@@ -152,8 +150,8 @@ namespace Echoglossian
         this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
         this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
       var size = Math.Min(
-        this.battleTalkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
-        ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
+        this.battleTalkTextDimensions.X * this.configuration.ImGuiWindowWidthMult * 1.5f,
+        ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 3));
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y * 2));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
@@ -201,6 +199,7 @@ namespace Echoglossian
           | ImGuiWindowFlags.NoMouseInputs
           | ImGuiWindowFlags.NoScrollbar);
       }
+
       ImGui.SetWindowFontScale(this.configuration.FontScale);
       if (this.battleTalkTranslationSemaphore.Wait(0))
       {
@@ -330,6 +329,7 @@ namespace Echoglossian
 #endif
           ImGui.PushFont(this.UiFont);
         }
+
         ImGui.Begin(
           "Toast Translation",
           ImGuiWindowFlags.NoTitleBar
@@ -362,7 +362,7 @@ namespace Echoglossian
       var size = Math.Min(
         this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentErrorToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 1.5f, this.errorToastTranslationTextDimensions.Y));
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 1.5f, this.errorToastTranslationTextDimensions.Y * 1.5f));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
       {

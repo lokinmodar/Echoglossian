@@ -67,8 +67,7 @@
         </trans-unit>
         <trans-unit id="TranslateTalkToggleLabel" translate="yes" xml:space="preserve">
           <source>Translate in-game dialogues</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducir charla</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Traducir charlas en juego</target>
         </trans-unit>
         <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
           <source>Awaiting translation...</source>
@@ -217,6 +216,18 @@
         <trans-unit id="OverlayFontScaleLabel" translate="yes" xml:space="preserve">
           <source>Adjust the Overlay font scale</source>
           <target state="translated" state-qualifier="mt-suggestion">Ajustar la escala de fuentes de superposición</target>
+        </trans-unit>
+        <trans-unit id="EchoglossianPathModal" translate="yes" xml:space="preserve">
+          <source>Attention!</source>
+          <target state="translated" state-qualifier="mt-suggestion">¡Atención!</target>
+        </trans-unit>
+        <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
+          <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
+          <target state="translated">Ruta absoluta a la carpeta Echoglossian (dentro de la carpeta XIVLauncher -&gt; pluginConfigs)</target>
+        </trans-unit>
+        <trans-unit id="PathTypeInstructions" translate="yes" xml:space="preserve">
+          <source>Please type the path and save so the plugin can work properly!</source>
+          <target state="translated" state-qualifier="mt-suggestion">¡Escriba la ruta y guárdela para que el complemento pueda funcionar correctamente!</target>
         </trans-unit>
       </group>
     </body>

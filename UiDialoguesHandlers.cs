@@ -104,7 +104,7 @@ namespace Echoglossian
         if (talkMaster->IsVisible)
         {
           this.battleTalkDisplayTranslation = true;
-          this.battleTalkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
+          this.battleTalkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale * 2;
           this.battleTalkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
           this.battleTalkTextPosition.X = talkMaster->RootNode->X;
           this.battleTalkTextPosition.Y = talkMaster->RootNode->Y;
@@ -127,7 +127,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetTalkLog.txt", append: true);
+      using StreamWriter logStream = new(this.ConfigDir + "GetTalkLog.txt", append: true);
 #endif
 
       try
@@ -432,7 +432,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new(this.DbOperationsLogPath + "GetBattleTalkLog.txt", append: true);
+      using StreamWriter logStream = new(this.ConfigDir + "GetBattleTalkLog.txt", append: true);
 #endif
 
       try

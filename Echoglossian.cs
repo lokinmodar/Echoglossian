@@ -27,6 +27,7 @@ namespace Echoglossian
   public partial class Echoglossian : IDalamudPlugin
   {
     private const string SlashCommand = "/eglo";
+    private string ConfigDir;
     private static int languageInt = 16;
     private static int fontSize = 20;
     private static int chosenTransEngine = 0;
@@ -34,6 +35,7 @@ namespace Echoglossian
 
     private readonly CommandManager commandManager;
     private bool config;
+    private bool linuxPathFix;
     private readonly Config configuration;
 
     private readonly Framework framework;
@@ -80,7 +82,15 @@ namespace Echoglossian
       this.ci = clientState;
 
       this.pluginInterface = dalamudPluginInterface;
+
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
+
+      this.ConfigDir = this.FixAssemblyPath();
+      if (this.ConfigDir == string.Empty)
+      {
+        this.linuxPathFix = true;
+      }
+
       this.cultureInfo = new CultureInfo(this.configuration.PluginCulture);
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
@@ -137,10 +147,6 @@ namespace Echoglossian
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       this.pluginInterface.UiBuilder.Draw += this.BuildUi;
-      /*      this.pluginInterface.UiBuilder.Draw += this.EchoglossianConfigUi;
-            this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedDialogueWindow;
-            this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedBattleDialogueWindow;
-            this.pluginInterface.UiBuilder.Draw += this.DrawTranslatedToastWindow;*/
     }
 
     /// <summary>
@@ -275,6 +281,11 @@ namespace Echoglossian
         this.EchoglossianConfigUi();
       }
 
+      if (this.linuxPathFix)
+      {
+        this.ShowAssemblyPathPopup();
+      }
+
       if (this.configuration.FontChangeTime > 0)
       {
         if (DateTime.Now.Ticks - 10000000 > this.configuration.FontChangeTime)
@@ -302,11 +313,11 @@ namespace Echoglossian
 #endif
       }
 
-      if (this.configuration.UseImGui && this.configuration.TranslateToast && this.errorToastDisplayTranslation)
+      if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
       {
         this.DrawTranslatedErrorToastWindow();
 #if DEBUG
-        PluginLog.LogVerbose("Showing Error Toast Translation Overlay.");
+        PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
 #endif
       }
     }

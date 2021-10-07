@@ -76,6 +76,11 @@
               Looks up a localized string similar to Do not use overlay to show Toasts translations.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
+            <summary>
+              Looks up a localized string similar to Attention!.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">
             <summary>
               Looks up a localized string similar to Overlay font color:.
@@ -174,6 +179,16 @@
         <member name="P:Echoglossian.Properties.Resources.OverlayWidthScrollLabel">
             <summary>
               Looks up a localized string similar to Dialogue Width multiplier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PathInputInstructions">
+            <summary>
+              Looks up a localized string similar to Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PathTypeInstructions">
+            <summary>
+              Looks up a localized string similar to Please type the path and save so the plugin can work properly!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PatronButtonLabel">

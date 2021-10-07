@@ -5,6 +5,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 
@@ -20,7 +21,6 @@ namespace Echoglossian
 
     internal void ReloadFont()
     {
-
       this.pluginInterface.UiBuilder.RebuildFonts();
 #if DEBUG
       PluginLog.LogVerbose("Font atlas rebuilt!");
@@ -29,17 +29,19 @@ namespace Echoglossian
 
     private void EchoglossianConfigUi()
     {
+      this.configuration.ConfigurationDirectory =
+        $"{this.pluginInterface.ConfigDirectory}{Path.DirectorySeparatorChar}";
       ImGui.SetNextWindowSizeConstraints(new Vector2(600, 500), new Vector2(1920, 1080));
       ImGui.Begin(Resources.ConfigWindowTitle, ref this.config);
       if (ImGui.BeginTabBar("Tabs", ImGuiTabBarFlags.None))
       {
         if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
         {
-          ImGui.Text(Resources.PluginInterfaceLanguage);
+          /*ImGui.Text(Resources.PluginInterfaceLanguage);
           if (ImGui.Combo(Resources.PluginInterfaceLanguageSelectorText, ref this.configuration.PluginCultureInt, this.languages, this.languages.Length))
           {
             this.SaveConfig();
-          }
+          }*/
 
           ImGui.Text(Resources.WhatToTranslateText);
           if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
@@ -59,6 +61,15 @@ namespace Echoglossian
 
           if (ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast))
           {
+            if (!this.configuration.TranslateToast)
+            {
+              this.configuration.TranslateAreaToast = false;
+              this.configuration.TranslateClassChangeToast = false;
+              this.configuration.TranslateErrorToast = false;
+              this.configuration.TranslateQuestToast = false;
+              this.configuration.TranslateWideTextToast = false;
+            }
+
             this.SaveConfig();
           }
 
@@ -109,15 +120,16 @@ namespace Echoglossian
                 ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
               }
 
-              ImGui.SameLine();
+              /*ImGui.SameLine();
               if (ImGui.SmallButton("Reload Font"))
               {
                 this.ReloadFont();
-              }
+              }*/
 
               ImGui.Separator();
               ImGui.SameLine();
-              ImGui.Text(Resources.FontColorSelectLabel);
+              ImGui.Text(Resources.FontColorSelectLabel); 
+              ImGui.SameLine();
               if (ImGui.ColorEdit3(Resources.OverlayColorSelectName, ref this.configuration.OverlayTextColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
               {
 #if DEBUG

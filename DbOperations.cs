@@ -6,7 +6,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+
 using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
@@ -18,7 +18,7 @@ namespace Echoglossian
   public partial class Echoglossian
   {
 #if DEBUG
-    public string DbOperationsLogPath = $"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}";
+
 #endif
     public TalkMessage FoundTalkMessage { get; set; }
 
@@ -30,20 +30,26 @@ namespace Echoglossian
 
     public void CreateOrUseDb()
     {
-      using var context = new EchoglossianDbContext();
+      if (this.ConfigDir == string.Empty)
+      {
+        this.linuxPathFix = true;
+        this.ConfigDir = this.FixAssemblyPath();
+      }
+
+      using var context = new EchoglossianDbContext(this.ConfigDir);
       context.Database.MigrateAsync();
     }
 
     public bool FindTalkMessage(TalkMessage talkMessage)
     {
-      using var context = new EchoglossianDbContext();
+      using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
-      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbFindTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.ConfigDir}DbFindTalkOperationsLog.txt", append: true);
 #endif
       try
       {
 #if DEBUG
-        PluginLog.Error(this.DbOperationsLogPath);
+        PluginLog.Error(this.ConfigDir);
         logStream.WriteLineAsync($"Before Talk Messages table query: {talkMessage}");
 #endif
 
@@ -76,9 +82,9 @@ namespace Echoglossian
 
     public bool FindToastMessage(ToastMessage toastMessage)
     {
-      using var context = new EchoglossianDbContext();
+      using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
-      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbFindToastOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.ConfigDir}DbFindToastOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -90,11 +96,11 @@ namespace Echoglossian
           context.ToastMessage.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
                                           t.TranslationLang == toastMessage.TranslationLang && t.ToastType == toastMessage.ToastType);
 
-        var localFoundToastMessage = existingToastMessage.FirstOrDefault();
+        var localFoundToastMessage = existingToastMessage.Single();
 #if DEBUG
         logStream.WriteLineAsync($"After Toast Messages table query: {localFoundToastMessage}");
 #endif
-        if (existingToastMessage.FirstOrDefault() == null ||
+        if (existingToastMessage.Single() == null ||
             localFoundToastMessage?.OriginalToastMessage != toastMessage.OriginalToastMessage)
         {
           this.FoundToastMessage = toastMessage;
@@ -115,9 +121,9 @@ namespace Echoglossian
 
     public bool FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
     {
-      using var context = new EchoglossianDbContext();
+      using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
-      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbFindBattleTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.ConfigDir}DbFindBattleTalkOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -155,9 +161,9 @@ namespace Echoglossian
 
     public string InsertTalkData(TalkMessage talkMessage)
     {
-      using var context = new EchoglossianDbContext();
+      using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
-      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbInsertTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.ConfigDir}DbInsertTalkOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -200,9 +206,9 @@ namespace Echoglossian
 
     public string InsertBattleTalkData(BattleTalkMessage battleTalkMessage)
     {
-      using var context = new EchoglossianDbContext();
+      using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
-      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbInsertBattleTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.ConfigDir}DbInsertBattleTalkOperationsLog.txt", append: true);
 #endif
       try
       {
@@ -238,9 +244,9 @@ namespace Echoglossian
 
     public string InsertToastMessageData(ToastMessage toastMessage)
     {
-      using var context = new EchoglossianDbContext();
+      using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
-      using StreamWriter logStream = new($"{this.DbOperationsLogPath}DbInsertToastOperationsLog.txt", append: true);
+      using StreamWriter logStream = new($"{this.ConfigDir}DbInsertToastOperationsLog.txt", append: true);
 #endif
       try
       {

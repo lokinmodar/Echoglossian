@@ -217,6 +217,18 @@
           <source>Adjust the Overlay font scale</source>
           <target state="translated">Ajuste a escala de fonte da Overlay</target>
         </trans-unit>
+        <trans-unit id="EchoglossianPathModal" translate="yes" xml:space="preserve">
+          <source>Attention!</source>
+          <target state="translated" state-qualifier="mt-suggestion">Atenção!</target>
+        </trans-unit>
+        <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
+          <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
+          <target state="translated">Caminho absoluto para a pasta Echoglossian (dentro da pasta XIVLauncher -&gt; pluginConfigs)</target>
+        </trans-unit>
+        <trans-unit id="PathTypeInstructions" translate="yes" xml:space="preserve">
+          <source>Please type the path and save so the plugin can work properly!</source>
+          <target state="translated" state-qualifier="mt-suggestion">Digite o caminho e salve para que o plugin possa funcionar corretamente!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

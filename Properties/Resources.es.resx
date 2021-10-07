@@ -55,7 +55,7 @@
     <value>Traducir charla de batalla</value>
   </data>
   <data name="TranslateTalkToggleLabel" xml:space="preserve">
-    <value>Traducir charla</value>
+    <value>Traducir charlas en juego</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>A la espera de traducción...</value>
@@ -143,5 +143,14 @@
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
     <value>Ajustar la escala de fuentes de superposición</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>¡Atención!</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Ruta absoluta a la carpeta Echoglossian (dentro de la carpeta XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>¡Escriba la ruta y guárdela para que el complemento pueda funcionar correctamente!</value>
   </data>
 </root>

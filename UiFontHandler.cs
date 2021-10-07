@@ -5,12 +5,8 @@
 
 using System;
 using System.IO;
-using System.Numerics;
 
-using Dalamud.Interface;
 using Dalamud.Logging;
-using Dalamud.Utility;
-using Echoglossian.Properties;
 using ImGuiNET;
 
 namespace Echoglossian
@@ -25,7 +21,19 @@ namespace Echoglossian
     {
       // TODO: Get font by languageint
       PluginLog.LogVerbose("Inside LoadFont method");
+#if DEBUG
+      var pathCorrection = MovePathUp(this.ConfigDir, 2);
+      var fontFile2 = $@"{pathCorrection}{Path.DirectorySeparatorChar}installedPlugins{Path.DirectorySeparatorChar}Echoglossian{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+      PluginLog.LogVerbose($"Font file in DEBUG Mode using path correction: {fontFile2}");
+
+
       var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+      PluginLog.LogVerbose($"Font file in Debug Mode: {fontFile}");
+#else
+      var pathCorrection = MovePathUp(this.ConfigDir, 1);
+      var fontFile = $@"{pathCorrection}{Path.DirectorySeparatorChar}installedPlugins{Path.DirectorySeparatorChar}Echoglossian{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+      PluginLog.LogVerbose($"Font file in Prod Mode: {fontFile}");
+#endif
       this.FontLoaded = false;
       if (File.Exists(fontFile))
       {
