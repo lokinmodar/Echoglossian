@@ -9,7 +9,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 
 using Dalamud.Logging;
 using Echoglossian.Properties;
@@ -28,20 +27,7 @@ namespace Echoglossian
 
     private static readonly RankedLanguageIdentifierFactory Factory = new();
 
-    private static readonly RankedLanguageIdentifier Identifier =
-      Factory.Load($"{Directory.GetParent(Assembly.GetExecutingAssembly().Location)}{Path.DirectorySeparatorChar}Wiki82.profile.xml")/*.Load(Path.Combine(AssemblyDirectory, "Wiki82.profile.xml"))*/;
-
-    private static string AssemblyDirectory
-    {
-      get
-      {
-        var codeBase = typeof(Echoglossian).Assembly.Location;
-        Debug.Assert(codeBase != null, nameof(codeBase) + " != null");
-        var uri = new UriBuilder(codeBase);
-        var path = Uri.UnescapeDataString(uri.Path);
-        return Path.GetDirectoryName(path);
-      }
-    }
+    private static RankedLanguageIdentifier Identifier;
 
     public static string LangIdentify(string message)
     {

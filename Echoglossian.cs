@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 
@@ -129,7 +130,10 @@ namespace Echoglossian
 
       chosenTransEngine = this.configuration.ChosenTransEngine;
 
-      transEngineName = ((TransEngines)chosenTransEngine).ToString();
+      transEngineName = ((TransEngines) chosenTransEngine).ToString();
+
+      Identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+
       this.LoadAllErrorToasts();
 
       this.framework.Update += this.Tick;

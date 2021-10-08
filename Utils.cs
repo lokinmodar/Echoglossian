@@ -35,7 +35,7 @@ namespace Echoglossian
 #endif
 
 
-    public static string MovePathUp(string path, int noOfLevels)
+    public string MovePathUp(string path, int noOfLevels)
     {
       string parentPath = path.TrimEnd(new[] { '/', '\\' });
       for (int i = 0; i < noOfLevels; i++)
