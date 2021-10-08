@@ -362,7 +362,7 @@ namespace Echoglossian
       var size = Math.Min(
         this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentErrorToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 1.5f, this.errorToastTranslationTextDimensions.Y * 1.5f));
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.errorToastTranslationTextDimensions.Y * 1.5f));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
       {

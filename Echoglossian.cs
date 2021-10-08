@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Threading;
@@ -16,6 +17,7 @@ using Dalamud.Game.Gui.Toast;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using ImGuiScene;
 using XivCommon;
@@ -60,6 +62,8 @@ namespace Echoglossian
 
     private readonly ToastGui toastGui;
     private readonly CultureInfo cultureInfo;
+
+    public List<ToastMessage> ErrorToastsCache { get; set; }
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
@@ -126,6 +130,7 @@ namespace Echoglossian
       chosenTransEngine = this.configuration.ChosenTransEngine;
 
       transEngineName = ((TransEngines)chosenTransEngine).ToString();
+      this.LoadAllErrorToasts();
 
       this.framework.Update += this.Tick;
 

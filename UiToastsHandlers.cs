@@ -268,13 +268,13 @@ namespace Echoglossian
           if (this.configuration.DoNotUseImGuiForToasts)
           {
             var translatedToastMessage = Translate(message.TextValue);
-            message = translatedToastMessage;
             var translatedToastData = new ToastMessage("Error", message.TextValue, LangIdentify(message.TextValue),
               translatedToastMessage, Codes[languageInt], this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
 #if DEBUG
             logStream.WriteLineAsync($"Before Toast Messages table data insertion:  {translatedToastData}");
 #endif
+            message = translatedToastMessage;
             var result = this.InsertToastMessageData(translatedToastData);
 #if DEBUG
             PluginLog.LogError($"Toast Message DB Insert operation result: {result}");
