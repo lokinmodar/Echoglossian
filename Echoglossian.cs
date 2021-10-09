@@ -90,7 +90,7 @@ namespace Echoglossian
 
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
       this.FixConfig();
-      this.ConfigDir = this.pluginInterface.GetPluginConfigDirectory();
+      this.ConfigDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
       this.cultureInfo = new CultureInfo(this.configuration.PluginCulture);
 
@@ -154,7 +154,6 @@ namespace Echoglossian
       this.pluginInterface.UiBuilder.Draw += this.BuildUi;
     }
     private static XivCommonBase Common { get; set; }
-
     public string Name => Resources.Name;
 
     /// <inheritdoc />

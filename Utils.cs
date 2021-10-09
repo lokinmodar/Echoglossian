@@ -105,6 +105,7 @@ namespace Echoglossian
         if (this.pluginInterface.ConfigDirectory.Exists)
         {
           this.pluginInterface.ConfigDirectory.Delete(true);
+          this.config = true;
         }
       }
 
