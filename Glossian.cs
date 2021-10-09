@@ -9,7 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-
+using System.Runtime.CompilerServices;
 using Dalamud.Logging;
 using Echoglossian.Properties;
 using Newtonsoft.Json.Linq;
@@ -45,10 +45,22 @@ namespace Echoglossian
 
     public static string Translate(string text)
     {
+#if DEBUG
+      PluginLog.LogError($"inside translate method");
+#endif
       try
       {
         var lang = Codes[languageInt];
-        var detectedLanguage = LangIdentify(text);
+        var parsedText = text[..2] == "..." ? text[3..] : text;
+
+        var detectedLanguage = LangIdentify(parsedText);
+        if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical")
+        {
+          detectedLanguage = "en";
+        }
+
+
+
 
 #if DEBUG
         PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
@@ -73,6 +85,7 @@ namespace Echoglossian
           dialogueSentenceList.Aggregate(string.Empty, (current, dialogueSentence) => current + dialogueSentence);
 
         finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
+        finalDialogueText = finalDialogueText.Replace("...", "\u2026");
 
         var src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");

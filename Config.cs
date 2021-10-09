@@ -53,7 +53,5 @@ namespace Echoglossian
     public long FontChangeTime = DateTime.Now.Ticks;
 
     public int Version { get; set; } = 0;
-
-    public string ConfigurationDirectory { get; set; } = string.Empty;
   }
 }

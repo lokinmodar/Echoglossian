@@ -7,6 +7,7 @@ using System;
 using System.Numerics;
 
 using Dalamud.Interface;
+using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
 using ImGuiNET;
@@ -356,13 +357,22 @@ namespace Echoglossian
 
     private void DrawTranslatedErrorToastWindow()
     {
+#if DEBUG
+      PluginLog.LogWarning($"Using Toast Overlay - inside Draw Error toast Overlay");
+#endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.errorToastTranslationTextPosition.X + (this.errorToastTranslationTextDimensions.X / 2) - (this.errorToastTranslationTextImguiSize.X / 2),
         this.errorToastTranslationTextPosition.Y - this.errorToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
       var size = Math.Min(
         this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
-        ImGui.CalcTextSize(this.currentErrorToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.errorToastTranslationTextDimensions.Y * 1.5f));
+        ImGui.CalcTextSize(this.currentErrorToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
+#if DEBUG
+      PluginLog.LogWarning($"size: {size}");
+#endif
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2));
+#if DEBUG
+      PluginLog.LogWarning($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2)}");
+#endif
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
       {
@@ -378,7 +388,8 @@ namespace Echoglossian
         | ImGuiWindowFlags.NoNav
         | ImGuiWindowFlags.AlwaysAutoResize
         | ImGuiWindowFlags.NoFocusOnAppearing
-        | ImGuiWindowFlags.NoMouseInputs);
+        | ImGuiWindowFlags.NoMouseInputs
+        | ImGuiWindowFlags.NoBackground);
 
       if (this.errorToastTranslationSemaphore.Wait(0))
       {

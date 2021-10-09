@@ -38,7 +38,7 @@ namespace Echoglossian
 
     private readonly CommandManager commandManager;
     private bool config;
-    private bool linuxPathFix;
+
     private readonly Config configuration;
 
     private readonly Framework framework;
@@ -89,12 +89,8 @@ namespace Echoglossian
       this.pluginInterface = dalamudPluginInterface;
 
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
-
-      this.ConfigDir = this.FixAssemblyPath();
-      if (this.ConfigDir == string.Empty)
-      {
-        this.linuxPathFix = true;
-      }
+      this.FixConfig();
+      this.ConfigDir = this.pluginInterface.GetPluginConfigDirectory();
 
       this.cultureInfo = new CultureInfo(this.configuration.PluginCulture);
 
@@ -210,7 +206,7 @@ namespace Echoglossian
 
     private void Tick(Framework tFramework)
     {
-      switch (this.configuration.UseImGui)
+      switch (this.configuration.UseImGui || !this.configuration.DoNotUseImGuiForToasts)
       {
         case true when !this.FontLoaded || this.FontLoadFailed:
           return;
@@ -224,32 +220,19 @@ namespace Echoglossian
 #endif
                 this.TalkHandler("Talk", 1);
                 // this.TalkSubtitleHandler("TalkSubtitle", 1);
-/*                this.TalkSubtitleHandler("TalkSubtitle", 2);
-                this.TalkSubtitleHandler("TalkSubtitle", 3);
-                this.TalkSubtitleHandler("TalkSubtitle", 4);
-                this.TalkSubtitleHandler("TalkSubtitle", 5);*/
+
                 this.BattleTalkHandler("_BattleTalk", 1);
-                this.ErrorToastHandler("_TextError", 1);
-/*                this.ErrorToastHandler("_TextError", 2);
-                this.ErrorToastHandler("_TextError", 3);
-                this.ErrorToastHandler("_TextError", 4);*/
+
+                this.TextErrorToastHandler("_TextError", 1);
+
                 this.WideTextToastHandler("_WideText", 1);
-/*                this.WideTextToastHandler("_WideText", 2);
-                this.WideTextToastHandler("_WideText", 3);
-                this.WideTextToastHandler("_WideText", 4);*/
+
                 this.ClassChangeToastHandler("_TextClassChange", 1);
-                // this.ClassChangeToastHandler("_TextClassChange", 2);
+
                 this.AreaToastHandler("_AreaText", 1);
-/*                this.AreaToastHandler("_AreaText", 2);*/
+
                 this.QuestToastHandler("_ScreenText", 1);
-/*                this.QuestToastHandler("_ScreenText", 2);
-                this.QuestToastHandler("_ScreenText", 3);
-                this.QuestToastHandler("_ScreenText", 4);
-                this.QuestToastHandler("_ScreenText", 5);
-                this.QuestToastHandler("_ScreenText", 6);
-                this.QuestToastHandler("_ScreenText", 7);
-                this.QuestToastHandler("_ScreenText", 8);
-                this.QuestToastHandler("_ScreenText", 9);*/
+
                 break;
             }
 
@@ -282,11 +265,6 @@ namespace Echoglossian
         this.EchoglossianConfigUi();
       }
 
-      if (this.linuxPathFix)
-      {
-        this.ShowAssemblyPathPopup();
-      }
-
       if (this.configuration.FontChangeTime > 0)
       {
         if (DateTime.Now.Ticks - 10000000 > this.configuration.FontChangeTime)
@@ -313,7 +291,12 @@ namespace Echoglossian
         // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
 #endif
       }
-
+#if DEBUG
+      PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
+                           $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
+                           $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
+                           $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");
+#endif
       if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
       {
         this.DrawTranslatedErrorToastWindow();

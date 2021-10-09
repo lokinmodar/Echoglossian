@@ -31,12 +31,6 @@ namespace Echoglossian
 
     public void CreateOrUseDb()
     {
-      if (this.ConfigDir == string.Empty)
-      {
-        this.linuxPathFix = true;
-        this.ConfigDir = this.FixAssemblyPath();
-      }
-
       using var context = new EchoglossianDbContext(this.ConfigDir);
       context.Database.MigrateAsync();
     }
@@ -90,10 +84,20 @@ namespace Echoglossian
       try
       {
         var cache = this.ErrorToastsCache;
+        if (cache.Count == 0 || cache == null)
+        {
+          this.LoadAllErrorToasts();
+          cache = this.ErrorToastsCache;
+
+          if (cache.Count == 0 || cache == null)
+          {
+            return false;
+          }
+        }
+
 #if DEBUG
         logStream.WriteLineAsync($"Before Toast Messages table query: {toastMessage}");
 #endif
-
         var existingToastMessage =
           cache.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
                                           t.TranslationLang == toastMessage.TranslationLang &&
@@ -106,7 +110,7 @@ namespace Echoglossian
         if (localFoundToastMessage == null ||
             localFoundToastMessage.OriginalToastMessage != toastMessage.OriginalToastMessage)
         {
-          this.FoundToastMessage = toastMessage;
+          this.FoundToastMessage = null;
           return false;
         }
 
@@ -215,7 +219,7 @@ namespace Echoglossian
 #endif
       try
       {
-        // 1. Attach an entity to context with Added EntityState
+
         context.BattleTalkMessage.Attach(battleTalkMessage);
 #if DEBUG
         if (!this.configuration.UseImGui)
@@ -224,12 +228,7 @@ namespace Echoglossian
         }
 #endif
 
-        // or the followings are also valid
-        // context.Students.Add(std);
-        // context.Entry<Student>(std).State = EntityState.Added;
-        // context.Attach<Student>(std);
 
-        // 2. Calling SaveChanges to insert a new record into Students table
         context.SaveChangesAsync();
 #if DEBUG
         if (!this.configuration.UseImGui)
@@ -254,17 +253,16 @@ namespace Echoglossian
       try
       {
         bool isInThere;
-        if (this.ErrorToastsCache != null)
+        if (this.ErrorToastsCache.Count > 0 && this.ErrorToastsCache != null)
         {
 #if DEBUG
           foreach (var t in this.ErrorToastsCache)
           {
-            PluginLog.LogError($"{t}");
+            PluginLog.LogError($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
           }
 #endif
-
           isInThere = this.ErrorToastsCache.Any(t => toastMessage.ToastType == t.ToastType && toastMessage.TranslationLang == t.TranslationLang &&
-                                                       toastMessage.OriginalToastMessage == t.OriginalToastMessage);
+                                                     toastMessage.OriginalToastMessage == t.OriginalToastMessage);
         }
         else
         {
@@ -276,13 +274,9 @@ namespace Echoglossian
           return "Data already in the Db.";
         }
 
-        // 1. Attach an entity to context with Added EntityState
         context.ToastMessage.Attach(toastMessage);
 #if DEBUG
-        if (!this.configuration.UseImGui)
-        {
-          logStream.WriteLineAsync($"Inside Context: {context.ToastMessage.Local}");
-        }
+        logStream.WriteLineAsync($"Inside Context: {context.ToastMessage.Local}");
 #endif
 
         // or the followings are also valid
@@ -293,13 +287,11 @@ namespace Echoglossian
         // 2. Calling SaveChanges to insert a new record into Students table
         context.SaveChangesAsync();
 #if DEBUG
-        if (!this.configuration.UseImGui)
-        {
-          logStream.WriteLineAsync($"After 'SaveChanges': {context.ToastMessage.Local}");
-        }
+        logStream.WriteLineAsync($"After 'SaveChanges': {context.ToastMessage.Local}");
+#endif
 
         this.LoadAllErrorToasts();
-#endif
+
         return "Data inserted to ToastMessages table.";
 
       }
@@ -328,7 +320,7 @@ namespace Echoglossian
           this.ErrorToastsCache.Add(t);
         }
 #if DEBUG
-        logStream.WriteLineAsync($"After Toast Messages table query: {this.ErrorToastsCache}");
+        logStream.WriteLineAsync($"After Toast Messages table query: {this.ErrorToastsCache.ToArray()}");
 #endif
       }
       catch (Exception e)

@@ -29,8 +29,6 @@ namespace Echoglossian
 
     private void EchoglossianConfigUi()
     {
-      this.configuration.ConfigurationDirectory =
-        $"{this.pluginInterface.ConfigDirectory}{Path.DirectorySeparatorChar}";
       ImGui.SetNextWindowSizeConstraints(new Vector2(600, 500), new Vector2(1920, 1080));
       ImGui.Begin(Resources.ConfigWindowTitle, ref this.config);
       if (ImGui.BeginTabBar("Tabs", ImGuiTabBarFlags.None))
