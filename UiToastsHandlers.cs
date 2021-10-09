@@ -361,6 +361,8 @@ namespace Echoglossian
         return;
       }
 
+      var tOptions = options;
+      PluginLog.LogWarning($"Toast options: Position - {tOptions.Position}, Speed: {tOptions.Speed}");
       try
       {
         var messageTextToTranslate = message.TextValue;

@@ -15,13 +15,6 @@
             <param name="pToastGui">Toast Gui Object.</param>
             <param name="clientState">This class represents the state of the game client at the time of access.</param>
         </member>
-        <member name="P:Echoglossian.Echoglossian.AssemblyLocation">
-            <summary>
-              Gets or sets AssemblyLocation. When loaded by LivePluginLoader, the executing assembly will be wrong. Supplying this
-              property allows LivePluginLoader to supply the correct location, so that you have full compatibility when loaded
-              normally and through LPL.
-            </summary>
-        </member>
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
         </member>

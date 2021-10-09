@@ -157,14 +157,6 @@ namespace Echoglossian
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       this.pluginInterface.UiBuilder.Draw += this.BuildUi;
     }
-
-    /// <summary>
-    ///   Gets or sets AssemblyLocation. When loaded by LivePluginLoader, the executing assembly will be wrong. Supplying this
-    ///   property allows LivePluginLoader to supply the correct location, so that you have full compatibility when loaded
-    ///   normally and through LPL.
-    /// </summary>
-    public string AssemblyLocation { get; set; } = Assembly.GetExecutingAssembly().Location;
-
     private static XivCommonBase Common { get; set; }
 
     public string Name => Resources.Name;
@@ -231,33 +223,33 @@ namespace Echoglossian
                 // PluginLog.LogVerbose("Monitoring Framework Tick");
 #endif
                 this.TalkHandler("Talk", 1);
-                this.TalkSubtitleHandler("TalkSubtitle", 1);
-                this.TalkSubtitleHandler("TalkSubtitle", 2);
+                // this.TalkSubtitleHandler("TalkSubtitle", 1);
+/*                this.TalkSubtitleHandler("TalkSubtitle", 2);
                 this.TalkSubtitleHandler("TalkSubtitle", 3);
                 this.TalkSubtitleHandler("TalkSubtitle", 4);
-                this.TalkSubtitleHandler("TalkSubtitle", 5);
+                this.TalkSubtitleHandler("TalkSubtitle", 5);*/
                 this.BattleTalkHandler("_BattleTalk", 1);
                 this.ErrorToastHandler("_TextError", 1);
-                this.ErrorToastHandler("_TextError", 2);
+/*                this.ErrorToastHandler("_TextError", 2);
                 this.ErrorToastHandler("_TextError", 3);
-                this.ErrorToastHandler("_TextError", 4);
+                this.ErrorToastHandler("_TextError", 4);*/
                 this.WideTextToastHandler("_WideText", 1);
-                this.WideTextToastHandler("_WideText", 2);
+/*                this.WideTextToastHandler("_WideText", 2);
                 this.WideTextToastHandler("_WideText", 3);
-                this.WideTextToastHandler("_WideText", 4);
+                this.WideTextToastHandler("_WideText", 4);*/
                 this.ClassChangeToastHandler("_TextClassChange", 1);
-                this.ClassChangeToastHandler("_TextClassChange", 2);
+                // this.ClassChangeToastHandler("_TextClassChange", 2);
                 this.AreaToastHandler("_AreaText", 1);
-                this.AreaToastHandler("_AreaText", 2);
+/*                this.AreaToastHandler("_AreaText", 2);*/
                 this.QuestToastHandler("_ScreenText", 1);
-                this.QuestToastHandler("_ScreenText", 2);
+/*                this.QuestToastHandler("_ScreenText", 2);
                 this.QuestToastHandler("_ScreenText", 3);
                 this.QuestToastHandler("_ScreenText", 4);
                 this.QuestToastHandler("_ScreenText", 5);
                 this.QuestToastHandler("_ScreenText", 6);
                 this.QuestToastHandler("_ScreenText", 7);
                 this.QuestToastHandler("_ScreenText", 8);
-                this.QuestToastHandler("_ScreenText", 9);
+                this.QuestToastHandler("_ScreenText", 9);*/
                 break;
             }
 

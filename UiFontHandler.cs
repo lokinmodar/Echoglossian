@@ -20,17 +20,17 @@ namespace Echoglossian
     private void LoadFont(/*string fontFileName,int imguiFontSize */)
     {
       // TODO: Get font by languageint
-      PluginLog.LogVerbose("Inside LoadFont method");
 #if DEBUG
-      var pathCorrection = MovePathUp(this.ConfigDir, 2);
-      var fontFile2 =  $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
-      PluginLog.LogVerbose($"Font file in DEBUG Mode using path correction: {fontFile2}");
+      PluginLog.LogVerbose("Inside LoadFont method");
 
 
-      var fontFile = $@"{Path.GetFullPath(Path.GetDirectoryName(this.AssemblyLocation)!)}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
-      PluginLog.LogVerbose($"Font file in Debug Mode: {fontFile}");
+      var fontFile =  $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+      PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
+
+
+      
 #else
-      //var pathCorrection = this.MovePathUp(this.ConfigDir, 2);
+
       var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
       PluginLog.LogVerbose($"Font file in Prod Mode: {fontFile}");
 #endif
