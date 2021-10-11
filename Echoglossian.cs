@@ -290,18 +290,19 @@ namespace Echoglossian
         // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
 #endif
       }
+/*
 #if DEBUG
       PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
                            $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
                            $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
                            $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");
-#endif
+#endif*/
       if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
       {
         this.DrawTranslatedErrorToastWindow();
-#if DEBUG
+/*#if DEBUG
         PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
-#endif
+#endif*/
       }
     }
 

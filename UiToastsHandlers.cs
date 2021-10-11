@@ -97,19 +97,19 @@ namespace Echoglossian
     private unsafe void TextErrorToastHandler(string toastName, int index)
     {
       var errorToastByName = this.gameGui.GetAddonByName(toastName, index);
-      
+     /* 
 #if DEBUG
       PluginLog.LogInformation($"Error toast pointer: {errorToastByName}");
       PluginLog.LogFatal($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
                            $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
                            $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
                            $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");
-#endif
+#endif*/
       if (errorToastByName != IntPtr.Zero)
       {
-#if DEBUG
+/*#if DEBUG
         PluginLog.LogWarning($"inside TextErrorToastHandler method");
-#endif
+#endif*/
         var errorToastByNameMaster = (AtkUnitBase*)errorToastByName;
         if (errorToastByNameMaster->IsVisible)
         {

@@ -244,7 +244,11 @@ namespace Echoglossian
 
       if (ImGui.Button(Resources.PatronButtonLabel))
       {
-        Process.Start("https://ko-fi.com/lokinmodar");
+        Process.Start(new ProcessStartInfo
+        {
+          FileName = "https://ko-fi.com/lokinmodar",
+          UseShellExecute = true,
+        });
       }
 
       ImGui.PopStyleColor(3);
