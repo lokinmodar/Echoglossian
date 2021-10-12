@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
+using Dalamud.Memory;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -111,9 +112,23 @@ namespace Echoglossian
         PluginLog.LogWarning($"inside TextErrorToastHandler method");
 #endif*/
         var errorToastByNameMaster = (AtkUnitBase*)errorToastByName;
+
+        // 2729DE6EDE0
+
+
         if (errorToastByNameMaster->IsVisible)
         {
           this.errorToastDisplayTranslation = true;
+
+
+          // TODO: convert all to this approach + async
+          /*var errorToastId = errorToastByNameMaster->RootNode->ChildNode->NodeID;
+          PluginLog.LogError($"error toast id: {errorToastId}");
+          var textNode = (AtkTextNode*)errorToastByNameMaster->UldManager.SearchNodeById(errorToastId);
+          //var nodeText = MemoryHelper.ReadString((IntPtr)textNode->NodeText.StringPtr, (int)textNode->NodeText.StringLength);
+          PluginLog.LogError(textNode->NodeText.ToString() ?? "sem nada...");
+          textNode->SetText("What is a man? A miserable little pile of secrets. But enough talk… Have at you!");*/
+
           this.errorToastTranslationTextDimensions.X = errorToastByNameMaster->RootNode->Width * errorToastByNameMaster->Scale;
           this.errorToastTranslationTextDimensions.Y = errorToastByNameMaster->RootNode->Height * errorToastByNameMaster->Scale;
           this.errorToastTranslationTextPosition.X = errorToastByNameMaster->RootNode->X;

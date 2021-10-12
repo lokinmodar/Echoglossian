@@ -106,6 +106,8 @@ namespace Echoglossian
 
       this.toastGui = pToastGui;
 
+      FFXIVClientStructs.Resolver.Initialize();
+
       this.CreateOrUseDb();
 
       this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;

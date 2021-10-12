@@ -249,6 +249,8 @@ namespace Echoglossian
           FileName = "https://ko-fi.com/lokinmodar",
           UseShellExecute = true,
         });
+        this.SaveConfig();
+        this.config = false;
       }
 
       ImGui.PopStyleColor(3);
@@ -260,6 +262,7 @@ namespace Echoglossian
       if (ImGui.Button(Resources.SendPixButton))
       {
         ImGui.OpenPopup(Resources.PixQrWindowLabel);
+        this.SaveConfig();
       }
 
       // Always center this window when appearing
