@@ -77,7 +77,6 @@ namespace Echoglossian
 
     public bool FindToastMessage(ToastMessage toastMessage)
     {
-      
 #if DEBUG
       using StreamWriter logStream = new($"{this.ConfigDir}DbFindToastOperationsLog.txt", append: true);
 #endif
@@ -219,7 +218,6 @@ namespace Echoglossian
 #endif
       try
       {
-
         context.BattleTalkMessage.Attach(battleTalkMessage);
 #if DEBUG
         if (!this.configuration.UseImGui)
@@ -227,7 +225,6 @@ namespace Echoglossian
           logStream.WriteLineAsync($"Inside Context: {context.BattleTalkMessage.Local}");
         }
 #endif
-
 
         context.SaveChangesAsync();
 #if DEBUG
@@ -293,14 +290,12 @@ namespace Echoglossian
         this.LoadAllErrorToasts();
 
         return "Data inserted to ToastMessages table.";
-
       }
       catch (Exception e)
       {
         return $"ErrorSavingData: {e}";
       }
     }
-
 
     public void LoadAllErrorToasts()
     {
@@ -330,7 +325,6 @@ namespace Echoglossian
         PluginLog.LogWarning("Could not find any Error Toasts in Database");
 #endif
       }
-
     }
   }
 }

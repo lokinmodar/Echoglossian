@@ -151,7 +151,7 @@ namespace Echoglossian
         this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
         this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
       var size = Math.Min(
-        this.battleTalkTextDimensions.X * this.configuration.ImGuiWindowWidthMult * 1.5f,
+        this.battleTalkTextDimensions.X * this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
         ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 3));
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y * 2));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
@@ -235,7 +235,7 @@ namespace Echoglossian
           this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
           this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
       var size = Math.Min(
-          this.talkTextDimensions.X * this.configuration.ImGuiWindowWidthMult,
+          this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult,
           ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
@@ -403,6 +403,65 @@ namespace Echoglossian
 
       ImGui.SetWindowFontScale(this.configuration.FontScale);
       this.errorToastTranslationTextImguiSize = ImGui.GetWindowSize();
+      ImGui.PopStyleColor(1);
+      ImGui.End();
+      if (this.FontLoaded)
+      {
+#if DEBUG
+        // PluginLog.LogVerbose("Popping font!");
+#endif
+        ImGui.PopFont();
+      }
+    }
+
+    private void DrawTranslatedClassChangeToastWindow()
+    {
+#if DEBUG
+      PluginLog.LogWarning($"Using Toast Overlay - inside Draw Class change toast Overlay");
+#endif
+      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
+        this.classChangeToastTranslationTextPosition.X + (this.classChangeToastTranslationTextDimensions.X / 2) - (this.classChangeToastTranslationTextImguiSize.X / 2),
+        this.classChangeToastTranslationTextPosition.Y - this.classChangeToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
+      var size = Math.Min(
+        this.classChangeToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
+        ImGui.CalcTextSize(this.currentClassChangeToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
+#if DEBUG
+      PluginLog.LogWarning($"size: {size}");
+#endif
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4, this.classChangeToastTranslationTextDimensions.Y * 2));
+#if DEBUG
+      PluginLog.LogWarning($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.classChangeToastTranslationTextDimensions.Y * 2)}");
+#endif
+      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
+      if (this.FontLoaded)
+      {
+#if DEBUG
+        // PluginLog.LogVerbose("Pushing font");
+#endif
+        ImGui.PushFont(this.UiFont);
+      }
+
+      ImGui.Begin(
+        "Error Toast Translation",
+        ImGuiWindowFlags.NoTitleBar
+        | ImGuiWindowFlags.NoNav
+        | ImGuiWindowFlags.AlwaysAutoResize
+        | ImGuiWindowFlags.NoFocusOnAppearing
+        | ImGuiWindowFlags.NoMouseInputs
+        | ImGuiWindowFlags.NoBackground);
+
+      if (this.classChangeToastTranslationSemaphore.Wait(0))
+      {
+        ImGui.Text(this.currentClassChangeToastTranslation);
+        this.classChangeToastTranslationSemaphore.Release();
+      }
+      else
+      {
+        ImGui.Text(Resources.WaitingForTranslation);
+      }
+
+      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      this.classChangeToastTranslationTextImguiSize = ImGui.GetWindowSize();
       ImGui.PopStyleColor(1);
       ImGui.End();
       if (this.FontLoaded)

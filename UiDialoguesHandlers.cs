@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
+using Dalamud.Utility;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -80,6 +81,7 @@ namespace Echoglossian
           this.talkSubtitleTextPosition.Y = talkSubtitleMaster->RootNode->Y;
 #if DEBUG
           var childCount = talkSubtitleMaster->RootNode->ChildCount;
+
           // PluginLog.Fatal("Node Count: " + childCount.ToString());
           // PluginLog.LogFatal("Text using NodeList: " + ttFinal);
 #endif
@@ -136,7 +138,7 @@ namespace Echoglossian
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
 
-        var nameToTranslate = name.TextValue;
+        var nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : string.Empty;
         var textToTranslate = text.TextValue;
 
         TalkMessage talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
@@ -156,7 +158,7 @@ namespace Echoglossian
           if (!this.configuration.UseImGui)
           {
             var translatedText = Translate(textToTranslate);
-            var nameTranslation = Translate(nameToTranslate);
+            var nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
 #if DEBUG
             PluginLog.LogWarning(translatedText);
 #endif

@@ -9,12 +9,13 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-
+using Dalamud;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
+using Dalamud.Game.Text.Sanitizer;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
@@ -51,6 +52,7 @@ namespace Echoglossian
     private readonly SemaphoreSlim battleTalkTranslationSemaphore;
     private readonly SemaphoreSlim senderTranslationSemaphore;
     private readonly SemaphoreSlim errorToastTranslationSemaphore;
+    private readonly SemaphoreSlim classChangeToastTranslationSemaphore;
     private readonly SemaphoreSlim areaToastTranslationSemaphore;
     private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
     private readonly SemaphoreSlim questToastTranslationSemaphore;
@@ -63,6 +65,8 @@ namespace Echoglossian
 
     private readonly ToastGui toastGui;
     private readonly CultureInfo cultureInfo;
+
+    private static Sanitizer sanitizer;
 
     public List<ToastMessage> ErrorToastsCache { get; set; }
 
@@ -89,8 +93,12 @@ namespace Echoglossian
       this.pluginInterface = dalamudPluginInterface;
 
       this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
+
       this.FixConfig();
+
       this.ConfigDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
+
+      sanitizer = this.pluginInterface.Sanitizer as Sanitizer;
 
       this.cultureInfo = new CultureInfo(this.configuration.PluginCulture);
 
@@ -128,7 +136,7 @@ namespace Echoglossian
 
       chosenTransEngine = this.configuration.ChosenTransEngine;
 
-      transEngineName = ((TransEngines) chosenTransEngine).ToString();
+      transEngineName = ((TransEngines)chosenTransEngine).ToString();
 
       Identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
@@ -143,11 +151,12 @@ namespace Echoglossian
 
       this.toastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.errorToastTranslationSemaphore = new SemaphoreSlim(1, 1);
+      this.classChangeToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.areaToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
 
-      this.toastGui.Toast += this.OnToast;
+      // this.toastGui.Toast += this.OnToast;
       this.toastGui.ErrorToast += this.OnErrorToast;
       this.toastGui.QuestToast += this.OnQuestToast;
 
@@ -155,7 +164,9 @@ namespace Echoglossian
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       this.pluginInterface.UiBuilder.Draw += this.BuildUi;
     }
+
     private static XivCommonBase Common { get; set; }
+
     public string Name => Resources.Name;
 
     /// <inheritdoc />
@@ -172,7 +183,7 @@ namespace Echoglossian
       Common?.Functions.Dispose();
       Common?.Dispose();
 
-      this.toastGui.Toast -= this.OnToast;
+      // this.toastGui.Toast -= this.OnToast;
       this.toastGui.ErrorToast -= this.OnErrorToast;
       this.toastGui.QuestToast -= this.OnQuestToast;
 
@@ -220,13 +231,16 @@ namespace Echoglossian
                 // PluginLog.LogVerbose("Monitoring Framework Tick");
 #endif
                 this.TalkHandler("Talk", 1);
-                // this.TalkSubtitleHandler("TalkSubtitle", 1);
 
+                // this.TalkSubtitleHandler("TalkSubtitle", 1);
                 this.BattleTalkHandler("_BattleTalk", 1);
 
                 this.TextErrorToastHandler("_TextError", 1);
 
                 this.WideTextToastHandler("_WideText", 1);
+
+                //this.ClassChangeToastHandler("_WideText", 1);
+                this.ClassChangeToastHandler("_WideText", 2);
 
                 this.ClassChangeToastHandler("_TextClassChange", 1);
 
@@ -292,19 +306,28 @@ namespace Echoglossian
         // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
 #endif
       }
-/*
-#if DEBUG
-      PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
-                           $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
-                           $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
-                           $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");
-#endif*/
+
+      /*
+      #if DEBUG
+            PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
+                                 $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
+                                 $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
+                                 $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");
+      #endif*/
       if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
       {
         this.DrawTranslatedErrorToastWindow();
-/*#if DEBUG
-        PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
-#endif*/
+        /*#if DEBUG
+                PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+        #endif*/
+      }
+
+      if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation)
+      {
+        this.DrawTranslatedClassChangeToastWindow();
+        /*#if DEBUG
+                PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+        #endif*/
       }
     }
 

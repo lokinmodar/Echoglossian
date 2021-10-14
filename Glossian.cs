@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using Dalamud;
+using Dalamud.Game.Text.Sanitizer;
 using Dalamud.Logging;
 using Echoglossian.Properties;
 using Newtonsoft.Json.Linq;
@@ -31,10 +33,12 @@ namespace Echoglossian
 
     public static string LangIdentify(string message)
     {
+      // Sanitizer sanitizer = new(ClientLanguage);
+      var sanitizedString = sanitizer.Sanitize(message);
 #if DEBUG
-      PluginLog.LogInformation($"Message in Lang Method: {message}");
+      PluginLog.LogInformation($"Message in Lang Method: {sanitizedString}");
 #endif
-      var mostCertainLanguage = Identifier.Identify(message).FirstOrDefault();
+      var mostCertainLanguage = Identifier.Identify(sanitizedString).FirstOrDefault();
 #if DEBUG
       PluginLog.LogInformation($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
 #endif
@@ -45,13 +49,16 @@ namespace Echoglossian
 
     public static string Translate(string text)
     {
+      //Sanitizer sanitizer = new(ClientLanguage);
 #if DEBUG
       PluginLog.LogError($"inside translate method");
 #endif
       try
       {
         var lang = Codes[languageInt];
-        var parsedText = text[..2] == "..." ? text[3..] : text;
+        var sanitizedString = sanitizer.Sanitize(text);
+
+        var parsedText = sanitizedString[..2] == "..." ? sanitizedString[3..] : sanitizedString;
 
         var detectedLanguage = LangIdentify(parsedText);
         if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical")
@@ -59,14 +66,11 @@ namespace Echoglossian
           detectedLanguage = "en";
         }
 
-
-
-
 #if DEBUG
         PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
         PluginLog.LogInformation($"Chosen Translation Language: {lang}");
 #endif
-        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={text}";
+        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={sanitizedString}";
 #if DEBUG
         PluginLog.LogInformation($"URL: {url}");
 #endif
@@ -85,7 +89,7 @@ namespace Echoglossian
           dialogueSentenceList.Aggregate(string.Empty, (current, dialogueSentence) => current + dialogueSentence);
 
         finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
-        finalDialogueText = finalDialogueText.Replace("...", "\u2026");
+        // finalDialogueText = finalDialogueText.Replace("...", "\u2026");
 
         var src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");

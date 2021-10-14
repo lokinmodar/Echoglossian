@@ -75,6 +75,7 @@ namespace Echoglossian
           ImGui.Separator();
           if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languages, this.languages.Length))
           {
+            this.configuration.Lang = languageInt;
             this.SaveConfig();
           }
 
@@ -126,7 +127,7 @@ namespace Echoglossian
 
               ImGui.Separator();
               ImGui.SameLine();
-              ImGui.Text(Resources.FontColorSelectLabel); 
+              ImGui.Text(Resources.FontColorSelectLabel);
               ImGui.SameLine();
               if (ImGui.ColorEdit3(Resources.OverlayColorSelectName, ref this.configuration.OverlayTextColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
               {
@@ -147,7 +148,14 @@ namespace Echoglossian
               }
 
               ImGui.Separator();
-              if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiWindowWidthMult, 0.001f, 0.01f, 3f))
+              if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiTalkWindowWidthMult, 0.001f, 0.01f, 3f))
+              {
+                this.SaveConfig();
+              }
+
+              // TODO: Fix this to BattleTalk
+              ImGui.Separator();
+              if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiTalkWindowWidthMult, 0.001f, 0.01f, 3f))
               {
                 this.SaveConfig();
               }

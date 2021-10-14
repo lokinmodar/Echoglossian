@@ -23,13 +23,13 @@ namespace Echoglossian
 
     public bool TranslateBattleTalk = true;
     public bool TranslateTalk = true;
-    public bool TranslateToast = true;
+    public bool TranslateToast = false;
     public bool TranslateNPCNames = true;
-    public bool TranslateErrorToast = true;
-    public bool TranslateQuestToast = true;
-    public bool TranslateAreaToast = true;
-    public bool TranslateClassChangeToast = true;
-    public bool TranslateWideTextToast = true;
+    public bool TranslateErrorToast = false;
+    public bool TranslateQuestToast = false;
+    public bool TranslateAreaToast = false;
+    public bool TranslateClassChangeToast = false;
+    public bool TranslateWideTextToast = false;
     public bool TranslateYesNoScreen = true;
     public bool TranslateCutSceneSelectString = true;
     public bool TranslateSelectString = true;
@@ -37,15 +37,18 @@ namespace Echoglossian
     public bool TranslateToDoList = true;
     public bool TranslateScenarioTree = true;
 
-    public bool UseImGui = false;
-    public bool DoNotUseImGuiForToasts = true;
+    public bool UseImGui = true;
+    public bool DoNotUseImGuiForToasts = false;
     public bool SwapTextsUsingImGui = false;
 
     public int ChosenTransEngine = 0;
 
     public Vector2 ImGuiWindowPosCorrection = new Vector2(0.0f, 0.0f);
     public Vector2 ImGuiToastWindowPosCorrection = new Vector2(0.0f, 0.0f);
-    public float ImGuiWindowWidthMult = 1f;
+    public float ImGuiTalkWindowWidthMult = 1f;
+    public float ImGuiTalkWindowHeightMult = 1f;
+    public float ImGuiBattleTalkWindowWidthMult = 1f;
+    public float ImGuiBattleTalkWindowHeightMult = 1f;
     public float ImGuiToastWindowWidthMult = 1f;
     public Vector3 OverlayTextColor = new Vector3(1.0f, 1.0f, 1.0f);
     public float FontScale = 1;

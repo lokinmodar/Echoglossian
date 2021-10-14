@@ -48,7 +48,6 @@ namespace Echoglossian
       return parentPath;
     }
 
-
     private static readonly string[] Codes =
     {
       "af", "an", "ar", "az", "be_x_old",
@@ -94,18 +93,18 @@ namespace Echoglossian
 
     private void FixConfig()
     {
-      if (this.configuration.Version == 0)
+      if (!this.pluginInterface.ConfigFile.Exists)
       {
         return;
       }
 
-      if (this.pluginInterface.ConfigFile.Exists)
+      if (this.configuration.Version != 0)
       {
         this.pluginInterface.ConfigFile.Delete();
         if (this.pluginInterface.ConfigDirectory.Exists)
         {
           this.pluginInterface.ConfigDirectory.Delete(true);
-          this.config = true;
+          // this.config = true;
         }
       }
 
@@ -114,8 +113,7 @@ namespace Echoglossian
 
     private void SaveConfig()
     {
-      this.configuration.Lang = languageInt;
-
+      // this.configuration.Lang = languageInt;
       this.pluginInterface.SavePluginConfig(this.configuration);
     }
 

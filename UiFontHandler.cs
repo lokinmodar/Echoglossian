@@ -23,12 +23,9 @@ namespace Echoglossian
 #if DEBUG
       PluginLog.LogVerbose("Inside LoadFont method");
 
-
       var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
       PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 
-
-      
 #else
 
       var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
