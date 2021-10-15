@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using Dalamud;
 using Dalamud.Game.Text.Sanitizer;
 using Dalamud.Logging;
+using Dalamud.Utility;
 using Echoglossian.Properties;
 using Newtonsoft.Json.Linq;
 using NTextCat;
@@ -49,7 +50,10 @@ namespace Echoglossian
 
     public static string Translate(string text)
     {
-      //Sanitizer sanitizer = new(ClientLanguage);
+      if (text.IsNullOrEmpty())
+      {
+        return string.Empty;
+      }
 #if DEBUG
       PluginLog.LogError($"inside translate method");
 #endif
@@ -57,8 +61,15 @@ namespace Echoglossian
       {
         var lang = Codes[languageInt];
         var sanitizedString = sanitizer.Sanitize(text);
+        if (sanitizedString.IsNullOrEmpty())
+        {
+          return string.Empty;
+        }
 
         var parsedText = sanitizedString[..2] == "..." ? sanitizedString[3..] : sanitizedString;
+
+        parsedText = parsedText.Replace("\u201C", "\u0022");
+        parsedText = parsedText.Replace("\u201D", "\u0022");
 
         var detectedLanguage = LangIdentify(parsedText);
         if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical")
@@ -89,7 +100,10 @@ namespace Echoglossian
           dialogueSentenceList.Aggregate(string.Empty, (current, dialogueSentence) => current + dialogueSentence);
 
         finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
-        // finalDialogueText = finalDialogueText.Replace("...", "\u2026");
+
+        finalDialogueText = finalDialogueText.Replace("\u201C", "\u0022");
+        finalDialogueText = finalDialogueText.Replace("\u201D", "\u0022");
+        finalDialogueText = finalDialogueText.Replace("...", ". . .");
 
         var src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");

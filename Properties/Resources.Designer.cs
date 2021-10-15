@@ -171,6 +171,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected language is not supported by the currently available translation backend.
+        /// </summary>
+        public static string LanguageNotSupportedText {
+            get {
+                return ResourceManager.GetString("LanguageNotSupportedText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected language is only supported using the plugin overlays due to limitations of the native game Font.
+        /// </summary>
+        public static string LanguageOnlySupportedUsingOverlay {
+            get {
+                return ResourceManager.GetString("LanguageOnlySupportedUsingOverlay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Which language to translate the in-game dialogue boxes to..
         /// </summary>
         public static string LanguageSelectionTooltip {

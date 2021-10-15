@@ -74,13 +74,14 @@ namespace Echoglossian
 
     private unsafe void ClassChangeToastHandler(string classChangeToastName, int index)
     {
+      // TODO: Rework translation code to async
       if (!this.configuration.TranslateClassChangeToast)
       {
         return;
       }
-/*#if DEBUG
-      PluginLog.LogError($"Should translate!");
-#endif*/
+      /*#if DEBUG
+            PluginLog.LogError($"Should translate!");
+      #endif*/
       var classChangeToastByName = this.gameGui.GetAddonByName(classChangeToastName, index);
 
       /*
@@ -158,51 +159,51 @@ namespace Echoglossian
             if (this.configuration.DoNotUseImGuiForToasts)
             {
 
-/*#if DEBUG
-              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast");
-#endif*/
+              /*#if DEBUG
+                            PluginLog.LogError("Not Using Imgui - Translate ClassChange toast");
+              #endif*/
               this.currentClassChangeToastTranslationId = Environment.TickCount;
               this.currentClassChangeToastTranslation = Resources.WaitingForTranslation;
-/*#if DEBUG
-              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast 1");
-#endif*/
+              /*#if DEBUG
+                            PluginLog.LogError("Not Using Imgui - Translate ClassChange toast 1");
+              #endif*/
               textNode->SetText(Resources.WaitingForTranslation);
-/*#if DEBUG
-              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 2");
-#endif*/
+              /*#if DEBUG
+                            PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 2");
+              #endif*/
 
               Task.Run(() =>
               {
                 var messageId = this.currentClassChangeToastTranslationId;
-/*
-#if DEBUG
-                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 3");
-#endif
-                
-                */
+                /*
+                #if DEBUG
+                                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 3");
+                #endif
+
+                                */
                 textNode->SetText(this.currentClassChangeToastTranslation);
                 this.classChangeToastTranslationSemaphore.Wait();
                 if (messageId == this.currentClassChangeToastTranslationId)
                 {
                   var messageTranslation = Translate(messageToTranslate?.ToString());
-/*#if DEBUG
-                  PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 4");
-#endif*/
+                  /*#if DEBUG
+                                    PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 4");
+                  #endif*/
                   textNode->SetText(messageTranslation);
                 }
 
                 textNode->SetText(Resources.WaitingForTranslation);
-/*#if DEBUG
-                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 5");
-#endif*/
+                /*#if DEBUG
+                                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 5");
+                #endif*/
                 this.classChangeToastTranslationSemaphore.Release();
               });
             }
             else
             {
-/*#if DEBUG
-              PluginLog.LogError("Using Imgui - Translate ClassChange toast");
-#endif*/
+              /*#if DEBUG
+                            PluginLog.LogError("Using Imgui - Translate ClassChange toast");
+              #endif*/
               this.classChangeToastDisplayTranslation = true;
               this.currentClassChangeToastTranslationId = Environment.TickCount;
               this.currentClassChangeToastTranslation = Resources.WaitingForTranslation;
@@ -277,10 +278,10 @@ namespace Echoglossian
           this.errorToastTranslationTextDimensions.Y = errorToastByNameMaster->RootNode->Height * errorToastByNameMaster->Scale;
           this.errorToastTranslationTextPosition.X = errorToastByNameMaster->RootNode->X;
           this.errorToastTranslationTextPosition.Y = errorToastByNameMaster->RootNode->Y;
-/*#if DEBUG
-          PluginLog.LogWarning($"Toast Dimensions: {this.errorToastTranslationTextDimensions}");
-          PluginLog.LogWarning($"Toast position: {this.errorToastTranslationTextPosition}");
-#endif*/
+          /*#if DEBUG
+                    PluginLog.LogWarning($"Toast Dimensions: {this.errorToastTranslationTextDimensions}");
+                    PluginLog.LogWarning($"Toast position: {this.errorToastTranslationTextPosition}");
+          #endif*/
         }
         else
         {
@@ -545,53 +546,53 @@ namespace Echoglossian
       }
     }
 
-    /*  private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
+    private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
+    {
+#if DEBUG
+      using StreamWriter logStream = new(this.ConfigDir + "GetToastLog.txt", append: true);
+#endif
+      if (!this.configuration.TranslateAreaToast ||
+                                                 !this.configuration.TranslateClassChangeToast ||
+                                                 !this.configuration.TranslateWideTextToast)
       {
-  #if DEBUG
-        using StreamWriter logStream = new(this.ConfigDir + "GetToastLog.txt", append: true);
-  #endif
-        if (!this.configuration.TranslateAreaToast ||
-                                                   !this.configuration.TranslateClassChangeToast ||
-                                                   !this.configuration.TranslateWideTextToast)
+        return;
+      }
+
+      var tOptions = options;
+      PluginLog.LogWarning($"Toast options: Position - {tOptions.Position}, Speed: {tOptions.Speed}");
+      try
+      {
+        var messageTextToTranslate = message.TextValue;
+
+        if (this.configuration.DoNotUseImGuiForToasts)
         {
-          return;
+          var messageTranslatedText = Translate(messageTextToTranslate);
+
+          message = messageTranslatedText;
         }
-
-        var tOptions = options;
-        PluginLog.LogWarning($"Toast options: Position - {tOptions.Position}, Speed: {tOptions.Speed}");
-        try
+        else
         {
-          var messageTextToTranslate = message.TextValue;
-
-          if (this.configuration.DoNotUseImGuiForToasts)
+          this.currentToastTranslationId = Environment.TickCount;
+          this.currentToastTranslation = Resources.WaitingForTranslation;
+          Task.Run(() =>
           {
-            var messageTranslatedText = Translate(messageTextToTranslate);
-
-            message = messageTranslatedText;
-          }
-          else
-          {
-            this.currentToastTranslationId = Environment.TickCount;
-            this.currentToastTranslation = Resources.WaitingForTranslation;
-            Task.Run(() =>
+            var messageId = this.currentToastTranslationId;
+            var messageTranslation = Translate(messageTextToTranslate);
+            this.toastTranslationSemaphore.Wait();
+            if (messageId == this.currentToastTranslationId)
             {
-              var messageId = this.currentToastTranslationId;
-              var messageTranslation = Translate(messageTextToTranslate);
-              this.toastTranslationSemaphore.Wait();
-              if (messageId == this.currentToastTranslationId)
-              {
-                this.currentToastTranslation = messageTranslation;
-              }
+              this.currentToastTranslation = messageTranslation;
+            }
 
-              this.toastTranslationSemaphore.Release();
-            });
-          }
+            this.toastTranslationSemaphore.Release();
+          });
         }
-        catch (Exception e)
-        {
-          PluginLog.Log("Exception: " + e.StackTrace);
-          throw;
-        }
-      }*/
+      }
+      catch (Exception e)
+      {
+        PluginLog.Log("Exception: " + e.StackTrace);
+        throw;
+      }
+    }
   }
 }

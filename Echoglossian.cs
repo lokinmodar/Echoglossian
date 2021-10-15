@@ -156,7 +156,7 @@ namespace Echoglossian
       this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
 
-      // this.toastGui.Toast += this.OnToast;
+      this.toastGui.Toast += this.OnToast;
       this.toastGui.ErrorToast += this.OnErrorToast;
       this.toastGui.QuestToast += this.OnQuestToast;
 
@@ -183,7 +183,7 @@ namespace Echoglossian
       Common?.Functions.Dispose();
       Common?.Dispose();
 
-      // this.toastGui.Toast -= this.OnToast;
+      this.toastGui.Toast -= this.OnToast;
       this.toastGui.ErrorToast -= this.OnErrorToast;
       this.toastGui.QuestToast -= this.OnQuestToast;
 
@@ -239,10 +239,11 @@ namespace Echoglossian
 
                 this.WideTextToastHandler("_WideText", 1);
 
-                //this.ClassChangeToastHandler("_WideText", 1);
-                this.ClassChangeToastHandler("_WideText", 2);
+                // this.ClassChangeToastHandler("_WideText", 1);
+                //
+                // this.ClassChangeToastHandler("_WideText", 2);
 
-                this.ClassChangeToastHandler("_TextClassChange", 1);
+                // this.ClassChangeToastHandler("_TextClassChange", 1);
 
                 this.AreaToastHandler("_AreaText", 1);
 
@@ -322,13 +323,13 @@ namespace Echoglossian
         #endif*/
       }
 
-      if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation)
+      /*if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation)
       {
         this.DrawTranslatedClassChangeToastWindow();
-        /*#if DEBUG
+        *//*#if DEBUG
                 PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
-        #endif*/
-      }
+        #endif*//*
+      }*/
     }
 
     private void ConfigWindow()

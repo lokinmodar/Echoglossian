@@ -167,9 +167,17 @@ namespace Echoglossian
               name = nameTranslation == string.Empty ? name : nameTranslation;
               text = translatedText;
 
-              var translatedTalkData = new TalkMessage(nameToTranslate, textToTranslate, LangIdentify(textToTranslate),
-                LangIdentify(nameToTranslate), nameTranslation, translatedText, Codes[languageInt],
-                this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+              var translatedTalkData = new TalkMessage(
+                nameToTranslate,
+                textToTranslate,
+                LangIdentify(textToTranslate),
+                LangIdentify(nameToTranslate),
+                nameTranslation,
+                translatedText,
+                Codes[languageInt],
+                this.configuration.ChosenTransEngine,
+                DateTime.Now,
+                DateTime.Now);
 #if DEBUG
               logStream.WriteLineAsync($"Before Talk Messages table data insertion:  {translatedTalkData}");
 #endif
@@ -182,9 +190,17 @@ namespace Echoglossian
             {
               text = translatedText;
 
-              var translatedTalkData = new TalkMessage(nameToTranslate, textToTranslate, LangIdentify(textToTranslate),
-                LangIdentify(nameToTranslate), string.Empty, translatedText, Codes[languageInt],
-                this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+              var translatedTalkData = new TalkMessage(
+                nameToTranslate,
+                textToTranslate,
+                LangIdentify(textToTranslate),
+                LangIdentify(nameToTranslate),
+                string.Empty,
+                translatedText,
+                Codes[languageInt],
+                this.configuration.ChosenTransEngine,
+                DateTime.Now,
+                DateTime.Now);
 
               var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
@@ -240,12 +256,17 @@ namespace Echoglossian
                 if (this.currentNameTranslation != Resources.WaitingForTranslation &&
                     this.currentTalkTranslation != Resources.WaitingForTranslation)
                 {
-                  var translatedTalkData = new TalkMessage(nameToTranslate, textToTranslate,
+                  var translatedTalkData = new TalkMessage(
+                    nameToTranslate,
+                    textToTranslate,
                     LangIdentify(textToTranslate),
                     LangIdentify(nameToTranslate),
                     this.configuration.TranslateNPCNames ? this.currentNameTranslation : string.Empty,
-                    this.currentTalkTranslation, Codes[languageInt],
-                    this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+                    this.currentTalkTranslation,
+                    Codes[languageInt],
+                    this.configuration.ChosenTransEngine,
+                    DateTime.Now,
+                    DateTime.Now);
                   var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
                   PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
@@ -255,8 +276,16 @@ namespace Echoglossian
             }
             else
             {
+#if DEBUG
+              PluginLog.LogWarning("Using Swap text for translation");
+#endif
+              var translatedText = Translate(textToTranslate);
+              var nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
               if (this.configuration.TranslateNPCNames)
               {
+                name = nameTranslation == string.Empty ? name : nameTranslation;
+                text = translatedText;
+
                 this.currentNameTranslationId = Environment.TickCount;
                 this.currentNameTranslation = Resources.WaitingForTranslation;
                 Task.Run(() =>
@@ -270,41 +299,92 @@ namespace Echoglossian
 
                   this.nameTranslationSemaphore.Release();
                 });
+
+                this.currentTalkTranslationId = Environment.TickCount;
+                this.currentTalkTranslation = Resources.WaitingForTranslation;
+                Task.Run(() =>
+                {
+                  var id = this.currentTalkTranslationId;
+                  this.talkTranslationSemaphore.Wait();
+                  if (id == this.currentTalkTranslationId)
+                  {
+                    this.currentTalkTranslation = textToTranslate;
+                  }
+
+                  this.talkTranslationSemaphore.Release();
+                });
+
+                var translatedTalkData = new TalkMessage(
+                  nameToTranslate,
+                  textToTranslate,
+                  LangIdentify(textToTranslate),
+                  LangIdentify(nameToTranslate),
+                  nameTranslation,
+                  translatedText,
+                  Codes[languageInt],
+                  this.configuration.ChosenTransEngine,
+                  DateTime.Now,
+                  DateTime.Now);
+#if DEBUG
+                logStream.WriteLineAsync($"Before Talk Messages table data insertion:  {translatedTalkData}");
+#endif
+                var result = this.InsertTalkData(translatedTalkData);
+#if DEBUG
+                PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+#endif
               }
-
-              this.currentTalkTranslationId = Environment.TickCount;
-              this.currentTalkTranslation = Resources.WaitingForTranslation;
-              Task.Run(() =>
+              else
               {
-                var id = this.currentTalkTranslationId;
-                this.talkTranslationSemaphore.Wait();
-                if (id == this.currentTalkTranslationId)
-                {
-                  this.currentTalkTranslation = textToTranslate;
-                }
+                text = translatedText;
 
-                this.talkTranslationSemaphore.Release();
-
-#if DEBUG
-                PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
-#endif
-                if (this.currentNameTranslation != Resources.WaitingForTranslation &&
-                    this.currentTalkTranslation != Resources.WaitingForTranslation)
+                this.currentTalkTranslationId = Environment.TickCount;
+                this.currentTalkTranslation = Resources.WaitingForTranslation;
+                Task.Run(() =>
                 {
-                  var translatedTalkData = new TalkMessage(this.currentNameTranslation, this.currentTalkTranslation,
-                    LangIdentify(this.currentTalkTranslation),
-                    LangIdentify(this.currentNameTranslation),
-                    this.configuration.TranslateNPCNames ? Translate(this.currentNameTranslation) : string.Empty,
-                    Translate(this.currentTalkTranslation), Codes[languageInt],
-                    this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
-                  var result = this.InsertTalkData(translatedTalkData);
+                  var id = this.currentTalkTranslationId;
+                  this.talkTranslationSemaphore.Wait();
+                  if (id == this.currentTalkTranslationId)
+                  {
+                    this.currentTalkTranslation = textToTranslate;
+                  }
+
+                  this.talkTranslationSemaphore.Release();
+                  /*#if DEBUG
+                                    PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
+                  #endif*/
+                  /*if (this.currentNameTranslation != Resources.WaitingForTranslation &&
+                      this.currentTalkTranslation != Resources.WaitingForTranslation)
+                  {
+                    var translatedTalkData = new TalkMessage(this.currentNameTranslation, this.currentTalkTranslation,
+                      LangIdentify(this.currentTalkTranslation),
+                      LangIdentify(this.currentNameTranslation),
+                      this.configuration.TranslateNPCNames ? Translate(this.currentNameTranslation) : string.Empty,
+                      Translate(this.currentTalkTranslation), Codes[languageInt],
+                      this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+                    var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                  PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+                    PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
 #endif
-                }
-              });
-              name = Translate(name.TextValue);
-              text = Translate(text.TextValue);
+                  }*/
+                });
+
+                var translatedTalkData = new TalkMessage(
+                  nameToTranslate,
+                  textToTranslate,
+                  LangIdentify(textToTranslate),
+                  LangIdentify(nameToTranslate),
+                  string.Empty,
+                  translatedText,
+                  Codes[languageInt],
+                  this.configuration.ChosenTransEngine,
+                  DateTime.Now,
+                  DateTime.Now);
+
+                var result = this.InsertTalkData(translatedTalkData);
+#if DEBUG
+                PluginLog.LogError(result);
+#endif
+              }
             }
           }
         }

@@ -50,7 +50,7 @@ namespace Echoglossian
 
     private static readonly string[] Codes =
     {
-      "af", "an", "ar", "az", "be_x_old",
+      "af", "an", "ar", "az", "be", "be_x_old",
       "bg", "bn", "br", "bs",
       "ca", "ceb", "cs", "cy", "da",
       "de", "el", "en", "eo", "es",
@@ -71,7 +71,7 @@ namespace Echoglossian
 
     private readonly string[] languages =
     {
-      "Afrikaans", "Aragonese", "Arabic", "Azerbaijani", "Belarusian",
+      "Afrikaans", "Aragonese", "Arabic", "Azerbaijani", "Belarusian", "Belarusian Old Script",
       "Bulgarian", "Bengali", "Breton", "Bosnian",
       "Catalan; Valencian", "Cebuano", "Czech", "Welsh", "Danish",
       "German", "Greek, Modern", "English", "Esperanto", "Spanish; Castilian",

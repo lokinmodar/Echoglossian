@@ -4,8 +4,11 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text.Unicode;
 using Dalamud.Logging;
 using ImGuiNET;
 
@@ -19,6 +22,7 @@ namespace Echoglossian
 
     private void LoadFont(/*string fontFileName,int imguiFontSize */)
     {
+
       // TODO: Get font by languageint
 #if DEBUG
       PluginLog.LogVerbose("Inside LoadFont method");
@@ -34,20 +38,52 @@ namespace Echoglossian
       this.FontLoaded = false;
       if (File.Exists(fontFile))
       {
+        //GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { Convert.ToUInt16("0x0000", 16), Convert.ToUInt16("0xFFFF", 16), 0 }, GCHandleType.Pinned);
         try
         {
-          var neededGlyphs = ImGui.GetIO().Fonts.GetGlyphRangesVietnamese();
+          unsafe
+          {
+            var io = ImGui.GetIO();
+            /*ImVector<ImWchar>*/
+            List<ushort> chars = new List<ushort>();
+
+            // if (this.configuration.Lang == )
+            this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesVietnamese());
+            this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesCyrillic());
+            // this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts. );
+
+            var addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
+            chars.AddRange(addChars);
+
+
+            chars.Add(0);
+
+            var arr = chars.ToArray();
+
+            fixed (ushort* ptr = &arr[0])
+            {
+              this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize /*imguiFontSize*/, null, new IntPtr((void*)ptr));
+            }
+
+
+
+
+            // var neededGlyphs = ImGui.GetIO().Fonts.GetGlyphRangesVietnamese();
+            // var neededGlyps2 = ImGui.GetIO().Fonts.GetGlyphRangesCyrillic();
+            // var neededGlyphs3 = ImGui.GetIO().Fonts.GetGlyphRangesDefault();
+
 #if DEBUG
-          PluginLog.Debug($"Glyphs pointer: {neededGlyphs}");
+            // PluginLog.Debug($"Glyphs pointer: {neededGlyphs}");
 #endif
-          this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize /*imguiFontSize*/, null, neededGlyphs);
+            // this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize /*imguiFontSize*/, null, rangeHandle.AddrOfPinnedObject());
 #if DEBUG
-          PluginLog.Debug($"UiFont pointer: {this.UiFont}");
+            PluginLog.Debug($"UiFont pointer: {this.UiFont}");
 #endif
-          this.FontLoaded = true;
+            this.FontLoaded = true;
 #if DEBUG
-          PluginLog.Debug($"Font loaded? {this.FontLoaded}");
+            PluginLog.Debug($"Font loaded? {this.FontLoaded}");
 #endif
+          }
         }
         catch (Exception ex)
         {
@@ -55,6 +91,13 @@ namespace Echoglossian
           PluginLog.Log(ex.ToString());
           this.FontLoadFailed = true;
         }
+        /*        finally
+                {
+                  if (rangeHandle.IsAllocated)
+                  {
+                    rangeHandle.Free();
+                  }
+                }*/
       }
       else
       {
@@ -62,5 +105,17 @@ namespace Echoglossian
         this.FontLoadFailed = true;
       }
     }
+
+
+    private unsafe void AddCharsFromIntPtr(List<ushort> chars, ushort* ptr)
+    {
+      while (*ptr != 0)
+      {
+        chars.Add(*ptr);
+        ptr++;
+      }
+    }
+
+
   }
 }

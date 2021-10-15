@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -41,38 +42,6 @@ namespace Echoglossian
             this.SaveConfig();
           }*/
 
-          ImGui.Text(Resources.WhatToTranslateText);
-          if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
-          {
-            this.SaveConfig();
-          }
-
-          if (ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk))
-          {
-            this.SaveConfig();
-          }
-
-          if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
-          {
-            this.SaveConfig();
-          }
-
-          if (ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast))
-          {
-            if (!this.configuration.TranslateToast)
-            {
-              this.configuration.TranslateAreaToast = false;
-              this.configuration.TranslateClassChangeToast = false;
-              this.configuration.TranslateErrorToast = false;
-              this.configuration.TranslateQuestToast = false;
-              this.configuration.TranslateWideTextToast = false;
-            }
-
-            this.SaveConfig();
-          }
-
-          ImGui.Spacing();
-          ImGui.Separator();
           if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languages, this.languages.Length))
           {
             this.configuration.Lang = languageInt;
@@ -86,113 +55,174 @@ namespace Echoglossian
             ImGui.SetTooltip(Resources.LanguageSelectionTooltip);
           }
 
-          ImGui.Spacing();
-          ImGui.Separator();
-
-          if (this.configuration.TranslateTalk || this.configuration.TranslateToast)
+          if (this.configuration.Lang is 1 or 8 or 9 or 60 or 78 or 79 or 81)
           {
-            ImGui.Checkbox(Resources.OverlayToggleLabel, ref this.configuration.UseImGui);
-            if (this.configuration.UseImGui)
+            ImGui.Text(Resources.LanguageNotSupportedText);
+            this.configuration.TranslateTalk = false;
+            this.configuration.TranslateBattleTalk = false;
+            this.configuration.TranslateToast = false;
+            this.SaveConfig();
+          }
+          else
+          {
+            if (
+              this.configuration.Lang is 2 or 3 or 4 or 5 or 7 or 10 or 13 or 17 or 19 or 23 or 27 or 28 or 29 or 32 or
+                38 or 39 or 40 or 44 or 45 or 47 or 48 or 49 or 56 or 59 or 64 or 65 or 67 or 70 or 71 or 72 or 74 or 75
+                or 76 or 77 or 80 or 82)
             {
-              /*ImGui.Separator();
-              if (ImGui.Combo(Resources.OverlayFontSizeLabel, ref this.configuration.FontSize, this.FontSizes, this.FontSizes.Length))
+              ImGui.Text(Resources.LanguageOnlySupportedUsingOverlay);
+              this.configuration.UseImGui = true;
+              this.SaveConfig();
+            }
+            else
+            {
+              ImGui.Text(Resources.WhatToTranslateText);
+              if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
               {
                 this.SaveConfig();
-                //this.LoadFont();
-                if (this.FontLoaded)
+              }
+
+              if (ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk))
+              {
+                this.SaveConfig();
+              }
+
+              if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
+              {
+                this.SaveConfig();
+              }
+
+              if (ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast))
+              {
+                if (!this.configuration.TranslateToast)
                 {
-                  this.pluginInterface.UiBuilder.RebuildFonts();
+                  this.configuration.TranslateAreaToast = false;
+                  this.configuration.TranslateClassChangeToast = false;
+                  this.configuration.TranslateErrorToast = false;
+                  this.configuration.TranslateQuestToast = false;
+                  this.configuration.TranslateWideTextToast = false;
                 }
-              }*/
 
-              ImGui.Separator();
-              if (ImGui.SliderFloat(Resources.OverlayFontScaleLabel, ref this.configuration.FontScale, -3f, 3f, "%.2f"))
-              {
-                this.configuration.FontChangeTime = DateTime.Now.Ticks;
                 this.SaveConfig();
               }
 
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
-              }
-
-              /*ImGui.SameLine();
-              if (ImGui.SmallButton("Reload Font"))
-              {
-                this.ReloadFont();
-              }*/
-
-              ImGui.Separator();
-              ImGui.SameLine();
-              ImGui.Text(Resources.FontColorSelectLabel);
-              ImGui.SameLine();
-              if (ImGui.ColorEdit3(Resources.OverlayColorSelectName, ref this.configuration.OverlayTextColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
-              {
-#if DEBUG
-                PluginLog.Information($"Color selected before save: {this.configuration.OverlayTextColor}");
-#endif
-                this.SaveConfig();
-#if DEBUG
-                PluginLog.Information($"Color selected after save: {this.configuration.OverlayTextColor}");
-#endif
-              }
-
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
-              }
-
-              ImGui.Separator();
-              if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiTalkWindowWidthMult, 0.001f, 0.01f, 3f))
-              {
-                this.SaveConfig();
-              }
-
-              // TODO: Fix this to BattleTalk
-              ImGui.Separator();
-              if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref this.configuration.ImGuiTalkWindowWidthMult, 0.001f, 0.01f, 3f))
-              {
-                this.SaveConfig();
-              }
-
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.OverlayWidthMultiplierOrientations);
-              }
-
-              ImGui.Separator();
               ImGui.Spacing();
-              if (ImGui.DragFloat2(Resources.OverlayPositionAdjustmentLabel, ref this.configuration.ImGuiWindowPosCorrection))
-              {
-                this.SaveConfig();
-              }
+              ImGui.Separator();
 
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
+              if (this.configuration.TranslateTalk || this.configuration.TranslateToast)
               {
-                ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
-              }
-
-              if (this.configuration.TranslateTalk)
-              {
-                if (ImGui.Checkbox(Resources.SwapTranslationTextToggle, ref this.configuration.SwapTextsUsingImGui))
+                ImGui.Checkbox(Resources.OverlayToggleLabel, ref this.configuration.UseImGui);
+                if (this.configuration.UseImGui)
                 {
-                  this.SaveConfig();
+                  /*ImGui.Separator();
+                  if (ImGui.Combo(Resources.OverlayFontSizeLabel, ref this.configuration.FontSize, this.FontSizes, this.FontSizes.Length))
+                  {
+                    this.SaveConfig();
+                    //this.LoadFont();
+                    if (this.FontLoaded)
+                    {
+                      this.pluginInterface.UiBuilder.RebuildFonts();
+                    }
+                  }*/
+
+                  ImGui.Separator();
+                  if (ImGui.SliderFloat(Resources.OverlayFontScaleLabel, ref this.configuration.FontScale, -3f, 3f,
+                    "%.2f"))
+                  {
+                    this.configuration.FontChangeTime = DateTime.Now.Ticks;
+                    this.SaveConfig();
+                  }
+
+                  ImGui.SameLine();
+                  ImGui.Text(Resources.HoverTooltipIndicator);
+                  if (ImGui.IsItemHovered())
+                  {
+                    ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
+                  }
+
+                  /*ImGui.SameLine();
+                  if (ImGui.SmallButton("Reload Font"))
+                  {
+                    this.ReloadFont();
+                  }*/
+
+                  ImGui.Separator();
+                  ImGui.SameLine();
+                  ImGui.Text(Resources.FontColorSelectLabel);
+                  ImGui.SameLine();
+                  if (ImGui.ColorEdit3(Resources.OverlayColorSelectName, ref this.configuration.OverlayTextColor,
+                    ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
+                  {
+#if DEBUG
+                    PluginLog.Information($"Color selected before save: {this.configuration.OverlayTextColor}");
+#endif
+                    this.SaveConfig();
+#if DEBUG
+                    PluginLog.Information($"Color selected after save: {this.configuration.OverlayTextColor}");
+#endif
+                  }
+
+                  ImGui.SameLine();
+                  ImGui.Text(Resources.HoverTooltipIndicator);
+                  if (ImGui.IsItemHovered())
+                  {
+                    ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
+                  }
+
+                  ImGui.Separator();
+                  if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel,
+                    ref this.configuration.ImGuiTalkWindowWidthMult,
+                    0.001f, 0.01f, 3f))
+                  {
+                    this.SaveConfig();
+                  }
+
+                  // TODO: Fix this to BattleTalk
+                  ImGui.Separator();
+                  if (ImGui.DragFloat(Resources.OverlayWidthScrollLabel,
+                    ref this.configuration.ImGuiTalkWindowWidthMult,
+                    0.001f, 0.01f, 3f))
+                  {
+                    this.SaveConfig();
+                  }
+
+                  ImGui.SameLine();
+                  ImGui.Text(Resources.HoverTooltipIndicator);
+                  if (ImGui.IsItemHovered())
+                  {
+                    ImGui.SetTooltip(Resources.OverlayWidthMultiplierOrientations);
+                  }
+
+                  ImGui.Separator();
+                  ImGui.Spacing();
+                  if (ImGui.DragFloat2(Resources.OverlayPositionAdjustmentLabel,
+                    ref this.configuration.ImGuiWindowPosCorrection))
+                  {
+                    this.SaveConfig();
+                  }
+
+                  ImGui.SameLine();
+                  ImGui.Text(Resources.HoverTooltipIndicator);
+                  if (ImGui.IsItemHovered())
+                  {
+                    ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
+                  }
+
+                  if (this.configuration.TranslateTalk)
+                  {
+                    if (ImGui.Checkbox(Resources.SwapTranslationTextToggle, ref this.configuration.SwapTextsUsingImGui))
+                    {
+                      this.SaveConfig();
+                    }
+                  }
                 }
               }
             }
           }
-
-          ImGui.EndTabItem();
         }
+
+        ImGui.EndTabItem();
+
 
         if (this.configuration.TranslateToast)
         {
@@ -293,7 +323,7 @@ namespace Echoglossian
       ImGui.PopID();
       ImGui.EndGroup();
       ImGui.End();
-      /*}*/
+
     }
   }
 }
