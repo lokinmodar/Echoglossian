@@ -82,6 +82,15 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Main Configuration.
         /// </summary>
+        public static string ConfigTab0Name {
+            get {
+                return ResourceManager.GetString("ConfigTab0Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Talk Settings.
+        /// </summary>
         public static string ConfigTab1Name {
             get {
                 return ResourceManager.GetString("ConfigTab1Name", resourceCulture);
@@ -89,11 +98,20 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Toast configurations.
+        ///   Looks up a localized string similar to Battle Talk Settings.
         /// </summary>
         public static string ConfigTab2Name {
             get {
                 return ResourceManager.GetString("ConfigTab2Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toast configurations.
+        /// </summary>
+        public static string ConfigTab3Name {
+            get {
+                return ResourceManager.GetString("ConfigTab3Name", resourceCulture);
             }
         }
         
@@ -236,15 +254,6 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Battle talk (Enenies dialogue lines) translation.
-        /// </summary>
-        public static string Overlay_name {
-            get {
-                return ResourceManager.GetString("Overlay name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI dialogue box..
         /// </summary>
         public static string OverlayAdjustmentOrientations {
@@ -299,6 +308,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dialogue Overlay Height multiplier.
+        /// </summary>
+        public static string OverlayHeightScrollLabel {
+            get {
+                return ResourceManager.GetString("OverlayHeightScrollLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Battle talk (Enenies dialogue lines) translation.
+        /// </summary>
+        public static string OverlayName {
+            get {
+                return ResourceManager.GetString("OverlayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Position adjustment.
         /// </summary>
         public static string OverlayPositionAdjustmentLabel {
@@ -326,7 +353,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Dialogue Width multiplier.
+        ///   Looks up a localized string similar to Dialogue Overlay Width multiplier.
         /// </summary>
         public static string OverlayWidthScrollLabel {
             get {

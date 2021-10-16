@@ -7,8 +7,9 @@
     <body>
       <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
         <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
-          <source>Main Configuration</source>
-          <target state="translated">Configurações principais</target>
+          <source>Talk Settings</source>
+          <target state="needs-review-translation">Configurações principais</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ConfigWindowTitle" translate="yes" xml:space="preserve">
           <source>Echoglossian Configuration</source>
@@ -32,11 +33,6 @@
           <source>Language to translate to</source>
           <target state="translated" state-qualifier="mt-suggestion">Linguagem para traduzir para</target>
         </trans-unit>
-        <trans-unit id="Overlay name" translate="yes" xml:space="preserve">
-          <source>Battle talk (Enenies dialogue lines) translation</source>
-          <target state="translated">Tradução de conversa de batalha (falas dos inimigos)</target>
-          <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
-        </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
           <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
           <target state="translated">Ajuste a posição se a sobreposição não estiver centrada em relação à caixa de conversa da UI do jogo.</target>
@@ -50,8 +46,9 @@
           <target state="translated">Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</target>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Width multiplier</source>
-          <target state="translated">Multiplicador de largura da sobreposição de tradução de diálogo</target>
+          <source>Dialogue Overlay Width multiplier</source>
+          <target state="needs-review-translation">Multiplicador de largura da sobreposição de tradução de diálogo</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="PatronButtonLabel" translate="yes" xml:space="preserve">
           <source>Buy lokinmodar a Coffee</source>
@@ -126,8 +123,9 @@
           <target state="translated">A linguagem não pôde ser identificada com um grau aceitável de certeza</target>
         </trans-unit>
         <trans-unit id="ConfigTab2Name" translate="yes" xml:space="preserve">
-          <source>Toast configurations</source>
-          <target state="translated">Configurações de Toasts</target>
+          <source>Battle Talk Settings</source>
+          <target state="needs-review-translation">Configurações de Toasts</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ToastOverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust toast translation overlay width</source>
@@ -228,6 +226,31 @@
         <trans-unit id="PathTypeInstructions" translate="yes" xml:space="preserve">
           <source>Please type the path and save so the plugin can work properly!</source>
           <target state="translated" state-qualifier="mt-suggestion">Digite o caminho e salve para que o plugin possa funcionar corretamente!</target>
+        </trans-unit>
+        <trans-unit id="LanguageNotSupportedText" translate="yes" xml:space="preserve">
+          <source>The selected language is not supported by the currently available translation backend</source>
+          <target state="new">The selected language is not supported by the currently available translation backend</target>
+        </trans-unit>
+        <trans-unit id="LanguageOnlySupportedUsingOverlay" translate="yes" xml:space="preserve">
+          <source>The selected language is only supported using the plugin overlays due to limitations of the native game Font</source>
+          <target state="new">The selected language is only supported using the plugin overlays due to limitations of the native game Font</target>
+        </trans-unit>
+        <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
+          <source>Dialogue Overlay Height multiplier</source>
+          <target state="new">Dialogue Overlay Height multiplier</target>
+        </trans-unit>
+        <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
+          <source>Battle talk (Enenies dialogue lines) translation</source>
+          <target state="new">Battle talk (Enenies dialogue lines) translation</target>
+          <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
+        </trans-unit>
+        <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
+          <source>Main Configuration</source>
+          <target state="new">Main Configuration</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
+          <source>Toast configurations</source>
+          <target state="new">Toast configurations</target>
         </trans-unit>
       </group>
     </body>

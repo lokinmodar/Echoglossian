@@ -124,10 +124,16 @@
   <data name="CloseButtonLabel" xml:space="preserve">
     <value>Close</value>
   </data>
-  <data name="ConfigTab1Name" xml:space="preserve">
+  <data name="ConfigTab0Name" xml:space="preserve">
     <value>Main Configuration</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Talk Settings</value>
+  </data>
   <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk Settings</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
     <value>Toast configurations</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
@@ -177,10 +183,6 @@
   <data name="Name" xml:space="preserve">
     <value>Echoglossian</value>
   </data>
-  <data name="Overlay name" xml:space="preserve">
-    <value>Battle talk (Enenies dialogue lines) translation</value>
-    <comment>Translation overlay window name</comment>
-  </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
     <value>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</value>
   </data>
@@ -199,6 +201,13 @@
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
     <value>Select the font size for the dialogue text overlay</value>
   </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Dialogue Overlay Height multiplier</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (Enenies dialogue lines) translation</value>
+    <comment>Translation overlay window name</comment>
+  </data>
   <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
     <value>Position adjustment</value>
   </data>
@@ -209,7 +218,7 @@
     <value>Adjust translation overlay width</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Dialogue Width multiplier</value>
+    <value>Dialogue Overlay Width multiplier</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</value>

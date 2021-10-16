@@ -79,6 +79,7 @@ namespace Echoglossian
       {
         return;
       }
+
       /*#if DEBUG
             PluginLog.LogError($"Should translate!");
       #endif*/

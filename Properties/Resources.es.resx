@@ -29,10 +29,6 @@
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Idioma al que traducir</value>
   </data>
-  <data name="Overlay name" xml:space="preserve">
-    <value>Traducción de charlas de batalla (charlas de enemigos en batallas)</value>
-    <comment>Translation overlay window name</comment>
-  </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
     <value>Ajuste la posición si su superposición no está centrada en relación con la ventana emergente de conversación.</value>
   </data>

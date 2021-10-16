@@ -40,6 +40,7 @@ namespace Echoglossian
       using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.ConfigDir}DbFindTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream2 = new($"{this.ConfigDir}DbFindTalkOperationsErrorLog.txt", append: true);
 #endif
       try
       {
@@ -69,7 +70,7 @@ namespace Echoglossian
       catch (Exception e)
       {
 #if DEBUG
-        logStream.WriteLineAsync($"Query operation error: {e}");
+        logStream2.WriteLineAsync($"Query operation error: {e}");
 #endif
         return false;
       }
@@ -79,6 +80,8 @@ namespace Echoglossian
     {
 #if DEBUG
       using StreamWriter logStream = new($"{this.ConfigDir}DbFindToastOperationsLog.txt", append: true);
+      using StreamWriter logStream2 = new($"{this.ConfigDir}DbFindToastOperationsErrorLog.txt", append: true);
+
 #endif
       try
       {
@@ -119,7 +122,7 @@ namespace Echoglossian
       catch (Exception e)
       {
 #if DEBUG
-        logStream.WriteLineAsync($"Query operation error: {e}");
+        logStream2.WriteLineAsync($"Query operation error: {e}");
 #endif
         return false;
       }
@@ -130,6 +133,7 @@ namespace Echoglossian
       using var context = new EchoglossianDbContext(this.ConfigDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.ConfigDir}DbFindBattleTalkOperationsLog.txt", append: true);
+      using StreamWriter logStream2 = new($"{this.ConfigDir}DbFindBattleTalkOperationsErrorLog.txt", append: true);
 #endif
       try
       {
@@ -159,7 +163,7 @@ namespace Echoglossian
       catch (Exception e)
       {
 #if DEBUG
-        logStream.WriteLineAsync($"Query operation error: {e}");
+        logStream2.WriteLineAsync($"Query operation error: {e}");
 #endif
         return false;
       }

@@ -55,7 +55,6 @@ namespace Echoglossian
             var addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
             chars.AddRange(addChars);
 
-
             chars.Add(0);
 
             var arr = chars.ToArray();
@@ -64,9 +63,6 @@ namespace Echoglossian
             {
               this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize /*imguiFontSize*/, null, new IntPtr((void*)ptr));
             }
-
-
-
 
             // var neededGlyphs = ImGui.GetIO().Fonts.GetGlyphRangesVietnamese();
             // var neededGlyps2 = ImGui.GetIO().Fonts.GetGlyphRangesCyrillic();
@@ -91,6 +87,7 @@ namespace Echoglossian
           PluginLog.Log(ex.ToString());
           this.FontLoadFailed = true;
         }
+
         /*        finally
                 {
                   if (rangeHandle.IsAllocated)
@@ -106,7 +103,6 @@ namespace Echoglossian
       }
     }
 
-
     private unsafe void AddCharsFromIntPtr(List<ushort> chars, ushort* ptr)
     {
       while (*ptr != 0)
@@ -115,7 +111,6 @@ namespace Echoglossian
         ptr++;
       }
     }
-
 
   }
 }

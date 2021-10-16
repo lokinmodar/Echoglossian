@@ -29,10 +29,6 @@
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Linguagem para traduzir para</value>
   </data>
-  <data name="Overlay name" xml:space="preserve">
-    <value>Tradução de conversa de batalha (falas dos inimigos)</value>
-    <comment>Translation overlay window name</comment>
-  </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
     <value>Ajuste a posição se a sobreposição não estiver centrada em relação à caixa de conversa da UI do jogo.</value>
   </data>
