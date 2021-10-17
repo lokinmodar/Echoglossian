@@ -125,16 +125,28 @@
     <value>Close</value>
   </data>
   <data name="ConfigTab0Name" xml:space="preserve">
-    <value>Main Configuration</value>
+    <value>Main</value>
   </data>
   <data name="ConfigTab1Name" xml:space="preserve">
-    <value>Talk Settings</value>
+    <value>Talk settings</value>
   </data>
   <data name="ConfigTab2Name" xml:space="preserve">
-    <value>Battle Talk Settings</value>
+    <value>Battle Talk settings</value>
   </data>
   <data name="ConfigTab3Name" xml:space="preserve">
-    <value>Toast configurations</value>
+    <value>Toast settings</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Journal settings</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Tooltips settings</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Other settings</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>About Echoglossian</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
     <value>Echoglossian Configuration</value>
@@ -291,6 +303,9 @@
   </data>
   <data name="TranslateToastToggleText" xml:space="preserve">
     <value>Translate in-game Toast Messages</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Translations enabled!</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Awaiting translation...</value>

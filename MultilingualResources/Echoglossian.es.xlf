@@ -7,7 +7,7 @@
     <body>
       <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
         <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
-          <source>Talk Settings</source>
+          <source>Talk settings</source>
           <target state="needs-review-translation">Configuraciones principales</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
@@ -123,7 +123,7 @@
           <target state="translated" state-qualifier="mt-suggestion">El idioma no pudo ser identificado con un grado aceptable de certeza</target>
         </trans-unit>
         <trans-unit id="ConfigTab2Name" translate="yes" xml:space="preserve">
-          <source>Battle Talk Settings</source>
+          <source>Battle Talk settings</source>
           <target state="needs-review-translation">Configuraciones de mensajes de sistema</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
@@ -245,12 +245,32 @@
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
-          <source>Main Configuration</source>
-          <target state="new">Main Configuration</target>
+          <source>Main</source>
+          <target state="new">Main</target>
         </trans-unit>
         <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
-          <source>Toast configurations</source>
-          <target state="new">Toast configurations</target>
+          <source>Toast settings</source>
+          <target state="new">Toast settings</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
+          <source>Journal settings</source>
+          <target state="new">Journal settings</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
+          <source>Tooltips settings</source>
+          <target state="new">Tooltips settings</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab6Name" translate="yes" xml:space="preserve">
+          <source>Other settings</source>
+          <target state="new">Other settings</target>
+        </trans-unit>
+        <trans-unit id="ConfigTabAbout" translate="yes" xml:space="preserve">
+          <source>About Echoglossian</source>
+          <target state="new">About Echoglossian</target>
+        </trans-unit>
+        <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
+          <source>Translations enabled!</source>
+          <target state="new">Translations enabled!</target>
         </trans-unit>
       </group>
     </body>

@@ -7,8 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.Unicode;
+
 using Dalamud.Logging;
 using ImGuiNET;
 
@@ -22,7 +21,6 @@ namespace Echoglossian
 
     private void LoadFont(/*string fontFileName,int imguiFontSize */)
     {
-
       // TODO: Get font by languageint
 #if DEBUG
       PluginLog.LogVerbose("Inside LoadFont method");
@@ -38,19 +36,24 @@ namespace Echoglossian
       this.FontLoaded = false;
       if (File.Exists(fontFile))
       {
-        //GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { Convert.ToUInt16("0x0000", 16), Convert.ToUInt16("0xFFFF", 16), 0 }, GCHandleType.Pinned);
         try
         {
           unsafe
           {
             var io = ImGui.GetIO();
-            /*ImVector<ImWchar>*/
-            List<ushort> chars = new List<ushort>();
+           
+            List<ushort> chars = new();
+
+            var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
+            builder.AddText("\"«»‘’‚‛“”„‟‹›ąĄćĆęĘłŁńŃóÓśŚźŹżŻ");
+
+            builder.BuildRanges(out ImVector ranges);
 
             // if (this.configuration.Lang == )
+            this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesDefault());
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesVietnamese());
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesCyrillic());
-            // this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts. );
+            this.AddCharsFromIntPtr(chars, (ushort*)ranges.Data);
 
             var addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
             chars.AddRange(addChars);
@@ -63,10 +66,6 @@ namespace Echoglossian
             {
               this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize /*imguiFontSize*/, null, new IntPtr((void*)ptr));
             }
-
-            // var neededGlyphs = ImGui.GetIO().Fonts.GetGlyphRangesVietnamese();
-            // var neededGlyps2 = ImGui.GetIO().Fonts.GetGlyphRangesCyrillic();
-            // var neededGlyphs3 = ImGui.GetIO().Fonts.GetGlyphRangesDefault();
 
 #if DEBUG
             // PluginLog.Debug($"Glyphs pointer: {neededGlyphs}");
@@ -87,14 +86,6 @@ namespace Echoglossian
           PluginLog.Log(ex.ToString());
           this.FontLoadFailed = true;
         }
-
-        /*        finally
-                {
-                  if (rangeHandle.IsAllocated)
-                  {
-                    rangeHandle.Free();
-                  }
-                }*/
       }
       else
       {
@@ -111,6 +102,5 @@ namespace Echoglossian
         ptr++;
       }
     }
-
   }
 }

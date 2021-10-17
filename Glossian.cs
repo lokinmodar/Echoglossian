@@ -9,9 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
-using Dalamud;
-using Dalamud.Game.Text.Sanitizer;
+
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;

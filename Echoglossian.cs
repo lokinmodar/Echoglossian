@@ -7,9 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Threading;
-using Dalamud;
+
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
@@ -17,7 +16,6 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.Sanitizer;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
@@ -102,8 +100,6 @@ namespace Echoglossian
 
       this.cultureInfo = new CultureInfo(this.configuration.PluginCulture);
 
-      Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
-
       this.commandManager = pCommandManager;
       this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
       {
@@ -113,6 +109,8 @@ namespace Echoglossian
       this.gameGui = pGameGui;
 
       this.toastGui = pToastGui;
+
+      Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
       FFXIVClientStructs.Resolver.Initialize();
 
@@ -160,6 +158,9 @@ namespace Echoglossian
       this.toastGui.ErrorToast += this.OnErrorToast;
       this.toastGui.QuestToast += this.OnQuestToast;
 
+      Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnOnChatBubble;
+      Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
+
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       this.pluginInterface.UiBuilder.Draw += this.BuildUi;
@@ -180,6 +181,8 @@ namespace Echoglossian
     {
       Common.Functions.Talk.OnTalk -= this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleTalk;
+      Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnOnChatBubble;
+      Common.Functions.Tooltips.OnActionTooltip -= this.TooltipsOnActionTooltip;
       Common?.Functions.Dispose();
       Common?.Dispose();
 
@@ -244,7 +247,6 @@ namespace Echoglossian
                 // this.ClassChangeToastHandler("_WideText", 2);
 
                 // this.ClassChangeToastHandler("_TextClassChange", 1);
-
                 this.AreaToastHandler("_AreaText", 1);
 
                 this.QuestToastHandler("_ScreenText", 1);

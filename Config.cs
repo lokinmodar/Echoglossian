@@ -23,6 +23,7 @@ namespace Echoglossian
 
     public bool TranslateBattleTalk = true;
     public bool TranslateTalk = true;
+    public bool TranslateTalkSubtitle = false;
     public bool TranslateToast = false;
     public bool TranslateNPCNames = true;
     public bool TranslateErrorToast = false;
@@ -36,6 +37,8 @@ namespace Echoglossian
     public bool TranslateSelectOk = true;
     public bool TranslateToDoList = true;
     public bool TranslateScenarioTree = true;
+    public bool TranslateTooltips = false;
+    public bool TranslateJournal = false;
 
     public bool UseImGui = true;
     public bool DoNotUseImGuiForToasts = false;

@@ -46,22 +46,42 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab0Name">
             <summary>
-              Looks up a localized string similar to Main Configuration.
+              Looks up a localized string similar to Main.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab1Name">
             <summary>
-              Looks up a localized string similar to Talk Settings.
+              Looks up a localized string similar to Talk settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab2Name">
             <summary>
-              Looks up a localized string similar to Battle Talk Settings.
+              Looks up a localized string similar to Battle Talk settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab3Name">
             <summary>
-              Looks up a localized string similar to Toast configurations.
+              Looks up a localized string similar to Toast settings.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab4Name">
+            <summary>
+              Looks up a localized string similar to Journal settings.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab5Name">
+            <summary>
+              Looks up a localized string similar to Tooltips settings.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab6Name">
+            <summary>
+              Looks up a localized string similar to Other settings.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTabAbout">
+            <summary>
+              Looks up a localized string similar to About Echoglossian.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigWindowTitle">
@@ -317,6 +337,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslateToastToggleText">
             <summary>
               Looks up a localized string similar to Translate in-game Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">
+            <summary>
+              Looks up a localized string similar to Translations enabled!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.WaitingForTranslation">

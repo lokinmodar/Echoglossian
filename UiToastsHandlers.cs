@@ -12,10 +12,8 @@ using System.Threading.Tasks;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
-using Dalamud.Memory;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
-using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace Echoglossian
@@ -126,7 +124,7 @@ namespace Echoglossian
             var tcc = classChangeToastByNameMaster->RootNode->ChildCount;
             PluginLog.LogDebug($"{(long)textNodeX:X}");
             PluginLog.Error($"Node ptr: {classChangeToastByName}");
-            var typ = classChangeToastByNameMaster->RootNode->ChildNode->ChildNode->ChildNode->Type.ToString(); 
+            var typ = classChangeToastByNameMaster->RootNode->ChildNode->ChildNode->ChildNode->Type.ToString();
             PluginLog.LogWarning($"child count: {tcc}");
             PluginLog.LogWarning($"Node type: {typ}");
   #endif
@@ -159,7 +157,6 @@ namespace Echoglossian
 
             if (this.configuration.DoNotUseImGuiForToasts)
             {
-
               /*#if DEBUG
                             PluginLog.LogError("Not Using Imgui - Translate ClassChange toast");
               #endif*/

@@ -4,12 +4,10 @@
 // </copyright>
 
 using System;
-using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using Amazon.Auth.AccessControlPolicy;
+
 using Dalamud.Logging;
 using Echoglossian.Properties;
 using ImGuiNET;
@@ -35,18 +33,12 @@ namespace Echoglossian
         this.configuration.Lang is 2 or 3 or 4 or 5 or 7 or 10 or 13 or 17 or 19 or 23 or 27 or 28 or 29 or 32 or
           38 or 39 or 40 or 44 or 45 or 47 or 48 or 49 or 56 or 59 or 64 or 65 or 67 or 70 or 71 or 72 or 74 or 75
           or 76 or 77 or 80 or 82;
-      ImGui.SetNextWindowSizeConstraints(new Vector2(600, 500), new Vector2(1920, 1080));
+      ImGui.SetNextWindowSizeConstraints(new Vector2(600, 600), new Vector2(1920, 1080));
       ImGui.Begin(Resources.ConfigWindowTitle, ref this.config);
-      if (ImGui.BeginTabBar("Tabs", ImGuiTabBarFlags.None))
+      if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.None))
       {
         if (ImGui.BeginTabItem(Resources.ConfigTab0Name))
         {
-          /*ImGui.Text(Resources.PluginInterfaceLanguage);
-          if (ImGui.Combo(Resources.PluginInterfaceLanguageSelectorText, ref this.configuration.PluginCultureInt, this.languages, this.languages.Length))
-          {
-            this.SaveConfig();
-          }*/
-
           if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languages, this.languages.Length))
           {
             this.configuration.Lang = languageInt;
@@ -63,180 +55,218 @@ namespace Echoglossian
           if (languageNotSupported)
           {
             ImGui.Text(Resources.LanguageNotSupportedText);
-            this.configuration.TranslateTalk = false;
-            this.configuration.TranslateBattleTalk = false;
-            this.configuration.TranslateToast = false;
-            this.configuration.TranslateNPCNames = false;
-            this.configuration.TranslateErrorToast = false;
-            this.configuration.TranslateQuestToast = false;
-            this.configuration.TranslateAreaToast = false;
-            this.configuration.TranslateClassChangeToast = false;
-            this.configuration.TranslateWideTextToast = false;
-            this.configuration.TranslateYesNoScreen = false;
-            this.configuration.TranslateCutSceneSelectString = false;
-            this.configuration.TranslateSelectString = false;
-            this.configuration.TranslateSelectOk = false;
-            this.configuration.TranslateToDoList = false;
-            this.configuration.TranslateScenarioTree = false;
+            bool translationsDisabled = this.DisableAllTranslations();
 
-            this.SaveConfig();
-          }
-
-          if (languageOnlySupportedThruOverlay)
-          {
-            ImGui.Text(Resources.LanguageOnlySupportedUsingOverlay);
-            this.configuration.UseImGui = true;
-            this.configuration.DoNotUseImGuiForToasts = false;
-
-            this.SaveConfig();
-          }
-
-          ImGui.Text(Resources.WhatToTranslateText);
-          if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
-          {
-            this.SaveConfig();
-          }
-
-          if (ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk))
-          {
-            this.SaveConfig();
-          }
-
-          if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
-          {
-            this.SaveConfig();
-          }
-
-          if (ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast))
-          {
-            if (!this.configuration.TranslateToast)
+            if (translationsDisabled)
             {
-              this.configuration.TranslateAreaToast = false;
-              this.configuration.TranslateClassChangeToast = false;
-              this.configuration.TranslateErrorToast = false;
-              this.configuration.TranslateQuestToast = false;
-              this.configuration.TranslateWideTextToast = false;
+              this.SaveConfig();
             }
-
-            this.SaveConfig();
           }
-
-          ImGui.EndTabItem();
-
-          if (this.configuration.TranslateTalk)
+          else
           {
-            if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
+            if (languageOnlySupportedThruOverlay)
             {
-              if (!languageOnlySupportedThruOverlay)
+              ImGui.Text(Resources.LanguageOnlySupportedUsingOverlay);
+              this.configuration.UseImGui = true;
+              this.configuration.DoNotUseImGuiForToasts = false;
+
+              this.SaveConfig();
+            }
+            else
+            {
+
+              ImGui.Text(Resources.WhatToTranslateText);
+              if (ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref this.configuration.TranslateTalk))
               {
-                if (ImGui.Checkbox(
-                  Resources.OverlayToggleLabel,
-                  ref this.configuration.UseImGui))
-                {
-                  this.SaveConfig();
-                }
-              }
-              else
-              {
-                this.configuration.UseImGui = true;
                 this.SaveConfig();
               }
 
-              if (languageOnlySupportedThruOverlay || this.configuration.UseImGui)
+              if (ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref this.configuration.TranslateBattleTalk))
               {
-                ImGui.Spacing();
-                ImGui.Separator();
-                ImGui.Separator();
-                if (ImGui.SliderFloat(
-                  Resources.OverlayFontScaleLabel,
-                  ref this.configuration.FontScale,
-                  -3f,
-                  3f,
-                  "%.2f"))
-                {
-                  this.configuration.FontChangeTime = DateTime.Now.Ticks;
-                  this.SaveConfig();
-                }
-
-                ImGui.SameLine();
-                ImGui.Text(Resources.HoverTooltipIndicator);
-                if (ImGui.IsItemHovered())
-                {
-                  ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
-                }
-
-                ImGui.Separator();
-                ImGui.SameLine();
-                ImGui.Text(Resources.FontColorSelectLabel);
-                ImGui.SameLine();
-                if (ImGui.ColorEdit3(
-                  Resources.OverlayColorSelectName,
-                  ref this.configuration.OverlayTextColor,
-                  ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
-                {
-#if DEBUG
-                  PluginLog.Information($"Color selected before save: {this.configuration.OverlayTextColor}");
-#endif
-                  this.SaveConfig();
-#if DEBUG
-                  PluginLog.Information($"Color selected after save: {this.configuration.OverlayTextColor}");
-#endif
-                }
-
-                ImGui.SameLine();
-                ImGui.Text(Resources.HoverTooltipIndicator);
-                if (ImGui.IsItemHovered())
-                {
-                  ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
-                }
-
-                ImGui.Separator();
-                if (ImGui.DragFloat(
-                  Resources.OverlayWidthScrollLabel,
-                  ref this.configuration.ImGuiTalkWindowWidthMult,
-                  0.001f, 0.01f, 3f))
-                {
-                  this.SaveConfig();
-                }
-
-                ImGui.Separator();
-                if (ImGui.DragFloat(
-                  Resources.OverlayHeightScrollLabel,
-                  ref this.configuration.ImGuiTalkWindowHeightMult,
-                  0.001f, 0.01f, 3f))
-                {
-                  this.SaveConfig();
-                }
-
+                this.SaveConfig();
               }
 
-              ImGui.Spacing();
-              ImGui.Separator();
-            }
+              if (ImGui.Checkbox(Resources.TranslateToastToggleText, ref this.configuration.TranslateToast))
+              {
+                if (!this.configuration.TranslateToast)
+                {
+                  this.configuration.TranslateAreaToast = false;
+                  this.configuration.TranslateClassChangeToast = false;
+                  this.configuration.TranslateErrorToast = false;
+                  this.configuration.TranslateQuestToast = false;
+                  this.configuration.TranslateWideTextToast = false;
+                }
 
-            ImGui.EndTabItem();
+                this.SaveConfig();
+              }
+
+              ImGui.Text(Resources.TranslationsEnabled);
+
+            }
           }
 
-          if (this.configuration.TranslateBattleTalk)
+          ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTab1Name, ref this.configuration.TranslateTalk))
+        {
+          if (!languageOnlySupportedThruOverlay && this.configuration.UseImGui)
           {
-            if (ImGui.BeginTabItem(Resources.ConfigTab2Name))
+            if (ImGui.Checkbox(
+              Resources.OverlayToggleLabel,
+              ref this.configuration.UseImGui))
             {
-              if (languageOnlySupportedThruOverlay)
-              {
-                ImGui.Spacing();
-                ImGui.Separator();
-              }
-
-              ImGui.Spacing();
-              ImGui.Separator();
+              this.SaveConfig();
             }
-
-            ImGui.EndTabItem();
           }
 
+          if (languageOnlySupportedThruOverlay || this.configuration.UseImGui)
+          {
+            if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
+            {
+              this.SaveConfig();
+            }
+
+            ImGui.Spacing();
+            ImGui.Separator();
+
+            if (ImGui.SliderFloat(
+              Resources.OverlayFontScaleLabel,
+              ref this.configuration.FontScale,
+              -3f,
+              3f,
+              "%.2f"))
+            {
+              this.configuration.FontChangeTime = DateTime.Now.Ticks;
+              this.SaveConfig();
+            }
+
+            ImGui.SameLine();
+            ImGui.Text(Resources.HoverTooltipIndicator);
+            if (ImGui.IsItemHovered())
+            {
+              ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
+            }
+
+            ImGui.Separator();
+            ImGui.Spacing();
+            ImGui.SameLine();
+            ImGui.Text(Resources.FontColorSelectLabel);
+            ImGui.SameLine();
+            if (ImGui.ColorEdit3(
+              Resources.OverlayColorSelectName,
+              ref this.configuration.OverlayTextColor,
+              ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
+            {
+              this.SaveConfig();
+            }
+
+            ImGui.SameLine();
+            ImGui.Text(Resources.HoverTooltipIndicator);
+            if (ImGui.IsItemHovered())
+            {
+              ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
+            }
+
+            ImGui.Spacing();
+            ImGui.Separator();
+            if (ImGui.DragFloat(
+              Resources.OverlayWidthScrollLabel,
+              ref this.configuration.ImGuiTalkWindowWidthMult,
+              0.001f, 0.01f, 3f))
+            {
+              this.SaveConfig();
+            }
+
+            ImGui.Separator();
+            if (ImGui.DragFloat(
+              Resources.OverlayHeightScrollLabel,
+              ref this.configuration.ImGuiTalkWindowHeightMult,
+              0.001f, 0.01f, 3f))
+            {
+              this.SaveConfig();
+            }
+
+            ImGui.Separator();
+            ImGui.Spacing();
+            if (ImGui.DragFloat2(
+              Resources.OverlayPositionAdjustmentLabel,
+              ref this.configuration.ImGuiWindowPosCorrection))
+            {
+              this.SaveConfig();
+            }
+
+            ImGui.SameLine();
+            ImGui.Text(Resources.HoverTooltipIndicator);
+            if (ImGui.IsItemHovered())
+            {
+              ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
+            }
+
+          }
+
+          ImGui.Spacing();
+          ImGui.Separator();
+          if (!languageOnlySupportedThruOverlay && this.configuration.UseImGui)
+          {
+            if (ImGui.Checkbox(Resources.SwapTranslationTextToggle, ref this.configuration.SwapTextsUsingImGui))
+            {
+              this.SaveConfig();
+            }
+          }
+
+          ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTab2Name, ref this.configuration.TranslateBattleTalk))
+        {
+
+
+          if (languageOnlySupportedThruOverlay)
+          {
+            ImGui.Spacing();
+            ImGui.Separator();
+          }
+
+          if (this.configuration.UseImGui)
+          {
+            /*ImGui.Separator();
+            if (ImGui.Combo(Resources.OverlayFontSizeLabel, ref this.configuration.FontSize, this.FontSizes, this.FontSizes.Length))
+            {
+              this.SaveConfig();
+              //this.LoadFont();
+              if (this.FontLoaded)
+              {
+                this.pluginInterface.UiBuilder.RebuildFonts();
+              }
+            }*/
+
+            // TODO: Fix this to BattleTalk
+            ImGui.Separator();
+            if (ImGui.DragFloat(
+              Resources.OverlayWidthScrollLabel,
+              ref this.configuration.ImGuiBattleTalkWindowWidthMult,
+              0.001f, 0.01f, 3f))
+            {
+              this.SaveConfig();
+            }
+
+            ImGui.SameLine();
+            ImGui.Text(Resources.HoverTooltipIndicator);
+            if (ImGui.IsItemHovered())
+            {
+              ImGui.SetTooltip(Resources.OverlayWidthMultiplierOrientations);
+            }
+          }
+
+          ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTab3Name, ref this.configuration.TranslateToast))
+        {
           if (this.configuration.TranslateToast)
           {
-            if (languageOnlySupportedThruOverlay)
+            if (!languageOnlySupportedThruOverlay)
             {
               ImGui.Spacing();
               ImGui.Separator();
@@ -248,27 +278,32 @@ namespace Echoglossian
                 ref this.configuration.UseImGui);
             }
 
-            if (this.configuration.UseImGui)
+            ImGui.Separator();
+            ImGui.Text(Resources.WhichToastsToTranslateText);
+            ImGui.Checkbox(Resources.TranslateErrorToastToggleText, ref this.configuration.TranslateErrorToast);
+            ImGui.Checkbox(Resources.TranslateQuestToastToggleText, ref this.configuration.TranslateQuestToast);
+            ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref this.configuration.TranslateAreaToast);
+            ImGui.Checkbox(
+              Resources.TranslateClassChangeToastToggleText,
+              ref this.configuration.TranslateClassChangeToast);
+            ImGui.Checkbox(
+              Resources.TranslateScreenInfoToastToggleText,
+              ref this.configuration.TranslateWideTextToast);
+            ImGui.Separator();
+            if (ImGui.Checkbox(
+              Resources.DoNotUseImGuiForToastsToggle,
+              ref this.configuration.DoNotUseImGuiForToasts))
             {
-              /*ImGui.Separator();
-              if (ImGui.Combo(Resources.OverlayFontSizeLabel, ref this.configuration.FontSize, this.FontSizes, this.FontSizes.Length))
-              {
-                this.SaveConfig();
-                //this.LoadFont();
-                if (this.FontLoaded)
-                {
-                  this.pluginInterface.UiBuilder.RebuildFonts();
-                }
-              }*/
+              this.SaveConfig();
+            }
 
-              
-
-              // TODO: Fix this to BattleTalk
+            ImGui.Separator();
+            if (this.configuration.UseImGui && !this.configuration.DoNotUseImGuiForToasts)
+            {
               ImGui.Separator();
               if (ImGui.DragFloat(
-                Resources.OverlayWidthScrollLabel,
-                ref this.configuration.ImGuiBattleTalkWindowWidthMult,
-                0.001f, 0.01f, 3f))
+                Resources.ToastOverlayWidthScrollLabel,
+                ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.01f, 3f))
               {
                 this.SaveConfig();
               }
@@ -277,142 +312,119 @@ namespace Echoglossian
               ImGui.Text(Resources.HoverTooltipIndicator);
               if (ImGui.IsItemHovered())
               {
-                ImGui.SetTooltip(Resources.OverlayWidthMultiplierOrientations);
-              }
-
-              ImGui.Separator();
-              ImGui.Spacing();
-              if (ImGui.DragFloat2(
-                Resources.OverlayPositionAdjustmentLabel,
-                ref this.configuration.ImGuiWindowPosCorrection))
-              {
-                this.SaveConfig();
-              }
-
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
-              }
-
-              if (this.configuration.TranslateTalk)
-              {
-                if (ImGui.Checkbox(Resources.SwapTranslationTextToggle, ref this.configuration.SwapTextsUsingImGui))
-                {
-                  this.SaveConfig();
-                }
+                ImGui.SetTooltip(Resources.ToastOverlayWidthMultiplierOrientations);
               }
             }
-
-            ImGui.EndTabItem();
-
-            if (this.configuration.TranslateToast)
-            {
-              if (ImGui.BeginTabItem(Resources.ConfigTab3Name))
-              {
-                ImGui.Separator();
-                ImGui.Text(Resources.WhichToastsToTranslateText);
-                ImGui.Checkbox(Resources.TranslateErrorToastToggleText, ref this.configuration.TranslateErrorToast);
-                ImGui.Checkbox(Resources.TranslateQuestToastToggleText, ref this.configuration.TranslateQuestToast);
-                ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref this.configuration.TranslateAreaToast);
-                ImGui.Checkbox(Resources.TranslateClassChangeToastToggleText,
-                  ref this.configuration.TranslateClassChangeToast);
-                ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText,
-                  ref this.configuration.TranslateWideTextToast);
-                ImGui.Separator();
-                if (ImGui.Checkbox(Resources.DoNotUseImGuiForToastsToggle,
-                  ref this.configuration.DoNotUseImGuiForToasts))
-                {
-                  this.SaveConfig();
-                }
-
-                ImGui.Separator();
-                if (this.configuration.UseImGui && !this.configuration.DoNotUseImGuiForToasts)
-                {
-                  ImGui.Separator();
-                  if (ImGui.DragFloat(Resources.ToastOverlayWidthScrollLabel,
-                    ref this.configuration.ImGuiToastWindowWidthMult, 0.001f, 0.01f, 3f))
-                  {
-                    this.SaveConfig();
-                  }
-
-                  ImGui.SameLine();
-                  ImGui.Text(Resources.HoverTooltipIndicator);
-                  if (ImGui.IsItemHovered())
-                  {
-                    ImGui.SetTooltip(Resources.ToastOverlayWidthMultiplierOrientations);
-                  }
-                }
-
-                ImGui.EndTabItem();
-              }
-            }
-
-            ImGui.EndTabBar();
           }
 
-          var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 30);
-          ImGui.Separator();
-          ImGui.SetCursorPos(pos);
-          ImGui.BeginGroup();
-          if (ImGui.Button(Resources.SaveCloseButtonLabel))
-          {
-            this.SaveConfig();
-            this.config = false;
-          }
-
-          ImGui.SameLine();
-          ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
-          ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
-          ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
-
-          if (ImGui.Button(Resources.PatronButtonLabel))
-          {
-            Process.Start(new ProcessStartInfo
-            {
-              FileName = "https://ko-fi.com/lokinmodar",
-              UseShellExecute = true,
-            });
-            this.SaveConfig();
-            this.config = false;
-          }
-
-          ImGui.PopStyleColor(3);
-          ImGui.SameLine();
-          ImGui.PushID(4);
-          ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 7.0f, 0.6f, 0.6f));
-          ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
-          ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
-          if (ImGui.Button(Resources.SendPixButton))
-          {
-            ImGui.OpenPopup(Resources.PixQrWindowLabel);
-            this.SaveConfig();
-          }
-
-// Always center this window when appearing
-          var center = ImGui.GetMainViewport().GetCenter();
-          ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
-          if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
-          {
-            ImGui.Text(Resources.QRCodeInstructionsText);
-            ImGui.Image(this.pixImage.ImGuiHandle, new Vector2(512, 512));
-            if (ImGui.Button(Resources.CloseButtonLabel))
-            {
-              ImGui.CloseCurrentPopup();
-            }
-
-            ImGui.EndPopup();
-            ImGui.SetItemDefaultFocus();
-          }
-
-          ImGui.PopStyleColor(3);
-          ImGui.PopID();
-          ImGui.EndGroup();
-          ImGui.End();
-
+          ImGui.EndTabItem();
         }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTab4Name, ref this.configuration.TranslateJournal))
+        {
+          ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
+          ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTab5Name, ref this.configuration.TranslateTooltips))
+        {
+          ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
+          ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTab6Name, ref this.configuration.TranslateToDoList))
+        {
+          ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
+          ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
+        {
+          ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
+          ImGui.EndTabItem();
+        }
+        ImGui.EndTabBar();
       }
+
+      var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 30);
+      ImGui.Separator();
+      ImGui.SetCursorPos(pos);
+      ImGui.BeginGroup();
+      if (ImGui.Button(Resources.SaveCloseButtonLabel))
+      {
+        this.SaveConfig();
+        this.config = false;
+      }
+
+      ImGui.SameLine();
+      ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
+      ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
+      ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
+
+      if (ImGui.Button(Resources.PatronButtonLabel))
+      {
+        Process.Start(new ProcessStartInfo
+        {
+          FileName = "https://ko-fi.com/lokinmodar",
+          UseShellExecute = true,
+        });
+        this.SaveConfig();
+        this.config = false;
+      }
+
+      ImGui.PopStyleColor(3);
+      ImGui.SameLine();
+      ImGui.PushID(4);
+      ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 7.0f, 0.6f, 0.6f));
+      ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
+      ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
+      if (ImGui.Button(Resources.SendPixButton))
+      {
+        ImGui.OpenPopup(Resources.PixQrWindowLabel);
+        this.SaveConfig();
+      }
+
+      // Always center this window when appearing
+      var center = ImGui.GetMainViewport().GetCenter();
+      ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+      if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
+      {
+        ImGui.Text(Resources.QRCodeInstructionsText);
+        ImGui.Image(this.pixImage.ImGuiHandle, new Vector2(512, 512));
+        if (ImGui.Button(Resources.CloseButtonLabel))
+        {
+          ImGui.CloseCurrentPopup();
+        }
+
+        ImGui.EndPopup();
+        ImGui.SetItemDefaultFocus();
+      }
+
+      ImGui.PopStyleColor(3);
+      ImGui.PopID();
+      ImGui.EndGroup();
+      ImGui.End();
+    }
+
+    private bool DisableAllTranslations()
+    {
+      this.configuration.TranslateTalk = false;
+      this.configuration.TranslateBattleTalk = false;
+      this.configuration.TranslateToast = false;
+      this.configuration.TranslateNPCNames = false;
+      this.configuration.TranslateErrorToast = false;
+      this.configuration.TranslateQuestToast = false;
+      this.configuration.TranslateAreaToast = false;
+      this.configuration.TranslateClassChangeToast = false;
+      this.configuration.TranslateWideTextToast = false;
+      this.configuration.TranslateYesNoScreen = false;
+      this.configuration.TranslateCutSceneSelectString = false;
+      this.configuration.TranslateSelectString = false;
+      this.configuration.TranslateSelectOk = false;
+      this.configuration.TranslateToDoList = false;
+      this.configuration.TranslateScenarioTree = false;
+
+      return true;
     }
   }
 }

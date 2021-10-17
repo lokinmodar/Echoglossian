@@ -80,7 +80,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Main Configuration.
+        ///   Looks up a localized string similar to Main.
         /// </summary>
         public static string ConfigTab0Name {
             get {
@@ -89,7 +89,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Talk Settings.
+        ///   Looks up a localized string similar to Talk settings.
         /// </summary>
         public static string ConfigTab1Name {
             get {
@@ -98,7 +98,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Battle Talk Settings.
+        ///   Looks up a localized string similar to Battle Talk settings.
         /// </summary>
         public static string ConfigTab2Name {
             get {
@@ -107,11 +107,47 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Toast configurations.
+        ///   Looks up a localized string similar to Toast settings.
         /// </summary>
         public static string ConfigTab3Name {
             get {
                 return ResourceManager.GetString("ConfigTab3Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Journal settings.
+        /// </summary>
+        public static string ConfigTab4Name {
+            get {
+                return ResourceManager.GetString("ConfigTab4Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tooltips settings.
+        /// </summary>
+        public static string ConfigTab5Name {
+            get {
+                return ResourceManager.GetString("ConfigTab5Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other settings.
+        /// </summary>
+        public static string ConfigTab6Name {
+            get {
+                return ResourceManager.GetString("ConfigTab6Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to About Echoglossian.
+        /// </summary>
+        public static string ConfigTabAbout {
+            get {
+                return ResourceManager.GetString("ConfigTabAbout", resourceCulture);
             }
         }
         
@@ -576,6 +612,15 @@ namespace Echoglossian.Properties {
         public static string TranslateToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateToastToggleText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translations enabled!.
+        /// </summary>
+        public static string TranslationsEnabled {
+            get {
+                return ResourceManager.GetString("TranslationsEnabled", resourceCulture);
             }
         }
         

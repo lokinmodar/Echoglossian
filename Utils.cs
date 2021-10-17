@@ -6,11 +6,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Numerics;
-
-using Dalamud.Logging;
-using Echoglossian.Properties;
-using ImGuiNET;
 
 namespace Echoglossian
 {
