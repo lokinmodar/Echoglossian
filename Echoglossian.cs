@@ -158,7 +158,7 @@ namespace Echoglossian
       this.toastGui.ErrorToast += this.OnErrorToast;
       this.toastGui.QuestToast += this.OnQuestToast;
 
-      Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnOnChatBubble;
+      // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnOnChatBubble;
       Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
 
       Common.Functions.Talk.OnTalk += this.GetTalk;
@@ -181,7 +181,7 @@ namespace Echoglossian
     {
       Common.Functions.Talk.OnTalk -= this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleTalk;
-      Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnOnChatBubble;
+      // Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnOnChatBubble;
       Common.Functions.Tooltips.OnActionTooltip -= this.TooltipsOnActionTooltip;
       Common?.Functions.Dispose();
       Common?.Dispose();

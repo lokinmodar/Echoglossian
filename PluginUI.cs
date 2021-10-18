@@ -28,11 +28,9 @@ namespace Echoglossian
 
     private void EchoglossianConfigUi()
     {
-      bool languageNotSupported = this.configuration.Lang is 1 or 8 or 9 or 60 or 78 or 79 or 81;
+      bool languageNotSupported = this.configuration.Lang is 3 or 5 or 11 or 13 or 114 or 115;
       bool languageOnlySupportedThruOverlay =
-        this.configuration.Lang is 2 or 3 or 4 or 5 or 7 or 10 or 13 or 17 or 19 or 23 or 27 or 28 or 29 or 32 or
-          38 or 39 or 40 or 44 or 45 or 47 or 48 or 49 or 56 or 59 or 64 or 65 or 67 or 70 or 71 or 72 or 74 or 75
-          or 76 or 77 or 80 or 82;
+        this.configuration.Lang is 2 or 4 or 6 or 8 or 9 or 10 or 12 or 14 or 15 or 16 or 18 or 19 or 21 or 22 or 24 or 25 or 30 or 36 or 38 or 39 or 41 or 42 or 43 or 44 or 45 or 47 or 53 or 54 or 55 or 57 or 58 or 59 or 60 or 62 or 63 or 66 or 69 or 72 or 73 or 74 or 78 or 79 or 80 or 82 or 84 or 85 or 88 or 91 or 92 or 93 or 94 or 98 or 102 or 103 or 104 or 105 or 106 or 107 or 108 or 109 or 110 or 111 or 112 or 113 or 119;
       ImGui.SetNextWindowSizeConstraints(new Vector2(600, 600), new Vector2(1920, 1080));
       ImGui.Begin(Resources.ConfigWindowTitle, ref this.config);
       if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.None))
@@ -106,6 +104,8 @@ namespace Echoglossian
           }
 
           ImGui.EndTabItem();
+          this.SaveConfig();
+
         }
 
         if (ImGui.BeginTabItem(Resources.ConfigTab1Name, ref this.configuration.TranslateTalk))
@@ -202,7 +202,6 @@ namespace Echoglossian
             {
               ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
             }
-
           }
 
           ImGui.Spacing();
@@ -220,8 +219,6 @@ namespace Echoglossian
 
         if (ImGui.BeginTabItem(Resources.ConfigTab2Name, ref this.configuration.TranslateBattleTalk))
         {
-
-
           if (languageOnlySupportedThruOverlay)
           {
             ImGui.Spacing();
