@@ -79,6 +79,11 @@
               Looks up a localized string similar to Other settings.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab7Name">
+            <summary>
+              Looks up a localized string similar to Translation Engine settings.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTabAbout">
             <summary>
               Looks up a localized string similar to About Echoglossian.
@@ -102,6 +107,11 @@
         <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
             <summary>
               Looks up a localized string similar to Attention!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.EnableTranslation">
+            <summary>
+              Looks up a localized string similar to Activate game text realtime translation.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">

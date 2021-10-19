@@ -98,7 +98,7 @@ namespace Echoglossian
 
       sanitizer = this.pluginInterface.Sanitizer as Sanitizer;
 
-      this.cultureInfo = new CultureInfo(this.configuration.PluginCulture);
+      this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
 
       this.commandManager = pCommandManager;
       this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
@@ -117,6 +117,7 @@ namespace Echoglossian
       this.CreateOrUseDb();
 
       this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
+      this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
 
       // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
@@ -213,6 +214,7 @@ namespace Echoglossian
       this.framework.Update -= this.Tick;
 
       this.pluginInterface.UiBuilder.BuildFonts -= this.LoadFont;
+      this.pluginInterface.UiBuilder.BuildFonts -= this.LoadConfigFont;
 
       this.pluginInterface.UiBuilder.RebuildFonts();
 
@@ -273,6 +275,12 @@ namespace Echoglossian
     private void BuildUi()
     {
       if (!this.FontLoaded && !this.FontLoadFailed)
+      {
+        this.pluginInterface.UiBuilder.RebuildFonts();
+        return;
+      }
+
+      if (!this.ConfigFontLoaded && !this.ConfigFontLoadFailed)
       {
         this.pluginInterface.UiBuilder.RebuildFonts();
         return;

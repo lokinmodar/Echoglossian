@@ -145,6 +145,9 @@
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Other settings</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Translation Engine settings</value>
+  </data>
   <data name="ConfigTabAbout" xml:space="preserve">
     <value>About Echoglossian</value>
   </data>
@@ -160,6 +163,9 @@
   </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Attention!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Activate game text realtime translation</value>
   </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
     <value>Overlay font color:</value>

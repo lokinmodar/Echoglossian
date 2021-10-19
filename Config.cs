@@ -12,8 +12,9 @@ namespace Echoglossian
 {
   public class Config : IPluginConfiguration
   {
-    public string PluginCulture = "en";
+    public string DefaultPluginCulture = "en";
     public int PluginCultureInt;
+    public bool Translate = true;
 
     public int Lang { get; set; } = 16;
 

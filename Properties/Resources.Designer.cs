@@ -143,6 +143,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Translation Engine settings.
+        /// </summary>
+        public static string ConfigTab7Name {
+            get {
+                return ResourceManager.GetString("ConfigTab7Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to About Echoglossian.
         /// </summary>
         public static string ConfigTabAbout {
@@ -185,6 +194,15 @@ namespace Echoglossian.Properties {
         public static string EchoglossianPathModal {
             get {
                 return ResourceManager.GetString("EchoglossianPathModal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Activate game text realtime translation.
+        /// </summary>
+        public static string EnableTranslation {
+            get {
+                return ResourceManager.GetString("EnableTranslation", resourceCulture);
             }
         }
         

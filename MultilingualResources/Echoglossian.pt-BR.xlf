@@ -272,6 +272,14 @@
           <source>Translations enabled!</source>
           <target state="new">Translations enabled!</target>
         </trans-unit>
+        <trans-unit id="ConfigTab7Name" translate="yes" xml:space="preserve">
+          <source>Translation Engine settings</source>
+          <target state="new">Translation Engine settings</target>
+        </trans-unit>
+        <trans-unit id="EnableTranslation" translate="yes" xml:space="preserve">
+          <source>Activate game text realtime translation</source>
+          <target state="new">Activate game text realtime translation</target>
+        </trans-unit>
       </group>
     </body>
   </file>
