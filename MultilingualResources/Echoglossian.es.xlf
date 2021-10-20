@@ -246,7 +246,7 @@
         </trans-unit>
         <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
           <source>Main</source>
-          <target state="new">Main</target>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">Principal</target>
         </trans-unit>
         <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
           <source>Toast settings</source>
@@ -254,7 +254,7 @@
         </trans-unit>
         <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
           <source>Journal settings</source>
-          <target state="new">Journal settings</target>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">Configuración del diario</target>
         </trans-unit>
         <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
           <source>Tooltips settings</source>
@@ -262,7 +262,7 @@
         </trans-unit>
         <trans-unit id="ConfigTab6Name" translate="yes" xml:space="preserve">
           <source>Other settings</source>
-          <target state="new">Other settings</target>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">Otra configuración</target>
         </trans-unit>
         <trans-unit id="ConfigTabAbout" translate="yes" xml:space="preserve">
           <source>About Echoglossian</source>

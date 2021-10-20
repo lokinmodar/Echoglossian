@@ -149,4 +149,13 @@
   <data name="PathTypeInstructions" xml:space="preserve">
     <value>Digite o caminho e salve para que o plugin possa funcionar corretamente!</value>
   </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Principal</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Configurações de diário</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Outras configurações</value>
+  </data>
 </root>

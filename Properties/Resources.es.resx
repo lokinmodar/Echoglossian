@@ -149,4 +149,13 @@
   <data name="PathTypeInstructions" xml:space="preserve">
     <value>¡Escriba la ruta y guárdela para que el complemento pueda funcionar correctamente!</value>
   </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Principal</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Configuración del diario</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Otra configuración</value>
+  </data>
 </root>
