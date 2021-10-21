@@ -80,7 +80,7 @@ namespace Echoglossian
       @"Беларуская Мова Belaruskaâ Mova; Belarusian", @"বাংলা Bāŋlā; Bengali",
       @"ইমার ঠার;বিষ্ণুপ্রিয়া মণিপুরী Bishnupriya Manipuri Language; Bishnupriya Manipuri",
       @"Bosanski; Bosnian", @"Brezhoneg; Breton", @"Български Език Bălgarski Ezik; Bulgarian",
-      @"မြန်မာစာ Mrãmācā; မြန်မာစကား Mrãmākā:; Burmese", @"广东话; Cantonese",
+      @"မြန်မာစာ Mrãmācā; မြန်မာစကား Mrãmākā; Burmese", @"广东话; Cantonese",
       @"Català,Valencià; Catalan; Valencian", @"Sinugbuanong Binisayâ; Cebuano",
       @"ភាសាខ្មែរ Phiəsaakhmær; Central Khmer", @"Chichewa; Chinyanja; Chichewa; Chewa; Nyanja",
       @"中文 Zhōngwén; Chinese Simplified", @"汉语; 漢語 Hànyǔ; Chinese Traditional",

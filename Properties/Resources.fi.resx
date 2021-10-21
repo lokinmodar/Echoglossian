@@ -21,17 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Pää</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Puheasetukset</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk -asetukset</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Ilmoitusruutujen asetukset</value>
+  </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Kirjauskansion asetukset</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Työkaluvihjeiden asetukset</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Muut asetukset</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Käännösmoduulin asetukset</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Tietoja henkilöstä Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossian-kokoonpano</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Älä käytä peittokuvaa Toasts-käännösten näyttämiseen</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Huomio</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Aktivoi pelitekstin reaaliaikainen käännös</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Peittokuvafontin väri:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Avautuu Echoglossian config -ikkuna</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Kieltä ei voitu tunnistaa hyväksyttävällä varmuudella</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Valittua kieltä ei tue tällä hetkellä käytettävissä oleva käännösten tausta</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Valittua kieltä tuetaan vain laajennuspeitteillä, jotka johtuvat natiivipelin Fontin rajoituksista</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Mihin kieleen pelinsisäiset valintaikkunat käännetään.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Kieli, jota käännetään</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -39,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Kaikuglossian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Säädä sijaintia, jos peittokuvasi ei ole keskitetty pelin käyttöliittymän valintaikkunaan verrattuna.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>PeittokuvaKolorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Valitse peittokuvafontin väri napsauttamalla tätä</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Peittokuvan fonttiasteikon säätäminen</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Peittokuvan fonttikoko</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Valintaikkunan tekstipeitteen fonttikoon valitseminen</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Dialogin peittokuvan korkeuskerroin</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Taistelupuheet (Enenies-vuoropuhelulinjat) käännös</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Position säätö</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Näytä käännetty valintaikkunan tekstikerros pelin käyttöliittymän valintaikkunan yläpuolella sen sijaan, että korvaisit sen tekstin käännöksellä</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Käännöskerroksen leveyden säätäminen</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Dialogin peittokuvan leveyskerroin</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Echoglossian-kansion absoluuttinen polku (XIVLauncher -&gt; pluginConfigs-kansiossa)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Kirjoita polku ja tallenna, jotta laajennus voi toimia oikein!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Osta lokinmodar a Coffee</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode -koodi</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Skannaa QR-koodi lähettääksesi minulle PIX: n - voimassa vain Brasiliassa</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Laajennuksen määritysikkunan kielen valitseminen</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Määritysikkunan kieli:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Skannaa QR-koodi lähettääksesi minulle PIX: n - voimassa vain Brasiliassa</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Tallenna ja sulje määritysikkuna</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Lähetä minulle PIX-lahjoitus!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Näytä alkuperäinen valintaikkunan teksti Peittokuvassa ja käännettynä Pelikäyttöliittymä-valintaikkunassa</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Paahtoleivän käännöskerroksen leveyden säätäminen</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Paahtoleivän peittokuvan leveyskerroin</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Käännä pelinsisäinen aluenimi Paahtoleipäviestit</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Käännä taistelupuheita</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Käännä pelinsisäiset luokka-/työmuutosleipäviestit</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Käännä pelinsisäiset virheruutuviestit</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>NPC-nimien kääntäminen valintaikkunassa</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Käännä pelinsisäiset Quest-paahtoleipäviestit</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Muiden pelinsisäisten muiden paahtoleipäviestien kääntäminen</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Pelinsisäisten dialogien kääntäminen</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Pelinsisäisten paahtoleipäviestien kääntäminen</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Käännökset käytössä!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Odotetaan käännöstä...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Käännettävän tekstin valitseminen</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Valitse käännettävät pelinsisäiset paahtoleipäviestit</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Säädä käännöskerrokseen liittyviä asetuksia:</value>
   </data>
 </root>

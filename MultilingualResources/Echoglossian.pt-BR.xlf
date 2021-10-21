@@ -8,8 +8,7 @@
       <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
         <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
           <source>Talk settings</source>
-          <target state="needs-review-translation">Configurações principais</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Configurações de diálogos</target>
         </trans-unit>
         <trans-unit id="ConfigWindowTitle" translate="yes" xml:space="preserve">
           <source>Echoglossian Configuration</source>
@@ -47,8 +46,7 @@
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
           <source>Dialogue Overlay Width multiplier</source>
-          <target state="needs-review-translation">Multiplicador de largura da sobreposição de tradução de diálogo</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Multiplicador de largura da sobreposição de tradução de diálogo</target>
         </trans-unit>
         <trans-unit id="PatronButtonLabel" translate="yes" xml:space="preserve">
           <source>Buy lokinmodar a Coffee</source>
@@ -124,8 +122,7 @@
         </trans-unit>
         <trans-unit id="ConfigTab2Name" translate="yes" xml:space="preserve">
           <source>Battle Talk settings</source>
-          <target state="needs-review-translation">Configurações de Toasts</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Configurações de diálogos de batalha</target>
         </trans-unit>
         <trans-unit id="ToastOverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust toast translation overlay width</source>
@@ -229,56 +226,60 @@
         </trans-unit>
         <trans-unit id="LanguageNotSupportedText" translate="yes" xml:space="preserve">
           <source>The selected language is not supported by the currently available translation backend</source>
-          <target state="new">The selected language is not supported by the currently available translation backend</target>
+          <target state="translated" state-qualifier="mt-suggestion">O idioma selecionado não é suportado pelo backend de tradução disponível atualmente</target>
         </trans-unit>
         <trans-unit id="LanguageOnlySupportedUsingOverlay" translate="yes" xml:space="preserve">
           <source>The selected language is only supported using the plugin overlays due to limitations of the native game Font</source>
-          <target state="new">The selected language is only supported using the plugin overlays due to limitations of the native game Font</target>
+          <target state="translated">O idioma selecionado só é suportado usando overlays devido a limitações da fonte nativa do jogo</target>
         </trans-unit>
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
           <source>Dialogue Overlay Height multiplier</source>
-          <target state="new">Dialogue Overlay Height multiplier</target>
+          <target state="translated">Multiplicador de altura da overlay de diálogo</target>
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
-          <target state="new">Battle talk (Enenies dialogue lines) translation</target>
+          <target state="translated">Tradução de diálogos de batalha</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
           <source>Main</source>
-          <target state="needs-review-translation" state-qualifier="tm-suggestion">Principal</target>
+          <target state="translated" state-qualifier="tm-suggestion">Principal</target>
         </trans-unit>
         <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
           <source>Toast settings</source>
-          <target state="new">Toast settings</target>
+          <target state="translated">Configurações de mensagens de sistema</target>
         </trans-unit>
         <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
           <source>Journal settings</source>
-          <target state="needs-review-translation" state-qualifier="tm-suggestion">Configurações de diário</target>
+          <target state="translated" state-qualifier="tm-suggestion">Configurações de diário</target>
         </trans-unit>
         <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
           <source>Tooltips settings</source>
-          <target state="new">Tooltips settings</target>
+          <target state="translated">Configurações de Tooltips</target>
         </trans-unit>
         <trans-unit id="ConfigTab6Name" translate="yes" xml:space="preserve">
           <source>Other settings</source>
-          <target state="needs-review-translation" state-qualifier="tm-suggestion">Outras configurações</target>
+          <target state="translated" state-qualifier="tm-suggestion">Outras configurações</target>
         </trans-unit>
         <trans-unit id="ConfigTabAbout" translate="yes" xml:space="preserve">
           <source>About Echoglossian</source>
-          <target state="new">About Echoglossian</target>
+          <target state="translated">Sobre o Echoglossian</target>
         </trans-unit>
         <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
           <source>Translations enabled!</source>
-          <target state="new">Translations enabled!</target>
+          <target state="translated">Traduções habilitadas!</target>
         </trans-unit>
         <trans-unit id="ConfigTab7Name" translate="yes" xml:space="preserve">
           <source>Translation Engine settings</source>
-          <target state="new">Translation Engine settings</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações do mecanismo de tradução</target>
         </trans-unit>
         <trans-unit id="EnableTranslation" translate="yes" xml:space="preserve">
           <source>Activate game text realtime translation</source>
-          <target state="new">Activate game text realtime translation</target>
+          <target state="translated" state-qualifier="mt-suggestion">Ativar tradução em tempo real do texto do jogo</target>
+        </trans-unit>
+        <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the options related to the translation overlay:</source>
+          <target state="translated">Ajuste as opções relacionadas à overlay de tradução:</target>
         </trans-unit>
       </group>
     </body>

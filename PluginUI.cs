@@ -47,8 +47,7 @@ namespace Echoglossian
 
             this.SaveConfig();
           }
-
-          if (this.configuration.Translate)
+          else
           {
             if (this.ConfigFontLoaded)
             {
@@ -61,6 +60,8 @@ namespace Echoglossian
             if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languages, this.languages.Length))
             {
               this.configuration.Lang = languageInt;
+              this.LoadFont();
+              this.ReloadFont();
               this.SaveConfig();
             }
 
@@ -132,8 +133,10 @@ namespace Echoglossian
 
         if (ImGui.BeginTabItem(Resources.ConfigTab1Name, ref this.configuration.TranslateTalk))
         {
-          if (!languageOnlySupportedThruOverlay && this.configuration.UseImGui)
+
+          if (!languageOnlySupportedThruOverlay && !this.configuration.UseImGui)
           {
+            ImGui.IsItemDeactivated();
             if (ImGui.Checkbox(
               Resources.OverlayToggleLabel,
               ref this.configuration.UseImGui))
@@ -144,6 +147,7 @@ namespace Echoglossian
 
           if (languageOnlySupportedThruOverlay || this.configuration.UseImGui)
           {
+            ImGui.Text(Resources.ImguiAdjustmentsLabel);
             if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
             {
               this.SaveConfig();

@@ -149,13 +149,47 @@
   <data name="PathTypeInstructions" xml:space="preserve">
     <value>¡Escriba la ruta y guárdela para que el complemento pueda funcionar correctamente!</value>
   </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>El idioma seleccionado no es compatible con el backend de traducción actualmente disponible</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>El idioma seleccionado solo se admite con las superposiciones del complemento debido a las limitaciones de la fuente nativa del juego</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplicador de altura de superposición de diálogo</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Traducción de battle talk (líneas de diálogo de Enenies)</value>
+    <comment>Translation overlay window name</comment>
+  </data>
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Principal</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Configuración de la notificación del sistema</value>
   </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Configuración del diario</value>
   </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Configuración de información sobre herramientas</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Otra configuración</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Acerca de Echoglossian</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>¡Traducciones habilitadas!</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Configuración del motor de traducción</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Activar la traducción de texto del juego en tiempo real</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Ajuste las opciones relacionadas con la superposición de traducción:</value>
   </data>
 </root>

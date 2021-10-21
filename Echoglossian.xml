@@ -129,6 +129,11 @@
               Looks up a localized string similar to (?).
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ImguiAdjustmentsLabel">
+            <summary>
+              Looks up a localized string similar to Adjust the options related to the translation overlay:.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.LangIdentError">
             <summary>
               Looks up a localized string similar to The language could not be identified with an acceptable degree of certainty.

@@ -21,17 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Fő</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Beszélgetési beállítások</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk beállítások</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Pirítós beállításai</value>
+  </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Naplóbeállítások</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Elemleírások beállításai</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Egyéb beállítások</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Fordítási motor beállításai</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Echoglossian -ról</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossian konfiguráció</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Ne használjon átfedést a Pirítós fordítások megjelenítéséhez</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Figyelem!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Játékszöveg aktiválása valós idejű fordítás</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Átfedi a betűtípus színét:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Megnyitja echoglossian konfigurációs ablak</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>A nyelvet nem lehetett elfogadható bizonyossággal azonosítani.</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>A kiválasztott nyelvet nem támogatja a jelenleg elérhető fordítási háttér</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>A kiválasztott nyelvet csak a bővítmény átfedései támogatják a natív játék, a Font korlátai miatt</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Melyik nyelvre kell lefordítani a játékon belüli párbeszéd dobozokat.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Nyelv lefordítani</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -39,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Kérjük, állítsa be a pozíciót, ha az átfedés nem a játék felhasználói felületi párbeszédmezőjéhez képest középre van állítva.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Ide kattintva kiválaszthatja az átfedési betűszínt</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Az Átfedés betűtípus-skála beállítása</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Betűméret átfedése</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>A párbeszédszöveg-átfedés betűméretének kiválasztása</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Párbeszéd Overlay Magasság szorzó</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (Enenies párbeszéd vonalak) fordítás</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Pozícióbeállítás</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>A lefordított párbeszéd szövegátfedése a játék felhasználói felület párbeszédmezője felett, ahelyett, hogy a szöveget a fordításra cserélné</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Fordítási átfedés szélességének módosítása</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Párbeszéd átfedési szélesség szorzó</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Abszolút elérési út az Echoglossian mappához (XIVLauncher -&gt; pluginConfigs mappában)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Kérjük, írja be az utat, és mentse, hogy a plugin megfelelően működjön!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Vásároljon lokinmodar kávét</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Szkennelje be a QR-kódot, hogy küldjön nekem egy PIX-et - csak Brazíliában érvényes</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Válassza ki a bővítmény konfigurációs ablakának nyelvét</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Konfigurációs ablak nyelve:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Szkennelje be a QR-kódot, hogy küldjön nekem egy PIX-et - csak Brazíliában érvényes</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Konfigurációs ablak mentése és bezárása</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Küldj egy PIX adományt!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Eredeti párbeszédszöveg megjelenítése az Átfedésben és Lefordítva a Játék felhasználói felület párbeszéd mezőjében</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Pirítósfordítás átfedésének szélességének beállítása</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Pirítós átfedés szélesség szorzó</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Játékon belüli terület nevének fordítása Pirítósüzenetek</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>A harci beszélgetés fordítása</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Játékon belüli osztály/ feladatmódosítás Toast üzenetek fordítása</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Játékon belüli hiba pirítósüzenetek fordítása</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Hálózati házirendek nevének lefordítva párbeszédmezőkben</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Játékon belüli Quest Toast üzenetek fordítása</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Más játékon belüli vegyes toast üzenetek fordítása</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Játékon belüli párbeszédek fordítása</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Játékon belüli toast üzenetek fordítása</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Fordítások engedélyezve!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Fordításra várva...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Válassza ki, hogy milyen típusú szöveget szeretne lefordítani</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Válassza ki, hogy mely játékon belüli Pirítós üzeneteket kell lefordítani</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>A fordítási átfedéssel kapcsolatos beállítások módosítása:</value>
   </data>
 </root>

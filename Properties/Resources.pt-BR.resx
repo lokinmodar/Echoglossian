@@ -13,7 +13,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ConfigTab1Name" xml:space="preserve">
-    <value>Configurações principais</value>
+    <value>Configurações de diálogos</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
     <value>Configuração do Echoglossian</value>
@@ -90,7 +90,7 @@
     <value>A linguagem não pôde ser identificada com um grau aceitável de certeza</value>
   </data>
   <data name="ConfigTab2Name" xml:space="preserve">
-    <value>Configurações de Toasts</value>
+    <value>Configurações de diálogos de batalha</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Ajuste a largura de sobreposição de tradução de Toasts</value>
@@ -149,13 +149,47 @@
   <data name="PathTypeInstructions" xml:space="preserve">
     <value>Digite o caminho e salve para que o plugin possa funcionar corretamente!</value>
   </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>O idioma selecionado não é suportado pelo backend de tradução disponível atualmente</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>O idioma selecionado só é suportado usando overlays devido a limitações da fonte nativa do jogo</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplicador de altura da overlay de diálogo</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Tradução de diálogos de batalha</value>
+    <comment>Translation overlay window name</comment>
+  </data>
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Principal</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Configurações de mensagens de sistema</value>
   </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Configurações de diário</value>
   </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Configurações de Tooltips</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Outras configurações</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Sobre o Echoglossian</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Traduções habilitadas!</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Configurações do mecanismo de tradução</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Ativar tradução em tempo real do texto do jogo</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Ajuste as opções relacionadas à overlay de tradução:</value>
   </data>
 </root>

@@ -234,6 +234,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adjust the options related to the translation overlay:.
+        /// </summary>
+        public static string ImguiAdjustmentsLabel {
+            get {
+                return ResourceManager.GetString("ImguiAdjustmentsLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The language could not be identified with an acceptable degree of certainty.
         /// </summary>
         public static string LangIdentError {

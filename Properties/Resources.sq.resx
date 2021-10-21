@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Kryesori</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Rregullimet e bisedës</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Rregullimet e Battle Talk</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Rregullime dolli</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Rregullimet e ditarit</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Rregullimet etipeve të veglave</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Parametrat e tjerë</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Parametrat e Motorit të Përkthimit</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Për Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Konfigurimi Echoglossian</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Mos përdor overlay për të treguar përkthimet Toasts</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Kujdes</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Aktivizo përkthimin e tekstit të lojës në kohë reale</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Ngjyra e gërmave overlay:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Hap dritaren e konfigurimit Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Gjuha nuk mund të identifikohej me një shkallë sigurie të pranueshme</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Gjuha e zgjedhur nuk mbështetet nga backend i përkthimit që është aktualisht në dispozicion</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Gjuha e zgjedhur suportohet vetëm duke përdorur mbishtresë plugin për shkak të kufizimeve të lojës vendase Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Cila gjuhë për të përkthyer kutitë e dialogut në lojë.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Gjuha për t'u përkthyer</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Të lutem rregullo pozicionin nëse mbinjesa jote nuk është e përqëndruar në lidhje me kutinë e dialogut UI të lojës.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Kliko për të zgjedhur ngjyrën e gërmave të mbishtjes</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Rregullo shkallën e gërmave Overlay</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Mbishtej Madhësia e gërmave</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Zgjidh madhësinë e gërmave për mbishkoren e tekstit të dialogut</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Shumëfishues i lartësisë së dialogut</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Përkthim i bisedës së betejës (linjat e dialogut enenies)</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Rregullimi i pozicionit</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Shfaq tekstin e dialogut të përkthyer mbi kutinë e dialogut të lojës UI në vend që të zëvendësosh tekstin e tij me përkthimin</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Rregullo gjerësinë e përkthimit</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Shumëfishues i gjerësisë së dialogut</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Rrugë absolute për tek kartela Echoglossian (brenda kartelës XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Të lutem shkruaj rrugën dhe ruaj që plugin të funksionojë siç duhet!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Blej lokinmodar një kafe</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>Qrcode PIX</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Skano kodin QR për të më dërguar një PIX - i vlefshëm vetëm në Brazil</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Zgjidh gjuhën për dritaren e konfigurimit të plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Gjuha e dritares së konfigurimit:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Skano kodin QR për të më dërguar një PIX - i vlefshëm vetëm në Brazil</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Ruaj dhe mbyll dritaren e konfigurimit</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Më dërgo një donacion PIX!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Shfaq tekstin origjinal të dialogut në Overlay dhe Përktheu në kutinë e dialogut Game UI</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Rregullo gjerësinë e përkthimit dolli</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Shumëfishues i Gjerësisë së Dollive</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Përkthe në lojë emrin e zonës Mesazhet Dolli</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Përkthe fjalimin e betejës</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Përkthe në lojë Class/Job ndrysho Mesazhet Toast</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Përkthe mesazhet dolli me gabime në lojë</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Përkthe emrat e NPCs në kutitë e dialogut</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Përkthe mesazhet e dollisë quest</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Përkthe mesazhet e tjerë të ndryshem toast</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Përkthe dialogët në lojë</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Përkthe mesazhet dolli në lojë</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Përkthimet u bënë të mundura!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Në pritje të përkthimit...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Zgjidh çfarë lloj teksti dëshiron të përkthehet</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Zgjidh cilat mesazhe dolli në lojë për të përkthyer</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Rregullo opsionet që lidhen me mbishrejn e përkthimit:</value>
   </data>
 </root>

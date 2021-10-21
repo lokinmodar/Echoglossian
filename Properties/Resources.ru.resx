@@ -21,17 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Основной</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Настройки беседы</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Настройки Боевого Разговора</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Параметры всплываемого остов</value>
+  </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Параметры журнала</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Параметры подсказок</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Другие параметры</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Настройки механизма перевода</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Об Эхоглоссян</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Эхоглоссианская конфигурация</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Не используйте наложение для отображения переводов всплывашек</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Внимание</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Активация перевода текста игры в режиме реального времени</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Цвет наложения шрифта:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Открывает окно конфигурации Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Формулировка не может быть идентифицирована с приемлемой степенью определенности.</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Выбранный язык не поддерживается доступной в настоящее время серверной частью перевода</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Выбранный язык поддерживается только с помощью наложений плагина из-за ограничений нативного игрового шрифта</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>На какой язык переводить игровые диалоговые окна.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Язык для перевода</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -39,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Эхоглоссян</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Пожалуйста, отрегулируйте положение, если ваше наложение не центрировано относительно диалогового окна пользовательского интерфейса игры.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>НаложениеЦветВыбор</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Нажмите, чтобы выбрать цвет шрифта наложения</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Настройка масштаба шрифта наложения</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Размер шрифта наложения</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Выбор размера шрифта для наложения текста диалогового диалога</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Множитель высоты наложения диалогов</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Перевод боевого разговора (диалоговые строки Энение)</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Регулировка положения</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Отображение наложения переведенного диалогового текста над диалоговым окном пользовательского интерфейса игры вместо замены его текста переводом</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Настройка ширины наложения трансляции</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Множитель ширины наложения диалогов</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Абсолютный путь к папке Echoglossian (внутри папки XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Пожалуйста, введите путь и сохраните, чтобы плагин мог работать правильно!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Купить локинмодар кофе</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>Qrcode PIX</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Отсканируйте QR-код, чтобы отправить мне PIX - действителен только в Бразилии</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Выберите язык для окна настройки плагина</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Язык окна конфигурации:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Отсканируйте QR-код, чтобы отправить мне PIX - действителен только в Бразилии</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Сохранение и закрытие окна конфигурации</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Пришлите мне пожертвование PIX!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Отображение исходного текста диалогового окна в наложении и переводе в диалоговом окне пользовательского интерфейса игры</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Настройка ширины наложения трансляции всплываетных красок</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Множитель ширины наложения всплывает</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Перевод названия области в игре Всплывающие сообщения</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Перевести боевой разговор</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Перевод всплываючих сообщений об изменении классов и заданий</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Перевод всплываючих сообщений об ошибках в игре</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Перевод имен NPC в диалоговые окна</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Перевод вигровых всплываючих сообщений квеста</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Другие вигровые всплывающие сообщения переводят разные</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Перевод игровых диалогов</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Перевод всплываючих сообщений в игре</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Переводы включены!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>В ожидании перевода...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Выберите, какой текст вы хотите перевести</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Выбор всплываемых сообщений в игре для перевода</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Настройте параметры, связанные с наложением перевода:</value>
   </data>
 </root>

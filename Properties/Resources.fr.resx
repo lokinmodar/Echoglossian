@@ -21,17 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Principal</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Paramètres de conversation</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Paramètres de Battle Talk</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Paramètres toast</value>
+  </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Paramètres de journal</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Paramètres des info-bulles</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Autres paramètres</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Paramètres du moteur de traduction</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>À propos d’Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Configuration échoglossienne</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>N’utilisez pas de superposition pour afficher les traductions Toasts</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Attention</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Activer la traduction de texte de jeu en temps réel</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Couleur de police de superposition :</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Ouvre la fenêtre de configuration Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>La langue n’a pas pu être identifiée avec un degré de certitude acceptable</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>La langue sélectionnée n’est pas prise en charge par le backend de traduction actuellement disponible</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>La langue sélectionnée n’est prise en charge qu’à l’aide des superpositions de plugins en raison des limitations du jeu natif Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Dans quelle langue traduire les boîtes de dialogue du jeu.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Langue vers laquelle traduire</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -39,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Échoglossien</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Veuillez ajuster la position si votre superposition n’est pas centrée par rapport à la boîte de dialogue de l’interface utilisateur du jeu.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Cliquez pour choisir la couleur de police de superposition</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Ajuster l’échelle de police de superposition</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Taille de police de superposition</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Sélectionnez la taille de police pour la superposition de texte de dialogue</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplicateur de hauteur de superposition de dialogue</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (lignes de dialogue Enenies) traduction</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Réglage de la position</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Afficher la superposition de texte de dialogue traduit au-dessus de la boîte de dialogue de l’interface utilisateur du jeu au lieu de remplacer son texte par la traduction</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuster la largeur de superposition de traduction</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicateur de largeur de superposition de dialogue</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Chemin absolu vers le dossier Echoglossian (dans le dossier XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Veuillez taper le chemin et enregistrer pour que le plugin puisse fonctionner correctement!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Acheter lokinmodar un café</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>QRcode PIX</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Scannez le code QR pour m’envoyer un PIX - valable uniquement au Brésil</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Choisissez la langue de la fenêtre de configuration du plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Langue de la fenêtre de configuration :</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Scannez le code QR pour m’envoyer un PIX - valable uniquement au Brésil</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Enregistrer et fermer la fenêtre de configuration</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Envoyez-moi un don PIX!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Afficher le texte de dialogue d’origine dans superposition et traduit dans la boîte de dialogue de l’interface utilisateur du jeu</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuster la largeur de superposition de translation toast</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicateur de largeur de superposition toast</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Traduire le nom de la zone dans le jeu Toast Messages</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Traduire le discours de bataille</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Traduire les messages toast de changement de classe/d’emploi dans le jeu</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Traduire les messages toast d’erreur dans le jeu</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Traduire les noms des PNJ dans les boîtes de dialogue</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Traduire les messages toast Quest dans le jeu</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Traduire d’autres messages toast divers dans le jeu</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Traduire les dialogues dans le jeu</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Traduire des messages toast dans le jeu</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Traductions activées !</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>En attente de traduction...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Sélectionnez le type de texte que vous souhaitez traduire</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Sélectionnez les messages Toast dans le jeu à traduire</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Ajustez les options liées à la superposition de traduction :</value>
   </data>
 </root>

@@ -229,19 +229,19 @@
         </trans-unit>
         <trans-unit id="LanguageNotSupportedText" translate="yes" xml:space="preserve">
           <source>The selected language is not supported by the currently available translation backend</source>
-          <target state="new">The selected language is not supported by the currently available translation backend</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">El idioma seleccionado no es compatible con el backend de traducción actualmente disponible</target>
         </trans-unit>
         <trans-unit id="LanguageOnlySupportedUsingOverlay" translate="yes" xml:space="preserve">
           <source>The selected language is only supported using the plugin overlays due to limitations of the native game Font</source>
-          <target state="new">The selected language is only supported using the plugin overlays due to limitations of the native game Font</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">El idioma seleccionado solo se admite con las superposiciones del complemento debido a las limitaciones de la fuente nativa del juego</target>
         </trans-unit>
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
           <source>Dialogue Overlay Height multiplier</source>
-          <target state="new">Dialogue Overlay Height multiplier</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Multiplicador de altura de superposición de diálogo</target>
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
-          <target state="new">Battle talk (Enenies dialogue lines) translation</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traducción de battle talk (líneas de diálogo de Enenies)</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
@@ -250,7 +250,7 @@
         </trans-unit>
         <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
           <source>Toast settings</source>
-          <target state="new">Toast settings</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configuración de la notificación del sistema</target>
         </trans-unit>
         <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
           <source>Journal settings</source>
@@ -258,7 +258,7 @@
         </trans-unit>
         <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
           <source>Tooltips settings</source>
-          <target state="new">Tooltips settings</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configuración de información sobre herramientas</target>
         </trans-unit>
         <trans-unit id="ConfigTab6Name" translate="yes" xml:space="preserve">
           <source>Other settings</source>
@@ -266,19 +266,23 @@
         </trans-unit>
         <trans-unit id="ConfigTabAbout" translate="yes" xml:space="preserve">
           <source>About Echoglossian</source>
-          <target state="new">About Echoglossian</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Acerca de Echoglossian</target>
         </trans-unit>
         <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
           <source>Translations enabled!</source>
-          <target state="new">Translations enabled!</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">¡Traducciones habilitadas!</target>
         </trans-unit>
         <trans-unit id="ConfigTab7Name" translate="yes" xml:space="preserve">
           <source>Translation Engine settings</source>
-          <target state="new">Translation Engine settings</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configuración del motor de traducción</target>
         </trans-unit>
         <trans-unit id="EnableTranslation" translate="yes" xml:space="preserve">
           <source>Activate game text realtime translation</source>
-          <target state="new">Activate game text realtime translation</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Activar la traducción de texto del juego en tiempo real</target>
+        </trans-unit>
+        <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the options related to the translation overlay:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ajuste las opciones relacionadas con la superposición de traducción:</target>
         </trans-unit>
       </group>
     </body>

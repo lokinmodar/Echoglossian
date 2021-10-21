@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>ראשי</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>הגדרות שיחה</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>הגדרות שיחת קרב</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>הגדרות הרמת כוסית</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>הגדרות יומן</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>הגדרות תיאורי כלים</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>הגדרות אחרות</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>הגדרות מנגנון התרגום</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>אודות אקוגלוזי</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>תצורה אקוגלוזית</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>אל תשתמש בשכבת-על כדי להציג תרגומים של Toasts</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>שים לב</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>הפעלת תרגום טקסט משחק בזמן אמת</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>צבע גופן שכבת-על:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>פתיחת חלון התצורה של Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>לא היתה אפשרות לזהות את השפה במידה מקובלת של ודאות</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>השפה שנבחרה אינה נתמכת על-ידי הקצה העורפי של התרגום הזמין כעת</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>השפה שנבחרה נתמכת רק באמצעות שכבות-העל של התוסף עקב מגבלות של גופן המשחק המקורי</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>לאיזה שפה לתרגם את תיבות הדיאלוג בתוך המשחק.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>שפה לתרגום</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>אקוגלוזי</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>נא התאם מיקום אם שכבת-העל שלך אינה ממורכזת ביחס לתיבת הדו-שיח של ממשק המשתמש של המשחק.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>צבעי שכבת-עלבחירה</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>לחץ כדי לבחור את צבע גופן שכבת העל</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>התאמת סרגל הגופן של שכבת-על</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>גודל גופן שכבת-על</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>בחירת גודל הגופן עבור שכבת-העל של טקסט הדו-שיח</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>מכפיל גובה שכבת-על של דיאלוג</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>שיחת קרב (קווי דיאלוג אניס) תרגום</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>התאמת מיקום</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>הצגת שכבת-על של טקסט דו-שיח מתורגם מעל תיבת הדו-שיח של ממשק המשתמש של המשחק במקום להחליף את הטקסט בתרגום</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>התאמת רוחב שכבת-על של תרגום</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>מכפיל רוחב שכבת-על של דו-שיח</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>נתיב מוחלט לתיקיה Echoglossian (בתוך XIVLauncher -&gt; תיקיית תוספיםConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>נא הקלד את הנתיב ושמור כדי שהתוסף יוכל לפעול כראוי!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>קנה לוקינודר קפה</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>קוד Qrcode של PIX</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>סרוק את קוד ה- QR כדי לשלוח לי PIX - תקף רק בברזיל</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>בחר את השפה עבור חלון תצורת התוסף</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>שפת חלון תצורה:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>סרוק את קוד ה- QR כדי לשלוח לי PIX - תקף רק בברזיל</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>שמור וסגור חלון תצורה</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>שלח לי תרומת PIX!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>הצג טקסט דו-שיח מקורי בשכבת-על ותרגום בתיבת הדו-שיח 'ממשק משתמש של משחק'</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>התאמת רוחב שכבת-על של תרגום טוסט</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>מכפיל רוחב שכבת-על של Toast</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>תרגום שם אזור במשחק הודעות מוקפות כוסית</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>תרגם דיבורי קרב</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>תרגם הודעות הרמת כוסית של כיתה/עבודה במשחק</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>תרגם הודעות הרמת שגיאות במשחק</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>תרגום שמות NPC בתיבות דו-שיח</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>תרגום הודעות טוסט Quest במשחק</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>תרגם הודעות טוסט שונות אחרות במשחק</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>תרגום דיאלוגים במשחק</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>תרגום הודעות הרמת כוסית במשחק</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>תרגומים זמינים!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>ממתין לתרגום...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>בחר איזה סוג טקסט ברצונך לתרגם</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>בחר אילו הודעות טוסט במשחק לתרגום</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>התאם את האפשרויות הקשורות לשכבת-העל של התרגום:</value>
   </data>
 </root>

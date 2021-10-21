@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Esasy</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Gepleşik düzümleri</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Söweş gepleşik düzümleri</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Tost düzümleri</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Journal Settings</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Essin nadipler</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Beýleki sazlamalar</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Terjime motorynyň düzümleri</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Echoglossian hakynda</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossian Konfigurasiýasy</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Tostlaryň terjimelerini görkezmek üçin aşagy ulanmaň</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Üns beriň:</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Oýun tekstini realwagt terjimesini aktiwleşdir</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Kalam renki üstine al:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Echoglossian config äpişgesini açdy</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Diliň kabul edilen derejede ynamlydygyny anyklap bolmady</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Saýlanan dil häzirki wagtda bar bolan terjime arkalaşyklary bilen goldanylmaýar</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Saýlanan dil diňe ýerli oýun Fontyň çäklidigi sebäpli plýonkanyň üstýulmeleri arkaly goldanylýar</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Oýundaky dialog gutularyny haýsy dilde terjime etmeli.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Terjime etmek üçin diller</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Eçoglossian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Eger siziň örtgäňiz oýunyň UI dialog gutusyna garanyňda merkezleşdirilmedik bolsa, pozisiýany üýtgetmegiňizi haýyş edýäris.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>Renk Saýlawy</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Kalam renkini saýlamak üçin basyň</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Kalam ölçegini sazla</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Kalam Ululykyny Ewez Etmek</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Dialog metini üçin kalam ululykyny saýla</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Dialog Üstlenme Belentlik köpeldýän</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Söweş nutugy (Duşmanlaryň gepleşiginiň setirleri) terjimesi</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Pozisiýa düzmek</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Öz tekstini terjime bilen çalyşmagyň deregine, oýun UI dialog gutusynyň ýokarsynda terjime edilen dialog tekstiniň üstüni örtmek</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Terjimäniň üstinlik giňligini düz</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Dialog Yňlaýn giňlik köpeltmek</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Eçýoglossiýa haltasyna absolýut ýol (XIVLauncher -&gt; pluginConfigs haltaiçinde)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>%s, baglanç dogry işlesin diýip, ýol ýazyň we gaýd ediň!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Lokinmodar a kofe satyn almak</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrkody</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Maňa PIX ibermek üçin QR koduny skan et - diňe Braziliýada güýje girýär</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Baglanç konfigurasiýa äpişgesiniň dilini saýla</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Äpişgäniň Dili:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Maňa PIX ibermek üçin QR koduny skan et - diňe Braziliýada güýje girýär</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Äpişgäni Gaýd Et we Ýap</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Maňa PIX sadakai iberäýiň!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Oýunyň UI dialog gutusynda Overlay we Translated asyl dialog tekstini görkez</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Tost terjimesiniň üstinlik giňligini sazla</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Tost Üstine Giňlik Köpeltmek</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>In-game Meýdança ady Tost Habarlar terjime et</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Söweş nutugy terjime ediň</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Play in-game/Eýýup üýtget Tost habarlar</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Oýun içinde terjime etmek Hata Tost Habarlar</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>NPC-leriň atlaryny dialog gutularynda terjime etmek</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Oýundaky Quest Toast habarlary terjime etmek</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Oýuniçinde beýleki dürli tost habarlaryny terjime etmek</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Oýundaky dialoglary terjime etmek</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Oýun içinde tost habarlaryny terjime etmek</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Terjimeler mümkin boldy!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Terjime edilmäge garaşylýar...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Nähili bir metniň terjime edilmegini isleýändigiňizi saýlaň</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Haýsy oýundaky Tost habarlaryny terjime etmek üçin saýlaň</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Terjimäniň üstine degişli usullary sazlaň:</value>
   </data>
 </root>

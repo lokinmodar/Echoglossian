@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Principal</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Configuració de la conversa</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Configuració de la xerrada de batalla</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Configuració del torrat</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Configuració del diari</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Configuració dels consells d'eina</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Altres configuracions</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Configuració del motor de traducció</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Sobre Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Configuració ecoglossiana</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>No utilitzeu la superposició per mostrar traduccions de Toasts</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Atenció</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Activa la traducció de text del joc en temps real</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Sobreposició del color del tipus de lletra:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Obre la finestra de configuració echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>La llengua no s'ha pogut identificar amb un grau acceptable de certesa.</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>L'idioma seleccionat no és compatible amb el dorsal de traducció disponible actualment</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>L'idioma seleccionat només s'admet utilitzant les superposicions de connectors a causa de les limitacions del tipus de lletra del joc natiu</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>A quin idioma traduir les caixes de diàleg en joc.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Llengua a traduir</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,13 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Ecoglossià</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Ajusteu la posició si la superposició no està centrada en relació amb el quadre de diàleg d'interfície d'usuari del joc.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelecciona</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Feu clic per triar el color del tipus de lletra de superposició</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Ajusta l'escala de tipus de lletra de superposició</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Mida del tipus de lletra superposat</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Seleccioneu la mida del tipus de lletra per a la superposició de text del diàleg</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplicador d'alçada de superposició de diàleg</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (Enenies dialogue lines) traducció</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Ajust de posició</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Visualitza la superposició de text de diàleg traduït per sobre del quadre de diàleg UI del joc en lloc de substituir el seu text per la traducció</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajusta l'amplada de la superposició de traducció</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador d'amplada de superposició de diàleg</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Camí absolut a la carpeta Echoglossian (dins de la carpetaconfigs de l' &gt; XIVLauncher)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Escriviu el camí i deseu perquè el connector funcioni correctament!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Comprar lokinmodar un cafè</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>Codi qr PIX</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Escaneja el codi QR per enviar-me un PIX - només vàlid al Brasil</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Trieu l' idioma per a la finestra de configuració del connector</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Llengua de finestra de configuració:</value>
   </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Escaneja el codi QR per enviar-me un PIX - només vàlid al Brasil</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Desa i tanca la finestra de configuració</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Envia'ns una donació de PIX!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Mostra el text de diàleg original a Superposició i traduït al quadre de diàleg Interfície d'usuari joc</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajusta l'amplada de la superposició de traducció del torrat</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador d'amplada de superposició de torrades</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Tradueix el nom de l'àrea del joc Toast Messages</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Traduir la xerrada de batalla</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Tradueix els missatges torrats de classe/treball en el joc</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Tradueix missatges torrats d'error en el joc</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Tradueix els noms dels NPCs als quadres de diàleg</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Tradueix els missatges de Torrat quest en el joc</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Tradueix altres missatges de torrades diversos en el joc</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Traduir diàlegs en joc</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Tradueix missatges torrats en el joc</value>
+  </data>
   <data name="TranslationsEnabled" xml:space="preserve">
     <value>S'han habilitat les traduccions</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>S'està esperant la traducció...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Seleccioneu quin tipus de text voleu traduir</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Seleccioneu quins missatges toast en el joc voleu traduir</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Ajusta les opcions relacionades amb la superposició de traducció:</value>
   </data>
 </root>

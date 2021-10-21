@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Главно</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Поставке разговора</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Баттле Талк поставке</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Поставке тоста</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Поставке дневника</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Поставке алатки</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Остале поставке</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Поставке машине за превођење</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>О Ехоглосиану</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Ехоглоссиан конфигурација</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Не користите преклапање да бисте тостирали преводе</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Пажња</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Активирање текста игре у реалном времену</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Преклапање боје фонта:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Отвара ехоглоссиан цонфиг прозор</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Језик није могао бити идентификован са прихватљивим степеном извесности</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Изабрани језик тренутно доступан преводи уназад не подржава изабрани језик</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Изабрани језик је подржан само помоћу преклапања додатне компоненте због ограничења изворне игре Фонт</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>На који језик треба превести оквире за дијалог у игри.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Језик за превођење</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Ехоглоссиан</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Подесите положај ако преклапање није центрирано у односу на дијалог за УИ игре.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>ПреклапањеКолорСелецт</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Кликните да бисте одабрали преклопну боју фонта</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Подешавање преклапања скале фонта</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Преклапање величине фонта</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Избор величине фонта за преклапање текста дијалога</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Множилац висине преклапања дијалога</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Баттле талк (Енениес диалогуе линес) превод</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Подешавање положаја</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Прикажи преведени текст дијалога преклапање изнад дијалога за УИ игре уместо замене његовог текста преводом</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Подешавање ширине преклапања превода</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Множилац преклапања ширине дијалога</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Апсолутна путања до фасцикле Ецхоглоссиан (унутар фасцикле XИВЛаунцхер -&amp;гт; плугинЦонфигс)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Откуцајте путању и сачувајте је да би додатна компонента радила исправно!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Купи локинмодар кафу</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>ПИX qрцоде</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Скенирај QР код да ми пошаљеш ПИX - важи само у Бразилу</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Одаберите језик за прозор за конфигурацију додатне компоненте</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Конфиски језик прозора:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Скенирај QР код да ми пошаљеш ПИX - важи само у Бразилу</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Сачувај и затвори прозор конфедитета</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Пошаљи ми ПИX донацију!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Прикажи оригинални текст дијалога у оквиру "Преклапање" и "Преведено" у дијалогу "УИ игре"</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Подешавање ширине преклапања тост превода</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Множилац ширине преклапања тоста</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Преведи име области игре Тост поруке</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Преведи борбени говор</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Преведи у игри Класа/Посао Промена тост порука</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Превођење порука о тосту грешке у игри</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Превођење НПЦ имена у оквире за дијалог</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Превођење ин-гаме Qуест Тоаст порука</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Превођење других разних тост порука у игри</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Превођење дијалога у игри</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Превођење тост порука у игри</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Преводи омогућени!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Чекам превод...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Изаберите врсту текста који желите да буде преведен</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Избор тост порука у игри које желите да преведете</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Подесите опције које се односе на преклапање превода:</value>
   </data>
 </root>

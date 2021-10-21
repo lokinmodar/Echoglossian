@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>ప్రధాన</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>టాక్ సెట్టింగ్ లు</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>యుద్ధ టాక్ సెట్టింగ్ లు</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>టోస్ట్ సెట్టింగ్ లు</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>జర్నల్ సెట్టింగ్ లు</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>టూల్ టిప్స్ సెట్టింగ్ లు</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>ఇతర సెట్టింగ్‌లు</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>అనువాద ఇంజిన్ అమర్పులు</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>ఎకోగ్లోసియన్ గురించి</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>ఎకోగ్లోసియన్ కాన్ఫిగరేషన్</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>టోస్ట్ ల అనువాదాలను చూపించడానికి ఓవర్ లే ఉపయోగించవద్దు</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>సావధానత</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>గేమ్ టెక్స్ట్ రియల్ టైమ్ అనువాదాన్ని యాక్టివేట్ చేయండి</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>ఫాంట్ రంగును ఓవర్ లే చేయి:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>ఎకోగ్లోసియన్ కాన్ఫిగ్లోసియన్ విండో తెరుస్తుంది</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>భాషను ఆమోదయోగ్యమైన స్థాయి నిశ్చయతతో గుర్తించలేము</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>ఎంపిక చేయబడ్డ భాష ప్రస్తుతం లభ్యం అవుతున్న ట్రాన్స్ లేషన్ బ్యాక్ ఎండ్ ద్వారా మద్దతు ఇవ్వబడదు</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>స్థానిక గేమ్ ఫాంట్ యొక్క పరిమితుల కారణంగా ప్లగిన్ ఓవర్ లేస్ ఉపయోగించి మాత్రమే ఎంపిక చేయబడ్డ భాషమద్దతు ఇవ్వబడుతుంది.</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>ఇన్ గేమ్ డైలాగ్ బాక్సులను ఏ భాషకు అనువదించాలి.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>అనువది౦చడానికి భాష</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>ఎకోగ్లోసియన్</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>మీ ఓవర్ లే గేమ్ యొక్క యుఐ డైలాగ్ బాక్స్ కు సంబంధించి కేంద్రీకృతం కానట్లయితే దయచేసి పొజిషన్ సర్దుబాటు చేయండి.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>ఓవర్ లే కలర్ సెలక్ట్</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>ఓవర్ లే ఫాంట్ కలర్ ఎంచుకోవడం కొరకు క్లిక్ చేయండి</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>ఓవర్ లే ఫాంట్ స్కేల్ సర్దుబాటు చేయండి</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>ఫాంట్ సైజును ఓవర్ లే చేయి</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>డైలాగ్ టెక్స్ట్ ఓవర్ లే కొరకు ఫాంట్ సైజును ఎంచుకోండి</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>డైలాగ్ ఓవర్ లే హైట్ మల్టిపైర్</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>యుద్ధ ప్రస౦గ౦ (ఎనీస్ డైలాగ్ లైన్లు) అనువాద౦</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>పొజిషన్ సర్దుబాటు</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>అనువాదంతో దాని టెక్స్ట్ ను మార్చడానికి బదులుగా గేమ్ యుఐ డైలాగ్ బాక్స్ పైన అనువదించబడిన డైలాగ్ టెక్స్ట్ ఓవర్ లే ను ప్రదర్శించండి</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>అనువాద ఓవర్ లే వెడల్పును సర్దుబాటు చేయండి</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>డైలాగ్ ఓవర్ లే విడ్త్ మల్టిపైర్</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>ఎకోగ్లోసియన్ ఫోల్డర్ కు సంపూర్ణ మార్గం (11విలాంచర్ లోపల -&gt; ప్లగిన్ కాన్ఫిగ్స్ ఫోల్డర్)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>దయచేసి పాత్ టైప్ చేయండి మరియు సేవ్ చేయండి, తద్వారా ప్లగిన్ సరిగ్గా పనిచేస్తుంది!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>లోకిన్ మోడార్ ఎ కాఫీ కొనండి</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>పిక్స్ క్యూఆర్ కోడ్</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>నాకు పిక్స్ పంపడానికి క్యూఆర్ కోడ్ స్కాన్ చేయండి - బ్రెజిల్ లో మాత్రమే చెల్లుబాటు అవుతుంది</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>ప్లగిన్ కాన్ఫిగరేషన్ విండో కొరకు భాషను ఎంచుకోండి</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>విండో లాంగ్వేజ్ ని కాన్ఫిగ్ చేయండి:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>నాకు పిక్స్ పంపడానికి క్యూఆర్ కోడ్ స్కాన్ చేయండి - బ్రెజిల్ లో మాత్రమే చెల్లుబాటు అవుతుంది</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>కా౦ఫిగ్ విండోను సేవ్ చేసి మూసివేయ౦డి</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>నాకు పిక్స్ విరాళం పంపండి!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>ఓవర్లేలో ఒరిజినల్ డైలాగ్ టెక్ట్స్ చూపించండి మరియు గేమ్ యుఐ డైలాగ్ బాక్స్ లో అనువదించబడింది</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>టోస్ట్ అనువాద ఓవర్ లే వెడల్పును సర్దుబాటు చేయండి</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>టోస్ట్ ఓవర్ లే వెడల్పు గుణకం</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>ఆటలో ప్రాంతం పేరు టోస్ట్ సందేశాలను అనువదించండి</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>యుద్ధ ప్రస౦గాన్ని అనువది౦౦చి</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>ఆటలో తరగతి/ఉద్యోగ మార్పు టోస్ట్ సందేశాలను అనువదించండి</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>ఇన్-గేమ్ ఎర్రర్ టోస్ట్ సందేశాలను అనువదించండి</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>డైలాగ్ బాక్సుల్లో ఎన్ పిసిల పేర్లను అనువదించండి</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>ఇన్-గేమ్ క్వెస్ట్ టోస్ట్ సందేశాలను అనువదించండి</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>ఇతర ఇన్-గేమ్ ఇతర టోస్ట్ సందేశాలను అనువదించండి</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>ఇన్-గేమ్ డైలాగ్ లను అనువదించండి</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>ఇన్-గేమ్ టోస్ట్ సందేశాలను అనువదించండి</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>అనువాదాలు ప్రారంభించబడ్డాయి!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>అనువాదం కోసం ఎదురు చూస్తోంది...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>మీరు ఎలాంటి టెక్ట్స్ ని అనువదించాలనుకుంటున్నారో ఎంచుకోండి</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>ఏ ఇన్ గేమ్ టోస్ట్ సందేశాలను అనువదించాలో ఎంచుకోండి</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>అనువాద ఓవర్ లేకు సంబంధించిన ఆప్షన్ లను సర్దుబాటు చేయండి:</value>
   </data>
 </root>

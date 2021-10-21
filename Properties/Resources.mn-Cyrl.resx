@@ -15,8 +15,76 @@
   <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Хаах</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Гол</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Ярианы тохиргоо</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk тохиргоо</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Зуушны тохиргоо</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Журнал тохиргоо</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Багажны тохиргоо</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Бусад тохиргоо</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Орчуулгын хөдөлгүүрийн тохиргоо</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Экоглоссийн тухай</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Экоглоссиан конфигурац</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Тостын орчуулгыг үзүүлэхдээ давхар ашиглах хэрэггүй</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Анхаар!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Тоглоомын текст realtime орчуулга идэвхжүүлэх</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Overlay фонтын өнгө:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Echoglossian config цонхыг нээв</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Хэлийг хүлээн зөвшөөрөгдөхүйц хэмжээгээр тодорхойлж чадахгүй байсан</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Сонгосон хэл нь одоогийн байгаа орчуулгын backend дэмждэггүй</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Сонгосон хэл нь зөвхөн фонтын фонтын хязгаарлагдмал байдлаас болж plugin overlays ашиглан дэмждэг</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Тоглоомын харилцан ярианы хайрцгуудыг аль хэлээр орчуулах вэ.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Орчуулга хийх хэл</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -24,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Экоглоссиан</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Хэрэв таны overlay тоглоомын UI харилцах хайрцагтай харьцуулахад төвлөрөөгүй бол байрлалаа тохируулна уу.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Давхар фонтын өнгийг сонгох дарна уу</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Overlay фонтын масштабыг тохируулах</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Давхар фонт хэмжээ</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Харилцан ярианы бичвэрийн давхардлагын фонтын хэмжээг сонгох</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Диагнал давхар өндрийн үржүүлэгч</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (Enenies dialogue мөрүүд) орчуулга</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Албан тушаалын зохицуулалт</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Орчуулгатай текстээ солихын оронд тоглоомын UI ярианы хайрцаг дээр орчуулсан харилцан ярианы текстийг үзүүлэх</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Орчуулгын давхар өргөнийг тохируулах</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Диагнал давхар өргөний үржүүлэгч</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Echoglossian фолдерт хүрэх абсолют зам (XIVLauncher -&gt; pluginConfigs хавтас дотор)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Плагин зөв ажиллахын тулд замыг бичээд хадгална уу!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Lokinmodar a Кофе худалдан авах</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Надад PIX илгээх QR кодыг гүйлгэн харах - зөвхөн Бразилд хүчинтэй</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Плагин конфигурацийн цонхонд хэл сонгох</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Цонхны хэл тохируулах:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Надад PIX илгээх QR кодыг гүйлгэн харах - зөвхөн Бразилд хүчинтэй</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Хадгалах, хаах Тохиргоо цонх</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Надад PIX хандив илгээ!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Тоглоомын UI ярианы хайрцагт Overlay-д болон орчуулсан эх харилцан ярианы текстийг харуулах</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Зуушны орчуулгын давхар өргөнийг тохируулах</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Toast Overlay өргөний үржүүлэгч</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>In-game Бүс нэр Тост Мессежийг орчуулах</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Тулааны илтгэл орчуулах</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Тоглоомын анги/Ажлын өөрчлөлт Toast Мессежийг орчуулах</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Тоглоом дотор алдаа Toast Мессежийг орчуулах</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>НПХ-ны нэрсийг ярианы хайрцагт орчуулах</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Тоглоомонд Quest Toast Мессежийг орчуулах</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Тоглоомын өөр өөр өөр toast Мессежийг орчуулах</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Тоглоомын харилцан яриаг орчуулах</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Тоглоомоор toast Мессежийг орчуулах</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Орчуулга хийх боломжтой болсон!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Орчуулга хүлээж байна...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Ямар төрлийн текст орчуулахыг хүсэж байгаагаа сонгоно уу</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Тоглоомоор toast мессежийг аль нь орчуулахыг сонгох</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Орчуулгын давхар орчуулгатай холбоотой хувилбаруудыг тохируул:</value>
   </data>
 </root>

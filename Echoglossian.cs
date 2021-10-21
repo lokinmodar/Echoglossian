@@ -302,47 +302,50 @@ namespace Echoglossian
         }
       }
 
-      if (this.configuration.Translate)
+      if (!this.configuration.Translate)
       {
-        if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
-        {
-          this.DrawTranslatedBattleDialogueWindow();
-#if DEBUG
-          // PluginLog.LogVerbose("Showing BattleTalk Translation Overlay.");
-#endif
-        }
-
-        if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
-        {
-          this.DrawTranslatedDialogueWindow();
-#if DEBUG
-          // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
-#endif
-        }
-
-
-#if DEBUG
-        /* PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
-                      $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
-                      $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
-                      $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");*/
-#endif
-        if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
-        {
-          this.DrawTranslatedErrorToastWindow();
-#if DEBUG
-                 // PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
-#endif
-        }
-
-        /*if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation)
-        {
-          this.DrawTranslatedClassChangeToastWindow();
-          *//*#if DEBUG
-                  PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
-          #endif*//*
-        }*/
+        return;
       }
+
+      if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
+      {
+        this.DrawTranslatedBattleDialogueWindow();
+#if DEBUG
+        // PluginLog.LogVerbose("Showing BattleTalk Translation Overlay.");
+#endif
+      }
+
+      if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
+      {
+        this.DrawTranslatedDialogueWindow();
+#if DEBUG
+        // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
+#endif
+      }
+
+
+#if DEBUG
+      /* PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
+                    $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
+                    $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
+                    $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");*/
+#endif
+      if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
+      {
+        this.DrawTranslatedErrorToastWindow();
+#if DEBUG
+        // PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+#endif
+      }
+
+      /*if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation)
+      {
+        this.DrawTranslatedClassChangeToastWindow();
+        *//*#if DEBUG
+                PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+        #endif*//*
+      }*/
+
     }
 
     private void ConfigWindow()

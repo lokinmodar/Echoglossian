@@ -21,25 +21,148 @@ namespace Echoglossian
 
     private void LoadFont()
     {
-      // TODO: Get font by languageint
-      var fontFileName = "";
 
+      var specialFontFileName = string.Empty;
+      var fontFileName = "NotoSans-Medium.ttf";
 
+      /*if (this.configuration.Lang is 0 or 1 or 3 or 5 or 7 or 8 or 9 or 12 or 13 or 14 or 17 or 18 or 20 or 23 or 24 or
+        25 or 26 or 27 or 28 or 29 or 30 or 31 or 32 or 33 or 34 or 36 or 37 or 39 or 41 or 44 or 45 or 46 or 47 or 48
+        or 49 or 53 or 54 or 55 or 59 or 60 or 61 or 62 or 63 or 64 or 65 or 66 or 68 or 69 or 73 or 74 or 75 or 79 or
+        80 or 81 or 83 or 84 or 85 or 86 or 87 or 88 or 91 or 92 or 93 or 94 or 95 or 96 or 97 or 98 or 99 or 101 or 104
+        or 105 or 107 or 109 or 110 or 111 or 112 or 113 or 114 or 115 or 117 or 118)
+      {
+        fontFileName = "NotoSans-Medium.ttf";
+      }*/
+
+      if (this.configuration.Lang is 2 or 6 or 40 or 57 or 78 or 82 or 106 or 108)
+      {
+        specialFontFileName = "NotoSansArabic-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 4)
+      {
+        specialFontFileName = "NotoSansArmenian-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 10 or 11)
+      {
+        specialFontFileName = "NotoSansBengali-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 50)
+      {
+        specialFontFileName = "NotoSansCJKjp-Regular.otf";
+      }
+
+      if (this.configuration.Lang is 16 or 21)
+      {
+        specialFontFileName = "NotoSansCJKsc-Regular.otf";
+      }
+
+      if (this.configuration.Lang is 22)
+      {
+        specialFontFileName = "NotoSansCJKtc-Regular.otf";
+      }
+
+      if (this.configuration.Lang is 56)
+      {
+        specialFontFileName = "NotoSansCJKkr-Regular.otf";
+      }
+
+      if (this.configuration.Lang is 43 or 70 or 72 or 77 or 89)
+      {
+        specialFontFileName = "NotoSansDevanagari-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 35)
+      {
+        specialFontFileName = "NotoSansGeorgian-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 38)
+      {
+        specialFontFileName = "NotoSansGujarati-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 42 or 116)
+      {
+        specialFontFileName = "NotoSansHebrew-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 51)
+      {
+        specialFontFileName = "NotoSansJavanese-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 52)
+      {
+        specialFontFileName = "NotoSansKannada-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 19)
+      {
+        specialFontFileName = "NotoSansKhmer-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 58)
+      {
+        specialFontFileName = "NotoSansLao-Medium-Lao.ttf";
+      }
+
+      if (this.configuration.Lang is 67)
+      {
+        specialFontFileName = "NotoSansMalayalam-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 71)
+      {
+        specialFontFileName = "NotoSansMongolian-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 15)
+      {
+        specialFontFileName = "NotoSansMyanmar-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 76)
+      {
+        specialFontFileName = "NotoSansOriya-Regular.ttf";
+      }
+
+      if (this.configuration.Lang is 90)
+      {
+        specialFontFileName = "NotoSansSinhala-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 100)
+      {
+        specialFontFileName = "NotoSansTamil-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 102)
+      {
+        specialFontFileName = "NotoSansTelugu-Medium.ttf";
+      }
+
+      if (this.configuration.Lang is 103)
+      {
+        specialFontFileName = "NotoSansThai-Medium.ttf";
+      }
+
+      var specialFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{specialFontFileName}";
+      var fontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{fontFileName}";
 
 
 #if DEBUG
       PluginLog.LogVerbose("Inside LoadFont method");
 
-      var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
-      PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 
-#else
+      PluginLog.LogVerbose($"Font file in DEBUG Mode: {specialFontFilePath}");
 
-      var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
-      PluginLog.LogVerbose($"Font file in Prod Mode: {fontFile}");
 #endif
+
       this.FontLoaded = false;
-      if (File.Exists(fontFile))
+      if (File.Exists(specialFontFilePath) || File.Exists(fontFilePath))
       {
         try
         {
@@ -53,10 +176,10 @@ namespace Echoglossian
 
             builder.BuildRanges(out ImVector ranges);
 
-            // if (this.configuration.Lang == )
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesDefault());
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesVietnamese());
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesCyrillic());
+
             this.AddCharsFromIntPtr(chars, (ushort*)ranges.Data);
 
             var addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
@@ -66,9 +189,21 @@ namespace Echoglossian
 
             var arr = chars.ToArray();
 
+
             fixed (ushort* ptr = &arr[0])
             {
-              this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, this.configuration.FontSize /*imguiFontSize*/, null, new IntPtr((void*)ptr));
+              if (specialFontFilePath != string.Empty)
+              {
+                this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(specialFontFilePath, this.configuration.FontSize,
+                  null, new IntPtr((void*)ptr));
+                this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFilePath, this.configuration.FontSize,
+                  null);
+              }
+              else
+              {
+                this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFilePath, this.configuration.FontSize,
+                  null, new IntPtr((void*)ptr));
+              }
             }
 
 #if DEBUG
@@ -86,14 +221,14 @@ namespace Echoglossian
         }
         catch (Exception ex)
         {
-          PluginLog.Log($"Font failed to load. {fontFile}");
+          PluginLog.Log($"Special Font failed to load. {specialFontFilePath}");
           PluginLog.Log(ex.ToString());
           this.FontLoadFailed = true;
         }
       }
       else
       {
-        PluginLog.Log($"Font doesn't exist. {fontFile}");
+        PluginLog.Log($"Special Font doesn't exist. {specialFontFilePath}");
         this.FontLoadFailed = true;
       }
     }

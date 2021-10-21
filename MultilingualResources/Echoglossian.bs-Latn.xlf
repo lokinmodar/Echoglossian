@@ -277,6 +277,10 @@
           <source>Select which in-game Toast messages to translate</source>
           <target state="new">Select which in-game Toast messages to translate</target>
         </trans-unit>
+        <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the options related to the translation overlay:</source>
+          <target state="new">Adjust the options related to the translation overlay:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

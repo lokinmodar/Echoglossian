@@ -21,17 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Ana</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Konuşma ayarları</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk ayarları</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Tost ayarları</value>
+  </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Günlük ayarları</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Araç ipuçları ayarları</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Diğer ayarlar</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Çeviri Altyapısı ayarları</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Echoglossian Hakkında</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossian Yapılandırması</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Toasts çevirilerini göstermek için yer paylaşımını kullanmayın</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Dikkat</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Oyun metni gerçek zamanlı çeviriyi etkinleştirme</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Yazı tipi rengini kapla:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Echoglossian yapılandırma penceresini açar</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Dil kabul edilebilir bir kesinlik derecesi ile tanımlanamadı</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Seçili dil şu anda kullanılabilir olan çeviri arka ucu tarafından desteklenmiyor</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Seçilen dil, yerel oyun Font'un sınırlamaları nedeniyle yalnızca eklenti kaplamaları kullanılarak desteklenir</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Oyun içi diyalog kutularının hangi dile çevrileceği.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Çevrilecek dil</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -39,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Yer paylaşımınız oyunun UI diyalog kutusuna göre ortalanmazsa lütfen konumu ayarlayın.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Kaplama yazı tipi rengini seçmek için tıklatın</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Yer paylaşımı yazı tipi ölçeğini ayarlama</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Üst Üste Bindirme Yazı Tipi Boyutu</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Diyalog metni yer paylaşımı için yazı tipi boyutunu seçme</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Diyalog Yer Paylaşımı Yüksekliği çarpanı</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Savaş konuşması (Enenies diyalog satırları) çevirisi</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Konum ayarlaması</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Çevrilmiş diyalog metnini çeviriyle değiştirmek yerine oyun kullanıcı arabirimi diyalog kutusunun üzerinde görüntüleme</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Çeviri kaplama genişliğini ayarlama</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Diyalog Yer Paylaşımı Genişliği çarpanı</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Echoglossian klasörüne giden mutlak yol (XIVLauncher -&gt; pluginConfigs klasörü içinde)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Eklentinin düzgün çalışabilmesi için lütfen yolu yazın ve kaydedin!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Lokinmodar a Coffee satın alın</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX karekod</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Bana bir PIX göndermek için QR kodunu tarayın - yalnızca Brezilya'da geçerlidir</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Eklenti yapılandırma penceresinin dilini seçme</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Pencere Dilini Yapılandırma:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Bana bir PIX göndermek için QR kodunu tarayın - yalnızca Brezilya'da geçerlidir</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Yapılandırma Penceresini Kaydet ve Kapat</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Bana bir PIX bağışı gönderin!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Oyun Kullanıcı Arabirimi diyalog kutusunda Yer Paylaşımı ve Çevrilmiş'te Orijinal diyalog metnini göster</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Tost çevirisi kaplama genişliğini ayarlama</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Tost Kaplama Genişliği çarpanı</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Oyun içi Alan adı Tost Mesajlarını Çevir</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Savaş konuşmasını çevir</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Oyun içi Sınıf/İş değişikliği Tost Mesajlarını Çevir</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Oyun içi Hata Tost Mesajlarını Çevir</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>NPC adlarını iletişim kutularında çevirme</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Oyun içi Quest Toast Mesajlarını Çevir</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Diğer oyun içi çeşitli Tost Mesajlarını çevir</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Oyun içi diyalogları çevirme</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Oyun içi Tost Mesajlarını Çevir</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Çeviriler etkinleştirildi!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Çeviri bekleniyor...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Ne tür bir metnin çevrilmesini istediğinizi seçin</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Hangi oyun içi Tost mesajlarının çevrileceğini seçin</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Çeviri kaplaması ile ilgili seçenekleri ayarlayın:</value>
   </data>
 </root>

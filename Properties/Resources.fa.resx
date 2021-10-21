@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>اصلی</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>تنظیمات بحث</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>تنظیمات بحث نبرد</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>تنظیمات توست</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>تنظیمات مجله</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>تنظیمات نوار ابزار</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>سایر تنظیمات</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>تنظیمات موتور ترجمه</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>درباره اکوگلوسیان</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>پیکربندی اکوگلوسیان</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>از روکش برای نشان دادن ترجمه های توست ها استفاده نکن</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>توجه</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>فعال کردن متن بازی ترجمه بی درینگام</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>رنگ قلم روکش:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>پنجره پیکربندی Echoglossian را باز می کند</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>زبان را نمی توان با درجه قابل قبولی از قطعیت شناسایی کرد</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>زبان انتخاب شده توسط backend ترجمه در حال حاضر در دسترس پشتیبانی نمی شود</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>زبان انتخاب شده تنها با استفاده از overlays پلاگین به دلیل محدودیت های بازی بومی فونت پشتیبانی می شود</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>کدام زبان برای ترجمه جعبه های گفتگوی در بازی به.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>زبان برای ترجمه به</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>اکوگلوسیان</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>لطفا در صورتی که روکش شما نسبت به جعبه گفتگوی UI بازی متمرکز نشده باشد، موقعیت را تنظیم کنید.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>برای انتخاب رنگ قلم روکش کلیک کنید</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>تنظیم مقیاس قلم روکش</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>اندازه قلم روکش</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>اندازه فونت را برای روکش متن گفتگو انتخاب کنید</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>دیالوگ روکش ارتفاع چند برابر</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>بحث نبرد (Enenies خطوط گفتگو) ترجمه</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>تنظیم موقعیت</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>نمایش متن گفتگوی ترجمه شده روکش بالای جعبه گفتگوی رابط کاربر بازی به جای جایگزینی متن آن با ترجمه</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>تنظیم عرض روکش ترجمه</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>دیالوگ عرض روکش چند برابر</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>مسیر مطلق به پوشه Echoglossian (در داخل XIVLauncher - &gt; پلاگین پیکربندی پوشه)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>لطفا مسیر را تایپ کنید و ذخیره کنید تا افزونه بتواند به درستی کار کند!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>خرید lokinmodar قهوه</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>اسکن کد QR به من ارسال PIX -- تنها معتبر در برزیل</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>انتخاب زبان برای پنجره پیکربندی پلاگین</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>پیکربندی زبان پنجره:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>اسکن کد QR به من ارسال PIX -- تنها معتبر در برزیل</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>ذخیره و بستن پنجره پیکربندی</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>يه کمک مالي پي.پي.ست برام بفرست!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>نمایش متن گفتگوی اصلی در روکش و ترجمه شده در جعبه گفتگوی رابط کاربر بازی</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>تنظیم عرض روکش ترجمه توست</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>عرض روکش توست چند برابر</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>ترجمه در بازی منطقه نام پیام های توست</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>ترجمه بحث نبرد</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>ترجمه در بازی کلاس / تغییر شغل پیام های توست</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>ترجمه در بازی خطا پیام های توست</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>ترجمه نام NPCs در جعبه گفتگو</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>ترجمه در بازی تلاش پیام های توست</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>ترجمه دیگر در بازی پیام های متفرقه توست</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>ترجمه دیالوگ های در بازی</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>ترجمه در بازی پیام های توست</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>ترجمه فعال!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>در انتظار ترجمه...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>انتخاب کنید که چه نوع متنی را می خواهید ترجمه کنید</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>انتخاب کنید که در بازی پیام های توست برای ترجمه</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>گزینه های مربوط به روکش ترجمه را تنظیم کنید:</value>
   </data>
 </root>

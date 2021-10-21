@@ -15,8 +15,76 @@
   <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>ᠡᠭᠦᠳᠡ ᠪᠡᠨ ᠬᠠᠭᠠ ᠃</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>ᠭᠣᠣᠯᠳᠠᠭᠤ ᠃</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠪᠠᠶᠢᠷᠢᠯᠠᠭᠤᠯᠤᠯᠲᠠ ᠃</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>ᠪᠠᠢ᠌ᠯᠳᠤᠭᠠᠨ ᠤ ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠶᠠᠷᠢᠯᠴᠠᠭ᠎ᠠ ᠲᠠᠯᠪᠢᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>ᠰᠢᠷᠠᠭᠰᠠᠨ ᠲᠠᠯᠬ᠎ᠠ ᠶᠢ ᠰᠢᠷᠠᠭᠰᠠᠨ ᠲᠠᠯᠬ᠎ᠠ ᠶᠢ ᠰᠢᠷ</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>ᠡᠳᠦᠷ ᠦᠨ ᠣᠶᠢᠯᠠᠯᠭ᠎ᠠ ᠶᠢ ᠪᠠᠶᠢᠷᠢᠯᠠᠭᠤᠯᠤᠨ᠎ᠠ᠃</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>ᠪᠠᠭᠠᠵᠢ ᠶᠢᠨ ᠦᠵᠦᠭᠦᠷ ᠪᠠᠶᠢᠷᠢᠯᠠᠭᠤᠯᠤᠨ᠎ᠠ᠃</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>ᠪᠤᠰᠤᠳ ᠪᠠᠶᠢᠷᠢᠯᠠᠭᠤᠯᠤᠯᠲᠠ ᠃</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ 擎 ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>ᠭᠧᠷᠮᠠᠨ ᠤ ᠠᠽᠢᠶ᠎ᠠ ᠳᠤ ᠬᠠᠷᠢᠭᠤᠯᠲᠠ ᠥᠭᠭᠦᠨ᠎ᠡ ᠃</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>ᠳᠠᠭᠤᠨ ᠡᠬᠢ ᠪᠠᠶᠠᠯᠢᠭ ᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠨ᠎ᠠ ᠃</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>ᠪᠢᠲᠡᠭᠡᠢ ᠰᠢᠷᠠᠭᠰᠠᠨ ᠲᠠᠯᠬ᠎ᠠ ᠶᠢ ᠢᠯᠡᠷᠡᠭᠦᠯ ᠃</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>ᠠᠩᠬᠠᠷ !</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>ᠨᠠᠭᠠᠳᠤᠮ ᠤᠨ ᠵᠦᠴᠦᠭᠡ ᠶᠢ ᠠᠮᠢᠳᠤᠯᠢᠭᠵᠢᠭᠤᠯᠬᠤ ᠳᠤ ᠪᠣᠳᠠᠲᠠᠢ ᠦᠶ᠎ᠡ ᠳᠦ ᠣᠷᠴᠢᠭᠤᠯᠳᠠᠭ ᠃</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>叠 ᠦᠰᠦᠭ᠍ ᠦᠨ ᠥᠩᠭᠡ ᠨᠢ ᠄</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>ᠳᠡᠯᠡᠬᠡᠢ ᠶᠢᠨ ᠪᠦᠮᠪᠦᠷᠴᠡᠭ ᠢ ᠨᠡᠭᠡᠭᠡᠵᠦ ᠴᠣᠩᠬᠣ ᠶᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠨ᠎ᠠ ᠃</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>ᠬᠡᠯᠡ ᠪᠡᠷ ᠬᠦᠯᠢᠶᠡᠨ ᠠᠪᠬᠤ ᠶᠢ ᠬᠦᠯᠢᠶᠡᠨ ᠠᠪᠬᠤ ᠴᠢᠨᠠᠷ ᠤᠨ ᠬᠡᠮᠵᠢᠶ᠎ᠡ ᠶᠢ ᠲᠣᠭᠲᠠᠭᠠᠵᠤ ᠴᠢᠳᠠᠬᠤ ᠦᠭᠡᠢ ᠃</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>ᠰᠣᠩᠭᠣᠨ ᠲᠣᠭᠲᠠᠭᠠᠭᠰᠠᠨ ᠬᠡᠯᠡ ᠨᠢ ᠣᠳᠣᠬᠠᠨ ᠳᠤ ᠬᠡᠷᠡᠭ᠍ᠯᠡᠵᠦ ᠪᠣᠯᠬᠤ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠳᠠᠷᠠᠭᠠᠬᠢ ᠳᠡᠮᠵᠢᠯᠭᠡ ᠶᠢ ᠬᠦᠯᠢᠶᠡᠬᠦ ᠦᠭᠡᠢ ᠃</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>ᠲᠤᠰ ᠭᠠᠵᠠᠷ ᠤᠨ ᠨᠠᠭᠠᠳᠤᠮ ᠤᠨ ᠴᠣᠭᠴᠠ ᠶᠢᠨ ᠬᠢᠵᠠᠭᠠᠷᠯᠠᠯ ᠠᠴᠠ ᠪᠣᠯᠵᠤ ᠂ ᠵᠥᠪᠬᠡᠨ ᠬᠠᠳᠬᠤᠵᠤ ᠪᠠᠶᠢᠭ᠎ᠠ ᠰᠣᠩᠭᠣᠭᠤᠯᠢ ᠶᠢᠨ ᠦᠭᠡ ᠬᠡᠯᠡ ᠶᠢ ᠬᠠᠮᠤᠷᠴᠠᠶ ᠃</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>ᠨᠠᠭᠠᠳᠤᠮ ᠳᠣᠲᠣᠷᠠᠬᠢ ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠬᠦᠷᠢᠶ᠎ᠡ ᠶᠢ ᠶᠠᠮᠠᠷ ᠬᠡᠯᠡ ᠪᠡᠷ ᠣᠷᠴᠢᠭᠤᠯᠵᠤ ᠥᠭ᠍ᠭᠥᠨ᠎ᠡ ᠃</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠤᠭᠴᠢ ᠶᠢᠨ ᠬᠡᠯᠡ ᠪᠡᠷ ᠣᠷᠴᠢᠭᠤᠯᠬᠤ ᠬᠡᠷᠡᠭᠲᠡᠢ᠃</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -24,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>ᠺᠣᠯᠣᠮᠪᠢᠶ᠎ᠠ ᠳᠤ ᠪᠤᠴᠠᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>ᠬᠡᠷᠪᠡ ᠲᠠᠨ ᠤ ᠪᠦᠷᠬᠦᠴᠡ ᠶᠢᠨ ᠬᠡᠮᠵᠢᠶ᠎ᠡ ᠲᠡᠢ ᠬᠠᠷᠢᠴᠠᠩᠭ᠋ᠤᠢ ᠲᠣᠭᠯᠠᠭᠠᠮ ᠤᠨ UI ᠤᠨ ᠬᠦᠷᠢᠶᠡᠨ ᠳᠤ ᠬᠠᠷᠢᠴᠠᠩᠭ᠋ᠤᠢ ᠲᠦᠪ ᠲᠤ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠭᠠᠷᠠᠢ᠃</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>ᠥᠩᠭᠡ ᠶᠢ ᠪᠦᠷᠬᠦᠵᠦ ᠰᠣᠩᠭᠣᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>ᠳᠠᠩ ᠴᠣᠬᠢᠯᠲᠠ ᠨᠢ 叠 ᠦᠰᠦᠭ ᠦᠨ ᠥᠩᠭᠡ ᠶᠢ ᠰᠣᠩᠭᠣᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>叠 ᠦᠰᠦᠭ ᠪᠢᠴᠢᠭ ᠦᠨ ᠴᠢᠳᠠᠮᠵᠢ ᠶᠢ ᠪᠠᠭᠠᠰᠬᠠᠬᠤ ᠴᠢᠳᠠᠮᠵᠢ ᠶᠢ ᠶᠡᠬᠡᠪᠡᠷ ᠪᠠᠭᠠᠰᠬᠠᠬᠤ ᠬᠡᠷᠡᠭᠲᠡᠶ ᠃</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>叠 ᠦᠰᠦᠭ ᠴᠣᠭᠴᠠ ᠶᠡᠬᠡ ᠪᠠᠭ᠎ᠠ ᠃</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>ᠦᠰᠦᠭ ᠪᠢᠴᠢᠭ᠌ ᠢ ᠬᠠᠮᠤᠷᠬᠤ ᠶᠢᠨ ᠲᠥᠯᠥᠭᠡ ᠦᠰᠦᠭ ᠴᠣᠭᠴᠠ ᠶᠢ ᠨᠢ ᠶᠡᠬᠡ ᠪᠠᠭ᠎ᠠ ᠶᠢ ᠨᠢ ᠰᠣᠩᠭᠣᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ 叠 ᠥᠨᠳᠥᠷ ᠬᠡᠮᠵᠢᠶᠡᠨ ᠳᠦ ᠰᠠᠭᠤᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>ᠪᠠᠶᠢᠯᠳᠤᠭᠠᠨ ᠤ ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠶᠠᠷᠢᠯᠴᠠᠭ᠎ᠠ ( ᠶᠧᠨᠢᠨᠢᠶ᠎ᠠ ᠶᠢᠨ ᠶᠠᠷᠢᠯᠴᠠᠭ᠎ᠠ ) ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠃</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>ᠪᠠᠶᠢᠷᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠯᠲᠠ ᠬᠢᠨ᠎ᠡ᠃</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>ᠨᠠᠭᠠᠳᠤᠮ ᠤᠨ UI ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠬᠦᠷᠢᠶ᠎ᠡ ᠲᠠᠯ᠎ᠠ ᠶᠢᠨ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠳᠡᠪᠲᠡᠷ ᠢ ᠢᠯᠡᠷᠡᠭᠦᠯᠬᠦ ᠨᠢ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠳᠡᠪᠲᠡᠷ ᠢ ᠨᠢ ᠰᠣᠯᠢᠬᠤ ᠳᠤ ᠬᠡᠷᠡᠭᠯᠡᠳᠡᠭ ᠪᠢᠰᠢ ᠃</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ 叠 ᠥᠷᠭᠡᠵᠢᠯ ᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ 叠 ᠥᠷᠭᠡᠵᠢᠬᠦ ᠬᠡᠮᠵᠢᠶ᠎ᠡ ᠶᠢ ᠥᠷᠭᠡᠵᠢᠭᠦᠯᠦᠨ᠎ᠡ ᠃</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>ᠷᠣᠮᠠᠨᠲ᠋ᠢᠶ᠎ᠠ ᠶᠢᠨ ᠪᠢᠴᠢᠭ᠌ ᠮᠠᠲ᠋ᠧᠷᠢᠶᠠᠯ ᠤᠨ ᠬᠠᠪᠴᠢᠭᠤᠯᠤᠭᠰᠠᠨ ᠵᠠᠮ ᠮᠥᠷ ᠢ XIV ᠯᠤ &gt;ᠭ᠎ᠠ ᠬᠠᠳᠬᠤᠬᠤ ᠪᠢᠴᠢᠭ᠌ ᠮᠠᠲ᠋ᠧᠷᠢᠶᠠᠯ ᠤᠨ ᠳᠣᠲᠣᠷ᠎ᠠ ᠬᠠᠪᠴᠢᠭᠤᠯᠵᠠᠢ ᠃</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>ᠵᠠᠩᠭᠢᠯᠠᠭ᠎ᠠ ᠶᠢᠨ ᠵᠠᠮ ᠮᠥᠷ ᠢ ᠨᠡᠢ᠌ᠯᠡᠭᠦᠯᠦᠨ ᠬᠠᠳᠠᠭᠠᠯᠠᠵᠤ ᠂ ᠬᠠᠳᠬᠤᠵᠤ ᠪᠠᠢ᠌ᠭᠠᠳ ᠬᠡᠪ ᠦᠨ ᠶᠣᠰᠣᠭᠠᠷ ᠠᠵᠢᠯᠯᠠᠵᠤ ᠪᠣᠯᠣᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>ᠯᠣᠨᠳᠣᠨ ᠺᠣᠹᠧ ᠠᠪᠤᠶ᠎ᠠ᠃</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>ᠫᠢᠺᠰ qrcode ᠃</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>描 QR᠎ᠠ ᠶᠢᠨ ᠺᠣᠳ᠋ ᠢ ᠨᠠᠳᠠᠳᠤ ᠫᠢᠶᠣᠣ ᠶᠠᠪᠤᠭᠤᠯᠤᠭᠰᠠᠨ ᠨᠢ ᠫᠢᠶᠣᠣ ᠵᠦᠪᠬᠡᠨ ᠪᠷᠠᠽᠢᠯ ᠦᠨ ᠬᠦᠴᠦᠨ ᠲᠡᠢ ᠃</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>ᠬᠠᠳᠭᠠᠬᠤ ᠲᠣᠨᠣᠭ ᠲᠥᠬᠥᠭᠡᠷᠦᠮᠵᠢ ᠶᠢᠨ ᠴᠣᠩᠬᠣᠨ ᠳᠤ ᠦᠭᠡ ᠬᠡᠯᠡ ᠰᠣᠩᠭᠣᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>ᠴᠣᠩᠬᠣᠨ ᠤ ᠦᠭᠡ ᠶᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠬᠤ ᠄</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>描 QR᠎ᠠ ᠶᠢᠨ ᠺᠣᠳ᠋ ᠢ ᠨᠠᠳᠠᠳᠤ ᠫᠢᠶᠣᠣ ᠶᠠᠪᠤᠭᠤᠯᠤᠭᠰᠠᠨ ᠨᠢ ᠫᠢᠶᠣᠣ ᠵᠦᠪᠬᠡᠨ ᠪᠷᠠᠽᠢᠯ ᠦᠨ ᠬᠦᠴᠦᠨ ᠲᠡᠢ ᠃</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>ᠴᠣᠩᠬᠣ ᠶᠢ ᠬᠠᠳᠠᠭᠠᠯᠠᠬᠤ ᠪᠠ ᠬᠠᠭᠠᠵᠤ ᠬᠠᠭᠠᠬᠤ ᠬᠡᠷᠡᠭᠲᠡᠶ᠃</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>ᠨᠠᠳᠠ ᠳᠤ ᠨᠢᠭᠡ ᠬᠤᠪᠢ ᠫᠢᠶᠣᠤ ᠬᠠᠨᠳᠢᠪᠯᠠᠶ᠎ᠠ!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>ᠲᠣᠭᠯᠠᠭᠠᠮ ᠤᠨ UI ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠬᠦᠷᠢᠶ᠎ᠡ ᠳᠤᠮᠳᠠ ᠤᠤᠯ ᠤᠨ ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠳᠡᠪᠲᠡᠷ ᠢ ᠢᠯᠡᠷᠡᠭᠦᠯᠵᠡᠢ ᠃</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>ᠺᠣᠮᠫᠠᠨᠢ ᠶᠢᠨ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ 叠 ᠥᠷᠭᠡᠵᠢᠬᠦ ᠶᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>ᠰᠢᠷᠠᠭᠰᠠᠨ ᠲᠠᠯᠬ᠎ᠠ ᠶᠢᠨ ᠬᠠᠮᠤᠷᠬᠤ ᠬᠡᠮᠵᠢᠶ᠎ᠡ ᠨᠢ ᠥᠷᠭᠡᠨ ᠦ ᠬᠡᠮᠵᠢᠶ᠎ᠡ ᠨᠢ ᠥᠷᠭᠡᠨ ᠦ ᠬᠡᠮᠵᠢᠶ᠎</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠣᠭᠯᠠᠭᠠᠮ ᠤᠨ ᠳᠣᠲᠣᠷᠠᠬᠢ ᠣᠷᠣᠨ ᠪᠦᠰᠡ ᠶᠢᠨ ᠨᠡᠷᠡᠶᠢᠳᠦᠯ ᠨᠢ ᠵᠢᠯᠣᠭᠣᠴᠢ ᠶᠢᠨ ᠮᠡᠳᠡᠭᠡ ᠶᠢ ᠨᠡᠷᠡᠶᠢᠳᠦᠨ᠎ᠡ ᠃</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠡᠮᠡᠴᠡᠯ ᠦᠨ ᠶᠠᠷᠢᠯᠴᠠᠭ᠎ᠠ᠃</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠳᠠᠬᠢ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠳᠣᠲᠣᠷᠠᠬᠢ ᠲᠦᠷᠦᠯ ᠦᠨ ᠠᠵᠢᠯ ᠨᠢ ᠵᠢᠯ ᠦᠨ ᠮᠡᠳᠡᠭᠡ ᠶᠢ ᠥᠭᠡᠷᠡᠴᠢᠯᠡᠨ᠎ᠡ ᠃</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠣᠭᠯᠠᠯᠲᠠ ᠶᠢᠨ ᠳᠣᠲᠣᠷ᠎ᠠ ᠪᠤᠷᠤᠭᠤ ᠪᠠᠷ ᠵᠢᠯᠤᠭᠤᠳᠬᠤ ᠮᠡᠳᠡᠭᠡ ᠶᠢ ᠠᠯᠳᠠᠭ᠎ᠠ ᠪᠤᠷᠤᠭᠤ ᠪᠠᠷ ᠨᠢᠯᠪᠤ</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>ᠶᠠᠷᠢᠯᠴᠠᠭᠠᠨ ᠤ ᠬᠦᠷᠢᠶ᠎ᠡ ᠳᠣᠲᠣᠷ᠎ᠠ ᠣᠷᠴᠢᠭᠤᠯᠤᠭᠴᠢ NPC ᠨᠡᠷᠡᠢᠳᠦᠯ ᠃</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠣᠭᠯᠠᠭᠠᠮ ᠤᠨ ᠡᠭᠦᠷᠭᠡ ᠶᠢ ᠵᠢᠯᠤᠭᠤᠳᠬᠤ ᠴᠢᠮᠡᠭᠡ ᠠᠪᠴᠠᠢ ᠃</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠣᠭᠯᠠᠯᠲᠠ ᠶᠢᠨ ᠳᠣᠲᠣᠷ᠎ᠠ ᠪᠤᠰᠤᠳ ᠡᠯᠳᠡᠪ ᠵᠦᠢᠯ ᠦᠨ ᠰᠤᠯᠠ ᠮᠡᠳᠡᠭᠡ ᠃</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠣᠭᠯᠠᠭᠠᠮ ᠤᠨ ᠳᠣᠲᠣᠷ᠎ᠠ ᠶᠠᠷᠢᠯᠴᠠᠭ᠎ᠠ ᠃</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>ᠨᠠᠭᠠᠳᠤᠮ ᠳᠣᠲᠣᠷ᠎ᠠ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠵᠢᠯᠣᠭᠣᠴᠢ ᠶᠢᠨ ᠮᠡᠳᠡᠭᠡ ᠶᠢ ᠰᠣᠨᠣᠰᠴᠠᠢ ᠃</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢ ᠬᠡᠷᠡᠭ᠍ᠯᠡᠵᠡᠢ !</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠬᠦᠯᠢᠶᠡᠵᠦ ᠪᠠᠢ᠁</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠵᠣᠬᠢᠶᠠᠯ ᠤᠨ ᠳᠡᠪᠲᠡᠷ ᠬᠡᠯᠪᠡᠷᠢ ᠶᠢ ᠰᠣᠩᠭᠣᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠣᠭᠯᠠᠭᠠᠮ ᠳᠣᠲᠣᠷ᠎ᠠ ᠠᠴᠠ ᠵᠢᠯᠤᠭᠤᠳᠬᠤ ᠮᠡᠳᠡᠭᠡ ᠶᠢ ᠰᠣᠩᠭᠣᠨ᠎ᠠ ᠃</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠯᠤᠭ᠎ᠠ ᠬᠣᠯᠪᠣᠭᠳᠠᠬᠤ ᠰᠣᠩᠭᠣᠭᠤᠯᠢ ᠶᠢᠨ ᠵᠦᠢᠯ ᠦᠳ ᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠨ᠎ᠠ ᠄</value>
   </data>
 </root>

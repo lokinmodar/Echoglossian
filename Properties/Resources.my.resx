@@ -15,8 +15,76 @@
   <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>ပိတ်ပါ</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>အဓိက</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>ဟောပြောချက်နေရာများ</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>တိုက်ပွဲဟောပြောချက်အခြေအနေများ</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>ဟင်းခတ်အမွှေးအကြိုင်များ</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>ဂျာနယ်သတ်မှတ်ချက်များ</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>ပစ္စည်းကိရိယာအခြေအနေများ</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>အခြားအခြေအနေများ</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>ဘာသာပြန်အင်ဂျင် သတ်မှတ်ချက်များ</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Echoglosian အကြောင်း</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglosian Configation</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Toasts ဘာသာပြန်ချက်တွေကို ပြသဖို့ အပိုအသုံးမပြုပါနဲ့</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>အာရုံစိုက်မှု!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>ဂိမ်းစာသားအမှန်တကယ်ဘာသာပြန်ဆိုခြင်း</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>ဖောင့်အရောင်အရောင် -</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Echoglosian cfig window ကို ဖွင့်ပါ</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>ထိုဘာသာစကားကို လက်ခံနိုင်ဖွယ်အတိုင်းအတာဖြင့် ခွဲခြား၍မရနိုင်</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>ရွေးချယ်ထားသောဘာသာစကားကို လောလောဆယ်ရရှိနိုင်သော ဘာသာပြန်ကျမ်းက မထောက်ခံပါ</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>ရွေးချယ် ထား သော ဘာသာစကား ကို ဒေသခံ ဂိမ်း ဖွန် ၏ ကန့်သတ်ချက် များ ကြောင့် ပလက်ဂျင်း လွှမ်းမိုး မှု များ ကို အသုံးပြု ခြင်း ဖြင့် သာလျှင် ထောက်ပံ့ ပေး ခဲ့ သည်</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>ဂိမ်း အပြန်အနားသေတ္တာတွေကို ဘာသာပြန်ဖို့ ဘယ်ဘာသာစကားလဲဆိုတာပါ။</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>ဘာသာပြန်ဆိုရန် ဘာသာစကား</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -24,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglosian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>သင် ၏ လွှမ်းမိုး မှု သည် ကစား ပွဲ ၏ ယူအိုင် အပြန်အလှန် စကားပြော သေတ္တာ နှင့် ဆက်စပ် ၍ ဗဟို မ ဟုတ် လျှင် ကျေးဇူးပြု ၍ ညှိနှိုင်း ထား သော အနေအထား ကို ကျေးဇူးပြု ၍ ညှိနှိုင်း ပါ ။</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>အောက်တိုလေးကော်လာဆဲလ်ရွေးချယ်မှု</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>ဖောင့်အရောင်ကို ရွေးချယ်ဖို့နှိပ်ပါ</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>TheOnlay font စကေးကို ညှိနှိုင်းပါ</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>ဖောင့်အရွယ်အစား</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>အပြန်အလှန်ပြောဆိုမှုစာသားအတွက် စာလုံးအရွယ်အစားကို ရွေးပါ</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>ဆွေးနွေး ညှိနှိုင်းမှု မြင့်မားတဲ့ မြင့်မားမှု ပွားများလာသူ</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>တိုက်ပွဲဟောပြောချက် (Enenies အပြန်အလှန် စကားပြောလိုင်းများ) ဘာသာပြန်ခြင်း</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>အနေအထားကို ပြုပြင်ပြောင်းမှတ်ခြင်း</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>ဂိမ်း UI အပြန်အလှန် စကားပြော သေတ္တာပေါ်မှာ ဘာသာပြန်ထားတဲ့ အပြန်အလှန် စကားပြောစာသားကို ပြသပါ</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>ညှိနှိုင်းထားတဲ့ ဘာသာပြန်လုပ်ငန်း အကျယ်အဝန်း</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>ဆွေးနွေး ညှိနှိုင်း မှု အော့ဖ် ဝစ်ဒ်ပလီယာ</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Echoglosian folder (XIVLauncher - &gt; pluginConfigs folder) သို့ အကြွင်းမဲ့လမ်းကြောင်း</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>ကျေးဇူးပြု၍ လမ်းကြောင်းကို ရိုက်ပြီး သိမ်းဆည်းထားပါ။ သို့မှသာ ပလက်ဂျင်းသည် ကောင်းစွာလုပ်ဆောင်နိုင်ပါသည်!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>လိုကင်မိုဒါကို ကော်ဖီဝယ်ပါ</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX Qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>ဘရာဇီးမှာ တရားဝင် PIX ပို့ပေးဖို့ QR ကုဒ်ကို စကဲန်ကြည့်ပါ - ဘရာဇီးမှာပဲ တရားဝင်</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Plugin ဖွဲ့စည်းပုံ ပြတင်းပေါက်အတွက် ဘာသာစကားကို ရွေးပါ</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>ကွန်ဖစ် ဝင်းဒိုးဘာသာစကား -</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>ဘရာဇီးမှာ တရားဝင် PIX ပို့ပေးဖို့ QR ကုဒ်ကို စကဲန်ကြည့်ပါ - ဘရာဇီးမှာပဲ တရားဝင်</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>သိမ်းဆည်းပြီး ပိတ်ထားတဲ့ ကွန်ဖစ် ဝင်းဒိုး</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>PIX လှူဒါန်းမှုတစ်ခု ပေးပို့ပါ!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>ဂိမ်း UI အပြန်အလှန် စကားပြော သေတ္တာထဲမှာ မူရင်း အပြန်အလှန် စကားပြောစာသားကို ပြပါ</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>အရသာကို ပြုပြင်ပြောင်းလဲခြင်းက အကျယ်အဝန်းကို ကျော်လွန်</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Toast Toast Tolay Width ပွားများပြားလာသူ</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>ဂိမ်းနယ်မြေအမည် Toast မက်ဆေ့များကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>တိုက်ပွဲဟောပြောချက်ကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>ဂိမ်းအတန်း/အလုပ်အကိုင် အပြောင်းအလဲ သတင်းစကားများကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>ဂိမ်းတွင်း အမှားအယွှက်ဖြစ်သော Toast သတင်းအချက်အလက်များကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>အပြန်အနားသေတ္တာများတွင် NPCs အမည်များကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>ဂိမ်းတွင်း Quest Toast သတင်းစကားများကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>အခြားဂိမ်းတွင်းမှ မှားယွင်းသော သိုလှောင်မှုသတင်းများကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>ဂိမ်း အပြန်အနားများကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>ဂိမ်းတွင်း Toast သတင်းစကားများကို ဘာသာပြန်ပါ</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>ဘာသာ ပြန် ကျမ်း များ ကို ခွင့်ပြု နိုင် ခဲ့ သည်!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>ဘာသာပြန်ဖို့ စောင့်နေတာ......</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>ဘာသာပြန်ချင်တဲ့ ဘယ်လိုစာသားမျိုးကို ရွေးပါ</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>ဘာသာပြန်ရန် ဂိမ်းတွင်း Toast သတင်းအချက်အလက်များကို ရွေးပါ</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>ဘာသာပြန်ခြင်းနဲ့ ဆက်နွှယ်နေတဲ့ ရွေးချယ်စရာတွေကို ပြုပြင်ပြောင်းလဲပါ–</value>
   </data>
 </root>

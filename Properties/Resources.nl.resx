@@ -21,17 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Hoofd</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Gespreksinstellingen</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk-instellingen</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Instellingen voor toasten</value>
+  </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Journaalinstellingen</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Instellingen voor knopinfo</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Overige instellingen</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Instellingen voor vertaalengines</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Over Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossische configuratie</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Gebruik geen overlay om Toasts-vertalingen weer te geven</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Let op</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Activeer speltekst realtime vertaling</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Kleur van overlaylettertype:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Opent Echoglossian config venster</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>De taal kon niet met een aanvaardbare mate van zekerheid worden geïdentificeerd</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>De geselecteerde taal wordt niet ondersteund door de momenteel beschikbare back-end van de vertaling</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>De geselecteerde taal wordt alleen ondersteund met behulp van de plug-inoverlays vanwege beperkingen van het native spel Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Naar welke taal je de in-game dialoogvensters moet vertalen.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Taal om naar te vertalen</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -39,13 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossisch</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Pas de positie aan als je overlay niet gecentreerd is ten opzichte van het dialoogvenster van de gebruikersinterface van de game.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelecteren</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Klik om de kleur van het overlaylettertype te kiezen</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>De lettertypeschaal van de overlay aanpassen</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Tekengrootte overlay</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Selecteer de tekengrootte voor de tekstoverlay van het dialoogvenster</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Dialoog overlay hoogte vermenigvuldiger</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (Enenies dialooglijnen) vertaling</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Positie aanpassing</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Toon vertaalde dialoogtekstoverlay boven het dialoogvenster van de gebruikersinterface van het spel in plaats van de tekst te vervangen door de vertaling</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>De breedte van de vertaaloverlay aanpassen</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Dialoog overlay breedte multiplier</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Absoluut pad naar echoglossische map (in XIVLauncher -&gt; pluginConfigs map)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Typ het pad en sla op zodat de plug-in goed kan werken!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Koop lokinmodar een koffie</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>Pix Qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Scan de QR-code om me een PIX te sturen - alleen geldig in Brazilië</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Kies de taal voor het configuratievenster van de plug-in</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Config Window Taal:</value>
   </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Scan de QR-code om me een PIX te sturen - alleen geldig in Brazilië</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Configuratievenster opslaan en sluiten</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Stuur mij een PIX donatie!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Originele dialoogtekst weergeven in Overlay en Vertaald in het dialoogvenster Game UI</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>De breedte van de toastvertalingsoverlay aanpassen</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Toast Overlay Breedte multiplier</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Vertaal in-game gebiedsnaam Toast Messages</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Translate Battle Talk</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Vertaal in-game Class/Job change Toast Messages</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Vertaal in-game Error Toast Messages</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>NPC-namen vertalen in dialoogvensters</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Vertaal in-game Quest Toast Messages</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Vertaal andere in-game diverse Toast Messages</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Vertaal in-game dialogen</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Vertaal in-game Toast Messages</value>
+  </data>
   <data name="TranslationsEnabled" xml:space="preserve">
     <value>Vertalingen zijn ingeschakeld</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>In afwachting van vertaling...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Selecteer wat voor soort tekst u wilt laten vertalen</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Selecteer welke toastberichten in de game u wilt vertalen</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Pas de opties met betrekking tot de vertaaloverlay aan:</value>
   </data>
 </root>

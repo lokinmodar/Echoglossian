@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>മുഖ്യം</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>ടോക്ക് ക്രമീകരണങ്ങൾ</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>ബാറ്റിൽ ടോക്ക് ക്രമീകരണങ്ങൾ</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>ടോസ്റ്റ് ക്രമീകരണങ്ങൾ</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>ജേണൽ ക്രമീകരണങ്ങൾ</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>ടൂൾടിപ്സ് ക്രമീകരണങ്ങൾ</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>മറ്റ് സജ്ജീകരണം</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>പരിഭാഷ എഞ്ചിൻ ക്രമീകരണങ്ങൾ</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>എക്കോഗ്ലോസിയനെ കുറിച്ച്</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>എക്കോഗ്ലോസിയൻ ക്രമീകരണം</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>ടോസ്റ്റുകൾ പരിഭാഷകൾ കാണിക്കാൻ ഓവർലേ ഉപയോഗിക്കരുത്</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>ശ്രദ്ധ</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>ഗെയിം ടെക്സ്റ്റ് തത്സമയ പരിഭാഷ സജീവമാക്കുക</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>അക്ഷരസഞ്ചയത്തിന്റെ നിറം:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>എക്കോഗ്ലോസിയൻ കോൺഫിഗ് വിൻഡോ തുറക്കുന്നു</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>ഭാഷ ഉറപ്പിന്റെ സ്വീകാര്യമായ അളവിൽ തിരിച്ചറിയാൻ കഴിഞ്ഞില്ല</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>നിലവിൽ ലഭ്യമായ പരിഭാഷ ബാക്കെൻഡ് തിരഞ്ഞെടുത്ത ഭാഷയെ പിന്തുണയ്ക്കുന്നില്ല</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>തിരഞ്ഞെടുത്ത ഭാഷ, നേറ്റീവ് ഗെയിമായ ഫോണ്ടിന്റെ പരിമിതികൾ കാരണം പ്ലഗിൻ ഓവർലെയ്സ് ഉപയോഗിച്ച് മാത്രമാണ് പിന്തുണയ്ക്കുന്നത്</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>ഇൻ-ഗെയിം ഡയലോഗ് ബോക്സുകൾ പരിഭാഷപ്പെടുത്താൻ ഏത് ഭാഷയിലേക്ക്.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>വിവർത്തനം ചെയ്യാനുള്ള ഭാഷ</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>എക്കോഗ്ലോസിയൻ</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>ഗെയിമിന്റെ യുഐ ഡയലോഗ് ബോക്സുമായി താരതമ്യപ്പെടുത്തുമ്പോൾ നിങ്ങളുടെ ഓവർലേ കേന്ദ്രീകൃതമല്ലെങ്കിൽ ദയവായി സ്ഥാനം ക്രമീകരിക്കുക.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>ഓവർലേകളർതിരഞ്ഞെടുക്കുക</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>ഓവർലെയ് അക്ഷരസഞ്ചയത്തിന്റെ നിറം തിരഞ്ഞെടുക്കാൻ ക്ലിക്ക് ചെയ്യുക</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>ഓവർലേ അക്ഷരസഞ്ചയ സ്കെയിൽ ക്രമീകരിക്കുക</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>അക്ഷരസഞ്ചയത്തിന്റെ വലിപ്പം</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>ഡയലോഗ് ടെക്സ്റ്റ് ഓവർലേയ്ക്കായി അക്ഷരസഞ്ചയത്തിന്റെ വലുപ്പം തിരഞ്ഞെടുക്കുക</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>ഡയലോഗ് ഓവർലേ ഉയരം ഗുണിതം</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>യുദ്ധപ്രസംഗം (എനെനീസ് ഡയലോഗ് ലൈനുകൾ) പരിഭാഷ</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>സ്ഥാനം ക്രമീകരിക്കൽ</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>ഡിസ്പ്ലേ പരിഭാഷപ്പെടുത്തിയ ഡയലോഗ് ടെക്സ്റ്റ് പരിഭാഷഉപയോഗിച്ച് ടെക്സ്റ്റ് മാറ്റിസ്ഥാപിക്കുന്നതിന് പകരം ഗെയിം യുഐ ഡയലോഗ് ബോക്സിന് മുകളിൽ ഓവർലേ ചെയ്യുക</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>പരിഭാഷ യുടെ വീതി ക്രമീകരിക്കുക</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>ഡയലോഗ് ഓവർലേ വീതി ഗുണിതം</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>എക്കോഗ്ലോസിയൻ ഫോൾഡറിലേക്കുള്ള സമ്പൂർണ്ണ പാത (എക്സ്ഐവിലോഞ്ചറിനുള്ളിൽ -&gt; പ്ലഗിൻകോൺഫിഗ്സ് ഫോൾഡറിനുള്ളിൽ)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>പ്ലഗിൻ ശരിയായി പ്രവർത്തിക്കാൻ കഴിയുന്ന തരത്തിൽ ദയവായി പാത ടൈപ്പ് ചെയ്ത് സംരക്ഷിക്കുക!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>ലോകിൻമോദാർ ഒരു കോഫി വാങ്ങുക</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>പിക്സ് ക്യുആർകോഡ്</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>എനിക്ക് ഒരു പിക്സ് അയയ്ക്കാൻ ക്യുആർ കോഡ് സ്കാൻ ചെയ്യുക - ബ്രസീലിൽ മാത്രം സാധുതയുള്ളതാണ്</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>പ്ലഗിൻ കോൺഫിഗറേഷൻ ജാലകത്തിനായുള്ള ഭാഷ തിരഞ്ഞെടുക്കുക</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>ജാലകഭാഷ ക്രമീകരിക്കുക:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>എനിക്ക് ഒരു പിക്സ് അയയ്ക്കാൻ ക്യുആർ കോഡ് സ്കാൻ ചെയ്യുക - ബ്രസീലിൽ മാത്രം സാധുതയുള്ളതാണ്</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>ജാലകം സംരക്ഷിക്കുകയും അടയ്ക്കുകയും ചെയ്യുക</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>എനിക്ക് ഒരു പിക്സ് സംഭാവന അയയ്ക്കുക!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>ഓവർലേയിൽ ഒറിജിനൽ ഡയലോഗ് ടെക്സ്റ്റ് കാണിക്കുക, ഗെയിം യുഐ ഡയലോഗ് ബോക്സിൽ പരിഭാഷപ്പെടുത്തുകയും ചെയ്യുക</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>ടോസ്റ്റ് പരിഭാഷ ഓവർലേ വീതി ക്രമീകരിക്കുക</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>ടോസ്റ്റ് ഓവർലേ വീതി ഗുണിതം</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>ഇൻ-ഗെയിം ഏരിയ നാമം ടോസ്റ്റ് സന്ദേശങ്ങൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>യുദ്ധസംഭാഷണം പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>ഇൻ-ഗെയിം ക്ലാസ്/ ജോലി മാറ്റം ടോസ്റ്റ് സന്ദേശങ്ങൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>ഇൻ-ഗെയിം പിശക് ടോസ്റ്റ് സന്ദേശങ്ങൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>സംഭാഷണ ബോക്സുകളിൽ എൻപിസികളുടെ പേരുകൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>ഇൻ-ഗെയിം ക്വസ്റ്റ് ടോസ്റ്റ് സന്ദേശങ്ങൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>മറ്റ് ഇൻ-ഗെയിം പലതരം ടോസ്റ്റ് സന്ദേശങ്ങൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>ഇൻ-ഗെയിം ഡയലോഗുകൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>ഇൻ-ഗെയിം ടോസ്റ്റ് സന്ദേശങ്ങൾ പരിഭാഷപ്പെടുത്തുക</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>പരിഭാഷകൾ പ്രാപ്തമാക്കി!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>പരിഭാഷകാത്തിരിക്കുന്നു...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>ഏത് തരം ടെക്സ്റ്റ് പരിഭാഷപ്പെടുത്താൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുവെന്ന് തിരഞ്ഞെടുക്കുക</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>ഏത് ഇൻ-ഗെയിം ടോസ്റ്റ് സന്ദേശങ്ങൾ പരിഭാഷപ്പെടുത്തണമെന്ന് തിരഞ്ഞെടുക്കുക</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>പരിഭാഷ യുടെ മേൽക്കിടക്കയുമായി ബന്ധപ്പെട്ട ഓപ്ഷനുകൾ ക്രമീകരിക്കുക:</value>
   </data>
 </root>

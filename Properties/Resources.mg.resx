@@ -15,8 +15,76 @@
   <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Hidio</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Main</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Fandrindran'ny fifampiresahana</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Fandrindran'ny lahatenin'ny ady</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Fandrindran'ny tora-pasika</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Fandrindran'ny diary</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Fandrindran'ny fitaovana</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Fandrindrana hafa</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Fandrindran'ny fandikana ny Engine</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Momba ny Echoglossianina</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Fikirakirana ny Echoglossian</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Aza ampiasaina ny takelaka mba hampisehoana ny dikantenin'ny Toasts</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Tandremo!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Alefaso ny dikantenin'ny kilalao tena izy</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Lokon'endri-tsoratra mandeha amin'ny endri-tsoratra:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Manokatra fikandran'ny fikirakirana ny config Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Tsy azo fantarina amin'ny ambaratonga azo ekena ilay fiteny</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Tsy raisin'ny mpanohana ny fandikan-teny misy amin'izao fotoana izao ny fiteny voafaritra</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Ny fiteny voafantina dia tohanana amin'ny fampiasana ny takelaka plugin noho ny fetran'ny endri-dalao teratany Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Fiteny inona handikana ireo boaty fifampdian-dahatsoratra amin'ny kilalao.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Fiteny handikana teny</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -24,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossianina</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Amboary azafady ny toerana misy anao raha toa ka tsy mifantoka amin'ny boatin'ny fifanakalozan-kevitra UI ny fehikibonao.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Tsindrio raha hisafidy ny lokon'endri-tsoratra ampitaina</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Amboary ny mari-endri-tsoratra overlay</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Haben'ny endri-tsoratra</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Safidio ny haben'ny endri-tsoratra ho an'ny soratra takila</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Dialoge Overlay Haavon'ny haavon'ny haavon'ny takila</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Lahateny (fifanakalozan-kevitra momba ny Enenies)</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Fanavakavahana ny toerana</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Asehoy ny takila voadika eo ambonin'ny efajoro UI fa tsy manolo ny lahabolany amin'ny fandikan-teny</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Amboary ny sakan'ny fanovana</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Fifanakalozan-kevitra Overlay Width multiplier</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Làlana feno mankany amin'ny laha-tahiry Echoglossianina (anatin'ny laha-tahirin'ny &gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Soraty azafady ny lalana ary tehirizo mba hahafahan'ilay plugin miasa araka ny tokony ho izy!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Mividiana lokinmodar a Coffee</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Ataovy tahadika ny mari-pamantarana QR handefasana PIX ho ahy - izay manankery ao Brezila ihany</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Misafidiana fiteny ho an'ny fikandran'ny kirakira plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Config Window Language:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Ataovy tahadika ny mari-pamantarana QR handefasana PIX ho ahy - izay manankery ao Brezila ihany</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Raiketo sy akatony ny fikandran'ny fikirakirana</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Mandefasa fanomezana PIX ho ahy!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Asehoy amin'ny teny takila ny soratra tany am-boalohany amin'ny teny Overlay sy nadika tamin'ny takila UI</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Amboary ny sakan'ny fandrafetana ny sakan'ny fandrafetana</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Mihamaro ny sakan'ny torapasika</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Fandikana ny anaran'ny Vondrom-paritra Toast Messages</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Adikao ny lahateny momba ny ady</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Mandika ny Kilasy/Asa manova Ny Hafatra Toast Messages</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Mandika ny Safidy Tsy Fetezana Amin'ny Lalao</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Mandika ny anaran'ny NPCs anatin'ny efajoro</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Mandika ireo hafatra amin'ny lalao Quest Toast Messages</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Mandika ireo hafatra tsy ara-drariny hafa amin'ny Lalao Toast Messages</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Fifanakalozan-kevitra amin'ny kilalao</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Mandika ireo Hafatra Toast Messages</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Nalefa ny fandikan - teny!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Miandry ny fandikan-teny...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Safidio hoe karazana lahabolana tianao ho adika</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Safidio izay hafatra amin'ny lalao Toast handikana</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Amboary ireo safidy mifandraika amin'ny fandikan-teny:</value>
   </data>
 </root>

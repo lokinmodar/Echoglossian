@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Hlavné</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Nastavenia hovoru</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Nastavenia bojovej reči</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Nastavenia prípitku</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Nastavenia denníka</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Nastavenia popisov</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Ďalšie nastavenia</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Nastavenia prekladového motora</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>O ubytovaní Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossiánova konfigurácia</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Nepoužívajte prekrytie na zobrazovanie prekladov toastov</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Pozor</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Aktivácia herný text v reálnom čase</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Prekrytie farby písma:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Otvorí echoglossian konfiguračné okno</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Jazyk nebolo možné identifikovať s prijateľným stupňom istoty</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Vybratý jazyk nie je podporovaný aktuálne dostupným prekladom backend</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Zvolený jazyk je podporovaný iba pomocou prekrytí pluginu z dôvodu obmedzení natívnej hry Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Do ktorého jazyka preložiť dialógové okná v hre.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Jazyk, ktorý sa prekladá do</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,13 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Upravte polohu, ak vaše prekrytie nie je centrované vzhľadom na dialógové okno používateľského používateľského nastavenia hry.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Kliknutím vyberte farbu písma prekrytie</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Úprava mierky písma prekrytie</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Veľkosť písma prekrytie</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Výber veľkosti písma pre prekrytie textu dialógu</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplikátor výšky prekrytie dialógu</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Bojový rozhovor (Eneniesove dialógové riadky) preklad</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Nastavenie polohy</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Zobrazenie preloženého dialógového textu nad dialógové okno používateľského rozhranie hry namiesto nahradenia textu prekladom</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Úprava šírky prekrytej prekrytej prekrytej prekladu</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplikátor šírky prekrytie dialógu</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Absolútna cesta k priečinku Echoglossian (vnútri priečinka XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Zadajte cestu a uložte, aby plugin mohol správne fungovať!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Kúpiť lokinmodar a kávu</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Naskenujte QR kód a pošlite mi PIX - platné iba v Brazílii</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Výber jazyka pre konfiguračné okno doplnku</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Jazyk Konfiguračného okna:</value>
   </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Naskenujte QR kód a pošlite mi PIX - platné iba v Brazílii</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Uložiť a zavrieť okno konfigurácie</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Pošlite mi dar PIX!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Zobraziť pôvodný text dialógu v prekrytie a preložené do dialógového poľa Používateľské rozhranie hry</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Úprava šírky prekrytej prekrytej plochy prekladu toastu</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Násobiteľ šírky toastu</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Preklad správ o prípitku v hre</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Preklad bojového rozhovoru</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Preklad správ o prípitku triedy alebo zmeny úlohy</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Preklad správ o chybe pripája v hre</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Preklad názvov NPC do dialógových polí</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Preklad správ questov v hre</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Preklad iných rôznych správ o prípitku v hre</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Preklad herných dialógov</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Preklad správ o prípitku v hre</value>
+  </data>
   <data name="TranslationsEnabled" xml:space="preserve">
     <value>Preklady sú povolené</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Čaká sa na preklad...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Výber textu, ktorý chcete preložiť</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Výber správ toastu v hre, ktoré sa majú preložiť</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Upravte možnosti týkajúce sa prekrytia prekladu:</value>
   </data>
 </root>

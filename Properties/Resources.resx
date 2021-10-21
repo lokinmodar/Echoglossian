@@ -177,6 +177,9 @@
   <data name="HoverTooltipIndicator" xml:space="preserve">
     <value>(?)</value>
   </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Adjust the options related to the translation overlay:</value>
+  </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>The language could not be identified with an acceptable degree of certainty</value>
   </data>

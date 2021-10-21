@@ -21,14 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Utama</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Pengaturan bicara</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Setelan Bicara Pertempuran</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Pengaturan toast</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Pengaturan jurnal</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Setelan tooltips</value>
+  </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Pengaturan lainnya</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Setelan Mesin Terjemahan</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Tentang Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Konfigurasi Echoglossian</value>
+    <comment>Config Window title bar</comment>
   </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Jangan gunakan overlay untuk menampilkan terjemahan Toasts</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Perhatian</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Mengaktifkan terjemahan realtime teks game</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Warna font overlay:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Membuka jendela konfigurasi Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Bahasa tidak dapat diidentifikasi dengan tingkat kepastian yang dapat diterima.</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Bahasa yang dipilih tidak didukung oleh backend terjemahan yang tersedia saat ini</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Bahasa yang dipilih hanya didukung menggunakan overlay plugin karena keterbatasan Font game asli</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Bahasa mana yang menerjemahkan kotak dialog dalam game.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Bahasa untuk diterjemahkan ke</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -36,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Silakan sesuaikan posisi jika overlay Anda tidak terpusat relatif terhadap kotak dialog UI game.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Klik untuk memilih warna font overlay</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Menyesuaikan skala font Overlay</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Ukuran Font Overlay</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Pilih ukuran font untuk overlay teks dialog</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Dialog Overlay Tinggi pengganda</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Terjemahan pembicaraan pertempuran (dialog Enenies)</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Penyesuaian posisi</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Tampilkan overlay teks dialog yang diterjemahkan di atas kotak dialog UI game alih-alih mengganti teksnya dengan terjemahan</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Menyesuaikan lebar overlay terjemahan</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Pengganda Lebar Overlay Dialog</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Jalur absolut ke folder Echoglossian (di dalam folder XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Silakan ketik jalur dan simpan sehingga plugin dapat berfungsi dengan baik!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Beli lokinmodar kopi</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Pindai kode QR untuk mengirimi saya PIX - hanya berlaku di Brasil</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Pilih bahasa untuk jendela konfigurasi plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Bahasa Jendela Konfigurasi:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Pindai kode QR untuk mengirimi saya PIX - hanya berlaku di Brasil</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Simpan dan Tutup Jendela Konfigurasi</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Kirimi saya donasi PIX!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Tampilkan teks dialog asli di Overlay dan Diterjemahkan dalam kotak dialog Game UI</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Menyesuaikan lebar overlay terjemahan roti panggang</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Pengganda Lebar Overlay Toast</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Terjemahkan dalam game Nama area Toast Messages</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Terjemahkan pembicaraan pertempuran</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Terjemahkan Pesan Toast Kelas/Pekerjaan dalam game</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Terjemahkan Pesan Toast Kesalahan dalam game</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Menerjemahkan nama NPC dalam kotak dialog</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Terjemahkan Pesan Quest Toast dalam game</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Terjemahkan Pesan Toast lain dalam game lainnya</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Menerjemahkan dialog dalam game</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Terjemahkan Pesan Toast dalam game</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Terjemahan diaktifkan!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Menunggu terjemahan...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Pilih jenis teks apa yang ingin Anda terjemahkan</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Pilih pesan Toast dalam game mana yang akan diterjemahkan</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Menyesuaikan opsi yang terkait dengan overlay terjemahan:</value>
   </data>
 </root>

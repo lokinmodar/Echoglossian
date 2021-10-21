@@ -21,17 +21,70 @@
   <data name="ConfigTab0Name" xml:space="preserve">
     <value>Galvenais</value>
   </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Sarunu iestatījumi</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk iestatījumi</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Grauzdiņu iestatījumi</value>
+  </data>
   <data name="ConfigTab4Name" xml:space="preserve">
     <value>Žurnāla iestatījumi</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Rīku padomu iestatījumi</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Citi iestatījumi</value>
   </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Tulkošanas programmas iestatījumi</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Par Eholosu</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Eholosa konfigurācija</value>
+    <comment>Config Window title bar</comment>
+  </data>
   <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
+    <value>Neizmantojiet pārklājumu, lai parādītu grauzdiņu tulkojumus</value>
+  </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Uzmanību!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Aktivizēt spēles teksta reāllaika tulkošanu</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Pārklājuma fonta krāsa:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Atver Echoglossian konfigurācijas logu</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Valodu nevarēja identificēt ar pieņemamu noteiktības pakāpi</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Pašlaik pieejamā tulkošanas aizmugure neatbalsta atlasīto valodu</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Atlasītā valoda tiek atbalstīta tikai, izmantojot spraudņa pārklājumus vietējās spēles Font ierobežojumu dēļ</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Kādā valodā tulkot spēles dialoga lodziņus.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Valoda, uz ko tulkot</value>
   </data>
   <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -39,10 +92,131 @@
   <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Name" xml:space="preserve">
+    <value>Eholote</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Lūdzu, pielāgojiet pozīciju, ja pārklājums nav centrēts attiecībā pret spēles lietotāja interfeisa dialoga lodziņu.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>PārklājumsColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Noklikšķiniet, lai izvēlētos pārklājuma fonta krāsu</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Pārklājuma fonta skalas pielāgošana</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Pārklājuma fonta lielums</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Atlasiet dialoga teksta pārklājuma fonta lielumu</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Dialoga pārklājuma augstuma reizinātājs</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Kaujas sarunu (Enenies dialoga līnijas) tulkošana</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Pozīcijas regulēšana</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Parādīt tulkotā dialoga teksta pārklājumu virs spēles UI dialoga lodziņa, nevis aizstāt tā tekstu ar tulkojumu</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Tulkojuma pārklājuma platuma pielāgošana</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Dialoga pārklājuma platuma reizinātājs</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Absolūtais ceļš uz eholosa mapi (XIVLauncher -&gt; pluginConfigs mapē)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Lūdzu, ierakstiet ceļu un saglabājiet, lai spraudnis varētu darboties pareizi!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Nopirkt lokinmodar kafiju</value>
+  </data>
   <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Skenējiet QR kodu, lai nosūtītu man PIX - derīgs tikai Brazīlijā</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Izvēlieties spraudņa konfigurācijas loga valodu</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Konfigurācijas loga valoda:</value>
+  </data>
   <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Skenējiet QR kodu, lai nosūtītu man PIX - derīgs tikai Brazīlijā</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Saglabāt un aizvērt konfigurācijas logu</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Atsūtiet man PIX ziedojumu!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Rādīt sākotnējo dialoga tekstu pārklājuma un tulkotā dialoglodziņā Spēles lietotāja interfeiss</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Pielāgot grauzdiņu tulkošanas pārklājuma platumu</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Grauzdiņu pārklājuma platuma reizinātājs</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Tulkot spēlē Apgabala nosaukums Grauzdiņu ziņojumi</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Tulkot kaujas sarunu</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Tulkot spēlē Klases/darba maiņas grauzdiņu ziņojumi</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Tulkot spēles kļūdu grauzdiņu ziņojumus</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>NPC nosaukumu tulkošana dialoga lodziņos</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Tulkot spēles Quest Grauzdiņu ziņojumus</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Tulkot citus spēles dažādus grauzdiņu ziņojumus</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Tulkot spēles dialogus</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Tulkot spēles Grauzdiņu ziņojumus</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Tulkojumi iespējoti!</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Gaida tulkojumu...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Atlasiet, kāda veida tekstu vēlaties tulkot</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Izvēlieties, kurus spēles grauzdiņu ziņojumus tulkot</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Pielāgojiet ar tulkošanas pārklājumu saistītās opcijas:</value>
   </data>
 </root>
