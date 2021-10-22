@@ -11,7 +11,6 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-
 #if DEBUG
     public void ListCultureInfos()
     {

@@ -128,12 +128,10 @@ namespace Echoglossian
 
           ImGui.EndTabItem();
           this.SaveConfig();
-
         }
 
         if (ImGui.BeginTabItem(Resources.ConfigTab1Name, ref this.configuration.TranslateTalk))
         {
-
           if (!languageOnlySupportedThruOverlay && !this.configuration.UseImGui)
           {
             ImGui.IsItemDeactivated();
@@ -357,15 +355,22 @@ namespace Echoglossian
 
         if (ImGui.BeginTabItem(Resources.ConfigTab6Name, ref this.configuration.TranslateToDoList))
         {
-          ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
+          ImGui.Text("This is the Onion tab!\nblah blah blah blah blah");
+          ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(Resources.ConfigTab7Name, ref this.configuration.TranslateToDoList))
+        {
+          ImGui.Text("This is the Tomato tab!\nblah blah blah blah blah");
           ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
         {
-          ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
+          ImGui.Text("This is the Sausage tab!\nblah blah blah blah blah");
           ImGui.EndTabItem();
         }
+
         ImGui.EndTabBar();
       }
 
@@ -427,7 +432,6 @@ namespace Echoglossian
       ImGui.PopID();
       ImGui.EndGroup();
       ImGui.End();
-
     }
 
     private bool DisableAllToastTranslations()

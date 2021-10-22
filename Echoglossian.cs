@@ -345,7 +345,6 @@ namespace Echoglossian
                 PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
         #endif*//*
       }*/
-
     }
 
     private void ConfigWindow()
