@@ -25,11 +25,19 @@ namespace Echoglossian
     public ImFontPtr ConfigUiFont;
     public readonly string LangComboItems = "Afrikaans; Afrikaans Shqip; Albanian   العَرَبِيَّة   Al'Arabiyyeẗ; Arabic Aragonés; Aragonese Հայերէն Hayerèn; Հայերեն Hayeren; Armenian Armãneashce; Armãneashti; Rrãmãneshti; Aromanian; Arumanian; Macedo-Romanian Azərbaycan Dili; آذربایجان دیلی; Азәрбајҹан Дили; Azerbaijani Euskara; Basque Беларуская Мова Belaruskaâ Mova; Belarusian Беларуская Мова Belaruskaâ Mova; Belarusian বাংলা Bāŋlā; Bengali ইমার ঠার/বিষ্ণুপ্রিয়া মণিপুরী Bishnupriya Manipuri Language; Bishnupriya Manipuri Bosanski; Bosnian Brezhoneg; Breton Български Език Bălgarski Ezik; Bulgarian မြန်မာစာ Mrãmācā; မြန်မာစကား Mrãmākā:; Burmese ; Cantonese Català,Valencià; Catalan; Valencian Sinugbuanong Binisayâ; Cebuano ភាសាខ្មែរ Phiəsaakhmær; Central Khmer Chichewa; Chinyanja; Chichewa; Chewa; Nyanja 中文 Zhōngwén; 汉语; 漢語 Hànyǔ; Chinese 中文 Zhōngwén; 汉语; 漢語 Hànyǔ; Chinese Corsu; Lingua Corsa; Corsican Hrvatski; Croatian Čeština; Český Jazyk; Czech Dansk; Danish Nederlands; Vlaams; Dutch; Flemish English; English English; English Esperanto; Esperanto Eesti Keel; Estonian Suomen Kieli; Finnish Français; French Gàidhlig; Gaelic; Scottish Gaelic Galego; Galician Ქართული Kharthuli; Georgian Deutsch; German Νέα Ελληνικά Néa Ellêniká; Greek, Modern (1453-) ગુજરાતી Gujarātī; Gujarati Kreyòl Ayisyen; Haitian; Haitian Creole Harshen Hausa; هَرْشَن; Hausa ʻōlelo Hawaiʻi; Hawaiian עברית 'Ivriyþ; Hebrew हिन्दी Hindī; Hindi Lus Hmoob; Lug Moob; Lol Hmongb; Hmong; Mong Magyar Nyelv; Hungarian Íslenska; Icelandic Asụsụ Igbo; Igbo Bahasa Indonesia; Indonesian Gaeilge; Irish Italiano; Lingua Italiana; Italian 日本語 Nihongo; Japanese ꦧꦱꦗꦮ  Basa Jawa; Javanese ಕನ್ನಡ Kannađa; Kannada Қазақ Тілі Qazaq Tili; Қазақша Qazaqşa; Kazakh Ikinyarwanda; Kinyarwanda Кыргызча Kırgızça; Кыргыз Тили Kırgız Tili; Kirghiz; Kyrgyz 한국어 Han'Gug'Ô; Korean Kurdî  کوردی; Kurdish ພາສາລາວ Phasalaw; Lao Lingua Latīna; Latin Latviešu Valoda; Latvian Lietuvių Kalba; Lithuanian ; Lombard Lëtzebuergesch; Luxembourgish; Letzeburgesch Македонски Јазик Makedonski Jazik; Macedonian ; Malagasy Bahasa Melayu; Malay മലയാളം Malayāļã; Malayalam Malti; Maltese Te Reo Māori; Maori मराठी Marāţhī; Marathi Монгол Хэл Mongol Xel; ᠮᠣᠩᠭᠣᠯ ᠬᠡᠯᠡ; Mongolian नेपाली भाषा Nepālī Bhāśā; Nepali Norsk; Norwegian Norsk Nynorsk; Norwegian Nynorsk; Nynorsk, Norwegian Occitan; Lenga D'Òc; Occitan (Post 1500) ଓଡ଼ିଆ; Oriya ਪੰਜਾਬੀ  پنجابی Pãjābī; Panjabi; Punjabi فارسی Fārsiy; Persian ; Piedmontese Język Polski; Polish Português; Portuguese پښتو Pax̌Tow; Pushto; Pashto Limba Română; Romanian; Moldavian; Moldovan Русский Язык Russkiĭ Âzık; Russian Gagana Faʻa Sāmoa; Samoan Српски  Srpski; Serbian ; Serbo-Croatian Chishona; Shona سنڌي  सिन्धी  ਸਿੰਧੀ; Sindhi සිංහල Sĩhala; Sinhala; Sinhalese Slovenčina; Slovenský Jazyk; Slovak Slovenski Jezik; Slovenščina; Slovenian Af Soomaali; Somali Sesotho [Southern]; Sotho, Southern Español; Castellano; Spanish; Castilian Basa Sunda; Sundanese Kiswahili; Swahili Svenska; Swedish Wikang Tagalog; Tagalog Тоҷикӣ Toçikī; Tajik தமிழ் Tamił; Tamil Татар Теле  Tatar Tele  تاتار; Tatar తెలుగు Telugu; Telugu ภาษาไทย Phasathay; Thai Türkçe; Turkish Türkmençe  Түркменче  تورکمن تیلی تورکمنچ; Türkmen Dili  Түркмен Дили; Turkmen ئۇيغۇرچە  ; ئۇيغۇر تىلى; Uighur; Uyghur Українська Мова; Українська; Ukrainian اُردُو Urduw; Urdu Oʻzbekcha  Ózbekça  Ўзбекча  ئوزبېچه; Oʻzbek Tili  Ўзбек Тили  ئوبېک تیلی; Uzbek Tiếng Việt; Vietnamese ; Volapük Winaray; Samareño; Lineyte-Samarnon; Binisayâ Nga Winaray; Binisayâ Nga Samar-Leyte; “Binisayâ Nga Waray”; Waray Cymraeg; Y Gymraeg; Welsh Frysk; Western Frisian Isixhosa; Xhosa ייִדיש; יידיש; אידיש Yidiš; Yiddish ";
 
+
+    string specialFontFileName = string.Empty;
+    string fontFileName = "NotoSans-Medium.ttf";
+    string scriptCharList = string.Empty;
+    private void AdjustLanguageForFontBuild()
+    {
+      var lang = this.LanguagesDictionary[this.configuration.Lang];
+      this.specialFontFileName = lang.FontName;
+      this.scriptCharList = lang.ExclusiveCharsToAdd;
+    }
+
     private void LoadFont()
     {
-      var specialFontFileName = string.Empty;
-      var fontFileName = "NotoSans-Medium.ttf";
-
       /*if (this.configuration.Lang is 0 or 1 or 3 or 5 or 7 or 8 or 9 or 12 or 13 or 14 or 17 or 18 or 20 or 23 or 24 or
         25 or 26 or 27 or 28 or 29 or 30 or 31 or 32 or 33 or 34 or 36 or 37 or 39 or 41 or 44 or 45 or 46 or 47 or 48
         or 49 or 53 or 54 or 55 or 59 or 60 or 61 or 62 or 63 or 64 or 65 or 66 or 68 or 69 or 73 or 74 or 75 or 79 or
@@ -41,121 +49,121 @@ namespace Echoglossian
 
       if (this.configuration.Lang is 2 or 6 or 40 or 57 or 78 or 82 or 106 or 108)
       {
-        specialFontFileName = "NotoSansArabic-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 4)
       {
-        specialFontFileName = "NotoSansArmenian-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 10 or 11)
       {
-        specialFontFileName = "NotoSansBengali-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 50)
       {
-        specialFontFileName = "NotoSansCJKjp-Regular.otf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 16 or 21)
       {
-        specialFontFileName = "NotoSansCJKsc-Regular.otf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 22)
       {
-        specialFontFileName = "NotoSansCJKtc-Regular.otf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 56)
       {
-        specialFontFileName = "NotoSansCJKkr-Regular.otf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 43 or 70 or 72 or 77 or 89)
       {
-        specialFontFileName = "NotoSansDevanagari-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 35)
       {
-        specialFontFileName = "NotoSansGeorgian-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 38)
       {
-        specialFontFileName = "NotoSansGujarati-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 42 or 116)
       {
-        specialFontFileName = "NotoSansHebrew-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 51)
       {
-        specialFontFileName = "NotoSansJavanese-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 52)
       {
-        specialFontFileName = "NotoSansKannada-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 19)
       {
-        specialFontFileName = "NotoSansKhmer-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 58)
       {
-        specialFontFileName = "NotoSansLao-Medium-Lao.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 67)
       {
-        specialFontFileName = "NotoSansMalayalam-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 71)
       {
-        specialFontFileName = "NotoSansMongolian-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 15)
       {
-        specialFontFileName = "NotoSansMyanmar-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 76)
       {
-        specialFontFileName = "NotoSansOriya-Regular.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 90)
       {
-        specialFontFileName = "NotoSansSinhala-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 100)
       {
-        specialFontFileName = "NotoSansTamil-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 102)
       {
-        specialFontFileName = "NotoSansTelugu-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
       if (this.configuration.Lang is 103)
       {
-        specialFontFileName = "NotoSansThai-Medium.ttf";
+        this.AdjustLanguageForFontBuild();
       }
 
-      var specialFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{specialFontFileName}";
-      var fontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{fontFileName}";
+      var specialFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}";
+      var fontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.fontFileName}";
 
 
 #if DEBUG
@@ -178,6 +186,7 @@ namespace Echoglossian
 
             var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
             builder.AddText(this.CharsToAddToAll);
+            builder.AddText(this.scriptCharList);
 
             builder.BuildRanges(out ImVector ranges);
 
@@ -195,14 +204,22 @@ namespace Echoglossian
             var arr = chars.ToArray();
 
 
+            var nativeConfig = ImGuiNative.ImFontConfig_ImFontConfig();
+            var fontConfig = new ImFontConfigPtr(nativeConfig)
+            {
+              OversampleH = 2,
+              OversampleV = 2,
+              MergeMode = true,
+            };
+
             fixed (ushort* ptr = &arr[0])
             {
               if (specialFontFilePath != string.Empty)
               {
                 this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(specialFontFilePath, this.configuration.FontSize,
-                  null, new IntPtr((void*)ptr));
+                  fontConfig, new IntPtr((void*)ptr));
                 this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFilePath, this.configuration.FontSize,
-                  null);
+                  fontConfig);
               }
               else
               {

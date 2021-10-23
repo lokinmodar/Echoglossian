@@ -359,15 +359,25 @@ namespace Echoglossian
           ImGui.EndTabItem();
         }
 
-        if (ImGui.BeginTabItem(Resources.ConfigTab7Name, ref this.configuration.TranslateToDoList))
+        if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
         {
-          ImGui.Text("This is the Tomato tab!\nblah blah blah blah blah");
+          var transEngine = this.configuration.ChosenTransEngine;
+          var selectedTransEngineName = transEngineName;
+          ImGui.BeginGroup();
+          ImGui.Text($"Settings for: {selectedTransEngineName}");
+          if (transEngine == 0)
+          {
+            ImGui.Text($"This translation engine does not require any special settings.");
+          }
+
+          ImGui.EndGroup();
           ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
         {
-          ImGui.Text("This is the Sausage tab!\nblah blah blah blah blah");
+          ImGui.Image(this.logo.ImGuiHandle, new Vector2(200, 200));
+          ImGui.Text("This is the About tab!\nblah blah blah blah blah");
           ImGui.EndTabItem();
         }
 

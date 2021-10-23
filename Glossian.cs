@@ -30,6 +30,11 @@ namespace Echoglossian
 
     private static RankedLanguageIdentifier Identifier;
 
+    /// <summary>
+    /// Detects which language the source text is in.
+    /// </summary>
+    /// <param name="message">text to have the source language identified.</param>
+    /// <returns>Returns the detected language code</returns>
     public static string LangIdentify(string message)
     {
       // Sanitizer sanitizer = new(ClientLanguage);
@@ -46,8 +51,15 @@ namespace Echoglossian
         : Resources.LangIdentError;
     }
 
+    /// <summary>
+    /// Translates the sentences passed to it. Uses Google Translate Free endpoint.
+    /// </summary>
+    /// <param name="text">Text to be translated</param>
+    /// <returns>Returns the translated text passed in the call parameter.</returns>
+    /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps</exception>
     public static string Translate(string text)
     {
+      string startingEllipsis = string.Empty;
       if (text.IsNullOrEmpty())
       {
         return string.Empty;
@@ -64,8 +76,24 @@ namespace Echoglossian
           return string.Empty;
         }
 
-        var parsedText = sanitizedString[..2] == "..." ? sanitizedString[3..] : sanitizedString;
+        if (sanitizedString == "...")
+        {
+          return sanitizedString;
+        }
 
+        string parsedText;
+        if (sanitizedString.StartsWith("..."))
+        {
+          startingEllipsis = "...";
+          parsedText = sanitizedString.Substring(3);
+        }
+        else
+        {
+          parsedText = sanitizedString;
+        }
+
+        parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
+        parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
         parsedText = parsedText.Replace("\u201C", "\u0022");
         parsedText = parsedText.Replace("\u201D", "\u0022");
 
@@ -79,7 +107,7 @@ namespace Echoglossian
         PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
         PluginLog.LogInformation($"Chosen Translation Language: {lang}");
 #endif
-        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={sanitizedString}";
+        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={parsedText}";
 #if DEBUG
         PluginLog.LogInformation($"URL: {url}");
 #endif
@@ -101,6 +129,7 @@ namespace Echoglossian
 
         finalDialogueText = finalDialogueText.Replace("\u201C", "\u0022");
         finalDialogueText = finalDialogueText.Replace("\u201D", "\u0022");
+        finalDialogueText = startingEllipsis + finalDialogueText;
         finalDialogueText = finalDialogueText.Replace("...", ". . .");
 
         var src = (JValue)parsed["src"];

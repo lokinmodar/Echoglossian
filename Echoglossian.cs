@@ -60,7 +60,7 @@ namespace Echoglossian
     private readonly TextureWrap choiceImage;
     private readonly TextureWrap cutsceneChoiceImage;
     private readonly TextureWrap talkImage;
-
+    private readonly TextureWrap logo;
     private readonly ToastGui toastGui;
     private readonly CultureInfo cultureInfo;
 
@@ -124,6 +124,7 @@ namespace Echoglossian
       this.choiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.choice);
       this.cutsceneChoiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.cutscenechoice);
       this.talkImage = this.pluginInterface.UiBuilder.LoadImage(Resources.prttws);
+      this.logo = this.pluginInterface.UiBuilder.LoadImage(Resources.logo);
 
       this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
 

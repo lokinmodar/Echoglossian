@@ -18,6 +18,21 @@
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.Echoglossian.LangIdentify(System.String)">
+            <summary>
+            Detects which language the source text is in.
+            </summary>
+            <param name="message">text to have the source language identified.</param>
+            <returns>Returns the detected language code</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
+            <summary>
+            Translates the sentences passed to it. Uses Google Translate Free endpoint.
+            </summary>
+            <param name="text">Text to be translated</param>
+            <returns>Returns the translated text passed in the call parameter.</returns>
+            <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps</exception>
+        </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>
               A strongly-typed resource class, for looking up localized strings, etc.
