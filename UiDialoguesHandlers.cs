@@ -129,7 +129,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new(this.ConfigDir + "GetTalkLog.txt", append: true);
+      using StreamWriter logStream = new(this.configDir + "GetTalkLog.txt", append: true);
 #endif
 
       try
@@ -162,7 +162,7 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogWarning(translatedText);
 #endif
-            if (this.configuration.TranslateNPCNames)
+            if (this.configuration.TranslateNpcNames)
             {
               name = nameTranslation == string.Empty ? name : nameTranslation;
               text = translatedText;
@@ -174,7 +174,7 @@ namespace Echoglossian
                 LangIdentify(nameToTranslate),
                 nameTranslation,
                 translatedText,
-                Codes[languageInt],
+                langDict[languageInt].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -197,7 +197,7 @@ namespace Echoglossian
                 LangIdentify(nameToTranslate),
                 string.Empty,
                 translatedText,
-                Codes[languageInt],
+                langDict[languageInt].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -215,7 +215,7 @@ namespace Echoglossian
           {
             if (!this.configuration.SwapTextsUsingImGui)
             {
-              if (this.configuration.TranslateNPCNames)
+              if (this.configuration.TranslateNpcNames)
               {
                 this.currentNameTranslationId = Environment.TickCount;
                 this.currentNameTranslation = Resources.WaitingForTranslation;
@@ -261,9 +261,9 @@ namespace Echoglossian
                     textToTranslate,
                     LangIdentify(textToTranslate),
                     LangIdentify(nameToTranslate),
-                    this.configuration.TranslateNPCNames ? this.currentNameTranslation : string.Empty,
+                    this.configuration.TranslateNpcNames ? this.currentNameTranslation : string.Empty,
                     this.currentTalkTranslation,
-                    Codes[languageInt],
+                    langDict[languageInt].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);
@@ -281,7 +281,7 @@ namespace Echoglossian
 #endif
               var translatedText = Translate(textToTranslate);
               var nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
-              if (this.configuration.TranslateNPCNames)
+              if (this.configuration.TranslateNpcNames)
               {
                 name = nameTranslation == string.Empty ? name : nameTranslation;
                 text = translatedText;
@@ -321,7 +321,7 @@ namespace Echoglossian
                   LangIdentify(nameToTranslate),
                   nameTranslation,
                   translatedText,
-                  Codes[languageInt],
+                  langDict[languageInt].Code,
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
                   DateTime.Now);
@@ -359,7 +359,7 @@ namespace Echoglossian
                       LangIdentify(this.currentTalkTranslation),
                       LangIdentify(this.currentNameTranslation),
                       this.configuration.TranslateNPCNames ? Translate(this.currentNameTranslation) : string.Empty,
-                      Translate(this.currentTalkTranslation), Codes[languageInt],
+                      Translate(this.currentTalkTranslation), langDict[languageInt].Code,
                       this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                     var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
@@ -375,7 +375,7 @@ namespace Echoglossian
                   LangIdentify(nameToTranslate),
                   string.Empty,
                   translatedText,
-                  Codes[languageInt],
+                  langDict[languageInt].Code,
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
                   DateTime.Now);
@@ -397,7 +397,7 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogWarning($"From database - Name: {nameTranslation}, Message: {translatedText}");
 #endif
-            if (this.configuration.TranslateNPCNames)
+            if (this.configuration.TranslateNpcNames)
             {
               name = nameTranslation == string.Empty ? name : nameTranslation;
               text = translatedText;
@@ -414,7 +414,7 @@ namespace Echoglossian
           {
             if (!this.configuration.SwapTextsUsingImGui)
             {
-              if (this.configuration.TranslateNPCNames)
+              if (this.configuration.TranslateNpcNames)
               {
                 this.currentNameTranslationId = Environment.TickCount;
                 this.currentNameTranslation = Resources.WaitingForTranslation;
@@ -455,7 +455,7 @@ namespace Echoglossian
             }
             else
             {
-              if (this.configuration.TranslateNPCNames)
+              if (this.configuration.TranslateNpcNames)
               {
                 this.currentNameTranslationId = Environment.TickCount;
                 this.currentNameTranslation = Resources.WaitingForTranslation;
@@ -514,7 +514,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new(this.ConfigDir + "GetBattleTalkLog.txt", append: true);
+      using StreamWriter logStream = new(this.configDir + "GetBattleTalkLog.txt", append: true);
 #endif
 
       try
@@ -547,14 +547,14 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogWarning(translatedBattleTalkMessage);
 #endif
-            if (this.configuration.TranslateNPCNames)
+            if (this.configuration.TranslateNpcNames)
             {
               sender = senderTranslation == string.Empty ? sender : senderTranslation;
               message = translatedBattleTalkMessage;
 
               var translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
                 LangIdentify(battleTextToTranslate),
-                LangIdentify(senderToTranslate), senderTranslation, translatedBattleTalkMessage, Codes[languageInt],
+                LangIdentify(senderToTranslate), senderTranslation, translatedBattleTalkMessage, langDict[languageInt].Code,
                 this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
 #if DEBUG
               logStream.WriteLineAsync($"Before Talk Messages table data insertion:  {translatedBattleTalkData}");
@@ -570,7 +570,7 @@ namespace Echoglossian
 
               var translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
                 LangIdentify(battleTextToTranslate),
-                LangIdentify(senderToTranslate), string.Empty, translatedBattleTalkMessage, Codes[languageInt],
+                LangIdentify(senderToTranslate), string.Empty, translatedBattleTalkMessage, langDict[languageInt].Code,
                 this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
 
               var result = this.InsertBattleTalkData(translatedBattleTalkData);
@@ -584,7 +584,7 @@ namespace Echoglossian
           }
           else
           {
-            if (this.configuration.TranslateNPCNames)
+            if (this.configuration.TranslateNpcNames)
             {
               this.currentSenderTranslationId = Environment.TickCount;
               this.currentSenderTranslation = Resources.WaitingForTranslation;
@@ -623,8 +623,8 @@ namespace Echoglossian
                 var translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
                   LangIdentify(battleTextToTranslate),
                   LangIdentify(senderToTranslate),
-                  this.configuration.TranslateNPCNames ? this.currentSenderTranslation : string.Empty,
-                  this.currentBattleTalkTranslation, Codes[languageInt],
+                  this.configuration.TranslateNpcNames ? this.currentSenderTranslation : string.Empty,
+                  this.currentBattleTalkTranslation, langDict[languageInt].Code,
                   this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                 var result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
@@ -643,7 +643,7 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogWarning($"From database - Name: {senderTranslation}, Message: {translatedBattleMessage}");
 #endif
-            if (this.configuration.TranslateNPCNames)
+            if (this.configuration.TranslateNpcNames)
             {
               sender = senderTranslation == string.Empty ? sender : senderTranslation;
               message = translatedBattleMessage;
@@ -658,7 +658,7 @@ namespace Echoglossian
           }
           else
           {
-            if (this.configuration.TranslateNPCNames)
+            if (this.configuration.TranslateNpcNames)
             {
               this.currentSenderTranslationId = Environment.TickCount;
               this.currentSenderTranslation = Resources.WaitingForTranslation;

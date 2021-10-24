@@ -163,7 +163,7 @@ namespace Echoglossian
         ImGui.PushFont(this.UiFont);
       }
 
-      if (this.configuration.TranslateNPCNames)
+      if (this.configuration.TranslateNpcNames)
       {
         var name = this.GetTranslatedSenderNameForWindow();
         if (!name.IsNullOrEmpty())
@@ -247,7 +247,7 @@ namespace Echoglossian
         ImGui.PushFont(this.UiFont);
       }
 
-      if (this.configuration.TranslateNPCNames)
+      if (this.configuration.TranslateNpcNames)
       {
         var name = this.GetTranslatedNpcNameForWindow();
         if (!name.IsNullOrEmpty())

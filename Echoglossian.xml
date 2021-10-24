@@ -23,15 +23,27 @@
             Detects which language the source text is in.
             </summary>
             <param name="message">text to have the source language identified.</param>
-            <returns>Returns the detected language code</returns>
+            <returns>Returns the detected language code.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
             <summary>
             Translates the sentences passed to it. Uses Google Translate Free endpoint.
             </summary>
-            <param name="text">Text to be translated</param>
+            <param name="text">Text to be translated.</param>
             <returns>Returns the translated text passed in the call parameter.</returns>
-            <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps</exception>
+            <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps.</exception>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawText(System.String,System.Drawing.Font,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Size})">
+            <summary>
+            Creates an image containing the given text.
+            NOTE: the image should be disposed after use.
+            </summary>
+            <param name="text">Text to draw</param>
+            <param name="fontOptional">Font to use, defaults to Control.DefaultFont</param>
+            <param name="textColorOptional">Text color, defaults to Black</param>
+            <param name="backColorOptional">Background color, defaults to white</param>
+            <param name="minSizeOptional">Minimum image size, defaults the size required to display the text</param>
+            <returns>The image containing the text, which should be disposed after use</returns>
         </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>

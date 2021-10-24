@@ -419,7 +419,7 @@ namespace Echoglossian
         return;
       }
 #if DEBUG
-      using StreamWriter logStream = new(this.ConfigDir + "GetToastLog.txt", append: true);
+      using StreamWriter logStream = new(this.configDir + "GetToastLog.txt", append: true);
 #endif
 
       var messageTextToTranslate = message.TextValue;
@@ -450,7 +450,7 @@ namespace Echoglossian
             message = translatedToastMessage;
 
             var translatedToastData = new ToastMessage("Error", messageTextToTranslate, LangIdentify(messageTextToTranslate),
-              translatedToastMessage, Codes[languageInt], this.configuration.ChosenTransEngine, DateTime.Now,
+              translatedToastMessage, langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
 #if DEBUG
             logStream.WriteLineAsync($"Before Toast Messages table data insertion:  {translatedToastData}");
@@ -485,7 +485,7 @@ namespace Echoglossian
               {
                 var translatedErrorToastData = new ToastMessage("Error", messageTextToTranslate,
                   errorToastToHandle.OriginalLang, this.currentErrorToastTranslation,
-                  Codes[languageInt], this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+                  langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                 var result = this.InsertToastMessageData(translatedErrorToastData);
 #if DEBUG
                 PluginLog.LogError($"ToastMessage DB Insert operation result: {result}");
@@ -547,7 +547,7 @@ namespace Echoglossian
     private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
     {
 #if DEBUG
-      using StreamWriter logStream = new(this.ConfigDir + "GetToastLog.txt", append: true);
+      using StreamWriter logStream = new(this.configDir + "GetToastLog.txt", append: true);
 #endif
       if (!this.configuration.TranslateAreaToast ||
                                                  !this.configuration.TranslateClassChangeToast ||

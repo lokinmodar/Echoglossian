@@ -28,13 +28,13 @@ namespace Echoglossian
 
     private static readonly RankedLanguageIdentifierFactory Factory = new();
 
-    private static RankedLanguageIdentifier Identifier;
+    private static RankedLanguageIdentifier identifier;
 
     /// <summary>
     /// Detects which language the source text is in.
     /// </summary>
     /// <param name="message">text to have the source language identified.</param>
-    /// <returns>Returns the detected language code</returns>
+    /// <returns>Returns the detected language code.</returns>
     public static string LangIdentify(string message)
     {
       // Sanitizer sanitizer = new(ClientLanguage);
@@ -42,7 +42,7 @@ namespace Echoglossian
 #if DEBUG
       PluginLog.LogInformation($"Message in Lang Method: {sanitizedString}");
 #endif
-      var mostCertainLanguage = Identifier.Identify(sanitizedString).FirstOrDefault();
+      var mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
 #if DEBUG
       PluginLog.LogInformation($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
 #endif
@@ -54,9 +54,9 @@ namespace Echoglossian
     /// <summary>
     /// Translates the sentences passed to it. Uses Google Translate Free endpoint.
     /// </summary>
-    /// <param name="text">Text to be translated</param>
+    /// <param name="text">Text to be translated.</param>
     /// <returns>Returns the translated text passed in the call parameter.</returns>
-    /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps</exception>
+    /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
     public static string Translate(string text)
     {
       string startingEllipsis = string.Empty;
@@ -69,7 +69,7 @@ namespace Echoglossian
 #endif
       try
       {
-        var lang = Codes[languageInt];
+        var lang = langDict[languageInt].Code;
         var sanitizedString = sanitizer.Sanitize(text);
         if (sanitizedString.IsNullOrEmpty())
         {

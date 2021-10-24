@@ -36,7 +36,6 @@ namespace Echoglossian
       var desc = tooltipDescription.TextValue;
       var status = TranslateAsync(desc);
 
-
       PluginLog.LogWarning($"Tooltip desc: {desc}");
       PluginLog.LogError($"Tooltip trans: {status.Result}");
 #endif

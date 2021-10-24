@@ -6,6 +6,9 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Drawing;
+
+using System.Drawing.Text;
 
 namespace Echoglossian
 {
@@ -14,7 +17,7 @@ namespace Echoglossian
 #if DEBUG
     public void ListCultureInfos()
     {
-      using StreamWriter logStream = new(this.ConfigDir + "CultureInfos.txt", append: true);
+      using StreamWriter logStream = new(this.configDir + "CultureInfos.txt", append: true);
 
       var cus = CultureInfo.GetCultures(CultureTypes.AllCultures);
       foreach (var cu in cus)
@@ -37,37 +40,6 @@ namespace Echoglossian
 
       return parentPath;
     }
-
-    /*private readonly string[] FontFileNames =
-    {
-
-    };*/
-
-
-    private static readonly string[] Codes =
-    {
-      @"af", @"sq", @"ar", @"an", @"hy",
-      @"roa_rup", @"az", @"eu", @"be",
-      @"be_x_old", @"bn", @"bpy", @"bs", @"br",
-      @"bg", @"my", @"zh_yue", @"ca", @"ceb",
-      @"km", @"ny", @"zh-CN", @"zh-TW", @"co",
-      @"hr", @"cs", @"da", @"nl", @"en", @"eo",
-      @"et", @"fi", @"fr", @"gd", @"gl", @"ka",
-      @"de", @"el", @"gu", @"ht", @"ha", @"haw",
-      @"he", @"hi", @"hu", @"is", @"ig", @"id",
-      @"ga", @"it", @"ja", @"jv", @"kn", @"kk",
-      @"rw", @"ky", @"ko", @"ku", @"lo", @"la",
-      @"lv", @"lt", @"lmo", @"lb", @"mk", @"mg",
-      @"ms", @"ml", @"mt", @"mi", @"mr", @"mn",
-      @"ne", @"no", @"nn", @"oc", @"or", @"pa",
-      @"fa", @"pms", @"pl", @"pt", @"ps", @"ro",
-      @"ru", @"sm", @"sr", @"hbs", @"sn", @"sd",
-      @"si", @"sk", @"sl", @"so", @"st", @"es",
-      @"sw", @"sv", @"tl", @"tg", @"ta", @"tt",
-      @"te", @"th", @"tr", @"tk", @"ug", @"uk",
-      @"ur", @"uz", @"vi", @"vo", @"war", @"cy",
-      @"fy", @"xh", @"yi", @"yo", @"zu",
-    };
 
     private readonly string[] languages =
     {
@@ -163,5 +135,80 @@ namespace Echoglossian
       Amazon = 1 << 5, // Amazon Translate
       Azure = 1 << 6, // Microsoft Azure Translate
     }
+
+    /// <summary>
+    /// Creates an image containing the given text.
+    /// NOTE: the image should be disposed after use.
+    /// </summary>
+    /// <param name="text">Text to draw</param>
+    /// <param name="fontOptional">Font to use, defaults to Control.DefaultFont</param>
+    /// <param name="textColorOptional">Text color, defaults to Black</param>
+    /// <param name="backColorOptional">Background color, defaults to white</param>
+    /// <param name="minSizeOptional">Minimum image size, defaults the size required to display the text</param>
+    /// <returns>The image containing the text, which should be disposed after use</returns>
+    public Image DrawText(string text, Font fontOptional = null, Color? textColorOptional = null, Color? backColorOptional = null, Size? minSizeOptional = null)
+    {
+
+      PrivateFontCollection pfc = new PrivateFontCollection();
+      pfc.AddFontFile($@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}");
+
+      Font font = new Font(pfc.Families[0], this.configuration.FontSize, FontStyle.Regular);
+      if (fontOptional != null)
+      {
+        font = fontOptional;
+      }
+
+      Color textColor = Color.White;
+      if (textColorOptional != null)
+      {
+        textColor = (Color)textColorOptional;
+      }
+
+      Color backColor = Color.Black;
+      if (backColorOptional != null)
+      {
+        backColor = (Color)backColorOptional;
+      }
+
+      Size minSize = Size.Empty;
+      if (minSizeOptional != null)
+      {
+        minSize = (Size)minSizeOptional;
+      }
+
+      // first, create a dummy bitmap just to get a graphics object
+      SizeF textSize;
+      using (Image img = new Bitmap(1, 1))
+      {
+        using (Graphics drawing = Graphics.FromImage(img))
+        {
+          // measure the string to see how big the image needs to be
+          textSize = drawing.MeasureString(text, font);
+          if (!minSize.IsEmpty)
+          {
+            textSize.Width = textSize.Width > minSize.Width ? textSize.Width : minSize.Width;
+            textSize.Height = textSize.Height > minSize.Height ? textSize.Height : minSize.Height;
+          }
+        }
+      }
+
+      // create a new image of the right size
+      Image retImg = new Bitmap((int)textSize.Width, (int)textSize.Height);
+      using (var drawing = Graphics.FromImage(retImg))
+      {
+        // paint the background
+        drawing.Clear(backColor);
+
+        // create a brush for the text
+        using (Brush textBrush = new SolidBrush(textColor))
+        {
+          drawing.DrawString(text, font, textBrush, 0, 0);
+          drawing.Save();
+        }
+      }
+
+      return retImg;
+    }
+
   }
 }

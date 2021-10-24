@@ -29,11 +29,12 @@ namespace Echoglossian
   public partial class Echoglossian : IDalamudPlugin
   {
     private const string SlashCommand = "/eglo";
-    private string ConfigDir;
+    private string configDir;
     private static int languageInt = 16;
     private static int fontSize = 20;
     private static int chosenTransEngine = 0;
     private static string transEngineName;
+    private static Dictionary<int, Language> langDict;
 
     private readonly CommandManager commandManager;
     private bool config;
@@ -94,9 +95,11 @@ namespace Echoglossian
 
       this.FixConfig();
 
-      this.ConfigDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
+      this.configDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
       sanitizer = this.pluginInterface.Sanitizer as Sanitizer;
+
+      langDict = this.LanguagesDictionary;
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
 
@@ -116,8 +119,8 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
-      this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
       this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
+      this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
 
       // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
@@ -138,7 +141,7 @@ namespace Echoglossian
 
       transEngineName = ((TransEngines)chosenTransEngine).ToString();
 
-      Identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+      identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
       this.LoadAllErrorToasts();
 
@@ -275,17 +278,19 @@ namespace Echoglossian
 
     private void BuildUi()
     {
+      if (!this.ConfigFontLoaded && !this.ConfigFontLoadFailed)
+      {
+        this.pluginInterface.UiBuilder.RebuildFonts();
+        return;
+      }
+
       if (!this.FontLoaded && !this.FontLoadFailed)
       {
         this.pluginInterface.UiBuilder.RebuildFonts();
         return;
       }
 
-      if (!this.ConfigFontLoaded && !this.ConfigFontLoadFailed)
-      {
-        this.pluginInterface.UiBuilder.RebuildFonts();
-        return;
-      }
+
 
       if (this.config)
       {
@@ -323,7 +328,6 @@ namespace Echoglossian
         // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
 #endif
       }
-
 
 #if DEBUG
       /* PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +

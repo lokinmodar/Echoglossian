@@ -26,7 +26,7 @@ namespace Echoglossian
     public bool TranslateTalk = true;
     public bool TranslateTalkSubtitle = false;
     public bool TranslateToast = false;
-    public bool TranslateNPCNames = true;
+    public bool TranslateNpcNames = true;
     public bool TranslateErrorToast = false;
     public bool TranslateQuestToast = false;
     public bool TranslateAreaToast = false;

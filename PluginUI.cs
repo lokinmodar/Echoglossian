@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
@@ -17,6 +18,7 @@ namespace Echoglossian
   public partial class Echoglossian
   {
     // public string[] FontSizes = Array.ConvertAll(Enumerable.Range(4, 72).ToArray(), x => x.ToString());
+    private List<string> LanguageList;
 
     internal void ReloadFont()
     {
@@ -28,6 +30,13 @@ namespace Echoglossian
 
     private void EchoglossianConfigUi()
     {
+      this.LanguageList = new List<string>();
+
+      foreach (KeyValuePair<int, Language> l in this.LanguagesDictionary)
+      {
+        this.LanguageList.Add(l.Value.LanguageName);
+      }
+
       bool languageNotSupported = this.configuration.Lang is 3 or 5 or 11 or 13 or 111 or 112;
       bool languageOnlySupportedThruOverlay =
         this.configuration.Lang is 2 or 4 or 6 or 8 or 9 or 10 or 12 or 14 or 15 or 16 or 18 or 19 or 21 or 22 or 24 or 25 or 29 or 35 or 37 or 38 or 40 or 41 or 42 or 43 or 45 or 46 or 51 or 52 or 53 or 55 or 56 or 57 or 58 or 60 or 61 or 64 or 67 or 69 or 70 or 71 or 72 or 76 or 77 or 78 or 80 or 82 or 83 or 85 or 86 or 89 or 90 or 91 or 92 or 99 or 100 or 101 or 102 or 103 or 104 or 105 or 106 or 107 or 108 or 109 or 110 or 116;
@@ -57,7 +66,7 @@ namespace Echoglossian
               ImGui.PushFont(this.ConfigUiFont);
             }
 
-            if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languages, this.languages.Length))
+            if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.LanguageList.ToArray(), this.LanguageList.ToArray().Length))
             {
               this.configuration.Lang = languageInt;
               this.LoadFont();
@@ -146,7 +155,7 @@ namespace Echoglossian
           if (languageOnlySupportedThruOverlay || this.configuration.UseImGui)
           {
             ImGui.Text(Resources.ImguiAdjustmentsLabel);
-            if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNPCNames))
+            if (ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref this.configuration.TranslateNpcNames))
             {
               this.SaveConfig();
             }
@@ -460,7 +469,7 @@ namespace Echoglossian
       this.configuration.TranslateTalkSubtitle = false;
       this.configuration.TranslateBattleTalk = false;
       this.configuration.TranslateToast = false;
-      this.configuration.TranslateNPCNames = false;
+      this.configuration.TranslateNpcNames = false;
       this.configuration.TranslateErrorToast = false;
       this.configuration.TranslateQuestToast = false;
       this.configuration.TranslateAreaToast = false;

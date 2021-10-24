@@ -14,19 +14,19 @@ namespace Echoglossian
     public TalkMessage FormatTalkMessage(string sender, string text)
     {
       return new TalkMessage(sender, text, LangIdentify(text), LangIdentify(sender), string.Empty, string.Empty,
-        Codes[this.configuration.Lang], this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        this.LanguagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
     }
 
     public BattleTalkMessage FormatBattleTalkMessage(string sender, string text)
     {
       return new BattleTalkMessage(sender, text, LangIdentify(text), LangIdentify(sender), string.Empty, string.Empty,
-        Codes[this.configuration.Lang], this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        this.LanguagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
     }
 
     public ToastMessage FormatToastMessage(string type, string text)
     {
       return new ToastMessage(type, text, LangIdentify(text), string.Empty,
-        Codes[this.configuration.Lang], this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        this.LanguagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
     }
   }
 }
