@@ -5,7 +5,6 @@
 
 using System;
 using System.Numerics;
-
 using Dalamud.Interface;
 using Dalamud.Logging;
 using Dalamud.Utility;
@@ -153,8 +152,8 @@ namespace Echoglossian
       var size = Math.Min(
         this.battleTalkTextDimensions.X * this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
         ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 3));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y * 2));
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y * 2.5f * this.configuration.ImGuiBattleTalkWindowHeightMult));
+      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayBattleTalkTextColor, 255));
       if (this.FontLoaded)
       {
 #if DEBUG
@@ -237,7 +236,7 @@ namespace Echoglossian
       var size = Math.Min(
           this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult,
           ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y));
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
       {
@@ -358,7 +357,7 @@ namespace Echoglossian
     private void DrawTranslatedErrorToastWindow()
     {
 #if DEBUG
-      PluginLog.LogWarning($"Using Toast Overlay - inside Draw Error toast Overlay");
+      // PluginLog.LogWarning("Using Toast Overlay - inside Draw Error toast Overlay");
 #endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.errorToastTranslationTextPosition.X + (this.errorToastTranslationTextDimensions.X / 2) - (this.errorToastTranslationTextImguiSize.X / 2),
@@ -367,11 +366,11 @@ namespace Echoglossian
         this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentErrorToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
 #if DEBUG
-      PluginLog.LogWarning($"size: {size}");
+      // PluginLog.LogWarning($"size: {size}");
 #endif
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2));
 #if DEBUG
-      PluginLog.LogWarning($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2)}");
+      // PluginLog.LogWarning($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2)}");
 #endif
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
@@ -417,7 +416,7 @@ namespace Echoglossian
     private void DrawTranslatedClassChangeToastWindow()
     {
 #if DEBUG
-      PluginLog.LogWarning($"Using Toast Overlay - inside Draw Class change toast Overlay");
+      // PluginLog.LogWarning("Using Toast Overlay - inside Draw Class change toast Overlay");
 #endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.classChangeToastTranslationTextPosition.X + (this.classChangeToastTranslationTextDimensions.X / 2) - (this.classChangeToastTranslationTextImguiSize.X / 2),

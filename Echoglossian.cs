@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
-
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
@@ -19,6 +18,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
+using FFXIVClientStructs;
 using ImGuiScene;
 using XivCommon;
 
@@ -32,7 +32,7 @@ namespace Echoglossian
     private string configDir;
     private static int languageInt = 16;
     private static int fontSize = 20;
-    private static int chosenTransEngine = 0;
+    private static int chosenTransEngine;
     private static string transEngineName;
     private static Dictionary<int, Language> langDict;
 
@@ -115,7 +115,7 @@ namespace Echoglossian
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
-      FFXIVClientStructs.Resolver.Initialize();
+      Resolver.Initialize();
 
       this.CreateOrUseDb();
 
@@ -139,7 +139,8 @@ namespace Echoglossian
 
       chosenTransEngine = this.configuration.ChosenTransEngine;
 
-      transEngineName = ((TransEngines)chosenTransEngine).ToString();
+      TransEngines t = (TransEngines)chosenTransEngine;
+      transEngineName = t.ToString();
 
       identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
@@ -227,7 +228,7 @@ namespace Echoglossian
 
     private void Tick(Framework tFramework)
     {
-      switch (this.configuration.UseImGui || !this.configuration.DoNotUseImGuiForToasts)
+      switch (this.configuration.UseImGui || this.configuration.UseImGuiForBattleTalk || !this.configuration.DoNotUseImGuiForToasts)
       {
         case true when !this.FontLoaded || this.FontLoadFailed:
           return;
@@ -313,7 +314,7 @@ namespace Echoglossian
         return;
       }
 
-      if (this.configuration.UseImGui && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
+      if (this.configuration.UseImGuiForBattleTalk && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
       {
         this.DrawTranslatedBattleDialogueWindow();
 #if DEBUG

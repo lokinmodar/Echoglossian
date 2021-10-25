@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
 using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
@@ -224,7 +223,7 @@ namespace Echoglossian
       {
         context.BattleTalkMessage.Attach(battleTalkMessage);
 #if DEBUG
-        if (!this.configuration.UseImGui)
+        if (!this.configuration.UseImGuiForBattleTalk)
         {
           logStream.WriteLineAsync($"Inside Context: {context.BattleTalkMessage.Local}");
         }
@@ -232,7 +231,7 @@ namespace Echoglossian
 
         context.SaveChangesAsync();
 #if DEBUG
-        if (!this.configuration.UseImGui)
+        if (!this.configuration.UseImGuiForBattleTalk)
         {
           logStream.WriteLineAsync($"After 'SaveChanges': {context.BattleTalkMessage.Local}");
         }

@@ -4,11 +4,10 @@
 // </copyright>
 
 using System;
+using System.Drawing;
+using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
-using System.Drawing;
-
-using System.Drawing.Text;
 
 namespace Echoglossian
 {
@@ -29,7 +28,7 @@ namespace Echoglossian
 
     public string MovePathUp(string path, int noOfLevels)
     {
-      string parentPath = path.TrimEnd(new[] { '/', '\\' });
+      string parentPath = path.TrimEnd('/', '\\');
       for (int i = 0; i < noOfLevels; i++)
       {
         if (parentPath != null)
@@ -83,19 +82,18 @@ namespace Echoglossian
     /// Creates an image containing the given text.
     /// NOTE: the image should be disposed after use.
     /// </summary>
-    /// <param name="text">Text to draw</param>
-    /// <param name="fontOptional">Font to use, defaults to Control.DefaultFont</param>
-    /// <param name="textColorOptional">Text color, defaults to Black</param>
-    /// <param name="backColorOptional">Background color, defaults to white</param>
-    /// <param name="minSizeOptional">Minimum image size, defaults the size required to display the text</param>
-    /// <returns>The image containing the text, which should be disposed after use</returns>
+    /// <param name="text">Text to draw.</param>
+    /// <param name="fontOptional">Font to use, defaults to Control.DefaultFont.</param>
+    /// <param name="textColorOptional">Text color, defaults to Black.</param>
+    /// <param name="backColorOptional">Background color, defaults to white.</param>
+    /// <param name="minSizeOptional">Minimum image size, defaults the size required to display the text.</param>
+    /// <returns>The image containing the text, which should be disposed after use.</returns>
     public Image DrawText(string text, Font fontOptional = null, Color? textColorOptional = null, Color? backColorOptional = null, Size? minSizeOptional = null)
     {
-
-      PrivateFontCollection pfc = new PrivateFontCollection();
+      PrivateFontCollection pfc = new();
       pfc.AddFontFile($@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}");
 
-      Font font = new Font(pfc.Families[0], this.configuration.FontSize, FontStyle.Regular);
+      Font font = new(pfc.Families[0], this.configuration.FontSize, FontStyle.Regular);
       if (fontOptional != null)
       {
         font = fontOptional;
@@ -152,6 +150,5 @@ namespace Echoglossian
 
       return retImg;
     }
-
   }
 }

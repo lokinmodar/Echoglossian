@@ -5,7 +5,6 @@
 
 using System.IO;
 using System.Threading.Tasks;
-
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Microsoft.EntityFrameworkCore;

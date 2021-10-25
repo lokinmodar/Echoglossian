@@ -5,12 +5,9 @@
 
 using System.Linq;
 using System.Threading.Tasks;
-
 using Dalamud.Game.Gui;
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
-using Echoglossian.Properties;
 using XivCommon.Functions.Tooltips;
 
 namespace Echoglossian

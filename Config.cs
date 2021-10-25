@@ -5,7 +5,6 @@
 
 using System;
 using System.Numerics;
-
 using Dalamud.Configuration;
 
 namespace Echoglossian
@@ -42,20 +41,25 @@ namespace Echoglossian
     public bool TranslateJournal = false;
 
     public bool UseImGui = true;
+    public bool UseImGuiForBattleTalk = true;
     public bool DoNotUseImGuiForToasts = false;
     public bool SwapTextsUsingImGui = false;
 
     public int ChosenTransEngine = 0;
 
-    public Vector2 ImGuiWindowPosCorrection = new Vector2(0.0f, 0.0f);
-    public Vector2 ImGuiToastWindowPosCorrection = new Vector2(0.0f, 0.0f);
+    public Vector2 ImGuiWindowPosCorrection = new(0.0f, 0.0f);
+    public Vector2 ImGuiToastWindowPosCorrection = new(0.0f, 0.0f);
+    public Vector2 ImGuiBattleTalkWindowPosCorrection = new(0.0f, 0.0f);
     public float ImGuiTalkWindowWidthMult = 1f;
     public float ImGuiTalkWindowHeightMult = 1f;
     public float ImGuiBattleTalkWindowWidthMult = 1f;
     public float ImGuiBattleTalkWindowHeightMult = 1f;
     public float ImGuiToastWindowWidthMult = 1f;
-    public Vector3 OverlayTextColor = new Vector3(1.0f, 1.0f, 1.0f);
+    public Vector3 OverlayTextColor = new(1.0f, 1.0f, 1.0f);
+    public Vector3 OverlayBattleTalkTextColor = new(1.0f, 1.0f, 1.0f);
     public float FontScale = 1;
+    public float BattleTalkFontScale = 1;
+
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 

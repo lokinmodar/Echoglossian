@@ -8,7 +8,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
@@ -183,7 +182,7 @@ namespace Echoglossian
                 this.classChangeToastTranslationSemaphore.Wait();
                 if (messageId == this.currentClassChangeToastTranslationId)
                 {
-                  var messageTranslation = Translate(messageToTranslate?.ToString());
+                  var messageTranslation = Translate(messageToTranslate);
                   /*#if DEBUG
                                     PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 4");
                   #endif*/
@@ -444,7 +443,7 @@ namespace Echoglossian
           if (this.configuration.DoNotUseImGuiForToasts)
           {
 #if DEBUG
-            PluginLog.LogError($"if not found and if not using imgui");
+            PluginLog.LogError("if not found and if not using imgui");
 #endif
             var translatedToastMessage = Translate(message.TextValue);
             message = translatedToastMessage;
@@ -463,7 +462,7 @@ namespace Echoglossian
           else
           {
 #if DEBUG
-            PluginLog.LogError($"if not found and if using imgui");
+            PluginLog.LogError("if not found and if using imgui");
 #endif
             this.currentErrorToastTranslationId = Environment.TickCount;
             this.currentErrorToastTranslation = Resources.WaitingForTranslation;
@@ -505,7 +504,7 @@ namespace Echoglossian
         if (this.configuration.DoNotUseImGuiForToasts)
         {
 #if DEBUG
-          PluginLog.LogError($"if found and if not using imgui");
+          PluginLog.LogError("if found and if not using imgui");
 #endif
           message = this.FoundToastMessage.TranslatedToastMessage;
 #if DEBUG
@@ -515,14 +514,14 @@ namespace Echoglossian
         else
         {
 #if DEBUG
-          PluginLog.LogError($"if found and if using imgui");
+          PluginLog.LogError("if found and if using imgui");
 #endif
           this.currentErrorToastTranslationId = Environment.TickCount;
           this.currentErrorToastTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
 #if DEBUG
-            PluginLog.LogWarning($"Using Toast Overlay - inside Draw task");
+            PluginLog.LogWarning("Using Toast Overlay - inside Draw task");
 #endif
             var messageId = this.currentErrorToastTranslationId;
             var messageTranslation = this.FoundToastMessage.TranslatedToastMessage;

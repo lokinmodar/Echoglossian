@@ -38,12 +38,12 @@
             Creates an image containing the given text.
             NOTE: the image should be disposed after use.
             </summary>
-            <param name="text">Text to draw</param>
-            <param name="fontOptional">Font to use, defaults to Control.DefaultFont</param>
-            <param name="textColorOptional">Text color, defaults to Black</param>
-            <param name="backColorOptional">Background color, defaults to white</param>
-            <param name="minSizeOptional">Minimum image size, defaults the size required to display the text</param>
-            <returns>The image containing the text, which should be disposed after use</returns>
+            <param name="text">Text to draw.</param>
+            <param name="fontOptional">Font to use, defaults to Control.DefaultFont.</param>
+            <param name="textColorOptional">Text color, defaults to Black.</param>
+            <param name="backColorOptional">Background color, defaults to white.</param>
+            <param name="minSizeOptional">Minimum image size, defaults the size required to display the text.</param>
+            <returns>The image containing the text, which should be disposed after use.</returns>
         </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>

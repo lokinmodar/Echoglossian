@@ -9,7 +9,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
@@ -65,7 +64,7 @@ namespace Echoglossian
         return string.Empty;
       }
 #if DEBUG
-      PluginLog.LogError($"inside translate method");
+      PluginLog.LogError("inside translate method");
 #endif
       try
       {

@@ -8,7 +8,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
 using Dalamud.Utility;
@@ -540,7 +539,7 @@ namespace Echoglossian
         // If the dialogue is not saved
         if (!findings)
         {
-          if (!this.configuration.UseImGui)
+          if (!this.configuration.UseImGuiForBattleTalk)
           {
             var translatedBattleTalkMessage = Translate(battleTextToTranslate);
             var senderTranslation = Translate(senderToTranslate);
@@ -636,7 +635,7 @@ namespace Echoglossian
         }
         else
         { // if the data is already in the DB
-          if (!this.configuration.UseImGui)
+          if (!this.configuration.UseImGuiForBattleTalk)
           {
             var translatedBattleMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;
             var senderTranslation = this.FoundBattleTalkMessage.TranslatedSenderName;
