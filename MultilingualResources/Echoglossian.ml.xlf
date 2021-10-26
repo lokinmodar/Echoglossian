@@ -117,8 +117,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">എക്കോഗ്ലോസിയൻ</target>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
-          <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
+          <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ഗെയിമിന്റെ യുഐ ഡയലോഗ് ബോക്സുമായി താരതമ്യപ്പെടുത്തുമ്പോൾ നിങ്ങളുടെ ഓവർലേ കേന്ദ്രീകൃതമല്ലെങ്കിൽ ദയവായി സ്ഥാനം ക്രമീകരിക്കുക.</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayColorSelectName" translate="yes" xml:space="preserve">
           <source>OverlayColorSelect</source>
@@ -137,12 +138,14 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">അക്ഷരസഞ്ചയത്തിന്റെ വലിപ്പം</target>
         </trans-unit>
         <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
-          <source>Select the font size for the dialogue text overlay</source>
+          <source>Select the font size for the text overlay</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ഡയലോഗ് ടെക്സ്റ്റ് ഓവർലേയ്ക്കായി അക്ഷരസഞ്ചയത്തിന്റെ വലുപ്പം തിരഞ്ഞെടുക്കുക</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Height multiplier</source>
+          <source>Translation Overlay Height multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ഡയലോഗ് ഓവർലേ ഉയരം ഗുണിതം</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
@@ -154,16 +157,18 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">സ്ഥാനം ക്രമീകരിക്കൽ</target>
         </trans-unit>
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
-          <source>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</source>
+          <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ഡിസ്പ്ലേ പരിഭാഷപ്പെടുത്തിയ ഡയലോഗ് ടെക്സ്റ്റ് പരിഭാഷഉപയോഗിച്ച് ടെക്സ്റ്റ് മാറ്റിസ്ഥാപിക്കുന്നതിന് പകരം ഗെയിം യുഐ ഡയലോഗ് ബോക്സിന് മുകളിൽ ഓവർലേ ചെയ്യുക</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust translation overlay width</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">പരിഭാഷ യുടെ വീതി ക്രമീകരിക്കുക</target>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Width multiplier</source>
+          <source>Translation Overlay Width multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ഡയലോഗ് ഓവർലേ വീതി ഗുണിതം</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
           <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
@@ -280,6 +285,10 @@
         <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
           <source>Adjust the options related to the translation overlay:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">പരിഭാഷ യുടെ മേൽക്കിടക്കയുമായി ബന്ധപ്പെട്ട ഓപ്ഷനുകൾ ക്രമീകരിക്കുക:</target>
+        </trans-unit>
+        <trans-unit id="TranslationEngineSettingsNotRequired" translate="yes" xml:space="preserve">
+          <source>This translation engine does not require any special settings.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">ഈ വിവർത്തന എഞ്ചിന് പ്രത്യേക സജ്ജീകരണങ്ങളൊന്നും ആവശ്യമില്ല.</target>
         </trans-unit>
       </group>
     </body>

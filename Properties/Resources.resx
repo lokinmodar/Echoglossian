@@ -205,7 +205,7 @@
     <value>Echoglossian</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</value>
+    <value>Please adjust position if your overlay is not centered relative to the game's UI text box.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
     <value>OverlayColorSelect</value>
@@ -220,10 +220,10 @@
     <value>Overlay Font Size</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Select the font size for the dialogue text overlay</value>
+    <value>Select the font size for the text overlay</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Dialogue Overlay Height multiplier</value>
+    <value>Translation Overlay Height multiplier</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Battle talk (Enenies dialogue lines) translation</value>
@@ -233,13 +233,13 @@
     <value>Position adjustment</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</value>
+    <value>Display translated text overlay above game UI text box instead of replacing its text with the translation</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Adjust translation overlay width</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Dialogue Overlay Width multiplier</value>
+    <value>Translation Overlay Width multiplier</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</value>
@@ -277,6 +277,9 @@
   <data name="SendPixButton" xml:space="preserve">
     <value>Send me a PIX donation!</value>
   </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Settings for Google Translate:</value>
+  </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
     <value>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</value>
   </data>
@@ -285,6 +288,9 @@
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
     <value>Toast Overlay Width multiplier</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs List on Github</value>
   </data>
   <data name="TranslateAreaToastToggleText" xml:space="preserve">
     <value>Translate in-game Area name Toast Messages</value>
@@ -312,6 +318,9 @@
   </data>
   <data name="TranslateToastToggleText" xml:space="preserve">
     <value>Translate in-game Toast Messages</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>This translation engine does not require any special settings.</value>
   </data>
   <data name="TranslationsEnabled" xml:space="preserve">
     <value>Translations enabled!</value>

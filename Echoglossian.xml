@@ -203,7 +203,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayAdjustmentOrientations">
             <summary>
-              Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI dialogue box..
+              Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI text box..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayColorSelectName">
@@ -228,12 +228,12 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayFontSizeOrientations">
             <summary>
-              Looks up a localized string similar to Select the font size for the dialogue text overlay.
+              Looks up a localized string similar to Select the font size for the text overlay.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayHeightScrollLabel">
             <summary>
-              Looks up a localized string similar to Dialogue Overlay Height multiplier.
+              Looks up a localized string similar to Translation Overlay Height multiplier.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayName">
@@ -248,7 +248,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayToggleLabel">
             <summary>
-              Looks up a localized string similar to Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation.
+              Looks up a localized string similar to Display translated text overlay above game UI text box instead of replacing its text with the translation.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayWidthMultiplierOrientations">
@@ -258,7 +258,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayWidthScrollLabel">
             <summary>
-              Looks up a localized string similar to Dialogue Overlay Width multiplier.
+              Looks up a localized string similar to Translation Overlay Width multiplier.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PathInputInstructions">
@@ -379,6 +379,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslateToastToggleText">
             <summary>
               Looks up a localized string similar to Translate in-game Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationEngineSettingsNotRequired">
+            <summary>
+              Looks up a localized string similar to This translation engine does not require any special settings..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">

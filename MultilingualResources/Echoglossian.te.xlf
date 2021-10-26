@@ -117,8 +117,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ఎకోగ్లోసియన్</target>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
-          <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
+          <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">మీ ఓవర్ లే గేమ్ యొక్క యుఐ డైలాగ్ బాక్స్ కు సంబంధించి కేంద్రీకృతం కానట్లయితే దయచేసి పొజిషన్ సర్దుబాటు చేయండి.</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayColorSelectName" translate="yes" xml:space="preserve">
           <source>OverlayColorSelect</source>
@@ -137,12 +138,14 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ఫాంట్ సైజును ఓవర్ లే చేయి</target>
         </trans-unit>
         <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
-          <source>Select the font size for the dialogue text overlay</source>
+          <source>Select the font size for the text overlay</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">డైలాగ్ టెక్స్ట్ ఓవర్ లే కొరకు ఫాంట్ సైజును ఎంచుకోండి</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Height multiplier</source>
+          <source>Translation Overlay Height multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">డైలాగ్ ఓవర్ లే హైట్ మల్టిపైర్</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
@@ -154,16 +157,18 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">పొజిషన్ సర్దుబాటు</target>
         </trans-unit>
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
-          <source>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</source>
+          <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">అనువాదంతో దాని టెక్స్ట్ ను మార్చడానికి బదులుగా గేమ్ యుఐ డైలాగ్ బాక్స్ పైన అనువదించబడిన డైలాగ్ టెక్స్ట్ ఓవర్ లే ను ప్రదర్శించండి</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust translation overlay width</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">అనువాద ఓవర్ లే వెడల్పును సర్దుబాటు చేయండి</target>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Width multiplier</source>
+          <source>Translation Overlay Width multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">డైలాగ్ ఓవర్ లే విడ్త్ మల్టిపైర్</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
           <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
@@ -280,6 +285,10 @@
         <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
           <source>Adjust the options related to the translation overlay:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">అనువాద ఓవర్ లేకు సంబంధించిన ఆప్షన్ లను సర్దుబాటు చేయండి:</target>
+        </trans-unit>
+        <trans-unit id="TranslationEngineSettingsNotRequired" translate="yes" xml:space="preserve">
+          <source>This translation engine does not require any special settings.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">ఈ అనువాద ఇంజిన్ కు ప్రత్యేక సెట్టింగ్ లు అవసరం లేదు.</target>
         </trans-unit>
       </group>
     </body>

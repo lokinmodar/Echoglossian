@@ -117,8 +117,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian</target>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
-          <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
+          <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Upravte polohu, ak vaše prekrytie nie je centrované vzhľadom na dialógové okno používateľského používateľského nastavenia hry.</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayColorSelectName" translate="yes" xml:space="preserve">
           <source>OverlayColorSelect</source>
@@ -137,12 +138,14 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Veľkosť písma prekrytie</target>
         </trans-unit>
         <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
-          <source>Select the font size for the dialogue text overlay</source>
+          <source>Select the font size for the text overlay</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Výber veľkosti písma pre prekrytie textu dialógu</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Height multiplier</source>
+          <source>Translation Overlay Height multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Multiplikátor výšky prekrytie dialógu</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
@@ -154,16 +157,18 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Nastavenie polohy</target>
         </trans-unit>
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
-          <source>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</source>
+          <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Zobrazenie preloženého dialógového textu nad dialógové okno používateľského rozhranie hry namiesto nahradenia textu prekladom</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust translation overlay width</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Úprava šírky prekrytej prekrytej prekrytej prekladu</target>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Width multiplier</source>
+          <source>Translation Overlay Width multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Multiplikátor šírky prekrytie dialógu</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
           <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
@@ -280,6 +285,10 @@
         <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
           <source>Adjust the options related to the translation overlay:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Upravte možnosti týkajúce sa prekrytia prekladu:</target>
+        </trans-unit>
+        <trans-unit id="TranslationEngineSettingsNotRequired" translate="yes" xml:space="preserve">
+          <source>This translation engine does not require any special settings.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tento prekladový nástroj nevyžaduje žiadne špeciálne nastavenia.</target>
         </trans-unit>
       </group>
     </body>

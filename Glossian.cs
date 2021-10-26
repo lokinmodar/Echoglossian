@@ -106,7 +106,7 @@ namespace Echoglossian
         PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
         PluginLog.LogInformation($"Chosen Translation Language: {lang}");
 #endif
-        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={parsedText}";
+        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
 #if DEBUG
         PluginLog.LogInformation($"URL: {url}");
 #endif

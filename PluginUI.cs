@@ -430,8 +430,8 @@ namespace Echoglossian
           ImGui.BeginGroup();
           if (transEngine == 0)
           {
-            ImGui.Text($"Settings for: Google Translate:");
-            ImGui.Text("This translation engine does not require any special settings.");
+            ImGui.Text(Resources.SettingsForGTransText);
+            ImGui.Text(Resources.TranslationEngineSettingsNotRequired);
           }
 
           ImGui.EndGroup();
@@ -440,8 +440,27 @@ namespace Echoglossian
 
         if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
         {
-          ImGui.Image(this.logo.ImGuiHandle, new Vector2(200, 200));
+          ImGui.Columns(2, "columns", false);
           ImGui.Text("About Echoglossian:");
+          ImGui.TextWrapped("About Echoglossian:");
+          ImGui.Spacing();
+          ImGui.TextWrapped("This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.");
+          ImGui.TextWrapped("For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.");
+          ImGui.TextWrapped("Please support us either by contributing to the project development, submitting issues or helping us with a coffee.");
+          ImGui.TextWrapped("The non-exhaustive list of issues and TODOs is available in the link below:");
+          if (ImGui.Button(Resources.TodoUrl))
+          {
+            Process.Start(new ProcessStartInfo
+            {
+              FileName = "https://github.com/lokinmodar/Echoglossian/projects/1",
+              UseShellExecute = true,
+            });
+            this.SaveConfig();
+            this.config = false;
+          }
+
+          ImGui.NextColumn();
+          ImGui.Image(this.logo.ImGuiHandle, new Vector2(200, 200));
           ImGui.EndTabItem();
         }
 

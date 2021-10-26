@@ -117,8 +117,8 @@
           <target state="new">Echoglossian</target>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
-          <source>Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</source>
-          <target state="new">Please adjust position if your overlay is not centered relative to the game's UI dialogue box.</target>
+          <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
+          <target state="new">Please adjust position if your overlay is not centered relative to the game's UI text box.</target>
         </trans-unit>
         <trans-unit id="OverlayColorSelectName" translate="yes" xml:space="preserve">
           <source>OverlayColorSelect</source>
@@ -137,12 +137,12 @@
           <target state="new">Overlay Font Size</target>
         </trans-unit>
         <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
-          <source>Select the font size for the dialogue text overlay</source>
-          <target state="new">Select the font size for the dialogue text overlay</target>
+          <source>Select the font size for the text overlay</source>
+          <target state="new">Select the font size for the text overlay</target>
         </trans-unit>
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Height multiplier</source>
-          <target state="new">Dialogue Overlay Height multiplier</target>
+          <source>Translation Overlay Height multiplier</source>
+          <target state="new">Translation Overlay Height multiplier</target>
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
@@ -154,16 +154,16 @@
           <target state="new">Position adjustment</target>
         </trans-unit>
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
-          <source>Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</source>
-          <target state="new">Display translated dialogue text overlay above game UI dialogue box instead of replacing its text with the translation</target>
+          <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
+          <target state="new">Display translated text overlay above game UI text box instead of replacing its text with the translation</target>
         </trans-unit>
         <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust translation overlay width</source>
           <target state="new">Adjust translation overlay width</target>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Dialogue Overlay Width multiplier</source>
-          <target state="new">Dialogue Overlay Width multiplier</target>
+          <source>Translation Overlay Width multiplier</source>
+          <target state="new">Translation Overlay Width multiplier</target>
         </trans-unit>
         <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
           <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
@@ -280,6 +280,10 @@
         <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
           <source>Adjust the options related to the translation overlay:</source>
           <target state="new">Adjust the options related to the translation overlay:</target>
+        </trans-unit>
+        <trans-unit id="TranslationEngineSettingsNotRequired" translate="yes" xml:space="preserve">
+          <source>This translation engine does not require any special settings.</source>
+          <target state="new">This translation engine does not require any special settings.</target>
         </trans-unit>
       </group>
     </body>
