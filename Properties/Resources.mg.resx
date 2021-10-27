@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Amboary ireo safidy mifandraika amin'ny fandikan-teny:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Tsy mitaky toerana manokana io maoteran'ny fandikan-teny io.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Fandrindrana ho an'ny Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Lisitry ny TODOs ao amin'ny Github</value>
+  </data>
 </root>

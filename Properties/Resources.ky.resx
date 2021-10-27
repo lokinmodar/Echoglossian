@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Которууга байланыштуу параметрлерди жөнгө салуу:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Бул которуу кыймылдаткычы кандайдыр бир атайын параметрлерди талап кылбайт.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google Translate үчүн параметрлер:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Гитуб боюнча ТОДО тизмеси</value>
+  </data>
 </root>

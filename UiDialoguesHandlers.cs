@@ -14,6 +14,7 @@ using Dalamud.Utility;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using Lumina.Data.Parsing;
 using XivCommon.Functions;
 
 namespace Echoglossian
@@ -21,6 +22,8 @@ namespace Echoglossian
   // TODO: Add logic to invert translation and original texts
   public partial class Echoglossian
   {
+
+
     private unsafe void TalkHandler(string addonName, int index)
     {
       var talk = this.gameGui.GetAddonByName(addonName, index);
@@ -49,17 +52,7 @@ namespace Echoglossian
       }
     }
 
-    public static unsafe string GetNodeText(AtkResNode* maybeTextNode)
-    {
-      if (maybeTextNode != null && maybeTextNode->Type == NodeType.Text)
-      {
-        var textNode = (AtkTextNode*)maybeTextNode;
-        var text = Marshal.PtrToStringUTF8(new IntPtr(textNode->NodeText.StringPtr));
-        return text;
-      }
-
-      return "This went wrong...";
-    }
+   
 
     private unsafe void TalkSubtitleHandler(string addonName, int index)
     {
@@ -70,8 +63,28 @@ namespace Echoglossian
         var talkSubtitleMaster = (AtkUnitBase*)talkSubtitle;
         if (talkSubtitleMaster->IsVisible)
         {
-          var textNode = talkSubtitleMaster->UldManager.NodeList[2];
-          var ttFinal = GetNodeText(textNode);
+         // var talkSubtitleId = talkSubtitleMaster->RootNode->ChildNode->NodeID;
+          // PluginLog.LogError($"node id: {talkSubtitleId}");
+          // var textNode = (AtkTextNode*)talkSubtitleMaster->UldManager.SearchNodeById(talkSubtitleId);
+
+          var tNode = (AtkTextNode*)talkSubtitleMaster->RootNode->ChildNode;
+
+          if (tNode == null)
+          {
+            PluginLog.LogWarning("Node Empty");
+          }
+          else
+          {
+            var text = tNode->NodeText;
+            var parsedText = text.StringPtr == null || text.BufUsed <= 1 ? string.Empty : Encoding.UTF8.GetString(text.StringPtr, (int)text.BufUsed - 1);
+            PluginLog.LogError($"Text: {parsedText}");
+          }
+
+          // var nodeText = MemoryHelper.ReadString((IntPtr)textNode->NodeText.StringPtr, (int)textNode->NodeText.StringLength);
+          
+          // tNode->SetText("What is a man? A miserable little pile of secrets. But enough talk… Have at you!"); 
+
+
 
           this.talkSubtitleDisplayTranslation = true;
           this.talkSubtitleTextDimensions.X = talkSubtitleMaster->RootNode->Width * talkSubtitleMaster->Scale;
@@ -79,7 +92,7 @@ namespace Echoglossian
           this.talkSubtitleTextPosition.X = talkSubtitleMaster->RootNode->X;
           this.talkSubtitleTextPosition.Y = talkSubtitleMaster->RootNode->Y;
 #if DEBUG
-          var childCount = talkSubtitleMaster->RootNode->ChildCount;
+          // var childCount = talkSubtitleMaster->RootNode->ChildCount;
 
           // PluginLog.Fatal("Node Count: " + childCount.ToString());
           // PluginLog.LogFatal("Text using NodeList: " + ttFinal);

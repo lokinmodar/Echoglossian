@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Аударма жапсырмасына қатысты параметрлерді реттеу:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Бұл аударма қозғалтқышы қандай да бір арнайы параметрлерді қажет етпейді.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google Translate үшін параметрлер:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Github сайтындағы ТОДО тізімі</value>
+  </data>
 </root>

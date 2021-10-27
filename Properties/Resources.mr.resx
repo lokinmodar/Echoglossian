@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>भाषांतर ओव्हरलेशी संबंधित पर्याय समायोजित करा:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>या भाषांतर इंजिनला कोणत्याही विशेष सेटिंग्जची आवश्यकता नसते.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>गुगल ट्रान्सलेटसाठी सेटिंग्ज:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>गिथबवरील टोडीओ यादी</value>
+  </data>
 </root>

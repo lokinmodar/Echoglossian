@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>შეცვალეთ თარგმანის გადახურვასთან დაკავშირებული ვარიანტები:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ეს მთარგმნელობითი ძრავა არ საჭიროებს სპეციალურ პარამეტრებს.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google Translate-ის პარამეტრები:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs სია Github- ზე</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>A fordítási átfedéssel kapcsolatos beállítások módosítása:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ez a fordítási motor nem igényel speciális beállításokat.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>A Google Fordító beállításai:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs lista a Githubon</value>
+  </data>
 </root>

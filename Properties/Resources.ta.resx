@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>மொழிபெயர்ப்பு மேலமைதொடர்பான விருப்பங்களை சரிசெய்யவும்:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>இந்த மொழிபெயர்ப்பு இயந்திரத்திற்கு எந்த சிறப்பு அமைப்புகளும் தேவையில்லை.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Ggmatat tat tamp;க்கான அமைப்புகள்:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>கீதுப் பற்றிய Tோடோக்கள் பட்டியல்</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Rekebisha machaguo yanayohusiana na overlay ya tafsiri:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Injini hii ya tafsiri haihitaji mipangilio yoyote maalum.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Mipangilio ya Tafsiri ya Google:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Orodha ya TODOs kwenye Github</value>
+  </data>
 </root>

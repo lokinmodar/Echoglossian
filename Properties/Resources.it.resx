@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Regola le opzioni relative alla sovrapposizione di traduzione:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Questo motore di traduzione non richiede impostazioni speciali.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Impostazioni per Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Elenco TODOs su Github</value>
+  </data>
 </root>

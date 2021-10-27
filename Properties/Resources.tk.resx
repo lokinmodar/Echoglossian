@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Terjimäniň üstine degişli usullary sazlaň:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Bu terjime motory ýörite düzüm talap etmeýär.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google Translate üçin sazlamalar:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Githubdaky TODO-laryň sanawy</value>
+  </data>
 </root>

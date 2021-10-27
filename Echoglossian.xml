@@ -121,9 +121,29 @@
               Looks up a localized string similar to Echoglossian Configuration.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ContribText">
+            <summary>
+              Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.cutscenechoice">
             <summary>
               Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DisclaimerText1">
+            <summary>
+              Looks up a localized string similar to This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DisclaimerText2">
+            <summary>
+              Looks up a localized string similar to For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DisclaimerTitle">
+            <summary>
+              Looks up a localized string similar to About Echoglossian:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.DoNotUseImGuiForToastsToggle">
@@ -199,6 +219,11 @@
         <member name="P:Echoglossian.Properties.Resources.Name">
             <summary>
               Looks up a localized string similar to Echoglossian.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.NEListText">
+            <summary>
+              Looks up a localized string similar to The non-exhaustive list of issues and TODOs is available in the link below:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayAdjustmentOrientations">
@@ -321,6 +346,11 @@
               Looks up a localized string similar to Send me a PIX donation!.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForGTransText">
+            <summary>
+              Looks up a localized string similar to Settings for Google Translate:.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.SwapTranslationTextToggle">
             <summary>
               Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
@@ -334,6 +364,11 @@
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthScrollLabel">
             <summary>
               Looks up a localized string similar to Toast Overlay Width multiplier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TodoUrl">
+            <summary>
+              Looks up a localized string similar to TODOs List on Github.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateAreaToastToggleText">

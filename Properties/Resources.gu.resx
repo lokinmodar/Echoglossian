@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>અનુવાદ ઓવરલે સાથે સંબંધિત વિકલ્પોને સમાયોજિત કરો:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>આ અનુવાદ એન્જિનને કોઈ વિશેષ સેટિંગ્સની જરૂર નથી.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>ગૂગલ ટ્રાન્સલેટ માટે સેટિંગ્સ:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>ગિથબ પર ટોડીઓ સૂચિ</value>
+  </data>
 </root>

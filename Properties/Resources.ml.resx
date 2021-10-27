@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>പരിഭാഷ യുടെ മേൽക്കിടക്കയുമായി ബന്ധപ്പെട്ട ഓപ്ഷനുകൾ ക്രമീകരിക്കുക:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ഈ വിവർത്തന എഞ്ചിന് പ്രത്യേക സജ്ജീകരണങ്ങളൊന്നും ആവശ്യമില്ല.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>ഗൂഗിൾ പരിഭാഷയ്ക്കുള്ള ക്രമീകരണങ്ങൾ:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>ഗിഥബിലെ ടിഒഡിഒകളുടെ പട്ടിക</value>
+  </data>
 </root>

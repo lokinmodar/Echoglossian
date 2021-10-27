@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Laraskan opsyen yang berkaitan dengan penindihan atas terjemahan:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Enjin terjemahan ini tidak memerlukan sebarang seting khas.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Tetapan untuk Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Senarai TODOs pada Github</value>
+  </data>
 </root>

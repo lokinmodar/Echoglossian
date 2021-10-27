@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Rregullo opsionet që lidhen me mbishrejn e përkthimit:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ky motor përkthimi nuk kërkon ndonjë rregullim të veçantë.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Rregullimet për Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Lista e TODOs në Github</value>
+  </data>
 </root>

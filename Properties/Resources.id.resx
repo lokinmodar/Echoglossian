@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Menyesuaikan opsi yang terkait dengan overlay terjemahan:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Mesin terjemahan ini tidak memerlukan pengaturan khusus.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Pengaturan untuk Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Daftar TODOs di Github</value>
+  </data>
 </root>

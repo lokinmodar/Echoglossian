@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Dostosuj opcje związane z nakładką tłumaczeniowa:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ten aparat tłumaczeniowy nie wymaga żadnych specjalnych ustawień.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Ustawienia Tłumacza Google:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Lista TODOs na Github</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Juster alternativene som er knyttet til oversettelsesoverlegget:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Denne oversettelsesmotoren krever ingen spesielle innstillinger.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Innstillinger for Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>LISTE OVER TODOer på Github</value>
+  </data>
 </root>

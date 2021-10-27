@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠯᠤᠭ᠎ᠠ ᠬᠣᠯᠪᠣᠭᠳᠠᠬᠤ ᠰᠣᠩᠭᠣᠭᠤᠯᠢ ᠶᠢᠨ ᠵᠦᠢᠯ ᠦᠳ ᠢ ᠲᠣᠬᠢᠷᠠᠭᠤᠯᠤᠨ᠎ᠠ ᠄</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ᠡᠨᠡ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ 擎 ᠶᠠᠮᠠᠷᠪᠠ ᠣᠨᠴᠣᠭᠣᠢ ᠲᠥᠬᠥᠭᠡᠷᠦᠮᠵᠢ ᠶᠢ ᠬᠡᠷᠡᠭ᠍ᠯᠡᠬᠦ ᠦᠭᠡᠢ ᠃</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>ᠳᠠᠭᠤᠤ ᠶᠢᠨ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠣᠷᠴᠢᠭᠤᠯᠭ᠎ᠠ ᠶᠢᠨ ᠲᠣᠬᠢᠶ᠎ᠠ ᠄</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>ᠵᠢᠷᠤᠭ ᠪᠦᠰ ᠳᠡᠭᠡᠷᠡᠬᠢ ᠨᠠᠢ᠌ᠳᠠᠯᠭ᠎ᠠ ᠶᠢᠨ ᠬᠦᠰᠦᠨᠦᠭᠲᠦ ᠃</value>
+  </data>
 </root>

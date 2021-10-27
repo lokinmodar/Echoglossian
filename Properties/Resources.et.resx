@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Reguleerige tõlke ülekattega seotud suvandeid:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>See tõlkemootor ei vaja erisätteid.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google'i tõlke seaded:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOde nimekiri Githubis</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Mag-ayos ng mga opsiyon na may kaugnayan sa pagsasalin:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ang translation engine na ito ay hindi nangangailangan ng anumang espesyal na mga seting.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Mga Setting para sa Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs Listahan sa Github</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>ضبط الخيارات المتعلقة بتراكب الترجمة:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>لا يتطلب مشغل الترجمة هذا أي إعدادات خاصة.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>إعدادات ترجمة جوجل:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>قائمة TODOs على جيثب</value>
+  </data>
 </root>

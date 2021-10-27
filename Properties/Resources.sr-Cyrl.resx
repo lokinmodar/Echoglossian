@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Подесите опције које се односе на преклапање превода:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ова машина за превођење не захтева посебна подешавања.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Подешавања за Гоогле Транслате:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>ТОДОс листа на Гитхуб-у</value>
+  </data>
 </root>

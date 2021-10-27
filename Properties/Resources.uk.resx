@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Налаштуйте параметри, пов'язані з накладенням перекладу:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Цей рушій перекладу не вимагає особливих налаштувань.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Налаштування для Перекладача Google:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Список TODOs на Github</value>
+  </data>
 </root>

@@ -170,12 +170,48 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
+        /// </summary>
+        public static string ContribText {
+            get {
+                return ResourceManager.GetString("ContribText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         public static byte[] cutscenechoice {
             get {
                 object obj = ResourceManager.GetObject("cutscenechoice", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
+        /// </summary>
+        public static string DisclaimerText1 {
+            get {
+                return ResourceManager.GetString("DisclaimerText1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community..
+        /// </summary>
+        public static string DisclaimerText2 {
+            get {
+                return ResourceManager.GetString("DisclaimerText2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to About Echoglossian:.
+        /// </summary>
+        public static string DisclaimerTitle {
+            get {
+                return ResourceManager.GetString("DisclaimerTitle", resourceCulture);
             }
         }
         
@@ -313,6 +349,15 @@ namespace Echoglossian.Properties {
         public static string Name {
             get {
                 return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The non-exhaustive list of issues and TODOs is available in the link below:.
+        /// </summary>
+        public static string NEListText {
+            get {
+                return ResourceManager.GetString("NEListText", resourceCulture);
             }
         }
         

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>ປັບຕົວເລືອກທີ່ກ່ຽວຂ້ອງກັບການແປ overlay:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ເຄື່ອງຈັກແປພາສານີ້ບໍ່ຈໍາເປັນຕ້ອງມີການຕັ້ງຄ່າພິເສດໃດໆ.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>ການຕັ້ງຄ່າສໍາລັບ Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>ລາຍການ TODOs on Github</value>
+  </data>
 </root>

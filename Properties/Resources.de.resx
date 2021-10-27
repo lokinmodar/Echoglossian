@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Passen Sie die Optionen für das Übersetzungs-Overlay an:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Diese Übersetzungs-Engine erfordert keine speziellen Einstellungen.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Einstellungen für Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs-Liste auf Github</value>
+  </data>
 </root>

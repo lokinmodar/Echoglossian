@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>ترجمہ اوورلے سے متعلق اختیارات کو ایڈجسٹ کریں:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>اس ترجمہ انجن کو کسی خاص سیٹنگ کی ضرورت نہیں ہے۔</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>گوگل ترجمہ کے لیے سیٹنگیں:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>گیتھوب پر ٹی او ڈی اوز کی فہرست</value>
+  </data>
 </root>

@@ -290,6 +290,34 @@
           <source>This translation engine does not require any special settings.</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Този превод двигател не изисква никакви специални настройки.</target>
         </trans-unit>
+        <trans-unit id="SettingsForGTransText" translate="yes" xml:space="preserve">
+          <source>Settings for Google Translate:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Настройки за Google Преводач:</target>
+        </trans-unit>
+        <trans-unit id="TodoUrl" translate="yes" xml:space="preserve">
+          <source>TODOs List on Github</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">TODOs Списък на Гитуб</target>
+        </trans-unit>
+        <trans-unit id="ContribText" translate="yes" xml:space="preserve">
+          <source>Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</source>
+          <target state="new">Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerText1" translate="yes" xml:space="preserve">
+          <source>This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</source>
+          <target state="new">This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerText2" translate="yes" xml:space="preserve">
+          <source>For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.</source>
+          <target state="new">For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerTitle" translate="yes" xml:space="preserve">
+          <source>About Echoglossian:</source>
+          <target state="new">About Echoglossian:</target>
+        </trans-unit>
+        <trans-unit id="NEListText" translate="yes" xml:space="preserve">
+          <source>The non-exhaustive list of issues and TODOs is available in the link below:</source>
+          <target state="new">The non-exhaustive list of issues and TODOs is available in the link below:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

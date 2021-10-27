@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>លៃតម្រូវ ជម្រើស ដែល ទាក់ទង នឹង ការ បកប្រែ លើស ៖</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ម៉ាស៊ីន បកប្រែ នេះ មិន តម្រូវ ឲ្យ មាន ការ កំណត់ ពិសេស ណា មួយ ឡើយ &amp; # 160; ។</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>ការកំណត់សម្រាប់ Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>បញ្ជី TODOs លើ Github</value>
+  </data>
 </root>

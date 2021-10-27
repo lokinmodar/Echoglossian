@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>अनुवाद अधिलेखनसँग सम्बन्धित विकल्पहरू समायोजन गर्नुहोस्:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>यो अनुवाद इन्जिनलाई कुनै विशेष सेटिङको आवश्यक पर्दैन ।</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>गूगल अनुवादका लागि सेटिङ:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>गिथबमा टोडिओ सूची</value>
+  </data>
 </root>

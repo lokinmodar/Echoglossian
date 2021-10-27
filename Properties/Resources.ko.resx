@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>번역 오버레이와 관련된 옵션을 조정합니다.</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>이 번역 엔진에는 특별한 설정이 필요하지 않습니다.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>구글 번역에 대 한 설정:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Github의 TODOs 목록</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Тәрҗемәнең үтермәсе белән бәйле вариантларны төзегез:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Бу тәрҗемә двигателе ниндидер махсус шартлардан таләп итми.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google Translate өчен көймәләр:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Гитубта ТОДОС исемлеге</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>تەرجىمە ئۈستىلىگە مۇناسىۋەتلىك تاللاشلارنى تەڭشەڭ:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>بۇ تەرجىمە ماتورى ھېچقانداق ئالاھىدە تەڭشەك تەلەپ قىلمايدۇ.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google Translate نىڭ تەڭشەكلىرى:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Github دىكى TODOs تىزىملىكى</value>
+  </data>
 </root>

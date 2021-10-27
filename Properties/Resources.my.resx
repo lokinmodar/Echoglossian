@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>ဘာသာပြန်ခြင်းနဲ့ ဆက်နွှယ်နေတဲ့ ရွေးချယ်စရာတွေကို ပြုပြင်ပြောင်းလဲပါ–</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ဒီဘာသာပြန်အင်ဂျင်မှာ အထူးနေရာတွေ မလိုအပ်ဘူး။</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google ဘာသာပြန်ခြင်းအတွက် သတ်မှတ်ချက်များ -</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Github ပေါ်တွင် ToDOs စာရင်း</value>
+  </data>
 </root>

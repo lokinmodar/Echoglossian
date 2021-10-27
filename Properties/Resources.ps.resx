@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>د ژباړې د پاسه کولو اړوند اختیارونه تنظیم کړئ:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>دا د ژباړې انجن کوم ځانګړی تنظیم ته اړتیا نه لری.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>د ګوګل د ژباړې تنظیمات :</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>د جیتوب په اړه د TODOs لیست</value>
+  </data>
 </root>

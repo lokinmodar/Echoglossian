@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Điều chỉnh các tùy chọn liên quan đến lớp phủ dịch:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Công cụ dịch thuật này không yêu cầu bất kỳ cài đặt đặc biệt nào.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Thiết đặt cho Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Danh sách TODOs trên Github</value>
+  </data>
 </root>

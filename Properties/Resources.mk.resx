@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Прилагодете ги опциите поврзани со преведувачката прекривка:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Овој преведувачки мотор не бара посебни подесувања.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Подесувања за Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>ToDOs Листа на Гитуб</value>
+  </data>
 </root>

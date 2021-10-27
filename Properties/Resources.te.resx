@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>అనువాద ఓవర్ లేకు సంబంధించిన ఆప్షన్ లను సర్దుబాటు చేయండి:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ఈ అనువాద ఇంజిన్ కు ప్రత్యేక సెట్టింగ్ లు అవసరం లేదు.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>గూగుల్ ట్రాన్స్ లేట్ కోసం సెట్టింగ్ లు:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>గితుబ్ పై టివోడిఓల జాబితా</value>
+  </data>
 </root>

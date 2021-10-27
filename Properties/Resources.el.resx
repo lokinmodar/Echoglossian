@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Προσαρμόστε τις επιλογές που σχετίζονται με την επικάλυψη μετάφρασης:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Αυτή η μηχανή μετάφρασης δεν απαιτεί ειδικές ρυθμίσεις.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Ρυθμίσεις για τη Μετάφραση Google:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Λίστα TODOs για το Github</value>
+  </data>
 </root>

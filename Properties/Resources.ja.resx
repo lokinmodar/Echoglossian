@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>翻訳オーバーレイに関連するオプションを調整します。</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>この翻訳エンジンは特別な設定を必要としません。</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google翻訳の設定:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>GithubのTOOSリスト</value>
+  </data>
 </root>

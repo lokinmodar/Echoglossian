@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>ಅನುವಾದ ಓವರ್ ಲೇಗೆ ಸಂಬಂಧಿಸಿದ ಆಯ್ಕೆಗಳನ್ನು ಹೊಂದಿಸಿ:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>ಈ ಅನುವಾದ ಎಂಜಿನ್ ಗೆ ಯಾವುದೇ ವಿಶೇಷ ಸೆಟ್ಟಿಂಗ್ ಗಳ ಅಗತ್ಯವಿಲ್ಲ.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Ggmg</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Gtta</value>
+  </data>
 </root>

@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Pas de opties met betrekking tot de vertaaloverlay aan:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Deze vertaalmachine vereist geen speciale instellingen.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Instellingen voor Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODO's Lijst op Github</value>
+  </data>
 </root>

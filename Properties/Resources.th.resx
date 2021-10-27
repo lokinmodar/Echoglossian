@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>ปรับตัวเลือกที่เกี่ยวข้องกับการซ้อนทับการแปล:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>โปรแกรมการแปลนี้ไม่ต้องการการตั้งค่าพิเศษใด ๆ</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>การตั้งค่าสําหรับ Google แปลภาษา:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>รายการ TODOs บน กิธับ</value>
+  </data>
 </root>

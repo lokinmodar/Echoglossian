@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>调整与翻译覆盖相关的选项：</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>此翻译引擎不需要任何特殊设置。</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>谷歌翻译的设置：</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>吉图布上的托多列表</value>
+  </data>
 </root>

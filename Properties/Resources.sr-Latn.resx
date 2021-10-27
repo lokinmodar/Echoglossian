@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Podesite opcije koje se odnose na preklapanje prevoda:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ova mašina za prevođenje ne zahteva posebna podešavanja.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Podešavanja za Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs lista na Github-u</value>
+  </data>
 </root>

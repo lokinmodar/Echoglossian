@@ -39,6 +39,7 @@ namespace Echoglossian
       bool languageOnlySupportedThruOverlay =
         this.configuration.Lang is 2 or 4 or 6 or 8 or 9 or 10 or 12 or 14 or 15 or 16 or 18 or 19 or 21 or 22 or 24 or 25 or 29 or 35 or 37 or 38 or 40 or 41 or 42 or 43 or 45 or 46 or 51 or 52 or 53 or 55 or 56 or 57 or 58 or 60 or 61 or 64 or 67 or 69 or 70 or 71 or 72 or 76 or 77 or 78 or 80 or 82 or 83 or 85 or 86 or 89 or 90 or 91 or 92 or 99 or 100 or 101 or 102 or 103 or 104 or 105 or 106 or 107 or 108 or 109 or 110 or 116;
       ImGui.SetNextWindowSizeConstraints(new Vector2(600, 600), new Vector2(1920, 1080));
+      
 
       ImGui.Begin(Resources.ConfigWindowTitle, ref this.config);
       if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.None))
@@ -441,13 +442,22 @@ namespace Echoglossian
         if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
         {
           ImGui.Columns(2, "columns", false);
-          ImGui.Text("About Echoglossian:");
-          ImGui.TextWrapped("About Echoglossian:");
+
+          ImGui.BeginGroup();
+          ImGui.Text(Resources.DisclaimerTitle);
           ImGui.Spacing();
-          ImGui.TextWrapped("This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.");
-          ImGui.TextWrapped("For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.");
-          ImGui.TextWrapped("Please support us either by contributing to the project development, submitting issues or helping us with a coffee.");
-          ImGui.TextWrapped("The non-exhaustive list of issues and TODOs is available in the link below:");
+          ImGui.TextWrapped(Resources.DisclaimerText1);
+          ImGui.TextWrapped(Resources.DisclaimerText2);
+          ImGui.TextWrapped(Resources.ContribText);
+          ImGui.EndGroup();
+          ImGui.Spacing();
+
+          ImGui.NextColumn();
+          var posLogo = new Vector2(ImGui.GetWindowContentRegionMax().X - 300, ImGui.GetWindowContentRegionMin().Y+50);
+          ImGui.Separator();
+          ImGui.SetCursorPos(posLogo);
+          ImGui.Image(this.logo.ImGuiHandle, new Vector2(300, 300));
+          ImGui.TextWrapped(Resources.NEListText);
           if (ImGui.Button(Resources.TodoUrl))
           {
             Process.Start(new ProcessStartInfo
@@ -458,17 +468,18 @@ namespace Echoglossian
             this.SaveConfig();
             this.config = false;
           }
-
-          ImGui.NextColumn();
-          ImGui.Image(this.logo.ImGuiHandle, new Vector2(200, 200));
+          
           ImGui.EndTabItem();
+          ImGui.Spacing();
         }
 
         ImGui.EndTabBar();
       }
-
-      var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 30);
       ImGui.Separator();
+      ImGui.Spacing();
+      ImGui.Separator();
+      var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 30);
+
       ImGui.SetCursorPos(pos);
       ImGui.BeginGroup();
       if (ImGui.Button(Resources.SaveCloseButtonLabel))

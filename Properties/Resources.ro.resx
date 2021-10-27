@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>Ajustați opțiunile legate de suprapunerea traducerii:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Acest motor de traducere nu necesită setări speciale.</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Setări pentru Google Translate:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Lista TODOs pe Github</value>
+  </data>
 </root>

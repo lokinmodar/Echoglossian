@@ -219,4 +219,13 @@
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
     <value>अनुवाद ओवरले से संबंधित विकल्पों को समायोजित करें:</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>इस अनुवाद इंजन के लिए किसी विशेष सेटिंग्स की आवश्यकता नहीं है।</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google अनुवाद के लिए सेटिंग:</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>गिथब पर TODOs सूची</value>
+  </data>
 </root>
