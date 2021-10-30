@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
@@ -325,8 +326,8 @@ namespace Echoglossian
       {
 #if DEBUG
         logStream.WriteLineAsync($"Query operation error: {e}");
-        PluginLog.LogWarning("Could not find any Error Toasts in Database");
 #endif
+        PluginLog.LogWarning("Could not find any Error Toasts in Database");
       }
     }
   }

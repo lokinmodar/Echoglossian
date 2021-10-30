@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+
 using Echoglossian.EFCoreSqlite.Models;
 
 namespace Echoglossian

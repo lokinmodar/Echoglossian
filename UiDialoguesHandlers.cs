@@ -8,8 +8,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
+using Dalamud.Memory;
 using Dalamud.Utility;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
@@ -22,8 +24,6 @@ namespace Echoglossian
   // TODO: Add logic to invert translation and original texts
   public partial class Echoglossian
   {
-
-
     private unsafe void TalkHandler(string addonName, int index)
     {
       var talk = this.gameGui.GetAddonByName(addonName, index);
@@ -52,61 +52,31 @@ namespace Echoglossian
       }
     }
 
-   
-
-    private unsafe void TalkSubtitleHandler(string addonName, int index)
+    private void TalkSubtitleHandler(string addonName, int index)
     {
       // Pointer: 23FDB6C9040 or 23FDB6C91C0
-      var talkSubtitle = this.gameGui.GetAddonByName(addonName, index);
-      if (talkSubtitle != IntPtr.Zero)
+      try
       {
-        var talkSubtitleMaster = (AtkUnitBase*)talkSubtitle;
-        if (talkSubtitleMaster->IsVisible)
+        var talkSubtitlePtr = this.gameGui.GetAddonByName(addonName, index);
+        if (talkSubtitlePtr == IntPtr.Zero)
         {
-         // var talkSubtitleId = talkSubtitleMaster->RootNode->ChildNode->NodeID;
-          // PluginLog.LogError($"node id: {talkSubtitleId}");
-          // var textNode = (AtkTextNode*)talkSubtitleMaster->UldManager.SearchNodeById(talkSubtitleId);
-
-          var tNode = (AtkTextNode*)talkSubtitleMaster->RootNode->ChildNode;
-
-          if (tNode == null)
-          {
-            PluginLog.LogWarning("Node Empty");
-          }
-          else
-          {
-            var text = tNode->NodeText;
-            var parsedText = text.StringPtr == null || text.BufUsed <= 1 ? string.Empty : Encoding.UTF8.GetString(text.StringPtr, (int)text.BufUsed - 1);
-            PluginLog.LogError($"Text: {parsedText}");
-          }
-
-          // var nodeText = MemoryHelper.ReadString((IntPtr)textNode->NodeText.StringPtr, (int)textNode->NodeText.StringLength);
-          
-          // tNode->SetText("What is a man? A miserable little pile of secrets. But enough talk… Have at you!"); 
-
-
-
-          this.talkSubtitleDisplayTranslation = true;
-          this.talkSubtitleTextDimensions.X = talkSubtitleMaster->RootNode->Width * talkSubtitleMaster->Scale;
-          this.talkSubtitleTextDimensions.Y = talkSubtitleMaster->RootNode->Height * talkSubtitleMaster->Scale;
-          this.talkSubtitleTextPosition.X = talkSubtitleMaster->RootNode->X;
-          this.talkSubtitleTextPosition.Y = talkSubtitleMaster->RootNode->Y;
-#if DEBUG
-          // var childCount = talkSubtitleMaster->RootNode->ChildCount;
-
-          // PluginLog.Fatal("Node Count: " + childCount.ToString());
-          // PluginLog.LogFatal("Text using NodeList: " + ttFinal);
-#endif
+          return;
         }
-        else
+
+        if (this.GameTask == null || this.GameTask.IsCompleted || this.GameTask.IsFaulted || this.GameTask.IsCanceled)
         {
-          this.talkSubtitleDisplayTranslation = false;
+          this.GameTask = Task.Run(() => this.TalkSubtitler(talkSubtitlePtr));
         }
       }
-      else
+      catch (Exception e)
       {
-        this.talkSubtitleDisplayTranslation = false;
+        PluginLog.Error($"The routine has crashed: {e}");
       }
+    }
+
+    private unsafe void TalkSubtitler(IntPtr talkSubtitleIntPtr)
+    {
+      throw new NotSupportedException();
     }
 
     private unsafe void BattleTalkHandler(string addonName, int index)

@@ -35,7 +35,7 @@
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
           <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
           <target state="needs-review-translation">Ajuste a posição se a sobreposição não estiver centrada em relação à caixa de conversa da UI do jogo.</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          
         </trans-unit>
         <trans-unit id="OverlayPositionAdjustmentLabel" translate="yes" xml:space="preserve">
           <source>Position adjustment</source>
@@ -44,12 +44,12 @@
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
           <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
           <target state="needs-review-translation">Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
           <source>Translation Overlay Width multiplier</source>
           <target state="needs-review-translation">Multiplicador de largura da sobreposição de tradução de diálogo</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          
         </trans-unit>
         <trans-unit id="PatronButtonLabel" translate="yes" xml:space="preserve">
           <source>Buy lokinmodar a Coffee</source>
@@ -78,7 +78,7 @@
         <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
           <source>Select the font size for the text overlay</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Selecione o tamanho da fonte para a sobreposição de texto de diálogo</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          
         </trans-unit>
         <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust translation overlay width</source>
@@ -239,7 +239,7 @@
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
           <source>Translation Overlay Height multiplier</source>
           <target state="needs-review-translation">Multiplicador de altura da overlay de diálogo</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
@@ -300,23 +300,23 @@
         </trans-unit>
         <trans-unit id="ContribText" translate="yes" xml:space="preserve">
           <source>Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</source>
-          <target state="new">Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Por favor, apoie-nos contribuindo para o desenvolvimento do projeto, enviando problemas ou nos ajudando com um café.</target>
         </trans-unit>
         <trans-unit id="DisclaimerText1" translate="yes" xml:space="preserve">
           <source>This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</source>
-          <target state="new">This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Este plugin visa resolver um dos maiores problemas para o público que não fala inglês, alemão, francês ou japonês: Entendendo diálogos e outros elementos da Interface do Jogo.</target>
         </trans-unit>
         <trans-unit id="DisclaimerText2" translate="yes" xml:space="preserve">
           <source>For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.</source>
-          <target state="new">For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Por enquanto, só fazemos traduções automáticas através da API do Google Translate, mas no futuro pretendemos suportar outros sistemas de tradução de ML. Temos até ideias voltadas para traduções crowdsourced, com curadoria da comunidade.</target>
         </trans-unit>
         <trans-unit id="DisclaimerTitle" translate="yes" xml:space="preserve">
           <source>About Echoglossian:</source>
-          <target state="new">About Echoglossian:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Sobre a Echoglossian:</target>
         </trans-unit>
         <trans-unit id="NEListText" translate="yes" xml:space="preserve">
           <source>The non-exhaustive list of issues and TODOs is available in the link below:</source>
-          <target state="new">The non-exhaustive list of issues and TODOs is available in the link below:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">A lista não exaustiva de problemas e TODOs está disponível no link abaixo:</target>
         </trans-unit>
       </group>
     </body>

@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Echoglossian.EFCoreSqlite.Migrations

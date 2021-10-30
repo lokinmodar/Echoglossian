@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using Dalamud.Logging;
 using ImGuiNET;
 
@@ -303,11 +304,11 @@ namespace Echoglossian
 
       PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 #else
-      PluginLog.LogVerbose("Inside LoadConfigFont method");
+      // PluginLog.LogVerbose("Inside LoadConfigFont method");
       var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
       var dummyFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}OpenSans-Medium.ttf";
 
-      PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
+      // PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 #endif
       this.ConfigFontLoaded = false;
       if (File.Exists(fontFile))

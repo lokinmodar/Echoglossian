@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
+
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
@@ -165,7 +167,7 @@ namespace Echoglossian
       this.toastGui.QuestToast += this.OnQuestToast;
 
       // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnOnChatBubble;
-      //Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
+      // Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
 
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
@@ -175,6 +177,8 @@ namespace Echoglossian
     private static XivCommonBase Common { get; set; }
 
     public string Name => Resources.Name;
+
+    private Task GameTask;
 
     /// <inheritdoc />
     public void Dispose()
@@ -188,7 +192,7 @@ namespace Echoglossian
       Common.Functions.Talk.OnTalk -= this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleTalk;
       // Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnOnChatBubble;
-      //Common.Functions.Tooltips.OnActionTooltip -= this.TooltipsOnActionTooltip;
+      // Common.Functions.Tooltips.OnActionTooltip -= this.TooltipsOnActionTooltip;
       Common?.Functions.Dispose();
       Common?.Dispose();
 
@@ -242,7 +246,7 @@ namespace Echoglossian
 #endif
                 this.TalkHandler("Talk", 1);
 
-                this.TalkSubtitleHandler("TalkSubtitle", 1);
+                // this.TalkSubtitleHandler("TalkSubtitle", 1);
 
                 this.BattleTalkHandler("_BattleTalk", 1);
 
@@ -291,8 +295,6 @@ namespace Echoglossian
         this.pluginInterface.UiBuilder.RebuildFonts();
         return;
       }
-
-
 
       if (this.config)
       {

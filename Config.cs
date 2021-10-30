@@ -5,6 +5,7 @@
 
 using System;
 using System.Numerics;
+
 using Dalamud.Configuration;
 
 namespace Echoglossian

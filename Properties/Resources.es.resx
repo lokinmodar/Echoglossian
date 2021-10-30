@@ -201,4 +201,19 @@
   <data name="TodoUrl" xml:space="preserve">
     <value>Lista de TODOs en Github</value>
   </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>Por favor, apóyenos ya sea contribuyendo al desarrollo del proyecto, enviando problemas o ayudándonos con un café.</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>Este plugin tiene como objetivo resolver uno de los mayores problemas para las audiencias que no hablan inglés, alemán, francés o japonés: comprender los diálogos y otros elementos de la interfaz de usuario del juego.</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>Por ahora solo hacemos traducciones automáticas a través de la API de Google Translate, pero en el futuro tenemos la intención de admitir otros sistemas de traducción de ML. Incluso tenemos ideas dirigidas a traducciones de crowdsourcing, curadas por la comunidad.</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>Acerca de Echoglossian:</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>La lista no exhaustiva de temas y TODOs está disponible en el siguiente enlace:</value>
+  </data>
 </root>
