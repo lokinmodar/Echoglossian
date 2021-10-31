@@ -7,6 +7,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>net5.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <AssemblyName>Echoglossian</AssemblyName>
     <Platforms>x64</Platforms>
     <Authors>lokinmodar</Authors>
@@ -48,7 +49,38 @@
     <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Font\NotoSans-Medium-Custom2.otf" />
+    <None Remove="Font\NotoSans-Medium.ttf" />
     <None Remove="Font\NotoSans-Regular.ttf" />
+    <None Remove="Font\NotoSansArabic-Medium.ttf" />
+    <None Remove="Font\NotoSansArmenian-Medium.ttf" />
+    <None Remove="Font\NotoSansBengali-Medium.ttf" />
+    <None Remove="Font\NotoSansCJKhk-Regular.otf" />
+    <None Remove="Font\NotoSansCJKjp-Regular.otf" />
+    <None Remove="Font\NotoSansCJKkr-Regular.otf" />
+    <None Remove="Font\NotoSansCJKsc-Regular.otf" />
+    <None Remove="Font\NotoSansCJKtc-Regular.otf" />
+    <None Remove="Font\NotoSansDevanagari-Medium.ttf" />
+    <None Remove="Font\NotoSansGeorgian-Medium.ttf" />
+    <None Remove="Font\NotoSansGlagolitic-Regular.ttf" />
+    <None Remove="Font\NotoSansGujarati-Medium.ttf" />
+    <None Remove="Font\NotoSansGurmukhi-Medium.ttf" />
+    <None Remove="Font\NotoSansHebrew-Medium.ttf" />
+    <None Remove="Font\NotoSansJavanese-Regular.ttf" />
+    <None Remove="Font\NotoSansKannada-Medium.ttf" />
+    <None Remove="Font\NotoSansKhmer-Medium.ttf" />
+    <None Remove="Font\NotoSansLao-Medium.ttf" />
+    <None Remove="Font\NotoSansMalayalam-Medium.ttf" />
+    <None Remove="Font\NotoSansMongolian-Regular.ttf" />
+    <None Remove="Font\NotoSansMyanmar-Medium.ttf" />
+    <None Remove="Font\NotoSansOriya-Regular.ttf" />
+    <None Remove="Font\NotoSansSinhala-Medium.ttf" />
+    <None Remove="Font\NotoSansTagalog-Regular.ttf" />
+    <None Remove="Font\NotoSansTamil-Medium.ttf" />
+    <None Remove="Font\NotoSansTelugu-Medium.ttf" />
+    <None Remove="Font\NotoSansThai-Medium.ttf" />
+    <None Remove="Font\OpenSans-Medium.ttf" />
+    <None Remove="images\icon.png" />
     <None Remove="images\logo.png" />
     <None Remove="minfilia.ico" />
     <None Remove="MultilingualResources\Echoglossian.es.xlf" />
@@ -58,12 +90,105 @@
     <None Remove="Wiki82.profile.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Font\NotoSans-Medium-Custom2.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSans-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansArabic-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansArmenian-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansBengali-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansCJKhk-Regular.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansCJKjp-Regular.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansCJKkr-Regular.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansCJKsc-Regular.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansCJKtc-Regular.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansDevanagari-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansGeorgian-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansGlagolitic-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansGujarati-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansGurmukhi-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansHebrew-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansJavanese-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansKannada-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansKhmer-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansLao-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansMalayalam-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansMongolian-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansMyanmar-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansOriya-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansSinhala-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansTagalog-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansTamil-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansTelugu-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSansThai-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\OpenSans-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="images\icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Wiki82.profile.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.0.82" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.0.88" />
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
     <PackageReference Include="DalamudPackager" Version="2.1.4" />
     <PackageReference Include="DeepL" Version="0.3.0" />
@@ -71,13 +196,13 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.11">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NTextCat" Version="0.3.65" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
     <PackageReference Include="System.Drawing.Common" Version="6.0.0-rc.2.21480.5" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
@@ -144,8 +269,5 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
-
-
-
     
 </Project>

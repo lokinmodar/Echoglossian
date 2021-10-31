@@ -44,6 +44,7 @@ namespace Echoglossian
     {
       if (!this.pluginInterface.ConfigFile.Exists)
       {
+
         return;
       }
 
