@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
+using Dalamud.Logging;
 
 namespace Echoglossian
 {
@@ -91,6 +92,9 @@ namespace Echoglossian
     /// <returns>The image containing the text, which should be disposed after use.</returns>
     public Image DrawText(string text, Font fontOptional = null, Color? textColorOptional = null, Color? backColorOptional = null, Size? minSizeOptional = null)
     {
+#if DEBUG
+      PluginLog.LogWarning("Inside image creation method");
+#endif
       PrivateFontCollection pfc = new();
       pfc.AddFontFile($@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}");
 
@@ -135,8 +139,8 @@ namespace Echoglossian
       }
 
       // create a new image of the right size
-      Image retImg = new Bitmap((int)textSize.Width, (int)textSize.Height);
-      using (var drawing = Graphics.FromImage(retImg))
+      Image textAsImage = new Bitmap((int)textSize.Width, (int)textSize.Height);
+      using (var drawing = Graphics.FromImage(textAsImage))
       {
         // paint the background
         drawing.Clear(backColor);
@@ -148,8 +152,24 @@ namespace Echoglossian
           drawing.Save();
         }
       }
+#if DEBUG
+      PluginLog.LogWarning("Before returning the image created");
+#endif
+      return textAsImage;
+    }
 
-      return retImg;
+    /// <summary>
+    /// Converts Image to byte array
+    /// </summary>
+    /// <param name="image">Image to be converted</param>
+    /// <returns>Byte array to be used elsewhere</returns>
+    private byte[] TranslationImageConverter(Image image)
+    {
+#if DEBUG
+      PluginLog.LogWarning("Conversion to byte");
+#endif
+      ImageConverter imageConverter = new ImageConverter();
+      return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));
     }
   }
 }

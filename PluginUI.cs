@@ -367,20 +367,19 @@ namespace Echoglossian
               Resources.TranslateScreenInfoToastToggleText,
               ref this.configuration.TranslateWideTextToast);
             ImGui.Separator();
-            if (!languageOnlySupportedThruOverlay)
+            if (languageOnlySupportedThruOverlay)
             {
-              this.configuration.DoNotUseImGuiForToasts = true;
+              this.configuration.DoNotUseImGuiForToasts = false;
+              this.SaveConfig();
+            }
+            else
+            {
               if (ImGui.Checkbox(
                 Resources.DoNotUseImGuiForToastsToggle,
                 ref this.configuration.DoNotUseImGuiForToasts))
               {
                 this.SaveConfig();
               }
-            }
-            else
-            {
-              this.configuration.DoNotUseImGuiForToasts = false;
-              this.SaveConfig();
             }
 
             ImGui.Separator();
@@ -445,7 +444,7 @@ namespace Echoglossian
           {
             ImGui.TableNextColumn();
             ImGui.BeginGroup();
-            ImGui.TextColored(new Vector4(247, 247, 7, 1), Resources.DisclaimerTitle);
+            ImGui.TextColored(new Vector4(247, 247, 7, 255), Resources.DisclaimerTitle);
             ImGui.Spacing();
             ImGui.TextWrapped(Resources.DisclaimerText1);
             ImGui.TextWrapped(Resources.DisclaimerText2);

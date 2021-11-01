@@ -16,6 +16,7 @@ using Dalamud.Utility;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using ImGuiNET;
 using Lumina.Data.Parsing;
 using XivCommon.Functions;
 
@@ -209,6 +210,11 @@ namespace Echoglossian
                   if (nameId == this.currentNameTranslationId)
                   {
                     this.currentNameTranslation = nameTranslation;
+                    if (this.configuration.Lang == 2)
+                    {
+                      this.currentNameTranslationTexture =
+                        this.pluginInterface.UiBuilder.LoadImage(this.TranslationImageConverter(this.DrawText(this.currentNameTranslation)));
+                    }
                   }
 
                   this.nameTranslationSemaphore.Release();
@@ -224,10 +230,20 @@ namespace Echoglossian
                 this.talkTranslationSemaphore.Wait();
                 if (id == this.currentTalkTranslationId)
                 {
-                  var encoded = new UTF8Encoding();
-                  var utf8TalkTranslationBytes = encoded.GetBytes(translation);
-                  var utf8TalkTranslationString = encoded.GetString(utf8TalkTranslationBytes);
-                  this.currentTalkTranslation = utf8TalkTranslationString;
+                  this.currentTalkTranslation = translation;
+                  if (this.configuration.Lang == 2)
+                  {
+#if DEBUG
+                    PluginLog.LogWarning("Lang is 2!");
+#endif
+                    var textAsImage = this.DrawText(this.currentTalkTranslation);
+                    var textImageAsBytes = this.TranslationImageConverter(textAsImage);
+#if DEBUG
+                    PluginLog.LogWarning($"image bytes: {textImageAsBytes}");
+#endif
+                    this.currentTalkTranslationTexture =
+                      this.pluginInterface.UiBuilder.LoadImage(textImageAsBytes);
+                  }
                 }
 
                 this.talkTranslationSemaphore.Release();

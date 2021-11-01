@@ -45,6 +45,13 @@
             <param name="minSizeOptional">Minimum image size, defaults the size required to display the text.</param>
             <returns>The image containing the text, which should be disposed after use.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TranslationImageConverter(System.Drawing.Image)">
+            <summary>
+            Converts Image to byte array
+            </summary>
+            <param name="image">Image to be converted</param>
+            <returns>Byte array to be used elsewhere</returns>
+        </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>
               A strongly-typed resource class, for looking up localized strings, etc.

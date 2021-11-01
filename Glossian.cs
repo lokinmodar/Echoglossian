@@ -92,10 +92,14 @@ namespace Echoglossian
           parsedText = sanitizedString;
         }
 
+        parsedText = parsedText.Replace("\u2500", "\u002D");
         parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
         parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
         parsedText = parsedText.Replace("\u201C", "\u0022");
         parsedText = parsedText.Replace("\u201D", "\u0022");
+        parsedText = parsedText.Replace("\u200B", string.Empty);
+
+ 
 
         var detectedLanguage = LangIdentify(parsedText);
         if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical")

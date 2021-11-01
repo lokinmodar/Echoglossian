@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Drawing;
 using System.Numerics;
 
 using Dalamud.Interface;
@@ -11,6 +12,7 @@ using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
 using ImGuiNET;
+using ImGuiScene;
 
 namespace Echoglossian
 {
@@ -19,9 +21,11 @@ namespace Echoglossian
     private bool talkDisplayTranslation;
 
     private string currentNameTranslation = string.Empty;
+    private TextureWrap currentNameTranslationTexture;
     private volatile int currentNameTranslationId;
 
     private string currentTalkTranslation = string.Empty;
+    private TextureWrap currentTalkTranslationTexture;
     private volatile int currentTalkTranslationId;
 
     private Vector2 talkTextDimensions = Vector2.Zero;
@@ -234,11 +238,6 @@ namespace Echoglossian
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
           this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
-      var size = Math.Min(
-          this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult,
-          ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
       {
 #if DEBUG
@@ -247,6 +246,11 @@ namespace Echoglossian
         ImGui.PushFont(this.UiFont);
       }
 
+      var size = Math.Min(
+          this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult,
+          ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
+      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.configuration.TranslateNpcNames)
       {
         var name = this.GetTranslatedNpcNameForWindow();
@@ -288,6 +292,15 @@ namespace Echoglossian
       ImGui.SetWindowFontScale(this.configuration.FontScale);
       if (this.talkTranslationSemaphore.Wait(0))
       {
+        if (this.configuration.Lang is 2)
+        {
+          ImGui.Image(
+            this.currentTalkTranslationTexture.ImGuiHandle,
+            new Vector2(
+              size,
+              this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
+        }
+
         ImGui.TextWrapped(this.currentTalkTranslation);
 
         this.talkTranslationSemaphore.Release();
