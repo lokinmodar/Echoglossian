@@ -31,6 +31,7 @@ namespace Echoglossian
 
     private void AdjustLanguageForFontBuild()
     {
+      PluginLog.Debug("Inside AdjustLanguageForFontBuild method");
       var lang = this.LanguagesDictionary[this.configuration.Lang];
       this.specialFontFileName = lang.FontName;
       this.scriptCharList = lang.ExclusiveCharsToAdd;
@@ -43,11 +44,11 @@ namespace Echoglossian
       var specialFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}";
       var fontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.fontFileName}";
       var dummyFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+      PluginLog.LogWarning(specialFontFilePath);
 
-#if DEBUG
       PluginLog.LogVerbose("Inside LoadFont method");
       PluginLog.LogVerbose($"Font file in DEBUG Mode: {specialFontFilePath}");
-#endif
+
 
       this.FontLoaded = false;
       if (File.Exists(specialFontFilePath) || File.Exists(fontFilePath))
@@ -128,16 +129,16 @@ namespace Echoglossian
               if (specialFontFilePath != string.Empty)
               {
                 ImGui.GetIO().Fonts.AddFontFromFileTTF(dummyFontFilePath, this.configuration.FontSize,
-                null, new IntPtr(ptr));
+                null);
                 ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFilePath, this.configuration.FontSize,
-                fontConfig3, new IntPtr(ptr));
+                fontConfig2, new IntPtr(ptr));
                 this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(specialFontFilePath, this.configuration.FontSize,
                   fontConfig, new IntPtr(ptr));
               }
               else
               {
                 ImGui.GetIO().Fonts.AddFontFromFileTTF(dummyFontFilePath, this.configuration.FontSize,
-                  fontConfig3, new IntPtr(ptr));
+                  fontConfig2, new IntPtr(ptr));
                 this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFilePath, this.configuration.FontSize,
                   fontConfig, new IntPtr(ptr));
               }
@@ -228,8 +229,7 @@ namespace Echoglossian
 
             fixed (ushort* ptr = &arr[0])
             {
-              ImGui.GetIO().Fonts.AddFontFromFileTTF(dummyFontFilePath, 17.0f,
-                  fontConfig2, new IntPtr(ptr));
+              ImGui.GetIO().Fonts.AddFontFromFileTTF(dummyFontFilePath, 17.0f, null, new IntPtr(ptr));
               this.ConfigUiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, 17.0f,
                   fontConfig, new IntPtr(ptr));
             }

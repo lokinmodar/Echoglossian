@@ -26,7 +26,6 @@ using XivCommon;
 
 namespace Echoglossian
 {
-  // TODO: Handle weird alphabets correctly.
   // TODO: implement multiple fallback translation engines.
   public partial class Echoglossian : IDalamudPlugin
   {
