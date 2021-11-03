@@ -40,15 +40,13 @@ namespace Echoglossian
     private void LoadFont()
     {
       this.AdjustLanguageForFontBuild();
-      
+
       var specialFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}";
       var fontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.fontFileName}";
       var dummyFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
-      PluginLog.LogWarning(specialFontFilePath);
 
-      PluginLog.LogVerbose("Inside LoadFont method");
-      PluginLog.LogVerbose($"Font file in DEBUG Mode: {specialFontFilePath}");
-
+      PluginLog.LogWarning("Inside LoadFont method");
+      PluginLog.LogWarning($"Font file in DEBUG Mode: {specialFontFilePath}");
 
       this.FontLoaded = false;
       if (File.Exists(specialFontFilePath) || File.Exists(fontFilePath))

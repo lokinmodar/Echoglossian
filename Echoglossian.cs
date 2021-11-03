@@ -17,6 +17,7 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.Sanitizer;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
@@ -35,6 +36,8 @@ namespace Echoglossian
     private static int fontSize = 20;
     private static int chosenTransEngine;
     private static string transEngineName;
+
+    private bool PluginAssetsState;
     private static Dictionary<int, Language> langDict;
 
     private readonly CommandManager commandManager;
@@ -98,6 +101,8 @@ namespace Echoglossian
 
       this.configDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
+      this.PluginAssetsState = this.configuration.PluginAssetsDownloaded;
+
       sanitizer = this.pluginInterface.Sanitizer as Sanitizer;
 
       langDict = this.LanguagesDictionary;
@@ -120,8 +125,17 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
-      this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
-      this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
+      if (this.PluginAssetsState)
+      {
+        this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
+        this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
+        identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+      }
+      else
+      {
+        this.configuration.PluginAssetsDownloaded = DownloadPluginAssets().Result;
+
+      }
 
       // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
@@ -142,8 +156,6 @@ namespace Echoglossian
 
       TransEngines t = (TransEngines)chosenTransEngine;
       transEngineName = t.ToString();
-
-      identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
       this.LoadAllErrorToasts();
 
@@ -231,7 +243,16 @@ namespace Echoglossian
 
     private void Tick(Framework tFramework)
     {
-      switch (this.configuration.UseImGui || this.configuration.UseImGuiForBattleTalk || !this.configuration.DoNotUseImGuiForToasts)
+      if (!this.configuration.Translate)
+      {
+#if DEBUG
+        PluginLog.Log("Translations are disabled!");
+#endif
+        return;
+      }
+
+      switch (this.configuration.UseImGui || this.configuration.UseImGuiForBattleTalk ||
+              !this.configuration.DoNotUseImGuiForToasts)
       {
         case true when !this.FontLoaded || this.FontLoadFailed:
           return;
@@ -240,9 +261,7 @@ namespace Echoglossian
             switch (this.ci.IsLoggedIn)
             {
               case true:
-#if DEBUG
-                // PluginLog.LogVerbose("Monitoring Framework Tick");
-#endif
+
                 this.TalkHandler("Talk", 1);
 
                 // this.TalkSubtitleHandler("TalkSubtitle", 1);
@@ -269,20 +288,19 @@ namespace Echoglossian
           }
 
         default:
-          this.toastDisplayTranslation = false;
-          this.questToastDisplayTranslation = false;
-          this.wideTextToastDisplayTranslation = false;
-          this.errorToastDisplayTranslation = false;
-          this.areaToastDisplayTranslation = false;
-          this.classChangeToastDisplayTranslation = false;
-          this.talkDisplayTranslation = false;
-          this.battleTalkDisplayTranslation = false;
+          this.DisableAllTranslations();
           break;
       }
     }
 
     private void BuildUi()
     {
+      if (!this.configuration.PluginAssetsDownloaded)
+      {
+        this.configuration.PluginAssetsDownloaded = DownloadPluginAssets().Result;
+        return;
+      }
+
       if (!this.ConfigFontLoaded && !this.ConfigFontLoadFailed)
       {
         this.pluginInterface.UiBuilder.RebuildFonts();

@@ -8,6 +8,9 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Dalamud.Logging;
 
 namespace Echoglossian
@@ -39,6 +42,23 @@ namespace Echoglossian
       }
 
       return parentPath;
+    }
+
+    private static async Task<bool> DownloadPluginAssets()
+    {
+      using WebClient webClient = new ();
+      try
+      {
+        await webClient.DownloadFileTaskAsync(
+          new Uri("https://drive.google.com/file/d/10XDzXGxheebckhFL0Rbuq36C-ssUSd4P/view?usp=sharing"),
+          "Wiki82.profile.xml");
+        return true;
+      }
+      catch (Exception e)
+      {
+        PluginLog.LogError($"Error downloading plugin assets: {e}");
+        return false;
+      }
     }
 
     private void FixConfig()

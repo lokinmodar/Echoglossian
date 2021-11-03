@@ -16,6 +16,8 @@ namespace Echoglossian
     public int PluginCultureInt;
     public bool Translate = true;
 
+    public bool PluginAssetsDownloaded = false;
+
     public int Lang { get; set; } = 16;
 
     public int FontSize = 24;
