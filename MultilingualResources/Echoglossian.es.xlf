@@ -9,7 +9,6 @@
         <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
           <source>Talk settings</source>
           <target state="needs-review-translation">Configuraciones principales</target>
-          
         </trans-unit>
         <trans-unit id="ConfigWindowTitle" translate="yes" xml:space="preserve">
           <source>Echoglossian Configuration</source>
@@ -36,7 +35,6 @@
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
           <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ajuste la posición si su superposición no está centrada en relación con la ventana emergente de conversación.</target>
-          
         </trans-unit>
         <trans-unit id="OverlayPositionAdjustmentLabel" translate="yes" xml:space="preserve">
           <source>Position adjustment</source>
@@ -45,12 +43,10 @@
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
           <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
           <target state="needs-review-translation">Mostrar la superposición con texto traducido sobre el cuadro de diálogo de la IU del juego en lugar de reemplazar su texto con la traducción</target>
-          
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
           <source>Translation Overlay Width multiplier</source>
           <target state="needs-review-translation">Multiplicador de ancho de diálogo</target>
-          
         </trans-unit>
         <trans-unit id="PatronButtonLabel" translate="yes" xml:space="preserve">
           <source>Buy lokinmodar a Coffee</source>
@@ -79,7 +75,6 @@
         <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
           <source>Select the font size for the text overlay</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Seleccione el tamaño de fuente para la superposición de texto del diálogo</target>
-          
         </trans-unit>
         <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust translation overlay width</source>
@@ -128,7 +123,6 @@
         <trans-unit id="ConfigTab2Name" translate="yes" xml:space="preserve">
           <source>Battle Talk settings</source>
           <target state="needs-review-translation">Configuraciones de mensajes de sistema</target>
-          
         </trans-unit>
         <trans-unit id="ToastOverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
           <source>Adjust toast translation overlay width</source>
@@ -241,7 +235,6 @@
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
           <source>Translation Overlay Height multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Multiplicador de altura de superposición de diálogo</target>
-          
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
@@ -319,6 +312,14 @@
         <trans-unit id="NEListText" translate="yes" xml:space="preserve">
           <source>The non-exhaustive list of issues and TODOs is available in the link below:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">La lista no exhaustiva de temas y TODOs está disponible en el siguiente enlace:</target>
+        </trans-unit>
+        <trans-unit id="TranslationDisabled" translate="yes" xml:space="preserve">
+          <source>Translations are Disabled!</source>
+          <target state="new">Translations are Disabled!</target>
+        </trans-unit>
+        <trans-unit id="TranslationEnabled" translate="yes" xml:space="preserve">
+          <source>Translations are Enabled!</source>
+          <target state="new">Translations are Enabled!</target>
         </trans-unit>
       </group>
     </body>

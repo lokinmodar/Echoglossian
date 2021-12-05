@@ -125,17 +125,17 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
-      if (this.PluginAssetsState)
-      {
-        this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
-        this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
-        identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
-      }
-      else
-      {
-        this.configuration.PluginAssetsDownloaded = DownloadPluginAssets().Result;
-
-      }
+      /*      if (this.PluginAssetsState)
+            {*/
+      this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
+      this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
+      identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+      /*      }
+            else
+            {
+              this.configuration.PluginAssetsDownloaded = DownloadPluginAssets().Result;
+              this.PluginAssetsState = true;
+            }*/
 
       // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);

@@ -49,6 +49,19 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Timestamp]
     public byte[] RowVersion { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BattleTalkMessage"/> class.
+    /// </summary>
+    /// <param name="senderName"></param>
+    /// <param name="originalBattleTalkMessage"></param>
+    /// <param name="originalBattleTalkMessageLang"></param>
+    /// <param name="originalSenderNameLang"></param>
+    /// <param name="translatedSenderName"></param>
+    /// <param name="translatedBattleTalkMessage"></param>
+    /// <param name="translationLang"></param>
+    /// <param name="translationEngine"></param>
+    /// <param name="createdDate"></param>
+    /// <param name="updatedDate"></param>
     public BattleTalkMessage(string senderName, string originalBattleTalkMessage, string originalBattleTalkMessageLang,
       string originalSenderNameLang, string translatedSenderName, string translatedBattleTalkMessage,
       string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)

@@ -49,6 +49,19 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Timestamp]
     public byte[] RowVersion { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TalkMessage"/> class.
+    /// </summary>
+    /// <param name="senderName"></param>
+    /// <param name="originalTalkMessage"></param>
+    /// <param name="originalTalkMessageLang"></param>
+    /// <param name="originalSenderNameLang"></param>
+    /// <param name="translatedSenderName"></param>
+    /// <param name="translatedTalkMessage"></param>
+    /// <param name="translationLang"></param>
+    /// <param name="translationEngine"></param>
+    /// <param name="createdDate"></param>
+    /// <param name="updatedDate"></param>
     public TalkMessage(string senderName, string originalTalkMessage, string originalTalkMessageLang, string originalSenderNameLang, string translatedSenderName, string translatedTalkMessage, string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)
     {
       this.SenderName = senderName;

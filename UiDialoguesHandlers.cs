@@ -5,19 +5,14 @@
 
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
-using Dalamud.Memory;
 using Dalamud.Utility;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using ImGuiNET;
-using Lumina.Data.Parsing;
 using XivCommon.Functions;
 
 namespace Echoglossian
@@ -231,19 +226,20 @@ namespace Echoglossian
                 if (id == this.currentTalkTranslationId)
                 {
                   this.currentTalkTranslation = translation;
-                  if (this.configuration.Lang == 2)
-                  {
-#if DEBUG
-                    PluginLog.LogWarning("Lang is 2!");
-#endif
-                    var textAsImage = this.DrawText(this.currentTalkTranslation);
-                    var textImageAsBytes = this.TranslationImageConverter(textAsImage);
-#if DEBUG
-                    PluginLog.LogWarning($"image bytes: {textImageAsBytes}");
-#endif
-                    this.currentTalkTranslationTexture =
-                      this.pluginInterface.UiBuilder.LoadImage(textImageAsBytes);
-                  }
+                  // TODO: check image creation logic for RTL
+                  /*                  if (this.configuration.Lang == 2)
+                                    {
+                  #if DEBUG
+                                      PluginLog.LogWarning("Lang is 2!");
+                  #endif
+                                      var textAsImage = this.DrawText(this.currentTalkTranslation);
+                                      var textImageAsBytes = this.TranslationImageConverter(textAsImage);
+                  #if DEBUG
+                                      PluginLog.LogWarning($"image bytes: {textImageAsBytes}");
+                  #endif
+                                      this.currentTalkTranslationTexture =
+                                        this.pluginInterface.UiBuilder.LoadImage(textImageAsBytes);
+                                    }*/
                 }
 
                 this.talkTranslationSemaphore.Release();

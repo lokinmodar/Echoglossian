@@ -706,6 +706,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Translations are Disabled!.
+        /// </summary>
+        public static string TranslationDisabled {
+            get {
+                return ResourceManager.GetString("TranslationDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translations are Enabled!.
+        /// </summary>
+        public static string TranslationEnabled {
+            get {
+                return ResourceManager.GetString("TranslationEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This translation engine does not require any special settings..
         /// </summary>
         public static string TranslationEngineSettingsNotRequired {

@@ -14,7 +14,7 @@ namespace Echoglossian
   {
     public string DefaultPluginCulture = "en";
     public int PluginCultureInt;
-    public bool Translate = true;
+    public bool Translate = false;
 
     public bool PluginAssetsDownloaded = false;
 
@@ -43,7 +43,8 @@ namespace Echoglossian
     public bool TranslateTooltips = false;
     public bool TranslateJournal = false;
 
-    public bool UseImGui = true;
+    public bool UseImGui = false;
+    public bool UseImGuiForTalk = true;
     public bool UseImGuiForBattleTalk = true;
     public bool DoNotUseImGuiForToasts = false;
     public bool SwapTextsUsingImGui = false;
@@ -66,6 +67,6 @@ namespace Echoglossian
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 
-    public int Version { get; set; } = 0;
+    public int Version { get; set; } = 1;
   }
 }

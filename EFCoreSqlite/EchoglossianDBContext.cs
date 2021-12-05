@@ -28,6 +28,11 @@ namespace Echoglossian.EFCoreSqlite
     private StreamWriter LogStream { get; set; }
 
 #endif
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EchoglossianDbContext"/> class.
+    /// </summary>
+    /// <param name="configDir"></param>
     public EchoglossianDbContext(string configDir)
     {
       this.DbPath = $"{configDir}Echoglossian.db";

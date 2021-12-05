@@ -334,6 +334,12 @@
   <data name="TranslateToastToggleText" xml:space="preserve">
     <value>Translate in-game Toast Messages</value>
   </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>Translations are Disabled!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>Translations are Enabled!</value>
+  </data>
   <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
     <value>This translation engine does not require any special settings.</value>
   </data>

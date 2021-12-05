@@ -9,7 +9,6 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Dalamud.Logging;
 
@@ -46,7 +45,7 @@ namespace Echoglossian
 
     private static async Task<bool> DownloadPluginAssets()
     {
-      using WebClient webClient = new ();
+      using WebClient webClient = new();
       try
       {
         await webClient.DownloadFileTaskAsync(
@@ -65,18 +64,17 @@ namespace Echoglossian
     {
       if (!this.pluginInterface.ConfigFile.Exists)
       {
-
         return;
       }
 
-      if (this.configuration.Version != 0)
+      if (this.configuration.Version != 1)
       {
         this.pluginInterface.ConfigFile.Delete();
-        if (this.pluginInterface.ConfigDirectory.Exists)
-        {
-          this.pluginInterface.ConfigDirectory.Delete(true);
-          // this.config = true;
-        }
+        /* if (this.pluginInterface.ConfigDirectory.Exists)
+         {
+           this.pluginInterface.ConfigDirectory.Delete(true);
+           // this.config = true;
+         }*/
       }
 
       this.SaveConfig();
@@ -179,10 +177,10 @@ namespace Echoglossian
     }
 
     /// <summary>
-    /// Converts Image to byte array
+    /// Converts Image to byte array.
     /// </summary>
-    /// <param name="image">Image to be converted</param>
-    /// <returns>Byte array to be used elsewhere</returns>
+    /// <param name="image">Image to be converted.</param>
+    /// <returns>Byte array to be used elsewhere.</returns>
     private byte[] TranslationImageConverter(Image image)
     {
 #if DEBUG

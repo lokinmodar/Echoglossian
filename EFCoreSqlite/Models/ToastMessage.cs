@@ -43,6 +43,17 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Timestamp]
     public byte[] RowVersion { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ToastMessage"/> class.
+    /// </summary>
+    /// <param name="toastType"></param>
+    /// <param name="originalToastMessage"></param>
+    /// <param name="originalLang"></param>
+    /// <param name="translatedToastMessage"></param>
+    /// <param name="translationLang"></param>
+    /// <param name="translationEngine"></param>
+    /// <param name="createdDate"></param>
+    /// <param name="updatedDate"></param>
     public ToastMessage(string toastType, string originalToastMessage, string originalLang,
       string translatedToastMessage, string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)
     {

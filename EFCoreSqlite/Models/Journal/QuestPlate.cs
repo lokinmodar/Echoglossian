@@ -52,6 +52,19 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
     [Timestamp]
     public byte[] RowVersion { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QuestPlate"/> class.
+    /// </summary>
+    /// <param name="questName"></param>
+    /// <param name="originalQuestMessage"></param>
+    /// <param name="originalLang"></param>
+    /// <param name="translatedQuestMessage"></param>
+    /// <param name="translationLang"></param>
+    /// <param name="translationEngine"></param>
+    /// <param name="questId"></param>
+    /// <param name="translatedQuestName"></param>
+    /// <param name="createdDate"></param>
+    /// <param name="updatedDate"></param>
     public QuestPlate(string questName, string originalQuestMessage, string originalLang,
       string translatedQuestMessage, string translationLang, int translationEngine, string questId,
       string translatedQuestName, DateTime createdDate, DateTime? updatedDate)
