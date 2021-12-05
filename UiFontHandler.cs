@@ -77,12 +77,12 @@ namespace Echoglossian
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesDefault());
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesVietnamese());
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesCyrillic());
-            if (this.configuration.Lang is 16 or 21)
+            if (this.configuration.Lang is 16)
             {
               this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
             }
 
-            if (this.configuration.Lang is 22)
+            if (this.configuration.Lang is 22 or 21)
             {
               this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesChineseFull());
             }
