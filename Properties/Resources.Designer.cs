@@ -216,15 +216,6 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not use overlay to show Toasts translations.
-        /// </summary>
-        public static string DoNotUseImGuiForToastsToggle {
-            get {
-                return ResourceManager.GetString("DoNotUseImGuiForToastsToggle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Attention!.
         /// </summary>
         public static string EchoglossianPathModal {
@@ -738,6 +729,15 @@ namespace Echoglossian.Properties {
         public static string TranslationsEnabled {
             get {
                 return ResourceManager.GetString("TranslationsEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use overlay to show Toasts translations.
+        /// </summary>
+        public static string UseImGuiForToastsToggle {
+            get {
+                return ResourceManager.GetString("UseImGuiForToastsToggle", resourceCulture);
             }
         }
         

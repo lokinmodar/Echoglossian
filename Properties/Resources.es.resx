@@ -134,9 +134,6 @@
   <data name="SwapTranslationTextToggle" xml:space="preserve">
     <value>Mostrar texto de diálogo original en Superposición y traducido en el cuadro de diálogo de la IU del juego</value>
   </data>
-  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
-    <value>No utilice la superposición para mostrar las traducciones de Toasts</value>
-  </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
     <value>Ajustar la escala de fuentes de superposición</value>
   </data>
@@ -215,5 +212,14 @@
   </data>
   <data name="NEListText" xml:space="preserve">
     <value>La lista no exhaustiva de temas y TODOs está disponible en el siguiente enlace:</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>¡Las traducciones están deshabilitadas!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>¡Las traducciones están habilitadas!</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Usar superposición para mostrar las traducciones de Toasts</value>
   </data>
 </root>

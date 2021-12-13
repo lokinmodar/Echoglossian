@@ -9,11 +9,11 @@
               Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian" /> class.
             </summary>
             <param name="dalamudPluginInterface">Plugin Interface.</param>
-            <param name="pframework">Framework.</param>
+            <param name="pframework">Game Framework.</param>
             <param name="pCommandManager">Command Manager.</param>
             <param name="pGameGui">Game Gui object.</param>
             <param name="pToastGui">Toast Gui Object.</param>
-            <param name="clientState">This class represents the state of the game client at the time of access.</param>
+            <param name="pClientState">This class represents the state of the game client at the time of access.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
@@ -225,11 +225,6 @@
         <member name="P:Echoglossian.Properties.Resources.DisclaimerTitle">
             <summary>
               Looks up a localized string similar to About Echoglossian:.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.DoNotUseImGuiForToastsToggle">
-            <summary>
-              Looks up a localized string similar to Do not use overlay to show Toasts translations.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
@@ -515,6 +510,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">
             <summary>
               Looks up a localized string similar to Translations enabled!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.UseImGuiForToastsToggle">
+            <summary>
+              Looks up a localized string similar to Use overlay to show Toasts translations.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.WaitingForTranslation">

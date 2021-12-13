@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Isara</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Pangunahin</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Mga setting ng mensahe</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Mga setting ng Pakikipag-usap sa Labanan</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Mga seting ng Toast</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Mga setting ng journal</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Mga seting ng tooltips</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Iba pang mga setting</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Mga setting ng Engine ng Pagsasalin</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Tungkol sa Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossian Configuration</value>
+    <comment>Config Window title bar</comment>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>Mangyaring suportahan kami sa pamamagitan ng pag-ambag sa pagpapaunlad ng proyekto, pagsusumite ng mga isyu o pagtulong sa amin na may kape.</value>
+  </data>
+  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>Ang plugin na ito ay para sa paglutas ng isa sa mga pinakamalaking isyu para sa mga manonood na hindi nagsasalita ng Ingles, Aleman, Pranses o Hapon: Pag-unawa sa mga diyalogo at iba pang mga elemento ng Laro UI.</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>Para sa ngayon kami lamang auto-translations sa pamamagitan ng Google Translate API, ngunit sa hinaharap balak naming suportahan ang iba pang mga ML translation system. Mayroon pa kaming mga ideya na target ang mga taong naka-target sa mga pagsasalin, na isinalin ng komunidad.</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>Tungkol sa Echoglossian:</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Pansin!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Aktibahin ang laro text realtime pagsasalin</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Overlay font kulay:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Nagbubukas ng window ng Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Mag-ayos ng mga opsiyon na may kaugnayan sa pagsasalin:</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Ang wika ay hindi matukoy nang may katanggap-tanggap na antas ng katiyakan</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Ang napiling wika ay hindi suportado ng kasalukuyang magagamit na translation backend</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Ang napiling wika ay suportado lamang gamit ang plugin overlays dahil sa mga limitasyon ng katutubong laro Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Aling wika upang isalin ang mga kahon ng dialogue sa.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Wika upang isalin sa</value>
+  </data>
+  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>Ang di-pangkaraniwang listahan ng mga isyu at TODOs ay makukuha sa link sa ibaba:</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Mangyaring mag-ayos ng posisyon kung ang iyong overlaylay ay hindi nakasentro kamag-anak sa UI text box ng laro.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>I-click upang piliin ang overlay font kulay</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Mag-ayos ng overlay font scale</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Laki ng Font</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Piliin ang laki ng font para sa teksto overlay</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Pagsasalin Overlay Height multiplier</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Labanan mensahe (Enenies dialogue linya) pagsasalin</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Pag-aayos ng posisyon</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Idispley ang isinalin na teksto sa itaas ng laro UI text box sa halip na bayaran ang kanyang teksto sa pagsasalin</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Mag-ayos ng pagsasalin sa lapad ng lapad</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Pagsasalin Overlay Width multiplier</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Ganap na landas patungo sa Echoglossian folder (sa loob ng XIVLauncher -&gt; pluginConfigs folder)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Mangyaring i-type ang landas at i-save upang ang plugin ay maaaring gumana nang maayos!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Bumili ng lokinmodar ng isang kape</value>
+  </data>
+  <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX q qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>I-scan ang QR code upang magpadala sa akin ng ISANG PIX - lamang may bisa sa Brazil</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Piliin ang wika para sa window ng kumpigurasyon ng plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Magkumpigura ng Wika ng Bintana:</value>
+  </data>
+  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>I-scan ang QR code upang magpadala sa akin ng ISANG PIX - lamang may bisa sa Brazil</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>I-save at Isara ang Window ng Kumpig</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Magpadala sa akin ng donasyong PIX!</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Mga Setting para sa Google Translate:</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Ipakita ang Orihinal na teksto ng talakayan sa Overlay at Isinalin sa Game UI dialogue box</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Mag-ayos ng toast pagsasalin sa lapad</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Toast Overlay Width multiplier</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs Listahan sa Github</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Isalin sa in-game Area name Toast Messages</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Isalin labanan pakikipag-usap</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Isalin sa in-game Class /Job change Toast Messages</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Isalin sa in-game Error Toast Messages</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Isalin ang mga pangalan ng NPC sa mga kahon ng talakayan</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Isalin sa in-game Quest Toast Messages</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Isalin ang iba pang mga in-game miscellaneous Toast Messages</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Isalin sa in-game dialogues</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Isalin sa in-game Toast Messages</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>Hindi pinagana ang mga pagsasalin!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>Pinagana ang mga pagsasalin!</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ang translation engine na ito ay hindi nangangailangan ng anumang espesyal na mga seting.</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Pinagana ang pagsasalin!</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Gumamit ng overlay upang ipakita ang mga pagsasalin ng Toasts</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Naghihintay pagsasalin...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Piliin kung anong uri ng tekstong gusto mong isalin</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Pumili kung aling mga mensahe ng Toast toast ang isasalin</value>
+  </data>
+</root>

@@ -204,10 +204,6 @@
           <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
           <target state="translated">Mostrar texto de diálogo original en Superposición y traducido en el cuadro de diálogo de la IU del juego</target>
         </trans-unit>
-        <trans-unit id="DoNotUseImGuiForToastsToggle" translate="yes" xml:space="preserve">
-          <source>Do not use overlay to show Toasts translations</source>
-          <target state="translated" state-qualifier="mt-suggestion">No utilice la superposición para mostrar las traducciones de Toasts</target>
-        </trans-unit>
         <trans-unit id="OverlayFontScaleLabel" translate="yes" xml:space="preserve">
           <source>Adjust the Overlay font scale</source>
           <target state="translated" state-qualifier="mt-suggestion">Ajustar la escala de fuentes de superposición</target>
@@ -315,11 +311,15 @@
         </trans-unit>
         <trans-unit id="TranslationDisabled" translate="yes" xml:space="preserve">
           <source>Translations are Disabled!</source>
-          <target state="new">Translations are Disabled!</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">¡Las traducciones están deshabilitadas!</target>
         </trans-unit>
         <trans-unit id="TranslationEnabled" translate="yes" xml:space="preserve">
           <source>Translations are Enabled!</source>
-          <target state="new">Translations are Enabled!</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">¡Las traducciones están habilitadas!</target>
+        </trans-unit>
+        <trans-unit id="UseImGuiForToastsToggle" translate="yes" xml:space="preserve">
+          <source>Use overlay to show Toasts translations</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Usar superposición para mostrar las traducciones de Toasts</target>
         </trans-unit>
       </group>
     </body>

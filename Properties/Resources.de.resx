@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Haupt</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Gesprächseinstellungen</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Battle Talk Einstellungen</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Toasteinstellungen</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Erfassungseinstellungen</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Tooltips-Einstellungen</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Andere Einstellungen</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Einstellungen des Übersetzungsmoduls</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Über Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Echoglossianische Konfiguration</value>
+    <comment>Config Window title bar</comment>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>Bitte unterstützen Sie uns entweder, indem Sie zur Projektentwicklung beitragen, Probleme einreichen oder uns mit einem Kaffee helfen.</value>
+  </data>
+  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>Dieses Plugin zielt darauf ab, eines der größten Probleme für Zielgruppen zu lösen, die weder Englisch, Deutsch, Französisch noch Japanisch sprechen: Dialoge und andere Elemente der Spielbenutzeroberfläche verstehen.</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>Im Moment führen wir nur automatische Übersetzungen über die Google Translate API durch, aber in Zukunft beabsichtigen wir, andere ML-Übersetzungssysteme zu unterstützen. Wir haben sogar Ideen für Crowdsourcing-Übersetzungen, die von der Community kuratiert werden.</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>Über Echoglossian:</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Aufmerksamkeit!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Spieltext-Echtzeitübersetzung aktivieren</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Schriftfarbe überlagern:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Öffnet das Echoglossian-Konfigurationsfenster</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Passen Sie die Optionen für das Übersetzungs-Overlay an:</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Die Sprache konnte nicht mit einem akzeptablen Grad an Sicherheit identifiziert werden.</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Die ausgewählte Sprache wird vom aktuell verfügbaren Übersetzungs-Backend nicht unterstützt.</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Die gewählte Sprache wird aufgrund von Einschränkungen der nativen Spielschrift nur über die Plugin-Overlays unterstützt</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>In welche Sprache die Dialogfelder im Spiel übersetzt werden sollen.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Sprache, in die übersetzt werden soll</value>
+  </data>
+  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Echoglossian</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>Die nicht erschöpfende Liste der Probleme und TODOs finden Sie unter dem folgenden Link:</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Bitte passen Sie die Position an, wenn Ihr Overlay nicht relativ zum UI-Textfeld des Spiels zentriert ist.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Klicken Sie hier, um die Overlay-Schriftfarbe auszuwählen</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Anpassen der Überlagerungs-Schriftskala</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Schriftgrad überlagern</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Auswählen der Schriftgröße für die Textüberlagerung</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplikator für die Höhe der Übersetzungsüberlagerung</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Schlachtgespräch (Enenies-Dialogzeilen) Übersetzung</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Positionsverstellung</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Übersetzte Textüberlagerung über dem Textfeld der Spielbenutzeroberfläche anzeigen, anstatt den Text durch die Übersetzung zu ersetzen</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Überlagerungsbreite der Übersetzung anpassen</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplikator der Übersetzungs-Overlay-Breite</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Absoluter Pfad zum Echoglossian-Ordner (innerhalb von XIVLauncher -&gt; pluginConfigs-Ordner)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Bitte geben Sie den Pfad ein und speichern Sie, damit das Plugin ordnungsgemäß funktionieren kann!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Kaufen Sie lokinmodar a Coffee</value>
+  </data>
+  <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX QR-Code</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Scannen Sie den QR-Code, um mir einen PIX zu senden - nur gültig in Brasilien</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Wählen Sie die Sprache für das Plugin-Konfigurationsfenster</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Sprache des Konfigurationsfensters:</value>
+  </data>
+  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Scannen Sie den QR-Code, um mir einen PIX zu senden - nur gültig in Brasilien</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Konfigurationsfenster speichern und schließen</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Schicken Sie mir eine PIX-Spende!</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Einstellungen für Google Translate:</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Original-Dialogtext im Dialogfeld "Überlagern" und "Übersetzt" im Dialogfeld "Spiel-UI" anzeigen</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Anpassen der Overlaybreite für die Popupübersetzung</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplikator für die Breite der Popupüberlagerung</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs-Liste auf Github</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Im Spiel übertragen Bereichsnamen Toast-Nachrichten</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Schlachtgespräche übersetzen</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Übersetzen Sie In-Game-Toast-Nachrichten zur Klassen-/Jobänderung</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Übersetzen von Fehler-Popupmeldungen im Spiel</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>NpCs-Namen in Dialogfeldern übersetzen</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Übersetze Quest Toast Messages im Spiel</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Übersetzen Sie andere verschiedene Toast-Nachrichten im Spiel</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Übersetze Dialoge im Spiel</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Übersetzen Sie Toast-Nachrichten im Spiel</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>Übersetzungen sind deaktiviert!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>Übersetzungen sind aktiviert!</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Für diese Übersetzungs-Engine sind keine besonderen Einstellungen erforderlich.</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Übersetzungen aktiviert!</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Verwenden von Overlay zum Anzeigen von Popups-Übersetzungen</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Warten auf Übersetzung...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Wählen Sie aus, welche Art von Text Übersetzt werden soll</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Wählen Sie aus, welche Toast-Nachrichten im Spiel übersetzt werden sollen</value>
+  </data>
+</root>

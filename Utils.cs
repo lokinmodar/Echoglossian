@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+
 using Dalamud.Logging;
 
 namespace Echoglossian
@@ -43,31 +44,19 @@ namespace Echoglossian
       return parentPath;
     }
 
-    private static async Task<bool> DownloadPluginAssets()
-    {
-      using WebClient webClient = new();
-      try
-      {
-        await webClient.DownloadFileTaskAsync(
-          new Uri("https://drive.google.com/file/d/10XDzXGxheebckhFL0Rbuq36C-ssUSd4P/view?usp=sharing"),
-          "Wiki82.profile.xml");
-        return true;
-      }
-      catch (Exception e)
-      {
-        PluginLog.LogError($"Error downloading plugin assets: {e}");
-        return false;
-      }
-    }
-
     private void FixConfig()
     {
-      if (!this.pluginInterface.ConfigFile.Exists)
+      if (!File.Exists($"{this.pluginInterface.ConfigFile.FullName}"))
       {
+#if DEBUG
+        PluginLog.LogDebug($"Inside config file fixer - Config File Info: {this.pluginInterface.ConfigFile.FullName}");
+#endif
+
+        this.SaveConfig();
         return;
       }
 
-      if (this.configuration.Version != 1)
+      if (this.configuration.Version != 3)
       {
         this.pluginInterface.ConfigFile.Delete();
         /* if (this.pluginInterface.ConfigDirectory.Exists)

@@ -23,6 +23,7 @@ using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs;
 using ImGuiScene;
+using Newtonsoft.Json;
 using XivCommon;
 
 namespace Echoglossian
@@ -47,7 +48,7 @@ namespace Echoglossian
 
     private readonly Framework framework;
     private readonly GameGui gameGui;
-    private readonly ClientState ci;
+    private readonly ClientState clientState;
 
     private readonly SemaphoreSlim toastTranslationSemaphore;
     private readonly SemaphoreSlim talkTranslationSemaphore;
@@ -73,43 +74,37 @@ namespace Echoglossian
 
     public List<ToastMessage> ErrorToastsCache { get; set; }
 
+    public List<ToastMessage> QuestToastsCache { get; set; }
+
+    public List<ToastMessage> OtherToastsCache { get; set; }
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
     /// </summary>
     /// <param name="dalamudPluginInterface">Plugin Interface.</param>
-    /// <param name="pframework">Framework.</param>
+    /// <param name="pframework">Game Framework.</param>
     /// <param name="pCommandManager">Command Manager.</param>
     /// <param name="pGameGui">Game Gui object.</param>
     /// <param name="pToastGui">Toast Gui Object.</param>
-    /// <param name="clientState">This class represents the state of the game client at the time of access.</param>
+    /// <param name="pClientState">This class represents the state of the game client at the time of access.</param>
     public Echoglossian(
       [RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface,
       Framework pframework,
       [RequiredVersion("1.0")] CommandManager pCommandManager,
       GameGui pGameGui,
       ToastGui pToastGui,
-      ClientState clientState)
+      ClientState pClientState)
     {
       this.framework = pframework;
-      this.ci = clientState;
-
+      this.clientState = pClientState;
       this.pluginInterface = dalamudPluginInterface;
-
-      this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
-
-      this.FixConfig();
-
-      this.configDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
-
-      this.PluginAssetsState = this.configuration.PluginAssetsDownloaded;
+      this.commandManager = pCommandManager;
 
       sanitizer = this.pluginInterface.Sanitizer as Sanitizer;
 
       langDict = this.LanguagesDictionary;
+      identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
-      this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
-
-      this.commandManager = pCommandManager;
       this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
       {
         HelpMessage = Resources.HelpMessage,
@@ -125,17 +120,35 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
-      /*      if (this.PluginAssetsState)
-            {*/
+      this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
+      this.configDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
+
+      this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
+      this.AssetsPath = $"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
+
+      this.AssetFiles.Add("NotoSansCJKhk-Regular.otf");
+      this.AssetFiles.Add("NotoSansCJKjp-Regular.otf");
+      this.AssetFiles.Add("NotoSansCJKkr-Regular.otf");
+      this.AssetFiles.Add("NotoSansCJKsc-Regular.otf");
+      this.AssetFiles.Add("NotoSansCJKtc-Regular.otf");
+
+#if DEBUG
+      //PluginLog.LogWarning($"Assets state config: {JsonConvert.SerializeObject(this.configuration, Formatting.Indented)}");
+#endif
+      this.FixConfig();
+
+      this.PluginAssetsState = this.configuration.PluginAssetsDownloaded;
+#if DEBUG
+      PluginLog.LogWarning($"Assets state config: {this.configuration.PluginAssetsDownloaded}");
+      PluginLog.LogWarning($"Assets state var: {this.PluginAssetsState}");
+#endif
+      if (!this.PluginAssetsState)
+      {
+        this.PluginAssetsChecker();
+      }
+
       this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
       this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
-      identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
-      /*      }
-            else
-            {
-              this.configuration.PluginAssetsDownloaded = DownloadPluginAssets().Result;
-              this.PluginAssetsState = true;
-            }*/
 
       // this.ListCultureInfos();
       this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
@@ -158,6 +171,7 @@ namespace Echoglossian
       transEngineName = t.ToString();
 
       this.LoadAllErrorToasts();
+      this.LoadAllOtherToasts();
 
       this.framework.Update += this.Tick;
 
@@ -177,7 +191,7 @@ namespace Echoglossian
       this.toastGui.ErrorToast += this.OnErrorToast;
       this.toastGui.QuestToast += this.OnQuestToast;
 
-      // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnOnChatBubble;
+      // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
 
       Common.Functions.Talk.OnTalk += this.GetTalk;
@@ -188,8 +202,6 @@ namespace Echoglossian
     private static XivCommonBase Common { get; set; }
 
     public string Name => Resources.Name;
-
-    private Task GameTask;
 
     /// <inheritdoc />
     public void Dispose()
@@ -202,7 +214,7 @@ namespace Echoglossian
     {
       Common.Functions.Talk.OnTalk -= this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleTalk;
-      // Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnOnChatBubble;
+      // Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip -= this.TooltipsOnActionTooltip;
       Common?.Functions.Dispose();
       Common?.Dispose();
@@ -251,14 +263,14 @@ namespace Echoglossian
         return;
       }
 
-      switch (this.configuration.UseImGui || this.configuration.UseImGuiForBattleTalk ||
-              !this.configuration.DoNotUseImGuiForToasts)
+      switch (this.configuration.UseImGuiForTalk || this.configuration.UseImGuiForBattleTalk ||
+              this.configuration.UseImGuiForToasts)
       {
         case true when !this.FontLoaded || this.FontLoadFailed:
           return;
         case true:
           {
-            switch (this.ci.IsLoggedIn)
+            switch (this.clientState.IsLoggedIn)
             {
               case true:
 
@@ -270,16 +282,16 @@ namespace Echoglossian
 
                 this.TextErrorToastHandler("_TextError", 1);
 
-                this.WideTextToastHandler("_WideText", 1);
+                this.ToastHandler("_WideText", 1);
 
                 // this.ClassChangeToastHandler("_WideText", 1);
                 //
                 // this.ClassChangeToastHandler("_WideText", 2);
 
-                // this.ClassChangeToastHandler("_TextClassChange", 1);
-                this.AreaToastHandler("_AreaText", 1);
+                this.ToastHandler("_TextClassChange", 1);
+                this.ToastHandler("_AreaText", 1);
 
-                this.QuestToastHandler("_ScreenText", 1);
+                //this.QuestToastHandler("_ScreenText", 1);
 
                 break;
             }
@@ -297,7 +309,7 @@ namespace Echoglossian
     {
       if (!this.configuration.PluginAssetsDownloaded)
       {
-        this.configuration.PluginAssetsDownloaded = DownloadPluginAssets().Result;
+       // this.PluginAssetsChecker();
         return;
       }
 
@@ -342,7 +354,7 @@ namespace Echoglossian
 #endif
       }
 
-      if (this.configuration.UseImGui && this.configuration.TranslateTalk && this.talkDisplayTranslation)
+      if (this.configuration.UseImGuiForTalk && this.configuration.TranslateTalk && this.talkDisplayTranslation)
       {
         this.DrawTranslatedDialogueWindow();
 #if DEBUG
@@ -351,20 +363,27 @@ namespace Echoglossian
       }
 
 #if DEBUG
-      /* PluginLog.LogWarning($"Toast Draw Vars: !DoNotUseImGuiForToasts - {!this.configuration.DoNotUseImGuiForToasts}" +
+      /* PluginLog.LogWarning($"Toast Draw Vars: !UseImGuiForToasts - {!this.configuration.UseImGuiForToasts}" +
                     $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
                     $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
-                    $" equals? {!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");*/
+                    $" equals? {!this.configuration.UseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");*/
 #endif
-      if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
+      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
       {
         this.DrawTranslatedErrorToastWindow();
 #if DEBUG
         // PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
 #endif
       }
+      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateToast && this.toastDisplayTranslation)
+      {
+        this.DrawTranslatedToastWindow();
+#if DEBUG
+        // PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+#endif
+      }
 
-      /*if (!this.configuration.DoNotUseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation)
+      /*if (!this.configuration.UseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation)
       {
         this.DrawTranslatedClassChangeToastWindow();
         *//*#if DEBUG

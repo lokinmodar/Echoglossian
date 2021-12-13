@@ -14,7 +14,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <LangVersion>9.0</LangVersion>
     <VersionMajor>2</VersionMajor>
-    <VersionMinor>1</VersionMinor>
+    <VersionMinor>2</VersionMinor>
     <VersionPatch Condition="'$(VersionPatch)' == ''">$([System.DateTime]::UtcNow.ToString("yyMM"))</VersionPatch>
     <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
@@ -83,8 +83,32 @@
     <None Remove="images\icon.png" />
     <None Remove="images\logo.png" />
     <None Remove="minfilia.ico" />
+    <None Remove="MultilingualResources\Echoglossian.ca.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.cs.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.da.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.de.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.el.xlf" />
     <None Remove="MultilingualResources\Echoglossian.es.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.fi.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.fil.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.fr.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ga.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.gl.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.gu.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.hi.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.hu.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ja.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ko.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ms.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.pa-Guru.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.pl.xlf" />
     <None Remove="MultilingualResources\Echoglossian.pt-BR.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ru.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.sd-Deva.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ta.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.vi.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.zh-Hans.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.zh-Hant.xlf" />
     <None Remove="Resources\pix.png" />
     <None Remove="stylecop.json" />
     <None Remove="Wiki82.profile.xml" />
@@ -106,19 +130,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansCJKhk-Regular.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansCJKjp-Regular.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansCJKkr-Regular.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansCJKsc-Regular.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansCJKtc-Regular.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansDevanagari-Medium.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -188,7 +212,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.3.2" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.3.3" />
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
     <PackageReference Include="DalamudPackager" Version="2.1.5" />
     <PackageReference Include="DeepL" Version="0.3.0" />
@@ -206,7 +230,7 @@
     </PackageReference>
     <PackageReference Include="System.Drawing.Common" Version="6.0.0-rc.2.21480.5" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
-    <PackageReference Include="XivCommon" Version="3.2.0" />
+    <PackageReference Include="XivCommon" Version="4.0.0-alpha.2" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">
@@ -219,8 +243,32 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\pix.png" />
     <EmbeddedResource Include="Resources\minfilia.ico" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ca.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.cs.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.da.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.de.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.el.xlf" />
     <XliffResource Include="MultilingualResources\Echoglossian.es.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.fi.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.fil.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.fr.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ga.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.gl.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.gu.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.hi.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.hu.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ja.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ko.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ms.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.pa-Guru.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.pl.xlf" />
     <XliffResource Include="MultilingualResources\Echoglossian.pt-BR.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ru.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.sd-Deva.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ta.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.vi.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.zh-Hans.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.zh-Hant.xlf" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

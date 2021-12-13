@@ -11,7 +11,7 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private void ChatBubblesOnOnChatBubble(ref GameObject gameObject, ref SeString text)
+    private void ChatBubblesOnChatBubble(ref GameObject gameObject, ref SeString text)
     {
       PluginLog.LogWarning($"Chat Bubble text: {text.TextValue}");
     }

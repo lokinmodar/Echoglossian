@@ -1,0 +1,327 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ta" original="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" tool-id="MultilingualAppToolkit" product-name="n/a" product-version="n/a" build-num="n/a">
+    <header>
+      <tool tool-id="MultilingualAppToolkit" tool-name="Multilingual App Toolkit" tool-version="4.0.6921.0" tool-company="Microsoft" />
+    </header>
+    <body>
+      <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
+        <trans-unit id="choice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="CloseButtonLabel" translate="yes" xml:space="preserve">
+          <source>Close</source>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">மூடு</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
+          <source>Main</source>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">பிரதான</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
+          <source>Talk settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">பேச்சு அமைப்புகள்</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab2Name" translate="yes" xml:space="preserve">
+          <source>Battle Talk settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">போர் பேச்சு அமைப்புகள்</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
+          <source>Toast settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">டோஸ்ட் அமைப்புகள்</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
+          <source>Journal settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">இதழ் அமைப்புகள்</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
+          <source>Tooltips settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">கருவிகுறிப்புகள் அமைப்புகள்</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab6Name" translate="yes" xml:space="preserve">
+          <source>Other settings</source>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">மற்ற அமைப்புகள்</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab7Name" translate="yes" xml:space="preserve">
+          <source>Translation Engine settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்பு இயந்திர அமைப்புகள்</target>
+        </trans-unit>
+        <trans-unit id="ConfigTabAbout" translate="yes" xml:space="preserve">
+          <source>About Echoglossian</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எக்கோக்ளோசியன் பற்றி</target>
+        </trans-unit>
+        <trans-unit id="ConfigWindowTitle" translate="yes" xml:space="preserve">
+          <source>Echoglossian Configuration</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எக்கோக்ளோசியன் கட்டமைப்பு</target>
+          <note from="MultilingualBuild" annotates="source" priority="2">Config Window title bar</note>
+        </trans-unit>
+        <trans-unit id="ContribText" translate="yes" xml:space="preserve">
+          <source>Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">திட்ட வளர்ச்சிக்கு பங்களிப்பதன் மூலம், சிக்கல்களை ச் சமர்ப்பிப்பதன் மூலம் அல்லது ஒரு காபியுடன் எங்களுக்கு உதவுவதன் மூலம் எங்களுக்கு ஆதரவு தாருங்கள்.</target>
+        </trans-unit>
+        <trans-unit id="cutscenechoice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerText1" translate="yes" xml:space="preserve">
+          <source>This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">இந்த சொருகி ஆங்கிலம், ஜெர்மன், பிரெஞ்சு அல்லது ஜப்பானிய பேசாத பார்வையாளர்களுக்கான மிகப்பெரிய பிரச்சினைகளில் ஒன்றைத் தீர்ப்பதை நோக்கமாகக் கொண்டுள்ளது: உரையாடல்கள் மற்றும் விளையாட்டு யுஐ இன் பிற கூறுகளைப் புரிந்துகொள்ளுதல்.</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerText2" translate="yes" xml:space="preserve">
+          <source>For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">இப்போது நாம் மட்டுமே கூகிள் மொழிபெயர்ப்பு APஐ மூலம் தானியங்கு மொழிபெயர்ப்பு செய்ய, ஆனால் எதிர்காலத்தில் நாம் மற்ற MM எல் மொழிபெயர்ப்பு அமைப்புகள் ஆதரவு நோக்கம். சமூகத்தால் தொகுக்கப்பட்ட கூட்டமூல மொழிபெயர்ப்புகளை தார்செய்யும் யோசனைகள் கூட எங்களிடம் உள்ளன.</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerTitle" translate="yes" xml:space="preserve">
+          <source>About Echoglossian:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எக்கோக்ளோசியன் பற்றி:</target>
+        </trans-unit>
+        <trans-unit id="EchoglossianPathModal" translate="yes" xml:space="preserve">
+          <source>Attention!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">கவனம்!</target>
+        </trans-unit>
+        <trans-unit id="EnableTranslation" translate="yes" xml:space="preserve">
+          <source>Activate game text realtime translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டு உரை நிகழ்நேர மொழிபெயர்ப்பை செயல்படுத்து</target>
+        </trans-unit>
+        <trans-unit id="FontColorSelectLabel" translate="yes" xml:space="preserve">
+          <source>Overlay font color:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எழுத்துரு வண்ணத்தை மேலெழுது:</target>
+        </trans-unit>
+        <trans-unit id="HelpMessage" translate="yes" xml:space="preserve">
+          <source>Opens Echoglossian config window</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எக்கோக்ளோசியன் உள்ளமைவு சாளரத்தை திறக்கிறது</target>
+          <note from="MultilingualBuild" annotates="source" priority="2">Shown in plugin install window</note>
+        </trans-unit>
+        <trans-unit id="HoverTooltipIndicator" translate="yes" xml:space="preserve">
+          <source>(?)</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">(?)</target>
+        </trans-unit>
+        <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the options related to the translation overlay:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்பு மேலமைதொடர்பான விருப்பங்களை சரிசெய்யவும்:</target>
+        </trans-unit>
+        <trans-unit id="LangIdentError" translate="yes" xml:space="preserve">
+          <source>The language could not be identified with an acceptable degree of certainty</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழியை ஏற்றுக்கொள்ளக்கூடிய அளவு உறுதியுடன் அடையாளம் காண முடியவில்லை</target>
+        </trans-unit>
+        <trans-unit id="LanguageNotSupportedText" translate="yes" xml:space="preserve">
+          <source>The selected language is not supported by the currently available translation backend</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">தேர்ந்தெடுக்கப்பட்ட மொழி தற்போது கிடைக்கும் மொழிபெயர்ப்பு பின்னோக்கு மூலம் ஆதரிக்கப்படவில்லை</target>
+        </trans-unit>
+        <trans-unit id="LanguageOnlySupportedUsingOverlay" translate="yes" xml:space="preserve">
+          <source>The selected language is only supported using the plugin overlays due to limitations of the native game Font</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">தேர்ந்தெடுக்கப்பட்ட மொழி மட்டுமே சொந்த விளையாட்டு எழுத்துரு வரம்புகள் காரணமாக சொருகி மேல்விரிகள் பயன்படுத்தி ஆதரிக்கப்படுகிறது</target>
+        </trans-unit>
+        <trans-unit id="LanguageSelectionTooltip" translate="yes" xml:space="preserve">
+          <source>Which language to translate the in-game dialogue boxes to.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எந்த மொழி க்கு விளையாட்டு உரையாடல் பெட்டிகள் மொழிபெயர்க்க.</target>
+        </trans-unit>
+        <trans-unit id="LanguageSelectLabelText" translate="yes" xml:space="preserve">
+          <source>Language to translate to</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழி மொழிபெயர்க்க</target>
+        </trans-unit>
+        <trans-unit id="logo" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="minfilia" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="Name" translate="yes" xml:space="preserve">
+          <source>Echoglossian</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எக்கோக்ளோசியன்</target>
+        </trans-unit>
+        <trans-unit id="NEListText" translate="yes" xml:space="preserve">
+          <source>The non-exhaustive list of issues and TODOs is available in the link below:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">சிக்கல்கள் மற்றும் TTோக்களின் முழுமையான பட்டியல் கீழே உள்ள இணைப்பில் கிடைக்கிறது:</target>
+        </trans-unit>
+        <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
+          <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டின் யுஐ உரைப் பெட்டிக்கு ஏற்ப உங்கள் மேலமைவு மையப்படுத்தப்படவில்லை என்றால் தயவுசெய்து நிலையை சரிசெய்யவும்.</target>
+        </trans-unit>
+        <trans-unit id="OverlayColorSelectName" translate="yes" xml:space="preserve">
+          <source>OverlayColorSelect</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மேலடுக்கலரிதேர்ந்தெடு</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontColorOrientations" translate="yes" xml:space="preserve">
+          <source>Click to choose the overlay font color</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மேலெழுது எழுத்துரு வண்ணத்தை தேர்வு செய்ய கிளிக் செய்யவும்</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontScaleLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the Overlay font scale</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மேலெழுது எழுத்துரு அளவை சரிசெய்</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeLabel" translate="yes" xml:space="preserve">
+          <source>Overlay Font Size</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எழுத்துரு அளவை மேலெழுது</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
+          <source>Select the font size for the text overlay</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">உரை மேலெழுத்திற்கு எழுத்துரு அளவை தேர்ந்தெடுக்கவும்</target>
+        </trans-unit>
+        <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
+          <source>Translation Overlay Height multiplier</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்பு மேலடுக்கு உயரம் பெருக்கி</target>
+        </trans-unit>
+        <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
+          <source>Battle talk (Enenies dialogue lines) translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">போர் பேச்சு (எனினிஸ் உரையாடல் வரிகள்) மொழிபெயர்ப்பு</target>
+          <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
+        </trans-unit>
+        <trans-unit id="OverlayPositionAdjustmentLabel" translate="yes" xml:space="preserve">
+          <source>Position adjustment</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">நிலை சரிசெய்தல்</target>
+        </trans-unit>
+        <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
+          <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">அதன் உரையை மொழிபெயர்ப்புடன் மாற்றுவதற்குபதிலாக விளையாட்டு யுஐ உரைபெட்டிக்கு மேலே மொழிபெயர்க்கப்பட்ட உரையை காண்பி</target>
+        </trans-unit>
+        <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
+          <source>Adjust translation overlay width</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்பு மேலமை அகலத்தை சரிசெய்</target>
+        </trans-unit>
+        <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
+          <source>Translation Overlay Width multiplier</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்பு மேலணுஅகலம் பெருக்கி</target>
+        </trans-unit>
+        <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
+          <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எக்கோக்ளோசியன் கோப்புறைக்கு முழுமையான பாதை (உள்ளே எக்ஸ்விலாஞ்சர் -&gt; சொருகிகான்ஃபிக்ஸ் கோப்புறை)</target>
+        </trans-unit>
+        <trans-unit id="PathTypeInstructions" translate="yes" xml:space="preserve">
+          <source>Please type the path and save so the plugin can work properly!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">தயவுசெய்து பாதையை தட்டச்சு செய்து சேமிக்கவும், இதனால் சொருகி சரியாக வேலை செய்ய முடியும்!</target>
+        </trans-unit>
+        <trans-unit id="PatronButtonLabel" translate="yes" xml:space="preserve">
+          <source>Buy lokinmodar a Coffee</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">லோகிமொதார் ஒரு காபி வாங்கவும்</target>
+        </trans-unit>
+        <trans-unit id="pix" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="PixQrWindowLabel" translate="yes" xml:space="preserve">
+          <source>PIX qrcode</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PAM-ஐ க்ரோக்கோட்</target>
+        </trans-unit>
+        <trans-unit id="PixText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எனக்கு ஒரு பிக்ஸ் அனுப்ப க்யூஆர் குறியீட்டை ஸ்கேன் செய்யவும் - பிரேசிலில் மட்டுமே செல்லுபடியாகும்</target>
+        </trans-unit>
+        <trans-unit id="PluginInterfaceLanguage" translate="yes" xml:space="preserve">
+          <source>Choose the language for the plugin configuration window</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">சொருகி உள்ளமைவு சாளரத்திற்கான மொழியைத் தேர்வு செய்யவும்</target>
+        </trans-unit>
+        <trans-unit id="PluginInterfaceLanguageSelectorText" translate="yes" xml:space="preserve">
+          <source>Config Window Language:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">சாளர மொழியை உள்ளமை:</target>
+        </trans-unit>
+        <trans-unit id="prttws" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="QRCodeInstructionsText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எனக்கு ஒரு பிக்ஸ் அனுப்ப க்யூஆர் குறியீட்டை ஸ்கேன் செய்யவும் - பிரேசிலில் மட்டுமே செல்லுபடியாகும்</target>
+        </trans-unit>
+        <trans-unit id="SaveCloseButtonLabel" translate="yes" xml:space="preserve">
+          <source>Save and Close Config Window</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">சாளரத்தை சேமித்து மூடவும்</target>
+        </trans-unit>
+        <trans-unit id="SendPixButton" translate="yes" xml:space="preserve">
+          <source>Send me a PIX donation!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எனக்கு ஒரு பி.பி.எஸ் நன்கொடை அனுப்பவும்!</target>
+        </trans-unit>
+        <trans-unit id="SettingsForGTransText" translate="yes" xml:space="preserve">
+          <source>Settings for Google Translate:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ggmatat tat tamp;க்கான அமைப்புகள்:</target>
+        </trans-unit>
+        <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
+          <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டு யுஐ உரையாடல் பெட்டியில் ஓவர்லே மற்றும் மொழிபெயர்க்கஅசல் உரையாடல் உரை காண்பி</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
+          <source>Adjust toast translation overlay width</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">டோஸ்ட் மொழிபெயர்ப்பு மேலமை அகலத்தை சரிசெய்யவும்</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayWidthScrollLabel" translate="yes" xml:space="preserve">
+          <source>Toast Overlay Width multiplier</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">டோஸ்ட் ஓவர்லே அகலம் பெருக்கி</target>
+        </trans-unit>
+        <trans-unit id="TodoUrl" translate="yes" xml:space="preserve">
+          <source>TODOs List on Github</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">கீதுப் பற்றிய Tோடோக்கள் பட்டியல்</target>
+        </trans-unit>
+        <trans-unit id="TranslateAreaToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Area name Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டு பகுதியில் பெயர் டோஸ்ட் செய்திகளை மொழிபெயர்க்க</target>
+        </trans-unit>
+        <trans-unit id="TransLateBattletalkToggle" translate="yes" xml:space="preserve">
+          <source>Translate battle talk</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">போர் பேச்சு மொழிபெயர்க்க</target>
+        </trans-unit>
+        <trans-unit id="TranslateClassChangeToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Class/Job change Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டு வகுப்பு / வேலை மாற்றம் டோஸ்ட் செய்திகளை மொழிபெயர்க்க</target>
+        </trans-unit>
+        <trans-unit id="TranslateErrorToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Error Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டில் பிழை டோஸ்ட் செய்திகளை மொழிபெயர்க்கவும்</target>
+        </trans-unit>
+        <trans-unit id="TranslateNpcNamesToggle" translate="yes" xml:space="preserve">
+          <source>Translate NPCs names in dialogue boxes</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">உரையாடல் பெட்டிகளில் என்.பி.சி.யின் பெயர்களை மொழிபெயர்க்கவும்</target>
+        </trans-unit>
+        <trans-unit id="TranslateQuestToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Quest Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டில் குவெஸ்ட் டோஸ்ட் செய்திகளை மொழிபெயர்க்கவும்</target>
+        </trans-unit>
+        <trans-unit id="TranslateScreenInfoToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate other in-game miscellaneous Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மற்ற விளையாட்டு இதர டோஸ்ட் செய்திகளை மொழிபெயர்க்கவும்</target>
+        </trans-unit>
+        <trans-unit id="TranslateTalkToggleLabel" translate="yes" xml:space="preserve">
+          <source>Translate in-game dialogues</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டு உரையாடல்களை மொழிபெயர்க்கவும்</target>
+        </trans-unit>
+        <trans-unit id="TranslateToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">விளையாட்டு டோஸ்ட் செய்திகளை மொழிபெயர்க்கவும்</target>
+        </trans-unit>
+        <trans-unit id="TranslationDisabled" translate="yes" xml:space="preserve">
+          <source>Translations are Disabled!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்புகள் முடக்கப்பட்டுள்ளன!</target>
+        </trans-unit>
+        <trans-unit id="TranslationEnabled" translate="yes" xml:space="preserve">
+          <source>Translations are Enabled!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்புகள் செயல்படுத்தப்பட்டுள்ளன!</target>
+        </trans-unit>
+        <trans-unit id="TranslationEngineSettingsNotRequired" translate="yes" xml:space="preserve">
+          <source>This translation engine does not require any special settings.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">இந்த மொழிபெயர்ப்பு இயந்திரத்திற்கு எந்த சிறப்பு அமைப்புகளும் தேவையில்லை.</target>
+        </trans-unit>
+        <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
+          <source>Translations enabled!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்புகள் செயல்படுத்தப்பட்டன!</target>
+        </trans-unit>
+        <trans-unit id="UseImGuiForToastsToggle" translate="yes" xml:space="preserve">
+          <source>Use overlay to show Toasts translations</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">டோஸ்ட்ஸ் மொழிபெயர்ப்புகளைக் காண்பிக்க மேலமைக்கபயன்படுத்தவும்</target>
+        </trans-unit>
+        <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
+          <source>Awaiting translation...</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">மொழிபெயர்ப்பு காத்திருக்கிறது...</target>
+        </trans-unit>
+        <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
+          <source>Select what kind of text you want to be translated</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">நீங்கள் எந்த வகையான உரையை மொழிபெயர்க்க விரும்புகிறீர்கள் என்பதைத் தேர்ந்தெடுக்கவும்</target>
+        </trans-unit>
+        <trans-unit id="WhichToastsToTranslateText" translate="yes" xml:space="preserve">
+          <source>Select which in-game Toast messages to translate</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">எந்த விளையாட்டில் டோஸ்ட் செய்திகளை மொழிபெயர்க்க தேர்ந்தெடுக்கவும்</target>
+        </trans-unit>
+      </group>
+    </body>
+  </file>
+</xliff>

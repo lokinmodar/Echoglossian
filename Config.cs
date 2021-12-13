@@ -34,19 +34,19 @@ namespace Echoglossian
     public bool TranslateAreaToast = false;
     public bool TranslateClassChangeToast = false;
     public bool TranslateWideTextToast = false;
-    public bool TranslateYesNoScreen = true;
-    public bool TranslateCutSceneSelectString = true;
+    public bool TranslateYesNoScreen = false;
+    public bool TranslateCutSceneSelectString = false;
     public bool TranslateSelectString = true;
     public bool TranslateSelectOk = true;
-    public bool TranslateToDoList = true;
-    public bool TranslateScenarioTree = true;
+    public bool TranslateToDoList = false;
+    public bool TranslateScenarioTree = false;
     public bool TranslateTooltips = false;
     public bool TranslateJournal = false;
 
-    public bool UseImGui = false;
-    public bool UseImGuiForTalk = true;
-    public bool UseImGuiForBattleTalk = true;
-    public bool DoNotUseImGuiForToasts = false;
+    public bool UseImGui = false; //deprecated
+    public bool UseImGuiForTalk = false;
+    public bool UseImGuiForBattleTalk = false;
+    public bool UseImGuiForToasts = false;
     public bool SwapTextsUsingImGui = false;
 
     public int ChosenTransEngine = 0;
@@ -63,10 +63,11 @@ namespace Echoglossian
     public Vector3 OverlayBattleTalkTextColor = new(1.0f, 1.0f, 1.0f);
     public float FontScale = 1;
     public float BattleTalkFontScale = 1;
+    public int Version { get; set; } = 3;
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 
-    public int Version { get; set; } = 1;
+
   }
 }

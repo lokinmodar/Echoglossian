@@ -30,7 +30,10 @@ namespace Echoglossian
 
     private static RankedLanguageIdentifier identifier;
 
-    /// <summary>
+
+      
+    
+  /// <summary>
     /// Detects which language the source text is in.
     /// </summary>
     /// <param name="message">text to have the source language identified.</param>
@@ -39,6 +42,7 @@ namespace Echoglossian
     {
       // Sanitizer sanitizer = new(ClientLanguage);
       var sanitizedString = sanitizer.Sanitize(message);
+
 #if DEBUG
       PluginLog.LogInformation($"Message in Lang Method: {sanitizedString}");
 #endif

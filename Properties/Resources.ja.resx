@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>メイン</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>トーク設定</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>バトルトークの設定</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>トーストの設定</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>仕訳帳設定</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>ツールヒントの設定</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>その他の設定</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>翻訳エンジンの設定</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>エコーグロシアンについて</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>エコーグロシアン構成</value>
+    <comment>Config Window title bar</comment>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>プロジェクト開発に貢献したり、課題を提出したり、コーヒーを飲むのを手伝って応援して下さい。</value>
+  </data>
+  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>このプラグインは、英語、ドイツ語、フランス語、日本語を話さない聴衆のための最大の問題の1つを解決することを目的としています: 対話やゲームUIの他の要素を理解します。</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>今のところ、Google翻訳APIを介して自動翻訳を行いますが、将来的には他のML翻訳システムをサポートする予定です。私たちは、コミュニティによってキュレーションされたクラウドソーシング翻訳を損なうアイデアさえあります。</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>エコーグロシアンについて:</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>注意してください!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>ゲームテキストリアルタイム翻訳を有効にする</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>オーバーレイフォントの色:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>エコーグロシアン設定ウィンドウを開きます</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>翻訳オーバーレイに関連するオプションを調整します。</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>言語は許容可能な程度の確実性で識別できませんでした</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>選択した言語は、現在利用可能な翻訳バックエンドでサポートされていません</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>選択した言語は、ネイティブゲームのフォントの制限により、プラグインオーバーレイを使用してのみサポートされています</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>ゲーム内のダイアログ ボックスをどの言語に翻訳するかを指定します。</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>翻訳する言語</value>
+  </data>
+  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>エコーグロシアン</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>問題と TODO の完全なリストは、以下のリンクから入手できます。</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>オーバーレイがゲームの UI テキスト ボックスを基準に中央揃えでない場合は、位置を調整してください。</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>オーバーレイ色選択</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>オーバーレイフォントの色をクリックして選択します</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>オーバーレイフォントのスケールを調整する</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>オーバーレイフォントサイズ</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>テキストオーバーレイのフォントサイズを選択します。</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>変換オーバーレイ高さの乗数</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>バトルトーク(エヌセリフ)翻訳</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>ポジション調整</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>翻訳テキストを翻訳に置き換える代わりに、ゲーム UI テキスト ボックスの上に翻訳されたテキスト オーバーレイを表示する</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>翻訳オーバーレイの幅を調整する</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>変換オーバーレイ幅乗数</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>エコーグロシアンフォルダへの絶対パス (XIVLauncher -&gt;プラグイン構成フォルダ内)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>プラグインが正常に動作できるようにパスを入力して保存してください!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>ロキンモダールコーヒーを購入する</value>
+  </data>
+  <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>私にPIXを送信するためにQRコードをスキャン - ブラジルでのみ有効</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>プラグイン設定ウィンドウの言語を選択します。</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>構成ウィンドウ言語:</value>
+  </data>
+  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>私にPIXを送信するためにQRコードをスキャン - ブラジルでのみ有効</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>[保存して閉じる] ウィンドウ</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>PIXの寄付を送ってください!</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Google翻訳の設定:</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>[ゲーム UI] ダイアログ ボックスの [オーバーレイと翻訳] に元のダイアログ テキストを表示する</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>トースト翻訳オーバーレイの幅を調整する</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>トースト オーバーレイ幅乗数</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>GithubのTOOSリスト</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>ゲーム内の領域名トースト メッセージを翻訳する</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>バトルトークを翻訳する</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>ゲーム内クラス/ジョブ変更トーストメッセージを翻訳する</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>ゲーム内エラーのトーストメッセージを翻訳する</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>ダイアログ ボックスで NPC 名を翻訳する</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>ゲーム内クエストトーストメッセージを翻訳する</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>他のゲーム内のトーストメッセージを翻訳する</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>ゲーム内の対話を翻訳する</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>ゲーム内のトースト メッセージを翻訳する</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>翻訳は無効です!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>翻訳が有効になっています!</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>この翻訳エンジンは特別な設定を必要としません。</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>翻訳が有効になりました!</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>オーバーレイを使用してトーストの翻訳を表示する</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>翻訳を待っています。</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>翻訳するテキストの種類を選択します</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>翻訳するゲーム内トーストメッセージを選択します</value>
+  </data>
+</root>

@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>主要</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>通话设置</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>战斗对话设置</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>吐司设置</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>日记帐设置</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>工具提示设置</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>其他设置</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>翻译引擎设置</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>关于回声手套</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>回声舌配置</value>
+    <comment>Config Window title bar</comment>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>请通过为项目开发做出贡献，提交问题或帮助我们喝咖啡来支持我们。</value>
+  </data>
+  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>该插件旨在解决不会说英语，德语，法语或日语的受众的最大问题之一：理解对话和游戏UI的其他元素。</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>目前，我们只通过 Google Translate API 进行自动翻译，但将来我们打算支持其他 ML 翻译系统。我们甚至有针对众包翻译的想法，由社区策划。</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>关于Echoglossian：</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>注意力！</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>激活游戏文本实时翻译</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>叠加字体颜色：</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>打开 Echoglossian 配置窗口</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>调整与翻译叠加相关的选项：</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>无法以可接受的确定程度确定该语言</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>当前可用的翻译后端不支持所选语言</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>由于本机游戏字体的限制，仅使用插件覆盖支持所选语言</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>将游戏内对话框翻译成哪种语言。</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>要翻译成的语言</value>
+  </data>
+  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>回声舌</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>以下链接提供了问题和 TODO 的非详尽列表：</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>如果您的叠加层相对于游戏的 UI 文本框未居中，请调整位置。</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>叠加颜色选择</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>单击以选择叠加字体颜色</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>调整叠加字体比例</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>叠加字体大小</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>选择文本叠加的字体大小</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>平移叠加高度乘数</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>战斗谈话（埃尼尼斯对话线）翻译</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>位置调整</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>在游戏 UI 文本框上方显示已翻译的文本叠加层，而不是将其文本替换为翻译</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>调整平移叠加宽度</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>平移叠加宽度乘数</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Echoglossian 文件夹的绝对路径（在 XIVLauncher -&gt; pluginConfigs 文件夹中）</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>请输入路径并保存，以便插件可以正常工作！</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>买洛金莫达咖啡</value>
+  </data>
+  <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>像素二维码</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>扫描二维码向我发送PIX - 仅在巴西有效</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>选择插件配置窗口的语言</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>配置窗口语言：</value>
+  </data>
+  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>扫描二维码向我发送PIX - 仅在巴西有效</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>保存并关闭配置窗口</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>给我一个PIX捐赠！</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>谷歌翻译的设置：</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>在"游戏 UI"对话框中的"叠加和已翻译"中显示原始对话文本</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>调整吐司平移叠加宽度</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>吐司叠加宽度乘数</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Github 上的 TODO 列表</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>翻译游戏内区域名称 吐司消息</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>翻译战斗谈话</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>翻译游戏内职业/职业更改吐司消息</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>翻译游戏内错误吐司消息</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>在对话框中翻译 NPC 名称</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>翻译游戏内任务吐司消息</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>翻译其他游戏内杂项吐司消息</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>翻译游戏内对话</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>翻译游戏内吐司消息</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>翻译被禁用！</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>翻译已启用！</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>此翻译引擎不需要任何特殊设置。</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>启用翻译！</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>使用叠加显示 Toasts 翻译</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>正在等待翻译...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>选择要翻译的文本类型</value>
+  </data>
+  <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>选择要翻译的游戏内吐司消息</value>
+  </data>
+</root>

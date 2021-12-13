@@ -1,0 +1,327 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ga" original="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" tool-id="MultilingualAppToolkit" product-name="n/a" product-version="n/a" build-num="n/a">
+    <header>
+      <tool tool-id="MultilingualAppToolkit" tool-name="Multilingual App Toolkit" tool-version="4.0.6921.0" tool-company="Microsoft" />
+    </header>
+    <body>
+      <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
+        <trans-unit id="choice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="CloseButtonLabel" translate="yes" xml:space="preserve">
+          <source>Close</source>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">Dún</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
+          <source>Main</source>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">Príomh-roghchlár</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
+          <source>Talk settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Socruithe cainte</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab2Name" translate="yes" xml:space="preserve">
+          <source>Battle Talk settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Socruithe Caint Cath</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
+          <source>Toast settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Socruithe tósta</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
+          <source>Journal settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Socruithe irise</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
+          <source>Tooltips settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Socruithe uirlisí</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab6Name" translate="yes" xml:space="preserve">
+          <source>Other settings</source>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">Socruithe eile</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab7Name" translate="yes" xml:space="preserve">
+          <source>Translation Engine settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Socruithe Inneall Aistriúcháin</target>
+        </trans-unit>
+        <trans-unit id="ConfigTabAbout" translate="yes" xml:space="preserve">
+          <source>About Echoglossian</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Maidir le Echoglossian</target>
+        </trans-unit>
+        <trans-unit id="ConfigWindowTitle" translate="yes" xml:space="preserve">
+          <source>Echoglossian Configuration</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Cumraíocht Echoglossian</target>
+          <note from="MultilingualBuild" annotates="source" priority="2">Config Window title bar</note>
+        </trans-unit>
+        <trans-unit id="ContribText" translate="yes" xml:space="preserve">
+          <source>Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tabhair tacaíocht dúinn trí chur le forbairt an tionscadail, trí shaincheisteanna a chur isteach nó trí chabhrú linn le caife.</target>
+        </trans-unit>
+        <trans-unit id="cutscenechoice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerText1" translate="yes" xml:space="preserve">
+          <source>This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tá an breiseán seo dírithe ar cheann de na saincheisteanna is mó a réiteach do lucht féachana nach labhraíonn Béarla, Gearmáinis, Fraincis nó Seapáinis: Idirphlé agus gnéithe eile den UI Cluiche a thuiscint.</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerText2" translate="yes" xml:space="preserve">
+          <source>For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Go dtí seo ní dhéanaimid ach uath-aistriúcháin trí Google Translate API, ach sa todhchaí tá sé i gceist againn tacú le córais aistriúcháin ML eile. Tá smaointe againn fiú a dhíríonn ar aistriúcháin sluafhoinsithe, arna gcoimeád ag an bpobal.</target>
+        </trans-unit>
+        <trans-unit id="DisclaimerTitle" translate="yes" xml:space="preserve">
+          <source>About Echoglossian:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Maidir le Echoglossian:</target>
+        </trans-unit>
+        <trans-unit id="EchoglossianPathModal" translate="yes" xml:space="preserve">
+          <source>Attention!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aird!</target>
+        </trans-unit>
+        <trans-unit id="EnableTranslation" translate="yes" xml:space="preserve">
+          <source>Activate game text realtime translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Gníomhachtaigh téacs cluiche aistriúchán fíor-ama</target>
+        </trans-unit>
+        <trans-unit id="FontColorSelectLabel" translate="yes" xml:space="preserve">
+          <source>Overlay font color:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Dath cló forleagan:</target>
+        </trans-unit>
+        <trans-unit id="HelpMessage" translate="yes" xml:space="preserve">
+          <source>Opens Echoglossian config window</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Osclaíonn sé fuinneog config Echoglossian</target>
+          <note from="MultilingualBuild" annotates="source" priority="2">Shown in plugin install window</note>
+        </trans-unit>
+        <trans-unit id="HoverTooltipIndicator" translate="yes" xml:space="preserve">
+          <source>(?)</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">(?)</target>
+        </trans-unit>
+        <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the options related to the translation overlay:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Coigeartaigh na roghanna a bhaineann leis an forleagan aistriúcháin:</target>
+        </trans-unit>
+        <trans-unit id="LangIdentError" translate="yes" xml:space="preserve">
+          <source>The language could not be identified with an acceptable degree of certainty</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Níorbh fhéidir an teanga a aithint le cinnteacht inghlactha</target>
+        </trans-unit>
+        <trans-unit id="LanguageNotSupportedText" translate="yes" xml:space="preserve">
+          <source>The selected language is not supported by the currently available translation backend</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ní thacaíonn an t-aistriúchán atá ar fáil faoi láthair leis an teanga roghnaithe</target>
+        </trans-unit>
+        <trans-unit id="LanguageOnlySupportedUsingOverlay" translate="yes" xml:space="preserve">
+          <source>The selected language is only supported using the plugin overlays due to limitations of the native game Font</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ní thacaítear leis an teanga roghnaithe ach amháin trí fhorleagan an bhreiseáin a úsáid mar gheall ar theorainneacha an chluiche dúchais Font</target>
+        </trans-unit>
+        <trans-unit id="LanguageSelectionTooltip" translate="yes" xml:space="preserve">
+          <source>Which language to translate the in-game dialogue boxes to.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Cén teanga a aistríonn na boscaí idirphlé in-chluiche chuig.</target>
+        </trans-unit>
+        <trans-unit id="LanguageSelectLabelText" translate="yes" xml:space="preserve">
+          <source>Language to translate to</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Teanga le haistriú chuig</target>
+        </trans-unit>
+        <trans-unit id="logo" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="minfilia" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="Name" translate="yes" xml:space="preserve">
+          <source>Echoglossian</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian</target>
+        </trans-unit>
+        <trans-unit id="NEListText" translate="yes" xml:space="preserve">
+          <source>The non-exhaustive list of issues and TODOs is available in the link below:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tá liosta neamh-uileghabhálach na saincheisteanna agus na TODOanna ar fáil sa nasc thíos:</target>
+        </trans-unit>
+        <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
+          <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Coigeartaigh an seasamh le do thoil mura bhfuil d'fhorleagan dírithe i gcoibhneas le bosca téacs UI an chluiche.</target>
+        </trans-unit>
+        <trans-unit id="OverlayColorSelectName" translate="yes" xml:space="preserve">
+          <source>OverlayColorSelect</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">OverlayColorSelect</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontColorOrientations" translate="yes" xml:space="preserve">
+          <source>Click to choose the overlay font color</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Cliceáil chun an dath clófhoireann fhorleagan a roghnú</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontScaleLabel" translate="yes" xml:space="preserve">
+          <source>Adjust the Overlay font scale</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Coigeartaigh an scála clófhoireann Fhorleagan</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeLabel" translate="yes" xml:space="preserve">
+          <source>Overlay Font Size</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Méid ClóFhoireann Fhorleagan</target>
+        </trans-unit>
+        <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
+          <source>Select the font size for the text overlay</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Roghnaigh an clómhéid don fhorleagan téacs</target>
+        </trans-unit>
+        <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
+          <source>Translation Overlay Height multiplier</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Iolraitheoir Airde An Aistriúcháin</target>
+        </trans-unit>
+        <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
+          <source>Battle talk (Enenies dialogue lines) translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Caint cath (Línte idirphlé Enenies) aistriúchán</target>
+          <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
+        </trans-unit>
+        <trans-unit id="OverlayPositionAdjustmentLabel" translate="yes" xml:space="preserve">
+          <source>Position adjustment</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Coigeartú suímh</target>
+        </trans-unit>
+        <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
+          <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Taispeáin frithleagan téacs aistrithe os cionn bosca téacs UI cluiche in ionad an t-aistriúchán a chur in ionad a théacs</target>
+        </trans-unit>
+        <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
+          <source>Adjust translation overlay width</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Coigeartaigh leithead an aistriúcháin</target>
+        </trans-unit>
+        <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
+          <source>Translation Overlay Width multiplier</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Iolraitheoir Leithead An Aistriúcháin</target>
+        </trans-unit>
+        <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
+          <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Cosán absalóideach chuig fillteán Echoglossian (taobh istigh de XIVLauncher -&gt; pluginConfigs fillteán)</target>
+        </trans-unit>
+        <trans-unit id="PathTypeInstructions" translate="yes" xml:space="preserve">
+          <source>Please type the path and save so the plugin can work properly!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Clóscríobh an cosán le do thoil agus sábháil ionas gur féidir leis an mbreiseán oibriú i gceart!</target>
+        </trans-unit>
+        <trans-unit id="PatronButtonLabel" translate="yes" xml:space="preserve">
+          <source>Buy lokinmodar a Coffee</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ceannaigh lokinmodar a Caife</target>
+        </trans-unit>
+        <trans-unit id="pix" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="PixQrWindowLabel" translate="yes" xml:space="preserve">
+          <source>PIX qrcode</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Pix qrcode</target>
+        </trans-unit>
+        <trans-unit id="PixText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Scan an cód QR chun PIX a sheoladh chugam - ach bailí sa Bhrasaíl</target>
+        </trans-unit>
+        <trans-unit id="PluginInterfaceLanguage" translate="yes" xml:space="preserve">
+          <source>Choose the language for the plugin configuration window</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Roghnaigh an teanga don fhuinneog cumraíochta breiseán</target>
+        </trans-unit>
+        <trans-unit id="PluginInterfaceLanguageSelectorText" translate="yes" xml:space="preserve">
+          <source>Config Window Language:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Teanga Fhuinneog Cumraíochta:</target>
+        </trans-unit>
+        <trans-unit id="prttws" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
+          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="QRCodeInstructionsText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Scan an cód QR chun PIX a sheoladh chugam - ach bailí sa Bhrasaíl</target>
+        </trans-unit>
+        <trans-unit id="SaveCloseButtonLabel" translate="yes" xml:space="preserve">
+          <source>Save and Close Config Window</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Sábháil agus Dún Fuinneog Config</target>
+        </trans-unit>
+        <trans-unit id="SendPixButton" translate="yes" xml:space="preserve">
+          <source>Send me a PIX donation!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Seol síntiús PIX chugam!</target>
+        </trans-unit>
+        <trans-unit id="SettingsForGTransText" translate="yes" xml:space="preserve">
+          <source>Settings for Google Translate:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Socruithe do Google Translate:</target>
+        </trans-unit>
+        <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
+          <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Taispeáin téacs idirphlé bunaidh i Overlay agus Aistrithe sa bhosca idirphlé Game UI</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
+          <source>Adjust toast translation overlay width</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Coigeartaigh leithead fhorleagan aistriúcháin tósta</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayWidthScrollLabel" translate="yes" xml:space="preserve">
+          <source>Toast Overlay Width multiplier</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Iolraitheoir Leithead Overlay Tósta</target>
+        </trans-unit>
+        <trans-unit id="TodoUrl" translate="yes" xml:space="preserve">
+          <source>TODOs List on Github</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Liosta TODOanna ar Github</target>
+        </trans-unit>
+        <trans-unit id="TranslateAreaToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Area name Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh in-chluiche Achar ainm Teachtaireachtaí Toast</target>
+        </trans-unit>
+        <trans-unit id="TransLateBattletalkToggle" translate="yes" xml:space="preserve">
+          <source>Translate battle talk</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh caint cath</target>
+        </trans-unit>
+        <trans-unit id="TranslateClassChangeToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Class/Job change Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh In-chluiche Rang / Athrú poist Teachtaireachtaí Toast</target>
+        </trans-unit>
+        <trans-unit id="TranslateErrorToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Error Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh teachtaireachtaí tósta Earráid in-chluiche</target>
+        </trans-unit>
+        <trans-unit id="TranslateNpcNamesToggle" translate="yes" xml:space="preserve">
+          <source>Translate NPCs names in dialogue boxes</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh ainmneacha NPCanna i mboscaí idirphlé</target>
+        </trans-unit>
+        <trans-unit id="TranslateQuestToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Quest Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh in-chluiche Quest Toast Teachtaireachtaí</target>
+        </trans-unit>
+        <trans-unit id="TranslateScreenInfoToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate other in-game miscellaneous Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh Teachtaireachtaí Toast ilghnéitheacha eile sa chluiche</target>
+        </trans-unit>
+        <trans-unit id="TranslateTalkToggleLabel" translate="yes" xml:space="preserve">
+          <source>Translate in-game dialogues</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh idirphlé sa chluiche</target>
+        </trans-unit>
+        <trans-unit id="TranslateToastToggleText" translate="yes" xml:space="preserve">
+          <source>Translate in-game Toast Messages</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistrigh Teachtaireachtaí Toast sa chluiche</target>
+        </trans-unit>
+        <trans-unit id="TranslationDisabled" translate="yes" xml:space="preserve">
+          <source>Translations are Disabled!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tá aistriúcháin díchumasaithe!</target>
+        </trans-unit>
+        <trans-unit id="TranslationEnabled" translate="yes" xml:space="preserve">
+          <source>Translations are Enabled!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tá aistriúcháin cumasaithe!</target>
+        </trans-unit>
+        <trans-unit id="TranslationEngineSettingsNotRequired" translate="yes" xml:space="preserve">
+          <source>This translation engine does not require any special settings.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ní theastaíonn aon socruithe speisialta ón inneall aistriúcháin seo.</target>
+        </trans-unit>
+        <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
+          <source>Translations enabled!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aistriúcháin cumasaithe!</target>
+        </trans-unit>
+        <trans-unit id="UseImGuiForToastsToggle" translate="yes" xml:space="preserve">
+          <source>Use overlay to show Toasts translations</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Úsáid an fhorleagan chun aistriúcháin Toasts a thaispeáint</target>
+        </trans-unit>
+        <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
+          <source>Awaiting translation...</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ag fanacht le haistriúchán...</target>
+        </trans-unit>
+        <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
+          <source>Select what kind of text you want to be translated</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Roghnaigh cén cineál téacs is mian leat a aistriú</target>
+        </trans-unit>
+        <trans-unit id="WhichToastsToTranslateText" translate="yes" xml:space="preserve">
+          <source>Select which in-game Toast messages to translate</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Roghnaigh cé na teachtaireachtaí Toast sa chluiche le haistriú</target>
+        </trans-unit>
+      </group>
+    </body>
+  </file>
+</xliff>

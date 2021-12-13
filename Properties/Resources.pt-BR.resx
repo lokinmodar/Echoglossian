@@ -134,9 +134,6 @@
   <data name="SwapTranslationTextToggle" xml:space="preserve">
     <value>Mostrar texto de diálogo original no Overlay e o texto traduzido na caixa de diálogo da IU do jogo</value>
   </data>
-  <data name="DoNotUseImGuiForToastsToggle" xml:space="preserve">
-    <value>Não use as Overlays para mostrar traduções de mensagens de Toast</value>
-  </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
     <value>Ajuste a escala de fonte da Overlay</value>
   </data>
@@ -202,18 +199,27 @@
     <value>Lista de TODOs no Github</value>
   </data>
   <data name="ContribText" xml:space="preserve">
-    <value>Por favor, apoie-nos contribuindo para o desenvolvimento do projeto, enviando problemas ou nos ajudando com um café.</value>
+    <value>Por favor, apoie-nos contribuindo para o desenvolvimento do projeto, enviando problemas ou nos ajudando com um cafezinho :).</value>
   </data>
   <data name="DisclaimerText1" xml:space="preserve">
-    <value>Este plugin visa resolver um dos maiores problemas para o público que não fala inglês, alemão, francês ou japonês: Entendendo diálogos e outros elementos da Interface do Jogo.</value>
+    <value>Este plugin visa resolver um dos maiores problemas para o público que não fala inglês, alemão, francês ou japonês: Entender os diálogos e outros elementos da Interface do Jogo.</value>
   </data>
   <data name="DisclaimerText2" xml:space="preserve">
-    <value>Por enquanto, só fazemos traduções automáticas através da API do Google Translate, mas no futuro pretendemos suportar outros sistemas de tradução de ML. Temos até ideias voltadas para traduções crowdsourced, com curadoria da comunidade.</value>
+    <value>Por enquanto, só fazemos traduções automáticas através da API do Google Translate, mas no futuro pretendemos suportar outros sistemas de tradução por ML. Temos até ideias voltadas para traduções crowdsourced, com curadoria da comunidade.</value>
   </data>
   <data name="DisclaimerTitle" xml:space="preserve">
-    <value>Sobre a Echoglossian:</value>
+    <value>Sobre o Echoglossian:</value>
   </data>
   <data name="NEListText" xml:space="preserve">
-    <value>A lista não exaustiva de problemas e TODOs está disponível no link abaixo:</value>
+    <value>A lista (in)completa de problemas e TODOs está disponível no link abaixo:</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>As traduções estão desabilitadas!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>As traduções estão habilitadas!</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Use sobreposição para mostrar traduções de toasts</value>
   </data>
 </root>

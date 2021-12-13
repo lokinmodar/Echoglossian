@@ -59,10 +59,6 @@ namespace Echoglossian
           return;
         }
 
-        if (this.GameTask == null || this.GameTask.IsCompleted || this.GameTask.IsFaulted || this.GameTask.IsCanceled)
-        {
-          this.GameTask = Task.Run(() => this.TalkSubtitler(talkSubtitlePtr));
-        }
       }
       catch (Exception e)
       {
@@ -70,24 +66,20 @@ namespace Echoglossian
       }
     }
 
-    private unsafe void TalkSubtitler(IntPtr talkSubtitleIntPtr)
-    {
-      throw new NotSupportedException();
-    }
 
     private unsafe void BattleTalkHandler(string addonName, int index)
     {
       var battleTalk = this.gameGui.GetAddonByName(addonName, index);
       if (battleTalk != IntPtr.Zero)
       {
-        var talkMaster = (AtkUnitBase*)battleTalk;
-        if (talkMaster->IsVisible)
+        var battleTalkMaster = (AtkUnitBase*)battleTalk;
+        if (battleTalkMaster->IsVisible)
         {
           this.battleTalkDisplayTranslation = true;
-          this.battleTalkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale * 2;
-          this.battleTalkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
-          this.battleTalkTextPosition.X = talkMaster->RootNode->X;
-          this.battleTalkTextPosition.Y = talkMaster->RootNode->Y;
+          this.battleTalkTextDimensions.X = battleTalkMaster->RootNode->Width * battleTalkMaster->Scale * 2;
+          this.battleTalkTextDimensions.Y = battleTalkMaster->RootNode->Height * battleTalkMaster->Scale;
+          this.battleTalkTextPosition.X = battleTalkMaster->RootNode->X;
+          this.battleTalkTextPosition.Y = battleTalkMaster->RootNode->Y;
         }
         else
         {
@@ -116,7 +108,7 @@ namespace Echoglossian
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
 
-        var nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : string.Empty;
+        var nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : "System Message";
         var textToTranslate = text.TextValue;
 
         TalkMessage talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
@@ -133,7 +125,7 @@ namespace Echoglossian
         // If the dialogue is not saved
         if (!findings)
         {
-          if (!this.configuration.UseImGui)
+          if (!this.configuration.UseImGuiForTalk)
           {
             var translatedText = Translate(textToTranslate);
             var nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
@@ -384,7 +376,7 @@ namespace Echoglossian
         }
         else
         {
-          if (!this.configuration.UseImGui)
+          if (!this.configuration.UseImGuiForTalk)
           {
             var translatedText = this.FoundTalkMessage.TranslatedTalkMessage;
             var nameTranslation = this.FoundTalkMessage.TranslatedSenderName;
@@ -517,7 +509,7 @@ namespace Echoglossian
         PluginLog.Log(sender.TextValue + ": " + message.TextValue);
 #endif
 
-        var senderToTranslate = sender.TextValue;
+        var senderToTranslate = !sender.TextValue.IsNullOrEmpty() ? sender.TextValue : "System Message";
         var battleTextToTranslate = message.TextValue;
 
         BattleTalkMessage battleTalkMessage = this.FormatBattleTalkMessage(senderToTranslate, battleTextToTranslate);

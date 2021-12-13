@@ -153,6 +153,13 @@ namespace Echoglossian
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
         this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+/*      if (this.configuration.TranslateNpcNames)
+      {
+        if ((this.battleTalkTextDimensions.X * 2) < ImGui.CalcTextSize(this.currentNameTranslation).X)
+        {
+
+        }
+      }*/
       var size = Math.Min(
         this.battleTalkTextDimensions.X * this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
         ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 3));
@@ -325,7 +332,7 @@ namespace Echoglossian
 
     private void DrawTranslatedToastWindow()
     {
-      if (this.configuration.UseImGui && this.configuration.TranslateToast && this.toastDisplayTranslation)
+      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateToast && this.toastDisplayTranslation)
       {
         ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.toastTranslationTextPosition.X + (this.toastTranslationTextDimensions.X / 2) - (this.toastTranslationTextImguiSize.X / 2),
@@ -333,7 +340,7 @@ namespace Echoglossian
         var size = Math.Min(
           this.toastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
           ImGui.CalcTextSize(this.currentToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 1.5f, this.toastTranslationTextDimensions.Y));
+        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4f, this.toastTranslationTextDimensions.Y * 2));
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
         if (this.FontLoaded)
         {
