@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>अनुवाद करने के लिए कौन से इन-गेम टोस्ट संदेशों का चयन करें</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>रीसेट सेटिंग्स</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>इकोग्लोसियन सेटिंग्स सफलतापूर्वक डिफ़ॉल्ट करने के लिए रीसेट!</value>
+  </data>
 </root>

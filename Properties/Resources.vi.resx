@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Chọn thông điệp Toast trong trò chơi nào để dịch</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Đặt lại Thiết đặt</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Cài đặt Echoglossian đặt lại mặc định thành công!</value>
+  </data>
 </root>

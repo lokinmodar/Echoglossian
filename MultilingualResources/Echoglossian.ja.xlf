@@ -321,6 +321,14 @@
           <source>Select which in-game Toast messages to translate</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">翻訳するゲーム内トーストメッセージを選択します</target>
         </trans-unit>
+        <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
+          <source>Reset Settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">設定をリセットする</target>
+        </trans-unit>
+        <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
+          <source>Echoglossian settings reset to default successfully!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">エコーグロシアンの設定はデフォルトにリセットされました!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Seleccioneu quins missatges de Torra en el joc voleu traduir</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Reinicialitza la configuració</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>La configuració de l'Ecoglossian es restableix per defecte amb èxit!</value>
+  </data>
 </root>

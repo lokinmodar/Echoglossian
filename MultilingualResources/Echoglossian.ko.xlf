@@ -321,6 +321,14 @@
           <source>Select which in-game Toast messages to translate</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">번역할 게임 내 토스트 메시지 선택</target>
         </trans-unit>
+        <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
+          <source>Reset Settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">설정 재설정</target>
+        </trans-unit>
+        <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
+          <source>Echoglossian settings reset to default successfully!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">에코글로시안 설정이 기본값으로 성공적으로 재설정됩니다!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

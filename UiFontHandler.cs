@@ -30,10 +30,10 @@ namespace Echoglossian
     private void AdjustLanguageForFontBuild()
     {
 #if DEBUG
-           PluginLog.Debug("Inside AdjustLanguageForFontBuild method"); 
+      PluginLog.Debug("Inside AdjustLanguageForFontBuild method");
 #endif
 
-      var lang = this.LanguagesDictionary[this.configuration.Lang];
+      LanguageInfo lang = this.LanguagesDictionary[this.configuration.Lang];
       this.specialFontFileName = lang.FontName;
       this.scriptCharList = lang.ExclusiveCharsToAdd;
     }
@@ -42,9 +42,9 @@ namespace Echoglossian
     {
       this.AdjustLanguageForFontBuild();
 
-      var specialFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}";
-      var fontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.fontFileName}";
-      var dummyFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+      string specialFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}";
+      string fontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.fontFileName}";
+      string dummyFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
 #if DEBUG
       PluginLog.LogWarning("Inside LoadFont method");
       PluginLog.LogWarning($"Font file in DEBUG Mode: {specialFontFilePath}");
@@ -56,10 +56,10 @@ namespace Echoglossian
         {
           unsafe
           {
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
             List<ushort> chars = new();
 
-            var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
+            ImFontGlyphRangesBuilderPtr builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
             builder.AddText(this.CharsToAddToAll);
             builder.AddText(this.scriptCharList);
 
@@ -81,10 +81,12 @@ namespace Echoglossian
             if (this.configuration.Lang is 16)
             {
               this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
+              this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesChineseFull());
             }
 
             if (this.configuration.Lang is 22 or 21)
             {
+              this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
               this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesChineseFull());
             }
 
@@ -105,29 +107,29 @@ namespace Echoglossian
 
             this.AddCharsFromIntPtr(chars, (ushort*)ranges.Data);
 
-            var addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
+            ushort[] addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
             chars.AddRange(addChars);
 
             chars.Add(0);
 
-            var arr = chars.ToArray();
+            ushort[] arr = chars.ToArray();
 
-            var nativeConfig = ImGuiNative.ImFontConfig_ImFontConfig();
-            var fontConfig = new ImFontConfigPtr(nativeConfig)
+            ImFontConfig* nativeConfig = ImGuiNative.ImFontConfig_ImFontConfig();
+            ImFontConfigPtr fontConfig = new ImFontConfigPtr(nativeConfig)
             {
               OversampleH = 2,
               OversampleV = 2,
               MergeMode = true,
             };
 
-            var fontConfig2 = new ImFontConfigPtr(nativeConfig)
+            ImFontConfigPtr fontConfig2 = new ImFontConfigPtr(nativeConfig)
             {
               OversampleH = 2,
               OversampleV = 2,
               MergeMode = true,
             };
 
-            var fontConfig3 = new ImFontConfigPtr(nativeConfig)
+            ImFontConfigPtr fontConfig3 = new ImFontConfigPtr(nativeConfig)
             {
               OversampleH = 2,
               OversampleV = 2,
@@ -180,14 +182,14 @@ namespace Echoglossian
     {
 #if DEBUG
       PluginLog.LogVerbose("Inside LoadConfigFont method");
-      var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
-      var dummyFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}OpenSans-Medium.ttf";
+      string fontFile = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
+      string dummyFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-SemiBold.ttf";
 
       PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 #else
       // PluginLog.LogVerbose("Inside LoadConfigFont method");
-      var fontFile = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
-      var dummyFontFilePath = $@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}OpenSans-Medium.ttf";
+      var fontFile = $@"{pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
+      var dummyFontFilePath = $@"{pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-SemiBold.ttf";
 
       // PluginLog.LogVerbose($"Font file in PROD Mode: {fontFile}");
 #endif
@@ -198,16 +200,17 @@ namespace Echoglossian
         {
           unsafe
           {
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
             List<ushort> chars = new();
 
-            var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
+            ImFontGlyphRangesBuilderPtr builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
             builder.AddText(this.CharsToAddToAll);
             builder.AddText(this.LangComboItems);
             foreach (char c in this.PuaCharCodes)
             {
               builder.AddChar(c);
             }
+
             builder.BuildRanges(out ImVector ranges);
 
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesDefault());
@@ -220,21 +223,21 @@ namespace Echoglossian
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
             this.AddCharsFromIntPtr(chars, (ushort*)ranges.Data);
 
-            var addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
+            ushort[] addChars = string.Join(string.Empty, chars.Select(c => new string((char)c, 2))).Select(c => (ushort)c).ToArray();
             chars.AddRange(addChars);
 
             chars.Add(0);
 
-            var arr = chars.ToArray();
+            ushort[] arr = chars.ToArray();
 
-            var nativeConfig = ImGuiNative.ImFontConfig_ImFontConfig();
-            var fontConfig = new ImFontConfigPtr(nativeConfig)
+            ImFontConfig* nativeConfig = ImGuiNative.ImFontConfig_ImFontConfig();
+            ImFontConfigPtr fontConfig = new ImFontConfigPtr(nativeConfig)
             {
               OversampleH = 2,
               OversampleV = 2,
               MergeMode = true,
             };
-            var fontConfig2 = new ImFontConfigPtr(nativeConfig)
+            ImFontConfigPtr fontConfig2 = new ImFontConfigPtr(nativeConfig)
             {
               OversampleH = 2,
               OversampleV = 2,

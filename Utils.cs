@@ -11,7 +11,10 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
+using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
+using Echoglossian.Properties;
+using ImGuiNET;
 
 namespace Echoglossian
 {
@@ -22,8 +25,8 @@ namespace Echoglossian
     {
       using StreamWriter logStream = new(this.configDir + "CultureInfos.txt", append: true);
 
-      var cus = CultureInfo.GetCultures(CultureTypes.AllCultures);
-      foreach (var cu in cus)
+      CultureInfo[] cus = CultureInfo.GetCultures(CultureTypes.AllCultures);
+      foreach (CultureInfo cu in cus)
       {
         logStream.WriteLine(cu.ToString());
       }
@@ -44,35 +47,74 @@ namespace Echoglossian
       return parentPath;
     }
 
+    private void ResetSettings()
+    {
+      this.configuration.Lang = 28;
+
+      this.configuration.FontSize = 24;
+
+      this.configuration.ShowInCutscenes = true;
+
+      this.configuration.TranslateBattleTalk = false;
+      this.configuration.TranslateTalk = false;
+      this.configuration.TranslateTalkSubtitle = false;
+      this.configuration.TranslateToast = false;
+      this.configuration.TranslateNpcNames = false;
+      this.configuration.TranslateErrorToast = false;
+      this.configuration.TranslateQuestToast = false;
+      this.configuration.TranslateAreaToast = false;
+      this.configuration.TranslateClassChangeToast = false;
+      this.configuration.TranslateWideTextToast = false;
+      this.configuration.TranslateYesNoScreen = false;
+      this.configuration.TranslateCutSceneSelectString = false;
+      this.configuration.TranslateSelectString = false;
+      this.configuration.TranslateSelectOk = false;
+      this.configuration.TranslateToDoList = false;
+      this.configuration.TranslateScenarioTree = false;
+      this.configuration.TranslateTooltips = false;
+      this.configuration.TranslateJournal = false;
+
+      this.configuration.UseImGuiForTalk = false;
+      this.configuration.UseImGuiForBattleTalk = false;
+      this.configuration.UseImGuiForToasts = false;
+      this.configuration.SwapTextsUsingImGui = false;
+      this.configuration.ChosenTransEngine = 0;
+      this.configuration.Version = 4;
+
+      this.SaveConfig();
+      PluginInterface.UiBuilder.AddNotification(Resources.SettingsReset, this.Name, NotificationType.Info, 5000);
+    }
+
     private void FixConfig()
     {
-      if (!File.Exists($"{this.pluginInterface.ConfigFile.FullName}"))
+      if (!File.Exists($"{PluginInterface.ConfigFile.FullName}"))
       {
 #if DEBUG
-        PluginLog.LogDebug($"Inside config file fixer - Config File Info: {this.pluginInterface.ConfigFile.FullName}");
+        PluginLog.LogDebug($"Inside config file fixer - Config File Info: {PluginInterface.ConfigFile.FullName}");
 #endif
 
         this.SaveConfig();
         return;
       }
 
-      if (this.configuration.Version != 3)
+      if (this.configuration.Version.CompareTo(4) != 0)
       {
-        this.pluginInterface.ConfigFile.Delete();
-        /* if (this.pluginInterface.ConfigDirectory.Exists)
+        PluginInterface.ConfigFile.Delete();
+        /* if (pluginInterface.ConfigDirectory.Exists)
          {
-           this.pluginInterface.ConfigDirectory.Delete(true);
+           pluginInterface.ConfigDirectory.Delete(true);
            // this.config = true;
          }*/
+        this.SaveConfig();
+        this.ResetSettings();
+        PluginInterface.GetPluginConfig();
       }
-
-      this.SaveConfig();
     }
 
     private void SaveConfig()
     {
       // this.configuration.Lang = languageInt;
-      this.pluginInterface.SavePluginConfig(this.configuration);
+      PluginInterface.SavePluginConfig(this.configuration);
     }
 
     [Flags]
@@ -103,7 +145,7 @@ namespace Echoglossian
       PluginLog.LogWarning("Inside image creation method");
 #endif
       PrivateFontCollection pfc = new();
-      pfc.AddFontFile($@"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}");
+      pfc.AddFontFile($@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}");
 
       Font font = new(pfc.Families[0], this.configuration.FontSize, FontStyle.Regular);
       if (fontOptional != null)
@@ -147,7 +189,7 @@ namespace Echoglossian
 
       // create a new image of the right size
       Image textAsImage = new Bitmap((int)textSize.Width, (int)textSize.Height);
-      using (var drawing = Graphics.FromImage(textAsImage))
+      using (Graphics drawing = Graphics.FromImage(textAsImage))
       {
         // paint the background
         drawing.Clear(backColor);

@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>અનુવાદ કરવા માટે કયા ઇન-ગેમ ટોસ્ટ સંદેશાઓ પસંદ કરો</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>સુયોજનો ને પુનઃસુયોજિત કરો</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>ઇકોગ્લોસિયન સેટિંગ્સ સફળતાપૂર્વક ડિફોલ્ટ કરવા માટે પુનઃસુયોજિત કરે છે!</value>
+  </data>
 </root>

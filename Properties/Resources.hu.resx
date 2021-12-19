@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Válassza ki, hogy mely játékon belüli Pirítós üzeneteket kell lefordítani</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Beállítások visszaállítása</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian beállítások vissza az alapértelmezett sikeresen!</value>
+  </data>
 </root>

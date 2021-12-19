@@ -153,14 +153,14 @@ namespace Echoglossian
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
         this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
-/*      if (this.configuration.TranslateNpcNames)
-      {
-        if ((this.battleTalkTextDimensions.X * 2) < ImGui.CalcTextSize(this.currentNameTranslation).X)
-        {
+      /*      if (this.configuration.TranslateNpcNames)
+            {
+              if ((this.battleTalkTextDimensions.X * 2) < ImGui.CalcTextSize(this.currentNameTranslation).X)
+              {
 
-        }
-      }*/
-      var size = Math.Min(
+              }
+            }*/
+      float size = Math.Min(
         this.battleTalkTextDimensions.X * this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
         ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 3));
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y * 2.5f * this.configuration.ImGuiBattleTalkWindowHeightMult));
@@ -175,7 +175,7 @@ namespace Echoglossian
 
       if (this.configuration.TranslateNpcNames)
       {
-        var name = this.GetTranslatedSenderNameForWindow();
+        string name = this.GetTranslatedSenderNameForWindow();
         if (!name.IsNullOrEmpty())
         {
           ImGui.Begin(
@@ -252,14 +252,14 @@ namespace Echoglossian
         ImGui.PushFont(this.UiFont);
       }
 
-      var size = Math.Min(
+      float size = Math.Min(
           this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult,
           ImGui.CalcTextSize(this.currentTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.configuration.TranslateNpcNames)
       {
-        var name = this.GetTranslatedNpcNameForWindow();
+        string name = this.GetTranslatedNpcNameForWindow();
         if (!name.IsNullOrEmpty())
         {
           ImGui.Begin(
@@ -337,7 +337,7 @@ namespace Echoglossian
         ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.toastTranslationTextPosition.X + (this.toastTranslationTextDimensions.X / 2) - (this.toastTranslationTextImguiSize.X / 2),
           this.toastTranslationTextPosition.Y - this.toastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
-        var size = Math.Min(
+        float size = Math.Min(
           this.toastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
           ImGui.CalcTextSize(this.currentToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
         ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4f, this.toastTranslationTextDimensions.Y * 2));
@@ -382,7 +382,7 @@ namespace Echoglossian
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.errorToastTranslationTextPosition.X + (this.errorToastTranslationTextDimensions.X / 2) - (this.errorToastTranslationTextImguiSize.X / 2),
         this.errorToastTranslationTextPosition.Y - this.errorToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
-      var size = Math.Min(
+      float size = Math.Min(
         this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentErrorToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
 #if DEBUG
@@ -441,7 +441,7 @@ namespace Echoglossian
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.classChangeToastTranslationTextPosition.X + (this.classChangeToastTranslationTextDimensions.X / 2) - (this.classChangeToastTranslationTextImguiSize.X / 2),
         this.classChangeToastTranslationTextPosition.Y - this.classChangeToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
-      var size = Math.Min(
+      float size = Math.Min(
         this.classChangeToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentClassChangeToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
 #if DEBUG

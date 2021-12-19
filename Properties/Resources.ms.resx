@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Pilih mesej Bakar dalam permainan untuk diterjemah</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Set Semula Pengesetan</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Tetapan Echoglossian ditetapkan semula kepada lalai berjaya!</value>
+  </data>
 </root>

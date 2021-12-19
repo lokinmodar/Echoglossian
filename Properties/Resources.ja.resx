@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>翻訳するゲーム内トーストメッセージを選択します</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>設定をリセットする</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>エコーグロシアンの設定はデフォルトにリセットされました!</value>
+  </data>
 </root>

@@ -5,6 +5,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using Dalamud.Game.Text.SeStringHandling;
@@ -17,15 +18,14 @@ using XivCommon.Functions;
 
 namespace Echoglossian
 {
-  // TODO: Add logic to invert translation and original texts
   public partial class Echoglossian
   {
     private unsafe void TalkHandler(string addonName, int index)
     {
-      var talk = this.gameGui.GetAddonByName(addonName, index);
+      IntPtr talk = GameGui.GetAddonByName(addonName, index);
       if (talk != IntPtr.Zero)
       {
-        var talkMaster = (AtkUnitBase*)talk;
+        AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
         if (talkMaster->IsVisible)
         {
           this.talkDisplayTranslation = true;
@@ -48,15 +48,40 @@ namespace Echoglossian
       }
     }
 
-    private void TalkSubtitleHandler(string addonName, int index)
+    private unsafe void TalkSubtitleHandler(string addonName, int index)
     {
       // Pointer: 23FDB6C9040 or 23FDB6C91C0
+      string originalText;
       try
       {
-        var talkSubtitlePtr = this.gameGui.GetAddonByName(addonName, index);
+        IntPtr talkSubtitlePtr = GameGui.GetAddonByName(addonName, index);
         if (talkSubtitlePtr == IntPtr.Zero)
         {
           return;
+        }
+
+        AtkUnitBase* talkSubtitleMaster = (AtkUnitBase*)talkSubtitlePtr;
+        if (!talkSubtitleMaster->IsVisible)
+        {
+          return;
+        }
+
+        var tNode = (AtkTextNode*)talkSubtitleMaster->RootNode->ChildNode;
+
+        if (tNode == null)
+        {
+          PluginLog.LogWarning("Node Empty");
+        }
+        else
+        {
+          var text = tNode->NodeText;
+
+          originalText = text.StringPtr == null || text.BufUsed == 0
+            ? string.Empty
+            : Marshal.PtrToStringUTF8(new IntPtr(text.StringPtr));
+#if DEBUG
+          PluginLog.LogVerbose($"talkSubtitleText: {originalText}");
+#endif
         }
 
       }
@@ -64,15 +89,15 @@ namespace Echoglossian
       {
         PluginLog.Error($"The routine has crashed: {e}");
       }
-    }
 
+    }
 
     private unsafe void BattleTalkHandler(string addonName, int index)
     {
-      var battleTalk = this.gameGui.GetAddonByName(addonName, index);
+      IntPtr battleTalk = GameGui.GetAddonByName(addonName, index);
       if (battleTalk != IntPtr.Zero)
       {
-        var battleTalkMaster = (AtkUnitBase*)battleTalk;
+        AtkUnitBase* battleTalkMaster = (AtkUnitBase*)battleTalk;
         if (battleTalkMaster->IsVisible)
         {
           this.battleTalkDisplayTranslation = true;
@@ -108,15 +133,15 @@ namespace Echoglossian
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
 
-        var nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : "System Message";
-        var textToTranslate = text.TextValue;
+        string nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : "System Message";
+        string textToTranslate = text.TextValue;
 
         TalkMessage talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
 
 #if DEBUG
         PluginLog.LogFatal($"Before DB Query attempt: {talkMessage}");
 #endif
-        var findings = this.FindTalkMessage(talkMessage);
+        bool findings = this.FindTalkMessage(talkMessage);
 #if DEBUG
         PluginLog.LogFatal(
           $"After DB Query attempt: {(findings ? "Message found in Db." : "Message not found in Db")}");
@@ -127,8 +152,8 @@ namespace Echoglossian
         {
           if (!this.configuration.UseImGuiForTalk)
           {
-            var translatedText = Translate(textToTranslate);
-            var nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
+            string translatedText = Translate(textToTranslate);
+            string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
 #if DEBUG
             PluginLog.LogWarning(translatedText);
 #endif
@@ -137,7 +162,7 @@ namespace Echoglossian
               name = nameTranslation == string.Empty ? name : nameTranslation;
               text = translatedText;
 
-              var translatedTalkData = new TalkMessage(
+              TalkMessage translatedTalkData = new TalkMessage(
                 nameToTranslate,
                 textToTranslate,
                 LangIdentify(textToTranslate),
@@ -151,7 +176,7 @@ namespace Echoglossian
 #if DEBUG
               logStream.WriteLineAsync($"Before Talk Messages table data insertion:  {translatedTalkData}");
 #endif
-              var result = this.InsertTalkData(translatedTalkData);
+              string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
               PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
 #endif
@@ -160,7 +185,7 @@ namespace Echoglossian
             {
               text = translatedText;
 
-              var translatedTalkData = new TalkMessage(
+              TalkMessage translatedTalkData = new TalkMessage(
                 nameToTranslate,
                 textToTranslate,
                 LangIdentify(textToTranslate),
@@ -172,7 +197,7 @@ namespace Echoglossian
                 DateTime.Now,
                 DateTime.Now);
 
-              var result = this.InsertTalkData(translatedTalkData);
+              string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
               PluginLog.LogError(result);
 #endif
@@ -191,8 +216,8 @@ namespace Echoglossian
                 this.currentNameTranslation = Resources.WaitingForTranslation;
                 Task.Run(() =>
                 {
-                  var nameId = this.currentNameTranslationId;
-                  var nameTranslation = Translate(nameToTranslate);
+                  int nameId = this.currentNameTranslationId;
+                  string nameTranslation = Translate(nameToTranslate);
                   this.nameTranslationSemaphore.Wait();
                   if (nameId == this.currentNameTranslationId)
                   {
@@ -200,7 +225,7 @@ namespace Echoglossian
                     if (this.configuration.Lang == 2)
                     {
                       this.currentNameTranslationTexture =
-                        this.pluginInterface.UiBuilder.LoadImage(this.TranslationImageConverter(this.DrawText(this.currentNameTranslation)));
+                        PluginInterface.UiBuilder.LoadImage(this.TranslationImageConverter(this.DrawText(this.currentNameTranslation)));
                     }
                   }
 
@@ -212,8 +237,8 @@ namespace Echoglossian
               this.currentTalkTranslation = Resources.WaitingForTranslation;
               Task.Run(() =>
               {
-                var id = this.currentTalkTranslationId;
-                var translation = Translate(textToTranslate);
+                int id = this.currentTalkTranslationId;
+                string translation = Translate(textToTranslate);
                 this.talkTranslationSemaphore.Wait();
                 if (id == this.currentTalkTranslationId)
                 {
@@ -230,7 +255,7 @@ namespace Echoglossian
                                       PluginLog.LogWarning($"image bytes: {textImageAsBytes}");
                   #endif
                                       this.currentTalkTranslationTexture =
-                                        this.pluginInterface.UiBuilder.LoadImage(textImageAsBytes);
+                                        pluginInterface.UiBuilder.LoadImage(textImageAsBytes);
                                     }*/
                 }
 
@@ -242,7 +267,7 @@ namespace Echoglossian
                 if (this.currentNameTranslation != Resources.WaitingForTranslation &&
                     this.currentTalkTranslation != Resources.WaitingForTranslation)
                 {
-                  var translatedTalkData = new TalkMessage(
+                  TalkMessage translatedTalkData = new TalkMessage(
                     nameToTranslate,
                     textToTranslate,
                     LangIdentify(textToTranslate),
@@ -253,7 +278,7 @@ namespace Echoglossian
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);
-                  var result = this.InsertTalkData(translatedTalkData);
+                  string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
                   PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
 #endif
@@ -265,8 +290,8 @@ namespace Echoglossian
 #if DEBUG
               PluginLog.LogWarning("Using Swap text for translation");
 #endif
-              var translatedText = Translate(textToTranslate);
-              var nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
+              string translatedText = Translate(textToTranslate);
+              string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
               if (this.configuration.TranslateNpcNames)
               {
                 name = nameTranslation == string.Empty ? name : nameTranslation;
@@ -276,7 +301,7 @@ namespace Echoglossian
                 this.currentNameTranslation = Resources.WaitingForTranslation;
                 Task.Run(() =>
                 {
-                  var nameId = this.currentNameTranslationId;
+                  int nameId = this.currentNameTranslationId;
                   this.nameTranslationSemaphore.Wait();
                   if (nameId == this.currentNameTranslationId)
                   {
@@ -290,7 +315,7 @@ namespace Echoglossian
                 this.currentTalkTranslation = Resources.WaitingForTranslation;
                 Task.Run(() =>
                 {
-                  var id = this.currentTalkTranslationId;
+                  int id = this.currentTalkTranslationId;
                   this.talkTranslationSemaphore.Wait();
                   if (id == this.currentTalkTranslationId)
                   {
@@ -300,7 +325,7 @@ namespace Echoglossian
                   this.talkTranslationSemaphore.Release();
                 });
 
-                var translatedTalkData = new TalkMessage(
+                TalkMessage translatedTalkData = new TalkMessage(
                   nameToTranslate,
                   textToTranslate,
                   LangIdentify(textToTranslate),
@@ -314,7 +339,7 @@ namespace Echoglossian
 #if DEBUG
                 logStream.WriteLineAsync($"Before Talk Messages table data insertion:  {translatedTalkData}");
 #endif
-                var result = this.InsertTalkData(translatedTalkData);
+                string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
                 PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
 #endif
@@ -327,7 +352,7 @@ namespace Echoglossian
                 this.currentTalkTranslation = Resources.WaitingForTranslation;
                 Task.Run(() =>
                 {
-                  var id = this.currentTalkTranslationId;
+                  int id = this.currentTalkTranslationId;
                   this.talkTranslationSemaphore.Wait();
                   if (id == this.currentTalkTranslationId)
                   {
@@ -354,7 +379,7 @@ namespace Echoglossian
                   }*/
                 });
 
-                var translatedTalkData = new TalkMessage(
+                TalkMessage translatedTalkData = new TalkMessage(
                   nameToTranslate,
                   textToTranslate,
                   LangIdentify(textToTranslate),
@@ -366,7 +391,7 @@ namespace Echoglossian
                   DateTime.Now,
                   DateTime.Now);
 
-                var result = this.InsertTalkData(translatedTalkData);
+                string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
                 PluginLog.LogError(result);
 #endif
@@ -378,8 +403,8 @@ namespace Echoglossian
         {
           if (!this.configuration.UseImGuiForTalk)
           {
-            var translatedText = this.FoundTalkMessage.TranslatedTalkMessage;
-            var nameTranslation = this.FoundTalkMessage.TranslatedSenderName;
+            string translatedText = this.FoundTalkMessage.TranslatedTalkMessage;
+            string nameTranslation = this.FoundTalkMessage.TranslatedSenderName;
 #if DEBUG
             PluginLog.LogWarning($"From database - Name: {nameTranslation}, Message: {translatedText}");
 #endif
@@ -406,8 +431,8 @@ namespace Echoglossian
                 this.currentNameTranslation = Resources.WaitingForTranslation;
                 Task.Run(() =>
                 {
-                  var nameId = this.currentNameTranslationId;
-                  var nameTranslation = this.FoundTalkMessage.TranslatedSenderName;
+                  int nameId = this.currentNameTranslationId;
+                  string nameTranslation = this.FoundTalkMessage.TranslatedSenderName;
                   this.nameTranslationSemaphore.Wait();
                   if (nameId == this.currentNameTranslationId)
                   {
@@ -425,8 +450,8 @@ namespace Echoglossian
               this.currentTalkTranslation = Resources.WaitingForTranslation;
               Task.Run(() =>
               {
-                var id = this.currentTalkTranslationId;
-                var translatedTalkMessage = this.FoundTalkMessage.TranslatedTalkMessage;
+                int id = this.currentTalkTranslationId;
+                string translatedTalkMessage = this.FoundTalkMessage.TranslatedTalkMessage;
                 this.talkTranslationSemaphore.Wait();
                 if (id == this.currentTalkTranslationId)
                 {
@@ -447,8 +472,8 @@ namespace Echoglossian
                 this.currentNameTranslation = Resources.WaitingForTranslation;
                 Task.Run(() =>
                 {
-                  var nameId = this.currentNameTranslationId;
-                  var nameTranslation = this.FoundTalkMessage.SenderName;
+                  int nameId = this.currentNameTranslationId;
+                  string nameTranslation = this.FoundTalkMessage.SenderName;
                   this.nameTranslationSemaphore.Wait();
                   if (nameId == this.currentNameTranslationId)
                   {
@@ -466,8 +491,8 @@ namespace Echoglossian
               this.currentTalkTranslation = Resources.WaitingForTranslation;
               Task.Run(() =>
               {
-                var id = this.currentTalkTranslationId;
-                var translatedTalkMessage = this.FoundTalkMessage.OriginalTalkMessage;
+                int id = this.currentTalkTranslationId;
+                string translatedTalkMessage = this.FoundTalkMessage.OriginalTalkMessage;
                 this.talkTranslationSemaphore.Wait();
                 if (id == this.currentTalkTranslationId)
                 {
@@ -509,15 +534,15 @@ namespace Echoglossian
         PluginLog.Log(sender.TextValue + ": " + message.TextValue);
 #endif
 
-        var senderToTranslate = !sender.TextValue.IsNullOrEmpty() ? sender.TextValue : "System Message";
-        var battleTextToTranslate = message.TextValue;
+        string senderToTranslate = !sender.TextValue.IsNullOrEmpty() ? sender.TextValue : "System Message";
+        string battleTextToTranslate = message.TextValue;
 
         BattleTalkMessage battleTalkMessage = this.FormatBattleTalkMessage(senderToTranslate, battleTextToTranslate);
 
 #if DEBUG
         PluginLog.LogFatal($"Before DB Query attempt: {battleTalkMessage}");
 #endif
-        var findings = this.FindBattleTalkMessage(battleTalkMessage);
+        bool findings = this.FindBattleTalkMessage(battleTalkMessage);
 #if DEBUG
         PluginLog.LogFatal(
           $"After DB Query attempt: {(findings ? "Message found in Db." : "Message not found in Db")}");
@@ -528,8 +553,8 @@ namespace Echoglossian
         {
           if (!this.configuration.UseImGuiForBattleTalk)
           {
-            var translatedBattleTalkMessage = Translate(battleTextToTranslate);
-            var senderTranslation = Translate(senderToTranslate);
+            string translatedBattleTalkMessage = Translate(battleTextToTranslate);
+            string senderTranslation = Translate(senderToTranslate);
 #if DEBUG
             PluginLog.LogWarning(translatedBattleTalkMessage);
 #endif
@@ -538,14 +563,14 @@ namespace Echoglossian
               sender = senderTranslation == string.Empty ? sender : senderTranslation;
               message = translatedBattleTalkMessage;
 
-              var translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
+              BattleTalkMessage translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
                 LangIdentify(battleTextToTranslate),
                 LangIdentify(senderToTranslate), senderTranslation, translatedBattleTalkMessage, langDict[languageInt].Code,
                 this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
 #if DEBUG
               logStream.WriteLineAsync($"Before Talk Messages table data insertion:  {translatedBattleTalkData}");
 #endif
-              var result = this.InsertBattleTalkData(translatedBattleTalkData);
+              string result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
               PluginLog.LogError($"BattleTalk Message DB Insert operation result: {result}");
 #endif
@@ -554,12 +579,12 @@ namespace Echoglossian
             {
               message = translatedBattleTalkMessage;
 
-              var translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
+              BattleTalkMessage translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
                 LangIdentify(battleTextToTranslate),
                 LangIdentify(senderToTranslate), string.Empty, translatedBattleTalkMessage, langDict[languageInt].Code,
                 this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
 
-              var result = this.InsertBattleTalkData(translatedBattleTalkData);
+              string result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
               PluginLog.LogError($"Using BattleTalk Overlay - BattleTalk Message DB Insert operation result: {result}");
 #endif
@@ -576,8 +601,8 @@ namespace Echoglossian
               this.currentSenderTranslation = Resources.WaitingForTranslation;
               Task.Run(() =>
               {
-                var nameId = this.currentSenderTranslationId;
-                var senderTranslation = Translate(senderToTranslate);
+                int nameId = this.currentSenderTranslationId;
+                string senderTranslation = Translate(senderToTranslate);
                 this.senderTranslationSemaphore.Wait();
                 if (nameId == this.currentSenderTranslationId)
                 {
@@ -592,8 +617,8 @@ namespace Echoglossian
             this.currentBattleTalkTranslation = Resources.WaitingForTranslation;
             Task.Run(() =>
             {
-              var id = this.currentBattleTalkTranslationId;
-              var translation = Translate(battleTextToTranslate);
+              int id = this.currentBattleTalkTranslationId;
+              string translation = Translate(battleTextToTranslate);
               this.battleTalkTranslationSemaphore.Wait();
               if (id == this.currentBattleTalkTranslationId)
               {
@@ -606,13 +631,13 @@ namespace Echoglossian
 #endif
               if (this.currentSenderTranslation != Resources.WaitingForTranslation && this.currentBattleTalkTranslation != Resources.WaitingForTranslation)
               {
-                var translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
+                BattleTalkMessage translatedBattleTalkData = new BattleTalkMessage(senderToTranslate, battleTextToTranslate,
                   LangIdentify(battleTextToTranslate),
                   LangIdentify(senderToTranslate),
                   this.configuration.TranslateNpcNames ? this.currentSenderTranslation : string.Empty,
                   this.currentBattleTalkTranslation, langDict[languageInt].Code,
                   this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
-                var result = this.InsertBattleTalkData(translatedBattleTalkData);
+                string result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
                 PluginLog.LogError($"BattleTalk Message DB Insert operation result: {result}");
 #endif
@@ -624,8 +649,8 @@ namespace Echoglossian
         { // if the data is already in the DB
           if (!this.configuration.UseImGuiForBattleTalk)
           {
-            var translatedBattleMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;
-            var senderTranslation = this.FoundBattleTalkMessage.TranslatedSenderName;
+            string translatedBattleMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;
+            string senderTranslation = this.FoundBattleTalkMessage.TranslatedSenderName;
 #if DEBUG
             PluginLog.LogWarning($"From database - Name: {senderTranslation}, Message: {translatedBattleMessage}");
 #endif
@@ -650,8 +675,8 @@ namespace Echoglossian
               this.currentSenderTranslation = Resources.WaitingForTranslation;
               Task.Run(() =>
               {
-                var nameId = this.currentSenderTranslationId;
-                var senderTranslation = this.FoundBattleTalkMessage.TranslatedSenderName;
+                int nameId = this.currentSenderTranslationId;
+                string senderTranslation = this.FoundBattleTalkMessage.TranslatedSenderName;
                 this.senderTranslationSemaphore.Wait();
                 if (nameId == this.currentSenderTranslationId)
                 {
@@ -669,8 +694,8 @@ namespace Echoglossian
             this.currentBattleTalkTranslation = Resources.WaitingForTranslation;
             Task.Run(() =>
             {
-              var id = this.currentBattleTalkTranslationId;
-              var translatedBattleTalkMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;
+              int id = this.currentBattleTalkTranslationId;
+              string translatedBattleTalkMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;
               this.battleTalkTranslationSemaphore.Wait();
               if (id == this.currentBattleTalkTranslationId)
               {

@@ -202,7 +202,7 @@
     <value>Which language to translate the in-game dialogue boxes to.</value>
   </data>
   <data name="LanguageSelectLabelText" xml:space="preserve">
-    <value>Language to translate to</value>
+    <value>LanguageInfo to translate to</value>
   </data>
   <data name="logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -275,13 +275,16 @@
     <value>Choose the language for the plugin configuration window</value>
   </data>
   <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
-    <value>Config Window Language:</value>
+    <value>Config Window LanguageInfo:</value>
   </data>
   <data name="prttws" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="QRCodeInstructionsText" xml:space="preserve">
     <value>Scan the QR code to send me a PIX - only valid in Brazil</value>
+  </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Reset Settings</value>
   </data>
   <data name="SaveCloseButtonLabel" xml:space="preserve">
     <value>Save and Close Config Window</value>
@@ -291,6 +294,9 @@
   </data>
   <data name="SettingsForGTransText" xml:space="preserve">
     <value>Settings for Google Translate:</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian settings reset to default successfully!</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
     <value>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</value>

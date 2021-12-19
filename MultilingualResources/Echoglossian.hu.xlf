@@ -321,6 +321,14 @@
           <source>Select which in-game Toast messages to translate</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Válassza ki, hogy mely játékon belüli Pirítós üzeneteket kell lefordítani</target>
         </trans-unit>
+        <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
+          <source>Reset Settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Beállítások visszaállítása</target>
+        </trans-unit>
+        <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
+          <source>Echoglossian settings reset to default successfully!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian beállítások vissza az alapértelmezett sikeresen!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

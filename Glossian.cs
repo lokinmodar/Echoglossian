@@ -30,10 +30,7 @@ namespace Echoglossian
 
     private static RankedLanguageIdentifier identifier;
 
-
-      
-    
-  /// <summary>
+    /// <summary>
     /// Detects which language the source text is in.
     /// </summary>
     /// <param name="message">text to have the source language identified.</param>
@@ -41,12 +38,12 @@ namespace Echoglossian
     public static string LangIdentify(string message)
     {
       // Sanitizer sanitizer = new(ClientLanguage);
-      var sanitizedString = sanitizer.Sanitize(message);
+      string sanitizedString = sanitizer.Sanitize(message);
 
 #if DEBUG
       PluginLog.LogInformation($"Message in Lang Method: {sanitizedString}");
 #endif
-      var mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
+      Tuple<NTextCat.LanguageInfo, double> mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
 #if DEBUG
       PluginLog.LogInformation($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
 #endif
@@ -73,8 +70,8 @@ namespace Echoglossian
 #endif
       try
       {
-        var lang = langDict[languageInt].Code;
-        var sanitizedString = sanitizer.Sanitize(text);
+        string lang = langDict[languageInt].Code;
+        string sanitizedString = sanitizer.Sanitize(text);
         if (sanitizedString.IsNullOrEmpty())
         {
           return string.Empty;
@@ -103,7 +100,7 @@ namespace Echoglossian
         parsedText = parsedText.Replace("\u201D", "\u0022");
         parsedText = parsedText.Replace("\u200B", string.Empty);
 
-        var detectedLanguage = LangIdentify(parsedText);
+        string detectedLanguage = LangIdentify(parsedText);
         if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical")
         {
           detectedLanguage = "en";
@@ -111,24 +108,24 @@ namespace Echoglossian
 
 #if DEBUG
         PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
-        PluginLog.LogInformation($"Chosen Translation Language: {lang}");
+        PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
 #endif
-        var url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
+        string url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
 #if DEBUG
         PluginLog.LogInformation($"URL: {url}");
 #endif
-        var request = (HttpWebRequest)WebRequest.Create(url);
+        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
         request.UserAgent = UaString;
-        var requestResult = request.GetResponse();
+        WebResponse requestResult = request.GetResponse();
 
-        var reader = new StreamReader(requestResult.GetResponseStream() ?? throw new Exception());
-        var read = reader.ReadToEnd();
+        StreamReader reader = new StreamReader(requestResult.GetResponseStream() ?? throw new Exception());
+        string read = reader.ReadToEnd();
 
-        var parsed = JObject.Parse(read);
+        JObject parsed = JObject.Parse(read);
 
-        var dialogueSentenceList = parsed.SelectTokens("sentences[*].trans").Select(i => (string)i).ToList();
+        System.Collections.Generic.List<string> dialogueSentenceList = parsed.SelectTokens("sentences[*].trans").Select(i => (string)i).ToList();
 
-        var finalDialogueText =
+        string finalDialogueText =
           dialogueSentenceList.Aggregate(string.Empty, (current, dialogueSentence) => current + dialogueSentence);
 
         finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
@@ -138,7 +135,7 @@ namespace Echoglossian
         finalDialogueText = startingEllipsis + finalDialogueText;
         finalDialogueText = finalDialogueText.Replace("...", ". . .");
 
-        var src = (JValue)parsed["src"];
+        JValue src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
 #if DEBUG
         PluginLog.LogInformation($"FinalTranslatedText: {finalDialogueText}");

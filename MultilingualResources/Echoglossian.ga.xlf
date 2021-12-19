@@ -321,6 +321,14 @@
           <source>Select which in-game Toast messages to translate</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Roghnaigh cé na teachtaireachtaí Toast sa chluiche le haistriú</target>
         </trans-unit>
+        <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
+          <source>Reset Settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Athshocraigh socruithe</target>
+        </trans-unit>
+        <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
+          <source>Echoglossian settings reset to default successfully!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Athshocraigh socruithe echoglossian go réamhshocraithe go rathúil!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

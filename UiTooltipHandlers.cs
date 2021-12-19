@@ -17,22 +17,22 @@ namespace Echoglossian
   {
     private void TooltipsOnActionTooltip(ActionTooltip actionTooltip, HoveredAction action)
     {
-      var tooltipDescription = actionTooltip[ActionTooltipString.Description];
+      Dalamud.Game.Text.SeStringHandling.SeString tooltipDescription = actionTooltip[ActionTooltipString.Description];
 #if DEBUG
-      var list = tooltipDescription.Payloads.ToArray();
-      var payload = list[0];
+      Dalamud.Game.Text.SeStringHandling.Payload[] list = tooltipDescription.Payloads.ToArray();
+      Dalamud.Game.Text.SeStringHandling.Payload payload = list[0];
 
-      var lines = tooltipDescription.Payloads.Where(p => p != NewLinePayload.Payload);
+      System.Collections.Generic.IEnumerable<Dalamud.Game.Text.SeStringHandling.Payload> lines = tooltipDescription.Payloads.Where(p => p != NewLinePayload.Payload);
 
-      foreach (var line in lines)
+      foreach (Dalamud.Game.Text.SeStringHandling.Payload line in lines)
       {
         PluginLog.LogWarning(line.ToString() ?? string.Empty);
       }
 
-      var payloadText = payload.ToString();
+      string payloadText = payload.ToString();
 
-      var desc = tooltipDescription.TextValue;
-      var status = TranslateAsync(desc);
+      string desc = tooltipDescription.TextValue;
+      Task<string> status = TranslateAsync(desc);
 
       PluginLog.LogWarning($"Tooltip desc: {desc}");
       PluginLog.LogError($"Tooltip trans: {status.Result}");

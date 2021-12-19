@@ -22,10 +22,10 @@ namespace Echoglossian
   {
     private unsafe void ToastHandler(string toastName, int index)
     {
-      var toastByName = this.gameGui.GetAddonByName(toastName, index);
+      IntPtr toastByName = GameGui.GetAddonByName(toastName, index);
       if (toastByName != IntPtr.Zero)
       {
-        var toastByNameMaster = (AtkUnitBase*)toastByName;
+        AtkUnitBase* toastByNameMaster = (AtkUnitBase*)toastByName;
         if (toastByNameMaster->IsVisible)
         {
           this.toastDisplayTranslation = true;
@@ -47,10 +47,10 @@ namespace Echoglossian
 
     private unsafe void QuestToastHandler(string questToastName, int index)
     {
-      var questToastByName = this.gameGui.GetAddonByName(questToastName, index);
+      IntPtr questToastByName = GameGui.GetAddonByName(questToastName, index);
       if (questToastByName != IntPtr.Zero)
       {
-        var questToastByNameMaster = (AtkUnitBase*)questToastByName;
+        AtkUnitBase* questToastByNameMaster = (AtkUnitBase*)questToastByName;
         if (questToastByNameMaster->IsVisible)
         {
           this.questToastDisplayTranslation = true;
@@ -78,27 +78,15 @@ namespace Echoglossian
         return;
       }
 
-      /*#if DEBUG
-            PluginLog.LogError($"Should translate!");
-      #endif*/
-      var classChangeToastByName = this.gameGui.GetAddonByName(classChangeToastName, index);
-
-      /*
-      #if DEBUG
-       PluginLog.LogInformation($"Class Change toast pointer: {classChangeToastByName}");
-       PluginLog.LogFatal($"Toast Draw Vars: UseImGuiForToasts - {!this.configuration.UseImGuiForToasts}" +
-                            $", TranslateClassChangeToast - {this.configuration.TranslateClassChangeToast}" +
-                            $", classChangeToastDisplayTranslation - {this.classChangeToastDisplayTranslation}" +
-                            $" equals? {!this.configuration.UseImGuiForToasts && this.configuration.TranslateClassChangeToast && this.classChangeToastDisplayTranslation}");
-      #endif*/
+      IntPtr classChangeToastByName = GameGui.GetAddonByName(classChangeToastName, index);
 
       if (classChangeToastByName != IntPtr.Zero)
       {
-        var classChangeToastByNameMaster = (AtkUnitBase*)classChangeToastByName;
+        AtkUnitBase* classChangeToastByNameMaster = (AtkUnitBase*)classChangeToastByName;
         if (classChangeToastByNameMaster->IsVisible)
         {
           AtkTextNode* textNode = null;
-          for (var i = 0; i < classChangeToastByNameMaster->UldManager.NodeListCount; i++)
+          for (int i = 0; i < classChangeToastByNameMaster->UldManager.NodeListCount; i++)
           {
             if (classChangeToastByNameMaster->UldManager.NodeList[i]->Type != NodeType.Text)
             {
@@ -114,101 +102,64 @@ namespace Echoglossian
             return;
           }
 
-          /*#if DEBUG
-                  PluginLog.LogWarning($"inside ClassChangeToastHandler method");
-          #endif*/
-          /*var classChangeToastByNameMaster = (AtkUnitBase*)classChangeToastByName;
-
-            var textNodeX = (AtkTextNode*)classChangeToastByNameMaster->RootNode->ChildNode->ChildNode->ChildNode;
-  #if DEBUG
-            var tcc = classChangeToastByNameMaster->RootNode->ChildCount;
-            PluginLog.LogDebug($"{(long)textNodeX:X}");
-            PluginLog.Error($"Node ptr: {classChangeToastByName}");
-            var typ = classChangeToastByNameMaster->RootNode->ChildNode->ChildNode->ChildNode->Type.ToString();
-            PluginLog.LogWarning($"child count: {tcc}");
-            PluginLog.LogWarning($"Node type: {typ}");
-  #endif
-            if (textNodeX == null)
-            {
-  #if DEBUG
-              PluginLog.LogWarning("Here!");
-  #endif
-              return;
-            }*/
-
           try
           {
-            /*#if DEBUG
-                        PluginLog.LogError($"Toast is visible: {classChangeToastByNameMaster->RootNode->NodeID}");
-            #endif
 
-                         var classChangeToastId = classChangeToastByNameMaster->RootNode->ChildNode->ChildNode->ChildNode->NodeID;
-            #if DEBUG
-                        // PluginLog.LogError($"error toast id: {classChangeToastId}");
-            #endif
-                         var textNode = (AtkTextNode*)classChangeToastByNameMaster->UldManager.SearchNodeById(classChangeToastId);
-            #if DEBUG
-                        PluginLog.LogError($"TextNode.NodeText: {textNode->NodeText}");
-                        PluginLog.LogError($"TextNode.StringLength: {textNode->NodeText.StringLength}");
-                        PluginLog.LogError($"TextNode: {textNode->ToString()}");
-
-            #endif*/
-            var messageToTranslate = Marshal.PtrToStringUTF8(new IntPtr(textNode->NodeText.StringPtr));
+            string messageToTranslate = Marshal.PtrToStringUTF8(new IntPtr(textNode->NodeText.StringPtr));
 
             if (!this.configuration.UseImGuiForToasts)
             {
-              /*#if DEBUG
-                            PluginLog.LogError("Not Using Imgui - Translate ClassChange toast");
-              #endif*/
+#if DEBUG
+              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast");
+#endif
               this.currentClassChangeToastTranslationId = Environment.TickCount;
               this.currentClassChangeToastTranslation = Resources.WaitingForTranslation;
-              /*#if DEBUG
-                            PluginLog.LogError("Not Using Imgui - Translate ClassChange toast 1");
-              #endif*/
+#if DEBUG
+              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast 1");
+#endif
               textNode->SetText(Resources.WaitingForTranslation);
-              /*#if DEBUG
-                            PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 2");
-              #endif*/
+#if DEBUG
+              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 2");
+#endif
 
               Task.Run(() =>
               {
-                var messageId = this.currentClassChangeToastTranslationId;
-                /*
-                #if DEBUG
-                                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 3");
-                #endif
+                int messageId = this.currentClassChangeToastTranslationId;
 
-                                */
+#if DEBUG
+                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 3");
+#endif
+
                 textNode->SetText(this.currentClassChangeToastTranslation);
                 this.classChangeToastTranslationSemaphore.Wait();
                 if (messageId == this.currentClassChangeToastTranslationId)
                 {
-                  var messageTranslation = Translate(messageToTranslate);
-                  /*#if DEBUG
-                                    PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 4");
-                  #endif*/
+                  string messageTranslation = Translate(messageToTranslate);
+#if DEBUG
+                  PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 4");
+#endif
                   textNode->SetText(messageTranslation);
                 }
 
                 textNode->SetText(Resources.WaitingForTranslation);
-                /*#if DEBUG
-                                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 5");
-                #endif*/
+#if DEBUG
+                PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 5");
+#endif
                 this.classChangeToastTranslationSemaphore.Release();
               });
             }
             else
             {
-              /*#if DEBUG
-                            PluginLog.LogError("Using Imgui - Translate ClassChange toast");
-              #endif*/
+#if DEBUG
+              PluginLog.LogError("Using Imgui - Translate ClassChange toast");
+#endif
               this.classChangeToastDisplayTranslation = true;
               this.currentClassChangeToastTranslationId = Environment.TickCount;
               this.currentClassChangeToastTranslation = Resources.WaitingForTranslation;
               Task.Run(() =>
               {
-                var messageId = this.currentToastTranslationId;
-                var messageTranslation = Translate(textNode->NodeText.ToString());
+                int messageId = this.currentToastTranslationId;
+                string messageTranslation = Translate(textNode->NodeText.ToString());
                 this.classChangeToastTranslationSemaphore.Wait();
                 if (messageId == this.currentClassChangeToastTranslationId)
                 {
@@ -243,21 +194,12 @@ namespace Echoglossian
 
     private unsafe void TextErrorToastHandler(string toastName, int index)
     {
-      var errorToastByName = this.gameGui.GetAddonByName(toastName, index);
-      /*
-  #if DEBUG
-       PluginLog.LogInformation($"Error toast pointer: {errorToastByName}");
-       PluginLog.LogFatal($"Toast Draw Vars: !UseImGuiForToasts - {!this.configuration.UseImGuiForToasts}" +
-                            $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
-                            $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
-                            $" equals? {!this.configuration.UseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");
-  #endif*/
+      IntPtr errorToastByName = GameGui.GetAddonByName(toastName, index);
+
       if (errorToastByName != IntPtr.Zero)
       {
-        /*#if DEBUG
-                PluginLog.LogWarning($"inside TextErrorToastHandler method");
-        #endif*/
-        var errorToastByNameMaster = (AtkUnitBase*)errorToastByName;
+
+        AtkUnitBase* errorToastByNameMaster = (AtkUnitBase*)errorToastByName;
 
         // 2729DE6EDE0
         if (errorToastByNameMaster->IsVisible)
@@ -276,10 +218,7 @@ namespace Echoglossian
           this.errorToastTranslationTextDimensions.Y = errorToastByNameMaster->RootNode->Height * errorToastByNameMaster->Scale;
           this.errorToastTranslationTextPosition.X = errorToastByNameMaster->RootNode->X;
           this.errorToastTranslationTextPosition.Y = errorToastByNameMaster->RootNode->Y;
-          /*#if DEBUG
-                    PluginLog.LogWarning($"Toast Dimensions: {this.errorToastTranslationTextDimensions}");
-                    PluginLog.LogWarning($"Toast position: {this.errorToastTranslationTextPosition}");
-          #endif*/
+
         }
         else
         {
@@ -294,10 +233,10 @@ namespace Echoglossian
 
     private unsafe void AreaToastHandler(string areaToastName, int index)
     {
-      var areaToastByName = this.gameGui.GetAddonByName(areaToastName, index);
+      IntPtr areaToastByName = GameGui.GetAddonByName(areaToastName, index);
       if (areaToastByName != IntPtr.Zero)
       {
-        var areaToastByNameMaster = (AtkUnitBase*)areaToastByName;
+        AtkUnitBase* areaToastByNameMaster = (AtkUnitBase*)areaToastByName;
         if (areaToastByNameMaster->IsVisible)
         {
           this.areaToastDisplayTranslation = true;
@@ -319,10 +258,10 @@ namespace Echoglossian
 
     private unsafe void WideTextToastHandler(string wideTextToastName, int index)
     {
-      var wideTextToastByName = this.gameGui.GetAddonByName(wideTextToastName, index);
+      IntPtr wideTextToastByName = GameGui.GetAddonByName(wideTextToastName, index);
       if (wideTextToastByName != IntPtr.Zero)
       {
-        var wideTextToastByNameMaster = (AtkUnitBase*)wideTextToastByName;
+        AtkUnitBase* wideTextToastByNameMaster = (AtkUnitBase*)wideTextToastByName;
         if (wideTextToastByNameMaster->IsVisible)
         {
           this.wideTextToastDisplayTranslation = true;
@@ -344,10 +283,10 @@ namespace Echoglossian
 
     private unsafe void AddonHandlers(string addonName, int index)
     {
-      var addonByName = this.gameGui.GetAddonByName(addonName, index);
+      IntPtr addonByName = GameGui.GetAddonByName(addonName, index);
       if (addonByName != IntPtr.Zero)
       {
-        var addonByNameMaster = (AtkUnitBase*)addonByName;
+        AtkUnitBase* addonByNameMaster = (AtkUnitBase*)addonByName;
         if (addonByNameMaster->IsVisible)
         {
           this.addonDisplayTranslation = true;
@@ -376,11 +315,11 @@ namespace Echoglossian
 
       try
       {
-        var messageTextToTranslate = message.TextValue;
+        string messageTextToTranslate = message.TextValue;
 
         if (!this.configuration.UseImGuiForToasts && this.configuration.TranslateQuestToast && this.configuration.TranslateWideTextToast)
         {
-          var messageTranslatedText = Translate(messageTextToTranslate);
+          string messageTranslatedText = Translate(messageTextToTranslate);
 
           message = messageTranslatedText;
         }
@@ -390,15 +329,12 @@ namespace Echoglossian
           this.currentQuestToastTranslation = Resources.WaitingForTranslation;
           Task.Run(() =>
           {
-            var messageId = this.currentQuestToastTranslationId;
-            var messageTranslation = Translate(messageTextToTranslate);
+            int messageId = this.currentQuestToastTranslationId;
+            string messageTranslation = Translate(messageTextToTranslate);
             this.questToastTranslationSemaphore.Wait();
             if (messageId == this.currentQuestToastTranslationId)
             {
-              var encoded = new UTF8Encoding();
-              var utf8MessageTranslationBytes = encoded.GetBytes(messageTranslation);
-              var utf8MessageTranslationString = encoded.GetString(utf8MessageTranslationBytes);
-              this.currentQuestToastTranslation = utf8MessageTranslationString;
+              this.currentQuestToastTranslation = messageTranslation;
             }
 
             this.questToastTranslationSemaphore.Release();
@@ -422,14 +358,14 @@ namespace Echoglossian
       using StreamWriter logStream = new(this.configDir + "GetToastLog.txt", append: true);
 #endif
 
-      var messageTextToTranslate = message.TextValue;
+      string messageTextToTranslate = message.TextValue;
       ToastMessage errorToastToHandle = this.FormatToastMessage("Error", message.TextValue);
 
 #if DEBUG
       PluginLog.LogFatal($"Before DB Query attempt: {errorToastToHandle}");
 #endif
 
-      var findings = this.FindErrorToastMessage(errorToastToHandle);
+      bool findings = this.FindErrorToastMessage(errorToastToHandle);
 
 #if DEBUG
       PluginLog.LogFatal(
@@ -446,16 +382,16 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogError("if not found and if not using imgui");
 #endif
-            var translatedToastMessage = Translate(message.TextValue);
+            string translatedToastMessage = Translate(message.TextValue);
             message = translatedToastMessage;
 
-            var translatedToastData = new ToastMessage("Error", messageTextToTranslate, LangIdentify(messageTextToTranslate),
+            ToastMessage translatedToastData = new ToastMessage("Error", messageTextToTranslate, LangIdentify(messageTextToTranslate),
               translatedToastMessage, langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
 #if DEBUG
             logStream.WriteLineAsync($"Before Toast Messages table data insertion:  {translatedToastData}");
 #endif
-            var result = this.InsertErrorToastMessageData(translatedToastData);
+            string result = this.InsertErrorToastMessageData(translatedToastData);
 #if DEBUG
             PluginLog.LogError($"Toast Message DB Insert operation result: {result}");
 #endif
@@ -469,8 +405,8 @@ namespace Echoglossian
             this.currentErrorToastTranslation = Resources.WaitingForTranslation;
             Task.Run(() =>
             {
-              var messageId = this.currentErrorToastTranslationId;
-              var messageTranslation = Translate(messageTextToTranslate);
+              int messageId = this.currentErrorToastTranslationId;
+              string messageTranslation = Translate(messageTextToTranslate);
               this.errorToastTranslationSemaphore.Wait();
               if (messageId == this.currentErrorToastTranslationId)
               {
@@ -483,10 +419,10 @@ namespace Echoglossian
 #endif
               if (this.currentErrorToastTranslation != Resources.WaitingForTranslation)
               {
-                var translatedErrorToastData = new ToastMessage("Error", messageTextToTranslate,
+                ToastMessage translatedErrorToastData = new ToastMessage("Error", messageTextToTranslate,
                   errorToastToHandle.OriginalLang, this.currentErrorToastTranslation,
                   langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
-                var result = this.InsertErrorToastMessageData(translatedErrorToastData);
+                string result = this.InsertErrorToastMessageData(translatedErrorToastData);
 #if DEBUG
                 PluginLog.LogError($"ToastMessage DB Insert operation result: {result}");
 #endif
@@ -524,8 +460,8 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogWarning("Using Toast Overlay - inside Draw task");
 #endif
-            var messageId = this.currentErrorToastTranslationId;
-            var messageTranslation = this.FoundToastMessage.TranslatedToastMessage;
+            int messageId = this.currentErrorToastTranslationId;
+            string messageTranslation = this.FoundToastMessage.TranslatedToastMessage;
 #if DEBUG
             PluginLog.LogWarning($"Using Toast Overlay - inside Draw Error toast Overlay - found toast message: {messageTranslation}");
 #endif
@@ -554,14 +490,14 @@ namespace Echoglossian
       using StreamWriter logStream = new(this.configDir + "GetNonErrorToastLog.txt", append: true);
 #endif
 
-      var messageTextToTranslate = message.TextValue;
+      string messageTextToTranslate = message.TextValue;
       ToastMessage toastToHandle = this.FormatToastMessage("NonError", message.TextValue);
 
 #if DEBUG
       PluginLog.LogFatal($"Before DB Query attempt: {toastToHandle}");
 #endif
 
-      var findings = this.FindToastMessage(toastToHandle);
+      bool findings = this.FindToastMessage(toastToHandle);
 
 #if DEBUG
       PluginLog.LogFatal(
@@ -578,16 +514,16 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogError("if not found and if not using imgui");
 #endif
-            var translatedToastMessage = Translate(message.TextValue);
+            string translatedToastMessage = Translate(message.TextValue);
             message = translatedToastMessage;
 
-            var translatedToastData = new ToastMessage("NonError", messageTextToTranslate, LangIdentify(messageTextToTranslate),
+            ToastMessage translatedToastData = new ToastMessage("NonError", messageTextToTranslate, LangIdentify(messageTextToTranslate),
               translatedToastMessage, langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
 #if DEBUG
             logStream.WriteLineAsync($"Before Toast Messages table data insertion:  {translatedToastData}");
 #endif
-            var result = this.InsertOtherToastMessageData(translatedToastData);
+            string result = this.InsertOtherToastMessageData(translatedToastData);
 #if DEBUG
             PluginLog.LogError($"Toast Message DB Insert operation result: {result}");
 #endif
@@ -601,8 +537,8 @@ namespace Echoglossian
             this.currentToastTranslation = Resources.WaitingForTranslation;
             Task.Run(() =>
             {
-              var messageId = this.currentToastTranslationId;
-              var messageTranslation = Translate(messageTextToTranslate);
+              int messageId = this.currentToastTranslationId;
+              string messageTranslation = Translate(messageTextToTranslate);
               this.toastTranslationSemaphore.Wait();
               if (messageId == this.currentToastTranslationId)
               {
@@ -615,10 +551,10 @@ namespace Echoglossian
 #endif
               if (this.currentToastTranslation != Resources.WaitingForTranslation)
               {
-                var translatedToastData = new ToastMessage("NonError", messageTextToTranslate,
+                ToastMessage translatedToastData = new ToastMessage("NonError", messageTextToTranslate,
                   toastToHandle.OriginalLang, this.currentToastTranslation,
                   langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
-                var result = this.InsertOtherToastMessageData(translatedToastData);
+                string result = this.InsertOtherToastMessageData(translatedToastData);
 #if DEBUG
                 PluginLog.LogError($"ToastMessage DB Insert operation result: {result}");
 #endif
@@ -656,8 +592,8 @@ namespace Echoglossian
 #if DEBUG
             PluginLog.LogWarning("Using Toast Overlay - inside Draw task");
 #endif
-            var messageId = this.currentToastTranslationId;
-            var messageTranslation = this.FoundToastMessage.TranslatedToastMessage;
+            int messageId = this.currentToastTranslationId;
+            string messageTranslation = this.FoundToastMessage.TranslatedToastMessage;
 #if DEBUG
             PluginLog.LogWarning($"Using Toast Overlay - inside Draw toast Overlay - found toast message: {messageTranslation}");
 #endif

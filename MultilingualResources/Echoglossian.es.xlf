@@ -321,6 +321,14 @@
           <source>Use overlay to show Toasts translations</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Usar superposición para mostrar las traducciones de Toasts</target>
         </trans-unit>
+        <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
+          <source>Reset Settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Restablecer configuración</target>
+        </trans-unit>
+        <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
+          <source>Echoglossian settings reset to default successfully!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">¡La configuración de Echoglossian se restablece a los valores predeterminados correctamente!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

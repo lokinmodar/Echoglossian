@@ -31,6 +31,28 @@ namespace Echoglossian
   // TODO: implement multiple fallback translation engines.
   public partial class Echoglossian : IDalamudPlugin
   {
+    [PluginService]
+    public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+
+    [PluginService]
+    public static CommandManager CommandManager { get; private set; } = null!;
+
+    [PluginService]
+    public static Framework Framework { get; private set; } = null!;
+
+    [PluginService]
+    public static GameGui GameGui { get; private set; } = null!;
+
+    [PluginService]
+    public static ClientState ClientState { get; private set; } = null!;
+
+    [PluginService]
+    public static ToastGui ToastGui { get; private set; } = null!;
+
+    private static XivCommonBase Common { get; set; }
+
+    public string Name => Resources.Name;
+
     private const string SlashCommand = "/eglo";
     private string configDir;
     private static int languageInt = 16;
@@ -39,16 +61,10 @@ namespace Echoglossian
     private static string transEngineName;
 
     private bool PluginAssetsState;
-    private static Dictionary<int, Language> langDict;
-
-    private readonly CommandManager commandManager;
+    private static Dictionary<int, LanguageInfo> langDict;
     private bool config;
 
     private readonly Config configuration;
-
-    private readonly Framework framework;
-    private readonly GameGui gameGui;
-    private readonly ClientState clientState;
 
     private readonly SemaphoreSlim toastTranslationSemaphore;
     private readonly SemaphoreSlim talkTranslationSemaphore;
@@ -61,13 +77,13 @@ namespace Echoglossian
     private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
     private readonly SemaphoreSlim questToastTranslationSemaphore;
 
-    private readonly DalamudPluginInterface pluginInterface;
+
     private readonly TextureWrap pixImage;
     private readonly TextureWrap choiceImage;
     private readonly TextureWrap cutsceneChoiceImage;
     private readonly TextureWrap talkImage;
     private readonly TextureWrap logo;
-    private readonly ToastGui toastGui;
+
     private readonly CultureInfo cultureInfo;
 
     private static Sanitizer sanitizer;
@@ -78,41 +94,18 @@ namespace Echoglossian
 
     public List<ToastMessage> OtherToastsCache { get; set; }
 
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="Echoglossian" /> class.
-    /// </summary>
-    /// <param name="dalamudPluginInterface">Plugin Interface.</param>
-    /// <param name="pframework">Game Framework.</param>
-    /// <param name="pCommandManager">Command Manager.</param>
-    /// <param name="pGameGui">Game Gui object.</param>
-    /// <param name="pToastGui">Toast Gui Object.</param>
-    /// <param name="pClientState">This class represents the state of the game client at the time of access.</param>
-    public Echoglossian(
-      [RequiredVersion("1.0")] DalamudPluginInterface dalamudPluginInterface,
-      Framework pframework,
-      [RequiredVersion("1.0")] CommandManager pCommandManager,
-      GameGui pGameGui,
-      ToastGui pToastGui,
-      ClientState pClientState)
-    {
-      this.framework = pframework;
-      this.clientState = pClientState;
-      this.pluginInterface = dalamudPluginInterface;
-      this.commandManager = pCommandManager;
 
-      sanitizer = this.pluginInterface.Sanitizer as Sanitizer;
+    public Echoglossian()
+    {
+      sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
       langDict = this.LanguagesDictionary;
-      identifier = Factory.Load($"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+      identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
-      this.commandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
+      CommandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
       {
         HelpMessage = Resources.HelpMessage,
       });
-
-      this.gameGui = pGameGui;
-
-      this.toastGui = pToastGui;
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
@@ -120,11 +113,11 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
-      this.configuration = this.pluginInterface.GetPluginConfig() as Config ?? new Config();
-      this.configDir = this.pluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
+      this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
+      this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
-      this.AssetsPath = $"{this.pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
+      this.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
 
       this.AssetFiles.Add("NotoSansCJKhk-Regular.otf");
       this.AssetFiles.Add("NotoSansCJKjp-Regular.otf");
@@ -133,7 +126,7 @@ namespace Echoglossian
       this.AssetFiles.Add("NotoSansCJKtc-Regular.otf");
 
 #if DEBUG
-      //PluginLog.LogWarning($"Assets state config: {JsonConvert.SerializeObject(this.configuration, Formatting.Indented)}");
+      // PluginLog.LogWarning($"Assets state config: {JsonConvert.SerializeObject(this.configuration, Formatting.Indented)}");
 #endif
       this.FixConfig();
 
@@ -147,19 +140,19 @@ namespace Echoglossian
         this.PluginAssetsChecker();
       }
 
-      this.pluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
-      this.pluginInterface.UiBuilder.BuildFonts += this.LoadFont;
+      PluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
+      PluginInterface.UiBuilder.BuildFonts += this.LoadFont;
 
       // this.ListCultureInfos();
-      this.pixImage = this.pluginInterface.UiBuilder.LoadImage(Resources.pix);
-      this.choiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.choice);
-      this.cutsceneChoiceImage = this.pluginInterface.UiBuilder.LoadImage(Resources.cutscenechoice);
-      this.talkImage = this.pluginInterface.UiBuilder.LoadImage(Resources.prttws);
-      this.logo = this.pluginInterface.UiBuilder.LoadImage(Resources.logo);
+      this.pixImage = PluginInterface.UiBuilder.LoadImage(Resources.pix);
+      this.choiceImage = PluginInterface.UiBuilder.LoadImage(Resources.choice);
+      this.cutsceneChoiceImage = PluginInterface.UiBuilder.LoadImage(Resources.cutscenechoice);
+      this.talkImage = PluginInterface.UiBuilder.LoadImage(Resources.prttws);
+      this.logo = PluginInterface.UiBuilder.LoadImage(Resources.logo);
 
-      this.pluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
+      PluginInterface.UiBuilder.DisableCutsceneUiHide = this.configuration.ShowInCutscenes;
 
-      this.pluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
+      PluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
       languageInt = this.configuration.Lang;
 
@@ -173,7 +166,7 @@ namespace Echoglossian
       this.LoadAllErrorToasts();
       this.LoadAllOtherToasts();
 
-      this.framework.Update += this.Tick;
+      Framework.Update += this.Tick;
 
       this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.nameTranslationSemaphore = new SemaphoreSlim(1, 1);
@@ -187,21 +180,17 @@ namespace Echoglossian
       this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
       this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
 
-      this.toastGui.Toast += this.OnToast;
-      this.toastGui.ErrorToast += this.OnErrorToast;
-      this.toastGui.QuestToast += this.OnQuestToast;
+      ToastGui.Toast += this.OnToast;
+      ToastGui.ErrorToast += this.OnErrorToast;
+      ToastGui.QuestToast += this.OnQuestToast;
 
       // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
-
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
-      this.pluginInterface.UiBuilder.Draw += this.BuildUi;
+      PluginInterface.UiBuilder.Draw += this.BuildUi;
     }
 
-    private static XivCommonBase Common { get; set; }
-
-    public string Name => Resources.Name;
 
     /// <inheritdoc />
     public void Dispose()
@@ -219,11 +208,11 @@ namespace Echoglossian
       Common?.Functions.Dispose();
       Common?.Dispose();
 
-      this.toastGui.Toast -= this.OnToast;
-      this.toastGui.ErrorToast -= this.OnErrorToast;
-      this.toastGui.QuestToast -= this.OnQuestToast;
+      ToastGui.Toast -= this.OnToast;
+      ToastGui.ErrorToast -= this.OnErrorToast;
+      ToastGui.QuestToast -= this.OnQuestToast;
 
-      this.pluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
+      PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
       this.nameTranslationSemaphore?.Dispose();
       this.talkTranslationSemaphore?.Dispose();
@@ -236,21 +225,21 @@ namespace Echoglossian
       this.wideTextToastTranslationSemaphore?.Dispose();
       this.questToastTranslationSemaphore?.Dispose();
 
-      this.pluginInterface.UiBuilder.Draw -= this.BuildUi;
+      PluginInterface.UiBuilder.Draw -= this.BuildUi;
 
       this.pixImage?.Dispose();
       this.choiceImage?.Dispose();
       this.cutsceneChoiceImage?.Dispose();
       this.talkImage?.Dispose();
 
-      this.framework.Update -= this.Tick;
+      Framework.Update -= this.Tick;
 
-      this.pluginInterface.UiBuilder.BuildFonts -= this.LoadFont;
-      this.pluginInterface.UiBuilder.BuildFonts -= this.LoadConfigFont;
+      PluginInterface.UiBuilder.BuildFonts -= this.LoadFont;
+      PluginInterface.UiBuilder.BuildFonts -= this.LoadConfigFont;
 
-      this.pluginInterface.UiBuilder.RebuildFonts();
+      PluginInterface.UiBuilder.RebuildFonts();
 
-      this.commandManager.RemoveHandler(SlashCommand);
+      CommandManager.RemoveHandler(SlashCommand);
     }
 
     private void Tick(Framework tFramework)
@@ -270,14 +259,13 @@ namespace Echoglossian
           return;
         case true:
           {
-            switch (this.clientState.IsLoggedIn)
+            switch (ClientState.IsLoggedIn)
             {
               case true:
 
                 this.TalkHandler("Talk", 1);
 
                 // this.TalkSubtitleHandler("TalkSubtitle", 1);
-
                 this.BattleTalkHandler("_BattleTalk", 1);
 
                 this.TextErrorToastHandler("_TextError", 1);
@@ -287,12 +275,10 @@ namespace Echoglossian
                 // this.ClassChangeToastHandler("_WideText", 1);
                 //
                 // this.ClassChangeToastHandler("_WideText", 2);
-
                 this.ToastHandler("_TextClassChange", 1);
                 this.ToastHandler("_AreaText", 1);
 
-                //this.QuestToastHandler("_ScreenText", 1);
-
+                // this.QuestToastHandler("_ScreenText", 1);
                 break;
             }
 
@@ -309,19 +295,19 @@ namespace Echoglossian
     {
       if (!this.configuration.PluginAssetsDownloaded)
       {
-       // this.PluginAssetsChecker();
+        // this.PluginAssetsChecker();
         return;
       }
 
       if (!this.ConfigFontLoaded && !this.ConfigFontLoadFailed)
       {
-        this.pluginInterface.UiBuilder.RebuildFonts();
+        PluginInterface.UiBuilder.RebuildFonts();
         return;
       }
 
       if (!this.FontLoaded && !this.FontLoadFailed)
       {
-        this.pluginInterface.UiBuilder.RebuildFonts();
+        PluginInterface.UiBuilder.RebuildFonts();
         return;
       }
 
@@ -375,6 +361,7 @@ namespace Echoglossian
         // PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
 #endif
       }
+
       if (this.configuration.UseImGuiForToasts && this.configuration.TranslateToast && this.toastDisplayTranslation)
       {
         this.DrawTranslatedToastWindow();

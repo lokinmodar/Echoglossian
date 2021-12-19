@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Επιλέξτε ποια μηνύματα toast στο παιχνίδι θα μεταφράσετε</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Επαναφορά ρυθμίσεων</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Οι ρυθμίσεις Echoglossian επαναφέρουν την προεπιλογή με επιτυχία!</value>
+  </data>
 </root>

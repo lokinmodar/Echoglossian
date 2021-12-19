@@ -31,13 +31,13 @@ namespace Echoglossian
 
     public void CreateOrUseDb()
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
       context.Database.MigrateAsync();
     }
 
     public bool FindTalkMessage(TalkMessage talkMessage)
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbFindTalkOperationsLog.txt", append: true);
       using StreamWriter logStream2 = new($"{this.configDir}DbFindTalkOperationsErrorLog.txt", append: true);
@@ -49,12 +49,12 @@ namespace Echoglossian
         logStream.WriteLineAsync($"Before Talk Messages table query: {talkMessage}");
 #endif
 
-        var existingTalkMessage =
+        IQueryable<TalkMessage> existingTalkMessage =
           context.TalkMessage.Where(t =>
             t.SenderName == talkMessage.SenderName &&
             t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
             t.TranslationLang == talkMessage.TranslationLang);
-        var localFoundTalkMessage = existingTalkMessage.FirstOrDefault();
+        TalkMessage localFoundTalkMessage = existingTalkMessage.FirstOrDefault();
 #if DEBUG
         logStream.WriteLineAsync($"After Talk Messages table query: {localFoundTalkMessage}");
 #endif
@@ -86,7 +86,7 @@ namespace Echoglossian
 #endif
       try
       {
-        var cache = this.OtherToastsCache;
+        List<ToastMessage> cache = this.OtherToastsCache;
         if (cache.Count == 0 || cache == null)
         {
           this.LoadAllOtherToasts();
@@ -101,12 +101,12 @@ namespace Echoglossian
 #if DEBUG
         logStream.WriteLineAsync($"Before Toast Messages table query: {toastMessage}");
 #endif
-        var existingToastMessage =
+        IEnumerable<ToastMessage> existingToastMessage =
           cache.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
                            t.TranslationLang == toastMessage.TranslationLang &&
                            t.ToastType == toastMessage.ToastType);
 
-        var localFoundToastMessage = existingToastMessage.SingleOrDefault();
+        ToastMessage localFoundToastMessage = existingToastMessage.SingleOrDefault();
 #if DEBUG
         logStream.WriteLineAsync($"After Toast Messages table query: {localFoundToastMessage}");
 #endif
@@ -138,7 +138,7 @@ namespace Echoglossian
 #endif
       try
       {
-        var cache = this.ErrorToastsCache;
+        List<ToastMessage> cache = this.ErrorToastsCache;
         if (cache.Count == 0 || cache == null)
         {
           this.LoadAllErrorToasts();
@@ -153,12 +153,12 @@ namespace Echoglossian
 #if DEBUG
         logStream.WriteLineAsync($"Before Toast Messages table query: {toastMessage}");
 #endif
-        var existingToastMessage =
+        IEnumerable<ToastMessage> existingToastMessage =
           cache.Where(t => t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
                                           t.TranslationLang == toastMessage.TranslationLang &&
                                           t.ToastType == toastMessage.ToastType);
 
-        var localFoundToastMessage = existingToastMessage.SingleOrDefault();
+        ToastMessage localFoundToastMessage = existingToastMessage.SingleOrDefault();
 #if DEBUG
         logStream.WriteLineAsync($"After Toast Messages table query: {localFoundToastMessage}");
 #endif
@@ -183,7 +183,7 @@ namespace Echoglossian
 
     public bool FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbFindBattleTalkOperationsLog.txt", append: true);
       using StreamWriter logStream2 = new($"{this.configDir}DbFindBattleTalkOperationsErrorLog.txt", append: true);
@@ -194,13 +194,13 @@ namespace Echoglossian
         logStream.WriteLineAsync($"Before BattleTalk Messages table query: {battleTalkMessage}");
 #endif
 
-        var existingBattleTalkMessage =
+        IQueryable<BattleTalkMessage> existingBattleTalkMessage =
           context.BattleTalkMessage.Where(t =>
             t.SenderName == battleTalkMessage.SenderName &&
             t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage &&
             t.TranslationLang == battleTalkMessage.TranslationLang);
 
-        var localFoundBattleTalkMessage = existingBattleTalkMessage.FirstOrDefault();
+        BattleTalkMessage localFoundBattleTalkMessage = existingBattleTalkMessage.FirstOrDefault();
 #if DEBUG
         logStream.WriteLineAsync($"After BattleTalk Messages table query: {localFoundBattleTalkMessage}");
 #endif
@@ -225,7 +225,7 @@ namespace Echoglossian
 
     public string InsertTalkData(TalkMessage talkMessage)
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbInsertTalkOperationsLog.txt", append: true);
 #endif
@@ -270,7 +270,7 @@ namespace Echoglossian
 
     public string InsertBattleTalkData(BattleTalkMessage battleTalkMessage)
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbInsertBattleTalkOperationsLog.txt", append: true);
 #endif
@@ -301,7 +301,7 @@ namespace Echoglossian
 
     public string InsertErrorToastMessageData(ToastMessage toastMessage)
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbInsertToastOperationsLog.txt", append: true);
 #endif
@@ -311,7 +311,7 @@ namespace Echoglossian
         if (this.ErrorToastsCache.Count > 0 && this.ErrorToastsCache != null)
         {
 #if DEBUG
-          foreach (var t in this.ErrorToastsCache)
+          foreach (ToastMessage t in this.ErrorToastsCache)
           {
             PluginLog.LogError($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
           }
@@ -357,7 +357,7 @@ namespace Echoglossian
 
     public string InsertOtherToastMessageData(ToastMessage toastMessage)
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbInsertToastOperationsLog.txt", append: true);
 #endif
@@ -367,7 +367,7 @@ namespace Echoglossian
         if (this.OtherToastsCache.Count > 0 && this.OtherToastsCache != null)
         {
 #if DEBUG
-          foreach (var t in this.OtherToastsCache)
+          foreach (ToastMessage t in this.OtherToastsCache)
           {
             PluginLog.LogError($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
           }
@@ -413,14 +413,14 @@ namespace Echoglossian
 
     public void LoadAllErrorToasts()
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
       this.ErrorToastsCache = new List<ToastMessage>();
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbErrorToastListQueryOperationsLog.txt", append: true);
 #endif
       try
       {
-        var existingToastMessages =
+        IQueryable<ToastMessage> existingToastMessages =
           context.ToastMessage
             .Where(t => t.ToastType == "Error");
 
@@ -443,14 +443,14 @@ namespace Echoglossian
 
     public void LoadAllOtherToasts()
     {
-      using var context = new EchoglossianDbContext(this.configDir);
+      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
       this.OtherToastsCache = new List<ToastMessage>();
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbOtherToastListQueryOperationsLog.txt", append: true);
 #endif
       try
       {
-        var existingToastMessages =
+        IQueryable<ToastMessage> existingToastMessages =
           context.ToastMessage
             .Where(t => t.ToastType == "NonError");
 

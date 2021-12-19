@@ -4,17 +4,6 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
-        <member name="M:Echoglossian.Echoglossian.#ctor(Dalamud.Plugin.DalamudPluginInterface,Dalamud.Game.Framework,Dalamud.Game.Command.CommandManager,Dalamud.Game.Gui.GameGui,Dalamud.Game.Gui.Toast.ToastGui,Dalamud.Game.ClientState.ClientState)">
-            <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian" /> class.
-            </summary>
-            <param name="dalamudPluginInterface">Plugin Interface.</param>
-            <param name="pframework">Game Framework.</param>
-            <param name="pCommandManager">Command Manager.</param>
-            <param name="pGameGui">Game Gui object.</param>
-            <param name="pToastGui">Toast Gui Object.</param>
-            <param name="pClientState">This class represents the state of the game client at the time of access.</param>
-        </member>
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
         </member>
@@ -33,12 +22,12 @@
             <returns>Returns the translated text passed in the call parameter.</returns>
             <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps.</exception>
         </member>
-        <member name="M:Echoglossian.Echoglossian.Language.#ctor(System.String,System.String,System.String,System.String,System.Int32[])">
+        <member name="M:Echoglossian.Echoglossian.LanguageInfo.#ctor(System.String,System.String,System.String,System.String,System.Int32[])">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.Language"/> class.
+            Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.LanguageInfo"/> class.
             </summary>
-            <param name="code">Iso Language Code.</param>
-            <param name="languageName">Language name.</param>
+            <param name="code">Iso LanguageInfo Code.</param>
+            <param name="languageName">LanguageInfo name.</param>
             <param name="fontName">Necessary font name.</param>
             <param name="exclusiveCharsToAdd">List of all the needed chars to be added.</param>
             <param name="supportedEngines">Supported translation engines.</param>
@@ -279,7 +268,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageSelectLabelText">
             <summary>
-              Looks up a localized string similar to Language to translate to.
+              Looks up a localized string similar to LanguageInfo to translate to.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.logo">
@@ -399,7 +388,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.PluginInterfaceLanguageSelectorText">
             <summary>
-              Looks up a localized string similar to Config Window Language:.
+              Looks up a localized string similar to Config Window LanguageInfo:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.prttws">
@@ -410,6 +399,11 @@
         <member name="P:Echoglossian.Properties.Resources.QRCodeInstructionsText">
             <summary>
               Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ResetConfigsButton">
+            <summary>
+              Looks up a localized string similar to Reset Settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SaveCloseButtonLabel">
@@ -425,6 +419,11 @@
         <member name="P:Echoglossian.Properties.Resources.SettingsForGTransText">
             <summary>
               Looks up a localized string similar to Settings for Google Translate:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsReset">
+            <summary>
+              Looks up a localized string similar to Echoglossian settings reset to default successfully!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SwapTranslationTextToggle">

@@ -18,17 +18,17 @@ namespace Echoglossian
 
     public bool PluginAssetsDownloaded = false;
 
-    public int Lang { get; set; } = 16;
+    public int Lang { get; set; } = 28;
 
     public int FontSize = 24;
 
     public bool ShowInCutscenes = true;
 
-    public bool TranslateBattleTalk = true;
-    public bool TranslateTalk = true;
+    public bool TranslateBattleTalk = false;
+    public bool TranslateTalk = false;
     public bool TranslateTalkSubtitle = false;
     public bool TranslateToast = false;
-    public bool TranslateNpcNames = true;
+    public bool TranslateNpcNames = false;
     public bool TranslateErrorToast = false;
     public bool TranslateQuestToast = false;
     public bool TranslateAreaToast = false;
@@ -36,14 +36,14 @@ namespace Echoglossian
     public bool TranslateWideTextToast = false;
     public bool TranslateYesNoScreen = false;
     public bool TranslateCutSceneSelectString = false;
-    public bool TranslateSelectString = true;
-    public bool TranslateSelectOk = true;
+    public bool TranslateSelectString = false;
+    public bool TranslateSelectOk = false;
     public bool TranslateToDoList = false;
     public bool TranslateScenarioTree = false;
     public bool TranslateTooltips = false;
     public bool TranslateJournal = false;
 
-    public bool UseImGui = false; //deprecated
+    // public bool UseImGui = false; //deprecated
     public bool UseImGuiForTalk = false;
     public bool UseImGuiForBattleTalk = false;
     public bool UseImGuiForToasts = false;
@@ -63,11 +63,10 @@ namespace Echoglossian
     public Vector3 OverlayBattleTalkTextColor = new(1.0f, 1.0f, 1.0f);
     public float FontScale = 1;
     public float BattleTalkFontScale = 1;
-    public int Version { get; set; } = 3;
+
+    public int Version { get; set; } = 4;
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
-
-
   }
 }

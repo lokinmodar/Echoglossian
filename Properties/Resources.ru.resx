@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Выбор всплываемых сообщений в игре для перевода</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Сброс настроек</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Настройки Echoglossian успешно сбрасываются по умолчанию!</value>
+  </data>
 </root>

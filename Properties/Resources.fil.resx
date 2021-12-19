@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Pumili kung aling mga mensahe ng Toast toast ang isasalin</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>I-reset ang mga Setting</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian settings reset sa default matagumpay!</value>
+  </data>
 </root>

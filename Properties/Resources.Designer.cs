@@ -306,7 +306,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Language to translate to.
+        ///   Looks up a localized string similar to LanguageInfo to translate to.
         /// </summary>
         public static string LanguageSelectLabelText {
             get {
@@ -525,7 +525,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Config Window Language:.
+        ///   Looks up a localized string similar to Config Window LanguageInfo:.
         /// </summary>
         public static string PluginInterfaceLanguageSelectorText {
             get {
@@ -553,6 +553,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset Settings.
+        /// </summary>
+        public static string ResetConfigsButton {
+            get {
+                return ResourceManager.GetString("ResetConfigsButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save and Close Config Window.
         /// </summary>
         public static string SaveCloseButtonLabel {
@@ -576,6 +585,15 @@ namespace Echoglossian.Properties {
         public static string SettingsForGTransText {
             get {
                 return ResourceManager.GetString("SettingsForGTransText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Echoglossian settings reset to default successfully!.
+        /// </summary>
+        public static string SettingsReset {
+            get {
+                return ResourceManager.GetString("SettingsReset", resourceCulture);
             }
         }
         

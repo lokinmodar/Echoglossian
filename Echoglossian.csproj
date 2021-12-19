@@ -52,6 +52,7 @@
     <None Remove="Font\NotoSans-Medium-Custom2.otf" />
     <None Remove="Font\NotoSans-Medium.ttf" />
     <None Remove="Font\NotoSans-Regular.ttf" />
+    <None Remove="Font\NotoSans-SemiBold.ttf" />
     <None Remove="Font\NotoSansArabic-Medium.ttf" />
     <None Remove="Font\NotoSansArmenian-Medium.ttf" />
     <None Remove="Font\NotoSansBengali-Medium.ttf" />
@@ -79,7 +80,6 @@
     <None Remove="Font\NotoSansTamil-Medium.ttf" />
     <None Remove="Font\NotoSansTelugu-Medium.ttf" />
     <None Remove="Font\NotoSansThai-Medium.ttf" />
-    <None Remove="Font\OpenSans-Medium.ttf" />
     <None Remove="images\icon.png" />
     <None Remove="images\logo.png" />
     <None Remove="minfilia.ico" />
@@ -118,6 +118,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSans-Medium.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Font\NotoSans-SemiBold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansArabic-Medium.ttf">
@@ -199,9 +202,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Font\NotoSansThai-Medium.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Font\OpenSans-Medium.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="images\icon.png">

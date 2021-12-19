@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Vyberte, které herní informační zprávy chcete přeložit</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Obnovit nastavení</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian nastavení obnovit na výchozí úspěšně!</value>
+  </data>
 </root>

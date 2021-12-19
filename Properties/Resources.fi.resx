@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Käännettävän pelinsisäisen paahtoleipäviestin valitseminen</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Palauta asetukset</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Kaiku-asetukset palautetaan oletusasetuksiksi onnistuneesti!</value>
+  </data>
 </root>

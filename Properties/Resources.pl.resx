@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Wybieranie wyskakujących wiadomości w grze do przetłumaczenia</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Resetowanie ustawień</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian settings reset to default successfully!</value>
+  </data>
 </root>

@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>选择要翻译的游戏内吐司消息</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>复位设置</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian 设置已成功重置为默认值！</value>
+  </data>
 </root>

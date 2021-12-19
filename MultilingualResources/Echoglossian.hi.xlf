@@ -321,6 +321,14 @@
           <source>Select which in-game Toast messages to translate</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">अनुवाद करने के लिए कौन से इन-गेम टोस्ट संदेशों का चयन करें</target>
         </trans-unit>
+        <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
+          <source>Reset Settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">रीसेट सेटिंग्स</target>
+        </trans-unit>
+        <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
+          <source>Echoglossian settings reset to default successfully!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">इकोग्लोसियन सेटिंग्स सफलतापूर्वक डिफ़ॉल्ट करने के लिए रीसेट!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

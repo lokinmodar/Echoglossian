@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Wählen Sie aus, welche Toast-Nachrichten im Spiel übersetzt werden sollen</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Einstellungen zurücksetzen</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossianische Einstellungen wurden erfolgreich auf die Standardeinstellungen zurückgesetzt!</value>
+  </data>
 </root>

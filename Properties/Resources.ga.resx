@@ -249,4 +249,10 @@
   <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Roghnaigh cé na teachtaireachtaí Toast sa chluiche le haistriú</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Athshocraigh socruithe</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Athshocraigh socruithe echoglossian go réamhshocraithe go rathúil!</value>
+  </data>
 </root>

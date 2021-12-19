@@ -222,4 +222,10 @@
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
     <value>Usar superposición para mostrar las traducciones de Toasts</value>
   </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Restablecer configuración</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>¡La configuración de Echoglossian se restablece a los valores predeterminados correctamente!</value>
+  </data>
 </root>

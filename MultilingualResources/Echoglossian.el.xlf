@@ -321,6 +321,14 @@
           <source>Select which in-game Toast messages to translate</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Επιλέξτε ποια μηνύματα toast στο παιχνίδι θα μεταφράσετε</target>
         </trans-unit>
+        <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
+          <source>Reset Settings</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Επαναφορά ρυθμίσεων</target>
+        </trans-unit>
+        <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
+          <source>Echoglossian settings reset to default successfully!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Οι ρυθμίσεις Echoglossian επαναφέρουν την προεπιλογή με επιτυχία!</target>
+        </trans-unit>
       </group>
     </body>
   </file>
