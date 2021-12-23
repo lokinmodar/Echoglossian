@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Dalamud.Logging;
 using DeepL;
 
@@ -12,7 +13,7 @@ namespace Echoglossian
   {
     public static async Task DeeplTranslateAsync(string[] arguments)
     {
-      using DeepLClient client = new ("<authentication key>", useFreeApi: false);
+      using DeepLClient client = new("<authentication key>", useFreeApi: false);
       try
       {
         Translation translation = await client.TranslateAsync(
@@ -27,6 +28,5 @@ namespace Echoglossian
         PluginLog.LogWarning($"An error occurred: {exception.Message}");
       }
     }
-
   }
 }

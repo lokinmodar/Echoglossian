@@ -306,7 +306,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to LanguageInfo to translate to.
+        ///   Looks up a localized string similar to Language to translate to.
         /// </summary>
         public static string LanguageSelectLabelText {
             get {

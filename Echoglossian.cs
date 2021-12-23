@@ -55,8 +55,8 @@ namespace Echoglossian
 
     private const string SlashCommand = "/eglo";
     private string configDir;
-    private static int languageInt = 16;
-    private static int fontSize = 20;
+    private static int languageInt = 28;
+    private static int fontSize = 24;
     private static int chosenTransEngine;
     private static string transEngineName;
 
@@ -97,15 +97,20 @@ namespace Echoglossian
 
     public Echoglossian()
     {
-      sanitizer = PluginInterface.Sanitizer as Sanitizer;
-
-      langDict = this.LanguagesDictionary;
-      identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+      this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
+      this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
       CommandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
       {
         HelpMessage = Resources.HelpMessage,
       });
+
+
+      sanitizer = PluginInterface.Sanitizer as Sanitizer;
+
+      langDict = this.LanguagesDictionary;
+      identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
@@ -113,8 +118,7 @@ namespace Echoglossian
 
       this.CreateOrUseDb();
 
-      this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
-      this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
+
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
       this.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
@@ -184,6 +188,8 @@ namespace Echoglossian
       ToastGui.ErrorToast += this.OnErrorToast;
       ToastGui.QuestToast += this.OnQuestToast;
 
+      //this.HandleTalkAsync();
+
       // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
       Common.Functions.Talk.OnTalk += this.GetTalk;
@@ -205,7 +211,6 @@ namespace Echoglossian
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleTalk;
       // Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip -= this.TooltipsOnActionTooltip;
-      Common?.Functions.Dispose();
       Common?.Dispose();
 
       ToastGui.Toast -= this.OnToast;

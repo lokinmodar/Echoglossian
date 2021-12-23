@@ -104,7 +104,6 @@ namespace Echoglossian
 
           try
           {
-
             string messageToTranslate = Marshal.PtrToStringUTF8(new IntPtr(textNode->NodeText.StringPtr));
 
             if (!this.configuration.UseImGuiForToasts)
@@ -198,7 +197,6 @@ namespace Echoglossian
 
       if (errorToastByName != IntPtr.Zero)
       {
-
         AtkUnitBase* errorToastByNameMaster = (AtkUnitBase*)errorToastByName;
 
         // 2729DE6EDE0
@@ -218,7 +216,6 @@ namespace Echoglossian
           this.errorToastTranslationTextDimensions.Y = errorToastByNameMaster->RootNode->Height * errorToastByNameMaster->Scale;
           this.errorToastTranslationTextPosition.X = errorToastByNameMaster->RootNode->X;
           this.errorToastTranslationTextPosition.Y = errorToastByNameMaster->RootNode->Y;
-
         }
         else
         {

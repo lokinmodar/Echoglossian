@@ -119,6 +119,7 @@
         <trans-unit id="LanguageSelectLabelText" translate="yes" xml:space="preserve">
           <source>Language to translate to</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Langue vers laquelle traduire</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="logo" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
           <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
@@ -214,8 +215,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Choisissez la langue de la fenêtre de configuration du plugin</target>
         </trans-unit>
         <trans-unit id="PluginInterfaceLanguageSelectorText" translate="yes" xml:space="preserve">
-          <source>Config Window Language:</source>
+          <source>Config Window LanguageInfo:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Langue de la fenêtre de configuration :</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="prttws" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
           <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>

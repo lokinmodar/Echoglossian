@@ -268,7 +268,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageSelectLabelText">
             <summary>
-              Looks up a localized string similar to LanguageInfo to translate to.
+              Looks up a localized string similar to Language to translate to.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.logo">

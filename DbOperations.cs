@@ -33,6 +33,8 @@ namespace Echoglossian
     {
       using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
       context.Database.MigrateAsync();
+
+      PluginLog.LogFatal($"Config dir path: {this.configDir}");
     }
 
     public bool FindTalkMessage(TalkMessage talkMessage)
@@ -45,7 +47,7 @@ namespace Echoglossian
       try
       {
 #if DEBUG
-        PluginLog.Error(this.configDir);
+        PluginLog.Verbose(this.configDir);
         logStream.WriteLineAsync($"Before Talk Messages table query: {talkMessage}");
 #endif
 

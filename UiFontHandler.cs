@@ -44,6 +44,8 @@ namespace Echoglossian
 
       string specialFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}";
       string fontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.fontFileName}";
+      string symbolsFontFilePath =
+        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
       string dummyFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
 #if DEBUG
       PluginLog.LogWarning("Inside LoadFont method");
@@ -72,6 +74,24 @@ namespace Echoglossian
             {
               builder.AddChar(c);
             }
+
+            /*var fontPathGame = Path.Combine(dalamud.AssetDirectory.FullName, "UIRes", "gamesym.ttf");
+
+            if (!File.Exists(fontPathGame))
+              ShowFontError(fontPathGame);
+
+            var gameRangeHandle = GCHandle.Alloc(
+              new ushort[]
+              {
+                0xE020,
+                0xE0DB,
+                0,
+              },
+              GCHandleType.Pinned);
+
+            ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathGame, 17.0f, fontConfig, gameRangeHandle.AddrOfPinnedObject());*/
+
+
 
             builder.BuildRanges(out ImVector ranges);
 
@@ -122,18 +142,7 @@ namespace Echoglossian
               MergeMode = true,
             };
 
-            ImFontConfigPtr fontConfig2 = new ImFontConfigPtr(nativeConfig)
-            {
-              OversampleH = 2,
-              OversampleV = 2,
-              MergeMode = true,
-            };
 
-            ImFontConfigPtr fontConfig3 = new ImFontConfigPtr(nativeConfig)
-            {
-              OversampleH = 2,
-              OversampleV = 2,
-            };
 
             fixed (ushort* ptr = &arr[0])
             {
@@ -141,15 +150,19 @@ namespace Echoglossian
               {
                 ImGui.GetIO().Fonts.AddFontFromFileTTF(dummyFontFilePath, this.configuration.FontSize,
                 null);
+                ImGui.GetIO().Fonts.AddFontFromFileTTF(symbolsFontFilePath, this.configuration.FontSize,
+                  fontConfig);
                 ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFilePath, this.configuration.FontSize,
-                fontConfig2, new IntPtr(ptr));
+                fontConfig, new IntPtr(ptr));
                 this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(specialFontFilePath, this.configuration.FontSize,
                   fontConfig, new IntPtr(ptr));
               }
               else
               {
                 ImGui.GetIO().Fonts.AddFontFromFileTTF(dummyFontFilePath, this.configuration.FontSize,
-                  fontConfig2, new IntPtr(ptr));
+                  fontConfig, new IntPtr(ptr));
+                ImGui.GetIO().Fonts.AddFontFromFileTTF(symbolsFontFilePath, this.configuration.FontSize,
+                  fontConfig);
                 this.UiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFilePath, this.configuration.FontSize,
                   fontConfig, new IntPtr(ptr));
               }
@@ -184,6 +197,9 @@ namespace Echoglossian
       PluginLog.LogVerbose("Inside LoadConfigFont method");
       string fontFile = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
       string dummyFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-SemiBold.ttf";
+      string symbolsFontFilePath =
+        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
+
 
       PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 #else
@@ -237,15 +253,13 @@ namespace Echoglossian
               OversampleV = 2,
               MergeMode = true,
             };
-            ImFontConfigPtr fontConfig2 = new ImFontConfigPtr(nativeConfig)
-            {
-              OversampleH = 2,
-              OversampleV = 2,
-            };
+
 
             fixed (ushort* ptr = &arr[0])
             {
               ImGui.GetIO().Fonts.AddFontFromFileTTF(dummyFontFilePath, 17.0f, null, new IntPtr(ptr));
+              ImGui.GetIO().Fonts.AddFontFromFileTTF(symbolsFontFilePath, this.configuration.FontSize,
+                fontConfig);
               this.ConfigUiFont = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, 17.0f,
                   fontConfig, new IntPtr(ptr));
             }

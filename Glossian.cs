@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -93,12 +94,12 @@ namespace Echoglossian
           parsedText = sanitizedString;
         }
 
-        parsedText = parsedText.Replace("\u2500", "\u002D");
-        parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
-        parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
-        parsedText = parsedText.Replace("\u201C", "\u0022");
-        parsedText = parsedText.Replace("\u201D", "\u0022");
-        parsedText = parsedText.Replace("\u200B", string.Empty);
+        /*        parsedText = parsedText.Replace("\u2500", "\u002D");
+                parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
+                parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
+                parsedText = parsedText.Replace("\u201C", "\u0022");
+                parsedText = parsedText.Replace("\u201D", "\u0022");
+                parsedText = parsedText.Replace("\u200B", string.Empty);*/
 
         string detectedLanguage = LangIdentify(parsedText);
         if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical")
@@ -123,17 +124,21 @@ namespace Echoglossian
 
         JObject parsed = JObject.Parse(read);
 
-        System.Collections.Generic.List<string> dialogueSentenceList = parsed.SelectTokens("sentences[*].trans").Select(i => (string)i).ToList();
+        List<string> dialogueSentenceList = parsed.SelectTokens("sentences[*].trans").Select(i => (string)i).ToList();
 
         string finalDialogueText =
           dialogueSentenceList.Aggregate(string.Empty, (current, dialogueSentence) => current + dialogueSentence);
 
-        finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
+        /* finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
 
-        finalDialogueText = finalDialogueText.Replace("\u201C", "\u0022");
-        finalDialogueText = finalDialogueText.Replace("\u201D", "\u0022");
-        finalDialogueText = startingEllipsis + finalDialogueText;
-        finalDialogueText = finalDialogueText.Replace("...", ". . .");
+         finalDialogueText = finalDialogueText.Replace("\u201C", "\u0022");
+         finalDialogueText = finalDialogueText.Replace("\u201D", "\u0022");
+         finalDialogueText = startingEllipsis + finalDialogueText;
+         finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
+
+        finalDialogueText = !startingEllipsis.IsNullOrEmpty()
+         ? startingEllipsis + finalDialogueText
+         : finalDialogueText;
 
         JValue src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");

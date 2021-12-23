@@ -202,7 +202,7 @@
     <value>Which language to translate the in-game dialogue boxes to.</value>
   </data>
   <data name="LanguageSelectLabelText" xml:space="preserve">
-    <value>LanguageInfo to translate to</value>
+    <value>Language to translate to</value>
   </data>
   <data name="logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

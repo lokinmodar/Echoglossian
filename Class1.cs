@@ -15,8 +15,6 @@ namespace Echoglossian
 
     public void ParseUi()
     {
-
     }
-
   }
 }
