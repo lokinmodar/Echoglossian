@@ -9,7 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
@@ -31,6 +31,10 @@ namespace Echoglossian
   // TODO: implement multiple fallback translation engines.
   public partial class Echoglossian : IDalamudPlugin
   {
+
+    [PluginService]
+    public static DataManager DManager { get; private set; }
+
     [PluginService]
     public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
 
@@ -98,6 +102,7 @@ namespace Echoglossian
     public Echoglossian()
     {
       this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
+      
       this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
       CommandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
@@ -195,6 +200,11 @@ namespace Echoglossian
       Common.Functions.Talk.OnTalk += this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       PluginInterface.UiBuilder.Draw += this.BuildUi;
+
+      if (ClientState.IsLoggedIn)
+      {
+        this.ParseUi();
+      }
     }
 
 
