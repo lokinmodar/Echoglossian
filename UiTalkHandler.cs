@@ -51,33 +51,35 @@ namespace Echoglossian
 
           messageTranslation = Translate(dialogue?.OriginalTalkMessage);
           PluginLog.LogWarning($"Message translation async: {messageTranslation}");
-          IntPtr talk = GameGui.GetAddonByName("Talk", 1);
-          if (talk != IntPtr.Zero)
-          {
-            unsafe
-            {
-              AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
-              if (talkMaster->IsVisible)
-              {
-                AtkTextNode* textNode = null;
-                for (int i = 0; i < talkMaster->UldManager.NodeListCount; i++)
-                {
-                  if (talkMaster->UldManager.NodeList[i]->Type != NodeType.Text)
-                  {
-                    continue;
-                  }
-
-                  textNode = (AtkTextNode*)talkMaster->UldManager.NodeList[i];
-                  break;
-                }
-
-                textNode->SetText(messageTranslation);
-              }
-            }
-          }
         }
       }
     }
+
+
+/*    IntPtr talk = GameGui.GetAddonByName("Talk", 1);
+      if (talk != IntPtr.Zero)
+    {
+      unsafe
+      {
+        AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
+        if (talkMaster->IsVisible)
+        {
+          AtkTextNode* textNode = null;
+          for (int i = 0; i<talkMaster->UldManager.NodeListCount; i++)
+          {
+            if (talkMaster->UldManager.NodeList[i]->Type != NodeType.Text)
+            {
+              continue;
+            }
+
+            textNode = (AtkTextNode*) talkMaster->UldManager.NodeList[i];
+            break;
+          }
+
+          textNode->SetText(messageTranslation);
+        }
+      }
+    }*/
 
     private unsafe void TalkHandler(string addonName, int index)
     {

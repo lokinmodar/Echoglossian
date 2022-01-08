@@ -31,7 +31,6 @@ namespace Echoglossian
   // TODO: implement multiple fallback translation engines.
   public partial class Echoglossian : IDalamudPlugin
   {
-
     [PluginService]
     public static DataManager DManager { get; private set; }
 
