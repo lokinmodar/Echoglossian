@@ -17,7 +17,6 @@ namespace Echoglossian
   public partial class Echoglossian
   {
 
-    
     public HashSet<string> UiElementsLabels = new ();
 
     public void ParseUi()
@@ -32,7 +31,7 @@ namespace Echoglossian
         foreach (var a in uiStuffz)
         {
           this.UiElementsLabels.Add(a.Text.ToString());
-          PluginLog.LogError($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+          //PluginLog.LogError($"Sheet row: {a.RowId}: {a.Text.ToString()}");
         }
       }
     }

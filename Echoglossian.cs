@@ -101,7 +101,7 @@ namespace Echoglossian
     public Echoglossian()
     {
       this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
-      
+
       this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
       CommandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
@@ -279,7 +279,7 @@ namespace Echoglossian
 
                 this.TalkHandler("Talk", 1);
 
-                // this.TalkSubtitleHandler("TalkSubtitle", 1);
+                this.TalkSubtitleHandler("TalkSubtitle", 1);
                 this.BattleTalkHandler("_BattleTalk", 1);
 
                 this.TextErrorToastHandler("_TextError", 1);

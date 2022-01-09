@@ -1,4 +1,4 @@
-﻿// <copyright file="UiTalkHandler.cs" company="lokinmodar">
+﻿// <copyright file="UiTalkSubtitleHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -43,6 +43,7 @@ namespace Echoglossian
         if (tNode == null)
         {
           PluginLog.LogWarning("Node Empty");
+          return;
         }
         else
         {
