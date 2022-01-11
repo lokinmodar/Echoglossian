@@ -80,7 +80,6 @@ namespace Echoglossian
     private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
     private readonly SemaphoreSlim questToastTranslationSemaphore;
 
-
     private readonly TextureWrap pixImage;
     private readonly TextureWrap choiceImage;
     private readonly TextureWrap cutsceneChoiceImage;
@@ -97,7 +96,6 @@ namespace Echoglossian
 
     public List<ToastMessage> OtherToastsCache { get; set; }
 
-
     public Echoglossian()
     {
       this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
@@ -109,20 +107,16 @@ namespace Echoglossian
         HelpMessage = Resources.HelpMessage,
       });
 
-
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
       langDict = this.LanguagesDictionary;
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
-
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
       Resolver.Initialize();
 
       this.CreateOrUseDb();
-
-
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
       this.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
@@ -192,7 +186,7 @@ namespace Echoglossian
       ToastGui.ErrorToast += this.OnErrorToast;
       ToastGui.QuestToast += this.OnQuestToast;
 
-      //this.HandleTalkAsync();
+      this.HandleTalkAsync();
 
       // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
@@ -200,12 +194,11 @@ namespace Echoglossian
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       PluginInterface.UiBuilder.Draw += this.BuildUi;
 
-      if (ClientState.IsLoggedIn)
+      /*if (ClientState.IsLoggedIn)
       {
         this.ParseUi();
-      }
+      }*/
     }
-
 
     /// <inheritdoc />
     public void Dispose()

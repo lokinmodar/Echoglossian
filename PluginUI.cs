@@ -148,7 +148,6 @@ namespace Echoglossian
               this.SaveConfig();
             }
 
-
             ImGui.EndGroup();
           }
           else
@@ -179,7 +178,6 @@ namespace Echoglossian
           {
             this.SaveConfig();
           }
-
 
           if (ImGui.Checkbox(
               Resources.TranslateNpcNamesToggle,
@@ -315,7 +313,6 @@ namespace Echoglossian
               this.configuration.UseImGuiForBattleTalk)
           {
             ImGui.Text(Resources.ImguiAdjustmentsLabel);
-
 
             if (ImGui.SliderFloat(
               Resources.OverlayFontScaleLabel,

@@ -37,24 +37,34 @@ namespace Echoglossian
       PluginLog.Log("Translation Engine Started");
       while (this.configuration.TranslateTalk)
       {
+        //PluginLog.LogWarning("3");
         if (this._talkMessageQueue.Count > 0)
         {
+          PluginLog.LogWarning("4");
           this._talkMessageQueue.TryDequeue(out TalkMessage dialogue);
           this.talkTracker = true;
           string nameTranslation;
           string messageTranslation;
           if (this.configuration.TranslateNpcNames)
           {
+            PluginLog.LogWarning("5");
             nameTranslation = Translate(dialogue?.SenderName);
             PluginLog.LogWarning($"Name translation async: {nameTranslation}");
+            dialogue.TranslatedSenderName = nameTranslation;
+            PluginLog.LogWarning("6");
           }
-
+          PluginLog.LogWarning("7");
           messageTranslation = Translate(dialogue?.OriginalTalkMessage);
-          PluginLog.LogWarning($"Message translation async: {messageTranslation}");
+          PluginLog.LogWarning(
+            $"Message translation async: {messageTranslation}");
+          PluginLog.LogWarning("8");
+          dialogue.TranslatedTalkMessage = messageTranslation;
+          PluginLog.LogWarning("9");
+          this._talkConcurrentDictionary.TryAdd(0, dialogue);
+          PluginLog.LogWarning("10");
         }
       }
     }
-
 
     /*    IntPtr talk = GameGui.GetAddonByName("Talk", 1);
           if (talk != IntPtr.Zero)
@@ -109,8 +119,6 @@ namespace Echoglossian
       }
     }
 
-
-
     private void GetTalk(ref SeString name, ref SeString text, ref TalkStyle style)
     {
       if (!this.configuration.TranslateTalk)
@@ -147,6 +155,30 @@ namespace Echoglossian
         {
           if (!this.configuration.UseImGuiForTalk)
           {
+#if DEBUG
+            //tentative async
+            PluginLog.LogWarning("1");
+            this._talkMessageQueue.Enqueue(new TalkMessage(nameToTranslate, textToTranslate, LangIdentify(textToTranslate),
+                LangIdentify(nameToTranslate), string.Empty, string.Empty, langDict[languageInt].Code,
+                this.configuration.ChosenTransEngine, DateTime.Now,
+                DateTime.Now));
+
+            while (this._talkConcurrentDictionary.IsEmpty)
+            {
+              PluginLog.LogWarning("2");
+              name = Resources.WaitingForTranslation;
+              text = Resources.WaitingForTranslation;
+            }
+            PluginLog.LogWarning("11");
+            this._talkConcurrentDictionary.TryRemove(0, out TalkMessage dialogue);
+            PluginLog.LogWarning("12");
+            name = dialogue.TranslatedSenderName;
+            text = dialogue.TranslatedTalkMessage;
+            PluginLog.LogWarning("13");
+
+            // end tentative
+#else
+            PluginLog.LogWarning("14");
             string translatedText = Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
 #if DEBUG
@@ -241,14 +273,14 @@ namespace Echoglossian
                   // TODO: check image creation logic for RTL
                   /*                  if (this.configuration.Lang == 2)
                                     {
-                  #if DEBUG
+#if DEBUG
                                       PluginLog.LogWarning("Lang is 2!");
-                  #endif
+#endif
                                       var textAsImage = this.DrawText(this.currentTalkTranslation);
                                       var textImageAsBytes = this.TranslationImageConverter(textAsImage);
-                  #if DEBUG
+#if DEBUG
                                       PluginLog.LogWarning($"image bytes: {textImageAsBytes}");
-                  #endif
+#endif
                                       this.currentTalkTranslationTexture =
                                         pluginInterface.UiBuilder.LoadImage(textImageAsBytes);
                                     }*/
@@ -357,7 +389,7 @@ namespace Echoglossian
                   this.talkTranslationSemaphore.Release();
                   /*#if DEBUG
                                     PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
-                  #endif*/
+                  //#endif*/
                   /*if (this.currentNameTranslation != Resources.WaitingForTranslation &&
                       this.currentTalkTranslation != Resources.WaitingForTranslation)
                   {
@@ -502,12 +534,14 @@ namespace Echoglossian
               name = this.FoundTalkMessage.TranslatedSenderName;
               text = this.FoundTalkMessage.TranslatedTalkMessage;
             }
+#endif
           }
+
         }
-      }
-      catch (Exception e)
-      {
-        PluginLog.Log("Exception: " + e.StackTrace);
+        }
+        catch (Exception e)
+        {
+PluginLog.Log("Exception: " + e.StackTrace);
         throw;
       }
     }

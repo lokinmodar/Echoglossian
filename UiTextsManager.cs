@@ -12,15 +12,24 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
+//using FrameworkI = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
+
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
 
-    public HashSet<string> UiElementsLabels = new ();
+    public HashSet<string> UiElementsLabels = new();
 
     public void ParseUi()
     {
+      /*      unsafe
+            {
+              var ptr =
+                (IntPtr) FrameworkI.Instance()->UIModule->GetExcelModule()->
+                  GetSheetByName("Addon");
+            }*/
+
       ExcelSheet<Addon> uiStuffz = DManager.GetExcelSheet<Addon>(ClientState.ClientLanguage);
 
       var addonList = uiStuffz?.ToList();
@@ -37,3 +46,4 @@ namespace Echoglossian
     }
   }
 }
+
