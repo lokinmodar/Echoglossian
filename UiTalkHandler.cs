@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
+using Dalamud.Memory;
 using Dalamud.Utility;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
@@ -25,13 +26,14 @@ namespace Echoglossian
     public bool talkTracker { get; set; } = false;
 
     private ConcurrentQueue<TalkMessage> _talkMessageQueue = new();
+    private ConcurrentQueue<TalkMessage> _translatedTalkMessageQueue = new();
     private ConcurrentDictionary<int, TalkMessage> _talkConcurrentDictionary = new();
     private void HandleTalkAsync()
     {
       Thread t = new(new ThreadStart(this.TalkProc));
       t.Start();
     }
-
+    //TODO: clear queues before use!
     public void TalkProc()
     {
       PluginLog.Log("Translation Engine Started");
@@ -60,7 +62,7 @@ namespace Echoglossian
           PluginLog.LogWarning("8");
           dialogue.TranslatedTalkMessage = messageTranslation;
           PluginLog.LogWarning("9");
-          this._talkConcurrentDictionary.TryAdd(0, dialogue);
+          this._translatedTalkMessageQueue.Enqueue(dialogue);
           PluginLog.LogWarning("10");
         }
       }
@@ -99,11 +101,60 @@ namespace Echoglossian
         AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
         if (talkMaster->IsVisible)
         {
-          this.talkDisplayTranslation = true;
-          this.talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
-          this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
-          this.talkTextPosition.X = talkMaster->RootNode->X;
-          this.talkTextPosition.Y = talkMaster->RootNode->Y;
+          if (this.configuration.UseImGuiForTalk)
+          {
+            this.talkDisplayTranslation = true;
+            this.talkTextDimensions.X =
+              talkMaster->RootNode->Width * talkMaster->Scale;
+            this.talkTextDimensions.Y =
+              talkMaster->RootNode->Height * talkMaster->Scale;
+            this.talkTextPosition.X = talkMaster->RootNode->X;
+            this.talkTextPosition.Y = talkMaster->RootNode->Y;
+          }
+          else
+          {
+            AtkTextNode* tempTextNode = null;
+            PluginLog.LogWarning("11");
+            this._translatedTalkMessageQueue.TryDequeue(out TalkMessage dialogue);
+            PluginLog.LogWarning("12");
+            for (int i = 0; i < talkMaster->UldManager.NodeListCount; i++)
+            {
+              if (talkMaster->UldManager.NodeList[i]->Type != NodeType.Text)
+              {
+                continue;
+              }
+
+
+              // use marshal whatever to read string, compare if equal to original. if it is, replace text.
+              tempTextNode = (AtkTextNode*)talkMaster->UldManager.NodeList[i];
+
+              var nodeText = MemoryHelper.ReadString((IntPtr)tempTextNode->NodeText.StringPtr, (int)tempTextNode->NodeText.StringLength);
+              PluginLog.LogError(tempTextNode->NodeText.ToString() ?? "sem nada...");
+              /*tempTextNode->SetText(
+                "What is a man? A miserable little pile of secrets. But enough talk… Have at you!");*/
+
+              /*if (Marshal.PtrToStringUTF8(
+                    new IntPtr(tempTextNode->NodeText.StringPtr)) ==
+                  dialogue.SenderName)*/
+              if (nodeText == dialogue.SenderName)
+              {
+                tempTextNode->SetText(dialogue.TranslatedSenderName);
+              }
+
+              /* if (Marshal.PtrToStringUTF8(
+                     new IntPtr(tempTextNode->NodeText.StringPtr)) ==
+                   dialogue.OriginalTalkMessage)*/
+              if (nodeText == dialogue.OriginalTalkMessage)
+              {
+                tempTextNode->SetText(dialogue.TranslatedTalkMessage);
+              }
+
+              break;
+            }
+
+            PluginLog.LogWarning("13");
+          }
+
 #if DEBUG
           // PluginLog.LogVerbose("Inside Talk Handler.");
 #endif
@@ -163,18 +214,23 @@ namespace Echoglossian
                 this.configuration.ChosenTransEngine, DateTime.Now,
                 DateTime.Now));
 
-            while (this._talkConcurrentDictionary.IsEmpty)
+            if (this._translatedTalkMessageQueue.IsEmpty)
             {
               PluginLog.LogWarning("2");
-              name = Resources.WaitingForTranslation;
-              text = Resources.WaitingForTranslation;
+              //name = Resources.WaitingForTranslation;
+              //text = Resources.WaitingForTranslation;
             }
-            PluginLog.LogWarning("11");
-            this._talkConcurrentDictionary.TryRemove(0, out TalkMessage dialogue);
-            PluginLog.LogWarning("12");
-            name = dialogue.TranslatedSenderName;
-            text = dialogue.TranslatedTalkMessage;
-            PluginLog.LogWarning("13");
+            else
+            {
+              PluginLog.LogWarning("21");
+              this._translatedTalkMessageQueue.TryDequeue(out TalkMessage dialogue);
+              PluginLog.LogWarning("22");
+              name = dialogue?.TranslatedSenderName;
+              text = dialogue?.TranslatedTalkMessage;
+              PluginLog.LogWarning("23");
+            }
+            
+
 
             // end tentative
 #else

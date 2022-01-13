@@ -108,13 +108,12 @@ namespace Echoglossian
       });
 
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
+      Resolver.Initialize();
 
       langDict = this.LanguagesDictionary;
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
-
-      Resolver.Initialize();
 
       this.CreateOrUseDb();
 
