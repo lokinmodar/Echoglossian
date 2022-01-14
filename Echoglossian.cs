@@ -113,7 +113,7 @@ namespace Echoglossian
       langDict = this.LanguagesDictionary;
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
-      Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
+      Common = new XivCommonBase(/*Hooks.Talk | */Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
       this.CreateOrUseDb();
 

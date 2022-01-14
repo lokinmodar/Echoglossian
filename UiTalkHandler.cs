@@ -95,62 +95,100 @@ namespace Echoglossian
 
     private unsafe void TalkHandler(string addonName, int index)
     {
+      PluginLog.LogWarning("11");
+      TalkMessage translatedTalkMessage = null;
+      if (!this._translatedTalkMessageQueue.IsEmpty)
+      {
+        this._translatedTalkMessageQueue.TryDequeue(out TalkMessage dialogue);
+        translatedTalkMessage = dialogue;
+      }
+
+      PluginLog.LogWarning("12");
       IntPtr talk = GameGui.GetAddonByName(addonName, index);
       if (talk != IntPtr.Zero)
       {
         AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
         if (talkMaster->IsVisible)
         {
-          if (this.configuration.UseImGuiForTalk)
+          //AtkTextNode* tempTextNode = null;
+          AtkTextNode* nameTextNode = talkMaster->GetTextNodeById(2);
+          AtkTextNode* textTextNode = talkMaster->GetTextNodeById(3);
+          var nameNodeText = MemoryHelper.ReadString((IntPtr)nameTextNode->NodeText.StringPtr, (int)nameTextNode->NodeText.StringLength);
+
+
+
+          var textNodeText = MemoryHelper.ReadString((IntPtr)textTextNode->NodeText.StringPtr, (int)textTextNode->NodeText.StringLength);
+#if DEBUG
+          PluginLog.LogError($"Name Node text: {nameNodeText}");
+          PluginLog.LogError($"Text Node text: {textNodeText}");
+#endif
+          if ((this.configuration.TranslateNpcNames && nameNodeText.IsNullOrWhitespace()) || textNodeText.IsNullOrWhitespace())
           {
-            this.talkDisplayTranslation = true;
-            this.talkTextDimensions.X =
-              talkMaster->RootNode->Width * talkMaster->Scale;
-            this.talkTextDimensions.Y =
-              talkMaster->RootNode->Height * talkMaster->Scale;
-            this.talkTextPosition.X = talkMaster->RootNode->X;
-            this.talkTextPosition.Y = talkMaster->RootNode->Y;
+            return;
           }
-          else
+
+            this._talkMessageQueue.Enqueue(new TalkMessage(
+              nameNodeText,
+              textNodeText,
+              LangIdentify(textNodeText),
+              LangIdentify(nameNodeText),
+              string.Empty,
+              string.Empty,
+              langDict[languageInt].Code,
+              chosenTransEngine,
+              DateTime.UtcNow,
+              null));
+          
+
+          /*    for (int i = 0; i < talkMaster->UldManager.NodeListCount; i++)
+                {
+                  if (talkMaster->UldManager.NodeList[i]->Type != NodeType.Text)
+                  {
+                    continue;
+                  }
+    */
+
+          // use marshal whatever to read string, compare if equal to original. if it is, replace text.
+          //tempTextNode = (AtkTextNode*)talkMaster->UldManager.NodeList[i];
+
+          //  var nodeText = MemoryHelper.ReadString((IntPtr)tempTextNode->NodeText.StringPtr, (int)tempTextNode->NodeText.StringLength);
+          //  PluginLog.LogError($"Node text: {nodeText.ToString() ?? "sem nada..."}");
+          /*tempTextNode->SetText(
+            "What is a man? A miserable little pile of secrets. But enough talk… Have at you!");*/
+
+          /*if (Marshal.PtrToStringUTF8(
+                new IntPtr(tempTextNode->NodeText.StringPtr)) ==
+              dialogue.SenderName)*/
+          if (translatedTalkMessage != null)
           {
-            AtkTextNode* tempTextNode = null;
-            PluginLog.LogWarning("11");
-            this._translatedTalkMessageQueue.TryDequeue(out TalkMessage dialogue);
-            PluginLog.LogWarning("12");
-            for (int i = 0; i < talkMaster->UldManager.NodeListCount; i++)
+            if (this.configuration.UseImGuiForTalk)
             {
-              if (talkMaster->UldManager.NodeList[i]->Type != NodeType.Text)
+              this.talkDisplayTranslation = true;
+              this.talkTextDimensions.X =
+                talkMaster->RootNode->Width * talkMaster->Scale;
+              this.talkTextDimensions.Y =
+                talkMaster->RootNode->Height * talkMaster->Scale;
+              this.talkTextPosition.X = talkMaster->RootNode->X;
+              this.talkTextPosition.Y = talkMaster->RootNode->Y;
+            }
+            else
+            {
+              if (nameNodeText == translatedTalkMessage.SenderName)
               {
-                continue;
-              }
-
-
-              // use marshal whatever to read string, compare if equal to original. if it is, replace text.
-              tempTextNode = (AtkTextNode*)talkMaster->UldManager.NodeList[i];
-
-              var nodeText = MemoryHelper.ReadString((IntPtr)tempTextNode->NodeText.StringPtr, (int)tempTextNode->NodeText.StringLength);
-              PluginLog.LogError(tempTextNode->NodeText.ToString() ?? "sem nada...");
-              /*tempTextNode->SetText(
-                "What is a man? A miserable little pile of secrets. But enough talk… Have at you!");*/
-
-              /*if (Marshal.PtrToStringUTF8(
-                    new IntPtr(tempTextNode->NodeText.StringPtr)) ==
-                  dialogue.SenderName)*/
-              if (nodeText == dialogue.SenderName)
-              {
-                tempTextNode->SetText(dialogue.TranslatedSenderName);
+                nameTextNode->SetText(translatedTalkMessage.TranslatedSenderName);
               }
 
               /* if (Marshal.PtrToStringUTF8(
                      new IntPtr(tempTextNode->NodeText.StringPtr)) ==
                    dialogue.OriginalTalkMessage)*/
-              if (nodeText == dialogue.OriginalTalkMessage)
+              if (textNodeText == translatedTalkMessage.OriginalTalkMessage)
               {
-                tempTextNode->SetText(dialogue.TranslatedTalkMessage);
+                textTextNode->SetText(translatedTalkMessage.TranslatedTalkMessage);
               }
-
-              break;
             }
+
+            /*    break;
+              }*/
 
             PluginLog.LogWarning("13");
           }
@@ -216,7 +254,7 @@ namespace Echoglossian
 
             if (this._translatedTalkMessageQueue.IsEmpty)
             {
-              PluginLog.LogWarning("2");
+              PluginLog.LogWarning("Translation Queue is empty");
               //name = Resources.WaitingForTranslation;
               //text = Resources.WaitingForTranslation;
             }
@@ -229,8 +267,6 @@ namespace Echoglossian
               text = dialogue?.TranslatedTalkMessage;
               PluginLog.LogWarning("23");
             }
-            
-
 
             // end tentative
 #else
@@ -594,10 +630,10 @@ namespace Echoglossian
           }
 
         }
-        }
-        catch (Exception e)
-        {
-PluginLog.Log("Exception: " + e.StackTrace);
+      }
+      catch (Exception e)
+      {
+        PluginLog.Log("Exception: " + e.StackTrace);
         throw;
       }
     }
