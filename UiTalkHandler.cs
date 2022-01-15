@@ -9,6 +9,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
@@ -27,75 +28,72 @@ namespace Echoglossian
 
     private ConcurrentQueue<TalkMessage> _talkMessageQueue = new();
     private ConcurrentQueue<TalkMessage> _translatedTalkMessageQueue = new();
-    private ConcurrentDictionary<int, TalkMessage> _talkConcurrentDictionary = new();
+    private ConcurrentDictionary<int, TalkMessage> _talkConcurrentDictionary = new(); // not using this right now
+
     private void HandleTalkAsync()
     {
       Thread t = new(new ThreadStart(this.TalkProc));
       t.Start();
     }
-    //TODO: clear queues before use!
-    public void TalkProc()
+
+    // TODO: clear queues before use!
+    private void TalkProc()
     {
       PluginLog.Log("Translation Engine Started");
       while (this.configuration.TranslateTalk)
       {
-        //PluginLog.LogWarning("3");
         if (this._talkMessageQueue.Count > 0)
         {
           PluginLog.LogWarning("4");
           this._talkMessageQueue.TryDequeue(out TalkMessage dialogue);
-          this.talkTracker = true;
-          string nameTranslation;
-          string messageTranslation;
-          if (this.configuration.TranslateNpcNames)
+          var talkMessageToTranslate = dialogue;
+
+          if (talkMessageToTranslate != null)
           {
-            PluginLog.LogWarning("5");
-            nameTranslation = Translate(dialogue?.SenderName);
-            PluginLog.LogWarning($"Name translation async: {nameTranslation}");
-            dialogue.TranslatedSenderName = nameTranslation;
-            PluginLog.LogWarning("6");
+            if (this.configuration.TranslateNpcNames)
+            {
+#if DEBUG
+              PluginLog.LogWarning("5");
+#endif
+              var nameTranslation = Translate(talkMessageToTranslate.SenderName);
+#if DEBUG
+              PluginLog.LogWarning(
+                $"Name translation async: {nameTranslation}");
+#endif
+              talkMessageToTranslate.TranslatedSenderName = nameTranslation;
+#if DEBUG
+              PluginLog.LogWarning("6");
+#endif
+            }
+#if DEBUG
+            PluginLog.LogWarning("7");
+#endif
+            var messageTranslation = Translate(talkMessageToTranslate.OriginalTalkMessage);
+#if DEBUG
+            PluginLog.LogWarning(
+              $"Message translation async: {messageTranslation}");
+            PluginLog.LogWarning("8");
+#endif
+            talkMessageToTranslate.TranslatedTalkMessage = messageTranslation;
+#if DEBUG
+            PluginLog.LogWarning("9");
+#endif
+            this._translatedTalkMessageQueue.Enqueue(talkMessageToTranslate);
+#if DEBUG
+            PluginLog.LogWarning("10");
+#endif
           }
-          PluginLog.LogWarning("7");
-          messageTranslation = Translate(dialogue?.OriginalTalkMessage);
-          PluginLog.LogWarning(
-            $"Message translation async: {messageTranslation}");
-          PluginLog.LogWarning("8");
-          dialogue.TranslatedTalkMessage = messageTranslation;
-          PluginLog.LogWarning("9");
-          this._translatedTalkMessageQueue.Enqueue(dialogue);
-          PluginLog.LogWarning("10");
         }
       }
     }
-
-    /*    IntPtr talk = GameGui.GetAddonByName("Talk", 1);
-          if (talk != IntPtr.Zero)
-        {
-          unsafe
-          {
-            AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
-            if (talkMaster->IsVisible)
-            {
-              AtkTextNode* textNode = null;
-              for (int i = 0; i<talkMaster->UldManager.NodeListCount; i++)
-              {
-                if (talkMaster->UldManager.NodeList[i]->Type != NodeType.Text)
-                {
-                  continue;
-                }
-
-                textNode = (AtkTextNode*) talkMaster->UldManager.NodeList[i];
-                break;
-              }
-
-              textNode->SetText(messageTranslation);
-            }
-          }
-        }*/
-
+    
     private unsafe void TalkHandler(string addonName, int index)
     {
-      PluginLog.LogWarning("11");
+      if (!this.configuration.TranslateTalk)
+      {
+        return;
+      }
+
       TalkMessage translatedTalkMessage = null;
       if (!this._translatedTalkMessageQueue.IsEmpty)
       {
@@ -103,21 +101,17 @@ namespace Echoglossian
         translatedTalkMessage = dialogue;
       }
 
-      PluginLog.LogWarning("12");
       IntPtr talk = GameGui.GetAddonByName(addonName, index);
       if (talk != IntPtr.Zero)
       {
         AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
         if (talkMaster->IsVisible)
         {
-          //AtkTextNode* tempTextNode = null;
+          // TODO: handle the payloads the game uses
           AtkTextNode* nameTextNode = talkMaster->GetTextNodeById(2);
+          var nameNodeText = nameTextNode->NodeText.ToString();
           AtkTextNode* textTextNode = talkMaster->GetTextNodeById(3);
-          var nameNodeText = MemoryHelper.ReadString((IntPtr)nameTextNode->NodeText.StringPtr, (int)nameTextNode->NodeText.StringLength);
-
-
-
-          var textNodeText = MemoryHelper.ReadString((IntPtr)textTextNode->NodeText.StringPtr, (int)textTextNode->NodeText.StringLength);
+          var textNodeText = textTextNode->NodeText.ToString();
 #if DEBUG
           PluginLog.LogError($"Name Node text: {nameNodeText}");
           PluginLog.LogError($"Text Node text: {textNodeText}");
@@ -127,7 +121,7 @@ namespace Echoglossian
             return;
           }
 
-            this._talkMessageQueue.Enqueue(new TalkMessage(
+          this._talkMessageQueue.Enqueue(new TalkMessage(
               nameNodeText,
               textNodeText,
               LangIdentify(textNodeText),
@@ -138,27 +132,7 @@ namespace Echoglossian
               chosenTransEngine,
               DateTime.UtcNow,
               null));
-          
 
-          /*    for (int i = 0; i < talkMaster->UldManager.NodeListCount; i++)
-                {
-                  if (talkMaster->UldManager.NodeList[i]->Type != NodeType.Text)
-                  {
-                    continue;
-                  }
-    */
-
-          // use marshal whatever to read string, compare if equal to original. if it is, replace text.
-          //tempTextNode = (AtkTextNode*)talkMaster->UldManager.NodeList[i];
-
-          //  var nodeText = MemoryHelper.ReadString((IntPtr)tempTextNode->NodeText.StringPtr, (int)tempTextNode->NodeText.StringLength);
-          //  PluginLog.LogError($"Node text: {nodeText.ToString() ?? "sem nada..."}");
-          /*tempTextNode->SetText(
-            "What is a man? A miserable little pile of secrets. But enough talk… Have at you!");*/
-
-          /*if (Marshal.PtrToStringUTF8(
-                new IntPtr(tempTextNode->NodeText.StringPtr)) ==
-              dialogue.SenderName)*/
           if (translatedTalkMessage != null)
           {
             if (this.configuration.UseImGuiForTalk)
@@ -173,29 +147,22 @@ namespace Echoglossian
             }
             else
             {
+              // TODO: handle the payloads the game uses
               if (nameNodeText == translatedTalkMessage.SenderName)
               {
                 nameTextNode->SetText(translatedTalkMessage.TranslatedSenderName);
               }
 
-              /* if (Marshal.PtrToStringUTF8(
-                     new IntPtr(tempTextNode->NodeText.StringPtr)) ==
-                   dialogue.OriginalTalkMessage)*/
               if (textNodeText == translatedTalkMessage.OriginalTalkMessage)
               {
                 textTextNode->SetText(translatedTalkMessage.TranslatedTalkMessage);
               }
             }
 
-            /*    break;
-              }*/
-
-            PluginLog.LogWarning("13");
-          }
-
 #if DEBUG
-          // PluginLog.LogVerbose("Inside Talk Handler.");
+            PluginLog.LogWarning("13");
 #endif
+          }
         }
         else
         {
@@ -208,6 +175,7 @@ namespace Echoglossian
       }
     }
 
+    // probably won't use this anymore
     private void GetTalk(ref SeString name, ref SeString text, ref TalkStyle style)
     {
       if (!this.configuration.TranslateTalk)

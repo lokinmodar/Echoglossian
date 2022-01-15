@@ -193,6 +193,10 @@ namespace Echoglossian
 
     private unsafe void TextErrorToastHandler(string toastName, int index)
     {
+      if (!this.configuration.TranslateErrorToast)
+      {
+        return;
+      }
       IntPtr errorToastByName = GameGui.GetAddonByName(toastName, index);
 
       if (errorToastByName != IntPtr.Zero)

@@ -22,6 +22,11 @@ namespace Echoglossian
   {
     private unsafe void TalkSubtitleHandler(string addonName, int index)
     {
+      if (!this.configuration.TranslateTalkSubtitle)
+      {
+        return;
+      }
+
       // Pointer: 23FDB6C9040 or 23FDB6C91C0
       string originalText;
       try

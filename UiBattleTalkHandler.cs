@@ -22,6 +22,11 @@ namespace Echoglossian
   {
     private unsafe void BattleTalkHandler(string addonName, int index)
     {
+      if (!this.configuration.TranslateBattleTalk)
+      {
+        return;
+      }
+
       IntPtr battleTalk = GameGui.GetAddonByName(addonName, index);
       if (battleTalk != IntPtr.Zero)
       {
