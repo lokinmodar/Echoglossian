@@ -87,7 +87,7 @@ namespace Echoglossian
       }
     }
     
-    private unsafe void TalkHandler(string addonName, int index)
+    private unsafe void TalkHandler(string addonName, int index) // not working but it is not retrying to translate all the time. Needs tracking logic
     {
       if (!this.configuration.TranslateTalk)
       {
@@ -95,6 +95,10 @@ namespace Echoglossian
       }
 
       TalkMessage translatedTalkMessage = null;
+      // TODO: add logic to catch message from db. Ignore old logic. Decouple stuff to improve readability
+
+
+
       if (!this._translatedTalkMessageQueue.IsEmpty)
       {
         this._translatedTalkMessageQueue.TryDequeue(out TalkMessage dialogue);
@@ -121,22 +125,18 @@ namespace Echoglossian
             return;
           }
 
-          this._talkMessageQueue.Enqueue(new TalkMessage(
-              nameNodeText,
-              textNodeText,
-              LangIdentify(textNodeText),
-              LangIdentify(nameNodeText),
-              string.Empty,
-              string.Empty,
-              langDict[languageInt].Code,
-              chosenTransEngine,
-              DateTime.UtcNow,
-              null));
-
           if (translatedTalkMessage != null)
           {
             if (this.configuration.UseImGuiForTalk)
             {
+              if (this.configuration.TranslateNpcNames)
+              {
+                this.currentNameTranslation = translatedTalkMessage.TranslatedSenderName;
+              }
+
+              this.currentTalkTranslation =
+                translatedTalkMessage.TranslatedTalkMessage;
+
               this.talkDisplayTranslation = true;
               this.talkTextDimensions.X =
                 talkMaster->RootNode->Width * talkMaster->Scale;
@@ -156,12 +156,27 @@ namespace Echoglossian
               if (textNodeText == translatedTalkMessage.OriginalTalkMessage)
               {
                 textTextNode->SetText(translatedTalkMessage.TranslatedTalkMessage);
+                textTextNode->ResizeNodeForCurrentText();
               }
             }
 
 #if DEBUG
             PluginLog.LogWarning("13");
 #endif
+          }
+          else
+          {
+            this._talkMessageQueue.Enqueue(new TalkMessage(
+              nameNodeText,
+              textNodeText,
+              LangIdentify(textNodeText),
+              LangIdentify(nameNodeText),
+              string.Empty,
+              string.Empty,
+              langDict[languageInt].Code,
+              chosenTransEngine,
+              DateTime.UtcNow,
+              null));
           }
         }
         else

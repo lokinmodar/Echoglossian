@@ -253,7 +253,7 @@ namespace Echoglossian
       if (!this.configuration.Translate)
       {
 #if DEBUG
-        PluginLog.Log("Translations are disabled!");
+       // PluginLog.Log("Translations are disabled!");
 #endif
         return;
       }
