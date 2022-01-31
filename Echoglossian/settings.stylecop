@@ -1,0 +1,20 @@
+{
+        "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+        "settings": {
+        "orderingRules": {
+        "systemUsingDirectivesFirst": true,
+        "usingDirectivesPlacement": "outsideNamespace",
+        "blankLinesBetweenUsingGroups": "require"
+        },
+        "maintainabilityRules": {
+        "topLevelTypes": [ "class", "interface", "struct", "enum" ]
+        },
+        "documentationRules": {
+        "companyName": "lokinmodar",
+        "copyrightText": "Copyright (c) {companyName}. All rights reserved.\nLicensed under the {licenseName} license.",
+        "variables": {
+        "licenseName": "Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License"
+        }
+        }
+        }
+        }

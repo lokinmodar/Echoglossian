@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>2.0</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+    <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Configurações de diálogos</value>
+  </data>
+    <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Configuração do Echoglossian</value>
+        <comment>Config Window title bar</comment>
+  </data>
+    <data name="HelpMessage" xml:space="preserve">
+    <value>Abre janela de configuração do Echoglossian</value>
+        <comment>Shown in plugin install window</comment>
+  </data>
+    <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Para qual língua traduzir os diálogos do jogo.</value>
+  </data>
+    <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Linguagem para traduzir para</value>
+  </data>
+    <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Ajuste a posição se a sobreposição não estiver centrada em relação à caixa de conversa da UI do jogo.</value>
+  </data>
+    <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Ajuste de posição</value>
+  </data>
+    <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</value>
+  </data>
+    <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador de largura da sobreposição de tradução de diálogo</value>
+  </data>
+    <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Comprar um café para lokinmodar</value>
+  </data>
+    <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Salvar e fechar janela de Configuração</value>
+  </data>
+    <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Traduzir conversas de batalha</value>
+  </data>
+    <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Traduzir diálogos do jogo</value>
+  </data>
+    <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Aguardando tradução...</value>
+  </data>
+    <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Tamanho da fonte da sobreposição</value>
+  </data>
+    <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Selecione o tamanho da fonte para a sobreposição de texto de diálogo</value>
+  </data>
+    <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuste a largura da sobreposição de tradução</value>
+  </data>
+    <data name="SendPixButton" xml:space="preserve">
+    <value>Mande-me um PIX!</value>
+  </data>
+    <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Selecione que tipo de texto deseja que seja traduzido</value>
+  </data>
+    <data name="PixText" xml:space="preserve">
+    <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
+  </data>
+    <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+    <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>QRCODE PIX</value>
+  </data>
+    <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
+  </data>
+    <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens Toast no jogo</value>
+  </data>
+    <data name="LangIdentError" xml:space="preserve">
+    <value>A linguagem não pôde ser identificada com um grau aceitável de certeza</value>
+  </data>
+    <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Configurações de diálogos de batalha</value>
+  </data>
+    <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuste a largura de sobreposição de tradução de Toasts</value>
+  </data>
+    <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador de largura para Toasts</value>
+  </data>
+    <data name="WhichToastsToTranslateText" xml:space="preserve">
+    <value>Selecione quais mensagens Toast devem ser traduzidas</value>
+  </data>
+    <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Cor da fonte da sobreposição:</value>
+  </data>
+    <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Clique para escolher a cor da fonte da sobreposição</value>
+  </data>
+    <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de nome de área</value>
+  </data>
+    <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de troca de classe/job</value>
+  </data>
+    <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de erro no jogo</value>
+  </data>
+    <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Traduzir nomes de NPCs em caixas de diálogo</value>
+  </data>
+    <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens de quest</value>
+  </data>
+    <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Traduzir no jogo outras mensagens de Toast diversas</value>
+  </data>
+    <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Escolha o idioma para a janela de configuração do plugin</value>
+  </data>
+    <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Linguagem de janela de config:</value>
+  </data>
+    <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Mostrar texto de diálogo original no Overlay e o texto traduzido na caixa de diálogo da IU do jogo</value>
+  </data>
+    <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Ajuste a escala de fonte da Overlay</value>
+  </data>
+    <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Atenção!</value>
+  </data>
+    <data name="PathInputInstructions" xml:space="preserve">
+    <value>Caminho absoluto para a pasta Echoglossian (dentro da pasta XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+    <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Digite o caminho e salve para que o plugin possa funcionar corretamente!</value>
+  </data>
+    <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>O idioma selecionado não é suportado pelo backend de tradução disponível atualmente</value>
+  </data>
+    <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>O idioma selecionado só é suportado usando overlays devido a limitações da fonte nativa do jogo</value>
+  </data>
+    <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplicador de altura da overlay de diálogo</value>
+  </data>
+    <data name="OverlayName" xml:space="preserve">
+    <value>Tradução de diálogos de batalha</value>
+        <comment>Translation overlay window name</comment>
+  </data>
+    <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Principal</value>
+  </data>
+    <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Configurações de mensagens de sistema</value>
+  </data>
+    <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Configurações de diário</value>
+  </data>
+    <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Configurações de Tooltips</value>
+  </data>
+    <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Outras configurações</value>
+  </data>
+    <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Sobre o Echoglossian</value>
+  </data>
+    <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Traduções habilitadas!</value>
+  </data>
+    <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Configurações do mecanismo de tradução</value>
+  </data>
+    <data name="EnableTranslation" xml:space="preserve">
+    <value>Ativar tradução em tempo real do texto do jogo</value>
+  </data>
+    <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Ajuste as opções relacionadas à overlay de tradução:</value>
+  </data>
+    <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Este mecanismo de tradução não requer configurações especiais.</value>
+  </data>
+    <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Configurações para o Google Translate:</value>
+  </data>
+    <data name="TodoUrl" xml:space="preserve">
+    <value>Lista de TODOs no Github</value>
+  </data>
+    <data name="ContribText" xml:space="preserve">
+    <value>Por favor, apoie-nos contribuindo para o desenvolvimento do projeto, enviando problemas ou nos ajudando com um cafezinho :).</value>
+  </data>
+    <data name="DisclaimerText1" xml:space="preserve">
+    <value>Este plugin visa resolver um dos maiores problemas para o público que não fala inglês, alemão, francês ou japonês: Entender os diálogos e outros elementos da Interface do Jogo.</value>
+  </data>
+    <data name="DisclaimerText2" xml:space="preserve">
+    <value>Por enquanto, só fazemos traduções automáticas através da API do Google Translate, mas no futuro pretendemos suportar outros sistemas de tradução por ML. Temos até ideias voltadas para traduções crowdsourced, com curadoria da comunidade.</value>
+  </data>
+    <data name="DisclaimerTitle" xml:space="preserve">
+    <value>Sobre o Echoglossian:</value>
+  </data>
+    <data name="NEListText" xml:space="preserve">
+    <value>A lista (in)completa de problemas e TODOs está disponível no link abaixo:</value>
+  </data>
+    <data name="TranslationDisabled" xml:space="preserve">
+    <value>As traduções estão desabilitadas!</value>
+  </data>
+    <data name="TranslationEnabled" xml:space="preserve">
+    <value>As traduções estão habilitadas!</value>
+  </data>
+    <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Use sobreposição para mostrar traduções de toasts</value>
+  </data>
+    <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Configurações de reset</value>
+  </data>
+    <data name="SettingsReset" xml:space="preserve">
+    <value>Configurações echoglossianas redefinidas para padrão com sucesso!</value>
+  </data>
+</root>

@@ -1,0 +1,29 @@
+﻿{
+  "Name": "Echoglossian",
+  "Author": "Dante Souza e Souza - aka lokinmodar",
+  "Contributors": "Eternita",
+  "InternalName": "Echoglossian",
+  "ApplicableVersion": "any",
+  "Description": "Realtime game text translator",
+  "RepoUrl": "https://github.com/lokinmodar/Echoglossian",
+  "Tags": [
+    "ffxiv",
+    "Dalamud",
+    "plugin",
+    "translation",
+    "UI",
+    "Utility"
+  ],
+  "DalamudApiLevel": 5,
+  "Disabled": true,
+  "Testing": false,
+  "Punchline": "Dialogue and other in-game text translations? Yes we have!\nKnown Issues at: https://github.com/lokinmodar/Echoglossian/issues/12",
+  "IsHide": false,
+  "TestingAssemblyVersion": null,
+  "IsTestingExclusive": false,
+  "LoadPriority": 0,
+  "ImageUrls": [
+    ""
+  ],
+  "IconUrl": "https://raw.githubusercontent.com/lokinmodar/Echoglossian/APIv4/images/icon.png"
+}
