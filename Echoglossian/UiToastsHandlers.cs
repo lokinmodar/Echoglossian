@@ -379,13 +379,13 @@ namespace Echoglossian
       var errorToastToHandle = this.FormatToastMessage("Error", message.TextValue);
 
 #if DEBUG
-      PluginLog.LogFatal($"Before DB Query attempt: {errorToastToHandle}");
+      PluginLog.LogVerbose($"Before DB Query attempt: {errorToastToHandle}");
 #endif
 
       var findings = this.FindErrorToastMessage(errorToastToHandle);
 
 #if DEBUG
-      PluginLog.LogFatal(
+      PluginLog.LogVerbose(
         $"After DB Query attempt: {(findings ? "ErrorToastMessage found in Db." : "ErrorToastMessage not found in Db")}");
 #endif
 
@@ -489,12 +489,12 @@ namespace Echoglossian
             () =>
             {
 #if DEBUG
-              PluginLog.LogWarning("Using Toast Overlay - inside Draw task");
+              PluginLog.LogVerbose("Using Toast Overlay - inside Draw task");
 #endif
               var messageId = this.currentErrorToastTranslationId;
               var messageTranslation = this.FoundToastMessage.TranslatedToastMessage;
 #if DEBUG
-              PluginLog.LogWarning(
+              PluginLog.LogVerbose(
                 $"Using Toast Overlay - inside Draw Error toast Overlay - found toast message: {messageTranslation}");
 #endif
               this.errorToastTranslationSemaphore.Wait();
@@ -526,13 +526,13 @@ namespace Echoglossian
       var toastToHandle = this.FormatToastMessage("NonError", message.TextValue);
 
 #if DEBUG
-      PluginLog.LogFatal($"Before DB Query attempt: {toastToHandle}");
+      PluginLog.LogVerbose($"Before DB Query attempt: {toastToHandle}");
 #endif
 
       var findings = this.FindToastMessage(toastToHandle);
 
 #if DEBUG
-      PluginLog.LogFatal(
+      PluginLog.LogVerbose(
         $"After DB Query attempt: {(findings ? "toastMessage found in Db." : "toastMessage not found in Db")}");
 #endif
 
@@ -636,12 +636,12 @@ namespace Echoglossian
             () =>
             {
 #if DEBUG
-              PluginLog.LogWarning("Using Toast Overlay - inside Draw task");
+              PluginLog.LogVerbose("Using Toast Overlay - inside Draw task");
 #endif
               var messageId = this.currentToastTranslationId;
               var messageTranslation = this.FoundToastMessage.TranslatedToastMessage;
 #if DEBUG
-              PluginLog.LogWarning(
+              PluginLog.LogVerbose(
                 $"Using Toast Overlay - inside Draw toast Overlay - found toast message: {messageTranslation}");
 #endif
               this.toastTranslationSemaphore.Wait();

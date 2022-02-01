@@ -14,12 +14,12 @@ namespace Echoglossian
         var translation = await client.TranslateAsync(
           "This is a test sentence.",
           Language.German);
-        PluginLog.LogWarning(translation.DetectedSourceLanguage);
-        PluginLog.LogWarning(translation.Text);
+        PluginLog.LogVerbose(translation.DetectedSourceLanguage);
+        PluginLog.LogVerbose(translation.Text);
       }
       catch (DeepLException exception)
       {
-        PluginLog.LogWarning($"An error occurred: {exception.Message}");
+        PluginLog.LogVerbose($"An error occurred: {exception.Message}");
       }
     }
   }

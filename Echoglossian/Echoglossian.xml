@@ -5,26 +5,30 @@
     </assembly>
     <members>
         <member name="M:Echoglossian.Echoglossian.Dispose">
-            <inheritdoc />
+            <inheritdoc/>
         </member>
         <member name="M:Echoglossian.Echoglossian.LangIdentify(System.String)">
             <summary>
-              Detects which language the source text is in.
+                Detects which language the source text is in.
             </summary>
             <param name="message">text to have the source language identified.</param>
             <returns>Returns the detected language code.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
             <summary>
-              Translates the sentences passed to it. Uses Google Translate Free endpoint.
+                Translates the sentences passed to it. Uses Google Translate Free endpoint.
             </summary>
             <param name="text">Text to be translated.</param>
             <returns>Returns the translated text passed in the call parameter.</returns>
-            <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps.</exception>
+            <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation
+                steps.
+            </exception>
         </member>
         <member name="M:Echoglossian.Echoglossian.LanguageInfo.#ctor(System.String,System.String,System.String,System.String,System.Int32[])">
             <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.LanguageInfo" /> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Echoglossian.LanguageInfo"/>
+                class.
             </summary>
             <param name="code">Iso LanguageInfo Code.</param>
             <param name="languageName">LanguageInfo name.</param>
@@ -34,8 +38,8 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.DrawText(System.String,System.Drawing.Font,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Size})">
             <summary>
-              Creates an image containing the given text.
-              NOTE: the image should be disposed after use.
+                Creates an image containing the given text.
+                NOTE: the image should be disposed after use.
             </summary>
             <param name="text">Text to draw.</param>
             <param name="fontOptional">Font to use, defaults to Control.DefaultFont.</param>
@@ -46,20 +50,24 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.TranslationImageConverter(System.Drawing.Image)">
             <summary>
-              Converts Image to byte array.
+                Converts Image to byte array.
             </summary>
             <param name="image">Image to be converted.</param>
             <returns>Byte array to be used elsewhere.</returns>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(System.String)">
             <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" /> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext"/>
+                class.
             </summary>
             <param name="configDir"></param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
             <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage"/>
+                class.
             </summary>
             <param name="senderName"></param>
             <param name="originalBattleTalkMessage"></param>
@@ -74,7 +82,9 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.#ctor(System.String,System.String,System.String,System.String,System.String,System.Int32,System.String,System.String,System.DateTime,System.Nullable{System.DateTime})">
             <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" /> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate"/>
+                class.
             </summary>
             <param name="questName"></param>
             <param name="originalQuestMessage"></param>
@@ -89,7 +99,9 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
             <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage"/>
+                class.
             </summary>
             <param name="senderName"></param>
             <param name="originalTalkMessage"></param>
@@ -104,7 +116,9 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
             <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage"/>
+                class.
             </summary>
             <param name="toastType"></param>
             <param name="originalToastMessage"></param>
@@ -117,418 +131,431 @@
         </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>
-              A strongly-typed resource class, for looking up localized strings, etc.
+                A strongly-typed resource class, for looking up localized strings, etc.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ResourceManager">
             <summary>
-              Returns the cached ResourceManager instance used by this class.
+                Returns the cached ResourceManager instance used by this class.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.Culture">
             <summary>
-              Overrides the current thread's CurrentUICulture property for all
-              resource lookups using this strongly typed resource class.
+                Overrides the current thread's CurrentUICulture property for all
+                resource lookups using this strongly typed resource class.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.choice">
             <summary>
-              Looks up a localized resource of type System.Byte[].
+                Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.CloseButtonLabel">
             <summary>
-              Looks up a localized string similar to Close.
+                Looks up a localized string similar to Close.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab0Name">
             <summary>
-              Looks up a localized string similar to Main.
+                Looks up a localized string similar to Main.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab1Name">
             <summary>
-              Looks up a localized string similar to Talk settings.
+                Looks up a localized string similar to Talk settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab2Name">
             <summary>
-              Looks up a localized string similar to Battle Talk settings.
+                Looks up a localized string similar to Battle Talk settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab3Name">
             <summary>
-              Looks up a localized string similar to Toast settings.
+                Looks up a localized string similar to Toast settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab4Name">
             <summary>
-              Looks up a localized string similar to Journal settings.
+                Looks up a localized string similar to Journal settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab5Name">
             <summary>
-              Looks up a localized string similar to Tooltips settings.
+                Looks up a localized string similar to Tooltips settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab6Name">
             <summary>
-              Looks up a localized string similar to Other settings.
+                Looks up a localized string similar to Other settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab7Name">
             <summary>
-              Looks up a localized string similar to Translation Engine settings.
+                Looks up a localized string similar to Translation Engine settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTabAbout">
             <summary>
-              Looks up a localized string similar to About Echoglossian.
+                Looks up a localized string similar to About Echoglossian.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigWindowTitle">
             <summary>
-              Looks up a localized string similar to Echoglossian Configuration.
+                Looks up a localized string similar to Echoglossian Configuration.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ContribText">
             <summary>
-              Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
+                Looks up a localized string similar to Please support us either by contributing to the project
+                development, submitting issues or helping us with a coffee..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.cutscenechoice">
             <summary>
-              Looks up a localized resource of type System.Byte[].
+                Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.DisclaimerText1">
             <summary>
-              Looks up a localized string similar to This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
+                Looks up a localized string similar to This plugin is aimed at solving one of the biggest issues for
+                audiences that do not speak either English, German, French or Japanese: Understanding dialogues and
+                other elements of the Game UI..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.DisclaimerText2">
             <summary>
-              Looks up a localized string similar to For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community..
+                Looks up a localized string similar to For now we only do auto-translations through Google Translate
+                API, but in the future we intend to support other ML translation systems. We even have ideas targetting
+                crowdsourced translations, curated by the community..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.DisclaimerTitle">
             <summary>
-              Looks up a localized string similar to About Echoglossian:.
+                Looks up a localized string similar to About Echoglossian:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
             <summary>
-              Looks up a localized string similar to Attention!.
+                Looks up a localized string similar to Attention!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.EnableTranslation">
             <summary>
-              Looks up a localized string similar to Activate game text realtime translation.
+                Looks up a localized string similar to Activate game text realtime translation.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">
             <summary>
-              Looks up a localized string similar to Overlay font color:.
+                Looks up a localized string similar to Overlay font color:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.HelpMessage">
             <summary>
-              Looks up a localized string similar to Opens Echoglossian config window.
+                Looks up a localized string similar to Opens Echoglossian config window.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.HoverTooltipIndicator">
             <summary>
-              Looks up a localized string similar to (?).
+                Looks up a localized string similar to (?).
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ImguiAdjustmentsLabel">
             <summary>
-              Looks up a localized string similar to Adjust the options related to the translation overlay:.
+                Looks up a localized string similar to Adjust the options related to the translation overlay:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.LangIdentError">
             <summary>
-              Looks up a localized string similar to The language could not be identified with an acceptable degree of certainty.
+                Looks up a localized string similar to The language could not be identified with an acceptable degree of
+                certainty.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageNotSupportedText">
             <summary>
-              Looks up a localized string similar to The selected language is not supported by the currently available translation backend.
+                Looks up a localized string similar to The selected language is not supported by the currently available
+                translation backend.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageOnlySupportedUsingOverlay">
             <summary>
-              Looks up a localized string similar to The selected language is only supported using the plugin overlays due to limitations of the native game Font.
+                Looks up a localized string similar to The selected language is only supported using the plugin overlays
+                due to limitations of the native game Font.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageSelectionTooltip">
             <summary>
-              Looks up a localized string similar to Which language to translate the in-game dialogue boxes to..
+                Looks up a localized string similar to Which language to translate the in-game dialogue boxes to..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.LanguageSelectLabelText">
             <summary>
-              Looks up a localized string similar to Language to translate to.
+                Looks up a localized string similar to Language to translate to.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.logo">
             <summary>
-              Looks up a localized resource of type System.Byte[].
+                Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.minfilia">
             <summary>
-              Looks up a localized resource of type System.Byte[].
+                Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.Name">
             <summary>
-              Looks up a localized string similar to Echoglossian.
+                Looks up a localized string similar to Echoglossian.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.NEListText">
             <summary>
-              Looks up a localized string similar to The non-exhaustive list of issues and TODOs is available in the link below:.
+                Looks up a localized string similar to The non-exhaustive list of issues and TODOs is available in the
+                link below:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayAdjustmentOrientations">
             <summary>
-              Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI text box..
+                Looks up a localized string similar to Please adjust position if your overlay is not centered relative
+                to the game&apos;s UI text box..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayColorSelectName">
             <summary>
-              Looks up a localized string similar to OverlayColorSelect.
+                Looks up a localized string similar to OverlayColorSelect.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayFontColorOrientations">
             <summary>
-              Looks up a localized string similar to Click to choose the overlay font color.
+                Looks up a localized string similar to Click to choose the overlay font color.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayFontScaleLabel">
             <summary>
-              Looks up a localized string similar to Adjust the Overlay font scale.
+                Looks up a localized string similar to Adjust the Overlay font scale.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayFontSizeLabel">
             <summary>
-              Looks up a localized string similar to Overlay Font Size.
+                Looks up a localized string similar to Overlay Font Size.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayFontSizeOrientations">
             <summary>
-              Looks up a localized string similar to Select the font size for the text overlay.
+                Looks up a localized string similar to Select the font size for the text overlay.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayHeightScrollLabel">
             <summary>
-              Looks up a localized string similar to Translation Overlay Height multiplier.
+                Looks up a localized string similar to Translation Overlay Height multiplier.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayName">
             <summary>
-              Looks up a localized string similar to Battle talk (Enenies dialogue lines) translation.
+                Looks up a localized string similar to Battle talk (Enenies dialogue lines) translation.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayPositionAdjustmentLabel">
             <summary>
-              Looks up a localized string similar to Position adjustment.
+                Looks up a localized string similar to Position adjustment.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayToggleLabel">
             <summary>
-              Looks up a localized string similar to Display translated text overlay above game UI text box instead of replacing its text with the translation.
+                Looks up a localized string similar to Display translated text overlay above game UI text box instead of
+                replacing its text with the translation.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayWidthMultiplierOrientations">
             <summary>
-              Looks up a localized string similar to Adjust translation overlay width.
+                Looks up a localized string similar to Adjust translation overlay width.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayWidthScrollLabel">
             <summary>
-              Looks up a localized string similar to Translation Overlay Width multiplier.
+                Looks up a localized string similar to Translation Overlay Width multiplier.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PathInputInstructions">
             <summary>
-              Looks up a localized string similar to Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder).
+                Looks up a localized string similar to Absolute path to Echoglossian folder (inside XIVLauncher -&gt;
+                pluginConfigs folder).
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PathTypeInstructions">
             <summary>
-              Looks up a localized string similar to Please type the path and save so the plugin can work properly!.
+                Looks up a localized string similar to Please type the path and save so the plugin can work properly!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PatronButtonLabel">
             <summary>
-              Looks up a localized string similar to Buy lokinmodar a Coffee.
+                Looks up a localized string similar to Buy lokinmodar a Coffee.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.pix">
             <summary>
-              Looks up a localized resource of type System.Byte[].
+                Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PixQrWindowLabel">
             <summary>
-              Looks up a localized string similar to PIX qrcode.
+                Looks up a localized string similar to PIX qrcode.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PixText">
             <summary>
-              Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+                Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PluginInterfaceLanguage">
             <summary>
-              Looks up a localized string similar to Choose the language for the plugin configuration window.
+                Looks up a localized string similar to Choose the language for the plugin configuration window.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PluginInterfaceLanguageSelectorText">
             <summary>
-              Looks up a localized string similar to Config Window LanguageInfo:.
+                Looks up a localized string similar to Config Window LanguageInfo:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.prttws">
             <summary>
-              Looks up a localized resource of type System.Byte[].
+                Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.QRCodeInstructionsText">
             <summary>
-              Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+                Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ResetConfigsButton">
             <summary>
-              Looks up a localized string similar to Reset Settings.
+                Looks up a localized string similar to Reset Settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SaveCloseButtonLabel">
             <summary>
-              Looks up a localized string similar to Save and Close Config Window.
+                Looks up a localized string similar to Save and Close Config Window.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SendPixButton">
             <summary>
-              Looks up a localized string similar to Send me a PIX donation!.
+                Looks up a localized string similar to Send me a PIX donation!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsForGTransText">
             <summary>
-              Looks up a localized string similar to Settings for Google Translate:.
+                Looks up a localized string similar to Settings for Google Translate:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsReset">
             <summary>
-              Looks up a localized string similar to Echoglossian settings reset to default successfully!.
+                Looks up a localized string similar to Echoglossian settings reset to default successfully!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SwapTranslationTextToggle">
             <summary>
-              Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
+                Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game
+                UI dialogue box.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthMultiplierOrientations">
             <summary>
-              Looks up a localized string similar to Adjust toast translation overlay width.
+                Looks up a localized string similar to Adjust toast translation overlay width.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthScrollLabel">
             <summary>
-              Looks up a localized string similar to Toast Overlay Width multiplier.
+                Looks up a localized string similar to Toast Overlay Width multiplier.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TodoUrl">
             <summary>
-              Looks up a localized string similar to TODOs List on Github.
+                Looks up a localized string similar to TODOs List on Github.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateAreaToastToggleText">
             <summary>
-              Looks up a localized string similar to Translate in-game Area name Toast Messages.
+                Looks up a localized string similar to Translate in-game Area name Toast Messages.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TransLateBattletalkToggle">
             <summary>
-              Looks up a localized string similar to Translate battle talk.
+                Looks up a localized string similar to Translate battle talk.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateClassChangeToastToggleText">
             <summary>
-              Looks up a localized string similar to Translate in-game Class/Job change Toast Messages.
+                Looks up a localized string similar to Translate in-game Class/Job change Toast Messages.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateErrorToastToggleText">
             <summary>
-              Looks up a localized string similar to Translate in-game Error Toast Messages.
+                Looks up a localized string similar to Translate in-game Error Toast Messages.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateNpcNamesToggle">
             <summary>
-              Looks up a localized string similar to Translate NPCs names in dialogue boxes.
+                Looks up a localized string similar to Translate NPCs names in dialogue boxes.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateQuestToastToggleText">
             <summary>
-              Looks up a localized string similar to Translate in-game Quest Toast Messages.
+                Looks up a localized string similar to Translate in-game Quest Toast Messages.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateScreenInfoToastToggleText">
             <summary>
-              Looks up a localized string similar to Translate other in-game miscellaneous Toast Messages.
+                Looks up a localized string similar to Translate other in-game miscellaneous Toast Messages.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateTalkToggleLabel">
             <summary>
-              Looks up a localized string similar to Translate in-game dialogues.
+                Looks up a localized string similar to Translate in-game dialogues.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateToastToggleText">
             <summary>
-              Looks up a localized string similar to Translate in-game Toast Messages.
+                Looks up a localized string similar to Translate in-game Toast Messages.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationDisabled">
             <summary>
-              Looks up a localized string similar to Translations are Disabled!.
+                Looks up a localized string similar to Translations are Disabled!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationEnabled">
             <summary>
-              Looks up a localized string similar to Translations are Enabled!.
+                Looks up a localized string similar to Translations are Enabled!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationEngineSettingsNotRequired">
             <summary>
-              Looks up a localized string similar to This translation engine does not require any special settings..
+                Looks up a localized string similar to This translation engine does not require any special settings..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">
             <summary>
-              Looks up a localized string similar to Translations enabled!.
+                Looks up a localized string similar to Translations enabled!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.UseImGuiForToastsToggle">
             <summary>
-              Looks up a localized string similar to Use overlay to show Toasts translations.
+                Looks up a localized string similar to Use overlay to show Toasts translations.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.WaitingForTranslation">
             <summary>
-              Looks up a localized string similar to Awaiting translation....
+                Looks up a localized string similar to Awaiting translation....
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.WhatToTranslateText">
             <summary>
-              Looks up a localized string similar to Select what kind of text you want to be translated.
+                Looks up a localized string similar to Select what kind of text you want to be translated.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslateText">
             <summary>
-              Looks up a localized string similar to Select which in-game Toast messages to translate.
+                Looks up a localized string similar to Select which in-game Toast messages to translate.
             </summary>
         </member>
     </members>

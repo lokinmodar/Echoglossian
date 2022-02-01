@@ -39,7 +39,7 @@ namespace Echoglossian
 
         if (tNode == null)
         {
-          PluginLog.LogWarning("Node Empty");
+          PluginLog.LogVerbose("Node Empty");
           return;
         }
 

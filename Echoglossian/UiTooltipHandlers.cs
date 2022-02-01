@@ -26,7 +26,7 @@ namespace Echoglossian
 
       foreach (var line in lines)
       {
-        PluginLog.LogWarning(line.ToString() ?? string.Empty);
+        PluginLog.LogVerbose(line.ToString() ?? string.Empty);
       }
 
       var payloadText = payload.ToString();
@@ -34,7 +34,7 @@ namespace Echoglossian
       var desc = tooltipDescription.TextValue;
       var status = TranslateAsync(desc);
 
-      PluginLog.LogWarning($"Tooltip desc: {desc}");
+      PluginLog.LogVerbose($"Tooltip desc: {desc}");
       PluginLog.LogError($"Tooltip trans: {status.Result}");
 #endif
     }

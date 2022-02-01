@@ -24,7 +24,7 @@ namespace Echoglossian
 
       var addonList = uiStuffz?.ToList();
 
-      PluginLog.LogWarning($"Addon list: {uiStuffz?.RowCount.ToString()}");
+      PluginLog.LogVerbose($"Addon list: {uiStuffz?.RowCount.ToString()}");
       if (uiStuffz != null)
       {
         foreach (var a in uiStuffz)

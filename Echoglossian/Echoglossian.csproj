@@ -5,6 +5,7 @@
         <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
         <TranslationReport Condition="'$(Configuration)' == 'Release'">true</TranslationReport>
         <SuppressPseudoWarning Condition="'$(Configuration)' == 'Debug'">true</SuppressPseudoWarning>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFramework>net5.0-windows</TargetFramework>
@@ -254,10 +255,6 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
         <PackageReference Include="NTextCat" Version="0.3.65"/>
         <PackageReference Include="Siggingway" Version="1.1.1"/>
-        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-            <PrivateAssets>all</PrivateAssets>
-            <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
-        </PackageReference>
         <PackageReference Include="System.Drawing.Common" Version="6.0.0"/>
         <PackageReference Include="System.Drawing.Primitives" Version="4.3.0"/>
         <PackageReference Include="XivCommon" Version="5.0.0"/>

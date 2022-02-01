@@ -74,11 +74,11 @@ namespace Echoglossian
         var battleTalkMessage = this.FormatBattleTalkMessage(senderToTranslate, battleTextToTranslate);
 
 #if DEBUG
-        PluginLog.LogFatal($"Before DB Query attempt: {battleTalkMessage}");
+        PluginLog.LogVerbose($"Before DB Query attempt: {battleTalkMessage}");
 #endif
         var findings = this.FindBattleTalkMessage(battleTalkMessage);
 #if DEBUG
-        PluginLog.LogFatal(
+        PluginLog.LogVerbose(
           $"After DB Query attempt: {(findings ? "Message found in Db." : "Message not found in Db")}");
 #endif
 
@@ -90,7 +90,7 @@ namespace Echoglossian
             var translatedBattleTalkMessage = Translate(battleTextToTranslate);
             var senderTranslation = Translate(senderToTranslate);
 #if DEBUG
-            PluginLog.LogWarning(translatedBattleTalkMessage);
+            PluginLog.LogVerbose(translatedBattleTalkMessage);
 #endif
             if (this.configuration.TranslateNpcNames)
             {
@@ -209,7 +209,7 @@ namespace Echoglossian
             var translatedBattleMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;
             var senderTranslation = this.FoundBattleTalkMessage.TranslatedSenderName;
 #if DEBUG
-            PluginLog.LogWarning($"From database - Name: {senderTranslation}, Message: {translatedBattleMessage}");
+            PluginLog.LogVerbose($"From database - Name: {senderTranslation}, Message: {translatedBattleMessage}");
 #endif
             if (this.configuration.TranslateNpcNames)
             {

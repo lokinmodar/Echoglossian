@@ -91,3 +91,5 @@ dotnet_diagnostic.SA1009.severity = suggestion
 dotnet_analyzer_diagnostic.category-StyleCop.CSharp.OrderingRules.severity = suggestion
 
 csharp_instance_members_qualify_members = all
+
+csharp_space_after_new_keyword = true

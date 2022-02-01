@@ -120,7 +120,7 @@ namespace Echoglossian
         var reader = new StreamReader(requestResult.GetResponseStream() ?? throw new Exception());
         var read = reader.ReadToEnd();
 #if DEBUG
-        PluginLog.LogWarning($"Received JSON string: {read}");
+        PluginLog.LogVerbose($"Received JSON string: {read}");
 #endif
         string finalDialogueText;
         JValue src = null;

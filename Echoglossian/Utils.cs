@@ -142,7 +142,7 @@ namespace Echoglossian
       Size? minSizeOptional = null)
     {
 #if DEBUG
-      PluginLog.LogWarning("Inside image creation method");
+      PluginLog.LogVerbose("Inside image creation method");
 #endif
       PrivateFontCollection pfc = new();
       pfc.AddFontFile(
@@ -203,7 +203,7 @@ namespace Echoglossian
         }
       }
 #if DEBUG
-      PluginLog.LogWarning("Before returning the image created");
+      PluginLog.LogVerbose("Before returning the image created");
 #endif
       return textAsImage;
     }
@@ -216,7 +216,7 @@ namespace Echoglossian
     private byte[] TranslationImageConverter(Image image)
     {
 #if DEBUG
-      PluginLog.LogWarning("Conversion to byte");
+      PluginLog.LogVerbose("Conversion to byte");
 #endif
       var imageConverter = new ImageConverter();
       return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));

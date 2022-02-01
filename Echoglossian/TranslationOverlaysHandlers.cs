@@ -397,7 +397,7 @@ namespace Echoglossian
     {
 #if DEBUG
 
-      // PluginLog.LogWarning("Using Toast Overlay - inside Draw Error toast Overlay");
+      // PluginLog.LogVerbose("Using Toast Overlay - inside Draw Error toast Overlay");
 #endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
         new Vector2(
@@ -411,14 +411,14 @@ namespace Echoglossian
         ImGui.CalcTextSize(this.currentErrorToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
 #if DEBUG
 
-      // PluginLog.LogWarning($"size: {size}");
+      // PluginLog.LogVerbose($"size: {size}");
 #endif
       ImGui.SetNextWindowSizeConstraints(
         new Vector2(size, 0),
         new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2));
 #if DEBUG
 
-      // PluginLog.LogWarning($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2)}");
+      // PluginLog.LogVerbose($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2)}");
 #endif
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.FontLoaded)
@@ -467,7 +467,7 @@ namespace Echoglossian
     {
 #if DEBUG
 
-      // PluginLog.LogWarning("Using Toast Overlay - inside Draw Class change toast Overlay");
+      // PluginLog.LogVerbose("Using Toast Overlay - inside Draw Class change toast Overlay");
 #endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
         new Vector2(
@@ -480,13 +480,13 @@ namespace Echoglossian
         this.classChangeToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentClassChangeToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
 #if DEBUG
-      PluginLog.LogWarning($"size: {size}");
+      PluginLog.LogVerbose($"size: {size}");
 #endif
       ImGui.SetNextWindowSizeConstraints(
         new Vector2(size, 0),
         new Vector2(size * 4, this.classChangeToastTranslationTextDimensions.Y * 2));
 #if DEBUG
-      PluginLog.LogWarning(
+      PluginLog.LogVerbose(
         $"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.classChangeToastTranslationTextDimensions.Y * 2)}");
 #endif
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));

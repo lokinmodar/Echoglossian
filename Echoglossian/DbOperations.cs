@@ -30,7 +30,7 @@ namespace Echoglossian
       using var context = new EchoglossianDbContext(this.configDir);
       context.Database.MigrateAsync();
 #if DEBUG
-      PluginLog.LogFatal($"Config dir path: {this.configDir}");
+      PluginLog.LogVerbose($"Config dir path: {this.configDir}");
 #endif
     }
 
@@ -447,7 +447,7 @@ namespace Echoglossian
 #if DEBUG
         logStream.WriteLineAsync($"Query operation error: {e}");
 #endif
-        PluginLog.LogWarning("Could not find any Error Toasts in Database");
+        PluginLog.LogVerbose("Could not find any Error Toasts in Database");
       }
     }
 
@@ -477,7 +477,7 @@ namespace Echoglossian
 #if DEBUG
         logStream.WriteLineAsync($"Query operation error: {e}");
 #endif
-        PluginLog.LogWarning("Could not find any Other Toasts in Database");
+        PluginLog.LogVerbose("Could not find any Other Toasts in Database");
       }
     }
 #if DEBUG

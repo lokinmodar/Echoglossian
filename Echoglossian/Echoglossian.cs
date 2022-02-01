@@ -41,6 +41,7 @@ namespace Echoglossian
     private readonly SemaphoreSlim battleTalkTranslationSemaphore;
     private readonly TextureWrap choiceImage;
     private readonly SemaphoreSlim classChangeToastTranslationSemaphore;
+    private readonly string configDir;
 
     private readonly Config configuration;
 
@@ -59,7 +60,6 @@ namespace Echoglossian
     private readonly SemaphoreSlim toastTranslationSemaphore;
     private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
     private bool config;
-    private readonly string configDir;
 
     private bool PluginAssetsState;
 
@@ -69,23 +69,27 @@ namespace Echoglossian
 
       this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
-      CommandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
-      {
-        HelpMessage = Resources.HelpMessage
-      });
+      CommandManager.AddHandler(
+        SlashCommand,
+        new CommandInfo(this.Command)
+        {
+          HelpMessage = Resources.HelpMessage
+        });
 
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
       Resolver.Initialize();
 
       langDict = this.LanguagesDictionary;
-      identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+      identifier = Factory.Load(
+        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
       Common = new XivCommonBase( /*Hooks.Talk | */Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
       this.CreateOrUseDb();
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
-      this.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
+      this.AssetsPath =
+        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
 
       this.AssetFiles.Add("NotoSansCJKhk-Regular.otf");
       this.AssetFiles.Add("NotoSansCJKjp-Regular.otf");
@@ -94,14 +98,15 @@ namespace Echoglossian
       this.AssetFiles.Add("NotoSansCJKtc-Regular.otf");
 
 #if DEBUG
-      // PluginLog.LogWarning($"Assets state config: {JsonConvert.SerializeObject(this.configuration, Formatting.Indented)}");
+
+      // PluginLog.LogVerbose($"Assets state config: {JsonConvert.SerializeObject(this.configuration, Formatting.Indented)}");
 #endif
       this.FixConfig();
 
       this.PluginAssetsState = this.configuration.PluginAssetsDownloaded;
 #if DEBUG
-      PluginLog.LogWarning($"Assets state config: {this.configuration.PluginAssetsDownloaded}");
-      PluginLog.LogWarning($"Assets state var: {this.PluginAssetsState}");
+      PluginLog.LogVerbose($"Assets state config: {this.configuration.PluginAssetsDownloaded}");
+      PluginLog.LogVerbose($"Assets state var: {this.PluginAssetsState}");
 #endif
       if (!this.PluginAssetsState)
       {
@@ -166,26 +171,19 @@ namespace Echoglossian
       }*/
     }
 
-    [PluginService]
-    public static DataManager DManager { get; } = null!;
+    [PluginService] public static DataManager DManager { get; } = null!;
 
-    [PluginService]
-    public static DalamudPluginInterface PluginInterface { get; } = null!;
+    [PluginService] public static DalamudPluginInterface PluginInterface { get; } = null!;
 
-    [PluginService]
-    public static CommandManager CommandManager { get; } = null!;
+    [PluginService] public static CommandManager CommandManager { get; } = null!;
 
-    [PluginService]
-    public static Framework Framework { get; } = null!;
+    [PluginService] public static Framework Framework { get; } = null!;
 
-    [PluginService]
-    public static GameGui GameGui { get; } = null!;
+    [PluginService] public static GameGui GameGui { get; } = null!;
 
-    [PluginService]
-    public static ClientState ClientState { get; } = null!;
+    [PluginService] public static ClientState ClientState { get; } = null!;
 
-    [PluginService]
-    public static ToastGui ToastGui { get; } = null!;
+    [PluginService] public static ToastGui ToastGui { get; } = null!;
 
     private static XivCommonBase Common { get; set; }
 
@@ -208,6 +206,7 @@ namespace Echoglossian
     {
       // Common.Functions.Talk.OnTalk -= this.GetTalk;
       Common.Functions.BattleTalk.OnBattleTalk -= this.GetBattleTalk;
+
       // Common.Functions.ChatBubbles.OnChatBubble -= this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip -= this.TooltipsOnActionTooltip;
       Common?.Dispose();
@@ -251,6 +250,7 @@ namespace Echoglossian
       if (!this.configuration.Translate)
       {
 #if DEBUG
+
         // PluginLog.Log("Translations are disabled!");
 #endif
         return;
@@ -262,32 +262,32 @@ namespace Echoglossian
         case true when !this.FontLoaded || this.FontLoadFailed:
           return;
         case true:
+        {
+          switch (ClientState.IsLoggedIn)
           {
-            switch (ClientState.IsLoggedIn)
-            {
-              case true:
+            case true:
 
-                this.TalkHandler("Talk", 1);
+              this.TalkHandler("Talk", 1);
 
-                this.TalkSubtitleHandler("TalkSubtitle", 1);
-                this.BattleTalkHandler("_BattleTalk", 1);
+              this.TalkSubtitleHandler("TalkSubtitle", 1);
+              this.BattleTalkHandler("_BattleTalk", 1);
 
-                this.TextErrorToastHandler("_TextError", 1);
+              this.TextErrorToastHandler("_TextError", 1);
 
-                this.ToastHandler("_WideText", 1);
+              this.ToastHandler("_WideText", 1);
 
-                // this.ClassChangeToastHandler("_WideText", 1);
-                //
-                // this.ClassChangeToastHandler("_WideText", 2);
-                this.ToastHandler("_TextClassChange", 1);
-                this.ToastHandler("_AreaText", 1);
+              // this.ClassChangeToastHandler("_WideText", 1);
+              //
+              // this.ClassChangeToastHandler("_WideText", 2);
+              this.ToastHandler("_TextClassChange", 1);
+              this.ToastHandler("_AreaText", 1);
 
-                // this.QuestToastHandler("_ScreenText", 1);
-                break;
-            }
-
-            break;
+              // this.QuestToastHandler("_ScreenText", 1);
+              break;
           }
+
+          break;
+        }
 
         default:
           this.DisableAllTranslations();
@@ -336,10 +336,12 @@ namespace Echoglossian
         return;
       }
 
-      if (this.configuration.UseImGuiForBattleTalk && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
+      if (this.configuration.UseImGuiForBattleTalk && this.configuration.TranslateBattleTalk &&
+          this.battleTalkDisplayTranslation)
       {
         this.DrawTranslatedBattleDialogueWindow();
 #if DEBUG
+
         // PluginLog.LogVerbose("Showing BattleTalk Translation Overlay.");
 #endif
       }
@@ -348,21 +350,24 @@ namespace Echoglossian
       {
         this.DrawTranslatedDialogueWindow();
 #if DEBUG
+
         // PluginLog.LogVerbose("Showing Talk Translation Overlay.");
 #endif
       }
 
 #if DEBUG
-      /* PluginLog.LogWarning($"Toast Draw Vars: !UseImGuiForToasts - {!this.configuration.UseImGuiForToasts}" +
+      /* PluginLog.LogVerbose($"Toast Draw Vars: !UseImGuiForToasts - {!this.configuration.UseImGuiForToasts}" +
                     $", TranslateErrorToast - {this.configuration.TranslateErrorToast}" +
                     $", errorToastDisplayTranslation - {this.errorToastDisplayTranslation}" +
                     $" equals? {!this.configuration.UseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation}");*/
 #endif
-      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
+      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateErrorToast &&
+          this.errorToastDisplayTranslation)
       {
         this.DrawTranslatedErrorToastWindow();
 #if DEBUG
-        // PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+
+        // PluginLog.LogVerbose("Showing Error Toast Translation Overlay.");
 #endif
       }
 
@@ -370,7 +375,8 @@ namespace Echoglossian
       {
         this.DrawTranslatedToastWindow();
 #if DEBUG
-        // PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+
+        // PluginLog.LogVerbose("Showing Error Toast Translation Overlay.");
 #endif
       }
 
@@ -378,7 +384,7 @@ namespace Echoglossian
       {
         this.DrawTranslatedClassChangeToastWindow();
         */ /*#if DEBUG
-                PluginLog.LogWarning("Showing Error Toast Translation Overlay.");
+                PluginLog.LogVerbose("Showing Error Toast Translation Overlay.");
         #endif*/ /*
       }*/
     }
