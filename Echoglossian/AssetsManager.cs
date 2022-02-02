@@ -132,7 +132,7 @@ namespace Echoglossian
       }
       catch (Exception e)
       {
-        PluginLog.LogError($"Error downloading plugin assets: {e}");
+        PluginLog.LogVerbose($"Error downloading plugin assets: {e}");
         PluginInterface.UiBuilder.AddNotification(
           $"Error downloading plugin assets: {this.AssetFiles[index]}",
           "Echoglossian",
