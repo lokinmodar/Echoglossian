@@ -34,7 +34,7 @@ namespace Echoglossian
     /// </summary>
     /// <param name="message">text to have the source language identified.</param>
     /// <returns>Returns the detected language code.</returns>
-    public static string LangIdentify(string message)
+    private static string LangIdentify(string message)
     {
       // Sanitizer sanitizer = new(ClientLanguage);
       var sanitizedString = sanitizer.Sanitize(message);
@@ -57,7 +57,7 @@ namespace Echoglossian
     /// <param name="text">Text to be translated.</param>
     /// <returns>Returns the translated text passed in the call parameter.</returns>
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
-    public static string Translate(string text)
+    private static string Translate(string text)
     {
       var startingEllipsis = string.Empty;
       if (text.IsNullOrEmpty())
@@ -65,27 +65,31 @@ namespace Echoglossian
         return string.Empty;
       }
 #if DEBUG
-      PluginLog.LogError("inside translate method");
+      PluginLog.LogVerbose("inside translate method");
 #endif
       try
       {
         var lang = langDict[languageInt].Code;
         var sanitizedString = sanitizer.Sanitize(text);
+        
         if (sanitizedString.IsNullOrEmpty())
         {
           return string.Empty;
         }
 
-        if (sanitizedString == "...")
+        switch (sanitizedString)
         {
-          return sanitizedString;
+          case "...":
+            return sanitizedString;
+          case "???":
+            return sanitizedString;
         }
 
         string parsedText;
         if (sanitizedString.StartsWith("..."))
         {
           startingEllipsis = "...";
-          parsedText = sanitizedString.Substring(3);
+          parsedText = sanitizedString[3..];
         }
         else
         {

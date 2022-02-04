@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game.Text.SeStringHandling;
@@ -23,7 +24,7 @@ namespace Echoglossian
     private readonly ConcurrentQueue<TalkMessage> _talkMessageQueue = new();
     private readonly ConcurrentQueue<TalkMessage> _translatedTalkMessageQueue = new();
     private ConcurrentDictionary<int, TalkMessage> _talkConcurrentDictionary = new(); // not using this right now
-
+    
     public bool talkTracker { get; set; } = false;
 
     private void HandleTalkAsync()
@@ -35,7 +36,7 @@ namespace Echoglossian
       }
       catch (Exception e)
       {
-        PluginLog.LogError($"Talk Translation Thread Error: {e}");
+        PluginLog.LogVerbose($"Talk Translation Thread Error: {e}");
         throw;
       }
     }
@@ -100,40 +101,58 @@ namespace Echoglossian
 #endif
       if (!this.configuration.TranslateTalk)
       {
+        PluginLog.LogWarning("-1");
         return;
       }
 
       try
       {
+        // PluginLog.LogWarning("0");
         var talk = GameGui.GetAddonByName(addonName, index);
         if (talk != IntPtr.Zero)
         {
+          // PluginLog.LogWarning("1");
           var talkMaster = (AtkUnitBase*)talk;
           if (talkMaster->IsVisible)
           {
+            PluginLog.LogWarning("2");
             var nameTextNode = talkMaster->GetTextNodeById(2);
             var nameNodeText = nameTextNode->NodeText.ToString();
             var textTextNode = talkMaster->GetTextNodeById(3);
             var textNodeText = textTextNode->NodeText.ToString();
 #if DEBUG
-            PluginLog.LogError($"Name Node text: {nameNodeText}");
-            PluginLog.LogError($"Text Node text: {textNodeText}");
+            PluginLog.LogVerbose($"Name Node text: {nameNodeText}");
+            PluginLog.LogVerbose($"Text Node text: {textNodeText}");
 #endif
             if (nameNodeText.IsNullOrEmpty() && textNodeText.IsNullOrEmpty())
             {
+              PluginLog.LogWarning("3");
               return;
             }
-
+            PluginLog.LogWarning("4");
             var nameToTranslate = !nameNodeText.IsNullOrEmpty() ? nameNodeText : string.Empty;
-            var textToTranslate = textNodeText;
+            var textToTranslate = sanitizer.Sanitize(textNodeText);
 
             var talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
-
-            // this._talkMessageQueue.Enqueue(talkMessage);
-
 #if DEBUG
             PluginLog.LogVerbose($"Before DB Query attempt: {talkMessage}");
 #endif
+            if (this.FoundTalkMessage != null)
+            {
+              if (this.FoundTalkMessage.OriginalTalkMessage != textNodeText)
+              {
+                if (this.FoundTalkMessage.TranslatedTalkMessage == textToTranslate)
+                {
+                  return;
+                }
+              }
+              else
+              {
+                return;
+              }
+            }
+
+
             var findings = this.FindTalkMessage(talkMessage);
 #if DEBUG
             PluginLog.LogVerbose(
@@ -141,6 +160,8 @@ namespace Echoglossian
 #endif
             if (findings)
             {
+
+              
               if (!this.configuration.UseImGuiForTalk)
               {
                 var translatedText = this.FoundTalkMessage.TranslatedTalkMessage;
@@ -150,14 +171,16 @@ namespace Echoglossian
 #endif
                 if (this.configuration.TranslateNpcNames)
                 {
-                  // TODO: fix this to use node elements
-                  name = nameTranslation == string.Empty ? name : nameTranslation;
-                  text = translatedText;
+                  nameTextNode->SetText(nameTranslation == string.Empty ? nameNodeText : nameTranslation);
+                  var formattedTranslatedText = FormatText(translatedText);
+                  PluginLog.LogWarning($"Formatted node text: {formattedTranslatedText}");
+                  textTextNode->SetText(formattedTranslatedText);
                 }
                 else
                 {
-                  // TODO: fix this to use node elements
-                  text = translatedText;
+                  var formattedTranslatedText = FormatText(translatedText);
+                  PluginLog.LogWarning($"Formatted node text: {formattedTranslatedText}");
+                  textTextNode->SetText(formattedTranslatedText);
                 }
               }
               else
@@ -249,11 +272,11 @@ namespace Echoglossian
                     });
 
                   // TODO: fix to use detected node elements
-                  name = this.FoundTalkMessage.TranslatedSenderName;
-                  text = this.FoundTalkMessage.TranslatedTalkMessage;
+                  nameTextNode->SetText(this.FoundTalkMessage.TranslatedSenderName);
+                  textTextNode->SetText(this.FoundTalkMessage.TranslatedTalkMessage);
                 }
               }
-            }
+            }/*
             else
             {
               if (translatedTalkMessage != null)
@@ -305,12 +328,12 @@ namespace Echoglossian
                     LangIdentify(nameNodeText),
                     string.Empty,
                     string.Empty,
-                    langDict[languageInt].Code,
+                    this.LanguagesDictionary[this.configuration.Lang].Code,
                     chosenTransEngine,
                     DateTime.UtcNow,
                     null));
               }
-            }
+            }*/
           }
           else
           {
@@ -371,7 +394,7 @@ namespace Echoglossian
 //tentative async
 PluginLog.LogVerbose("1");
 this._talkMessageQueue.Enqueue(new TalkMessage(nameToTranslate, textToTranslate, LangIdentify(textToTranslate),
-  LangIdentify(nameToTranslate), string.Empty, string.Empty, langDict[languageInt].Code,
+  LangIdentify(nameToTranslate), string.Empty, string.Empty, this.LanguagesDictionary[this.configuration.Lang].Code,
   this.configuration.ChosenTransEngine, DateTime.Now,
   DateTime.Now));
 
@@ -412,7 +435,7 @@ else
                 LangIdentify(nameToTranslate),
                 nameTranslation,
                 translatedText,
-                langDict[languageInt].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -421,7 +444,7 @@ else
 #endif
               var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-              PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+              PluginLog.LogVerbose($"Talk Message DB Insert operation result: {result}");
 #endif
             }
             else
@@ -435,14 +458,14 @@ else
                 LangIdentify(nameToTranslate),
                 string.Empty,
                 translatedText,
-                langDict[languageInt].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
 
               var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-              PluginLog.LogError(result);
+              PluginLog.LogVerbose(result);
 #endif
             }
 #if DEBUG
@@ -509,7 +532,7 @@ else
                   this.talkTranslationSemaphore.Release();
 
 #if DEBUG
-                  PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
+                  PluginLog.LogVerbose($"Before if talk translation: {this.currentTalkTranslation}");
 #endif
                   if (this.currentNameTranslation != Resources.WaitingForTranslation &&
                       this.currentTalkTranslation != Resources.WaitingForTranslation)
@@ -521,13 +544,13 @@ else
                       LangIdentify(nameToTranslate),
                       this.configuration.TranslateNpcNames ? this.currentNameTranslation : string.Empty,
                       this.currentTalkTranslation,
-                      langDict[languageInt].Code,
+                      this.LanguagesDictionary[this.configuration.Lang].Code,
                       this.configuration.ChosenTransEngine,
                       DateTime.Now,
                       DateTime.Now);
                     var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                    PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+                    PluginLog.LogVerbose($"Talk Message DB Insert operation result: {result}");
 #endif
                   }
                 });
@@ -581,7 +604,7 @@ else
                   LangIdentify(nameToTranslate),
                   nameTranslation,
                   translatedText,
-                  langDict[languageInt].Code,
+                  this.LanguagesDictionary[this.configuration.Lang].Code,
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
                   DateTime.Now);
@@ -590,7 +613,7 @@ else
 #endif
                 var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+                PluginLog.LogVerbose($"Talk Message DB Insert operation result: {result}");
 #endif
               }
               else
@@ -611,7 +634,7 @@ else
 
                     this.talkTranslationSemaphore.Release();
                     /*#if DEBUG
-                                      PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
+                                      PluginLog.LogVerbose($"Before if talk translation: {this.currentTalkTranslation}");
                     //#endif*/
                     /*if (this.currentNameTranslation != Resources.WaitingForTranslation &&
                         this.currentTalkTranslation != Resources.WaitingForTranslation)
@@ -620,11 +643,11 @@ else
                         LangIdentify(this.currentTalkTranslation),
                         LangIdentify(this.currentNameTranslation),
                         this.configuration.TranslateNPCNames ? Translate(this.currentNameTranslation) : string.Empty,
-                        Translate(this.currentTalkTranslation), langDict[languageInt].Code,
+                        Translate(this.currentTalkTranslation), this.LanguagesDictionary[this.configuration.Lang].Code,
                         this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                       var result = this.InsertTalkData(translatedTalkData);
   #if DEBUG
-                      PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+                      PluginLog.LogVerbose($"Talk Message DB Insert operation result: {result}");
   #endif
                     }*/
                   });
@@ -636,14 +659,14 @@ else
                   LangIdentify(nameToTranslate),
                   string.Empty,
                   translatedText,
-                  langDict[languageInt].Code,
+                  this.LanguagesDictionary[this.configuration.Lang].Code,
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
                   DateTime.Now);
 
                 var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                PluginLog.LogError(result);
+                PluginLog.LogVerbose(result);
 #endif
               }
             }

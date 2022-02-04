@@ -315,10 +315,10 @@ namespace Echoglossian
         if (this.ErrorToastsCache.Count > 0 && this.ErrorToastsCache != null)
         {
 #if DEBUG
-          PluginLog.LogError($"Total ErrorToasts in cache: {this.ErrorToastsCache.Count}");
+          PluginLog.LogVerbose($"Total ErrorToasts in cache: {this.ErrorToastsCache.Count}");
           /* foreach (ToastMessage t in this.ErrorToastsCache)
            {
-             PluginLog.LogError($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
+             PluginLog.LogVerbose($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
            }*/
 #endif
           isInThere = this.ErrorToastsCache.Any(
@@ -374,10 +374,10 @@ namespace Echoglossian
         if (this.OtherToastsCache.Count > 0 && this.OtherToastsCache != null)
         {
 #if DEBUG
-          PluginLog.LogError($"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
+          PluginLog.LogVerbose($"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
           /* foreach (ToastMessage t in this.OtherToastsCache)
            {
-             PluginLog.LogError($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
+             PluginLog.LogVerbose($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
            }*/
 #endif
           isInThere = this.OtherToastsCache.Any(

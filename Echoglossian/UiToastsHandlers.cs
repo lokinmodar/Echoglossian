@@ -110,16 +110,16 @@ namespace Echoglossian
             if (!this.configuration.UseImGuiForToasts)
             {
 #if DEBUG
-              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast");
+              PluginLog.LogVerbose("Not Using Imgui - Translate ClassChange toast");
 #endif
               this.currentClassChangeToastTranslationId = Environment.TickCount;
               this.currentClassChangeToastTranslation = Resources.WaitingForTranslation;
 #if DEBUG
-              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast 1");
+              PluginLog.LogVerbose("Not Using Imgui - Translate ClassChange toast 1");
 #endif
               textNode->SetText(Resources.WaitingForTranslation);
 #if DEBUG
-              PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 2");
+              PluginLog.LogVerbose("Not Using Imgui - Translate ClassChange toast - 2");
 #endif
 
               Task.Run(
@@ -128,7 +128,7 @@ namespace Echoglossian
                   var messageId = this.currentClassChangeToastTranslationId;
 
 #if DEBUG
-                  PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 3");
+                  PluginLog.LogVerbose("Not Using Imgui - Translate ClassChange toast - 3");
 #endif
 
                   textNode->SetText(this.currentClassChangeToastTranslation);
@@ -137,14 +137,14 @@ namespace Echoglossian
                   {
                     var messageTranslation = Translate(messageToTranslate);
 #if DEBUG
-                    PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 4");
+                    PluginLog.LogVerbose("Not Using Imgui - Translate ClassChange toast - 4");
 #endif
                     textNode->SetText(messageTranslation);
                   }
 
                   textNode->SetText(Resources.WaitingForTranslation);
 #if DEBUG
-                  PluginLog.LogError("Not Using Imgui - Translate ClassChange toast - 5");
+                  PluginLog.LogVerbose("Not Using Imgui - Translate ClassChange toast - 5");
 #endif
                   this.classChangeToastTranslationSemaphore.Release();
                 });
@@ -152,7 +152,7 @@ namespace Echoglossian
             else
             {
 #if DEBUG
-              PluginLog.LogError("Using Imgui - Translate ClassChange toast");
+              PluginLog.LogVerbose("Using Imgui - Translate ClassChange toast");
 #endif
               this.classChangeToastDisplayTranslation = true;
               this.currentClassChangeToastTranslationId = Environment.TickCount;
@@ -216,10 +216,10 @@ namespace Echoglossian
 
           // TODO: convert all to this approach + async
           /*var errorToastId = errorToastByNameMaster->RootNode->ChildNode->NodeID;
-          PluginLog.LogError($"error toast id: {errorToastId}");
+          PluginLog.LogVerbose($"error toast id: {errorToastId}");
           var textNode = (AtkTextNode*)errorToastByNameMaster->UldManager.SearchNodeById(errorToastId);
           //var nodeText = MemoryHelper.ReadString((IntPtr)textNode->NodeText.StringPtr, (int)textNode->NodeText.StringLength);
-          PluginLog.LogError(textNode->NodeText.ToString() ?? "sem nada...");
+          PluginLog.LogVerbose(textNode->NodeText.ToString() ?? "sem nada...");
           textNode->SetText("What is a man? A miserable little pile of secrets. But enough talk… Have at you!");*/
 
           this.errorToastTranslationTextDimensions.X =
@@ -397,7 +397,7 @@ namespace Echoglossian
           if (!this.configuration.UseImGuiForToasts)
           {
 #if DEBUG
-            PluginLog.LogError("if not found and if not using imgui");
+            PluginLog.LogVerbose("if not found and if not using imgui");
 #endif
             var translatedToastMessage = Translate(message.TextValue);
             message = translatedToastMessage;
@@ -407,7 +407,7 @@ namespace Echoglossian
               messageTextToTranslate,
               LangIdentify(messageTextToTranslate),
               translatedToastMessage,
-              langDict[languageInt].Code,
+              this.LanguagesDictionary[this.configuration.Lang].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -416,13 +416,13 @@ namespace Echoglossian
 #endif
             var result = this.InsertErrorToastMessageData(translatedToastData);
 #if DEBUG
-            PluginLog.LogError($"Toast Message DB Insert operation result: {result}");
+            PluginLog.LogVerbose($"Toast Message DB Insert operation result: {result}");
 #endif
           }
           else
           {
 #if DEBUG
-            PluginLog.LogError("if not found and if using imgui");
+            PluginLog.LogVerbose("if not found and if using imgui");
 #endif
             this.currentErrorToastTranslationId = Environment.TickCount;
             this.currentErrorToastTranslation = Resources.WaitingForTranslation;
@@ -439,7 +439,7 @@ namespace Echoglossian
 
                 this.errorToastTranslationSemaphore.Release();
 #if DEBUG
-                PluginLog.LogError($"Before if ErrorToast translation: {this.currentErrorToastTranslation}");
+                PluginLog.LogVerbose($"Before if ErrorToast translation: {this.currentErrorToastTranslation}");
 #endif
                 if (this.currentErrorToastTranslation != Resources.WaitingForTranslation)
                 {
@@ -448,13 +448,13 @@ namespace Echoglossian
                     messageTextToTranslate,
                     errorToastToHandle.OriginalLang,
                     this.currentErrorToastTranslation,
-                    langDict[languageInt].Code,
+                    this.LanguagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);
                   var result = this.InsertErrorToastMessageData(translatedErrorToastData);
 #if DEBUG
-                  PluginLog.LogError($"ToastMessage DB Insert operation result: {result}");
+                  PluginLog.LogVerbose($"ToastMessage DB Insert operation result: {result}");
 #endif
                 }
               });
@@ -471,7 +471,7 @@ namespace Echoglossian
         if (!this.configuration.UseImGuiForToasts)
         {
 #if DEBUG
-          PluginLog.LogError("if found and if not using imgui");
+          PluginLog.LogVerbose("if found and if not using imgui");
 #endif
           message = this.FoundToastMessage.TranslatedToastMessage;
 #if DEBUG
@@ -481,7 +481,7 @@ namespace Echoglossian
         else
         {
 #if DEBUG
-          PluginLog.LogError("if found and if using imgui");
+          PluginLog.LogVerbose("if found and if using imgui");
 #endif
           this.currentErrorToastTranslationId = Environment.TickCount;
           this.currentErrorToastTranslation = Resources.WaitingForTranslation;
@@ -544,7 +544,7 @@ namespace Echoglossian
           if (!this.configuration.UseImGuiForToasts)
           {
 #if DEBUG
-            PluginLog.LogError("if not found and if not using imgui");
+            PluginLog.LogVerbose("if not found and if not using imgui");
 #endif
             var translatedToastMessage = Translate(message.TextValue);
             message = translatedToastMessage;
@@ -554,7 +554,7 @@ namespace Echoglossian
               messageTextToTranslate,
               LangIdentify(messageTextToTranslate),
               translatedToastMessage,
-              langDict[languageInt].Code,
+              this.LanguagesDictionary[this.configuration.Lang].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -563,13 +563,13 @@ namespace Echoglossian
 #endif
             var result = this.InsertOtherToastMessageData(translatedToastData);
 #if DEBUG
-            PluginLog.LogError($"Toast Message DB Insert operation result: {result}");
+            PluginLog.LogVerbose($"Toast Message DB Insert operation result: {result}");
 #endif
           }
           else
           {
 #if DEBUG
-            PluginLog.LogError("if not found and if using imgui");
+            PluginLog.LogVerbose("if not found and if using imgui");
 #endif
             this.currentToastTranslationId = Environment.TickCount;
             this.currentToastTranslation = Resources.WaitingForTranslation;
@@ -586,7 +586,7 @@ namespace Echoglossian
 
                 this.toastTranslationSemaphore.Release();
 #if DEBUG
-                PluginLog.LogError($"Before if toast translation: {this.currentToastTranslation}");
+                PluginLog.LogVerbose($"Before if toast translation: {this.currentToastTranslation}");
 #endif
                 if (this.currentToastTranslation != Resources.WaitingForTranslation)
                 {
@@ -595,13 +595,13 @@ namespace Echoglossian
                     messageTextToTranslate,
                     toastToHandle.OriginalLang,
                     this.currentToastTranslation,
-                    langDict[languageInt].Code,
+                    this.LanguagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);
                   var result = this.InsertOtherToastMessageData(translatedToastData);
 #if DEBUG
-                  PluginLog.LogError($"ToastMessage DB Insert operation result: {result}");
+                  PluginLog.LogVerbose($"ToastMessage DB Insert operation result: {result}");
 #endif
                 }
               });
@@ -618,7 +618,7 @@ namespace Echoglossian
         if (!this.configuration.UseImGuiForToasts)
         {
 #if DEBUG
-          PluginLog.LogError("if found and if not using imgui");
+          PluginLog.LogVerbose("if found and if not using imgui");
 #endif
           message = this.FoundToastMessage.TranslatedToastMessage;
 #if DEBUG
@@ -628,7 +628,7 @@ namespace Echoglossian
         else
         {
 #if DEBUG
-          PluginLog.LogError("if found and if using imgui");
+          PluginLog.LogVerbose("if found and if using imgui");
 #endif
           this.currentToastTranslationId = Environment.TickCount;
           this.currentToastTranslation = Resources.WaitingForTranslation;

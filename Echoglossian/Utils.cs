@@ -4,12 +4,16 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
+using Dalamud.Utility;
 using Echoglossian.Properties;
 
 namespace Echoglossian
@@ -120,7 +124,7 @@ namespace Echoglossian
 
     private void SaveConfig()
     {
-      // this.configuration.Lang = languageInt;
+      // this.configuration.Lang = this.configuration.Lang;
       PluginInterface.SavePluginConfig(this.configuration);
     }
 
@@ -219,7 +223,21 @@ namespace Echoglossian
       PluginLog.LogVerbose("Conversion to byte");
 #endif
       var imageConverter = new ImageConverter();
-      return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));
+      return (byte[])imageConverter.ConvertTo(image, typeof(byte[])) ?? throw new InvalidOperationException();
+    }
+
+    private string FormatText(string text)
+    {
+      if (text.IsNullOrWhitespace())
+      {
+        return string.Empty;
+      }
+
+      var regex = new Regex(@"(.{1,64})(?:\s|$)"); //.{0,70}\S(?=$|\s)
+      return regex.Matches(text)
+        .Select(m => m.Groups[1].Value).ToList()
+        .Select(s => string.Join(s, "\u000A\u000D")).ToList()
+        .Aggregate((current, next) => current + next);
     }
   }
 }

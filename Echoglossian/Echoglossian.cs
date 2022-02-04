@@ -80,6 +80,7 @@ namespace Echoglossian
       Resolver.Initialize();
 
       langDict = this.LanguagesDictionary;
+      languageInt = this.configuration.Lang;
       identifier = Factory.Load(
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
@@ -127,8 +128,6 @@ namespace Echoglossian
 
       PluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
-      languageInt = this.configuration.Lang;
-
       fontSize = this.configuration.FontSize;
 
       chosenTransEngine = this.configuration.ChosenTransEngine;
@@ -171,19 +170,19 @@ namespace Echoglossian
       }*/
     }
 
-    [PluginService] public static DataManager DManager { get; } = null!;
+    [PluginService] public static DataManager DManager { get; set; } = null!;
 
-    [PluginService] public static DalamudPluginInterface PluginInterface { get; } = null!;
+    [PluginService] public static DalamudPluginInterface PluginInterface { get; set; } = null!;
 
-    [PluginService] public static CommandManager CommandManager { get; } = null!;
+    [PluginService] public static CommandManager CommandManager { get; set; } = null!;
 
-    [PluginService] public static Framework Framework { get; } = null!;
+    [PluginService] public static Framework Framework { get; set; } = null!;
 
-    [PluginService] public static GameGui GameGui { get; } = null!;
+    [PluginService] public static GameGui GameGui { get; set; } = null!;
 
-    [PluginService] public static ClientState ClientState { get; } = null!;
+    [PluginService] public static ClientState ClientState { get; set; } = null!;
 
-    [PluginService] public static ToastGui ToastGui { get; } = null!;
+    [PluginService] public static ToastGui ToastGui { get; set; } = null!;
 
     private static XivCommonBase Common { get; set; }
 

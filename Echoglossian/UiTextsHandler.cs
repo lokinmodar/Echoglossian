@@ -33,7 +33,7 @@ namespace Echoglossian
         }
       }
 
-      //PluginLog.LogError($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+      //PluginLog.LogVerbose($"Sheet row: {a.RowId}: {a.Text.ToString()}");
     }
   }
 }

@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite.Models;
 
 namespace Echoglossian
@@ -12,6 +13,7 @@ namespace Echoglossian
   {
     public TalkMessage FormatTalkMessage(string sender, string text)
     {
+      PluginLog.LogWarning("cu");
       return new TalkMessage(
         sender,
         text,

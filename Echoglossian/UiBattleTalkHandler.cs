@@ -104,7 +104,7 @@ namespace Echoglossian
                 LangIdentify(senderToTranslate),
                 senderTranslation,
                 translatedBattleTalkMessage,
-                langDict[languageInt].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -113,7 +113,7 @@ namespace Echoglossian
 #endif
               var result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
-              PluginLog.LogError($"BattleTalk Message DB Insert operation result: {result}");
+              PluginLog.LogVerbose($"BattleTalk Message DB Insert operation result: {result}");
 #endif
             }
             else
@@ -127,14 +127,14 @@ namespace Echoglossian
                 LangIdentify(senderToTranslate),
                 string.Empty,
                 translatedBattleTalkMessage,
-                langDict[languageInt].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
 
               var result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
-              PluginLog.LogError($"Using BattleTalk Overlay - BattleTalk Message DB Insert operation result: {result}");
+              PluginLog.LogVerbose($"Using BattleTalk Overlay - BattleTalk Message DB Insert operation result: {result}");
 #endif
             }
 #if DEBUG
@@ -177,7 +177,7 @@ namespace Echoglossian
 
                 this.battleTalkTranslationSemaphore.Release();
 #if DEBUG
-                PluginLog.LogError($"Before if BattleTalk translation: {this.currentBattleTalkTranslation}");
+                PluginLog.LogVerbose($"Before if BattleTalk translation: {this.currentBattleTalkTranslation}");
 #endif
                 if (this.currentSenderTranslation != Resources.WaitingForTranslation &&
                     this.currentBattleTalkTranslation != Resources.WaitingForTranslation)
@@ -189,13 +189,13 @@ namespace Echoglossian
                     LangIdentify(senderToTranslate),
                     this.configuration.TranslateNpcNames ? this.currentSenderTranslation : string.Empty,
                     this.currentBattleTalkTranslation,
-                    langDict[languageInt].Code,
+                    this.LanguagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);
                   var result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
-                  PluginLog.LogError($"BattleTalk Message DB Insert operation result: {result}");
+                  PluginLog.LogVerbose($"BattleTalk Message DB Insert operation result: {result}");
 #endif
                 }
               });
