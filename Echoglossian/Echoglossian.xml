@@ -216,6 +216,11 @@
               Looks up a localized string similar to About Echoglossian:.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported">
+            <summary>
+              Looks up a localized string similar to Language not supported.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
             <summary>
               Looks up a localized string similar to Attention!.

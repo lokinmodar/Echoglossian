@@ -10,11 +10,14 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
+using Lumina.Data;
 
 namespace Echoglossian
 {
@@ -232,12 +235,29 @@ namespace Echoglossian
       {
         return string.Empty;
       }
-
+      var newLinePayload = new NewLinePayload();
       var regex = new Regex(@"(.{1,64})(?:\s|$)"); //.{0,70}\S(?=$|\s)
       return regex.Matches(text)
         .Select(m => m.Groups[1].Value).ToList()
-        .Select(s => string.Join(s, "\u000A\u000D")).ToList()
+        .Select(s => string.Join(s, newLinePayload)).ToList()
         .Aggregate((current, next) => current + next);
+    }
+
+    private string ConvertClientLanguageToLangCode(Language currentClientLanguage)
+    {
+      return currentClientLanguage switch
+      {
+        Language.English => "en",
+        Language.German => "de",
+        Language.French => "fr",
+        Language.Japanese => "ja",
+        Language.Korean => "ko",
+        Language.None => "simple",
+        Language.ChineseSimplified => "zh-CN",
+        Language.ChineseTraditional => "zh-TW",
+        _ => throw new ArgumentOutOfRangeException(nameof(currentClientLanguage), currentClientLanguage, Resources.Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported)
+      };
     }
   }
 }
+

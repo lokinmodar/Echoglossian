@@ -374,7 +374,7 @@ namespace Echoglossian
         if (this.OtherToastsCache.Count > 0 && this.OtherToastsCache != null)
         {
 #if DEBUG
-          PluginLog.LogVerbose($"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
+          PluginLog.LogVerbose($"Total OtherToasts in cache: {this.OtherToastsCache.Count}");
           /* foreach (ToastMessage t in this.OtherToastsCache)
            {
              PluginLog.LogVerbose($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");

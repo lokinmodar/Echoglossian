@@ -94,8 +94,12 @@
           <target state="final">Echoglossian</target>
         </trans-unit>
         <trans-unit id="pix" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
-          <target state="final">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
+          <target state="final">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </target>
         </trans-unit>
         <trans-unit id="PixText" translate="yes" xml:space="preserve">
           <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
@@ -174,24 +178,44 @@
           <target state="translated">Traduzir no jogo outras mensagens de Toast diversas</target>
         </trans-unit>
         <trans-unit id="logo" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
-          <target state="final">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
+          <target state="final">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </target>
         </trans-unit>
         <trans-unit id="minfilia" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
-          <target state="final">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
+          <target state="final">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </target>
         </trans-unit>
         <trans-unit id="choice" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
-          <target state="final">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
+          <target state="final">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </target>
         </trans-unit>
         <trans-unit id="cutscenechoice" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
-          <target state="final">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
+          <target state="final">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </target>
         </trans-unit>
         <trans-unit id="prttws" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
-          <target state="final">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
+          <target state="final">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </target>
         </trans-unit>
         <trans-unit id="PluginInterfaceLanguage" translate="yes" xml:space="preserve">
           <source>Choose the language for the plugin configuration window</source>

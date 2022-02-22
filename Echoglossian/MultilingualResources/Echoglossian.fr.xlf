@@ -7,8 +7,11 @@
     <body>
       <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
         <trans-unit id="choice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
           <target state="needs-review-translation">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="CloseButtonLabel" translate="yes" xml:space="preserve">
           <source>Close</source>
@@ -60,8 +63,11 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">S’il vous plaît soutenez-nous soit en contribuant au développement du projet, en soumettant des problèmes ou en nous aidant avec un café.</target>
         </trans-unit>
         <trans-unit id="cutscenechoice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
           <target state="needs-review-translation">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="DisclaimerText1" translate="yes" xml:space="preserve">
           <source>This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</source>
@@ -122,12 +128,18 @@
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="logo" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
           <target state="needs-review-translation">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="minfilia" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
           <target state="needs-review-translation">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="Name" translate="yes" xml:space="preserve">
           <source>Echoglossian</source>
@@ -199,8 +211,11 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Acheter lokinmodar un café</target>
         </trans-unit>
         <trans-unit id="pix" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
           <target state="needs-review-translation">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="PixQrWindowLabel" translate="yes" xml:space="preserve">
           <source>PIX qrcode</source>
@@ -220,8 +235,11 @@
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="prttws" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </source>
           <target state="needs-review-translation">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="QRCodeInstructionsText" translate="yes" xml:space="preserve">
           <source>Scan the QR code to send me a PIX - only valid in Brazil</source>

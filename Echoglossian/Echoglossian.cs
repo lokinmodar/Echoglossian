@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
+using Dalamud;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
@@ -22,6 +24,7 @@ using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 using FFXIVClientStructs;
 using ImGuiScene;
+using Lumina.Data;
 using XivCommon;
 
 namespace Echoglossian
@@ -42,7 +45,7 @@ namespace Echoglossian
     private readonly TextureWrap choiceImage;
     private readonly SemaphoreSlim classChangeToastTranslationSemaphore;
     private readonly string configDir;
-
+    private readonly Language clientLanguage;
     private readonly Config configuration;
 
     private readonly CultureInfo cultureInfo;
@@ -78,7 +81,9 @@ namespace Echoglossian
 
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
       Resolver.Initialize();
-
+      
+      this.clientLanguage = ClientState.ClientLanguage.ToLumina();
+      
       langDict = this.LanguagesDictionary;
       languageInt = this.configuration.Lang;
       identifier = Factory.Load(
@@ -242,6 +247,7 @@ namespace Echoglossian
       PluginInterface.UiBuilder.RebuildFonts();
 
       CommandManager.RemoveHandler(SlashCommand);
+
     }
 
     private void Tick(Framework tFramework)
@@ -266,7 +272,7 @@ namespace Echoglossian
           {
             case true:
 
-              this.TalkHandler("Talk", 1);
+              this.TalkHandler();
 
               this.TalkSubtitleHandler("TalkSubtitle", 1);
               this.BattleTalkHandler("_BattleTalk", 1);

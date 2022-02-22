@@ -380,4 +380,7 @@
     <data name="WhichToastsToTranslateText" xml:space="preserve">
     <value>Select which in-game Toast messages to translate</value>
   </data>
+    <data name="Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported" xml:space="preserve">
+      <value>Language not supported</value>
+    </data>
 </root>

@@ -11,13 +11,13 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    public TalkMessage FormatTalkMessage(string sender, string text)
+    private TalkMessage FormatTalkMessage(string sender, string text)
     {
-      PluginLog.LogWarning("cu");
+      PluginLog.LogWarning("Formatting TalkMessage");
       return new TalkMessage(
         sender,
         text,
-        LangIdentify(text),
+        this.ConvertClientLanguageToLangCode(this.clientLanguage),
         LangIdentify(sender),
         string.Empty,
         string.Empty,
@@ -27,12 +27,12 @@ namespace Echoglossian
         DateTime.Now);
     }
 
-    public BattleTalkMessage FormatBattleTalkMessage(string sender, string text)
+    private BattleTalkMessage FormatBattleTalkMessage(string sender, string text)
     {
       return new BattleTalkMessage(
         sender,
         text,
-        LangIdentify(text),
+        this.ConvertClientLanguageToLangCode(this.clientLanguage),
         LangIdentify(sender),
         string.Empty,
         string.Empty,
@@ -42,12 +42,12 @@ namespace Echoglossian
         DateTime.Now);
     }
 
-    public ToastMessage FormatToastMessage(string type, string text)
+    private ToastMessage FormatToastMessage(string type, string text)
     {
       return new ToastMessage(
         type,
         text,
-        LangIdentify(text),
+        this.ConvertClientLanguageToLangCode(this.clientLanguage),
         string.Empty,
         this.LanguagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
