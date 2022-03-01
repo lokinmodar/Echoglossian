@@ -31,7 +31,7 @@ namespace Echoglossian
       PluginLog.Debug("Inside AdjustLanguageForFontBuild method");
 #endif
 
-      var lang = this.LanguagesDictionary[this.configuration.Lang];
+      var lang = this.languagesDictionary[this.configuration.Lang];
       this.specialFontFileName = lang.FontName;
       this.scriptCharList = lang.ExclusiveCharsToAdd;
     }

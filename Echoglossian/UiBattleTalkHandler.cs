@@ -104,7 +104,7 @@ namespace Echoglossian
                 LangIdentify(senderToTranslate),
                 senderTranslation,
                 translatedBattleTalkMessage,
-                this.LanguagesDictionary[this.configuration.Lang].Code,
+                this.languagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -127,7 +127,7 @@ namespace Echoglossian
                 LangIdentify(senderToTranslate),
                 string.Empty,
                 translatedBattleTalkMessage,
-                this.LanguagesDictionary[this.configuration.Lang].Code,
+                this.languagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -189,7 +189,7 @@ namespace Echoglossian
                     LangIdentify(senderToTranslate),
                     this.configuration.TranslateNpcNames ? this.currentSenderTranslation : string.Empty,
                     this.currentBattleTalkTranslation,
-                    this.LanguagesDictionary[this.configuration.Lang].Code,
+                    this.languagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);

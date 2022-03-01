@@ -16,7 +16,7 @@ namespace Echoglossian
   public partial class Echoglossian
   {
     // public string[] FontSizes = Array.ConvertAll(Enumerable.Range(4, 72).ToArray(), x => x.ToString());
-    private List<string> LanguageList;
+    private List<string> languageList;
 
     private void ReloadFont()
     {
@@ -28,11 +28,11 @@ namespace Echoglossian
 
     private void EchoglossianConfigUi()
     {
-      this.LanguageList = new List<string>();
+      this.languageList = new List<string>();
 
-      foreach (var l in this.LanguagesDictionary)
+      foreach (var l in this.languagesDictionary)
       {
-        this.LanguageList.Add(l.Value.LanguageName);
+        this.languageList.Add(l.Value.LanguageName);
       }
 
       var languageNotSupported = this.configuration.Lang is 3 or 5 or 11 or 13 or 111 or 112;
@@ -74,8 +74,8 @@ namespace Echoglossian
             if (ImGui.Combo(
                   Resources.LanguageSelectLabelText,
                   ref languageInt,
-                  this.LanguageList.ToArray(),
-                  this.LanguageList.ToArray().Length))
+                  this.languageList.ToArray(),
+                  this.languageList.ToArray().Length))
             {
               this.configuration.Lang = languageInt;
               this.LoadFont();

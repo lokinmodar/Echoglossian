@@ -16,7 +16,7 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private readonly string AssetsPath;
+    private readonly string assetsPath;
     public List<string> AssetFiles = new();
 
     public List<string> MissingAssetFiles = new();
@@ -30,7 +30,7 @@ namespace Echoglossian
 #if DEBUG
         PluginLog.LogInformation($"Asset file:{f}");
 #endif
-        if (!File.Exists($"{this.AssetsPath}{f}"))
+        if (!File.Exists($"{this.assetsPath}{f}"))
         {
 #if DEBUG
           PluginLog.LogInformation($"missing file:{f}");
@@ -44,7 +44,7 @@ namespace Echoglossian
 
       if (this.MissingAssetFiles?.Any() != true)
       {
-        this.PluginAssetsState = true;
+        this.pluginAssetsState = true;
         this.configuration.PluginAssetsDownloaded = true;
         PluginInterface.UiBuilder.AddNotification(
           "All plugin assets present",
@@ -73,7 +73,7 @@ namespace Echoglossian
         this.MissingAssetFiles.RemoveAt(missingAssetIndex);
         if (this.MissingAssetFiles?.Any() != true)
         {
-          this.PluginAssetsState = true;
+          this.pluginAssetsState = true;
           this.configuration.PluginAssetsDownloaded = true;
           this.SaveConfig();
           PluginInterface.UiBuilder.AddNotification(
@@ -89,7 +89,7 @@ namespace Echoglossian
       using var client = new WebClient();
       try
       {
-        var path = this.AssetsPath;
+        var path = this.assetsPath;
 
         Uri uri;
         switch (index)
@@ -157,7 +157,7 @@ namespace Echoglossian
 
       if (this.MissingAssetFiles?.Any() != true)
       {
-        this.PluginAssetsState = true;
+        this.pluginAssetsState = true;
         this.configuration.PluginAssetsDownloaded = true;
         PluginInterface.UiBuilder.AddNotification(
           "All plugin assets present",

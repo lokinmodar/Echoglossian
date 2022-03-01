@@ -10,7 +10,7 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private readonly Dictionary<int, LanguageInfo> LanguagesDictionary = new()
+    private readonly Dictionary<int, LanguageInfo> languagesDictionary = new()
     {
       [0] = new LanguageInfo(@"af", @"Afrikaans", "NotoSans-Medium.ttf", string.Empty, new[] { 0 }),
       [1] = new LanguageInfo(@"sq", @"Shqip; Albanian", "NotoSans-Medium.ttf", string.Empty, new[] { 0 }),

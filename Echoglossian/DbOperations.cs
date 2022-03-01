@@ -34,7 +34,7 @@ namespace Echoglossian
 #endif
     }
 
-    public bool FindTalkMessage(TalkMessage talkMessage)
+    private bool FindTalkMessage(TalkMessage talkMessage)
     {
       using var context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
@@ -77,7 +77,7 @@ namespace Echoglossian
       }
     }
 
-    public bool FindToastMessage(ToastMessage toastMessage)
+    private bool FindToastMessage(ToastMessage toastMessage)
     {
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbFindToastOperationsLog.txt", true);
@@ -130,7 +130,7 @@ namespace Echoglossian
       }
     }
 
-    public bool FindErrorToastMessage(ToastMessage toastMessage)
+    private bool FindErrorToastMessage(ToastMessage toastMessage)
     {
 #if DEBUG
       using StreamWriter logStream = new($"{this.configDir}DbFindToastOperationsLog.txt", true);
@@ -183,7 +183,7 @@ namespace Echoglossian
       }
     }
 
-    public bool FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
+    private bool FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
     {
       using var context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
@@ -227,7 +227,7 @@ namespace Echoglossian
       }
     }
 
-    public string InsertTalkData(TalkMessage talkMessage)
+    private string InsertTalkData(TalkMessage talkMessage)
     {
       using var context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
@@ -272,7 +272,7 @@ namespace Echoglossian
       }
     }
 
-    public string InsertBattleTalkData(BattleTalkMessage battleTalkMessage)
+    private string InsertBattleTalkData(BattleTalkMessage battleTalkMessage)
     {
       using var context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
@@ -303,7 +303,7 @@ namespace Echoglossian
       }
     }
 
-    public string InsertErrorToastMessageData(ToastMessage toastMessage)
+    private string InsertErrorToastMessageData(ToastMessage toastMessage)
     {
       using var context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
@@ -362,7 +362,7 @@ namespace Echoglossian
       }
     }
 
-    public string InsertOtherToastMessageData(ToastMessage toastMessage)
+    private string InsertOtherToastMessageData(ToastMessage toastMessage)
     {
       using var context = new EchoglossianDbContext(this.configDir);
 #if DEBUG
@@ -421,7 +421,7 @@ namespace Echoglossian
       }
     }
 
-    public void LoadAllErrorToasts()
+    private void LoadAllErrorToasts()
     {
       using var context = new EchoglossianDbContext(this.configDir);
       this.ErrorToastsCache = new List<ToastMessage>();
@@ -451,7 +451,7 @@ namespace Echoglossian
       }
     }
 
-    public void LoadAllOtherToasts()
+    private void LoadAllOtherToasts()
     {
       using var context = new EchoglossianDbContext(this.configDir);
       this.OtherToastsCache = new List<ToastMessage>();

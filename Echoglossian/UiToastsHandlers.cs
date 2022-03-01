@@ -407,7 +407,7 @@ namespace Echoglossian
               messageTextToTranslate,
               LangIdentify(messageTextToTranslate),
               translatedToastMessage,
-              this.LanguagesDictionary[this.configuration.Lang].Code,
+              this.languagesDictionary[this.configuration.Lang].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -448,7 +448,7 @@ namespace Echoglossian
                     messageTextToTranslate,
                     errorToastToHandle.OriginalLang,
                     this.currentErrorToastTranslation,
-                    this.LanguagesDictionary[this.configuration.Lang].Code,
+                    this.languagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);
@@ -554,7 +554,7 @@ namespace Echoglossian
               messageTextToTranslate,
               LangIdentify(messageTextToTranslate),
               translatedToastMessage,
-              this.LanguagesDictionary[this.configuration.Lang].Code,
+              this.languagesDictionary[this.configuration.Lang].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -595,7 +595,7 @@ namespace Echoglossian
                     messageTextToTranslate,
                     toastToHandle.OriginalLang,
                     this.currentToastTranslation,
-                    this.LanguagesDictionary[this.configuration.Lang].Code,
+                    this.languagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);

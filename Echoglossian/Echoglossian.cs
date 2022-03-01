@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 using Dalamud;
 using Dalamud.Data;
@@ -64,7 +63,7 @@ namespace Echoglossian
     private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
     private bool config;
 
-    private bool PluginAssetsState;
+    private bool pluginAssetsState;
 
     public Echoglossian()
     {
@@ -83,8 +82,11 @@ namespace Echoglossian
       Resolver.Initialize();
       
       this.clientLanguage = ClientState.ClientLanguage.ToLumina();
+#if DEBUG
+      PluginLog.Information("Client language: {0}", this.clientLanguage);
+#endif
       
-      langDict = this.LanguagesDictionary;
+      langDict = this.languagesDictionary;
       languageInt = this.configuration.Lang;
       identifier = Factory.Load(
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
@@ -94,7 +96,7 @@ namespace Echoglossian
       this.CreateOrUseDb();
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
-      this.AssetsPath =
+      this.assetsPath =
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
 
       this.AssetFiles.Add("NotoSansCJKhk-Regular.otf");
@@ -109,12 +111,12 @@ namespace Echoglossian
 #endif
       this.FixConfig();
 
-      this.PluginAssetsState = this.configuration.PluginAssetsDownloaded;
+      this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
 #if DEBUG
       PluginLog.LogVerbose($"Assets state config: {this.configuration.PluginAssetsDownloaded}");
-      PluginLog.LogVerbose($"Assets state var: {this.PluginAssetsState}");
+      PluginLog.LogVerbose($"Assets state var: {this.pluginAssetsState}");
 #endif
-      if (!this.PluginAssetsState)
+      if (!this.pluginAssetsState)
       {
         this.PluginAssetsChecker();
       }

@@ -13,15 +13,18 @@ namespace Echoglossian
   {
     private TalkMessage FormatTalkMessage(string sender, string text)
     {
-      PluginLog.LogWarning("Formatting TalkMessage");
+#if DEBUG
+      PluginLog.LogWarning("Formatting node texts into TalkMessage");
+      PluginLog.LogVerbose($"Client language: {this.clientLanguage}");
+#endif
       return new TalkMessage(
         sender,
         text,
-        this.ConvertClientLanguageToLangCode(this.clientLanguage),
+        ConvertClientLanguageToLangCode(this.clientLanguage),
         LangIdentify(sender),
         string.Empty,
         string.Empty,
-        this.LanguagesDictionary[this.configuration.Lang].Code,
+        this.languagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now);
@@ -32,11 +35,11 @@ namespace Echoglossian
       return new BattleTalkMessage(
         sender,
         text,
-        this.ConvertClientLanguageToLangCode(this.clientLanguage),
+        ConvertClientLanguageToLangCode(this.clientLanguage),
         LangIdentify(sender),
         string.Empty,
         string.Empty,
-        this.LanguagesDictionary[this.configuration.Lang].Code,
+        this.languagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now);
@@ -47,9 +50,9 @@ namespace Echoglossian
       return new ToastMessage(
         type,
         text,
-        this.ConvertClientLanguageToLangCode(this.clientLanguage),
+        ConvertClientLanguageToLangCode(this.clientLanguage),
         string.Empty,
-        this.LanguagesDictionary[this.configuration.Lang].Code,
+        this.languagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now);

@@ -4,13 +4,11 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Internal.Notifications;
@@ -101,6 +99,10 @@ namespace Echoglossian
 
     private void FixConfig()
     {
+#if DEBUG
+      PluginLog.LogDebug($"Config File Version: {this.configuration.Version}");
+#endif
+
       if (!File.Exists($"{PluginInterface.ConfigFile.FullName}"))
       {
 #if DEBUG
@@ -141,7 +143,7 @@ namespace Echoglossian
     /// <param name="backColorOptional">Background color, defaults to white.</param>
     /// <param name="minSizeOptional">Minimum image size, defaults the size required to display the text.</param>
     /// <returns>The image containing the text, which should be disposed after use.</returns>
-    public Image DrawText(
+    private Image DrawText(
       string text,
       Font fontOptional = null,
       Color? textColorOptional = null,
@@ -220,7 +222,7 @@ namespace Echoglossian
     /// </summary>
     /// <param name="image">Image to be converted.</param>
     /// <returns>Byte array to be used elsewhere.</returns>
-    private byte[] TranslationImageConverter(Image image)
+    private static byte[] TranslationImageConverter(Image image)
     {
 #if DEBUG
       PluginLog.LogVerbose("Conversion to byte");
@@ -229,21 +231,32 @@ namespace Echoglossian
       return (byte[])imageConverter.ConvertTo(image, typeof(byte[])) ?? throw new InvalidOperationException();
     }
 
-    private string FormatText(string text)
+    private static string FormatText(string text)
     {
+#if DEBUG
+      PluginLog.LogVerbose($"Text to break in lines: {text}");
+#endif
       if (text.IsNullOrWhitespace())
       {
         return string.Empty;
       }
-      var newLinePayload = new NewLinePayload();
+      var newLinePayload = new NewLinePayload().Text;
+#if DEBUG
+      PluginLog.LogVerbose($"New Line payload: {newLinePayload}");
+#endif
       var regex = new Regex(@"(.{1,64})(?:\s|$)"); //.{0,70}\S(?=$|\s)
-      return regex.Matches(text)
+      var formattedText = regex.Matches(text)
         .Select(m => m.Groups[1].Value).ToList()
         .Select(s => string.Join(s, newLinePayload)).ToList()
         .Aggregate((current, next) => current + next);
+#if DEBUG
+      PluginLog.LogVerbose($"Formatted text: {formattedText}");
+#endif
+      
+      return formattedText;
     }
 
-    private string ConvertClientLanguageToLangCode(Language currentClientLanguage)
+    private static string ConvertClientLanguageToLangCode(Language currentClientLanguage)
     {
       return currentClientLanguage switch
       {
