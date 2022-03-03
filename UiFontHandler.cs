@@ -204,8 +204,10 @@ namespace Echoglossian
       PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 #else
       // PluginLog.LogVerbose("Inside LoadConfigFont method");
-      var fontFile = $@"{pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
-      var dummyFontFilePath = $@"{pluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-SemiBold.ttf";
+      var fontFile = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
+      var dummyFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-SemiBold.ttf";
+      string symbolsFontFilePath =
+        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
 
       // PluginLog.LogVerbose($"Font file in PROD Mode: {fontFile}");
 #endif

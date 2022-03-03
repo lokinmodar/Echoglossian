@@ -69,6 +69,8 @@ namespace Echoglossian
 #if DEBUG
       PluginLog.LogError("inside translate method");
 #endif
+      string read;
+      JValue src;
       try
       {
         string lang = langDict[languageInt].Code;
@@ -120,14 +122,35 @@ namespace Echoglossian
         WebResponse requestResult = request.GetResponse();
 
         StreamReader reader = new StreamReader(requestResult.GetResponseStream() ?? throw new Exception());
-        string read = reader.ReadToEnd();
 
-        JObject parsed = JObject.Parse(read);
+        read = reader.ReadToEnd();
+#if DEBUG
+        PluginLog.LogVerbose($"Received JSON string: {read}");
+#endif
 
-        List<string> dialogueSentenceList = parsed.SelectTokens("sentences[*].trans").Select(i => (string)i).ToList();
+        src = null;
+        string finalDialogueText;
+        if (read.StartsWith("[\""))
+        {
+          char[] start = { '[', '\"' };
+          char[] end = { '\"', ']' };
+          var dialogueText = read.TrimStart(start);
+          finalDialogueText = dialogueText.TrimEnd(end);
+        }
+        else
+        {
 
-        string finalDialogueText =
-          dialogueSentenceList.Aggregate(string.Empty, (current, dialogueSentence) => current + dialogueSentence);
+          JObject parsed = JObject.Parse(read);
+
+          List<string> dialogueSentenceList = parsed
+            .SelectTokens("sentences[*].trans").Select(i => (string) i)
+            .ToList();
+
+          finalDialogueText = dialogueSentenceList.Aggregate(string.Empty,
+            (current, dialogueSentence) => current + dialogueSentence);
+
+          src = (JValue)parsed["src"];
+        }
 
         finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
 
@@ -137,10 +160,9 @@ finalDialogueText = startingEllipsis + finalDialogueText;
 finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
 
         finalDialogueText = !startingEllipsis.IsNullOrEmpty()
-         ? startingEllipsis + finalDialogueText
-         : finalDialogueText;
+          ? startingEllipsis + finalDialogueText
+          : finalDialogueText;
 
-        JValue src = (JValue)parsed["src"];
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
 #if DEBUG
         PluginLog.LogInformation($"FinalTranslatedText: {finalDialogueText}");
