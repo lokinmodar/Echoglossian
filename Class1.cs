@@ -16,9 +16,7 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-
-    
-    public HashSet<string> UiElementsLabels = new ();
+    public HashSet<string> UiElementsLabels = new();
 
     public void ParseUi()
     {

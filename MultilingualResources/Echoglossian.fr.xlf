@@ -316,12 +316,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">En attente de traduction...</target>
         </trans-unit>
         <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select what kind of text you want to be translated</source>
+          <source>Select what kind of text you want to be translated in the correspondent tab above!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Sélectionnez le type de texte que vous souhaitez traduire</target>
-        </trans-unit>
-        <trans-unit id="WhichToastsToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select which in-game Toast messages to translate</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Sélectionnez les messages Toast dans le jeu à traduire</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
           <source>Reset Settings</source>
@@ -330,6 +327,10 @@
         <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
           <source>Echoglossian settings reset to default successfully!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Les paramètres Echoglossian sont réinitialisés par défaut avec succès!</target>
+        </trans-unit>
+        <trans-unit id="WhichToastsToTranslate" translate="yes" xml:space="preserve">
+          <source>Select which kind of in-game message toasts to translate</source>
+          <target state="new">Select which kind of in-game message toasts to translate</target>
         </trans-unit>
       </group>
     </body>

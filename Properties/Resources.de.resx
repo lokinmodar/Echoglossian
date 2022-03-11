@@ -246,9 +246,6 @@
   <data name="WhatToTranslateText" xml:space="preserve">
     <value>Wählen Sie aus, welche Art von Text Übersetzt werden soll</value>
   </data>
-  <data name="WhichToastsToTranslateText" xml:space="preserve">
-    <value>Wählen Sie aus, welche Toast-Nachrichten im Spiel übersetzt werden sollen</value>
-  </data>
   <data name="ResetConfigsButton" xml:space="preserve">
     <value>Einstellungen zurücksetzen</value>
   </data>

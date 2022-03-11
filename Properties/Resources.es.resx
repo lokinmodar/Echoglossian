@@ -98,9 +98,6 @@
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
     <value>Multiplicador de ancho de mensajes de sistema</value>
   </data>
-  <data name="WhichToastsToTranslateText" xml:space="preserve">
-    <value>Selecciona los mensajes de sistema que quieres traducir</value>
-  </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
     <value>Color de fuente de la superposición:</value>
   </data>

@@ -314,10 +314,10 @@ namespace Echoglossian
         {
 #if DEBUG
           PluginLog.LogError($"Total ErrorToasts in cache: {this.ErrorToastsCache.Count}");
-         /* foreach (ToastMessage t in this.ErrorToastsCache)
-          {
-            PluginLog.LogError($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
-          }*/
+          /* foreach (ToastMessage t in this.ErrorToastsCache)
+           {
+             PluginLog.LogError($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
+           }*/
 #endif
           isInThere = this.ErrorToastsCache.Any(t => toastMessage.ToastType == t.ToastType && toastMessage.TranslationLang == t.TranslationLang &&
                                                      toastMessage.OriginalToastMessage == t.OriginalToastMessage);
@@ -371,10 +371,10 @@ namespace Echoglossian
         {
 #if DEBUG
           PluginLog.LogError($"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
-         /* foreach (ToastMessage t in this.OtherToastsCache)
-          {
-            PluginLog.LogError($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
-          }*/
+          /* foreach (ToastMessage t in this.OtherToastsCache)
+           {
+             PluginLog.LogError($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
+           }*/
 #endif
           isInThere = this.OtherToastsCache.Any(t => toastMessage.ToastType == t.ToastType && toastMessage.TranslationLang == t.TranslationLang &&
                                                      toastMessage.OriginalToastMessage == t.OriginalToastMessage);

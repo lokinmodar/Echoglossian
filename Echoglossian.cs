@@ -80,7 +80,6 @@ namespace Echoglossian
     private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
     private readonly SemaphoreSlim questToastTranslationSemaphore;
 
-
     private readonly TextureWrap pixImage;
     private readonly TextureWrap choiceImage;
     private readonly TextureWrap cutsceneChoiceImage;
@@ -101,7 +100,7 @@ namespace Echoglossian
     public Echoglossian()
     {
       this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
-      
+
       this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
 
       CommandManager.AddHandler(SlashCommand, new CommandInfo(this.Command)
@@ -109,20 +108,16 @@ namespace Echoglossian
         HelpMessage = Resources.HelpMessage,
       });
 
-
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
+      Resolver.Initialize();
       langDict = this.LanguagesDictionary;
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
-
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
 
-      Resolver.Initialize();
 
       this.CreateOrUseDb();
-
-
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
       this.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";

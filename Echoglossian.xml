@@ -523,12 +523,12 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.WhatToTranslateText">
             <summary>
-              Looks up a localized string similar to Select what kind of text you want to be translated.
+              Looks up a localized string similar to Select what kind of text you want to be translated in the correspondent tab above!.
             </summary>
         </member>
-        <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslateText">
+        <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslate">
             <summary>
-              Looks up a localized string similar to Select which in-game Toast messages to translate.
+              Looks up a localized string similar to Select which kind of in-game message toasts to translate.
             </summary>
         </member>
     </members>

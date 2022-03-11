@@ -98,9 +98,6 @@
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
     <value>Multiplicador de largura para Toasts</value>
   </data>
-  <data name="WhichToastsToTranslateText" xml:space="preserve">
-    <value>Selecione quais mensagens Toast devem ser traduzidas</value>
-  </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
     <value>Cor da fonte da sobreposição:</value>
   </data>

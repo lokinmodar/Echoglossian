@@ -18,8 +18,7 @@ namespace Echoglossian
       {
         Translation translation = await client.TranslateAsync(
           "This is a test sentence.",
-          Language.German
-        );
+          Language.German);
         PluginLog.LogWarning(translation.DetectedSourceLanguage);
         PluginLog.LogWarning(translation.Text);
       }

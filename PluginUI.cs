@@ -100,20 +100,11 @@ namespace Echoglossian
             {
               ImGui.Text(Resources.LanguageNotSupportedText);
               bool translationsDisabled = this.DisableAllTranslations();
-
-              if (translationsDisabled)
-              {
-                this.SaveConfig();
-              }
+              this.SaveConfig();
             }
-
             if (languageOnlySupportedThruOverlay)
             {
               ImGui.Text(Resources.LanguageOnlySupportedUsingOverlay);
-
-              this.configuration.UseImGuiForTalk = true;
-              this.configuration.UseImGuiForBattleTalk = true;
-              this.configuration.UseImGuiForToasts = true;
 
               this.SaveConfig();
             }
@@ -121,33 +112,6 @@ namespace Echoglossian
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Text(Resources.WhatToTranslateText);
-            if (ImGui.Checkbox(
-                Resources.TranslateTalkToggleLabel,
-                ref this.configuration.TranslateTalk))
-            {
-              this.SaveConfig();
-            }
-
-            if (ImGui.Checkbox(
-                Resources.TransLateBattletalkToggle,
-                ref this.configuration.TranslateBattleTalk))
-            {
-              this.SaveConfig();
-            }
-
-            if (ImGui.Checkbox(
-                Resources.TranslateToastToggleText,
-                ref this.configuration.TranslateToast))
-            {
-              if (!this.configuration.TranslateToast)
-              {
-                bool toastTranslationsDisabled =
-                  this.DisableAllToastTranslations();
-              }
-
-              this.SaveConfig();
-            }
-
 
             ImGui.EndGroup();
           }
@@ -164,43 +128,68 @@ namespace Echoglossian
           ImGui.EndTabItem();
         }
 
-        if (ImGui.BeginTabItem(
-            Resources.ConfigTab1Name,
-            ref this.configuration.TranslateTalk))
+        if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
         {
-          if (languageOnlySupportedThruOverlay)
+          if (languageNotSupported)
           {
-            this.configuration.UseImGuiForTalk = true;
-          }
-
-          if (ImGui.Checkbox(
-            Resources.OverlayToggleLabel,
-            ref this.configuration.UseImGuiForTalk))
-          {
+            this.DisableAllTranslations();
             this.SaveConfig();
           }
-
-
-          if (ImGui.Checkbox(
-              Resources.TranslateNpcNamesToggle,
-              ref this.configuration.TranslateNpcNames))
+          else
           {
-            this.SaveConfig();
+            if (ImGui.Checkbox(
+                Resources.TranslateTalkToggleLabel,
+                ref this.configuration.TranslateTalk))
+            {
+              this.SaveConfig();
+
+              ImGui.BeginGroup();
+              if (languageOnlySupportedThruOverlay)
+              {
+                this.configuration.UseImGuiForTalk = true;
+                this.SaveConfig();
+                if (ImGui.Checkbox(
+                      Resources.TranslateNpcNamesToggle,
+                      ref this.configuration.TranslateNpcNames))
+                {
+                  this.SaveConfig();
+                }
+              }
+              else
+              {
+                if (ImGui.Checkbox(
+                      Resources.OverlayToggleLabel,
+                      ref this.configuration.UseImGuiForTalk))
+                {
+                  this.SaveConfig();
+                }
+
+                if (ImGui.Checkbox(
+                      Resources.TranslateNpcNamesToggle,
+                      ref this.configuration.TranslateNpcNames))
+                {
+                  this.SaveConfig();
+                }
+              }
+            }
+
+            ImGui.EndGroup();
           }
 
           ImGui.Spacing();
           ImGui.Separator();
+
 
           if (languageOnlySupportedThruOverlay ||
               this.configuration.UseImGuiForTalk)
           {
             ImGui.Text(Resources.ImguiAdjustmentsLabel);
             if (ImGui.SliderFloat(
-              Resources.OverlayFontScaleLabel,
-              ref this.configuration.FontScale,
-              -3f,
-              3f,
-              "%.2f"))
+                  Resources.OverlayFontScaleLabel,
+                  ref this.configuration.FontScale,
+                  -3f,
+                  3f,
+                  "%.2f"))
             {
               this.configuration.FontChangeTime = DateTime.Now.Ticks;
               this.SaveConfig();
@@ -219,9 +208,9 @@ namespace Echoglossian
             ImGui.Text(Resources.FontColorSelectLabel);
             ImGui.SameLine();
             if (ImGui.ColorEdit3(
-              Resources.OverlayColorSelectName,
-              ref this.configuration.OverlayTextColor,
-              ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
+                  Resources.OverlayColorSelectName,
+                  ref this.configuration.OverlayTextColor,
+                  ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel))
             {
               this.SaveConfig();
             }
@@ -236,18 +225,18 @@ namespace Echoglossian
             ImGui.Spacing();
             ImGui.Separator();
             if (ImGui.DragFloat(
-              Resources.OverlayWidthScrollLabel,
-              ref this.configuration.ImGuiTalkWindowWidthMult,
-              0.001f, 0.01f, 3f))
+                  Resources.OverlayWidthScrollLabel,
+                  ref this.configuration.ImGuiTalkWindowWidthMult,
+                  0.001f, 0.01f, 3f))
             {
               this.SaveConfig();
             }
 
             ImGui.Separator();
             if (ImGui.DragFloat(
-              Resources.OverlayHeightScrollLabel,
-              ref this.configuration.ImGuiTalkWindowHeightMult,
-              0.001f, 0.01f, 3f))
+                  Resources.OverlayHeightScrollLabel,
+                  ref this.configuration.ImGuiTalkWindowHeightMult,
+                  0.001f, 0.01f, 3f))
             {
               this.SaveConfig();
             }
@@ -255,8 +244,8 @@ namespace Echoglossian
             ImGui.Separator();
             ImGui.Spacing();
             if (ImGui.DragFloat2(
-              Resources.OverlayPositionAdjustmentLabel,
-              ref this.configuration.ImGuiWindowPosCorrection))
+                  Resources.OverlayPositionAdjustmentLabel,
+                  ref this.configuration.ImGuiWindowPosCorrection))
             {
               this.SaveConfig();
             }
@@ -275,8 +264,8 @@ namespace Echoglossian
               this.configuration.UseImGuiForTalk)
           {
             if (ImGui.Checkbox(
-                Resources.SwapTranslationTextToggle,
-                ref this.configuration.SwapTextsUsingImGui))
+                  Resources.SwapTranslationTextToggle,
+                  ref this.configuration.SwapTextsUsingImGui))
             {
               this.SaveConfig();
             }
@@ -285,28 +274,53 @@ namespace Echoglossian
           ImGui.EndTabItem();
         }
 
-        if (ImGui.BeginTabItem(
-            Resources.ConfigTab2Name,
-            ref this.configuration.TranslateBattleTalk))
+        if (ImGui.BeginTabItem(Resources.ConfigTab2Name))
         {
-          if (languageOnlySupportedThruOverlay)
+          if (languageNotSupported)
           {
-            this.configuration.UseImGuiForBattleTalk = true;
-          }
-
-          if (ImGui.Checkbox(
-            Resources.OverlayToggleLabel,
-            ref this.configuration.UseImGuiForBattleTalk))
-          {
+            this.DisableAllTranslations();
             this.SaveConfig();
           }
-
-          if (ImGui.Checkbox(
-              Resources.TranslateNpcNamesToggle,
-              ref this.configuration.TranslateNpcNames))
+          else
           {
-            this.SaveConfig();
+            if (ImGui.Checkbox(Resources.TransLateBattletalkToggle,
+                  ref this.configuration.TranslateBattleTalk))
+            {
+              this.SaveConfig();
+            }
+
+            ImGui.BeginGroup();
+            if (languageOnlySupportedThruOverlay)
+            {
+              this.configuration.UseImGuiForBattleTalk = true;
+              this.SaveConfig();
+              if (ImGui.Checkbox(
+                    Resources.TranslateNpcNamesToggle,
+                    ref this.configuration.TranslateNpcNames))
+              {
+                this.SaveConfig();
+              }
+            }
+            else
+            {
+              if (ImGui.Checkbox(
+                    Resources.OverlayToggleLabel,
+                    ref this.configuration.UseImGuiForBattleTalk))
+              {
+                this.SaveConfig();
+              }
+
+              if (ImGui.Checkbox(
+                    Resources.TranslateNpcNamesToggle,
+                    ref this.configuration.TranslateNpcNames))
+              {
+                this.SaveConfig();
+              }
+            }
+
+            ImGui.EndGroup();
           }
+
 
           ImGui.Spacing();
           ImGui.Separator();
@@ -395,28 +409,49 @@ namespace Echoglossian
         }
 
         if (ImGui.BeginTabItem(
-            Resources.ConfigTab3Name,
-            ref this.configuration.TranslateToast))
+              Resources.ConfigTab3Name))
         {
-          if (languageOnlySupportedThruOverlay)
+          if (languageNotSupported)
           {
-            this.configuration.UseImGuiForToasts = true;
+            this.DisableAllTranslations();
             this.SaveConfig();
           }
           else
           {
             if (ImGui.Checkbox(
-              Resources.UseImGuiForToastsToggle,
-              ref this.configuration.UseImGuiForToasts))
+                  Resources.TranslateToastToggleText,
+                  ref this.configuration.TranslateToast))
             {
               this.SaveConfig();
             }
+            else
+            {
+              this.DisableAllToastTranslations();
+              this.SaveConfig();
+            }
+            ImGui.BeginGroup();
+            if (languageOnlySupportedThruOverlay)
+            {
+              this.configuration.UseImGuiForToasts = true;
+              this.SaveConfig();
+            }
+            else
+            {
+              if (ImGui.Checkbox(
+                    Resources.UseImGuiForToastsToggle,
+                    ref this.configuration.UseImGuiForToasts))
+              {
+                this.SaveConfig();
+              }
+            }
           }
+
+          ImGui.EndGroup();
 
           if (this.configuration.TranslateToast)
           {
             ImGui.Separator();
-            ImGui.Text(Resources.WhichToastsToTranslateText);
+            ImGui.Text(Resources.WhichToastsToTranslate);
             ImGui.Checkbox(
                 Resources.TranslateErrorToastToggleText,
                 ref this.configuration.TranslateErrorToast);
@@ -462,24 +497,24 @@ namespace Echoglossian
         }
 
         if (ImGui.BeginTabItem(
-            Resources.ConfigTab4Name,
-            ref this.configuration.TranslateJournal))
+          Resources.ConfigTab4Name,
+          ref this.configuration.TranslateJournal))
         {
           ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
           ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem(
-            Resources.ConfigTab5Name,
-            ref this.configuration.TranslateTooltips))
+          Resources.ConfigTab5Name,
+          ref this.configuration.TranslateTooltips))
         {
           ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
           ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem(
-            Resources.ConfigTab6Name,
-            ref this.configuration.TranslateToDoList))
+          Resources.ConfigTab6Name,
+          ref this.configuration.TranslateToDoList))
         {
           ImGui.Text("This is the Onion tab!\nblah blah blah blah blah");
           ImGui.EndTabItem();
@@ -532,8 +567,8 @@ namespace Echoglossian
 
       ImGui.Spacing();
       var pos = new Vector2(
-          ImGui.GetWindowContentRegionMin().X,
-          ImGui.GetWindowContentRegionMax().Y - 100);
+        ImGui.GetWindowContentRegionMin().X,
+        ImGui.GetWindowContentRegionMax().Y - 100);
 
       ImGui.SetCursorPos(pos);
       ImGui.Separator();
@@ -542,14 +577,14 @@ namespace Echoglossian
 
       ImGui.PushID(1);
       ImGui.PushStyleColor(
-          ImGuiCol.Button,
-          new Vector4(1 / 7.0f, 0.6f, 0.6f, 1f));
+        ImGuiCol.Button,
+        new Vector4(1 / 7.0f, 0.6f, 0.6f, 1f));
       ImGui.PushStyleColor(
-          ImGuiCol.ButtonHovered,
-          new Vector4(1 / 7.0f, 0.7f, 0.7f, 1f));
+        ImGuiCol.ButtonHovered,
+        new Vector4(1 / 7.0f, 0.7f, 0.7f, 1f));
       ImGui.PushStyleColor(
-          ImGuiCol.ButtonActive,
-          new Vector4(1 / 7.0f, 0.8f, 0.8f, 1f));
+        ImGuiCol.ButtonActive,
+        new Vector4(1 / 7.0f, 0.8f, 0.8f, 1f));
       if (ImGui.Button(Resources.TodoUrl))
       {
         Process.Start(new ProcessStartInfo
@@ -592,11 +627,11 @@ namespace Echoglossian
       ImGui.PushID(4);
       ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 7.0f, 0.6f, 0.6f));
       ImGui.PushStyleColor(
-          ImGuiCol.ButtonHovered,
-          new Vector4(4, 7.0f, 0.7f, 0.7f));
+        ImGuiCol.ButtonHovered,
+        new Vector4(4, 7.0f, 0.7f, 0.7f));
       ImGui.PushStyleColor(
-          ImGuiCol.ButtonActive,
-          new Vector4(4, 7.0f, 0.8f, 0.8f));
+        ImGuiCol.ButtonActive,
+        new Vector4(4, 7.0f, 0.8f, 0.8f));
       if (ImGui.Button(Resources.SendPixButton))
       {
         ImGui.OpenPopup(Resources.PixQrWindowLabel);
@@ -606,7 +641,7 @@ namespace Echoglossian
       // Always center this window when appearing
       var center = ImGui.GetMainViewport().GetCenter();
       ImGui.SetNextWindowPos(center, ImGuiCond.Appearing,
-        new Vector2(0.5f, 0.5f));
+      new Vector2(0.5f, 0.5f));
       if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
       {
         ImGui.Text(Resources.QRCodeInstructionsText);
@@ -628,6 +663,7 @@ namespace Echoglossian
 
     private bool DisableAllToastTranslations()
     {
+      this.configuration.TranslateToast = false;
       this.configuration.TranslateAreaToast = false;
       this.configuration.TranslateClassChangeToast = false;
       this.configuration.TranslateErrorToast = false;

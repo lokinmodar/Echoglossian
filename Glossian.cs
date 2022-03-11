@@ -139,11 +139,10 @@ namespace Echoglossian
         }
         else
         {
-
           JObject parsed = JObject.Parse(read);
 
           List<string> dialogueSentenceList = parsed
-            .SelectTokens("sentences[*].trans").Select(i => (string) i)
+            .SelectTokens("sentences[*].trans").Select(i => (string)i)
             .ToList();
 
           finalDialogueText = dialogueSentenceList.Aggregate(string.Empty,

@@ -769,7 +769,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select what kind of text you want to be translated.
+        ///   Looks up a localized string similar to Select what kind of text you want to be translated in the correspondent tab above!.
         /// </summary>
         public static string WhatToTranslateText {
             get {
@@ -778,11 +778,11 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select which in-game Toast messages to translate.
+        ///   Looks up a localized string similar to Select which kind of in-game message toasts to translate.
         /// </summary>
-        public static string WhichToastsToTranslateText {
+        public static string WhichToastsToTranslate {
             get {
-                return ResourceManager.GetString("WhichToastsToTranslateText", resourceCulture);
+                return ResourceManager.GetString("WhichToastsToTranslate", resourceCulture);
             }
         }
     }
