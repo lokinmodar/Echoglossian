@@ -109,6 +109,7 @@
     <None Remove="MultilingualResources\Echoglossian.vi.xlf" />
     <None Remove="MultilingualResources\Echoglossian.zh-Hans.xlf" />
     <None Remove="MultilingualResources\Echoglossian.zh-Hant.xlf" />
+    <None Remove="PluginUI - Copy___" />
     <None Remove="Resources\pix.png" />
     <None Remove="stylecop.json" />
     <None Remove="Wiki82.profile.xml" />
@@ -216,6 +217,7 @@
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
     <PackageReference Include="DalamudPackager" Version="2.1.5" />
     <PackageReference Include="DeepL" Version="0.4.0" />
+    <PackageReference Include="GTranslate" Version="2.0.1" />
     <PackageReference Include="Lumina.Excel" Version="6.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.11" />
@@ -270,10 +272,6 @@
     </Reference>
     <Reference Include="FFXIVClientStructs">
       <HintPath>C:\Users\lokin\AppData\Roaming\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
-    </Reference>
-    <Reference Include="GTranslate">
-      <HintPath>I:\Dante\tataru-to-dalamud\GTranslate\src\GTranslate\obj\Debug\net5.0-windows7.0\GTranslate.dll</HintPath>
-      <Private>true</Private>
     </Reference>
     <Reference Include="ImGui.NET">
       <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>

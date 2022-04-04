@@ -86,7 +86,7 @@
           <target state="translated" state-qualifier="mt-suggestion">¡Envíame un PIX!</target>
         </trans-unit>
         <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select what kind of text you want to be translated in the correspondent tab above!</source>
+          <source>Select what kind of text you want to be translated in the corresponding tab above!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Seleccione qué tipo de texto desea traducir</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>

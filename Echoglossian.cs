@@ -67,7 +67,7 @@ namespace Echoglossian
     private static Dictionary<int, LanguageInfo> langDict;
     private bool config;
 
-    private readonly Config configuration;
+    private Config configuration;
 
     private readonly SemaphoreSlim toastTranslationSemaphore;
     private readonly SemaphoreSlim talkTranslationSemaphore;
@@ -96,7 +96,6 @@ namespace Echoglossian
 
     public List<ToastMessage> OtherToastsCache { get; set; }
 
-
     public Echoglossian()
     {
       this.configuration = PluginInterface.GetPluginConfig() as Config ?? new Config();
@@ -115,7 +114,6 @@ namespace Echoglossian
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
       Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
-
 
       this.CreateOrUseDb();
 
@@ -195,12 +193,11 @@ namespace Echoglossian
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
       PluginInterface.UiBuilder.Draw += this.BuildUi;
 
-      if (ClientState.IsLoggedIn)
-      {
-        this.ParseUi();
-      }
+      /* if (ClientState.IsLoggedIn)
+       {
+         this.ParseUi();
+       }*/
     }
-
 
     /// <inheritdoc />
     public void Dispose()
@@ -295,7 +292,7 @@ namespace Echoglossian
           }
 
         default:
-          this.DisableAllTranslations();
+          //this.DisableAllTranslations();
           break;
       }
     }

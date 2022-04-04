@@ -91,8 +91,6 @@ namespace Echoglossian
 
             ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathGame, 17.0f, fontConfig, gameRangeHandle.AddrOfPinnedObject());*/
 
-
-
             builder.BuildRanges(out ImVector ranges);
 
             this.AddCharsFromIntPtr(chars, (ushort*)io.Fonts.GetGlyphRangesDefault());
@@ -141,8 +139,6 @@ namespace Echoglossian
               OversampleV = 2,
               MergeMode = true,
             };
-
-
 
             fixed (ushort* ptr = &arr[0])
             {
@@ -200,7 +196,6 @@ namespace Echoglossian
       string symbolsFontFilePath =
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
 
-
       PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
 #else
       // PluginLog.LogVerbose("Inside LoadConfigFont method");
@@ -255,7 +250,6 @@ namespace Echoglossian
               OversampleV = 2,
               MergeMode = true,
             };
-
 
             fixed (ushort* ptr = &arr[0])
             {

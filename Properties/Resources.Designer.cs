@@ -769,7 +769,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select what kind of text you want to be translated in the correspondent tab above!.
+        ///   Looks up a localized string similar to Select what kind of text you want to be translated in the corresponding tab above!.
         /// </summary>
         public static string WhatToTranslateText {
             get {

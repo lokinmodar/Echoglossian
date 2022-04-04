@@ -523,7 +523,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.WhatToTranslateText">
             <summary>
-              Looks up a localized string similar to Select what kind of text you want to be translated in the correspondent tab above!.
+              Looks up a localized string similar to Select what kind of text you want to be translated in the corresponding tab above!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslate">

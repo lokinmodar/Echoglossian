@@ -356,7 +356,7 @@
     <value>Awaiting translation...</value>
   </data>
   <data name="WhatToTranslateText" xml:space="preserve">
-    <value>Select what kind of text you want to be translated in the correspondent tab above!</value>
+    <value>Select what kind of text you want to be translated in the corresponding tab above!</value>
   </data>
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Select which kind of in-game message toasts to translate</value>

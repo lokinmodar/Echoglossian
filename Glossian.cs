@@ -10,10 +10,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-
+using System.Runtime.CompilerServices;
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
+using GTranslate.Translators;
 using Newtonsoft.Json.Linq;
 using NTextCat;
 
@@ -36,7 +37,7 @@ namespace Echoglossian
     /// </summary>
     /// <param name="message">text to have the source language identified.</param>
     /// <returns>Returns the detected language code.</returns>
-    public static string LangIdentify(string message)
+    private static string LangIdentify(string message)
     {
       // Sanitizer sanitizer = new(ClientLanguage);
       string sanitizedString = sanitizer.Sanitize(message);
@@ -53,13 +54,82 @@ namespace Echoglossian
         : Resources.LangIdentError;
     }
 
+    private static string TranslateTrial(string text)
+    {
+      using AggregateTranslator aggregateTranslator1 = new();
+      string startingEllipsis = string.Empty;
+      if (text.IsNullOrEmpty())
+      {
+        return string.Empty;
+      }
+#if DEBUG
+      PluginLog.LogError("inside translate NEW method");
+#endif
+
+      try
+      {
+        string lang = langDict[languageInt].Code;
+        string sanitizedString = sanitizer.Sanitize(text);
+        if (sanitizedString.IsNullOrEmpty())
+        {
+          return string.Empty;
+        }
+
+        if (sanitizedString == "...")
+        {
+          return sanitizedString;
+        }
+
+        string parsedText;
+        if (sanitizedString.StartsWith("..."))
+        {
+          startingEllipsis = "...";
+          parsedText = sanitizedString.Substring(3);
+        }
+        else
+        {
+          parsedText = sanitizedString;
+        }
+
+        /*        parsedText = parsedText.Replace("\u2500", "\u002D");
+                parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
+                parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
+                parsedText = parsedText.Replace("\u201C", "\u0022");
+                parsedText = parsedText.Replace("\u201D", "\u0022");*/
+        parsedText = parsedText.Replace("\u200B", string.Empty);
+
+        string detectedLanguage = LangIdentify(parsedText);
+        if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical" or "simple")
+        {
+          detectedLanguage = "en";
+        }
+
+#if DEBUG
+        PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
+        PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
+#endif
+        var translator = new GoogleTranslator2();
+        var aggregateTranslator = new AggregateTranslator();
+
+        var aggrtext = aggregateTranslator.TranslateAsync(text, lang, detectedLanguage);
+        PluginLog.Log("aggrtext: ", aggrtext.Result.Translation);
+
+        return translator.TranslateAsync(text, lang, detectedLanguage).Result.Translation;
+      }
+      catch (Exception e)
+      {
+        PluginLog.Error(e.ToString());
+        throw;
+      }
+    }
+
     /// <summary>
     /// Translates the sentences passed to it. Uses Google Translate Free endpoint.
     /// </summary>
     /// <param name="text">Text to be translated.</param>
     /// <returns>Returns the translated text passed in the call parameter.</returns>
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
-    public static string Translate(string text)
+    private static string Translate(string text)
     {
       string startingEllipsis = string.Empty;
       if (text.IsNullOrEmpty())
@@ -104,7 +174,7 @@ namespace Echoglossian
         parsedText = parsedText.Replace("\u200B", string.Empty);
 
         string detectedLanguage = LangIdentify(parsedText);
-        if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical")
+        if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical" or "simple")
         {
           detectedLanguage = "en";
         }
@@ -145,18 +215,21 @@ namespace Echoglossian
             .SelectTokens("sentences[*].trans").Select(i => (string)i)
             .ToList();
 
-          finalDialogueText = dialogueSentenceList.Aggregate(string.Empty,
-            (current, dialogueSentence) => current + dialogueSentence);
+          finalDialogueText = dialogueSentenceList.Aggregate(
+              string.Empty,
+              (current, dialogueSentence) => current + dialogueSentence);
 
           src = (JValue)parsed["src"];
         }
 
         finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
 
-        /*finalDialogueText = finalDialogueText.Replace("\u201C", "\u0022");
+        /*finalDialogueText = finalDialogueText.Replace("\u201C", "\u0022")
 finalDialogueText = finalDialogueText.Replace("\u201D", "\u0022");
 finalDialogueText = startingEllipsis + finalDialogueText;
 finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
+        finalDialogueText = finalDialogueText.Replace("\u005C\u0022", "\u0022");
+        finalDialogueText = finalDialogueText.Replace("\u005C\u002F", "\u005C");
 
         finalDialogueText = !startingEllipsis.IsNullOrEmpty()
           ? startingEllipsis + finalDialogueText

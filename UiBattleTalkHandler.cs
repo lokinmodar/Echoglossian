@@ -45,7 +45,6 @@ namespace Echoglossian
       }
     }
 
-
     private void GetBattleTalk(ref SeString sender, ref SeString message, ref BattleTalkOptions options,
       ref bool ishandled)
     {

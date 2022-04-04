@@ -55,7 +55,6 @@ namespace Echoglossian
       }
     }
 
-
     /*    IntPtr talk = GameGui.GetAddonByName("Talk", 1);
           if (talk != IntPtr.Zero)
         {
@@ -109,8 +108,6 @@ namespace Echoglossian
       }
     }
 
-
-
     private void GetTalk(ref SeString name, ref SeString text, ref TalkStyle style)
     {
       if (!this.configuration.TranslateTalk)
@@ -127,7 +124,7 @@ namespace Echoglossian
         PluginLog.Log(name.TextValue + ": " + text.TextValue);
 #endif
 
-        string nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : "System Message";
+        string nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : string.Empty;
         string textToTranslate = text.TextValue;
 
         TalkMessage talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
@@ -147,6 +144,7 @@ namespace Echoglossian
         {
           if (!this.configuration.UseImGuiForTalk)
           {
+
             string translatedText = Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
 #if DEBUG
