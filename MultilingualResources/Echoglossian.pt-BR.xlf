@@ -30,8 +30,7 @@
         </trans-unit>
         <trans-unit id="LanguageSelectLabelText" translate="yes" xml:space="preserve">
           <source>Language to translate to</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Linguagem para traduzir para</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated" state-qualifier="mt-suggestion">Linguagem para traduzir para</target>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
           <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
@@ -87,8 +86,7 @@
         </trans-unit>
         <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
           <source>Select what kind of text you want to be translated in the corresponding tab above!</source>
-          <target state="needs-review-translation">Selecione que tipo de texto deseja que seja traduzido</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Selecione que tipo de texto deseja que seja traduzido</target>
         </trans-unit>
         <trans-unit id="Name" translate="no" xml:space="preserve">
           <source>Echoglossian</source>
@@ -196,8 +194,7 @@
         </trans-unit>
         <trans-unit id="PluginInterfaceLanguageSelectorText" translate="yes" xml:space="preserve">
           <source>Config Window LanguageInfo:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Linguagem de janela de config:</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated" state-qualifier="mt-suggestion">Linguagem de janela de config:</target>
         </trans-unit>
         <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
           <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
@@ -330,7 +327,7 @@
         </trans-unit>
         <trans-unit id="WhichToastsToTranslate" translate="yes" xml:space="preserve">
           <source>Select which kind of in-game message toasts to translate</source>
-          <target state="new">Select which kind of in-game message toasts to translate</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Selecione qual tipo de brindes de mensagem no jogo para traduzir</target>
         </trans-unit>
       </group>
     </body>

@@ -252,4 +252,7 @@
   <data name="SettingsReset" xml:space="preserve">
     <value>Les paramètres Echoglossian sont réinitialisés par défaut avec succès!</value>
   </data>
+  <data name="WhichToastsToTranslate" xml:space="preserve">
+    <value>Sélectionnez le type de toasts de message dans le jeu à traduire</value>
+  </data>
 </root>

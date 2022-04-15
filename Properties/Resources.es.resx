@@ -225,4 +225,7 @@
   <data name="SettingsReset" xml:space="preserve">
     <value>¡La configuración de Echoglossian se restablece a los valores predeterminados correctamente!</value>
   </data>
+  <data name="WhichToastsToTranslate" xml:space="preserve">
+    <value>Selecciona qué tipo de notificaciones de mensajes del juego traducir</value>
+  </data>
 </root>

@@ -252,4 +252,7 @@
   <data name="SettingsReset" xml:space="preserve">
     <value>Ekkoglossiske indstillinger nulstilles til standard!</value>
   </data>
+  <data name="WhichToastsToTranslate" xml:space="preserve">
+    <value>Vælg, hvilken type skåltaler for beskeder i spillet der skal oversættes</value>
+  </data>
 </root>

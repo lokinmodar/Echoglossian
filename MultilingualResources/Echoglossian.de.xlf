@@ -330,7 +330,7 @@
         </trans-unit>
         <trans-unit id="WhichToastsToTranslate" translate="yes" xml:space="preserve">
           <source>Select which kind of in-game message toasts to translate</source>
-          <target state="new">Select which kind of in-game message toasts to translate</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Wählen Sie aus, welche Art von Nachrichtentoasts im Spiel übersetzt werden sollen</target>
         </trans-unit>
       </group>
     </body>

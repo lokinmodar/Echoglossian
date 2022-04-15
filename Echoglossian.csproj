@@ -14,7 +14,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <LangVersion>9.0</LangVersion>
     <VersionMajor>2</VersionMajor>
-    <VersionMinor>3</VersionMinor>
+    <VersionMinor>99</VersionMinor>
     <VersionPatch Condition="'$(VersionPatch)' == ''">$([System.DateTime]::UtcNow.ToString("yyMM"))</VersionPatch>
     <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
@@ -215,10 +215,10 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.Translate" Version="3.7.4.4" />
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
-    <PackageReference Include="DalamudPackager" Version="2.1.5" />
+    <PackageReference Include="DalamudPackager" Version="2.1.6" />
     <PackageReference Include="DeepL" Version="0.4.0" />
-    <PackageReference Include="GTranslate" Version="2.0.1" />
-    <PackageReference Include="Lumina.Excel" Version="6.0.2" />
+    <PackageReference Include="GTranslate" Version="2.0.2" />
+    <PackageReference Include="Lumina.Excel" Version="6.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.11">
