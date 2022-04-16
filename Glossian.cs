@@ -22,6 +22,9 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
+
+
+    private const string NewGTranslateUrl = "https://translate.google.com/m";
     private const string GTranslateUrl =
       "https://clients5.google.com/translate_a/t?client=dict-chrome-ex";
 
@@ -54,7 +57,7 @@ namespace Echoglossian
         : Resources.LangIdentError;
     }
 
-    private static string TranslateTrial(string text)
+  /*  private static string TranslateTrial(string text)
     {
       using AggregateTranslator aggregateTranslator1 = new();
       string startingEllipsis = string.Empty;
@@ -91,11 +94,11 @@ namespace Echoglossian
           parsedText = sanitizedString;
         }
 
-        /*        parsedText = parsedText.Replace("\u2500", "\u002D");
+        *//*        parsedText = parsedText.Replace("\u2500", "\u002D");
                 parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
                 parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
                 parsedText = parsedText.Replace("\u201C", "\u0022");
-                parsedText = parsedText.Replace("\u201D", "\u0022");*/
+                parsedText = parsedText.Replace("\u201D", "\u0022");*//*
         parsedText = parsedText.Replace("\u200B", string.Empty);
 
         string detectedLanguage = LangIdentify(parsedText);
@@ -122,7 +125,7 @@ namespace Echoglossian
         throw;
       }
     }
-
+*/
     /// <summary>
     /// Translates the sentences passed to it. Uses Google Translate Free endpoint.
     /// </summary>
@@ -183,7 +186,9 @@ namespace Echoglossian
         PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
         PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
 #endif
-        string url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
+        //string url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
+
+        string url = $"{NewGTranslateUrl}?hl=en&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
 #if DEBUG
         PluginLog.LogInformation($"URL: {url}");
 #endif
@@ -209,7 +214,11 @@ namespace Echoglossian
         }
         else
         {
-          JObject parsed = JObject.Parse(read);
+#if DEBUG
+          PluginLog.LogVerbose($"Received HTML {ParseHtml(read)} ");
+#endif
+          
+/*          JObject parsed = JObject.Parse(read);
 
           List<string> dialogueSentenceList = parsed
             .SelectTokens("sentences[*].trans").Select(i => (string)i)
@@ -219,7 +228,9 @@ namespace Echoglossian
               string.Empty,
               (current, dialogueSentence) => current + dialogueSentence);
 
-          src = (JValue)parsed["src"];
+          src = (JValue)parsed["src"];*/
+
+          finalDialogueText = ParseHtml(read);
         }
 
         finalDialogueText = finalDialogueText.Replace("\u200B", string.Empty);
@@ -229,7 +240,8 @@ finalDialogueText = finalDialogueText.Replace("\u201D", "\u0022");
 finalDialogueText = startingEllipsis + finalDialogueText;
 finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
         finalDialogueText = finalDialogueText.Replace("\u005C\u0022", "\u0022");
-        finalDialogueText = finalDialogueText.Replace("\u005C\u002F", "\u005C");
+        finalDialogueText = finalDialogueText.Replace("\u005C\u002F", "\u002F");
+        finalDialogueText = finalDialogueText.Replace("\\u003C", "<");
 
         finalDialogueText = !startingEllipsis.IsNullOrEmpty()
           ? startingEllipsis + finalDialogueText
@@ -251,6 +263,23 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
         PluginLog.Error(e.ToString());
         throw;
       }
+    }
+
+    private static string ParseHtml(string html)
+    {
+      HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
+      doc.LoadHtml(html);
+
+      var text = doc.DocumentNode.Descendants()
+        .Where(n => n.HasClass("result-container")).ToList();
+
+      var parsedText = text.Single(n => n.InnerText.Length > 0).InnerText;
+
+#if DEBUG
+      PluginLog.LogVerbose($"In parser: " + parsedText);
+#endif
+
+      return parsedText;
     }
   }
 }
