@@ -36,23 +36,13 @@ namespace Echoglossian
         this.LanguageList.Add(l.Value.LanguageName);
       }
 
-      bool languageNotSupported =
-        this.configuration.Lang is 3 or 5 or 11 or 13 or 111 or 112;
-      bool languageOnlySupportedThruOverlay =
-        this.configuration.Lang is 2 or 4 or 6 or 8 or 9 or 10 or 12 or 14 or 15
-          or 16 or 18 or 19 or 21 or 22 or 24 or 25 or 29 or 35 or 37 or 38 or
-          40 or 41 or 42 or 43 or 45 or 46 or 51 or 52 or 53 or 55 or 56 or 57
-          or 58 or 60 or 61 or 64 or 67 or 69 or 70 or 71 or 72 or 76 or 77 or
-          78 or 80 or 82 or 83 or 85 or 86 or 89 or 90 or 91 or 92 or 99 or 100
-          or 101 or 102 or 103 or 104 or 105 or 106 or 107 or 108 or 109 or 110
-          or 116;
+
 
       ImGui.SetNextWindowSizeConstraints(
           new Vector2(700, 600),
           new Vector2(1920, 1080));
 
       ImGui.Begin(Resources.ConfigWindowTitle, ref this.config);
-
 
       ImGui.BeginGroup();
       if (this.ConfigFontLoaded)
@@ -65,6 +55,27 @@ namespace Echoglossian
             this.LanguageList.ToArray().Length))
       {
         this.configuration.Lang = languageInt;
+
+        bool languageNotSupported =
+          this.configuration.Lang is 3 or 5 or 11 or 13 or 111 or 112;
+        bool languageOnlySupportedThruOverlay =
+          this.configuration.Lang is 2 or 4 or 6 or 8 or 9 or 10 or 12 or 14 or 15
+            or 16 or 18 or 19 or 21 or 22 or 24 or 25 or 29 or 35 or 37 or 38 or
+            40 or 41 or 42 or 43 or 45 or 46 or 51 or 52 or 53 or 55 or 56 or 57
+            or 58 or 60 or 61 or 64 or 67 or 69 or 70 or 71 or 72 or 76 or 77 or
+            78 or 80 or 82 or 83 or 85 or 86 or 89 or 90 or 91 or 92 or 99 or 100
+            or 101 or 102 or 103 or 104 or 105 or 106 or 107 or 108 or 109 or 110
+            or 116;
+        if (languageNotSupported)
+        {
+          this.configuration.UnsupportedLanguage = true;
+        }
+        else
+        {
+          this.configuration.UnsupportedLanguage = false;
+          this.configuration.OverlayOnlyLanguage = languageOnlySupportedThruOverlay;
+        }
+
         this.LoadFont();
         this.ReloadFont();
         this.SaveConfig();
@@ -82,14 +93,14 @@ namespace Echoglossian
         ImGui.SetTooltip(Resources.LanguageSelectionTooltip);
       }
 
-      if (languageNotSupported)
+      if (this.configuration.UnsupportedLanguage)
       {
         ImGui.Text(Resources.LanguageNotSupportedText);
         this.configuration.Translate = false;
         this.SaveConfig();
       }
 
-      if (languageOnlySupportedThruOverlay)
+      if (this.configuration.OverlayOnlyLanguage)
       {
         ImGui.Text(Resources.LanguageOnlySupportedUsingOverlay);
 
@@ -158,7 +169,7 @@ namespace Echoglossian
               this.SaveConfig();
 
               ImGui.BeginGroup();
-              if (languageOnlySupportedThruOverlay)
+              if (this.configuration.OverlayOnlyLanguage)
               {
                 this.configuration.UseImGuiForTalk = true;
                 this.SaveConfig();
@@ -272,7 +283,7 @@ namespace Echoglossian
 
           ImGui.Spacing();
           ImGui.Separator();
-          if (!languageOnlySupportedThruOverlay &&
+          if (!this.configuration.OverlayOnlyLanguage &&
               this.configuration.UseImGuiForTalk)
           {
             if (ImGui.Checkbox(
@@ -302,7 +313,7 @@ namespace Echoglossian
             }
 
             ImGui.BeginGroup();
-            if (languageOnlySupportedThruOverlay)
+            if (this.configuration.OverlayOnlyLanguage)
             {
               this.configuration.UseImGuiForBattleTalk = true;
               this.SaveConfig();
@@ -439,7 +450,7 @@ namespace Echoglossian
               this.SaveConfig();
             }
             ImGui.BeginGroup();
-            if (languageOnlySupportedThruOverlay)
+            if (this.configuration.OverlayOnlyLanguage)
             {
               this.configuration.UseImGuiForToasts = true;
               this.SaveConfig();

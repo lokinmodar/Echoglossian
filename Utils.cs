@@ -97,7 +97,7 @@ namespace Echoglossian
         return;
       }
 
-      if (this.configuration.Version.CompareTo(4) != 0)
+      if (this.configuration.Version.CompareTo(5) != 0)
       {
         PluginInterface.ConfigFile.Delete();
         /* if (pluginInterface.ConfigDirectory.Exists)

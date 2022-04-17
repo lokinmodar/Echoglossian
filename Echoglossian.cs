@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Data;
@@ -129,6 +130,7 @@ namespace Echoglossian
 #if DEBUG
       // PluginLog.LogWarning($"Assets state config: {JsonConvert.SerializeObject(this.configuration, Formatting.Indented)}");
 #endif
+      this.configuration.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
       this.FixConfig();
 
       this.PluginAssetsState = this.configuration.PluginAssetsDownloaded;

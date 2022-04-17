@@ -18,6 +18,10 @@ namespace Echoglossian
 
     public bool Translate = false;
 
+    public bool UnsupportedLanguage = false;
+
+    public bool OverlayOnlyLanguage = false;
+
     public bool PluginAssetsDownloaded = false;
 
     public int Lang = 28;
@@ -97,7 +101,9 @@ namespace Echoglossian
 
     public float BattleTalkFontScale = 1;
 
-    public int Version { get; set; } = 4;
+    public string PluginVersion { get; set; } = "2.0.0";
+
+    public int Version { get; set; } = 5;
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;

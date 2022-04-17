@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Web;
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
@@ -22,7 +23,6 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-
 
     private const string NewGTranslateUrl = "https://translate.google.com/m";
     private const string GTranslateUrl =
@@ -57,75 +57,75 @@ namespace Echoglossian
         : Resources.LangIdentError;
     }
 
-  /*  private static string TranslateTrial(string text)
-    {
-      using AggregateTranslator aggregateTranslator1 = new();
-      string startingEllipsis = string.Empty;
-      if (text.IsNullOrEmpty())
+    /*  private static string TranslateTrial(string text)
       {
-        return string.Empty;
-      }
-#if DEBUG
-      PluginLog.LogError("inside translate NEW method");
-#endif
-
-      try
-      {
-        string lang = langDict[languageInt].Code;
-        string sanitizedString = sanitizer.Sanitize(text);
-        if (sanitizedString.IsNullOrEmpty())
+        using AggregateTranslator aggregateTranslator1 = new();
+        string startingEllipsis = string.Empty;
+        if (text.IsNullOrEmpty())
         {
           return string.Empty;
         }
+  #if DEBUG
+        PluginLog.LogError("inside translate NEW method");
+  #endif
 
-        if (sanitizedString == "...")
+        try
         {
-          return sanitizedString;
-        }
+          string lang = langDict[languageInt].Code;
+          string sanitizedString = sanitizer.Sanitize(text);
+          if (sanitizedString.IsNullOrEmpty())
+          {
+            return string.Empty;
+          }
 
-        string parsedText;
-        if (sanitizedString.StartsWith("..."))
+          if (sanitizedString == "...")
+          {
+            return sanitizedString;
+          }
+
+          string parsedText;
+          if (sanitizedString.StartsWith("..."))
+          {
+            startingEllipsis = "...";
+            parsedText = sanitizedString.Substring(3);
+          }
+          else
+          {
+            parsedText = sanitizedString;
+          }
+
+          *//*        parsedText = parsedText.Replace("\u2500", "\u002D");
+                  parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
+                  parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
+                  parsedText = parsedText.Replace("\u201C", "\u0022");
+                  parsedText = parsedText.Replace("\u201D", "\u0022");*//*
+          parsedText = parsedText.Replace("\u200B", string.Empty);
+
+          string detectedLanguage = LangIdentify(parsedText);
+          if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical" or "simple")
+          {
+            detectedLanguage = "en";
+          }
+
+  #if DEBUG
+          PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
+          PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
+  #endif
+          var translator = new GoogleTranslator2();
+          var aggregateTranslator = new AggregateTranslator();
+
+          var aggrtext = aggregateTranslator.TranslateAsync(text, lang, detectedLanguage);
+          PluginLog.Log("aggrtext: ", aggrtext.Result.Translation);
+
+          return translator.TranslateAsync(text, lang, detectedLanguage).Result.Translation;
+        }
+        catch (Exception e)
         {
-          startingEllipsis = "...";
-          parsedText = sanitizedString.Substring(3);
+          PluginLog.Error(e.ToString());
+          throw;
         }
-        else
-        {
-          parsedText = sanitizedString;
-        }
-
-        *//*        parsedText = parsedText.Replace("\u2500", "\u002D");
-                parsedText = parsedText.Replace("\u0021", "\u0021\u0020");
-                parsedText = parsedText.Replace("\u003F", "\u003F\u0020");
-                parsedText = parsedText.Replace("\u201C", "\u0022");
-                parsedText = parsedText.Replace("\u201D", "\u0022");*//*
-        parsedText = parsedText.Replace("\u200B", string.Empty);
-
-        string detectedLanguage = LangIdentify(parsedText);
-        if (detectedLanguage is "oc" or "an" or "bpy" or "br" or "roa_rup" or "vo" or "war" or "zh_classical" or "simple")
-        {
-          detectedLanguage = "en";
-        }
-
-#if DEBUG
-        PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
-        PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
-#endif
-        var translator = new GoogleTranslator2();
-        var aggregateTranslator = new AggregateTranslator();
-
-        var aggrtext = aggregateTranslator.TranslateAsync(text, lang, detectedLanguage);
-        PluginLog.Log("aggrtext: ", aggrtext.Result.Translation);
-
-        return translator.TranslateAsync(text, lang, detectedLanguage).Result.Translation;
       }
-      catch (Exception e)
-      {
-        PluginLog.Error(e.ToString());
-        throw;
-      }
-    }
-*/
+  */
     /// <summary>
     /// Translates the sentences passed to it. Uses Google Translate Free endpoint.
     /// </summary>
@@ -217,18 +217,18 @@ namespace Echoglossian
 #if DEBUG
           PluginLog.LogVerbose($"Received HTML {ParseHtml(read)} ");
 #endif
-          
-/*          JObject parsed = JObject.Parse(read);
 
-          List<string> dialogueSentenceList = parsed
-            .SelectTokens("sentences[*].trans").Select(i => (string)i)
-            .ToList();
+          /*          JObject parsed = JObject.Parse(read);
 
-          finalDialogueText = dialogueSentenceList.Aggregate(
-              string.Empty,
-              (current, dialogueSentence) => current + dialogueSentence);
+                    List<string> dialogueSentenceList = parsed
+                      .SelectTokens("sentences[*].trans").Select(i => (string)i)
+                      .ToList();
 
-          src = (JValue)parsed["src"];*/
+                    finalDialogueText = dialogueSentenceList.Aggregate(
+                        string.Empty,
+                        (current, dialogueSentence) => current + dialogueSentence);
+
+                    src = (JValue)parsed["src"];*/
 
           finalDialogueText = ParseHtml(read);
         }
@@ -242,6 +242,7 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
         finalDialogueText = finalDialogueText.Replace("\u005C\u0022", "\u0022");
         finalDialogueText = finalDialogueText.Replace("\u005C\u002F", "\u002F");
         finalDialogueText = finalDialogueText.Replace("\\u003C", "<");
+        finalDialogueText = finalDialogueText.Replace("&#39;", "\u0027");
 
         finalDialogueText = !startingEllipsis.IsNullOrEmpty()
           ? startingEllipsis + finalDialogueText
@@ -267,6 +268,8 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
 
     private static string ParseHtml(string html)
     {
+      using StringWriter stringWriter = new StringWriter();
+
       HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
       doc.LoadHtml(html);
 
@@ -275,11 +278,15 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
 
       var parsedText = text.Single(n => n.InnerText.Length > 0).InnerText;
 
+      HttpUtility.HtmlDecode(parsedText, stringWriter);
+
+      string decodedString = stringWriter.ToString();
+
 #if DEBUG
       PluginLog.LogVerbose($"In parser: " + parsedText);
 #endif
 
-      return parsedText;
+      return decodedString;
     }
   }
 }
