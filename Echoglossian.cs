@@ -114,7 +114,7 @@ namespace Echoglossian
       langDict = this.LanguagesDictionary;
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
-      Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk | Hooks.ChatBubbles | Hooks.Tooltips);
+      Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
 
       this.CreateOrUseDb();
 
@@ -130,8 +130,11 @@ namespace Echoglossian
 #if DEBUG
       // PluginLog.LogWarning($"Assets state config: {JsonConvert.SerializeObject(this.configuration, Formatting.Indented)}");
 #endif
-      this.configuration.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-      this.FixConfig();
+      this.configuration.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+      if (this.configuration.Version < 5)
+      {
+        this.FixConfig();
+      }
 
       this.PluginAssetsState = this.configuration.PluginAssetsDownloaded;
 #if DEBUG

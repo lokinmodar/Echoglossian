@@ -255,4 +255,22 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Wählen Sie aus, welche Art von Nachrichtentoasts im Spiel übersetzt werden sollen</value>
   </data>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Überprüfen von Plugin-Assets!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Download der Plugin-Assets abgeschlossen!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Fehler beim Herunterladen von Plugin-Assets:</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Bitte versuchen Sie es später erneut. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an den Plugin-Entwickler.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Alle Plugin-Assets vorhanden!</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Herunterladen zusätzlicher Plugin-Assets im Hintergrund. Bitte warten Sie, bis der Download abgeschlossen ist, bevor Sie die Einstellungen öffnen!</value>
+  </data>
 </root>

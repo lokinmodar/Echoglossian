@@ -69,7 +69,7 @@
     <value>Mande-me um PIX!</value>
   </data>
   <data name="WhatToTranslateText" xml:space="preserve">
-    <value>Selecione que tipo de texto deseja que seja traduzido</value>
+    <value>Selecione que tipo de texto deseja que seja traduzido na guia correspondente abaixo!</value>
   </data>
   <data name="PixText" xml:space="preserve">
     <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
@@ -157,7 +157,7 @@
     <comment>Translation overlay window name</comment>
   </data>
   <data name="ConfigTab0Name" xml:space="preserve">
-    <value>Principal</value>
+    <value>O quês, Ondes e Comos</value>
   </data>
   <data name="ConfigTab3Name" xml:space="preserve">
     <value>Configurações de mensagens de sistema</value>
@@ -175,7 +175,7 @@
     <value>Sobre o Echoglossian</value>
   </data>
   <data name="TranslationsEnabled" xml:space="preserve">
-    <value>Traduções habilitadas!</value>
+    <value>Traduções estão habilitadas!</value>
   </data>
   <data name="ConfigTab7Name" xml:space="preserve">
     <value>Configurações do mecanismo de tradução</value>
@@ -214,18 +214,36 @@
     <value>As traduções estão desabilitadas!</value>
   </data>
   <data name="TranslationEnabled" xml:space="preserve">
-    <value>As traduções estão habilitadas!</value>
+    <value>Traduções estão habilitadas!</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Use sobreposição para mostrar traduções de toasts</value>
+    <value>Use sobreposição para mostrar traduções de toasts (WIP)</value>
   </data>
   <data name="ResetConfigsButton" xml:space="preserve">
-    <value>Configurações de reset</value>
+    <value>Resetar Configurações</value>
   </data>
   <data name="SettingsReset" xml:space="preserve">
-    <value>Configurações echoglossianas redefinidas para padrão com sucesso!</value>
+    <value>Configurações do Echoglossian foram redefinidas para o padrão com sucesso!</value>
   </data>
   <data name="WhichToastsToTranslate" xml:space="preserve">
-    <value>Selecione qual tipo de brindes de mensagem no jogo para traduzir</value>
+    <value>Selecione qual tipo de mensagens de toast traduzir</value>
+  </data>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Verificando os arquivos do Plugin!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Download de arquivos do plugin completo!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Erro ao baixar os arquivos do plugin:</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Por favor, tente novamente mais tarde. Se o problema persistir, entre em contato com o desenvolvedor do plugin.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Todos os arquivos do plugin estão presentes!</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Baixando arquivos extras do plugin em segundo plano. Por favor, aguarde o download terminar antes de abrir as configurações!</value>
   </data>
 </root>

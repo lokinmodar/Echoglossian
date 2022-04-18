@@ -9,6 +9,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Dalamud.Interface.Internal.Notifications;
@@ -79,7 +80,8 @@ namespace Echoglossian
       this.configuration.UseImGuiForToasts = false;
       this.configuration.SwapTextsUsingImGui = false;
       this.configuration.ChosenTransEngine = 0;
-      this.configuration.Version = 4;
+      this.configuration.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+      this.configuration.Version = 5;
 
       this.SaveConfig();
       PluginInterface.UiBuilder.AddNotification(Resources.SettingsReset, this.Name, NotificationType.Info, 5000);
@@ -97,23 +99,19 @@ namespace Echoglossian
         return;
       }
 
-      if (this.configuration.Version.CompareTo(5) != 0)
+      if (this.configuration.Version >= 5)
       {
-        PluginInterface.ConfigFile.Delete();
-        /* if (pluginInterface.ConfigDirectory.Exists)
-         {
-           pluginInterface.ConfigDirectory.Delete(true);
-           // this.config = true;
-         }*/
-        this.SaveConfig();
-        this.ResetSettings();
-        PluginInterface.GetPluginConfig();
+        return;
       }
+
+      PluginInterface.ConfigFile.Delete();
+      this.SaveConfig();
+      this.ResetSettings();
+      PluginInterface.GetPluginConfig();
     }
 
     private void SaveConfig()
     {
-      // this.configuration.Lang = languageInt;
       PluginInterface.SavePluginConfig(this.configuration);
     }
 

@@ -85,8 +85,8 @@
           <target state="translated" state-qualifier="mt-suggestion">Mande-me um PIX!</target>
         </trans-unit>
         <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select what kind of text you want to be translated in the corresponding tab above!</source>
-          <target state="translated">Selecione que tipo de texto deseja que seja traduzido</target>
+          <source>Select what kind of text you want to be translated in the corresponding tab below!</source>
+          <target state="translated">Selecione que tipo de texto deseja que seja traduzido na guia correspondente abaixo!</target>
         </trans-unit>
         <trans-unit id="Name" translate="no" xml:space="preserve">
           <source>Echoglossian</source>
@@ -234,8 +234,8 @@
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
-          <source>Main</source>
-          <target state="translated" state-qualifier="tm-suggestion">Principal</target>
+          <source>Whats, Whens and Hows</source>
+          <target state="translated">O quês, Ondes e Comos</target>
         </trans-unit>
         <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
           <source>Toast settings</source>
@@ -258,8 +258,8 @@
           <target state="translated">Sobre o Echoglossian</target>
         </trans-unit>
         <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
-          <source>Translations enabled!</source>
-          <target state="translated">Traduções habilitadas!</target>
+          <source>Translations are Enabled!</source>
+          <target state="translated">Traduções estão habilitadas!</target>
         </trans-unit>
         <trans-unit id="ConfigTab7Name" translate="yes" xml:space="preserve">
           <source>Translation Engine settings</source>
@@ -311,23 +311,47 @@
         </trans-unit>
         <trans-unit id="TranslationEnabled" translate="yes" xml:space="preserve">
           <source>Translations are Enabled!</source>
-          <target state="translated" state-qualifier="mt-suggestion">As traduções estão habilitadas!</target>
+          <target state="translated">Traduções estão habilitadas!</target>
         </trans-unit>
         <trans-unit id="UseImGuiForToastsToggle" translate="yes" xml:space="preserve">
-          <source>Use overlay to show Toasts translations</source>
-          <target state="translated">Use sobreposição para mostrar traduções de toasts</target>
+          <source>Use overlay to show Toasts translations (WIP)</source>
+          <target state="translated">Use sobreposição para mostrar traduções de toasts (WIP)</target>
         </trans-unit>
         <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
           <source>Reset Settings</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações de reset</target>
+          <target state="translated">Resetar Configurações</target>
         </trans-unit>
         <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
           <source>Echoglossian settings reset to default successfully!</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações echoglossianas redefinidas para padrão com sucesso!</target>
+          <target state="translated">Configurações do Echoglossian foram redefinidas para o padrão com sucesso!</target>
         </trans-unit>
         <trans-unit id="WhichToastsToTranslate" translate="yes" xml:space="preserve">
           <source>Select which kind of in-game message toasts to translate</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Selecione qual tipo de brindes de mensagem no jogo para traduzir</target>
+          <target state="translated">Selecione qual tipo de mensagens de toast traduzir</target>
+        </trans-unit>
+        <trans-unit id="AssetsCheckingPopupMsg" translate="yes" xml:space="preserve">
+          <source>Checking Plugin assets!</source>
+          <target state="translated">Verificando os arquivos do Plugin!</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadComplete" translate="yes" xml:space="preserve">
+          <source>Downloading of plugin assets complete!</source>
+          <target state="translated">Download de arquivos do plugin completo!</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadError1stPart" translate="yes" xml:space="preserve">
+          <source>Error downloading plugin assets:</source>
+          <target state="translated">Erro ao baixar os arquivos do plugin:</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadError2ndPart" translate="yes" xml:space="preserve">
+          <source>. Please retry later. If the issue persists, please contact the plugin developer.</source>
+          <target state="translated">. Por favor, tente novamente mais tarde. Se o problema persistir, entre em contato com o desenvolvedor do plugin.</target>
+        </trans-unit>
+        <trans-unit id="AssetsPresentPopupMsg" translate="yes" xml:space="preserve">
+          <source>All plugin assets present!</source>
+          <target state="translated">Todos os arquivos do plugin estão presentes!</target>
+        </trans-unit>
+        <trans-unit id="DownloadingAssetsPopupMsg" translate="yes" xml:space="preserve">
+          <source>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</source>
+          <target state="translated">Baixando arquivos extras do plugin em segundo plano. Por favor, aguarde o download terminar antes de abrir as configurações!</target>
         </trans-unit>
       </group>
     </body>

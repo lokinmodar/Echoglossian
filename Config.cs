@@ -66,7 +66,6 @@ namespace Echoglossian
 
     public bool TranslateJournal = false;
 
-    // public bool UseImGui = false; //deprecated
     public bool UseImGuiForTalk = false;
 
     public bool UseImGuiForBattleTalk = false;

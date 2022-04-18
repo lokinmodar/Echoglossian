@@ -255,4 +255,22 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Sélectionnez le type de toasts de message dans le jeu à traduire</value>
   </data>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Vérification des actifs du plugin!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Téléchargement des ressources du plugin terminé!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Erreur lors du téléchargement des ressources du plug-in :</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Veuillez réessayer plus tard. Si le problème persiste, veuillez contacter le développeur du plugin.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Tous les actifs du plugin sont présents!</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Téléchargement de ressources de plug-in supplémentaires en arrière-plan. Veuillez attendre la fin du téléchargement avant d’ouvrir les paramètres!</value>
+  </data>
 </root>

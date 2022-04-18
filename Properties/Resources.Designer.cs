@@ -19,7 +19,7 @@ namespace Echoglossian.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -61,6 +61,51 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Checking Plugin assets!.
+        /// </summary>
+        public static string AssetsCheckingPopupMsg {
+            get {
+                return ResourceManager.GetString("AssetsCheckingPopupMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading of plugin assets complete!.
+        /// </summary>
+        public static string AssetsDownloadComplete {
+            get {
+                return ResourceManager.GetString("AssetsDownloadComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error downloading plugin assets:.
+        /// </summary>
+        public static string AssetsDownloadError1stPart {
+            get {
+                return ResourceManager.GetString("AssetsDownloadError1stPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to . Please retry later. If the issue persists, please contact the plugin developer..
+        /// </summary>
+        public static string AssetsDownloadError2ndPart {
+            get {
+                return ResourceManager.GetString("AssetsDownloadError2ndPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All plugin assets present!.
+        /// </summary>
+        public static string AssetsPresentPopupMsg {
+            get {
+                return ResourceManager.GetString("AssetsPresentPopupMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         public static byte[] choice {
@@ -80,7 +125,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Main.
+        ///   Looks up a localized string similar to Whats, Whens and Hows.
         /// </summary>
         public static string ConfigTab0Name {
             get {
@@ -212,6 +257,15 @@ namespace Echoglossian.Properties {
         public static string DisclaimerTitle {
             get {
                 return ResourceManager.GetString("DisclaimerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!.
+        /// </summary>
+        public static string DownloadingAssetsPopupMsg {
+            get {
+                return ResourceManager.GetString("DownloadingAssetsPopupMsg", resourceCulture);
             }
         }
         
@@ -742,7 +796,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Translations enabled!.
+        ///   Looks up a localized string similar to Translations are Enabled!.
         /// </summary>
         public static string TranslationsEnabled {
             get {
@@ -751,7 +805,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use overlay to show Toasts translations.
+        ///   Looks up a localized string similar to Use overlay to show Toasts translations (WIP).
         /// </summary>
         public static string UseImGuiForToastsToggle {
             get {
@@ -769,7 +823,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select what kind of text you want to be translated in the corresponding tab above!.
+        ///   Looks up a localized string similar to Select what kind of text you want to be translated in the corresponding tab below!.
         /// </summary>
         public static string WhatToTranslateText {
             get {

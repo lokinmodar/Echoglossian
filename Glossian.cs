@@ -23,7 +23,6 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-
     private const string NewGTranslateUrl = "https://translate.google.com/m";
     private const string GTranslateUrl =
       "https://clients5.google.com/translate_a/t?client=dict-chrome-ex";

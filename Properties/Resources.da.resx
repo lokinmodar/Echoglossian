@@ -255,4 +255,22 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Vælg, hvilken type skåltaler for beskeder i spillet der skal oversættes</value>
   </data>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Kontrol af plugin-aktiver!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Download af plugin-aktiver komplet!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Fejl ved download af plugin-aktiver:</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Prøv igen senere. Hvis problemet fortsætter, skal du kontakte pluginudvikleren.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Alle plugin-aktiver til stede!</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Download af ekstra plugin-aktiver i baggrunden. Vent venligst på, at downloadet er færdigt, før du åbner indstillingerne!</value>
+  </data>
 </root>

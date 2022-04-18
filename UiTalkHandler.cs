@@ -144,7 +144,6 @@ namespace Echoglossian
         {
           if (!this.configuration.UseImGuiForTalk)
           {
-
             string translatedText = Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
 #if DEBUG

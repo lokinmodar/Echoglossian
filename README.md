@@ -1,6 +1,7 @@
 <img src="https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/logo.png" align="right" width="260px"/>
 
 # Echoglossian
+[![Download count](https://img.shields.io/endpoint?url=https://vz32sgcoal.execute-api.us-east-1.amazonaws.com/Echoglossian)](https://github.com/lokinmodar/Echoglossian)
 [![GitHub stars](https://badgen.net/github/stars/lokinmodar/Echoglossian)](https://GitHub.com/lokinmodar/Echoglossian/stargazers/)
 [![GitHub release](https://img.shields.io/github/release/lokinmodar/Echoglossian.svg)](https://GitHub.com/lokinmodar/Echoglossian/releases/)
 [![Crowdin](https://badges.crowdin.net/echoglossian/localized.svg)](https://crowdin.com)
@@ -27,6 +28,7 @@ Enable the desired translations and configure the various options through the Co
 - goaats for FFXIVQuickLauncher
 - haplo for ChatTranslator plugin
 - Eternita-S for their contribution
+- Bluefissure for their contribution
 
 
 ## Contributors
@@ -37,14 +39,10 @@ Enable the desired translations and configure the various options through the Co
 </a>
 
 
-
-
-
-
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J35HJVY) 
 
-Yo can also support the project via [![pix](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pixlogo.png)](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pix.png) (only valid in Brazil)
-###### Final Fantasy XIV � 2010-2021 SQUARE ENIX CO., LTD. All Rights Reserved. I am not affiliated with SQUARE ENIX CO., LTD. in any way.
+You can also support the project via [![pix](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pixlogo.png)](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pix.png) (only valid in Brazil)
+###### Final Fantasy XIV � 2010-2022 SQUARE ENIX CO., LTD. All Rights Reserved. I am not affiliated with SQUARE ENIX CO., LTD. in any way.
 
 
 

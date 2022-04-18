@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
+using Echoglossian.Properties;
 
 namespace Echoglossian
 {
@@ -27,7 +28,11 @@ namespace Echoglossian
 
     private void PluginAssetsChecker()
     {
+#if DEBUG
       PluginLog.LogInformation("Checking Plugin assets!");
+#endif
+      PluginInterface.UiBuilder.AddNotification(Resources.AssetsCheckingPopupMsg, "Echoglossian",
+        NotificationType.Warning, 3000);
 
       foreach (string f in this.AssetFiles)
       {
@@ -50,7 +55,7 @@ namespace Echoglossian
       {
         this.PluginAssetsState = true;
         this.configuration.PluginAssetsDownloaded = true;
-        PluginInterface.UiBuilder.AddNotification($"All plugin assets present", "Echoglossian",
+        PluginInterface.UiBuilder.AddNotification(Resources.AssetsPresentPopupMsg, "Echoglossian",
           NotificationType.Success, 3000);
         this.SaveConfig();
         return;
@@ -61,7 +66,7 @@ namespace Echoglossian
         this.DownloadPluginAssets(this.MissingAssetFiles.IndexOf(f));
       }
 
-      PluginInterface.UiBuilder.AddNotification($"Downloading extra plugin assets in background", "Echoglossian",
+      PluginInterface.UiBuilder.AddNotification(Resources.DownloadingAssetsPopupMsg, "Echoglossian",
         NotificationType.Warning, 3000);
     }
 
@@ -76,8 +81,9 @@ namespace Echoglossian
           this.PluginAssetsState = true;
           this.configuration.PluginAssetsDownloaded = true;
           this.SaveConfig();
-          PluginInterface.UiBuilder.AddNotification($"All plugin assets present", "Echoglossian",
+          PluginInterface.UiBuilder.AddNotification(Resources.AssetsPresentPopupMsg, "Echoglossian",
             NotificationType.Success, 3000);
+          this.config = true;
         }
       }
     }
@@ -132,7 +138,7 @@ namespace Echoglossian
       {
         PluginLog.LogError($"Error downloading plugin assets: {e}");
         PluginInterface.UiBuilder.AddNotification(
-            $"Error downloading plugin assets: {this.AssetFiles[index]}",
+            $"{Resources.AssetsDownloadError1stPart} {this.AssetFiles[index]}{Resources.AssetsDownloadError2ndPart}",
             "Echoglossian",
             NotificationType.Error,
             3000);
@@ -148,9 +154,11 @@ namespace Echoglossian
 
     private void WebClientDownloadCompleted(object sender, DownloadDataCompletedEventArgs e)
     {
+#if DEBUG
       PluginLog.LogInformation("Download finished!");
+#endif
       PluginInterface.UiBuilder.AddNotification(
-        $"Downloading of plugin assets complete!",
+        Resources.AssetsDownloadComplete,
         "Echoglossian",
         NotificationType.Success,
         3000);
@@ -159,9 +167,10 @@ namespace Echoglossian
       {
         this.PluginAssetsState = true;
         this.configuration.PluginAssetsDownloaded = true;
-        PluginInterface.UiBuilder.AddNotification($"All plugin assets present", "Echoglossian",
+        PluginInterface.UiBuilder.AddNotification(Resources.AssetsPresentPopupMsg, "Echoglossian",
           NotificationType.Success, 3000);
         this.SaveConfig();
+        this.config = true;
       }
     }
   }
