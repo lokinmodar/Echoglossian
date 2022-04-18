@@ -1,5 +1,9 @@
 ﻿[*.{cs,vb}]
 
+tab_width = 2
+
+indent_size = 2
+
 # IDE0003: Remove qualification
 dotnet_style_qualification_for_event = false:none
 
