@@ -10,42 +10,42 @@
 
 ## Installation
 
-	**Please install through [FFXIVQuickLauncher](https://github.com/goatcorp/FFXIVQuickLauncher)!**
+**Please install through [FFXIVQuickLauncher](https://github.com/goatcorp/FFXIVQuickLauncher)!**
 
 ## Chat Commands
  
-	***/eglo*** : Opens the Plugin Configuration Window
+***/eglo*** : Opens the Plugin Configuration Window
 
 ## Usage
 
-	Enable the desired translations and configure the various options through the Configuration Window.
+Enable the desired translations and configure the various options through the Configuration Window.
 
 ## Known Issues
 
-	- Refer to [This](https://github.com/lokinmodar/Echoglossian/issues/12)
+- Refer to [This](https://github.com/lokinmodar/Echoglossian/issues/12)
 
 ## TODOs
 
-  - [Non-exhaustive list](https://github.com/lokinmodar/Echoglossian/projects/1)
+- [Non-exhaustive list](https://github.com/lokinmodar/Echoglossian/projects/1)
 
 ## Thanks
-	- annaclemens for XivCommon
-	- goaats for FFXIVQuickLauncher
-	- haplo for ChatTranslator plugin
-	- Eternita-S for their contribution
-	- Bluefissure for their contribution
-	- Soreepeong aka Kizer for the fontConfig fix
+- annaclemens for XivCommon
+- goaats for FFXIVQuickLauncher
+- haplo for ChatTranslator plugin
+- Eternita-S for their contribution
+- Bluefissure for their contribution
+- Soreepeong aka Kizer for the fontConfig fix
 
 
 ## Contributors
 
 
-	<a href="https://github.com/lokinmodar/Echoglossian/graphs/contributors">
-	  <img src="https://contrib.rocks/image?repo=lokinmodar/Echoglossian" />
-	</a>
+<a href="https://github.com/lokinmodar/Echoglossian/graphs/contributors">
+	<img src="https://contrib.rocks/image?repo=lokinmodar/Echoglossian" />
+</a>
 
 
-	[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J35HJVY) 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J35HJVY) 
 
-	You can also support the project via [![pix](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pixlogo.png)](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pix.png) (only valid in Brazil)
-	###### Final Fantasy XIV © 2010-2022 SQUARE ENIX CO., LTD. All Rights Reserved. I am not affiliated with SQUARE ENIX CO., LTD. in any way.
+You can also support the project via [![pix](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pixlogo.png)](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pix.png) (only valid in Brazil)
+###### Final Fantasy XIV © 2010-2022 SQUARE ENIX CO., LTD. All Rights Reserved. I am not affiliated with SQUARE ENIX CO., LTD. in any way.
