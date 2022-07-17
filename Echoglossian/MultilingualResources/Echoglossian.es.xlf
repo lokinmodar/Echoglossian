@@ -355,6 +355,10 @@
           <source>Echoglossian settings reset to default successfully!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">¡La configuración de Echoglossian se restablece a los valores predeterminados correctamente!</target>
         </trans-unit>
+        <trans-unit id="Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported" translate="yes" xml:space="preserve">
+          <source>Language not supported</source>
+          <target state="new">Language not supported</target>
+        </trans-unit>
       </group>
     </body>
   </file>
