@@ -353,6 +353,10 @@
           <source>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</source>
           <target state="translated">Baixando arquivos extras do plugin em segundo plano. Por favor, aguarde o download terminar antes de abrir as configurações!</target>
         </trans-unit>
+        <trans-unit id="Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported" translate="yes" xml:space="preserve">
+          <source>Language not Supported!</source>
+          <target state="new">Language not Supported!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

@@ -213,12 +213,16 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.4.4" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.5.5" />
+    <PackageReference Include="Dalamud.ContextMenu" Version="1.1.1" />
+    <PackageReference Include="Dalamud.CrystalTower" Version="2.0.0" />
+    <PackageReference Include="Dalamud.DrunkenToad" Version="1.1.8" />
     <PackageReference Include="DalamudLinter" Version="1.0.3" />
     <PackageReference Include="DalamudPackager" Version="2.1.7" />
     <PackageReference Include="DeepL" Version="0.4.0" />
-    <PackageReference Include="GTranslate" Version="2.0.2" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
+    <PackageReference Include="ECommons" Version="0.0.0.1" />
+    <PackageReference Include="GTranslate" Version="2.1.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.43" />
     <PackageReference Include="Lumina.Excel" Version="6.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.11" />
@@ -232,9 +236,9 @@
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0-rc.2.21480.5" />
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
-    <PackageReference Include="XivCommon" Version="5.0.0" />
+    <PackageReference Include="XivCommon" Version="5.0.1-alpha.1" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">

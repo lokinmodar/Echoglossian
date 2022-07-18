@@ -359,6 +359,10 @@
           <source>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Download af ekstra plugin-aktiver i baggrunden. Vent venligst på, at downloadet er færdigt, før du åbner indstillingerne!</target>
         </trans-unit>
+        <trans-unit id="Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported" translate="yes" xml:space="preserve">
+          <source>Language not Supported!</source>
+          <target state="new">Language not Supported!</target>
+        </trans-unit>
       </group>
     </body>
   </file>

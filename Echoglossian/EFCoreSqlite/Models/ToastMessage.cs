@@ -43,25 +43,36 @@ namespace Echoglossian.EFCoreSqlite.Models
       this.UpdatedDate = updatedDate;
     }
 
-    [Key] public int Id { get; set; }
+    [Key]
+    public int Id { get; set; }
 
-    [Required] [MaxLength(40)] public string ToastType { get; set; }
+    [Required]
+    [MaxLength(40)]
+    public string ToastType { get; set; }
 
-    [Required] [MaxLength(200)] public string OriginalToastMessage { get; set; }
+    [Required]
+    [MaxLength(200)]
+    public string OriginalToastMessage { get; set; }
 
-    [Required] public string OriginalLang { get; set; }
+    [Required]
+    public string OriginalLang { get; set; }
 
-    [MaxLength(200)] public string TranslatedToastMessage { get; set; }
+    [MaxLength(200)]
+    public string TranslatedToastMessage { get; set; }
 
-    [Required] public string TranslationLang { get; set; }
+    [Required]
+    public string TranslationLang { get; set; }
 
-    [Required] public int TranslationEngine { get; set; }
+    [Required]
+    public int TranslationEngine { get; set; }
 
-    [Required] public DateTime CreatedDate { get; set; }
+    [Required]
+    public DateTime CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
 
-    [Timestamp] public byte[] RowVersion { get; set; }
+    [Timestamp]
+    public byte[] RowVersion { get; set; }
 
     public override string ToString()
     {

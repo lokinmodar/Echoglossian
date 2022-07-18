@@ -270,6 +270,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Language not Supported!.
+        /// </summary>
+        public static string Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported {
+            get {
+                return ResourceManager.GetString("Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attention!.
         /// </summary>
         public static string EchoglossianPathModal {

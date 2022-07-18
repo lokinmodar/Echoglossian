@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
@@ -71,7 +72,7 @@ namespace Echoglossian
       {
         var lang = langDict[languageInt].Code;
         var sanitizedString = sanitizer.Sanitize(text);
-        
+
         if (sanitizedString.IsNullOrEmpty())
         {
           return string.Empty;

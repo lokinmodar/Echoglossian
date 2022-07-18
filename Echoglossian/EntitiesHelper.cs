@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+
 using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite.Models;
 
@@ -24,7 +25,7 @@ namespace Echoglossian
         LangIdentify(sender),
         string.Empty,
         string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code,
+        this.LanguagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now);
@@ -39,7 +40,7 @@ namespace Echoglossian
         LangIdentify(sender),
         string.Empty,
         string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code,
+        this.LanguagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now);
@@ -52,7 +53,7 @@ namespace Echoglossian
         text,
         ConvertClientLanguageToLangCode(this.clientLanguage),
         string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code,
+        this.LanguagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now);

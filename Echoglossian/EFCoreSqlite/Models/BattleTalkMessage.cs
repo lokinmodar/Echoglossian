@@ -50,29 +50,42 @@ namespace Echoglossian.EFCoreSqlite.Models
       this.UpdatedDate = updatedDate;
     }
 
-    [Key] public int Id { get; set; }
+    [Key]
+    public int Id { get; set; }
 
-    [Required] [MaxLength(100)] public string SenderName { get; set; }
+    [Required]
+    [MaxLength(100)]
+    public string SenderName { get; set; }
 
-    [Required] [MaxLength(400)] public string OriginalBattleTalkMessage { get; set; }
+    [Required]
+    [MaxLength(400)]
+    public string OriginalBattleTalkMessage { get; set; }
 
-    [Required] public string OriginalSenderNameLang { get; set; }
+    [Required]
+    public string OriginalSenderNameLang { get; set; }
 
-    [Required] public string OriginalBattleTalkMessageLang { get; set; }
+    [Required]
+    public string OriginalBattleTalkMessageLang { get; set; }
 
-    [MaxLength(100)] public string TranslatedSenderName { get; set; }
+    [MaxLength(100)]
+    public string TranslatedSenderName { get; set; }
 
-    [MaxLength(400)] public string TranslatedBattleTalkMessage { get; set; }
+    [MaxLength(400)]
+    public string TranslatedBattleTalkMessage { get; set; }
 
-    [Required] public string TranslationLang { get; set; }
+    [Required]
+    public string TranslationLang { get; set; }
 
-    [Required] public int TranslationEngine { get; set; }
+    [Required]
+    public int TranslationEngine { get; set; }
 
-    [Required] public DateTime CreatedDate { get; set; }
+    [Required]
+    public DateTime CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
 
-    [Timestamp] public byte[] RowVersion { get; set; }
+    [Timestamp]
+    public byte[] RowVersion { get; set; }
 
     public override string ToString()
     {

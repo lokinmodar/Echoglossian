@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using Dalamud.Logging;
 using ImGuiNET;
 
@@ -31,7 +32,7 @@ namespace Echoglossian
       PluginLog.Debug("Inside AdjustLanguageForFontBuild method");
 #endif
 
-      var lang = this.languagesDictionary[this.configuration.Lang];
+      var lang = this.LanguagesDictionary[this.configuration.Lang];
       this.specialFontFileName = lang.FontName;
       this.scriptCharList = lang.ExclusiveCharsToAdd;
     }
@@ -140,7 +141,7 @@ namespace Echoglossian
             {
               OversampleH = 2,
               OversampleV = 2,
-              MergeMode = true
+              MergeMode = true,
             };
 
             fixed (ushort* ptr = &arr[0])
@@ -275,7 +276,7 @@ namespace Echoglossian
             {
               OversampleH = 2,
               OversampleV = 2,
-              MergeMode = true
+              MergeMode = true,
             };
 
             fixed (ushort* ptr = &arr[0])

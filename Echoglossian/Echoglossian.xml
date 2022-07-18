@@ -24,7 +24,7 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.LanguageInfo.#ctor(System.String,System.String,System.String,System.String,System.Int32[])">
             <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.LanguageInfo" /> class.
+            Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.LanguageInfo"/> class.
             </summary>
             <param name="code">Iso LanguageInfo Code.</param>
             <param name="languageName">LanguageInfo name.</param>
@@ -131,6 +131,31 @@
               resource lookups using this strongly typed resource class.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.AssetsCheckingPopupMsg">
+            <summary>
+              Looks up a localized string similar to Checking Plugin assets!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AssetsDownloadComplete">
+            <summary>
+              Looks up a localized string similar to Downloading of plugin assets complete!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AssetsDownloadError1stPart">
+            <summary>
+              Looks up a localized string similar to Error downloading plugin assets:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AssetsDownloadError2ndPart">
+            <summary>
+              Looks up a localized string similar to . Please retry later. If the issue persists, please contact the plugin developer..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AssetsPresentPopupMsg">
+            <summary>
+              Looks up a localized string similar to All plugin assets present!.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.choice">
             <summary>
               Looks up a localized resource of type System.Byte[].
@@ -143,7 +168,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab0Name">
             <summary>
-              Looks up a localized string similar to Main.
+              Looks up a localized string similar to Whats, Whens and Hows.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab1Name">
@@ -216,9 +241,14 @@
               Looks up a localized string similar to About Echoglossian:.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.DownloadingAssetsPopupMsg">
+            <summary>
+              Looks up a localized string similar to Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported">
             <summary>
-              Looks up a localized string similar to Language not supported.
+              Looks up a localized string similar to Language not Supported!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
@@ -513,12 +543,12 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">
             <summary>
-              Looks up a localized string similar to Translations enabled!.
+              Looks up a localized string similar to Translations are Enabled!.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.UseImGuiForToastsToggle">
             <summary>
-              Looks up a localized string similar to Use overlay to show Toasts translations.
+              Looks up a localized string similar to Use overlay to show Toasts translations (WIP).
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.WaitingForTranslation">
@@ -528,12 +558,12 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.WhatToTranslateText">
             <summary>
-              Looks up a localized string similar to Select what kind of text you want to be translated.
+              Looks up a localized string similar to Select what kind of text you want to be translated in the corresponding tab below!.
             </summary>
         </member>
-        <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslateText">
+        <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslate">
             <summary>
-              Looks up a localized string similar to Select which in-game Toast messages to translate.
+              Looks up a localized string similar to Select which kind of in-game message toasts to translate.
             </summary>
         </member>
     </members>

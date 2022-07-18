@@ -6,6 +6,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
 using Dalamud.Utility;
@@ -104,7 +105,7 @@ namespace Echoglossian
                 LangIdentify(senderToTranslate),
                 senderTranslation,
                 translatedBattleTalkMessage,
-                this.languagesDictionary[this.configuration.Lang].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -127,7 +128,7 @@ namespace Echoglossian
                 LangIdentify(senderToTranslate),
                 string.Empty,
                 translatedBattleTalkMessage,
-                this.languagesDictionary[this.configuration.Lang].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -189,7 +190,7 @@ namespace Echoglossian
                     LangIdentify(senderToTranslate),
                     this.configuration.TranslateNpcNames ? this.currentSenderTranslation : string.Empty,
                     this.currentBattleTalkTranslation,
-                    this.languagesDictionary[this.configuration.Lang].Code,
+                    this.LanguagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);

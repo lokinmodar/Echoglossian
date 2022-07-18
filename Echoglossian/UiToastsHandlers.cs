@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
@@ -407,7 +408,7 @@ namespace Echoglossian
               messageTextToTranslate,
               LangIdentify(messageTextToTranslate),
               translatedToastMessage,
-              this.languagesDictionary[this.configuration.Lang].Code,
+              this.LanguagesDictionary[this.configuration.Lang].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -448,7 +449,7 @@ namespace Echoglossian
                     messageTextToTranslate,
                     errorToastToHandle.OriginalLang,
                     this.currentErrorToastTranslation,
-                    this.languagesDictionary[this.configuration.Lang].Code,
+                    this.LanguagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);
@@ -554,7 +555,7 @@ namespace Echoglossian
               messageTextToTranslate,
               LangIdentify(messageTextToTranslate),
               translatedToastMessage,
-              this.languagesDictionary[this.configuration.Lang].Code,
+              this.LanguagesDictionary[this.configuration.Lang].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -595,7 +596,7 @@ namespace Echoglossian
                     messageTextToTranslate,
                     toastToHandle.OriginalLang,
                     this.currentToastTranslation,
-                    this.languagesDictionary[this.configuration.Lang].Code,
+                    this.LanguagesDictionary[this.configuration.Lang].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
                     DateTime.Now);

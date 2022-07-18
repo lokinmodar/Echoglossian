@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
 using Dalamud.Utility;
@@ -23,7 +24,9 @@ namespace Echoglossian
     private readonly ConcurrentQueue<TalkMessage> talkMessageQueue = new();
     private readonly ConcurrentQueue<TalkMessage> translatedTalkMessageQueue = new();
     private ConcurrentDictionary<int, TalkMessage> talkConcurrentDictionary = new(); // not using this right now
+
     private TalkMessage CurrentTalkMessage { get; set; }
+
     public bool TalkTracker { get; set; } = false;
 
     private void HandleTalkAsync()
@@ -103,7 +106,7 @@ namespace Echoglossian
       }
 
       try
-      { 
+      {
         var talk = GameGui.GetAddonByName("Talk", 1);
         if (talk != IntPtr.Zero)
         {
@@ -146,7 +149,7 @@ namespace Echoglossian
                   return;
                 }
                 FoundTalkMessage = null;
-                
+
               }
               else
               {
@@ -154,7 +157,7 @@ namespace Echoglossian
               }
               return;
             }
-            
+
             findings = this.FindTalkMessage(CurrentTalkMessage);
 #if DEBUG
             PluginLog.LogVerbose(
@@ -167,7 +170,7 @@ namespace Echoglossian
               this.CurrentTalkMessage = this.FoundTalkMessage;
               var translatedText = this.FoundTalkMessage?.TranslatedTalkMessage;
               var nameTranslation = this.FoundTalkMessage?.TranslatedSenderName;
-              
+
               if (!this.configuration.UseImGuiForTalk)
               {
 #if DEBUG
@@ -354,7 +357,7 @@ namespace Echoglossian
       }
     }
 
-// TODO: probably won't use this anymore
+    // TODO: probably won't use this anymore
     private void GetTalk(ref SeString name, ref SeString text, ref TalkStyle style)
     {
       if (!this.configuration.TranslateTalk)
@@ -438,7 +441,7 @@ else
                 LangIdentify(nameToTranslate),
                 nameTranslation,
                 translatedText,
-                this.languagesDictionary[this.configuration.Lang].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -461,7 +464,7 @@ else
                 LangIdentify(nameToTranslate),
                 string.Empty,
                 translatedText,
-                this.languagesDictionary[this.configuration.Lang].Code,
+                this.LanguagesDictionary[this.configuration.Lang].Code,
                 this.configuration.ChosenTransEngine,
                 DateTime.Now,
                 DateTime.Now);
@@ -547,7 +550,7 @@ else
                       LangIdentify(nameToTranslate),
                       this.configuration.TranslateNpcNames ? this.currentNameTranslation : string.Empty,
                       this.currentTalkTranslation,
-                      this.languagesDictionary[this.configuration.Lang].Code,
+                      this.LanguagesDictionary[this.configuration.Lang].Code,
                       this.configuration.ChosenTransEngine,
                       DateTime.Now,
                       DateTime.Now);
@@ -607,7 +610,7 @@ else
                   LangIdentify(nameToTranslate),
                   nameTranslation,
                   translatedText,
-                  this.languagesDictionary[this.configuration.Lang].Code,
+                  this.LanguagesDictionary[this.configuration.Lang].Code,
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
                   DateTime.Now);
@@ -662,7 +665,7 @@ else
                   LangIdentify(nameToTranslate),
                   string.Empty,
                   translatedText,
-                  this.languagesDictionary[this.configuration.Lang].Code,
+                  this.LanguagesDictionary[this.configuration.Lang].Code,
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
                   DateTime.Now);

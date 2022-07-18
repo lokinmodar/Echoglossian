@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+
 using Dalamud;
 using Dalamud.Data;
 using Dalamud.Game;
@@ -75,18 +76,18 @@ namespace Echoglossian
         SlashCommand,
         new CommandInfo(this.Command)
         {
-          HelpMessage = Resources.HelpMessage
+          HelpMessage = Resources.HelpMessage,
         });
 
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
       Resolver.Initialize();
-      
+
       this.clientLanguage = ClientState.ClientLanguage.ToLumina();
 #if DEBUG
       PluginLog.Information("Client language: {0}", this.clientLanguage);
 #endif
-      
-      langDict = this.languagesDictionary;
+
+      langDict = this.LanguagesDictionary;
       languageInt = this.configuration.Lang;
       identifier = Factory.Load(
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
@@ -177,19 +178,26 @@ namespace Echoglossian
       }*/
     }
 
-    [PluginService] public static DataManager DManager { get; set; } = null!;
+    [PluginService]
+    public static DataManager DManager { get; set; } = null!;
 
-    [PluginService] public static DalamudPluginInterface PluginInterface { get; set; } = null!;
+    [PluginService]
+    public static DalamudPluginInterface PluginInterface { get; set; } = null!;
 
-    [PluginService] public static CommandManager CommandManager { get; set; } = null!;
+    [PluginService]
+    public static CommandManager CommandManager { get; set; } = null!;
 
-    [PluginService] public static Framework Framework { get; set; } = null!;
+    [PluginService]
+    public static Framework Framework { get; set; } = null!;
 
-    [PluginService] public static GameGui GameGui { get; set; } = null!;
+    [PluginService]
+    public static GameGui GameGui { get; set; } = null!;
 
-    [PluginService] public static ClientState ClientState { get; set; } = null!;
+    [PluginService]
+    public static ClientState ClientState { get; set; } = null!;
 
-    [PluginService] public static ToastGui ToastGui { get; set; } = null!;
+    [PluginService]
+    public static ToastGui ToastGui { get; set; } = null!;
 
     private static XivCommonBase Common { get; set; }
 
@@ -269,35 +277,35 @@ namespace Echoglossian
         case true when !this.FontLoaded || this.FontLoadFailed:
           return;
         case true:
-        {
-          switch (ClientState.IsLoggedIn)
           {
-            case true:
+            switch (ClientState.IsLoggedIn)
+            {
+              case true:
 
-              this.TalkHandler();
+                this.TalkHandler();
 
-              this.TalkSubtitleHandler("TalkSubtitle", 1);
-              this.BattleTalkHandler("_BattleTalk", 1);
+                this.TalkSubtitleHandler("TalkSubtitle", 1);
+                this.BattleTalkHandler("_BattleTalk", 1);
 
-              this.TextErrorToastHandler("_TextError", 1);
+                this.TextErrorToastHandler("_TextError", 1);
 
-              this.ToastHandler("_WideText", 1);
+                this.ToastHandler("_WideText", 1);
 
-              // this.ClassChangeToastHandler("_WideText", 1);
-              //
-              // this.ClassChangeToastHandler("_WideText", 2);
-              this.ToastHandler("_TextClassChange", 1);
-              this.ToastHandler("_AreaText", 1);
+                // this.ClassChangeToastHandler("_WideText", 1);
+                //
+                // this.ClassChangeToastHandler("_WideText", 2);
+                this.ToastHandler("_TextClassChange", 1);
+                this.ToastHandler("_AreaText", 1);
 
-              // this.QuestToastHandler("_ScreenText", 1);
-              break;
+                // this.QuestToastHandler("_ScreenText", 1);
+                break;
+            }
+
+            break;
           }
 
-          break;
-        }
-
         default:
-          this.DisableAllTranslations();
+          // this.DisableAllTranslations();
           break;
       }
     }

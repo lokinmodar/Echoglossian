@@ -5,6 +5,7 @@
 
 using System.IO;
 using System.Threading.Tasks;
+
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,11 @@ namespace Echoglossian.EFCoreSqlite
 {
   public class EchoglossianDbContext : DbContext
   {
-        /// <summary>
-        ///   Initializes a new instance of the <see cref="EchoglossianDbContext" /> class.
-        /// </summary>
-        /// <param name="configDir"></param>
-        public EchoglossianDbContext(string configDir)
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="EchoglossianDbContext" /> class.
+    /// </summary>
+    /// <param name="configDir"></param>
+    public EchoglossianDbContext(string configDir)
     {
       this.DbPath = $"{configDir}Echoglossian.db";
 #if DEBUG

@@ -191,6 +191,9 @@
   <data name="EchoglossianPathModal" xml:space="preserve">
     <value>Attention!</value>
   </data>
+  <data name="Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported" xml:space="preserve">
+    <value>Language not Supported!</value>
+  </data>
   <data name="EnableTranslation" xml:space="preserve">
     <value>Activate game text realtime translation</value>
   </data>

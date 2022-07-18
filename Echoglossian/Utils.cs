@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
@@ -30,8 +31,9 @@ namespace Echoglossian
       Yandex = 1 << 3, // Yandex Translator
       GTranslate = 1 << 4, // Uses Google, Bing and Yandex (free engines)
       Amazon = 1 << 5, // Amazon Translate
-      Azure = 1 << 6 // Microsoft Azure Translate
+      Azure = 1 << 6, // Microsoft Azure Translate
     }
+
 #if DEBUG
     public void ListCultureInfos()
     {
@@ -244,7 +246,7 @@ namespace Echoglossian
 #if DEBUG
       PluginLog.LogVerbose($"New Line payload: {newLinePayload}");
 #endif
-      var regex = new Regex(@"(.{1,64})(?:\s|$)"); //.{0,70}\S(?=$|\s)
+      var regex = new Regex(@"(.{1,64})(?:\s|$)"); // .{0,70}\S(?=$|\s)
       var formattedText = regex.Matches(text)
         .Select(m => m.Groups[1].Value).ToList()
         .Select(s => string.Join(s, newLinePayload)).ToList()
@@ -252,7 +254,7 @@ namespace Echoglossian
 #if DEBUG
       PluginLog.LogVerbose($"Formatted text: {formattedText}");
 #endif
-      
+
       return formattedText;
     }
 

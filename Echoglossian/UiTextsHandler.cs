@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using Dalamud.Logging;
 using Lumina.Excel.GeneratedSheets;
 
-//using FrameworkI = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
+// using FrameworkI = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 
 namespace Echoglossian
 {
@@ -33,7 +34,7 @@ namespace Echoglossian
         }
       }
 
-      //PluginLog.LogVerbose($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+      // PluginLog.LogVerbose($"Sheet row: {a.RowId}: {a.Text.ToString()}");
     }
   }
 }
