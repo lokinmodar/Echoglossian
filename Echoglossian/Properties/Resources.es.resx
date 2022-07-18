@@ -98,9 +98,6 @@
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
     <value>Multiplicador de ancho de mensajes de sistema</value>
   </data>
-  <data name="WhichToastsToTranslateText" xml:space="preserve">
-    <value>Selecciona los mensajes de sistema que quieres traducir</value>
-  </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
     <value>Color de fuente de la superposición:</value>
   </data>
@@ -227,5 +224,26 @@
   </data>
   <data name="SettingsReset" xml:space="preserve">
     <value>¡La configuración de Echoglossian se restablece a los valores predeterminados correctamente!</value>
+  </data>
+  <data name="WhichToastsToTranslate" xml:space="preserve">
+    <value>Selecciona qué tipo de notificaciones de mensajes del juego traducir</value>
+  </data>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>¡Comprobando los activos del plugin!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>¡Descarga de activos de plugin completa!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Error al descargar los activos del plugin:</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Vuelva a intentarlo más tarde. Si el problema persiste, póngase en contacto con el desarrollador del plugin.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>¡Todos los activos del plugin presentes!</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Descarga de activos de plugins adicionales en segundo plano. ¡Espere a que finalice la descarga antes de abrir la configuración!</value>
   </data>
 </root>

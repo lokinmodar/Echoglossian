@@ -30,8 +30,7 @@
         </trans-unit>
         <trans-unit id="LanguageSelectLabelText" translate="yes" xml:space="preserve">
           <source>Language to translate to</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Linguagem para traduzir para</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated" state-qualifier="mt-suggestion">Linguagem para traduzir para</target>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
           <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
@@ -86,20 +85,16 @@
           <target state="translated" state-qualifier="mt-suggestion">Mande-me um PIX!</target>
         </trans-unit>
         <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select what kind of text you want to be translated</source>
-          <target state="translated">Selecione que tipo de texto deseja que seja traduzido</target>
+          <source>Select what kind of text you want to be translated in the corresponding tab below!</source>
+          <target state="translated">Selecione que tipo de texto deseja que seja traduzido na guia correspondente abaixo!</target>
         </trans-unit>
         <trans-unit id="Name" translate="no" xml:space="preserve">
           <source>Echoglossian</source>
           <target state="final">Echoglossian</target>
         </trans-unit>
         <trans-unit id="pix" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
-          <target state="final">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </target>
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
         </trans-unit>
         <trans-unit id="PixText" translate="yes" xml:space="preserve">
           <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
@@ -136,10 +131,6 @@
         <trans-unit id="ToastOverlayWidthScrollLabel" translate="yes" xml:space="preserve">
           <source>Toast Overlay Width multiplier</source>
           <target state="translated">Multiplicador de largura para Toasts</target>
-        </trans-unit>
-        <trans-unit id="WhichToastsToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select which in-game Toast messages to translate</source>
-          <target state="translated">Selecione quais mensagens Toast devem ser traduzidas</target>
         </trans-unit>
         <trans-unit id="FontColorSelectLabel" translate="yes" xml:space="preserve">
           <source>Overlay font color:</source>
@@ -178,44 +169,24 @@
           <target state="translated">Traduzir no jogo outras mensagens de Toast diversas</target>
         </trans-unit>
         <trans-unit id="logo" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
-          <target state="final">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </target>
+          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
         </trans-unit>
         <trans-unit id="minfilia" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
-          <target state="final">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </target>
+          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
         </trans-unit>
         <trans-unit id="choice" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
-          <target state="final">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </target>
+          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
         </trans-unit>
         <trans-unit id="cutscenechoice" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
-          <target state="final">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </target>
+          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
         </trans-unit>
         <trans-unit id="prttws" translate="no" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
-          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
-          <target state="final">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </target>
+          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="final">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
         </trans-unit>
         <trans-unit id="PluginInterfaceLanguage" translate="yes" xml:space="preserve">
           <source>Choose the language for the plugin configuration window</source>
@@ -223,8 +194,7 @@
         </trans-unit>
         <trans-unit id="PluginInterfaceLanguageSelectorText" translate="yes" xml:space="preserve">
           <source>Config Window LanguageInfo:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Linguagem de janela de config:</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated" state-qualifier="mt-suggestion">Linguagem de janela de config:</target>
         </trans-unit>
         <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
           <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
@@ -264,8 +234,8 @@
           <note from="MultilingualBuild" annotates="source" priority="2">Translation overlay window name</note>
         </trans-unit>
         <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
-          <source>Main</source>
-          <target state="translated" state-qualifier="tm-suggestion">Principal</target>
+          <source>Whats, Whens and Hows</source>
+          <target state="translated">O quês, Ondes e Comos</target>
         </trans-unit>
         <trans-unit id="ConfigTab3Name" translate="yes" xml:space="preserve">
           <source>Toast settings</source>
@@ -288,8 +258,8 @@
           <target state="translated">Sobre o Echoglossian</target>
         </trans-unit>
         <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
-          <source>Translations enabled!</source>
-          <target state="translated">Traduções habilitadas!</target>
+          <source>Translations are Enabled!</source>
+          <target state="translated">Traduções estão habilitadas!</target>
         </trans-unit>
         <trans-unit id="ConfigTab7Name" translate="yes" xml:space="preserve">
           <source>Translation Engine settings</source>
@@ -341,23 +311,47 @@
         </trans-unit>
         <trans-unit id="TranslationEnabled" translate="yes" xml:space="preserve">
           <source>Translations are Enabled!</source>
-          <target state="translated" state-qualifier="mt-suggestion">As traduções estão habilitadas!</target>
+          <target state="translated">Traduções estão habilitadas!</target>
         </trans-unit>
         <trans-unit id="UseImGuiForToastsToggle" translate="yes" xml:space="preserve">
-          <source>Use overlay to show Toasts translations</source>
-          <target state="translated">Use sobreposição para mostrar traduções de toasts</target>
+          <source>Use overlay to show Toasts translations (WIP)</source>
+          <target state="translated">Use sobreposição para mostrar traduções de toasts (WIP)</target>
         </trans-unit>
         <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
           <source>Reset Settings</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações de reset</target>
+          <target state="translated">Resetar Configurações</target>
         </trans-unit>
         <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
           <source>Echoglossian settings reset to default successfully!</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações echoglossianas redefinidas para padrão com sucesso!</target>
+          <target state="translated">Configurações do Echoglossian foram redefinidas para o padrão com sucesso!</target>
         </trans-unit>
-        <trans-unit id="Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported" translate="yes" xml:space="preserve">
-          <source>Language not supported</source>
-          <target state="new">Language not supported</target>
+        <trans-unit id="WhichToastsToTranslate" translate="yes" xml:space="preserve">
+          <source>Select which kind of in-game message toasts to translate</source>
+          <target state="translated">Selecione qual tipo de mensagens de toast traduzir</target>
+        </trans-unit>
+        <trans-unit id="AssetsCheckingPopupMsg" translate="yes" xml:space="preserve">
+          <source>Checking Plugin assets!</source>
+          <target state="translated">Verificando os arquivos do Plugin!</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadComplete" translate="yes" xml:space="preserve">
+          <source>Downloading of plugin assets complete!</source>
+          <target state="translated">Download de arquivos do plugin completo!</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadError1stPart" translate="yes" xml:space="preserve">
+          <source>Error downloading plugin assets:</source>
+          <target state="translated">Erro ao baixar os arquivos do plugin:</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadError2ndPart" translate="yes" xml:space="preserve">
+          <source>. Please retry later. If the issue persists, please contact the plugin developer.</source>
+          <target state="translated">. Por favor, tente novamente mais tarde. Se o problema persistir, entre em contato com o desenvolvedor do plugin.</target>
+        </trans-unit>
+        <trans-unit id="AssetsPresentPopupMsg" translate="yes" xml:space="preserve">
+          <source>All plugin assets present!</source>
+          <target state="translated">Todos os arquivos do plugin estão presentes!</target>
+        </trans-unit>
+        <trans-unit id="DownloadingAssetsPopupMsg" translate="yes" xml:space="preserve">
+          <source>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</source>
+          <target state="translated">Baixando arquivos extras do plugin em segundo plano. Por favor, aguarde o download terminar antes de abrir as configurações!</target>
         </trans-unit>
       </group>
     </body>

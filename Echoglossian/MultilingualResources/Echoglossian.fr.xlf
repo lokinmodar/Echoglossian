@@ -7,19 +7,17 @@
     <body>
       <group id="ECHOGLOSSIAN/PROPERTIES/RESOURCES.RESX" datatype="resx">
         <trans-unit id="choice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
+          <source>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="CloseButtonLabel" translate="yes" xml:space="preserve">
           <source>Close</source>
           <target state="needs-review-translation" state-qualifier="tm-suggestion">Fermer</target>
         </trans-unit>
         <trans-unit id="ConfigTab0Name" translate="yes" xml:space="preserve">
-          <source>Main</source>
+          <source>Whats, Whens and Hows</source>
           <target state="needs-review-translation" state-qualifier="tm-suggestion">Principal</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ConfigTab1Name" translate="yes" xml:space="preserve">
           <source>Talk settings</source>
@@ -63,11 +61,8 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">S’il vous plaît soutenez-nous soit en contribuant au développement du projet, en soumettant des problèmes ou en nous aidant avec un café.</target>
         </trans-unit>
         <trans-unit id="cutscenechoice" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
+          <source>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="DisclaimerText1" translate="yes" xml:space="preserve">
           <source>This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</source>
@@ -128,18 +123,12 @@
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="logo" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
+          <source>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="minfilia" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
+          <source>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="Name" translate="yes" xml:space="preserve">
           <source>Echoglossian</source>
@@ -211,11 +200,8 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Acheter lokinmodar un café</target>
         </trans-unit>
         <trans-unit id="pix" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
+          <source>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="PixQrWindowLabel" translate="yes" xml:space="preserve">
           <source>PIX qrcode</source>
@@ -235,11 +221,8 @@
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="prttws" translate="yes" extype="System.Resources.ResXFileRef, System.Windows.Forms" xml:space="preserve">
-          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral,
-            PublicKeyToken=b77a5c561934e089
-        </source>
+          <source>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="QRCodeInstructionsText" translate="yes" xml:space="preserve">
           <source>Scan the QR code to send me a PIX - only valid in Brazil</source>
@@ -322,24 +305,23 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ce moteur de traduction ne nécessite aucun paramètre spécial.</target>
         </trans-unit>
         <trans-unit id="TranslationsEnabled" translate="yes" xml:space="preserve">
-          <source>Translations enabled!</source>
+          <source>Translations are Enabled!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Traductions activées !</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="UseImGuiForToastsToggle" translate="yes" xml:space="preserve">
-          <source>Use overlay to show Toasts translations</source>
+          <source>Use overlay to show Toasts translations (WIP)</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Utiliser la superposition pour afficher les traductions toasts</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="WaitingForTranslation" translate="yes" xml:space="preserve">
           <source>Awaiting translation...</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">En attente de traduction...</target>
         </trans-unit>
         <trans-unit id="WhatToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select what kind of text you want to be translated</source>
+          <source>Select what kind of text you want to be translated in the corresponding tab below!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Sélectionnez le type de texte que vous souhaitez traduire</target>
-        </trans-unit>
-        <trans-unit id="WhichToastsToTranslateText" translate="yes" xml:space="preserve">
-          <source>Select which in-game Toast messages to translate</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Sélectionnez les messages Toast dans le jeu à traduire</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ResetConfigsButton" translate="yes" xml:space="preserve">
           <source>Reset Settings</source>
@@ -349,9 +331,33 @@
           <source>Echoglossian settings reset to default successfully!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Les paramètres Echoglossian sont réinitialisés par défaut avec succès!</target>
         </trans-unit>
-        <trans-unit id="Echoglossian_ConvertClientLanguageToLangCode_Language_not_supported" translate="yes" xml:space="preserve">
-          <source>Language not supported</source>
-          <target state="new">Language not supported</target>
+        <trans-unit id="WhichToastsToTranslate" translate="yes" xml:space="preserve">
+          <source>Select which kind of in-game message toasts to translate</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Sélectionnez le type de toasts de message dans le jeu à traduire</target>
+        </trans-unit>
+        <trans-unit id="AssetsCheckingPopupMsg" translate="yes" xml:space="preserve">
+          <source>Checking Plugin assets!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Vérification des actifs du plugin!</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadComplete" translate="yes" xml:space="preserve">
+          <source>Downloading of plugin assets complete!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Téléchargement des ressources du plugin terminé!</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadError1stPart" translate="yes" xml:space="preserve">
+          <source>Error downloading plugin assets:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Erreur lors du téléchargement des ressources du plug-in :</target>
+        </trans-unit>
+        <trans-unit id="AssetsDownloadError2ndPart" translate="yes" xml:space="preserve">
+          <source>. Please retry later. If the issue persists, please contact the plugin developer.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">. Veuillez réessayer plus tard. Si le problème persiste, veuillez contacter le développeur du plugin.</target>
+        </trans-unit>
+        <trans-unit id="AssetsPresentPopupMsg" translate="yes" xml:space="preserve">
+          <source>All plugin assets present!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tous les actifs du plugin sont présents!</target>
+        </trans-unit>
+        <trans-unit id="DownloadingAssetsPopupMsg" translate="yes" xml:space="preserve">
+          <source>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Téléchargement de ressources de plug-in supplémentaires en arrière-plan. Veuillez attendre la fin du téléchargement avant d’ouvrir les paramètres!</target>
         </trans-unit>
       </group>
     </body>
