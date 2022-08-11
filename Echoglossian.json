@@ -7,7 +7,7 @@
   "Description": "Realtime game text translator",
   "RepoUrl": "https://github.com/lokinmodar/Echoglossian",
   "Tags": [ "ffxiv", "Dalamud", "plugin", "translation", "UI", "Utility" ],
-  "DalamudApiLevel": 6,
+  "DalamudApiLevel": 7,
   "Disabled": false,
   "Testing": false,
   "Punchline": "Dialogue and other in-game text translations? Yes we have!\nKnown Issues at: https://github.com/lokinmodar/Echoglossian/issues/12",

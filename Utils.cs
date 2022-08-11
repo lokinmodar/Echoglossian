@@ -137,7 +137,7 @@ namespace Echoglossian
     /// <param name="backColorOptional">Background color, defaults to white.</param>
     /// <param name="minSizeOptional">Minimum image size, defaults the size required to display the text.</param>
     /// <returns>The image containing the text, which should be disposed after use.</returns>
-    public Image DrawText(string text, Font fontOptional = null, Color? textColorOptional = null, Color? backColorOptional = null, Size? minSizeOptional = null)
+    public Image DrawText(string text, Font? fontOptional = null, Color? textColorOptional = null, Color? backColorOptional = null, Size? minSizeOptional = null)
     {
 #if DEBUG
       PluginLog.LogWarning("Inside image creation method");
