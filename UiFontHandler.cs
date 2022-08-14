@@ -67,6 +67,16 @@ namespace Echoglossian
           builder.AddText(this.CharsToAddToAll);
           builder.AddText(this.scriptCharList);
 
+          foreach (char c in this.CharsToAddToAll)
+          {
+            builder.AddChar(c);
+          }
+
+          foreach (char c in this.scriptCharList)
+          {
+            builder.AddChar(c);
+          }
+
           foreach (char c in this.PuaCharCodes)
           {
             builder.AddChar(c);
@@ -211,6 +221,27 @@ namespace Echoglossian
           ImFontGlyphRangesBuilderPtr builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
           builder.AddText(this.CharsToAddToAll);
           builder.AddText(this.LangComboItems);
+
+          foreach (char c in this.LangComboItems)
+          {
+            builder.AddChar(c);
+          }
+
+          foreach (char c in this.CharsToAddToAll)
+          {
+            builder.AddChar(c);
+          }
+
+          foreach (char c in this.scriptCharList)
+          {
+            builder.AddChar(c);
+          }
+
+          foreach (char c in this.PuaChars)
+          {
+            builder.AddChar(c);
+          }
+
           foreach (char c in this.PuaCharCodes)
           {
             builder.AddChar(c);

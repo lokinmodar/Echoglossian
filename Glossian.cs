@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Web;
 using Dalamud.Logging;
 using Dalamud.Utility;
@@ -242,6 +243,8 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
         finalDialogueText = finalDialogueText.Replace("\u005C\u002F", "\u002F");
         finalDialogueText = finalDialogueText.Replace("\\u003C", "<");
         finalDialogueText = finalDialogueText.Replace("&#39;", "\u0027");
+        finalDialogueText = Regex.Replace(finalDialogueText, @"(?<=.)(─)(?=.)", " \u2015 ");
+
 
         finalDialogueText = !startingEllipsis.IsNullOrEmpty()
           ? startingEllipsis + finalDialogueText
