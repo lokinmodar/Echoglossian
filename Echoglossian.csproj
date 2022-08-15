@@ -217,7 +217,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.Translate" Version="3.7.5.14" />
-    <PackageReference Include="DalamudLinter" Version="1.0.3" />
     <PackageReference Include="DalamudPackager" Version="2.1.7" />
     <PackageReference Include="DeepL" Version="0.4.0" />
     <PackageReference Include="GTranslate" Version="2.1.1" />

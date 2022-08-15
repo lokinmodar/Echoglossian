@@ -11,12 +11,6 @@
           "AWSSDK.Core": "[3.7.12.19, 4.0.0)"
         }
       },
-      "DalamudLinter": {
-        "type": "Direct",
-        "requested": "[1.0.3, )",
-        "resolved": "1.0.3",
-        "contentHash": "yODrbT8F73JJsvC3UbQ+Cn+huhH4TEYvlunjKUUed2SHBhGDJrkV8l21Xe9GMut4ZauPvySgYWUigX/msAAEag=="
-      },
       "DalamudPackager": {
         "type": "Direct",
         "requested": "[2.1.7, )",
