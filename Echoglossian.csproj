@@ -25,7 +25,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Company>lokinmodar</Company>
     <Description>Final Fantasy XIV game text translator</Description>
-    <Copyright>Dante Souza e Souza - aka lokinmodar - 2022</Copyright>
+    <Copyright>lokinmodar - 2022</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>
     <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     <ApplicationIcon>minfilia.ico</ApplicationIcon>
@@ -216,12 +216,12 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.5.14" />
-    <PackageReference Include="DalamudPackager" Version="2.1.7" />
-    <PackageReference Include="DeepL" Version="0.4.0" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.5.19" />
+    <PackageReference Include="DalamudPackager" Version="2.1.8" />
+    <PackageReference Include="DeepL" Version="0.4.1" />
     <PackageReference Include="GTranslate" Version="2.1.1" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.43" />
-    <PackageReference Include="Lumina.Excel" Version="6.1.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.45" />
+    <PackageReference Include="Lumina.Excel" Version="6.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.8">
@@ -236,7 +236,7 @@
     </PackageReference>
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
-    <PackageReference Include="XivCommon" Version="5.0.1-alpha.1" />
+    <PackageReference Include="XivCommon" Version="6.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">
