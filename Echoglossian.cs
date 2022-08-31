@@ -146,7 +146,7 @@ namespace Echoglossian
         this.PluginAssetsChecker();
       }
 
-      PluginInterface.UiBuilder.BuildFonts += this.LoadConfigFont;
+      PluginInterface.UiBuilder.BuildFonts += this.LoadLanguageComboFont;
       PluginInterface.UiBuilder.BuildFonts += this.LoadFont;
 
       // this.ListCultureInfos();
@@ -246,9 +246,11 @@ namespace Echoglossian
       Framework.Update -= this.Tick;
 
       PluginInterface.UiBuilder.BuildFonts -= this.LoadFont;
-      PluginInterface.UiBuilder.BuildFonts -= this.LoadConfigFont;
-
-      PluginInterface.UiBuilder.RebuildFonts();
+      PluginInterface.UiBuilder.BuildFonts -= this.LoadLanguageComboFont;
+      this.glyphRangeMainText?.Free();
+      this.glyphRangeConfigText?.Free();
+      this.glyphRangeMainText = null;
+      this.glyphRangeConfigText = null;
 
       CommandManager.RemoveHandler(SlashCommand);
     }
@@ -258,7 +260,7 @@ namespace Echoglossian
       if (!this.configuration.Translate)
       {
 #if DEBUG
-        PluginLog.Log("Translations are disabled!");
+        // PluginLog.Log("Translations are disabled!");
 #endif
         return;
       }
@@ -310,7 +312,7 @@ namespace Echoglossian
         return;
       }
 
-      if (!this.ConfigFontLoaded && !this.ConfigFontLoadFailed)
+      if (!this.LanguageComboFontLoaded && !this.LanguageComboFontLoadFailed)
       {
         PluginInterface.UiBuilder.RebuildFonts();
         return;
@@ -334,7 +336,7 @@ namespace Echoglossian
           this.configuration.FontChangeTime = 0;
           this.FontLoadFailed = false;
 
-          this.ReloadFont();
+          PluginInterface.UiBuilder.RebuildFonts();
         }
       }
 
