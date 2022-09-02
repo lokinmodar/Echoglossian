@@ -218,5 +218,16 @@ namespace Echoglossian
       ImageConverter imageConverter = new ImageConverter();
       return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));
     }
+
+    private static bool AssignIfChanged<T>(ref T target, T newValue) where T : IEquatable<T>
+    {
+      if (target.Equals(newValue))
+      {
+        return false;
+      }
+
+      target = newValue;
+      return true;
+    }
   }
 }
