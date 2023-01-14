@@ -190,9 +190,10 @@ namespace Echoglossian
 
     private unsafe void LoadLanguageComboFont()
     {
+      string fontDir = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
 #if DEBUG
       PluginLog.LogVerbose("Inside LoadLanguageComboFont method");
-      string fontDir = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
+
       string fontFile = $@"{fontDir}NotoSans-Medium-Custom2.otf";
       string dummyFontFilePath = $@"{fontDir}NotoSans-SemiBold.ttf";
       string symbolsFontFilePath = $@"{fontDir}symbols.ttf";

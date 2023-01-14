@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using Dalamud.Logging;
 using DeepL;
+using DeepL.Model;
 
 namespace Echoglossian
 {
@@ -13,13 +10,15 @@ namespace Echoglossian
   {
     public static async Task DeeplTranslateAsync(string[] arguments)
     {
-      using DeepLClient client = new("<authentication key>", useFreeApi: false);
+      using Translator client = new("<authentication key>");
       try
       {
-        Translation translation = await client.TranslateAsync(
-          "This is a test sentence.",
-          Language.German);
-        PluginLog.LogWarning(translation.DetectedSourceLanguage);
+        var translation = client.TranslateTextAsync(
+          arguments[0],
+          "EN",
+          "JP"
+          ).Result;
+        PluginLog.LogWarning(translation.DetectedSourceLanguageCode);
         PluginLog.LogWarning(translation.Text);
       }
       catch (DeepLException exception)

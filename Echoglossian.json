@@ -8,14 +8,14 @@
   "RepoUrl": "https://github.com/lokinmodar/Echoglossian",
   "Tags": [ "ffxiv", "Dalamud", "plugin", "translation", "UI", "Utility" ],
   "Disabled": false,
-  "Testing": false,
+  "Testing": true,
   "Punchline": "Dialogue and other in-game text translations? Yes we have!\nKnown Issues at: https://github.com/lokinmodar/Echoglossian/issues/12",
   "IsHide": false,
-  "TestingAssemblyVersion": null,
-  "IsTestingExclusive": false,
+  "IsTestingExclusive": true,
   "LoadPriority": 0,
   "ImageUrls": [
     ""
   ],
+  "DevSupportState": "ACTIVE",
   "IconUrl": "https://raw.githubusercontent.com/lokinmodar/Echoglossian/APIv4/images/icon.png"
 }

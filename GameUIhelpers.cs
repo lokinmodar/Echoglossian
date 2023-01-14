@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Dalamud.Data;
 using Dalamud.Logging;
-using FFXIVClientStructs;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 

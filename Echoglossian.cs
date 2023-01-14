@@ -9,7 +9,6 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
@@ -22,9 +21,10 @@ using Dalamud.Logging;
 using Dalamud.Plugin;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
+
 using FFXIVClientStructs;
+using FFXIVClientStructs.Interop;
 using ImGuiScene;
-using Newtonsoft.Json;
 using XivCommon;
 
 namespace Echoglossian
@@ -110,7 +110,10 @@ namespace Echoglossian
 
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
-      Resolver.Initialize();
+      // Resolver.Initialize();
+      // Resolver.GetInstance.SetupSearchSpace();
+      // Resolver.GetInstance.Resolve(); 
+
       langDict = this.LanguagesDictionary;
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 

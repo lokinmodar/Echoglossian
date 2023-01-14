@@ -8,14 +8,10 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Threading.Tasks;
-
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using Echoglossian.Properties;
-using ImGuiNET;
 
 namespace Echoglossian
 {
