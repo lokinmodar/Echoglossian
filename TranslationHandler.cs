@@ -20,40 +20,40 @@ public class TranslationHandler
     if (translatedTextFromDb != null)
     {
       // The translated text already exists in the database, show it in the UI
-      ShowTranslatedText(text, translatedTextFromDb);
+      this.ShowTranslatedText(text, translatedTextFromDb);
     }
     else
     {
       // Add the original text to the ConcurrentDictionary with the value set to "translating..."
-      translations.TryAdd(text, "translating...");
+      this.translations.TryAdd(text, "translating...");
 
       // Update the UI to show "translating..."
-      ShowTranslating(text);
+      this.ShowTranslating(text);
 
       // Call the TranslateAsync method on a separate thread
-      var translatedText = await Task.Run(() => TranslateAsync(text));
+      var translatedText = await Task.Run(() => this.TranslateAsync(text));
 
       // Update the value of the key in the ConcurrentDictionary with the translated text
-      translations.TryUpdate(text, translatedText, "translating...");
+      this.translations.TryUpdate(text, translatedText, "translating...");
 
       // Store the translated text in the database
       var translation = new Translation
-        { OriginalText = text, TranslatedText = translatedText };
+      { OriginalText = text, TranslatedText = translatedText };
       dbContext.Set<Translation>().Add(translation);
       await dbContext.SaveChangesAsync();
 
       // Update the UI to show the translated text
-      ShowTranslatedText(text, translatedText);
+      this.ShowTranslatedText(text, translatedText);
     }
   }
 
   private async Task<string> TranslateAsync(string text)
   {
     // Call the translation API and get the translated text
-    string translatedText = await YourTranslationAPICall(text);
+    //string translatedText = await YourTranslationAPICall(text);
 
     // Return the translated text
-    return translatedText;
+    return "a"; //translatedText;
   }
 
   private void ShowTranslating(string text)
