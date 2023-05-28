@@ -62,7 +62,7 @@ public partial class Echoglossian
       "NotoSansMyanmar-Medium.ttf",
       "ကခဂဃငစဆဇဈဉညဋဌဍဎဏတထဒဓနပဖဗဘမယရလဝသဟဠအဢဣဤဥဦဧဨဩဪါာိီုူေဲဳဴဵံ့း္်ျြွှဿ၀၁၂၃၄၅၆၇၈၉၊။၌၍၎၏ၐၑၒၓၔၕၖၗၘၙၚၛၜၝၞၟၠၡၢၣၤၥၦၧၨၩၪၫၬၭၮၯၰၱၲၳၴၵၶၷၸၹၺၻၼၽၾၿႀႁႂႃႄႅႆႇႈႉႊႋႌႍႎႏ႐႑႒႓႔႕႖႗႘႙ႚႛႜႝ႞႟ꩠꩡꩢꩣꩤꩥꩦꩧꩨꩩꩪꩫꩬꩭꩮꩯꩰꩱꩲꩳꩴꩵꩶ꩷꩸꩹ꩺꩻꩼꩽꩾꩿꧠꧡꧢꧣꧤꧥꧦꧧꧨꧩꧪꧫꧬꧭꧮꧯ꧰꧱꧲꧳꧴꧵꧶꧷꧸꧹ꧺꧻꧼꧽꧾ꧿",
       new[] { 0 }),
-    [16] = new LanguageInfo(@"zh-HK", @"廣東話; Cantonese",
+    [16] = new LanguageInfo(@"zh-TW", @"廣東話; Cantonese",
       "NotoSansCJKtc-Regular.otf", string.Empty, new[] { 0 }),
     [17] = new LanguageInfo(@"ca", @"Català; Valencià; Catalan; Valencian",
       "NotoSans-Medium.ttf", string.Empty, new[] { 0 }),

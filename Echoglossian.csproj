@@ -216,19 +216,19 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.101.15" />
-    <PackageReference Include="DalamudPackager" Version="2.1.10" />
-    <PackageReference Include="DeepL.net" Version="1.5.0" />
-    <PackageReference Include="GTranslate" Version="2.1.1" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.102.3" />
+    <PackageReference Include="DalamudPackager" Version="2.1.11" />
+    <PackageReference Include="DeepL.net" Version="1.7.1" />
+    <PackageReference Include="GTranslate" Version="2.1.6" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
-    <PackageReference Include="Lumina.Excel" Version="6.3.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.2">
+    <PackageReference Include="Lumina.Excel" Version="6.4.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.5">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NTextCat" Version="0.3.65" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
       <PrivateAssets>all</PrivateAssets>
@@ -236,7 +236,7 @@
     </PackageReference>
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
-    <PackageReference Include="XivCommon" Version="7.0.0-alpha.1" />
+    <PackageReference Include="XivCommon" Version="7.0.2" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">

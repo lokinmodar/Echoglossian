@@ -86,9 +86,9 @@ public partial class Echoglossian
         if (this.configuration.Lang is 16 or 22)
         {
           this.AddCharsFromIntPtr(chars,
-            (ushort*)io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
-          this.AddCharsFromIntPtr(chars,
             (ushort*)io.Fonts.GetGlyphRangesChineseFull());
+          this.AddCharsFromIntPtr(chars,
+            (ushort*)io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
         }
 
         if (this.configuration.Lang is 21)
