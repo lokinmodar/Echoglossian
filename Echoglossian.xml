@@ -24,7 +24,7 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.LanguageInfo.#ctor(System.String,System.String,System.String,System.String,System.Int32[])">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.LanguageInfo"/> class.
+              Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.LanguageInfo" /> class.
             </summary>
             <param name="code">Iso LanguageInfo Code.</param>
             <param name="languageName">LanguageInfo name.</param>

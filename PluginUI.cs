@@ -11,9 +11,6 @@ using Echoglossian.Properties;
 using ImGuiNET;
 
 namespace Echoglossian;
-
-
-
 public partial class Echoglossian
 {
   // public string[] FontSizes = Array.ConvertAll(Enumerable.Range(4, 72).ToArray(), x => x.ToString());
@@ -57,9 +54,7 @@ public partial class Echoglossian
       }
 
       PluginInterface.UiBuilder.RebuildFonts();
-      // this.LoadFont();
-      // this.ReloadFont();
-      // this.SaveConfig();
+
     }
 
     if (this.LanguageComboFontLoaded)
