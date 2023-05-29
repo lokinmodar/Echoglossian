@@ -206,6 +206,11 @@
               Looks up a localized string similar to Translation Engine settings.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab8Name">
+            <summary>
+              Looks up a localized string similar to Troubleshooting.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTabAbout">
             <summary>
               Looks up a localized string similar to About Echoglossian.
@@ -219,6 +224,11 @@
         <member name="P:Echoglossian.Properties.Resources.ContribText">
             <summary>
               Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.CurrentPluginAssetsStatus">
+            <summary>
+              Looks up a localized string similar to Are the plugin assets downloaded?.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.cutscenechoice">
@@ -244,6 +254,11 @@
         <member name="P:Echoglossian.Properties.Resources.DownloadingAssetsPopupMsg">
             <summary>
               Looks up a localized string similar to Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DownloadPluginAssetsButtonText">
+            <summary>
+              Looks up a localized string similar to Force re-download plugin assets.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
@@ -409,6 +424,16 @@
         <member name="P:Echoglossian.Properties.Resources.PixText">
             <summary>
               Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PluginAssetsDownloadedText">
+            <summary>
+              Looks up a localized string similar to Plugin assets downloaded!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PluginAssetsNotDownloadedText">
+            <summary>
+              Looks up a localized string similar to If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PluginInterfaceLanguage">

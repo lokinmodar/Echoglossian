@@ -197,6 +197,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Troubleshooting.
+        /// </summary>
+        public static string ConfigTab8Name {
+            get {
+                return ResourceManager.GetString("ConfigTab8Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to About Echoglossian.
         /// </summary>
         public static string ConfigTabAbout {
@@ -220,6 +229,15 @@ namespace Echoglossian.Properties {
         public static string ContribText {
             get {
                 return ResourceManager.GetString("ContribText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are the plugin assets downloaded?.
+        /// </summary>
+        public static string CurrentPluginAssetsStatus {
+            get {
+                return ResourceManager.GetString("CurrentPluginAssetsStatus", resourceCulture);
             }
         }
         
@@ -266,6 +284,15 @@ namespace Echoglossian.Properties {
         public static string DownloadingAssetsPopupMsg {
             get {
                 return ResourceManager.GetString("DownloadingAssetsPopupMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Force re-download plugin assets.
+        /// </summary>
+        public static string DownloadPluginAssetsButtonText {
+            get {
+                return ResourceManager.GetString("DownloadPluginAssetsButtonText", resourceCulture);
             }
         }
         
@@ -566,6 +593,24 @@ namespace Echoglossian.Properties {
         public static string PixText {
             get {
                 return ResourceManager.GetString("PixText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plugin assets downloaded!.
+        /// </summary>
+        public static string PluginAssetsDownloadedText {
+            get {
+                return ResourceManager.GetString("PluginAssetsDownloadedText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them..
+        /// </summary>
+        public static string PluginAssetsNotDownloadedText {
+            get {
+                return ResourceManager.GetString("PluginAssetsNotDownloadedText", resourceCulture);
             }
         }
         

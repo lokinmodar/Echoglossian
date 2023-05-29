@@ -273,4 +273,7 @@
   <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
     <value>Téléchargement de ressources de plug-in supplémentaires en arrière-plan. Veuillez attendre la fin du téléchargement avant d’ouvrir les paramètres!</value>
   </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Résolution des problèmes</value>
+  </data>
 </root>

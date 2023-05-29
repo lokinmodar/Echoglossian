@@ -359,6 +359,26 @@
           <source>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Descarga de activos de plugins adicionales en segundo plano. ¡Espere a que finalice la descarga antes de abrir la configuración!</target>
         </trans-unit>
+        <trans-unit id="ConfigTab8Name" translate="yes" xml:space="preserve">
+          <source>Troubleshooting</source>
+          <target state="needs-review-translation" state-qualifier="tm-suggestion">Solución de problemas</target>
+        </trans-unit>
+        <trans-unit id="PluginAssetsDownloadedText" translate="yes" xml:space="preserve">
+          <source>Plugin assets downloaded!</source>
+          <target state="new">Plugin assets downloaded!</target>
+        </trans-unit>
+        <trans-unit id="PluginAssetsNotDownloadedText" translate="yes" xml:space="preserve">
+          <source>If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them.</source>
+          <target state="new">If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them.</target>
+        </trans-unit>
+        <trans-unit id="DownloadPluginAssetsButtonText" translate="yes" xml:space="preserve">
+          <source>Force re-download plugin assets</source>
+          <target state="new">Force re-download plugin assets</target>
+        </trans-unit>
+        <trans-unit id="CurrentPluginAssetsStatus" translate="yes" xml:space="preserve">
+          <source>Are the plugin assets downloaded?</source>
+          <target state="new">Are the plugin assets downloaded?</target>
+        </trans-unit>
       </group>
     </body>
   </file>

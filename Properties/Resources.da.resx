@@ -273,4 +273,7 @@
   <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
     <value>Download af ekstra plugin-aktiver i baggrunden. Vent venligst på, at downloadet er færdigt, før du åbner indstillingerne!</value>
   </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Fejlfinding</value>
+  </data>
 </root>

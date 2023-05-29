@@ -379,4 +379,19 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Select which kind of in-game message toasts to translate</value>
   </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Troubleshooting</value>
+  </data>
+  <data name="PluginAssetsDownloadedText" xml:space="preserve">
+    <value>Plugin assets downloaded!</value>
+  </data>
+  <data name="PluginAssetsNotDownloadedText" xml:space="preserve">
+    <value>If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them.</value>
+  </data>
+  <data name="DownloadPluginAssetsButtonText" xml:space="preserve">
+    <value>Force re-download plugin assets</value>
+  </data>
+  <data name="CurrentPluginAssetsStatus" xml:space="preserve">
+    <value>Are the plugin assets downloaded?</value>
+  </data>
 </root>

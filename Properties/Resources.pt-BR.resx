@@ -246,4 +246,7 @@
   <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
     <value>Baixando arquivos extras do plugin em segundo plano. Por favor, aguarde o download terminar antes de abrir as configurações!</value>
   </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Solução de problemas</value>
+  </data>
 </root>

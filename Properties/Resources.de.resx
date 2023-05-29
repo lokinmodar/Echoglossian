@@ -273,4 +273,7 @@
   <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
     <value>Herunterladen zusätzlicher Plugin-Assets im Hintergrund. Bitte warten Sie, bis der Download abgeschlossen ist, bevor Sie die Einstellungen öffnen!</value>
   </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Problembehandlung</value>
+  </data>
 </root>
