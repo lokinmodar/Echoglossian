@@ -12,7 +12,9 @@ using Dalamud.Logging;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
+using ImGuiNET;
 using Microsoft.EntityFrameworkCore;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Echoglossian
 {
@@ -239,6 +241,10 @@ namespace Echoglossian
           logStream.WriteLineAsync($"Before SaveChanges: {talkMessage}");
         }
 #endif
+        if (this.configuration.copyTranslationToClipboard)
+        {
+          ImGui.SetClipboardText(talkMessage.ToString());
+        }
 
         // 1. Attach an entity to context with Added EntityState
         context.TalkMessage.Attach(talkMessage);
@@ -285,6 +291,10 @@ namespace Echoglossian
           logStream.WriteLineAsync($"Inside Context: {context.BattleTalkMessage.Local}");
         }
 #endif
+        if (this.configuration.copyTranslationToClipboard)
+        {
+          ImGui.SetClipboardText(battleTalkMessage.ToString());
+        }
 
         context.SaveChangesAsync();
 #if DEBUG

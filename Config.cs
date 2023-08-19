@@ -96,6 +96,8 @@ namespace Echoglossian
 
     public Vector3 OverlayBattleTalkTextColor = new(1.0f, 1.0f, 1.0f);
 
+    public bool copyTranslationToClipboard = false;
+
     public float FontScale = 1;
 
     public float BattleTalkFontScale = 1;
