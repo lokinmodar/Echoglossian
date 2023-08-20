@@ -400,7 +400,7 @@ namespace Echoglossian
 #endif
             if (this.configuration.TranslateNpcNames)
             {
-              name = nameTranslation == string.Empty ? name : nameTranslation;
+              name = nameTranslation == string.Empty || nameTranslation == null || nameTranslation == "" ? name : nameTranslation;
               text = translatedText;
             }
             else
