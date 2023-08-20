@@ -206,6 +206,42 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Automatically copy the last translation to the Plugin Clipboard.
+        /// </summary>
+        public static string ConfigTab9CheckboxClipboardText {
+            get {
+                return ResourceManager.GetString("ConfigTab9CheckboxClipboardText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This setting copies the last translation and source text to the clipboard (Works with Talk and BattleTalk).
+        /// </summary>
+        public static string ConfigTab9CheckboxClipboardTooltipText {
+            get {
+                return ResourceManager.GetString("ConfigTab9CheckboxClipboardTooltipText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Misc. Settings.
+        /// </summary>
+        public static string ConfigTab9Name {
+            get {
+                return ResourceManager.GetString("ConfigTab9Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Miscellaneous Plugin Options and Settings.
+        /// </summary>
+        public static string ConfigTab9Text {
+            get {
+                return ResourceManager.GetString("ConfigTab9Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to About Echoglossian.
         /// </summary>
         public static string ConfigTabAbout {

@@ -248,6 +248,7 @@ public partial class Echoglossian
               Resources.OverlayToggleLabel,
               ref this.configuration.UseImGuiForBattleTalk);
           }
+
           saveConfig |= ImGui.Checkbox(
             Resources.TranslateNpcNamesToggle,
             ref this.configuration.TranslateNpcNames);
@@ -275,6 +276,7 @@ public partial class Echoglossian
           {
             ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
           }
+
           ImGui.Spacing();
           ImGui.Text(Resources.FontColorSelectLabel);
           ImGui.SameLine();
@@ -420,8 +422,8 @@ public partial class Echoglossian
         ImGui.BeginGroup();
         if (transEngine == 0)
         {
-          ImGui.Text(Resources.SettingsForGTransText);
-          ImGui.Text(Resources.TranslationEngineSettingsNotRequired);
+          ImGui.TextWrapped(Resources.SettingsForGTransText);
+          ImGui.TextWrapped(Resources.TranslationEngineSettingsNotRequired);
         }
 
         ImGui.EndGroup();
@@ -440,8 +442,8 @@ public partial class Echoglossian
         }
         else
         {*/
-        ImGui.Text(Resources.CurrentPluginAssetsStatus + ": " + pluginAssetsStatus);
-        ImGui.Text(Resources.PluginAssetsNotDownloadedText);
+        ImGui.TextWrapped(Resources.CurrentPluginAssetsStatus + ": " + pluginAssetsStatus);
+        ImGui.TextWrapped(Resources.PluginAssetsNotDownloadedText);
         ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
@@ -454,12 +456,21 @@ public partial class Echoglossian
           this.DownloadAssets(4);
           this.PluginAssetsChecker();
           saveConfig = true;
-
         }
+
         ImGui.PopStyleColor(3);
-        /*}*/
 
         ImGui.EndGroup();
+        ImGui.EndTabItem();
+      }
+
+      if (ImGui.BeginTabItem(Resources.ConfigTab9Name))
+      {
+        ImGui.Text(Resources.ConfigTab9Text);
+
+        ImGui.Checkbox(Resources.ConfigTab9CheckboxClipboardText, ref this.configuration.copyTranslationToClipboard);
+        ImGui.TextWrapped(Resources.ConfigTab9CheckboxClipboardTooltipText);
+
         ImGui.EndTabItem();
       }
 

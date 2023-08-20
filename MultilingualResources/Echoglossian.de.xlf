@@ -379,6 +379,22 @@
           <source>Are the plugin assets downloaded?</source>
           <target state="new">Are the plugin assets downloaded?</target>
         </trans-unit>
+        <trans-unit id="ConfigTab9Name" translate="yes" xml:space="preserve">
+          <source>Misc. Settings</source>
+          <target state="new">Misc. Settings</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab9Text" translate="yes" xml:space="preserve">
+          <source>Miscellaneous Plugin Options and Settings</source>
+          <target state="new">Miscellaneous Plugin Options and Settings</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab9CheckboxClipboardText" translate="yes" xml:space="preserve">
+          <source>Automatically copy the last translation to the Plugin Clipboard</source>
+          <target state="new">Automatically copy the last translation to the Plugin Clipboard</target>
+        </trans-unit>
+        <trans-unit id="ConfigTab9CheckboxClipboardTooltipText" translate="yes" xml:space="preserve">
+          <source>This setting copies the last translation and source text to the clipboard (Works with Talk and BattleTalk)</source>
+          <target state="new">This setting copies the last translation and source text to the clipboard (Works with Talk and BattleTalk)</target>
+        </trans-unit>
       </group>
     </body>
   </file>

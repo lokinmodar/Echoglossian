@@ -394,4 +394,16 @@
   <data name="CurrentPluginAssetsStatus" xml:space="preserve">
     <value>Are the plugin assets downloaded?</value>
   </data>
+  <data name="ConfigTab9Name" xml:space="preserve">
+    <value>Misc. Settings</value>
+  </data>
+  <data name="ConfigTab9Text" xml:space="preserve">
+    <value>Miscellaneous Plugin Options and Settings</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardText" xml:space="preserve">
+    <value>Automatically copy the last translation to the Plugin Clipboard</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardTooltipText" xml:space="preserve">
+    <value>This setting copies the last translation and source text to the clipboard (Works with Talk and BattleTalk)</value>
+  </data>
 </root>

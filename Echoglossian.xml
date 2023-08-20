@@ -211,6 +211,26 @@
               Looks up a localized string similar to Troubleshooting.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab9CheckboxClipboardText">
+            <summary>
+              Looks up a localized string similar to Automatically copy the last translation to the Plugin Clipboard.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab9CheckboxClipboardTooltipText">
+            <summary>
+              Looks up a localized string similar to This setting copies the last translation and source text to the clipboard (Works with Talk and BattleTalk).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab9Name">
+            <summary>
+              Looks up a localized string similar to Misc. Settings.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTab9Text">
+            <summary>
+              Looks up a localized string similar to Miscellaneous Plugin Options and Settings.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTabAbout">
             <summary>
               Looks up a localized string similar to About Echoglossian.

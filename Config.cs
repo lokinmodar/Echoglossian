@@ -82,15 +82,15 @@ namespace Echoglossian
 
     public Vector2 ImGuiBattleTalkWindowPosCorrection = new(0.0f, 0.0f);
 
-    public float ImGuiTalkWindowWidthMult = 1f;
+    public float ImGuiTalkWindowWidthMult = 1.5f;
 
     public float ImGuiTalkWindowHeightMult = 1f;
 
-    public float ImGuiBattleTalkWindowWidthMult = 1f;
+    public float ImGuiBattleTalkWindowWidthMult = 1.5f;
 
     public float ImGuiBattleTalkWindowHeightMult = 1f;
 
-    public float ImGuiToastWindowWidthMult = 1f;
+    public float ImGuiToastWindowWidthMult = 1.5f;
 
     public Vector3 OverlayTextColor = new(1.0f, 1.0f, 1.0f);
 
