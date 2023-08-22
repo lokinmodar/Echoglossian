@@ -468,7 +468,7 @@ public partial class Echoglossian
       {
         ImGui.Text(Resources.ConfigTab9Text);
 
-        ImGui.Checkbox(Resources.ConfigTab9CheckboxClipboardText, ref this.configuration.copyTranslationToClipboard);
+        ImGui.Checkbox(Resources.ConfigTab9CheckboxClipboardText, ref this.configuration.CopyTranslationToClipboard);
         ImGui.TextWrapped(Resources.ConfigTab9CheckboxClipboardTooltipText);
 
         ImGui.EndTabItem();

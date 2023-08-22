@@ -241,7 +241,7 @@ namespace Echoglossian
           logStream.WriteLineAsync($"Before SaveChanges: {talkMessage}");
         }
 #endif
-        if (this.configuration.copyTranslationToClipboard)
+        if (this.configuration.CopyTranslationToClipboard)
         {
           ImGui.SetClipboardText(talkMessage.ToString());
         }
@@ -291,7 +291,7 @@ namespace Echoglossian
           logStream.WriteLineAsync($"Inside Context: {context.BattleTalkMessage.Local}");
         }
 #endif
-        if (this.configuration.copyTranslationToClipboard)
+        if (this.configuration.CopyTranslationToClipboard)
         {
           ImGui.SetClipboardText(battleTalkMessage.ToString());
         }

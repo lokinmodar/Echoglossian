@@ -96,7 +96,9 @@ namespace Echoglossian
 
     public Vector3 OverlayBattleTalkTextColor = new(1.0f, 1.0f, 1.0f);
 
-    public bool copyTranslationToClipboard = false;
+    public bool CopyTranslationToClipboard = false;
+
+    public string DeeplTranslatorApiKey = "";
 
     public float FontScale = 1;
 

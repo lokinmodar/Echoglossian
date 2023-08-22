@@ -121,6 +121,9 @@ namespace Echoglossian
       GTranslate = 1 << 4, // Uses Google, Bing and Yandex (free engines)
       Amazon = 1 << 5, // Amazon Translate
       Azure = 1 << 6, // Microsoft Azure Translate
+      ChatGPT = 1 << 7, // Chat GPT
+      GoogleCloud = 1 << 8, // Google Cloud Translate
+      All = Google | Deepl | Bing | Yandex | GTranslate | Amazon | Azure | ChatGPT | GoogleCloud,
     }
 
     /// <summary>

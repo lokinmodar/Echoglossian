@@ -68,6 +68,7 @@ namespace Echoglossian
     private static Dictionary<int, LanguageInfo> langDict;
     private bool config;
 
+
     private Config configuration;
 
     private readonly SemaphoreSlim toastTranslationSemaphore;
