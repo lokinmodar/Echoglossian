@@ -98,7 +98,7 @@ namespace Echoglossian
 
     public bool CopyTranslationToClipboard = false;
 
-    public string DeeplTranslatorApiKey = "";
+    public string DeeplTranslatorApiKey = string.Empty;
 
     public float FontScale = 1;
 

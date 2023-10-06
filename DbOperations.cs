@@ -14,7 +14,6 @@ using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using ImGuiNET;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Echoglossian
 {

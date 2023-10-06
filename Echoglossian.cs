@@ -9,21 +9,16 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using Dalamud.Data;
-using Dalamud.Game;
-using Dalamud.Game.ClientState;
+
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
-using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.Sanitizer;
+using Dalamud.Interface.Internal;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
-
-using FFXIVClientStructs;
-using FFXIVClientStructs.Interop;
 using ImGuiScene;
 using XivCommon;
 
@@ -33,25 +28,25 @@ namespace Echoglossian
   public partial class Echoglossian : IDalamudPlugin
   {
     [PluginService]
-    public static DataManager DManager { get; private set; }
+    public static IDataManager DManager { get; private set; }
 
     [PluginService]
     public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
 
     [PluginService]
-    public static CommandManager CommandManager { get; private set; } = null!;
+    public static ICommandManager CommandManager { get; private set; } = null!;
 
     [PluginService]
-    public static Framework Framework { get; private set; } = null!;
+    public static IFramework Framework { get; private set; } = null!;
 
     [PluginService]
-    public static GameGui GameGui { get; private set; } = null!;
+    public static IGameGui GameGui { get; private set; } = null!;
 
     [PluginService]
-    public static ClientState ClientState { get; private set; } = null!;
+    public static IClientState ClientState { get; private set; } = null!;
 
     [PluginService]
-    public static ToastGui ToastGui { get; private set; } = null!;
+    public static IToastGui ToastGui { get; private set; } = null!;
 
     private static XivCommonBase Common { get; set; }
 
@@ -68,7 +63,6 @@ namespace Echoglossian
     private static Dictionary<int, LanguageInfo> langDict;
     private bool config;
 
-
     private Config configuration;
 
     private readonly SemaphoreSlim toastTranslationSemaphore;
@@ -82,11 +76,11 @@ namespace Echoglossian
     private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
     private readonly SemaphoreSlim questToastTranslationSemaphore;
 
-    private readonly TextureWrap pixImage;
-    private readonly TextureWrap choiceImage;
-    private readonly TextureWrap cutsceneChoiceImage;
-    private readonly TextureWrap talkImage;
-    private readonly TextureWrap logo;
+    private readonly IDalamudTextureWrap pixImage;
+    private readonly IDalamudTextureWrap choiceImage;
+    private readonly IDalamudTextureWrap cutsceneChoiceImage;
+    private readonly IDalamudTextureWrap talkImage;
+    private readonly IDalamudTextureWrap logo;
 
     private readonly CultureInfo cultureInfo;
 
@@ -113,12 +107,11 @@ namespace Echoglossian
 
       // Resolver.Initialize();
       // Resolver.GetInstance.SetupSearchSpace();
-      // Resolver.GetInstance.Resolve(); 
-
+      // Resolver.GetInstance.Resolve();
       langDict = this.LanguagesDictionary;
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
-      Common = new XivCommonBase(Hooks.Talk | Hooks.BattleTalk);
+      Common = new XivCommonBase(PluginInterface, Hooks.Talk | Hooks.BattleTalk);
 
       this.CreateOrUseDb();
 
@@ -194,7 +187,7 @@ namespace Echoglossian
       ToastGui.ErrorToast += this.OnErrorToast;
       ToastGui.QuestToast += this.OnQuestToast;
 
-      //this.HandleTalkAsync();
+      // this.HandleTalkAsync();
 
       // Common.Functions.ChatBubbles.OnChatBubble += this.ChatBubblesOnChatBubble;
       // Common.Functions.Tooltips.OnActionTooltip += this.TooltipsOnActionTooltip;
@@ -259,7 +252,7 @@ namespace Echoglossian
       CommandManager.RemoveHandler(SlashCommand);
     }
 
-    private void Tick(Framework tFramework)
+    private void Tick(IFramework tFramework)
     {
       if (!this.configuration.Translate)
       {
@@ -303,7 +296,7 @@ namespace Echoglossian
           }
 
         default:
-          //this.DisableAllTranslations();
+          // this.DisableAllTranslations();
           break;
       }
     }

@@ -9,6 +9,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using Echoglossian.Properties;
@@ -218,7 +219,8 @@ namespace Echoglossian
       return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));
     }
 
-    private static bool AssignIfChanged<T>(ref T target, T newValue) where T : IEquatable<T>
+    private static bool AssignIfChanged<T>(ref T target, T newValue)
+      where T : IEquatable<T>
     {
       if (target.Equals(newValue))
       {

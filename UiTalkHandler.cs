@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
 using Dalamud.Utility;
@@ -24,6 +25,7 @@ namespace Echoglossian
 
     private ConcurrentQueue<TalkMessage> _talkMessageQueue = new();
     private ConcurrentDictionary<int, TalkMessage> _talkConcurrentDictionary = new();
+
     private void HandleTalkAsync()
     {
       Thread t = new(new ThreadStart(this.TalkProc));
@@ -215,7 +217,7 @@ namespace Echoglossian
                     if (this.configuration.Lang == 2)
                     {
                       this.currentNameTranslationTexture =
-                        PluginInterface.UiBuilder.LoadImage(this.TranslationImageConverter(this.DrawText(this.currentNameTranslation)));
+                        (ImGuiScene.TextureWrap)PluginInterface.UiBuilder.LoadImage(this.TranslationImageConverter(this.DrawText(this.currentNameTranslation)));
                     }
                   }
 
@@ -400,7 +402,7 @@ namespace Echoglossian
 #endif
             if (this.configuration.TranslateNpcNames)
             {
-              name = nameTranslation == string.Empty || nameTranslation == null || nameTranslation == "" ? name : nameTranslation;
+              name = nameTranslation == string.Empty || nameTranslation == null || nameTranslation == string.Empty ? name : nameTranslation;
               text = translatedText;
             }
             else

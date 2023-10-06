@@ -11,7 +11,6 @@ using System.Numerics;
 using Echoglossian.Properties;
 
 using ImGuiNET;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Echoglossian;
 public partial class Echoglossian

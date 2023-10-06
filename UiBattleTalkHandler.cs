@@ -183,7 +183,7 @@ namespace Echoglossian
 #endif
             if (this.configuration.TranslateNpcNames)
             {
-              sender = senderTranslation == string.Empty || senderTranslation == null || senderTranslation == "" ? sender : senderTranslation;
+              sender = senderTranslation == string.Empty || senderTranslation == null || senderTranslation == string.Empty ? sender : senderTranslation;
               message = translatedBattleMessage;
             }
             else

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Web;
+
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
@@ -183,8 +184,7 @@ namespace Echoglossian
         PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
         PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
 #endif
-        //string url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
-
+        // string url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
         string url = $"{NewGTranslateUrl}?hl=en&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
 #if DEBUG
         PluginLog.LogInformation($"URL: {url}");
@@ -241,7 +241,6 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
         finalDialogueText = finalDialogueText.Replace("\\u003C", "<");
         finalDialogueText = finalDialogueText.Replace("&#39;", "\u0027");
         finalDialogueText = Regex.Replace(finalDialogueText, @"(?<=.)(─)(?=.)", " \u2015 ");
-
 
         finalDialogueText = !startingEllipsis.IsNullOrEmpty()
           ? startingEllipsis + finalDialogueText

@@ -6,7 +6,7 @@
 using System;
 using System.Numerics;
 
-using Dalamud.Interface;
+using Dalamud.Interface.Utility;
 using Dalamud.Logging;
 using Dalamud.Utility;
 using Echoglossian.Properties;
@@ -150,9 +150,9 @@ namespace Echoglossian
 
     private void DrawTranslatedBattleDialogueWindow()
     {
-      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-        this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
-        this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+      Dalamud.Interface.Utility.ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
+  this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
+  this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
       /*      if (this.configuration.TranslateNpcNames)
             {
               if ((this.battleTalkTextDimensions.X * 2) < ImGui.CalcTextSize(this.currentNameTranslation).X)
@@ -253,7 +253,7 @@ namespace Echoglossian
       }
 
       float size = Math.Min(
-          this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult + (ImGui.GetStyle().WindowPadding.X * 2),
+          (this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult) + (ImGui.GetStyle().WindowPadding.X * 2),
           (ImGui.CalcTextSize(this.currentTalkTranslation).X * 1.25f) + (ImGui.GetStyle().WindowPadding.X * 2));
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));

@@ -1,9 +1,4 @@
-﻿using GTranslate.Translators;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
 
 using static Echoglossian.Echoglossian;
@@ -25,6 +20,22 @@ namespace Echoglossian
           break;
         case TransEngines.Deepl:
           this.translator = new DeepLTranslator();
+          break;
+        case TransEngines.Bing:
+          break;
+        case TransEngines.Yandex:
+          break;
+        case TransEngines.GTranslate:
+          break;
+        case TransEngines.Amazon:
+          break;
+        case TransEngines.Azure:
+          break;
+        case TransEngines.ChatGPT:
+          break;
+        case TransEngines.GoogleCloud:
+          break;
+        case TransEngines.All:
           break;
         // ... add cases for other translation engines
         default:

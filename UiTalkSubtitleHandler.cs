@@ -5,6 +5,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+
 using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 

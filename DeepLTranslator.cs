@@ -5,10 +5,8 @@ using System.Text;
 using System;
 using System.Threading.Tasks;
 
-using Dalamud.Configuration;
 using Dalamud.Logging;
 using DeepL;
-using DeepL.Model;
 using Newtonsoft.Json;
 
 namespace Echoglossian
@@ -57,21 +55,21 @@ namespace Echoglossian
     /// <param name="sourceLanguage"></param>
     /// <param name="targetLanguage"></param>
     /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
-    public async Task<string> FreeTranslateAsync(string text,  string sourceLanguage, string targetLanguage)
+    public async Task<string> FreeTranslateAsync(string text, string sourceLanguage, string targetLanguage)
     {
-        var sentencesList = this.ParseSentences(text);
-        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(); // Current timestamp
+      var sentencesList = this.ParseSentences(text);
+      long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(); // Current timestamp
 
-        using (HttpClient client = new())
+      using (HttpClient client = new())
+      {
+        var requestBody = new
         {
-            var requestBody = new
-            {
-                jsonrpc = "2.0",
-                method = "LMT_handle_jobs",
-                @params = new
+          jsonrpc = "2.0",
+          method = "LMT_handle_jobs",
+          @params = new
+          {
+            jobs = new[]
                 {
-                    jobs = new[]
-                    {
                         new
                         {
                             kind = "default",
@@ -80,57 +78,57 @@ namespace Echoglossian
                             quality = "normal",
                         },
                     },
-                    lang = new
-                    {
-                        target_lang = targetLanguage,
-                        source_lang_user_selected = sourceLanguage,
-                    },
-                    priority = -1,
-                    commonJobParams = new
-                    {
-                        regionalVariant = "pt-BR",
-                        mode = "translate",
-                        browserType = 1,
-                    },
-                    timestamp,
-                },
-                id = 7990014, // This can also be dynamic if needed
-            };
-
-            var response = await client.PostAsync(Endpoint, new StringContent(
-                JsonConvert.SerializeObject(requestBody),
-                Encoding.UTF8,
-                "application/json"));
-
-            if (response.IsSuccessStatusCode)
+            lang = new
             {
-                return await response.Content.ReadAsStringAsync();
-            }
-            else
+              target_lang = targetLanguage,
+              source_lang_user_selected = sourceLanguage,
+            },
+            priority = -1,
+            commonJobParams = new
             {
-                 PluginLog.LogWarning($"An error occurred: {response.Content}");
-                 return text;
-            }
+              regionalVariant = "pt-BR",
+              mode = "translate",
+              browserType = 1,
+            },
+            timestamp,
+          },
+          id = 7990014, // This can also be dynamic if needed
+        };
+
+        var response = await client.PostAsync(Endpoint, new StringContent(
+            JsonConvert.SerializeObject(requestBody),
+            Encoding.UTF8,
+            "application/json"));
+
+        if (response.IsSuccessStatusCode)
+        {
+          return await response.Content.ReadAsStringAsync();
         }
+        else
+        {
+          PluginLog.LogWarning($"An error occurred: {response.Content}");
+          return text;
+        }
+      }
     }
 
     private List<object> ParseSentences(string input)
     {
-        var sentences = MyRegex().Split(input);
-        var result = new List<object>();
-        int idCounter = 1;
+      var sentences = MyRegex().Split(input);
+      var result = new List<object>();
+      int idCounter = 1;
 
-        foreach (var sentence in sentences)
+      foreach (var sentence in sentences)
+      {
+        result.Add(new
         {
-            result.Add(new
-            {
-                text = sentence.Trim(),
-                id = idCounter++,
-                prefix = string.Empty,
-            });
-        }
+          text = sentence.Trim(),
+          id = idCounter++,
+          prefix = string.Empty,
+        });
+      }
 
-        return result;
+      return result;
     }
 
     [GeneratedRegex("(?<=[.!?])\\s+")]

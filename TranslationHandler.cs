@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Echoglossian;
@@ -50,10 +51,10 @@ public class TranslationHandler
   private async Task<string> TranslateAsync(string text)
   {
     // Call the translation API and get the translated text
-    //string translatedText = await YourTranslationAPICall(text);
+    // string translatedText = await YourTranslationAPICall(text);
 
     // Return the translated text
-    return "a"; //translatedText;
+    return "a"; // translatedText;
   }
 
   private void ShowTranslating(string text)
@@ -70,6 +71,8 @@ public class TranslationHandler
 public class Translation
 {
   public int Id { get; set; }
+
   public string OriginalText { get; set; }
+
   public string TranslatedText { get; set; }
 }
