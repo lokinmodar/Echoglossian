@@ -55,8 +55,8 @@ public partial class Echoglossian
     var dummyFontFilePath =
       $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
 #if DEBUG
-    PluginLog.LogWarning("Inside LoadFont method");
-    PluginLog.LogWarning($"Font file in DEBUG Mode: {specialFontFilePath}");
+    PluginLog.Warning("Inside LoadFont method");
+    PluginLog.Warning($"Font file in DEBUG Mode: {specialFontFilePath}");
 #endif
     this.FontLoaded = false;
     if (File.Exists(specialFontFilePath) || File.Exists(fontFilePath))
@@ -148,8 +148,8 @@ public partial class Echoglossian
       }
       catch (Exception ex)
       {
-        PluginLog.Log($"Special Font failed to load. {specialFontFilePath}");
-        PluginLog.Log(ex.ToString());
+        PluginLog.Information($"Special Font failed to load. {specialFontFilePath}");
+        PluginLog.Information(ex.ToString());
         this.FontLoadFailed = true;
       }
       finally
@@ -159,7 +159,7 @@ public partial class Echoglossian
     }
     else
     {
-      PluginLog.Log($"Special Font doesn't exist. {specialFontFilePath}");
+      PluginLog.Information($"Special Font doesn't exist. {specialFontFilePath}");
       this.FontLoadFailed = true;
     }
   }
@@ -169,15 +169,15 @@ public partial class Echoglossian
     var fontDir =
       $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
 #if DEBUG
-    PluginLog.LogVerbose("Inside LoadLanguageComboFont method");
+    PluginLog.Verbose("Inside LoadLanguageComboFont method");
 
     var fontFile = $@"{fontDir}NotoSans-Medium-Custom2.otf";
     var dummyFontFilePath = $@"{fontDir}NotoSans-SemiBold.ttf";
     var symbolsFontFilePath = $@"{fontDir}symbols.ttf";
 
-    PluginLog.LogVerbose($"Font file in DEBUG Mode: {fontFile}");
+    PluginLog.Verbose($"Font file in DEBUG Mode: {fontFile}");
 #else
-      // PluginLog.LogVerbose("Inside LoadLanguageComboFont method");
+      // PluginLog.Verbose("Inside LoadLanguageComboFont method");
       var fontFile =
  $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
       var dummyFontFilePath =
@@ -185,7 +185,7 @@ public partial class Echoglossian
       string symbolsFontFilePath =
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
 
-      // PluginLog.LogVerbose($"Font file in PROD Mode: {fontFile}");
+      // PluginLog.Verbose($"Font file in PROD Mode: {fontFile}");
 #endif
     this.LanguageComboFontLoaded = false;
     if (File.Exists(fontFile))
@@ -252,8 +252,8 @@ public partial class Echoglossian
       }
       catch (Exception ex)
       {
-        PluginLog.Log($"Language Combo Font failed to load. {fontFile}");
-        PluginLog.Log(ex.ToString());
+        PluginLog.Information($"Language Combo Font failed to load. {fontFile}");
+        PluginLog.Information(ex.ToString());
         this.LanguageComboFontLoadFailed = true;
       }
       finally
@@ -266,7 +266,7 @@ public partial class Echoglossian
     }
     else
     {
-      PluginLog.Log($"Language Combo Font doesn't exist. {fontFile}");
+      PluginLog.Information($"Language Combo Font doesn't exist. {fontFile}");
       this.LanguageComboFontLoadFailed = true;
     }
   }

@@ -102,6 +102,26 @@ namespace Echoglossian.EFCoreSqlite.Migrations
           {
             table.PrimaryKey("PK_toastmessages", x => x.Id);
           });
+
+      migrationBuilder.CreateTable(
+                 name: "talksubtitlemessages",
+                 columns: table => new
+                 {
+                   Id = table.Column<int>(type: "INTEGER", nullable: false)
+                  .Annotation("Sqlite:Autoincrement", true),
+                   OriginalTalkSubtitleMessage = table.Column<string>(type: "TEXT", maxLength: 400, nullable: false),
+                   OriginalTalkSubtitleMessageLang = table.Column<string>(type: "TEXT", nullable: false),
+                   TranslatedTalkSubtitleMessage = table.Column<string>(type: "TEXT", maxLength: 400, nullable: true),
+                   TranslationLang = table.Column<string>(type: "TEXT", nullable: false),
+                   TranslationEngine = table.Column<int>(type: "INTEGER", nullable: false),
+                   CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                   UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                   RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+                 },
+                 constraints: table =>
+                                   {
+                                     table.PrimaryKey("PK_talksubtitlemessages", x => x.Id);
+                                   });
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)

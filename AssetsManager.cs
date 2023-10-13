@@ -27,7 +27,7 @@ namespace Echoglossian
     private void PluginAssetsChecker()
     {
 #if DEBUG
-      PluginLog.LogInformation("Checking Plugin assets!");
+      PluginLog.Information("Checking Plugin assets!");
 #endif
       PluginInterface.UiBuilder.AddNotification(Resources.AssetsCheckingPopupMsg, Resources.Name,
         NotificationType.Warning);
@@ -35,16 +35,16 @@ namespace Echoglossian
       foreach (string f in this.AssetFiles)
       {
 #if DEBUG
-        PluginLog.LogInformation($"Asset file:{f}");
+        PluginLog.Information($"Asset file:{f}");
 #endif
         if (!File.Exists($"{this.AssetsPath}{f}"))
         {
 #if DEBUG
-          PluginLog.LogInformation($"missing file:{f}");
+          PluginLog.Information($"missing file:{f}");
 #endif
           this.MissingAssetFiles.Add(f);
 #if DEBUG
-          PluginLog.LogVerbose($"missing files list: {this.MissingAssetFiles.ToArray()}");
+          PluginLog.Verbose($"missing files list: {this.MissingAssetFiles.ToArray()}");
 #endif
         }
       }
@@ -136,7 +136,7 @@ namespace Echoglossian
       }
       catch (Exception e)
       {
-        PluginLog.LogError($"Error downloading plugin assets: {e}");
+        PluginLog.Verbose($"Error downloading plugin assets: {e}");
         PluginInterface.UiBuilder.AddNotification(
             $"{Resources.AssetsDownloadError1stPart} {this.AssetFiles[index]}{Resources.AssetsDownloadError2ndPart}",
             Resources.Name,
@@ -147,14 +147,14 @@ namespace Echoglossian
     private void WebClientDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
     {
 #if DEBUG
-      PluginLog.LogInformation($"Download status: {e.ProgressPercentage}%.");
+      PluginLog.Information($"Download status: {e.ProgressPercentage}%.");
 #endif
     }
 
     private void WebClientDownloadCompleted(object sender, DownloadDataCompletedEventArgs e)
     {
 #if DEBUG
-      PluginLog.LogInformation("Download finished!");
+      PluginLog.Information("Download finished!");
 #endif
       PluginInterface.UiBuilder.AddNotification(
         Resources.AssetsDownloadComplete,

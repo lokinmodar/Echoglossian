@@ -25,13 +25,13 @@ namespace Echoglossian
           sourceLanguage,
           targetLanguage)
           .Result;
-        PluginLog.LogWarning(translation.DetectedSourceLanguageCode);
-        PluginLog.LogWarning(translation.Text);
+        PluginLog.Warning(translation.DetectedSourceLanguageCode);
+        PluginLog.Warning(translation.Text);
         return Task.FromResult(translation.Text);
       }
       catch (DeepLException exception)
       {
-        PluginLog.LogWarning($"An error occurred: {exception.Message}");
+        PluginLog.Warning($"An error occurred: {exception.Message}");
         return Task.FromResult(text);
       }
     }
@@ -77,7 +77,7 @@ namespace Echoglossian
                             preferred_num_beams = 1,
                             quality = "normal",
                         },
-                    },
+                },
             lang = new
             {
               target_lang = targetLanguage,
@@ -106,7 +106,7 @@ namespace Echoglossian
         }
         else
         {
-          PluginLog.LogWarning($"An error occurred: {response.Content}");
+          PluginLog.Warning($"An error occurred: {response.Content}");
           return text;
         }
       }

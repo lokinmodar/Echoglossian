@@ -625,6 +625,15 @@
               Looks up a localized string similar to Select which kind of in-game message toasts to translate.
             </summary>
         </member>
+        <member name="M:Echoglossian.SimpleWindow.#ctor(System.String,ImGuiNET.ImGuiWindowFlags,System.Boolean,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.SimpleWindow"/> class.
+            </summary>
+            <param name="name"></param>
+            <param name="flags"></param>
+            <param name="forceMainWindow"></param>
+            <param name="text"></param>
+        </member>
         <member name="T:System.Text.RegularExpressions.Generated.MyRegex_0">
             <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the MyRegex method.</summary>
         </member>

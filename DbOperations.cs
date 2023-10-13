@@ -35,7 +35,7 @@ namespace Echoglossian
       using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
       context.Database.MigrateAsync();
 
-      PluginLog.LogFatal($"Config dir path: {this.configDir}");
+      PluginLog.Fatal($"Config dir path: {this.configDir}");
     }
 
     public bool FindTalkMessage(TalkMessage talkMessage)
@@ -322,10 +322,10 @@ namespace Echoglossian
         if (this.ErrorToastsCache.Count > 0 && this.ErrorToastsCache != null)
         {
 #if DEBUG
-          PluginLog.LogError($"Total ErrorToasts in cache: {this.ErrorToastsCache.Count}");
+          PluginLog.Verbose($"Total ErrorToasts in cache: {this.ErrorToastsCache.Count}");
           /* foreach (ToastMessage t in this.ErrorToastsCache)
            {
-             PluginLog.LogError($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
+             PluginLog.Verbose($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
            }*/
 #endif
           isInThere = this.ErrorToastsCache.Any(t => toastMessage.ToastType == t.ToastType && toastMessage.TranslationLang == t.TranslationLang &&
@@ -379,10 +379,10 @@ namespace Echoglossian
         if (this.OtherToastsCache.Count > 0 && this.OtherToastsCache != null)
         {
 #if DEBUG
-          PluginLog.LogError($"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
+          PluginLog.Verbose($"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
           /* foreach (ToastMessage t in this.OtherToastsCache)
            {
-             PluginLog.LogError($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
+             PluginLog.Verbose($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
            }*/
 #endif
           isInThere = this.OtherToastsCache.Any(t => toastMessage.ToastType == t.ToastType && toastMessage.TranslationLang == t.TranslationLang &&
@@ -450,7 +450,7 @@ namespace Echoglossian
 #if DEBUG
         logStream.WriteLineAsync($"Query operation error: {e}");
 #endif
-        PluginLog.LogWarning("Could not find any Error Toasts in Database");
+        PluginLog.Warning("Could not find any Error Toasts in Database");
       }
     }
 
@@ -480,7 +480,7 @@ namespace Echoglossian
 #if DEBUG
         logStream.WriteLineAsync($"Query operation error: {e}");
 #endif
-        PluginLog.LogWarning("Could not find any Other Toasts in Database");
+        PluginLog.Warning("Could not find any Other Toasts in Database");
       }
     }
   }

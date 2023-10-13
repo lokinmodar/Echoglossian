@@ -17,13 +17,13 @@ namespace Echoglossian
 
       var addonList = uiStuffz?.ToList();
 
-      PluginLog.LogWarning($"Addon list: {uiStuffz?.RowCount.ToString()}");
+      PluginLog.Warning($"Addon list: {uiStuffz?.RowCount.ToString()}");
       if (uiStuffz != null)
       {
         foreach (var a in uiStuffz)
         {
           this.UiElementsLabels.Add(a.Text.ToString());
-          PluginLog.LogError($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+          PluginLog.Verbose($"Sheet row: {a.RowId}: {a.Text.ToString()}");
         }
       }
     }

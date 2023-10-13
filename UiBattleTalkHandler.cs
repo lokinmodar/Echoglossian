@@ -58,7 +58,7 @@ namespace Echoglossian
       try
       {
 #if DEBUG
-        PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+        PluginLog.Information(sender.TextValue + ": " + message.TextValue);
 #endif
 
         string senderToTranslate = !sender.TextValue.IsNullOrEmpty() ? sender.TextValue : "System Message";
@@ -67,11 +67,11 @@ namespace Echoglossian
         BattleTalkMessage battleTalkMessage = this.FormatBattleTalkMessage(senderToTranslate, battleTextToTranslate);
 
 #if DEBUG
-        PluginLog.LogFatal($"Before DB Query attempt: {battleTalkMessage}");
+        PluginLog.Fatal($"Before DB Query attempt: {battleTalkMessage}");
 #endif
         bool findings = this.FindBattleTalkMessage(battleTalkMessage);
 #if DEBUG
-        PluginLog.LogFatal(
+        PluginLog.Fatal(
           $"After DB Query attempt: {(findings ? "Message found in Db." : "Message not found in Db")}");
 #endif
 
@@ -83,7 +83,7 @@ namespace Echoglossian
             string translatedBattleTalkMessage = Translate(battleTextToTranslate);
             string senderTranslation = Translate(senderToTranslate);
 #if DEBUG
-            PluginLog.LogWarning(translatedBattleTalkMessage);
+            PluginLog.Warning(translatedBattleTalkMessage);
 #endif
             if (this.configuration.TranslateNpcNames)
             {
@@ -99,7 +99,7 @@ namespace Echoglossian
 #endif
               string result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
-              PluginLog.LogError($"BattleTalk Message DB Insert operation result: {result}");
+              PluginLog.Verbose($"BattleTalk Message DB Insert operation result: {result}");
 #endif
             }
             else
@@ -113,11 +113,11 @@ namespace Echoglossian
 
               string result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
-              PluginLog.LogError($"Using BattleTalk Overlay - BattleTalk Message DB Insert operation result: {result}");
+              PluginLog.Verbose($"Using BattleTalk Overlay - BattleTalk Message DB Insert operation result: {result}");
 #endif
             }
 #if DEBUG
-            PluginLog.Log($"Using BattleTalk Replace - {sender.TextValue}: {message.TextValue}");
+            PluginLog.Information($"Using BattleTalk Replace - {sender.TextValue}: {message.TextValue}");
 #endif
           }
           else
@@ -154,7 +154,7 @@ namespace Echoglossian
 
               this.battleTalkTranslationSemaphore.Release();
 #if DEBUG
-              PluginLog.LogError($"Before if BattleTalk translation: {this.currentBattleTalkTranslation}");
+              PluginLog.Verbose($"Before if BattleTalk translation: {this.currentBattleTalkTranslation}");
 #endif
               if (this.currentSenderTranslation != Resources.WaitingForTranslation && this.currentBattleTalkTranslation != Resources.WaitingForTranslation)
               {
@@ -166,7 +166,7 @@ namespace Echoglossian
                   this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                 string result = this.InsertBattleTalkData(translatedBattleTalkData);
 #if DEBUG
-                PluginLog.LogError($"BattleTalk Message DB Insert operation result: {result}");
+                PluginLog.Verbose($"BattleTalk Message DB Insert operation result: {result}");
 #endif
               }
             });
@@ -179,7 +179,7 @@ namespace Echoglossian
             string translatedBattleMessage = this.FoundBattleTalkMessage.TranslatedBattleTalkMessage;
             string senderTranslation = this.FoundBattleTalkMessage.TranslatedSenderName;
 #if DEBUG
-            PluginLog.LogWarning($"From database - Name: {senderTranslation}, Message: {translatedBattleMessage}");
+            PluginLog.Warning($"From database - Name: {senderTranslation}, Message: {translatedBattleMessage}");
 #endif
             if (this.configuration.TranslateNpcNames)
             {
@@ -191,7 +191,7 @@ namespace Echoglossian
               message = translatedBattleMessage;
             }
 #if DEBUG
-            PluginLog.Log(sender.TextValue + ": " + message.TextValue);
+            PluginLog.Information(sender.TextValue + ": " + message.TextValue);
 #endif
           }
           else
@@ -239,7 +239,7 @@ namespace Echoglossian
       }
       catch (Exception e)
       {
-        PluginLog.Log("Exception: " + e.StackTrace);
+        PluginLog.Information("Exception: " + e.StackTrace);
         throw;
       }
     }

@@ -14,6 +14,8 @@ namespace Echoglossian.EFCoreSqlite
 {
   public class EchoglossianDbContext : DbContext
   {
+    public DbSet<TalkSubtitleMessage> TalkSubtitleMessage { get; set; }
+
     public DbSet<ToastMessage> ToastMessage { get; set; }
 
     public DbSet<TalkMessage> TalkMessage { get; set; }

@@ -44,11 +44,11 @@ namespace Echoglossian
       string sanitizedString = sanitizer.Sanitize(message);
 
 #if DEBUG
-      PluginLog.LogInformation($"Message in Lang Method: {sanitizedString}");
+      PluginLog.Information($"Message in Lang Method: {sanitizedString}");
 #endif
       Tuple<NTextCat.LanguageInfo, double> mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
 #if DEBUG
-      PluginLog.LogInformation($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
+      PluginLog.Information($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
 #endif
       return mostCertainLanguage != null
         ? mostCertainLanguage.Item1.Iso639_2T
@@ -64,7 +64,7 @@ namespace Echoglossian
           return string.Empty;
         }
   #if DEBUG
-        PluginLog.LogError("inside translate NEW method");
+        PluginLog.Verbose("inside translate NEW method");
   #endif
 
         try
@@ -106,14 +106,14 @@ namespace Echoglossian
           }
 
   #if DEBUG
-          PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
-          PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
+          PluginLog.Information($"Chosen Translation Engine: {chosenTransEngine}");
+          PluginLog.Information($"Chosen Translation LanguageInfo: {lang}");
   #endif
           var translator = new GoogleTranslator2();
           var aggregateTranslator = new AggregateTranslator();
 
           var aggrtext = aggregateTranslator.TranslateAsync(text, lang, detectedLanguage);
-          PluginLog.Log("aggrtext: ", aggrtext.Result.Translation);
+          PluginLog.Information("aggrtext: ", aggrtext.Result.Translation);
 
           return translator.TranslateAsync(text, lang, detectedLanguage).Result.Translation;
         }
@@ -138,7 +138,7 @@ namespace Echoglossian
         return string.Empty;
       }
 #if DEBUG
-      PluginLog.LogError("inside translate method");
+      PluginLog.Verbose("inside translate method");
 #endif
       string read;
       JValue src;
@@ -181,13 +181,13 @@ namespace Echoglossian
         }
 
 #if DEBUG
-        PluginLog.LogInformation($"Chosen Translation Engine: {chosenTransEngine}");
-        PluginLog.LogInformation($"Chosen Translation LanguageInfo: {lang}");
+        PluginLog.Information($"Chosen Translation Engine: {chosenTransEngine}");
+        PluginLog.Information($"Chosen Translation LanguageInfo: {lang}");
 #endif
         // string url = $"{GTranslateUrl}&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
         string url = $"{NewGTranslateUrl}?hl=en&sl={detectedLanguage}&tl={lang}&q={Uri.EscapeDataString(parsedText)}";
 #if DEBUG
-        PluginLog.LogInformation($"URL: {url}");
+        PluginLog.Information($"URL: {url}");
 #endif
         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
         request.UserAgent = UaString;
@@ -197,7 +197,7 @@ namespace Echoglossian
 
         read = reader.ReadToEnd();
 #if DEBUG
-        PluginLog.LogVerbose($"Received JSON string: {read}");
+        // PluginLog.Verbose($"Received JSON string: {read}");
 #endif
 
         src = null;
@@ -212,7 +212,7 @@ namespace Echoglossian
         else
         {
 #if DEBUG
-          PluginLog.LogVerbose($"Received HTML {ParseHtml(read)} ");
+          //  PluginLog.Verbose($"Received HTML {ParseHtml(read)} ");
 #endif
 
           /*          JObject parsed = JObject.Parse(read);
@@ -248,7 +248,7 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
 
         Debug.Assert(finalDialogueText != null, nameof(finalDialogueText) + " != null");
 #if DEBUG
-        PluginLog.LogInformation($"FinalTranslatedText: {finalDialogueText}");
+        PluginLog.Information($"FinalTranslatedText: {finalDialogueText}");
 #endif
         if (src != null && (src.ToString(CultureInfo.InvariantCulture) == lang || finalDialogueText == text))
         {
@@ -281,7 +281,7 @@ finalDialogueText = finalDialogueText.Replace("...", ". . .");*/
       string decodedString = stringWriter.ToString();
 
 #if DEBUG
-      PluginLog.LogVerbose($"In parser: " + parsedText);
+      PluginLog.Verbose($"In parser: " + parsedText);
 #endif
 
       return decodedString;

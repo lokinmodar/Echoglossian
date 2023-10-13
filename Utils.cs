@@ -89,7 +89,7 @@ namespace Echoglossian
       if (!File.Exists($"{PluginInterface.ConfigFile.FullName}"))
       {
 #if DEBUG
-        PluginLog.LogDebug($"Inside config file fixer - Config File Info: {PluginInterface.ConfigFile.FullName}");
+        PluginLog.Debug($"Inside config file fixer - Config File Info: {PluginInterface.ConfigFile.FullName}");
 #endif
 
         this.SaveConfig();
@@ -140,7 +140,7 @@ namespace Echoglossian
     public Image DrawText(string text, Font? fontOptional = null, Color? textColorOptional = null, Color? backColorOptional = null, Size? minSizeOptional = null)
     {
 #if DEBUG
-      PluginLog.LogWarning("Inside image creation method");
+      PluginLog.Warning("Inside image creation method");
 #endif
       PrivateFontCollection pfc = new();
       pfc.AddFontFile($@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{this.specialFontFileName}");
@@ -200,7 +200,7 @@ namespace Echoglossian
         }
       }
 #if DEBUG
-      PluginLog.LogWarning("Before returning the image created");
+      PluginLog.Warning("Before returning the image created");
 #endif
       return textAsImage;
     }
@@ -213,7 +213,7 @@ namespace Echoglossian
     private byte[] TranslationImageConverter(Image image)
     {
 #if DEBUG
-      PluginLog.LogWarning("Conversion to byte");
+      PluginLog.Warning("Conversion to byte");
 #endif
       ImageConverter imageConverter = new ImageConverter();
       return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));

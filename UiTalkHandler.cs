@@ -34,7 +34,7 @@ namespace Echoglossian
 
     public void TalkProc()
     {
-      PluginLog.Log("Translation Engine Started");
+      PluginLog.Information("Translation Engine Started");
       while (this.configuration.TranslateTalk)
       {
         if (this._talkMessageQueue.Count > 0)
@@ -46,11 +46,11 @@ namespace Echoglossian
           if (this.configuration.TranslateNpcNames)
           {
             nameTranslation = Translate(dialogue?.SenderName);
-            PluginLog.LogWarning($"Name translation async: {nameTranslation}");
+            PluginLog.Warning($"Name translation async: {nameTranslation}");
           }
 
           messageTranslation = Translate(dialogue?.OriginalTalkMessage);
-          PluginLog.LogWarning($"Message translation async: {messageTranslation}");
+          PluginLog.Warning($"Message translation async: {messageTranslation}");
         }
       }
     }
@@ -94,7 +94,7 @@ namespace Echoglossian
           this.talkTextPosition.X = talkMaster->RootNode->X;
           this.talkTextPosition.Y = talkMaster->RootNode->Y;
 #if DEBUG
-          // PluginLog.LogVerbose("Inside Talk Handler.");
+          // PluginLog.Verbose("Inside Talk Handler.");
 #endif
         }
         else
@@ -121,7 +121,7 @@ namespace Echoglossian
       try
       {
 #if DEBUG
-        PluginLog.Log(name.TextValue + ": " + text.TextValue);
+        PluginLog.Information(name.TextValue + ": " + text.TextValue);
 #endif
 
         string nameToTranslate = !name.TextValue.IsNullOrEmpty() ? name.TextValue : string.Empty;
@@ -131,11 +131,11 @@ namespace Echoglossian
         this._talkMessageQueue.Enqueue(talkMessage);
 
 #if DEBUG
-        PluginLog.LogFatal($"Before DB Query attempt: {talkMessage}");
+        PluginLog.Fatal($"Before DB Query attempt: {talkMessage}");
 #endif
         bool findings = this.FindTalkMessage(talkMessage);
 #if DEBUG
-        PluginLog.LogFatal(
+        PluginLog.Fatal(
           $"After DB Query attempt: {(findings ? "Message found in Db." : "Message not found in Db")}");
 #endif
 
@@ -147,7 +147,7 @@ namespace Echoglossian
             string translatedText = Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
 #if DEBUG
-            PluginLog.LogWarning(translatedText);
+            PluginLog.Warning(translatedText);
 #endif
             if (this.configuration.TranslateNpcNames)
             {
@@ -170,7 +170,7 @@ namespace Echoglossian
 #endif
               string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-              PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+              PluginLog.Verbose($"Talk Message DB Insert operation result: {result}");
 #endif
             }
             else
@@ -191,11 +191,11 @@ namespace Echoglossian
 
               string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-              PluginLog.LogError(result);
+              PluginLog.Verbose(result);
 #endif
             }
 #if DEBUG
-            PluginLog.Log($"Using Talk Replace - {name.TextValue}: {text.TextValue}");
+            PluginLog.Information($"Using Talk Replace - {name.TextValue}: {text.TextValue}");
 #endif
           }
           else
@@ -239,12 +239,12 @@ namespace Echoglossian
                   /*                  if (this.configuration.Lang == 2)
                                     {
                   #if DEBUG
-                                      PluginLog.LogWarning("Lang is 2!");
+                                      PluginLog.Warning("Lang is 2!");
                   #endif
                                       var textAsImage = this.DrawText(this.currentTalkTranslation);
                                       var textImageAsBytes = this.TranslationImageConverter(textAsImage);
                   #if DEBUG
-                                      PluginLog.LogWarning($"image bytes: {textImageAsBytes}");
+                                      PluginLog.Warning($"image bytes: {textImageAsBytes}");
                   #endif
                                       this.currentTalkTranslationTexture =
                                         pluginInterface.UiBuilder.LoadImage(textImageAsBytes);
@@ -254,7 +254,7 @@ namespace Echoglossian
                 this.talkTranslationSemaphore.Release();
 
 #if DEBUG
-                PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
+                PluginLog.Verbose($"Before if talk translation: {this.currentTalkTranslation}");
 #endif
                 if (this.currentNameTranslation != Resources.WaitingForTranslation &&
                     this.currentTalkTranslation != Resources.WaitingForTranslation)
@@ -272,7 +272,7 @@ namespace Echoglossian
                     DateTime.Now);
                   string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                  PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+                  PluginLog.Verbose($"Talk Message DB Insert operation result: {result}");
 #endif
                 }
               });
@@ -280,7 +280,7 @@ namespace Echoglossian
             else
             {
 #if DEBUG
-              PluginLog.LogWarning("Using Swap text for translation");
+              PluginLog.Warning("Using Swap text for translation");
 #endif
               string translatedText = Translate(textToTranslate);
               string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : Translate(nameToTranslate);
@@ -333,7 +333,7 @@ namespace Echoglossian
 #endif
                 string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+                PluginLog.Verbose($"Talk Message DB Insert operation result: {result}");
 #endif
               }
               else
@@ -353,7 +353,7 @@ namespace Echoglossian
 
                   this.talkTranslationSemaphore.Release();
                   /*#if DEBUG
-                                    PluginLog.LogError($"Before if talk translation: {this.currentTalkTranslation}");
+                                    PluginLog.Verbose($"Before if talk translation: {this.currentTalkTranslation}");
                   #endif*/
                   /*if (this.currentNameTranslation != Resources.WaitingForTranslation &&
                       this.currentTalkTranslation != Resources.WaitingForTranslation)
@@ -366,7 +366,7 @@ namespace Echoglossian
                       this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                     var result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                    PluginLog.LogError($"Talk Message DB Insert operation result: {result}");
+                    PluginLog.Verbose($"Talk Message DB Insert operation result: {result}");
 #endif
                   }*/
                 });
@@ -385,7 +385,7 @@ namespace Echoglossian
 
                 string result = this.InsertTalkData(translatedTalkData);
 #if DEBUG
-                PluginLog.LogError(result);
+                PluginLog.Verbose(result);
 #endif
               }
             }
@@ -398,7 +398,7 @@ namespace Echoglossian
             string translatedText = this.FoundTalkMessage.TranslatedTalkMessage;
             string nameTranslation = this.FoundTalkMessage.TranslatedSenderName;
 #if DEBUG
-            PluginLog.LogWarning($"From database - Name: {nameTranslation}, Message: {translatedText}");
+            PluginLog.Warning($"From database - Name: {nameTranslation}, Message: {translatedText}");
 #endif
             if (this.configuration.TranslateNpcNames)
             {
@@ -410,7 +410,7 @@ namespace Echoglossian
               text = translatedText;
             }
 #if DEBUG
-            PluginLog.Log(name.TextValue + ": " + text.TextValue);
+            PluginLog.Information(name.TextValue + ": " + text.TextValue);
 #endif
           }
           else
@@ -504,7 +504,7 @@ namespace Echoglossian
       }
       catch (Exception e)
       {
-        PluginLog.Log("Exception: " + e.StackTrace);
+        PluginLog.Information("Exception: " + e.StackTrace);
         throw;
       }
     }
