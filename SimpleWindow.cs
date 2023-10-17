@@ -14,10 +14,10 @@ namespace Echoglossian
   {
     // TODO: add window position calculations based on the current addon
     // TODO: add window sizing calculations based on the current translation
-    private readonly SemaphoreSlim translationSemaphore;
+
     private bool disposedValue;
     private bool displayTranslation;
-
+    private readonly SemaphoreSlim translationSemaphore;
     private string translation = string.Empty;
     private volatile int currentTranslationId;
 
@@ -25,15 +25,15 @@ namespace Echoglossian
     private Vector2 textImguiSize = Vector2.Zero;
     private Vector2 textPosition = Vector2.Zero;
 
-    private Config configuration = Echoglossian.PluginInterface.GetPluginConfig() as Config;
+    private Config configuration;
     private ImFontPtr uiFont;
     private bool fontLoaded;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SimpleWindow"/> class.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="flags"></param>
+    /// <param name="name">Window Name.</param>
+    /// <param name="flags">Window Flags.</param>
     /// <param name="forceMainWindow"></param>
     /// <param name="translation"></param>
     /// <param name="displayTranslation"></param>
@@ -41,9 +41,9 @@ namespace Echoglossian
     /// <param name="textDimensions"></param>
     /// <param name="textImguiSize"></param>
     /// <param name="textPosition"></param>
-    /// <param name="configuration"></param>
     /// <param name="uiFont"></param>
     /// <param name="fontLoaded"></param>
+    /// <param name="translationSemaphore"></param>
     public SimpleWindow(
   string name,
   ImGuiWindowFlags flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
@@ -55,9 +55,9 @@ namespace Echoglossian
   Vector2 textDimensions = default,
   Vector2 textImguiSize = default,
   Vector2 textPosition = default,
-  Config configuration = default,
   ImFontPtr uiFont = default,
-  bool fontLoaded = default)
+  bool fontLoaded = default,
+  SemaphoreSlim translationSemaphore = default)
   : base(name, flags, forceMainWindow)
     {
       this.WindowName = name;
@@ -67,8 +67,8 @@ namespace Echoglossian
       this.textDimensions = textDimensions;
       this.textImguiSize = textImguiSize;
       this.textPosition = textPosition;
-      this.configuration = configuration;
-      this.translationSemaphore = new SemaphoreSlim(1, 1);
+      this.configuration = Echoglossian.PluginInterface.GetPluginConfig() as Config;
+      this.translationSemaphore = translationSemaphore;
       this.uiFont = uiFont;
       this.fontLoaded = fontLoaded;
     }
@@ -96,7 +96,7 @@ namespace Echoglossian
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTextColor, 255));
       if (this.configuration.TranslateNpcNames)
       {
-        string name = GetTranslatedNpcNameForWindow();
+        string name = string.Empty;//GetTranslatedNpcNameForWindow();
         if (!name.IsNullOrEmpty())
         {
           ImGui.Begin(
@@ -135,15 +135,6 @@ namespace Echoglossian
       ImGui.SetWindowFontScale(this.configuration.FontScale);
       if (this.translationSemaphore.Wait(0))
       {
-        /*if (this.configuration.Lang is 2)
-        {
-          ImGui.Image(
-            this.currentTranslationTexture.ImGuiHandle,
-            new Vector2(
-              size,
-              this.textDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
-        }*/
-
         ImGui.TextWrapped(this.translation);
 
         this.translationSemaphore.Release();
@@ -174,25 +165,14 @@ namespace Echoglossian
         if (disposing)
         {
           this.translationSemaphore.Dispose();
-          // TODO: dispose managed state (managed objects)
-        }
 
-        // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-        // TODO: set large fields to null
+        }
         this.disposedValue = true;
       }
     }
 
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~SimpleWindow()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
-
     public void Dispose()
     {
-      // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
       this.Dispose(disposing: true);
       GC.SuppressFinalize(this);
     }

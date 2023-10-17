@@ -95,6 +95,8 @@ namespace Echoglossian
 
     private static Sanitizer sanitizer;
 
+    private UIAddonHandler UIAddonHandler;
+
     public List<ToastMessage> ErrorToastsCache { get; set; }
 
     public List<ToastMessage> QuestToastsCache { get; set; }
@@ -204,6 +206,10 @@ namespace Echoglossian
       Common.Functions.BattleTalk.OnBattleTalk += this.GetBattleTalk;
 
       this.EgloAddonHandler();
+
+      this.UIAddonHandler = new UIAddonHandler(this.configuration, this.UiFont, this.FontLoaded, "_BattleTalk");
+
+      this.UIAddonHandler.EgloAddonHandler("_BattleTalk", new[] { "PreSetup", "PreRefresh", "PostRefresh", "PreRequestedUpdate", "PostRequestedUpdate" });
 
       PluginInterface.UiBuilder.Draw += this.BuildUi;
 

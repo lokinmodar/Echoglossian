@@ -21,11 +21,9 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    // private HashSet<IntPtr> processedAddons = new HashSet<IntPtr>();
+
 
     private Dictionary<string, string> translations = new Dictionary<string, string>();
-
-    // private string tsTranslation = string.Empty;
 
     public void EgloAddonHandler()
     {
@@ -56,8 +54,9 @@ namespace Echoglossian
           if (this.translations.TryGetValue(currentText, out var storedTranslation) && !string.IsNullOrEmpty(storedTranslation))
           {
             PluginLog.Information($"Setting new translation: {storedTranslation}");
-            var tsWindow = new SimpleWindow("TsWindow", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
-        ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoDecoration, false, storedTranslation, // TODO: continue!);
+            /*var tsWindow = new SimpleWindow("TsWindow", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
+        ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoDecoration, false, storedTranslation, true, 
+            */
             setupAtkValues[0].SetString(storedTranslation);
           }
 

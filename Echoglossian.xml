@@ -121,6 +121,18 @@
             <param name="createdDate"></param>
             <param name="updatedDate"></param>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.#ctor(System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage"/> class.
+            </summary>
+            <param name="originalTalkSubtitleMessage"></param>
+            <param name="originalTalkSubtitleMessageLang"></param>
+            <param name="translatedTalkSubtitleMessage"></param>
+            <param name="translationLang"></param>
+            <param name="translationEngine"></param>
+            <param name="createdDate"></param>
+            <param name="updatedDate"></param>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage"/> class.
@@ -625,14 +637,31 @@
               Looks up a localized string similar to Select which kind of in-game message toasts to translate.
             </summary>
         </member>
-        <member name="M:Echoglossian.SimpleWindow.#ctor(System.String,ImGuiNET.ImGuiWindowFlags,System.Boolean,System.String)">
+        <member name="M:Echoglossian.SimpleWindow.#ctor(System.String,ImGuiNET.ImGuiWindowFlags,System.Boolean,System.String,System.Boolean,System.Int32,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,ImGuiNET.ImFontPtr,System.Boolean,System.Threading.SemaphoreSlim)">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.SimpleWindow"/> class.
             </summary>
-            <param name="name"></param>
-            <param name="flags"></param>
+            <param name="name">Window Name.</param>
+            <param name="flags">Window Flags.</param>
             <param name="forceMainWindow"></param>
-            <param name="text"></param>
+            <param name="translation"></param>
+            <param name="displayTranslation"></param>
+            <param name="curentTranslationId"></param>
+            <param name="textDimensions"></param>
+            <param name="textImguiSize"></param>
+            <param name="textPosition"></param>
+            <param name="uiFont"></param>
+            <param name="fontLoaded"></param>
+            <param name="translationSemaphore"></param>
+        </member>
+        <member name="M:Echoglossian.UIAddonHandler.#ctor(Echoglossian.Config,ImGuiNET.ImFontPtr,System.Boolean,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.UIAddonHandler"/> class.
+            </summary>
+            <param name="configuration"></param>
+            <param name="uiFont"></param>
+            <param name="fontLoaded"></param>
+            <param name="addonName"></param>
         </member>
         <member name="T:System.Text.RegularExpressions.Generated.MyRegex_0">
             <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the MyRegex method.</summary>
