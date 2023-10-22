@@ -76,6 +76,18 @@
             </summary>
             <param name="configDir"></param>
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.EchoglossianDBupd">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.EchoglossianDBupd.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.EchoglossianDBupd.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.EchoglossianDBupd.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage"/> class.
@@ -103,6 +115,32 @@
             <param name="translationEngine"></param>
             <param name="questId"></param>
             <param name="translatedQuestName"></param>
+            <param name="createdDate"></param>
+            <param name="updatedDate"></param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.LocationName.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.LocationName"/> class.
+            </summary>
+            <param name="id"></param>
+            <param name="originalLocationName"></param>
+            <param name="originalLocationNameLang"></param>
+            <param name="translatedLocationName"></param>
+            <param name="translationLang"></param>
+            <param name="translationEngine"></param>
+            <param name="createdDate"></param>
+            <param name="updatedDate"></param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.NpcNames.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Int32,System.DateTime,System.Nullable{System.DateTime})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.NpcNames"/> class.
+            </summary>
+            <param name="id"></param>
+            <param name="originalNpcName"></param>
+            <param name="originalNpcNameLang"></param>
+            <param name="translatedNpcName"></param>
+            <param name="translationLang"></param>
+            <param name="translationEngine"></param>
             <param name="createdDate"></param>
             <param name="updatedDate"></param>
         </member>

@@ -124,7 +124,18 @@ namespace Echoglossian
 
       Common = new XivCommonBase(PluginInterface, Hooks.Talk | Hooks.BattleTalk);
 
-      this.CreateOrUseDb();
+      try
+      {
+        this.CreateOrUseDb();
+      }
+      catch (Exception e)
+      {
+        PluginLog.Error($"Error creating or using database: {e}");
+      }
+      finally
+      {
+        PluginLog.Information("Database created or used successfully.");
+      }
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
       this.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";

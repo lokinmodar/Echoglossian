@@ -30,12 +30,35 @@ namespace Echoglossian
 
     public QuestPlate FoundQuestPlate { get; set; }
 
-    public void CreateOrUseDb()
+    public async void CreateOrUseDb()
     {
-      using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
-      context.Database.MigrateAsync();
+      using (EchoglossianDbContext context = new EchoglossianDbContext(this.configDir))
+      {
+        try
+        {
+          PluginLog.Verbose($"Config dir path: {this.configDir}");
 
-      PluginLog.Fatal($"Config dir path: {this.configDir}");
+          var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+
+          if (pendingMigrations.Any())
+          {
+            PluginLog.Verbose($"Pending migrations: {pendingMigrations.Count()}");
+            await context.Database.MigrateAsync();
+          }
+
+          var lastAppliedMigration = (await context.Database.GetAppliedMigrationsAsync()).Last();
+
+          PluginLog.Verbose($"Last applied migration: {lastAppliedMigration}");
+        }
+        catch (Exception e)
+        {
+          PluginLog.Error($"Error creating or using Db: {e}");
+        }
+        finally
+        {
+          PluginLog.Verbose($"Db created or used successfully");
+        }
+      }
     }
 
     public bool FindTalkMessage(TalkMessage talkMessage)

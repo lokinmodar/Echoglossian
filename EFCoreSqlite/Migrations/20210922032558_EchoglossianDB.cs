@@ -1,10 +1,4 @@
-﻿// <copyright file="20210922032558_EchoglossianDB.cs" company="lokinmodar">
-// Copyright (c) lokinmodar. All rights reserved.
-// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
-// </copyright>
-
-using System;
-
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Echoglossian.EFCoreSqlite.Migrations
@@ -29,7 +23,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             TranslationEngine = table.Column<int>(type: "INTEGER", nullable: false),
             CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
             UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
           },
           constraints: table =>
           {
@@ -52,7 +46,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             TranslationEngine = table.Column<int>(type: "INTEGER", nullable: false),
             CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
             UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
           },
           constraints: table =>
           {
@@ -75,7 +69,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             TranslationEngine = table.Column<int>(type: "INTEGER", nullable: false),
             CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
             UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
           },
           constraints: table =>
           {
@@ -96,32 +90,12 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             TranslationEngine = table.Column<int>(type: "INTEGER", nullable: false),
             CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
             UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
           },
           constraints: table =>
           {
             table.PrimaryKey("PK_toastmessages", x => x.Id);
           });
-
-      migrationBuilder.CreateTable(
-                 name: "talksubtitlemessages",
-                 columns: table => new
-                 {
-                   Id = table.Column<int>(type: "INTEGER", nullable: false)
-                  .Annotation("Sqlite:Autoincrement", true),
-                   OriginalTalkSubtitleMessage = table.Column<string>(type: "TEXT", maxLength: 400, nullable: false),
-                   OriginalTalkSubtitleMessageLang = table.Column<string>(type: "TEXT", nullable: false),
-                   TranslatedTalkSubtitleMessage = table.Column<string>(type: "TEXT", maxLength: 400, nullable: true),
-                   TranslationLang = table.Column<string>(type: "TEXT", nullable: false),
-                   TranslationEngine = table.Column<int>(type: "INTEGER", nullable: false),
-                   CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                   UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                   RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
-                 },
-                 constraints: table =>
-                                   {
-                                     table.PrimaryKey("PK_talksubtitlemessages", x => x.Id);
-                                   });
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)

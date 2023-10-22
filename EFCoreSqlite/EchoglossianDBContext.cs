@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Echoglossian.EFCoreSqlite
 {
@@ -23,6 +24,10 @@ namespace Echoglossian.EFCoreSqlite
     public DbSet<BattleTalkMessage> BattleTalkMessage { get; set; }
 
     public DbSet<QuestPlate> QuestPlate { get; set; }
+
+    public DbSet<NpcNames> NpcName { get; set; }
+
+    public DbSet<LocationName> LocationNames { get; set; }
 
     public string DbPath { get; }
 
@@ -39,7 +44,7 @@ namespace Echoglossian.EFCoreSqlite
     {
       this.DbPath = $"{configDir}Echoglossian.db";
 #if DEBUG
-      // this.LogStream = new StreamWriter($"{configDir}DBContextLog.txt", append: true);
+      this.LogStream = new StreamWriter($"{configDir}DBContextLog.txt", append: true);
 #endif
     }
 
@@ -49,7 +54,7 @@ namespace Echoglossian.EFCoreSqlite
     {
       optionsBuilder.UseSqlite($"Data Source={this.DbPath}");
 #if DEBUG
-      // optionsBuilder.LogTo(this.LogStream.WriteLine).EnableSensitiveDataLogging().EnableDetailedErrors();
+      optionsBuilder.LogTo(this.LogStream.WriteLine, LogLevel.Trace).EnableSensitiveDataLogging().EnableDetailedErrors();
 #endif
     }
 
@@ -57,7 +62,7 @@ namespace Echoglossian.EFCoreSqlite
     {
       base.Dispose();
 #if DEBUG
-      // this.LogStream.Dispose();
+      this.LogStream.Dispose();
 #endif
     }
 
@@ -65,7 +70,7 @@ namespace Echoglossian.EFCoreSqlite
     {
       await base.DisposeAsync();
 #if DEBUG
-      // await this.LogStream.DisposeAsync();
+      await this.LogStream.DisposeAsync();
 #endif
     }
   }
