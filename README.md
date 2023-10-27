@@ -1,7 +1,7 @@
 <img src="https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/logo.png" align="right" width="260px"/>
 
 # Echoglossian
-[![Download count](https://img.shields.io/endpoint?url=https://vz32sgcoal.execute-api.us-east-1.amazonaws.com/Echoglossian)](https://github.com/lokinmodar/Echoglossian)
+[![Download count](https://img.shields.io/endpoint?url=https://qzysathwfhebdai6xgauhz4q7m0mzmrf.lambda-url.us-east-1.on.aws/Echoglossian)](https://github.com/lokinmodar/Echoglossian)
 [![GitHub stars](https://badgen.net/github/stars/lokinmodar/Echoglossian)](https://GitHub.com/lokinmodar/Echoglossian/stargazers/)
 [![GitHub release](https://img.shields.io/github/release/lokinmodar/Echoglossian.svg)](https://GitHub.com/lokinmodar/Echoglossian/releases/)
 [![Crowdin](https://badges.crowdin.net/echoglossian/localized.svg)](https://crowdin.com)
