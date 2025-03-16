@@ -13,201 +13,58 @@ using Dalamud.Memory;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Humanizer;
+using System.ComponentModel;
+using Lumina.Data.Parsing.Uld;
+using System.Collections;
 
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
+    private static readonly uint JournalDetailCanvasResNodeId = 43;
+    private static readonly uint JournalDetailDescriptionResNodeId = 5;
+    private static readonly uint JournalDetailObjectivesResNodeId = 9;
+    private static readonly uint JournalDetailSummaryResNodeId = 49;
+    private static readonly uint[] JournalDetailCanvasNodesToTranslate = { JournalDetailDescriptionResNodeId, JournalDetailObjectivesResNodeId, JournalDetailSummaryResNodeId };
+
+    private static unsafe List<TextNodePointer> GetComponentTextNodes(AtkComponentBase* component, uint[] parentFilter)
+    {
+#if DEBUG
+      PluginLog.Debug($"ChildCound: {component->UldManager.NodeListCount}");
+#endif
+      List<TextNodePointer> textNodesToTranslate = [];
+
+      for (var i = 0; i < component->UldManager.NodeListCount; i++)
+      {
+        var childNode = component->UldManager.NodeList[i];
+        var childComponent = childNode->GetComponent();
+
+        if (Array.IndexOf(parentFilter, childNode->ParentNode->NodeId) == -1 || !childNode->NodeFlags.HasFlag(NodeFlags.Visible))
+        {
+          continue;
+        }
+
+        if (childNode->Type == NodeType.Text)
+        {
+          var nodePointer = new TextNodePointer(childNode->GetAsAtkTextNode());
+          if (!nodePointer.IsEmpty())
+          {
+            textNodesToTranslate.Add(nodePointer);
+          }
+        }
+
+        if (childComponent != null && childComponent->UldManager.NodeListCount > 0)
+        {
+          var childTextNodes = GetComponentTextNodes(childComponent, [childNode->NodeId]);
+          textNodesToTranslate.AddRange(childTextNodes);
+        }
+      }
+
+      return textNodesToTranslate;
+    }
+
     // used to be sure we don't translate the same quest name twice
     private readonly ConcurrentDictionary<string, bool> translatedQuestNames = new();
-
-    private unsafe List<SummaryQuest> TranslateSummaries(
-      AtkComponentBase* journalBox,
-      QuestPlate foundQuestPlate,
-      string summaryText)
-    {
-      List<SummaryQuest> summaries = new();
-      if (summaryText == string.Empty)
-      {
-        return summaries;
-      }
-
-      for (var i = 0; i < journalBox->UldManager.NodeListCount; i++)
-      {
-        if (journalBox->UldManager.NodeList[i]->NodeId < 480700 || journalBox->UldManager.NodeList[i]->NodeId > 480750)
-        {
-          continue;
-        }
-
-        if (!journalBox->UldManager.NodeList[i]->IsVisible())
-        {
-          continue;
-        }
-
-        var summaryItemNode = journalBox->UldManager.NodeList[i]->GetAsAtkComponentNode();
-        var summaryNode = summaryItemNode->Component->UldManager.SearchNodeById(2);
-        if (summaryNode == null || summaryNode->Type != NodeType.Text || !summaryNode->IsVisible())
-        {
-          continue;
-        }
-
-        var summaryTextNode = summaryNode->GetAsAtkTextNode();
-        if (summaryTextNode->NodeText.IsEmpty)
-        {
-          continue;
-        }
-
-        var originalText = MemoryHelper.ReadSeStringAsString(out _, (nint)summaryTextNode->NodeText.StringPtr);
-        if (foundQuestPlate != null && foundQuestPlate.Summaries.TryGetValue(originalText, out var storedSummaryText))
-        {
-          summaries.Add(new(originalText, storedSummaryText, summaryTextNode, false));
-          continue;
-        }
-
-        var translatedText = this.Translate(originalText);
-        summaries.Add(new(originalText, translatedText, summaryTextNode, true));
-      }
-
-      return summaries;
-    }
-
-    private unsafe void TranslateQuestOnJournalBox(
-      AtkComponentBase* journalBox,
-      QuestPlate foundQuestPlate,
-      string questName,
-      string questMessage,
-      string objectiveText,
-      string summaryText,
-      AtkTextNode* questNameNode,
-      AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
-      AtkTextNode* summaryNode)
-    {
-      string translatedQuestName;
-      string translatedQuestMessage;
-      string translatedQuestObjective;
-      string translatedQuestSummary = string.Empty;
-      List<SummaryQuest> summaries;
-
-      if (foundQuestPlate != null)
-      {
-        translatedQuestName = foundQuestPlate.TranslatedQuestName;
-        translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
-        var shouldUpdateQuest = false;
-
-        if (foundQuestPlate.Objectives.TryGetValue(objectiveText, out var storedObjectiveText))
-        {
-          translatedQuestObjective = storedObjectiveText;
-        }
-        else
-        {
-          translatedQuestObjective = this.Translate(objectiveText);
-          foundQuestPlate.Objectives.Add(objectiveText, translatedQuestObjective);
-          shouldUpdateQuest = true;
-        }
-
-        if (summaryText != string.Empty)
-        {
-          if (foundQuestPlate.Summaries.TryGetValue(summaryText, out var storedSummaryText))
-          {
-            translatedQuestSummary = storedSummaryText;
-          }
-          else
-          {
-            translatedQuestSummary = this.Translate(summaryText);
-            foundQuestPlate.Summaries.Add(summaryText, translatedQuestSummary);
-            shouldUpdateQuest = true;
-          }
-        }
-
-        summaries = this.TranslateSummaries(journalBox, foundQuestPlate, summaryText);
-        foreach (var summary in summaries)
-        {
-          if (summary.IsTranslated)
-          {
-            foundQuestPlate.Summaries.Add(summary.OriginalText, summary.TranslatedText);
-            shouldUpdateQuest = true;
-          }
-        }
-
-        if (shouldUpdateQuest)
-        {
-          string result = this.UpdateQuestPlate(foundQuestPlate);
-#if DEBUG
-          PluginLog.Debug($"Using QuestPlate Replace - QuestPlate DB Update operation result: {result}");
-#endif
-        }
-#if DEBUG
-        PluginLog.Debug($"From database - Name: {foundQuestPlate.TranslatedQuestName}, Message: {foundQuestPlate.TranslatedQuestMessage}");
-#endif
-      }
-      else
-      {
-        translatedQuestName = this.Translate(questName);
-        translatedQuestMessage = this.Translate(questMessage);
-        translatedQuestObjective = this.Translate(objectiveText);
-
-        QuestPlate translatedQuestPlate = new(
-          questName,
-          questMessage,
-          ClientStateInterface.ClientLanguage.Humanize(),
-          translatedQuestName,
-          translatedQuestMessage,
-          string.Empty,
-          langDict[languageInt].Code,
-          this.configuration.ChosenTransEngine,
-          DateTime.Now,
-          DateTime.Now);
-
-        if (summaryText != string.Empty)
-        {
-          translatedQuestSummary = this.Translate(summaryText);
-          translatedQuestPlate.Summaries.Add(summaryText, translatedQuestSummary);
-        }
-
-        summaries = this.TranslateSummaries(journalBox, foundQuestPlate, summaryText);
-        foreach (var summary in summaries)
-        {
-          translatedQuestPlate.Summaries.Add(summary.OriginalText, summary.TranslatedText);
-        }
-
-        translatedQuestPlate.Objectives.Add(objectiveText, translatedQuestObjective);
-        string result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-        PluginLog.Debug($"Translated quest name: {translatedQuestName}");
-        PluginLog.Debug($"Translated quest message: {translatedQuestMessage}");
-        PluginLog.Debug($"Translated quest objective: {translatedQuestObjective}");
-        PluginLog.Debug($"Translated quest summary: {translatedQuestSummary}");
-        PluginLog.Debug($"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
-#endif
-      }
-
-      if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
-      {
-        translatedQuestName = this.RemoveDiacritics(translatedQuestName, this.SpecialCharsSupportedByGameFont);
-        translatedQuestMessage = this.RemoveDiacritics(translatedQuestMessage, this.SpecialCharsSupportedByGameFont);
-        translatedQuestObjective = this.RemoveDiacritics(translatedQuestObjective, this.SpecialCharsSupportedByGameFont);
-        translatedQuestSummary = this.RemoveDiacritics(translatedQuestSummary, this.SpecialCharsSupportedByGameFont);
-
-        foreach (var summary in summaries)
-        {
-          summary.TranslatedText = this.RemoveDiacritics(summary.TranslatedText, this.SpecialCharsSupportedByGameFont);
-        }
-      }
-
-      questNameNode->SetText(translatedQuestName);
-      descriptionNode->SetText(translatedQuestMessage);
-      objectiveNode->SetText(translatedQuestObjective);
-      if (summaryText != string.Empty && summaryNode != null)
-      {
-        summaryNode->SetText(translatedQuestSummary);
-      }
-
-      foreach (var summary in summaries)
-      {
-        summary.Node->SetText(summary.TranslatedText);
-      }
-    }
 
     private unsafe bool TranslateJournalBox(AtkUnitBase* journalDetail)
     {
@@ -219,52 +76,61 @@ namespace Echoglossian
           return false;
         }
 
-        if (!journalDetail->GetNodeById(43)->IsVisible())
+        var journalDetailNode = journalDetail->GetNodeById(JournalDetailCanvasResNodeId);
+        if (!journalDetailNode->IsVisible())
         {
           return false;
         }
 
-        var journalBox = journalDetail->GetNodeById(43)->GetComponent();
-        var description = journalBox->UldManager.SearchNodeById(8);
-        if (description == null || description->Type != NodeType.Text)
+        var journalDetailCanvasComponent = journalDetailNode->GetComponent();
+        var textNodesToTranslate = GetComponentTextNodes(journalDetailCanvasComponent, JournalDetailCanvasNodesToTranslate);
+        var questNameTextNodePointer = new TextNodePointer(questNameNode);
+        var languageCode = this.languagesDictionary[this.configuration.Lang].Code;
+        var questName = questNameTextNodePointer.GetNodeText();
+
+        textNodesToTranslate.Add(questNameTextNodePointer);
+
+        QuestPlate questPlate = this.FindQuestPlateByName(questName, this.configuration.ChosenTransEngine, languageCode);
+        var shouldUpdateQuestPlate = false;
+
+        if (questPlate == null)
         {
-          return false;
+          questPlate = this.FormatQuestPlate(questName, string.Empty);
+          this.InsertQuestPlate(questPlate);
         }
 
-        var objectiveResNode = journalBox->UldManager.SearchNodeById(12)->GetComponent()->UldManager.SearchNodeById(3);
-        if (objectiveResNode == null || objectiveResNode->Type != NodeType.Text)
+        for (var i = 0; i < textNodesToTranslate.Count; i++)
         {
-          return true;
-        }
-
-        var summaryText = string.Empty;
-        AtkTextNode* summaryNode = null;
-        var summaryBox = journalBox->UldManager.SearchNodeById(52);
-        if (summaryBox != null && summaryBox->IsVisible())
-        {
-          var summaryResNode = summaryBox->GetComponent()->UldManager.SearchNodeById(2);
-          if (summaryResNode != null && summaryResNode->Type == NodeType.Text)
-          {
-            summaryNode = summaryResNode->GetAsAtkTextNode();
-            summaryText = MemoryHelper.ReadSeStringAsString(out _, (nint)summaryNode->NodeText.StringPtr);
-          }
-        }
-
-        var questName = MemoryHelper.ReadSeStringAsString(out _, (nint)questNameNode->NodeText.StringPtr);
-        var descriptionNode = description->GetAsAtkTextNode();
-        var questMessage = MemoryHelper.ReadSeStringAsString(out _, (nint)descriptionNode->NodeText.StringPtr);
-        var objectiveNode = objectiveResNode->GetAsAtkTextNode();
-        var objectiveText = MemoryHelper.ReadSeStringAsString(out _, (nint)objectiveNode->NodeText.StringPtr);
-        QuestPlate questPlate = this.FormatQuestPlate(questName, questMessage);
-        QuestPlate foundQuestPlate = this.FindQuestPlate(questPlate);
-
+          var node = textNodesToTranslate[i];
 #if DEBUG
-        PluginLog.Debug($"Quest name: {questName}");
-        PluginLog.Debug($"Quest message: {questMessage}");
-        PluginLog.Debug($"Objective text: {objectiveText}");
-        PluginLog.Debug($"Summary text: {summaryText}");
+          PluginLog.Debug($"Node id: {node.Node->NodeId}; ParentId: {node.Node->ParentNode->NodeId}; Node Type: {node.Node->Type}; IsVisible: {node.Node->IsVisible()};");
 #endif
-        this.TranslateQuestOnJournalBox(journalBox, foundQuestPlate, questName, questMessage, objectiveText, summaryText, questNameNode, descriptionNode, objectiveNode, summaryNode);
+
+          var text = node.GetNodeText();
+          var translatedText = string.Empty;
+          if (questPlate.Texts.TryGetValue(text, out var storedTranslatedText))
+          {
+            translatedText = storedTranslatedText;
+          }
+          else
+          {
+            shouldUpdateQuestPlate = true;
+            translatedText = this.Translate(text);
+            if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
+            {
+              translatedText = this.RemoveDiacritics(translatedText, this.SpecialCharsSupportedByGameFont);
+            }
+
+            questPlate.Texts.Add(text, translatedText);
+          }
+
+          node.SetNodeText(translatedText);
+        }
+
+        if (shouldUpdateQuestPlate)
+        {
+          this.UpdateQuestPlate(questPlate);
+        }
       }
       catch (Exception e)
       {
@@ -397,8 +263,8 @@ namespace Echoglossian
       }
 
 #if DEBUG
-      PluginLog.Debug($"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
-      PluginLog.Debug($"Translate JournalQuests");
+      //PluginLog.Debug($"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
+      //PluginLog.Debug($"Translate JournalQuests");
 #endif
       try
       {
@@ -499,9 +365,34 @@ namespace Echoglossian
     private unsafe void UiJournalQuestHandler(AddonEvent type, AddonArgs args)
     {
 #if DEBUG
-      PluginLog.Debug($"UiJournalQuestHandler AddonEvent: {type} {args.AddonName}");
+      //PluginLog.Debug($"UiJournalQuestHandler AddonEvent: {type} {args.AddonName}");
 #endif
       this.TranslateJournalQuests();
+    }
+  }
+
+  public unsafe class TextNodePointer
+  {
+    public AtkTextNode* Node { get; set; }
+
+    public string GetNodeText()
+    {
+      return MemoryHelper.ReadSeStringAsString(out _, (nint)this.Node->NodeText.StringPtr);
+    }
+
+    public bool IsEmpty()
+    {
+      return this.GetNodeText() == string.Empty;
+    }
+
+    public void SetNodeText(string text)
+    {
+      this.Node->SetText(text);
+    }
+
+    public TextNodePointer(AtkTextNode* node)
+    {
+      this.Node = node;
     }
   }
 

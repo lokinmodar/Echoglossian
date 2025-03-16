@@ -362,7 +362,6 @@ namespace Echoglossian
         AddonLifecycle.UnregisterListener(AddonEvent.PostRequestedUpdate, "RecommendList", this.UiRecommendListHandlerAsync);
         AddonLifecycle.UnregisterListener(AddonEvent.PreRefresh, "AreaMap", this.UiAreaMapHandler);
         AddonLifecycle.UnregisterListener(AddonEvent.PreRefresh, "ScenarioTree", this.UiScenarioTreeHandler);
-        AddonLifecycle.UnregisterListener(AddonEvent.PreUpdate, "Journal", this.UiJournalQuestHandler);
         AddonLifecycle.UnregisterListener(AddonEvent.PostRequestedUpdate, "Journal", this.UiJournalDetailHandler);
         AddonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, "JournalDetail", this.UiJournalDetailHandler);
         AddonLifecycle.UnregisterListener(AddonEvent.PreSetup, "JournalAccept", this.UiJournalAcceptHandler);

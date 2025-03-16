@@ -335,22 +335,27 @@ namespace Echoglossian
 
     public QuestPlate FindQuestPlateByName(QuestPlate questPlate)
     {
+      return this.FindQuestPlateByName(questPlate.QuestName, questPlate.TranslationEngine, questPlate.TranslationLang);
+    }
+
+    public QuestPlate FindQuestPlateByName(string questName, int translationEngine, string languageCode)
+    {
       using EchoglossianDbContext context = new EchoglossianDbContext(this.configDir);
       try
       {
         IQueryable<QuestPlate> existingQuestPlate =
           context.QuestPlate.Where(t =>
-            t.QuestName == questPlate.QuestName &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.QuestName == questName &&
+            t.TranslationLang == languageCode);
 
         if (this.configuration.TranslateAlreadyTranslatedTexts)
         {
-          existingQuestPlate = existingQuestPlate.Where(t => t.TranslationEngine == questPlate.TranslationEngine);
+          existingQuestPlate = existingQuestPlate.Where(t => t.TranslationEngine == translationEngine);
         }
 
         QuestPlate localFoundQuestPlate = existingQuestPlate.FirstOrDefault();
 
-        if (localFoundQuestPlate == null || localFoundQuestPlate.QuestName != questPlate.QuestName)
+        if (localFoundQuestPlate == null || localFoundQuestPlate.QuestName != questName)
         {
           return null;
         }

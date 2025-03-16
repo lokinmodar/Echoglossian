@@ -61,6 +61,11 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
     [Timestamp]
     public byte[] RowVersion { get; set; }
 
+    [NotMapped]
+    public Dictionary<string, string> Texts { get; set; }
+
+    public string SerializedTexts { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="QuestPlate"/> class.
     /// </summary>
@@ -93,6 +98,7 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
       this.UpdatedDate = updatedDate;
       this.Objectives = new();
       this.Summaries = new();
+      this.Texts = new();
     }
 
     public void UpdateFieldsAsText()
@@ -108,6 +114,11 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
       {
         this.SummariesAsText = JsonSerializer.Serialize(this.Summaries);
       }
+
+      if (this.Texts != null && this.Texts.Count != 0)
+      {
+        this.SerializedTexts = JsonSerializer.Serialize(this.Texts);
+      }
     }
 
     public void UpdateFieldsFromText()
@@ -121,12 +132,17 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
       {
         this.Summaries = JsonSerializer.Deserialize<Dictionary<string, string>>(this.SummariesAsText);
       }
+
+      if (this.SerializedTexts != null && this.SerializedTexts != string.Empty)
+      {
+        this.Texts = JsonSerializer.Deserialize<Dictionary<string, string>>(this.SerializedTexts);
+      }
     }
 
     public override string ToString()
     {
       return
-        $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.Objectives}, Summaries: {this.Summaries}";
+        $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.Objectives}, Summaries: {this.Summaries}, Texts: {this.Texts}";
     }
   }
 }
