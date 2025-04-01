@@ -135,15 +135,16 @@ namespace Echoglossian
       Google = 0, // Google Translator (free engine)
       Deepl = 1, // DeepL Translator
       ChatGPT = 2, // Chat GPT
-      Bing = 3, // Microsoft Bing Translator (free engine)
-      Yandex = 4, // Yandex Translator
-      GTranslate = 5, // Uses Google, Bing and Yandex (free engines)
-      Amazon = 6, // Amazon Translate
-      Azure = 7, // Microsoft Azure Translate
-      GoogleCloud = 8, // Google Cloud Translate
-      DeepSeek = 9,
-      OpenLlama = 10,
-      LibreTranslate = 11,
+      Yandex = 3, // Yandex Translator
+      GTranslate = 4, // Uses Google, Bing and Yandex (free engines)
+      DeepSeek = 5,
+      OpenLlama = 6,
+      LibreTranslate = 7,
+      Bing = 8, // Microsoft Bing Translator (free engine)
+      Amazon = 9, // Amazon Translate
+      Azure = 10, // Microsoft Azure Translate
+      GoogleCloud = 11, // Google Cloud Translate
+
       All = Google | Deepl | Bing | Yandex | GTranslate | Amazon | Azure | ChatGPT | GoogleCloud | DeepSeek | OpenLlama | LibreTranslate,
     }
 

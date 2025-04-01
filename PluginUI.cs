@@ -23,6 +23,9 @@ public partial class Echoglossian
     "Google Translate",
     "DeepL",
     "ChatGPT",
+    "Yandex",
+    "GTranslate",
+    "DeepSeek",
   };
 
   private void EchoglossianConfigUi()

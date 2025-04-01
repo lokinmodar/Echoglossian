@@ -79,6 +79,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to API Key is empty or invalid. Gemini translation will not be available..
+        /// </summary>
+        public static string APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable {
+            get {
+                return ResourceManager.GetString("APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checking Plugin assets!.
         /// </summary>
         public static string AssetsCheckingPopupMsg {
@@ -437,6 +446,15 @@ namespace Echoglossian.Properties {
         public static string FontColorSelectLabel {
             get {
                 return ResourceManager.GetString("FontColorSelectLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Gemini translation unavailable. Please check your API key.].
+        /// </summary>
+        public static string GeminiTranslationUnavailablePleaseCheckYourAPIKey {
+            get {
+                return ResourceManager.GetString("GeminiTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
             }
         }
         

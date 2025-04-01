@@ -138,27 +138,44 @@ namespace Echoglossian
 
     public int GoogleTranslateVersion = 2;
 
-    public string PluginVersion { get; set; } = "2.0.0";
+    public string PluginVersion = "2.0.0";
 
-    public string YandexFreeApiKey { get; internal set; } = string.Empty;
+    public string YandexFreeApiKey = string.Empty;
 
-    public bool UsePaidYandexApi { get; internal set; } = false;
+    public bool UsePaidYandexApi = false;
 
-    public bool UseYandexV2ForFreeApi { get; internal set; } = false;
+    public bool UseYandexV2ForFreeApi = false;
 
-    public string YandexFolderId { get; internal set; } = string.Empty;
+    public string YandexFolderId = string.Empty;
 
-    public string YandexPaidApiKey { get; internal set; } = string.Empty;
+    public string YandexPaidApiKey = string.Empty;
 
-    public int YandexCharactersTranslated { get; internal set; } = 0;
+    public int YandexCharactersTranslated = 0;
+
+    public string DeepSeekBaseUrl = "https://api.deepseek.com/v1";
+
+    public string? DeepSeekTranslatorApiKey = string.Empty;
+
+    public string? DeepSeekModel = "deepseek-chat";
+
+    public float DeepSeekTemperature = 0.1f;
+
+    public string? AwsRegion = "us-east-1";
+
+    public string? AwsAccessKey = string.Empty;
+
+    public string? AwsSecretKey = string.Empty;
+
+    public string? GeminiTranslatorApiKey = string.Empty;
+
+    public string? GeminiModel = "gemini-pro";
+
+    public float GeminiTemperature = 0.1f;
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 
     public int Version { get; set; } = 5;
-    public string DeepSeekBaseUrl { get; internal set; }
-    public string? DeepSeekTranslatorApiKey { get; internal set; }
-    public string? DeepSeekModel { get; internal set; }
-    public float DeepSeekTemperature { get; internal set; }
+
   }
 }

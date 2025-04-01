@@ -457,4 +457,10 @@
   <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
     <value>API Key is empty or invalid. DeepSeek translation will not be available.</value>
   </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API Key is empty or invalid. Gemini translation will not be available.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Gemini translation unavailable. Please check your API key.]</value>
+  </data>
 </root>
