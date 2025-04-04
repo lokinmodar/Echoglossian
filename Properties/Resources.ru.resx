@@ -351,4 +351,16 @@
   <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
     <value>Ключ API пуст или недействителен. Перевод с помощью DeepSeek будет недоступен.</value>
   </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Ключ API пуст или недействителен. Перевод Gemini будет недоступен.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Перевод Gemini недоступен. Пожалуйста, проверьте свой ключ API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Ключ API пуст или недействителен. Перевод Microsoft будет недоступен.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Перевод Microsoft недоступен. Пожалуйста, проверьте свой ключ API.]</value>
+  </data>
 </root>

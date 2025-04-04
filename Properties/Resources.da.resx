@@ -317,4 +317,22 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Oversættelsesfejl:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[DeepSeek-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API-nøglen er tom eller ugyldig. DeepSeek-oversættelse vil ikke være tilgængelig.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API-nøglen er tom eller ugyldig. Tvillingerne kan ikke oversættes til flere Tvillinger.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Tvillingernes oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API-nøglen er tom eller ugyldig. Microsoft-oversættelse vil ikke være tilgængelig.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Microsoft-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</value>
+  </data>
 </root>

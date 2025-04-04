@@ -130,7 +130,7 @@ namespace Echoglossian
 
     public string ChatGptEngine = "davinci";
 
-    public string ChatGptPrompt = "";
+    public string AiTranslatorPrompt = string.Empty;
 
     public float FontScale = 1;
 
@@ -171,6 +171,10 @@ namespace Echoglossian
     public string? GeminiModel = "gemini-pro";
 
     public float GeminiTemperature = 0.1f;
+
+    internal string? MicrosoftTranslatorApiKey = string.Empty;
+    internal string? MicrosoftTranslatorRegion = string.Empty;
+    internal string? MicrosoftTranslatorEndpoint = "https://api.cognitive.microsofttranslator.com";
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;

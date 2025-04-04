@@ -88,6 +88,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to API Key is empty or invalid. Microsoft translation will not be available..
+        /// </summary>
+        public static string APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable {
+            get {
+                return ResourceManager.GetString("APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checking Plugin assets!.
         /// </summary>
         public static string AssetsCheckingPopupMsg {
@@ -537,6 +546,15 @@ namespace Echoglossian.Properties {
             get {
                 object obj = ResourceManager.GetObject("logo", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Microsoft translation unavailable. Please check your API key.].
+        /// </summary>
+        public static string MicrosoftTranslationUnavailablePleaseCheckYourAPIKey {
+            get {
+                return ResourceManager.GetString("MicrosoftTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
             }
         }
         

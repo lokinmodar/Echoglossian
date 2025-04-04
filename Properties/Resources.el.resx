@@ -351,4 +351,16 @@
   <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
     <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση DeepSeek δεν θα είναι διαθέσιμη.</value>
   </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση Gemini δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση Gemini δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση της Microsoft δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση της Microsoft δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
 </root>

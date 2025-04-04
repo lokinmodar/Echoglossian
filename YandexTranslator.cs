@@ -53,6 +53,7 @@ namespace Echoglossian
       return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
     }
 
+    /// <inheritdoc/>
     public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
     {
       this.pluginLog.Debug("Inside YandexTranslator TranslateAsync");

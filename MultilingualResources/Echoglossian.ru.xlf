@@ -459,11 +459,19 @@
         </trans-unit>
         <trans-unit id="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
           <source>API Key is empty or invalid. Gemini translation will not be available.</source>
-          <target state="new">API Key is empty or invalid. Gemini translation will not be available.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ключ API пуст или недействителен. Перевод Gemini будет недоступен.</target>
         </trans-unit>
         <trans-unit id="GeminiTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
           <source>[Gemini translation unavailable. Please check your API key.]</source>
-          <target state="new">[Gemini translation unavailable. Please check your API key.]</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Перевод Gemini недоступен. Пожалуйста, проверьте свой ключ API.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Microsoft translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ключ API пуст или недействителен. Перевод Microsoft будет недоступен.</target>
+        </trans-unit>
+        <trans-unit id="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Microsoft translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Перевод Microsoft недоступен. Пожалуйста, проверьте свой ключ API.]</target>
         </trans-unit>
       </group>
     </body>

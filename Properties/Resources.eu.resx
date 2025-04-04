@@ -351,4 +351,16 @@
   <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
     <value>PIIren gakoa hutsik edo ez da baliozkoa. DeepSeeken itzulpena ez da eskuragarri egongo.</value>
   </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>PIIren gakoa hutsik edo ez da baliozkoa. Geminiren itzulpena ez da eskuragarri egongo.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Geminisen itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>PIIren gakoa hutsik edo ez da baliozkoa. Microsoften itzulpena ez da eskuragarri egongo.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Microsoften itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+  </data>
 </root>

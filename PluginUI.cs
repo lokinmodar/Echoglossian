@@ -656,9 +656,14 @@ public partial class Echoglossian
               this.configuration.ChatGptTemperature = temperature;
             }
 
+            this.DrawAiTranslatorPromptTab();
+
             ImGui.SameLine();
+            ImGui.Separator();
+
             if (ImGui.Button("Apply"))
             {
+              saveConfig = true;
               this.translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
             }
 

@@ -45,6 +45,11 @@
             <param name="exclusiveCharsToAdd">List of all the needed chars to be added.</param>
             <param name="supportedEngines">Supported translation engines.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.DrawAiTranslatorPromptTab">
+            <summary>
+            Draws the AI Translator prompt tab in the UI.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.DrawText(System.String,System.Drawing.Font,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Size})">
             <summary>
             Creates an image containing the given text.
@@ -86,6 +91,16 @@
             Frees the previously allocated buffer.
             </summary>
         </member>
+        <member name="M:Echoglossian.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.ChatGPTTranslator"/> class.
+            </summary>
+            <param name="pluginLog"></param>
+            <param name="baseUrl"></param>
+            <param name="apiKey"></param>
+            <param name="model"></param>
+            <param name="temperature"></param>
+        </member>
         <member name="M:Echoglossian.ChatGPTTranslator.Translate(System.String,System.String,System.String)">
             <summary>
             Translates the specified text from the source language to the target language.
@@ -112,6 +127,13 @@
             <param name="sourceLanguage">The source language of the text.</param>
             <param name="targetLanguage">The target language for the translation.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> representing the result of the asynchronous operation.</returns>
+        </member>
+        <member name="M:Echoglossian.DeepSeekTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DeepSeekTranslator"/> class.
+            </summary>
+            <param name="pluginLog">The plugin log instance for logging purposes.</param>
+            <param name="config">The configuration settings for the DeepSeekTranslator.</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(System.String)">
             <summary>
@@ -363,6 +385,29 @@
             <param name="targetLanguage">The target language code.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
         </member>
+        <member name="T:Echoglossian.ITranslator">
+            <summary>
+            Interface for translating text between different languages.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ITranslator.Translate(System.String,System.String,System.String)">
+            <summary>
+            Translates the specified text from the source language to the target language.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The language of the text to translate.</param>
+            <param name="targetLanguage">The language to translate the text into.</param>
+            <returns>The translated text.</returns>
+        </member>
+        <member name="M:Echoglossian.ITranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+            Asynchronously translates the specified text from the source language to the target language.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The language of the text to translate.</param>
+            <param name="targetLanguage">The language to translate the text into.</param>
+            <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
+        </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>
               A strongly-typed resource class, for looking up localized strings, etc.
@@ -382,6 +427,21 @@
         <member name="P:Echoglossian.Properties.Resources.APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable">
             <summary>
               Looks up a localized string similar to API Key is empty or invalid. ChatGPT translation will not be available..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable">
+            <summary>
+              Looks up a localized string similar to API Key is empty or invalid. DeepSeek translation will not be available..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable">
+            <summary>
+              Looks up a localized string similar to API Key is empty or invalid. Gemini translation will not be available..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable">
+            <summary>
+              Looks up a localized string similar to API Key is empty or invalid. Microsoft translation will not be available..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.AssetsCheckingPopupMsg">
@@ -539,6 +599,11 @@
               Looks up a localized string similar to Click here to create a DeepL API Key.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.DeepSeekTranslationUnavailablePleaseCheckYourAPIKey">
+            <summary>
+              Looks up a localized string similar to [DeepSeek translation unavailable. Please check your API key.].
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.DisclaimerText1">
             <summary>
               Looks up a localized string similar to This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
@@ -577,6 +642,11 @@
         <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">
             <summary>
               Looks up a localized string similar to Overlay font color:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.GeminiTranslationUnavailablePleaseCheckYourAPIKey">
+            <summary>
+              Looks up a localized string similar to [Gemini translation unavailable. Please check your API key.].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.HelpMessage">
@@ -622,6 +692,11 @@
         <member name="P:Echoglossian.Properties.Resources.logo">
             <summary>
               Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.MicrosoftTranslationUnavailablePleaseCheckYourAPIKey">
+            <summary>
+              Looks up a localized string similar to [Microsoft translation unavailable. Please check your API key.].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.minfilia">
@@ -945,6 +1020,23 @@
             <param name="textPosition">Position of the text.</param>
             <param name="uiFont">Font used for the UI.</param>
             <param name="fontLoaded">Indicates whether the font is loaded.</param>
+        </member>
+        <member name="M:Echoglossian.TranslationService.#ctor(Echoglossian.Config,Dalamud.Plugin.Services.IPluginLog,Dalamud.Game.Text.Sanitizer.Sanitizer)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.TranslationService"/> class.
+            </summary>
+            <param name="config"></param>
+            <param name="pluginLog"></param>
+            <param name="sanitizer"></param>
+        </member>
+        <member name="M:Echoglossian.TranslationService.TranslateAsync(System.String,System.String,System.String)">
+             <summary>
+            
+             </summary>
+             <param name="text"></param>
+             <param name="sourceLanguage"></param>
+             <param name="targetLanguage"></param>
+             <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> representing the result of the asynchronous operation.</returns>
         </member>
     </members>
 </doc>

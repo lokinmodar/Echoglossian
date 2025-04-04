@@ -324,4 +324,16 @@
   <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
     <value>La clave de API está vacía o no es válida. La traducción de DeepSeek no estará disponible.</value>
   </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clave de API está vacía o no es válida. La traducción de Gemini no estará disponible.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[La traducción de Géminis no está disponible. Por favor, compruebe su clave API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clave de API está vacía o no es válida. La traducción de Microsoft no estará disponible.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Traducción de Microsoft no disponible. Por favor, compruebe su clave API.]</value>
+  </data>
 </root>

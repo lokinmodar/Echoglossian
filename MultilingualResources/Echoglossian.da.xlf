@@ -452,19 +452,27 @@
         </trans-unit>
         <trans-unit id="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
           <source>[DeepSeek translation unavailable. Please check your API key.]</source>
-          <target state="new">[DeepSeek translation unavailable. Please check your API key.]</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[DeepSeek-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</target>
         </trans-unit>
         <trans-unit id="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
           <source>API Key is empty or invalid. DeepSeek translation will not be available.</source>
-          <target state="new">API Key is empty or invalid. DeepSeek translation will not be available.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">API-nøglen er tom eller ugyldig. DeepSeek-oversættelse vil ikke være tilgængelig.</target>
         </trans-unit>
         <trans-unit id="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
           <source>API Key is empty or invalid. Gemini translation will not be available.</source>
-          <target state="new">API Key is empty or invalid. Gemini translation will not be available.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">API-nøglen er tom eller ugyldig. Tvillingerne kan ikke oversættes til flere Tvillinger.</target>
         </trans-unit>
         <trans-unit id="GeminiTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
           <source>[Gemini translation unavailable. Please check your API key.]</source>
-          <target state="new">[Gemini translation unavailable. Please check your API key.]</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Tvillingernes oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Microsoft translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">API-nøglen er tom eller ugyldig. Microsoft-oversættelse vil ikke være tilgængelig.</target>
+        </trans-unit>
+        <trans-unit id="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Microsoft translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Microsoft-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</target>
         </trans-unit>
       </group>
     </body>
