@@ -1,19 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 using Dalamud.Plugin.Services;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   public class YandexPublicTranslator : ITranslator
   {
     private readonly IPluginLog pluginLog;
-    private static readonly HttpClient httpClient = new();
+    private static readonly HttpClient HttpClient = new();
 
     public YandexPublicTranslator(IPluginLog pluginLog)
     {
@@ -29,7 +30,7 @@ namespace Echoglossian
     {
       try
       {
-        string fixedText = this.FixText(text);
+        string fixedText = Echoglossian.FixText(text);
         string langPair = $"{sourceLanguage}-{targetLanguage}";
         string url = "https://translate.yandex.net/api/v1/tr.json/translate";
 
@@ -43,13 +44,13 @@ namespace Echoglossian
           new KeyValuePair<string, string>("text", fixedText),
         });
 
-        httpClient.DefaultRequestHeaders.Clear();
-        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        HttpClient.DefaultRequestHeaders.Clear();
+        HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+        HttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         this.pluginLog.Debug($"Sending public Yandex request for: {fixedText}");
 
-        var response = await httpClient.PostAsync(url, content);
+        var response = await HttpClient.PostAsync(url, content);
         var json = await response.Content.ReadAsStringAsync();
 
         this.pluginLog.Debug($"Response: {json}");
@@ -59,7 +60,7 @@ namespace Echoglossian
 
         if (!string.IsNullOrEmpty(translated))
         {
-          string clean = this.FixText(translated);
+          string clean = Echoglossian.FixText(translated);
           this.pluginLog.Debug($"Translated: {clean}");
           return clean;
         }
@@ -78,19 +79,6 @@ namespace Echoglossian
     {
       long unixTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
       return $"{unixTime}-0-0";
-    }
-
-    private string FixText(string text)
-    {
-      string fixedText = text
-          .Replace("\u200B", "")
-          .Replace("\u005C\u0022", "\"")
-          .Replace("\u005C\u002F", "/")
-          .Replace("\\u003C", "<")
-          .Replace("&#39;", "'");
-
-      fixedText = Regex.Replace(fixedText, @"(?<=.)(─)(?=.)", " \u2015 ");
-      return fixedText;
     }
   }
 }

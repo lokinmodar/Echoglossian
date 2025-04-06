@@ -9,12 +9,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Dalamud.Plugin.Services;
 using Echoglossian.Properties;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   public class DeepSeekTranslator : ITranslator
   {
@@ -104,7 +104,7 @@ Please provide only the translated text in your response, without any explanatio
       {
         var requestData = new
         {
-          model = this.model,
+          this.model,
           messages = new[]
             {
                         new
@@ -113,7 +113,7 @@ Please provide only the translated text in your response, without any explanatio
                             content = prompt,
                         },
             },
-          temperature = this.temperature,
+          this.temperature,
         };
 
         var jsonContent = JsonConvert.SerializeObject(requestData);

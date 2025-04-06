@@ -8,8 +8,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Echoglossian.Properties;
-using NTextCat;
 using Humanizer;
+using NTextCat;
 
 namespace Echoglossian
 {

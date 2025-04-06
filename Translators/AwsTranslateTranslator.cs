@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
+
 using Amazon;
+using Amazon.Runtime;
 using Amazon.Translate;
 using Amazon.Translate.Model;
-using Amazon.Runtime;
 using Dalamud.Plugin.Services;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   public class AwsTranslateTranslator : ITranslator
   {
@@ -60,7 +61,7 @@ namespace Echoglossian
         return string.Empty;
       }
 
-      string fixedText = this.FixText(text);
+      string fixedText = Echoglossian.FixText(text);
       this.pluginLog.Debug($"AWS Translate input: {fixedText}");
 
       try
@@ -73,7 +74,7 @@ namespace Echoglossian
         };
 
         var response = await this.translateClient.TranslateTextAsync(request);
-        string cleaned = this.FixText(response.TranslatedText);
+        string cleaned = Echoglossian.FixText(response.TranslatedText);
         this.pluginLog.Debug($"AWS Translate result: {cleaned}");
         return cleaned;
       }
@@ -84,16 +85,5 @@ namespace Echoglossian
       }
     }
 
-    private string FixText(string text)
-    {
-      string fixedText = text
-          .Replace("\u200B", "")
-          .Replace("\u005C\u0022", "\"")
-          .Replace("\u005C\u002F", "/")
-          .Replace("\\u003C", "<")
-          .Replace("&#39;", "'");
-
-      return System.Text.RegularExpressions.Regex.Replace(fixedText, @"(?<=.)(─)(?=.)", " \u2015 ");
-    }
   }
 }

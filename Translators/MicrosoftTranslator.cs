@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
 using Dalamud.Plugin.Services;
 using Echoglossian.Properties;
-using System.Threading;
-using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   public class MicrosoftTranslator : ITranslator
   {
@@ -81,7 +82,7 @@ namespace Echoglossian
       }
 
       // Preprocess the incoming text.
-      string fixedInputText = FixText(text);
+      string fixedInputText = Echoglossian.FixText(text);
 
       // Build the request URL with query parameters.
       string requestUrl = $"{this.endpoint}/translate?api-version=3.0&from={sourceLanguage}&to={targetLanguage}";
@@ -89,14 +90,14 @@ namespace Echoglossian
       // Prepare the request body. Microsoft Translator expects an array of objects with a "Text" property.
       var requestBody = new[]
       {
-                new { Text = fixedInputText }
-            };
+                new { Text = fixedInputText },
+      };
 
       var jsonContent = JsonConvert.SerializeObject(requestBody);
       var httpContent = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
       // Attempt the translation with retries (exponential backoff).
-      for (int retry = 0; retry <= maxRetries; retry++)
+      for (int retry = 0; retry <= this.maxRetries; retry++)
       {
         try
         {
@@ -104,16 +105,16 @@ namespace Echoglossian
 
           if (!response.IsSuccessStatusCode)
           {
-            if (retry < maxRetries)
+            if (retry < this.maxRetries)
             {
-              var backoff = initialBackoff * Math.Pow(2, retry);
+              var backoff = this.initialBackoff * Math.Pow(2, retry);
               this.pluginLog.Warning($"Microsoft Translator API request failed with status code {response.StatusCode}. Retrying in {backoff.TotalSeconds} seconds...");
               await Task.Delay(backoff);
               continue; // Retry
             }
             else
             {
-              this.pluginLog.Error($"Microsoft Translator API request failed after {maxRetries} retries with status code {response.StatusCode}.");
+              this.pluginLog.Error($"Microsoft Translator API request failed after {this.maxRetries} retries with status code {response.StatusCode}.");
               return $"[{Resources.TranslationError} Microsoft Translator API request failed with status code {response.StatusCode}]";
             }
           }
@@ -140,7 +141,7 @@ namespace Echoglossian
               string translatedText = translations[0]?["text"]?.ToString().Trim();
               if (!string.IsNullOrEmpty(translatedText))
               {
-                translatedText = FixText(translatedText.Trim('"'));
+                translatedText = Echoglossian.FixText(translatedText.Trim('"'));
                 this.translationCache[cacheKey] = translatedText;
                 return translatedText;
               }
@@ -152,9 +153,9 @@ namespace Echoglossian
         }
         catch (HttpRequestException httpEx)
         {
-          if (retry < maxRetries)
+          if (retry < this.maxRetries)
           {
-            var backoff = initialBackoff * Math.Pow(2, retry);
+            var backoff = this.initialBackoff * Math.Pow(2, retry);
             this.pluginLog.Warning($"HTTP Error: {httpEx.Message}. Retrying in {backoff.TotalSeconds} seconds...");
             await Task.Delay(backoff);
             continue;
@@ -180,17 +181,5 @@ namespace Echoglossian
       return string.Empty;
     }
 
-    private string FixText(string text)
-    {
-      string fixedText = text
-          .Replace("\u200B", "")
-          .Replace("\u005C\u0022", "\"")
-          .Replace("\u005C\u002F", "/")
-          .Replace("\\u003C", "<")
-          .Replace("&#39;", "'");
-
-      // Example of inserting spaces around specific punctuation.
-      return Regex.Replace(fixedText, @"(?<=.)(─)(?=.)", " \u2015 ");
-    }
   }
 }

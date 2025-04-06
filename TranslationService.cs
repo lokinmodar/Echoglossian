@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using Dalamud.Game.Text.Sanitizer;
 using Dalamud.Plugin.Services;
+using Echoglossian.Translators;
 
 using static Echoglossian.Echoglossian;
 
@@ -41,19 +42,20 @@ namespace Echoglossian
         case TransEngines.ChatGPT:
           this.translator = new ChatGPTTranslator(pluginLog, config.ChatGPTBaseUrl, config.ChatGptApiKey, config.OpenAILlmModel, config.ChatGptTemperature);
           break;
-        case TransEngines.Bing:
-          break;
-        case TransEngines.Yandex:
+        case TransEngines.YandexCloud:
           this.translator = new YandexTranslator(pluginLog, config);
           break;
         case TransEngines.GTranslate:
           this.translator = new GTranslateTranslator(pluginLog, config);
           break;
         case TransEngines.Amazon:
+          this.translator = new AwsTranslateTranslator(pluginLog, config);
           break;
-        case TransEngines.Azure:
+        case TransEngines.Microsoft:
+          this.translator = new MicrosoftTranslator(pluginLog, config);
           break;
-        case TransEngines.GoogleCloud:
+        case TransEngines.Gemini:
+          this.translator = new GeminiTranslator(pluginLog, config);
           break;
         case TransEngines.DeepSeek:
           this.translator = new DeepSeekTranslator(pluginLog, config);
@@ -61,7 +63,12 @@ namespace Echoglossian
         case TransEngines.OpenLlama:
           break;
         case TransEngines.LibreTranslate:
+          this.translator = new LibreTranslateTranslator(pluginLog);
           break;
+        case TransEngines.YandexPublic:
+          this.translator = new YandexPublicTranslator(pluginLog);
+          break;
+
         case TransEngines.All:
           break;
         // ... add cases for other translation engines

@@ -14,7 +14,7 @@ using Dalamud.Plugin.Services;
 using DeepL;
 using Newtonsoft.Json;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   public partial class DeepLTranslator : ITranslator
   {
@@ -142,7 +142,7 @@ namespace Echoglossian
       }
 
       iCount++;
-      return timestamp - (timestamp % iCount) + iCount;
+      return timestamp - timestamp % iCount + iCount;
     }
 
     /// <summary>

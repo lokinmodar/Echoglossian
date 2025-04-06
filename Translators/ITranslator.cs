@@ -5,7 +5,7 @@
 
 using System.Threading.Tasks;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   /// <summary>
   /// Interface for translating text between different languages.

@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
 using Dalamud.Plugin.Services;
 using Echoglossian.Properties;
-using System.Threading;
-using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   public class GeminiTranslator : ITranslator
   {
@@ -70,7 +71,7 @@ namespace Echoglossian
         return cachedTranslation;
       }
 
-      string fixedInputText = FixText(text);
+      string fixedInputText = Echoglossian.FixText(text);
 
       string prompt = @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
@@ -89,7 +90,7 @@ Text to translate: ""{fixedInputText}""
 
 Please provide only the translated text in your response, without any explanations, additional comments, or quotation marks. Your goal is to create a localized version that captures the essence of the original Final Fantasy XIV dialogue while feeling authentic to {targetLanguage} speakers and seamlessly fitting into the game world.";
 
-      for (int retry = 0; retry <= maxRetries; retry++)
+      for (int retry = 0; retry <= this.maxRetries; retry++)
       {
         try
         {
@@ -104,14 +105,14 @@ Please provide only the translated text in your response, without any explanatio
                                     new
                                     {
                                         text = prompt
-                                    }
-                                }
-                            }
-                        },
+                                    },
+                                },
+                            },
+              },
             generationConfig = new
             {
-              temperature = this.temperature,
-            }
+              this.temperature,
+            },
 
           };
 
@@ -124,16 +125,16 @@ Please provide only the translated text in your response, without any explanatio
 
           if (!response.IsSuccessStatusCode)
           {
-            if (retry < maxRetries)
+            if (retry < this.maxRetries)
             {
-              var backoff = initialBackoff * Math.Pow(2, retry);
+              var backoff = this.initialBackoff * Math.Pow(2, retry);
               this.pluginLog.Warning($"Gemini API request failed with status code {response.StatusCode}. Retrying in {backoff.TotalSeconds} seconds...");
               await Task.Delay(backoff);
               continue; // Retry
             }
             else
             {
-              this.pluginLog.Error($"Gemini API request failed after {maxRetries} retries with status code {response.StatusCode}.");
+              this.pluginLog.Error($"Gemini API request failed after {this.maxRetries} retries with status code {response.StatusCode}.");
               return $"[{Resources.TranslationError} Gemini API request failed with status code {response.StatusCode}]";
             }
           }
@@ -145,7 +146,7 @@ Please provide only the translated text in your response, without any explanatio
 
           if (!string.IsNullOrEmpty(translatedText))
           {
-            translatedText = FixText(translatedText.Trim('"'));
+            translatedText = Echoglossian.FixText(translatedText.Trim('"'));
             this.translationCache[cacheKey] = translatedText;
             return translatedText;
           }
@@ -157,9 +158,9 @@ Please provide only the translated text in your response, without any explanatio
         }
         catch (HttpRequestException httpEx)
         {
-          if (retry < maxRetries)
+          if (retry < this.maxRetries)
           {
-            var backoff = initialBackoff * Math.Pow(2, retry);
+            var backoff = this.initialBackoff * Math.Pow(2, retry);
             this.pluginLog.Warning($"HTTP Error: {httpEx.Message}. Retrying in {backoff.TotalSeconds} seconds...");
             await Task.Delay(backoff);
             continue;
@@ -183,18 +184,6 @@ Please provide only the translated text in your response, without any explanatio
       }
 
       return string.Empty;
-    }
-
-    private string FixText(string text)
-    {
-      string fixedText = text
-          .Replace("\u200B", "")
-          .Replace("\u005C\u0022", "\"")
-          .Replace("\u005C\u002F", "/")
-          .Replace("\\u003C", "<")
-          .Replace("&#39;", "'");
-
-      return Regex.Replace(fixedText, @"(?<=.)(─)(?=.)", " \u2015 ");
     }
   }
 }

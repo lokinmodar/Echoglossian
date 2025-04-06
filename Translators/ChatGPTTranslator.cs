@@ -14,7 +14,7 @@ using Echoglossian.Properties;
 using OpenAI;
 using OpenAI.Chat;
 
-namespace Echoglossian
+namespace Echoglossian.Translators
 {
   public class ChatGPTTranslator : ITranslator
   {
