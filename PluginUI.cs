@@ -20,12 +20,18 @@ public partial class Echoglossian
 
   private List<string> enginesList = new()
   {
-    "Google Translate",
+    "Google",
     "DeepL",
     "ChatGPT",
-    "Yandex",
+    "YandexCloud",
     "GTranslate",
     "DeepSeek",
+    "OpenLlama",
+    "LibreTranslate",
+    "Microsoft",
+    "Amazon",
+    "Gemini",
+    "YandexPublic",
   };
 
   private void EchoglossianConfigUi()
@@ -562,17 +568,26 @@ public partial class Echoglossian
       {
         ImGui.Checkbox(Resources.TranslateTextsAgain, ref this.configuration.TranslateAlreadyTranslatedTexts);
 
-        var engines = this.enginesList.Where((_, i) => langDict[languageInt].SupportedEngines.Contains(i)).ToArray();
-        chosenTransEngine = Array.IndexOf(langDict[languageInt].SupportedEngines, this.configuration.ChosenTransEngine);
+        var engines = this.enginesList
+    .Where((_, i) => langDict[languageInt].IsEngineSupported(i))
+    .ToArray();
 
-        PluginLog.Debug("Engines", engines.ToString());
+        /*        var engines = this.enginesList.Where((_, i) => langDict[languageInt].SupportedEngines.Contains(i)).ToArray();
+                chosenTransEngine = Array.IndexOf(langDict[languageInt].SupportedEngines, this.configuration.ChosenTransEngine);*/
+
+        // PluginLog.Debug("Engines", engines);
 
 
         if (ImGui.Combo(Resources.TranslationEngineChoose, ref chosenTransEngine, engines, engines.Length))
         {
           // this.configuration.ChosenTransEngine = chosenTransEngine;
-          this.configuration.ChosenTransEngine = langDict[languageInt].SupportedEngines[chosenTransEngine];
-          PluginLog.Debug("Chosen translation engine: " + this.configuration.ChosenTransEngine);
+          this.configuration.ChosenTransEngine = /*langDict[languageInt].SupportedEngines[chosenTransEngine];*/
+
+          langDict[languageInt].SupportedEngines
+    .IndexOf(chosenTransEngine);
+
+          saveConfig = true;
+          PluginLog.Debug("Chosen translation engine: " + this.configuration.ChosenTransEngine + "engine name" + engines[this.configuration.ChosenTransEngine]);
 
           this.translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
         }

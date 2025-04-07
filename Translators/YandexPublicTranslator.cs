@@ -11,22 +11,43 @@ using Newtonsoft.Json.Linq;
 
 namespace Echoglossian.Translators
 {
+  /// <summary>
+  /// Translator class using Yandex public API.
+  /// </summary>
   public class YandexPublicTranslator : ITranslator
   {
     private readonly IPluginLog pluginLog;
     private static readonly HttpClient HttpClient = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="YandexPublicTranslator"/> class.
+    /// </summary>
+    /// <param name="pluginLog">The plugin log.</param>
     public YandexPublicTranslator(IPluginLog pluginLog)
     {
       this.pluginLog = pluginLog;
     }
 
+    /// <summary>
+    /// Translates the specified text synchronously.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <returns>The translated text.</returns>
     public string Translate(string text, string sourceLanguage, string targetLanguage)
     {
       return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
     }
 
-    public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+    /// <summary>
+    /// Translates the specified text asynchronously.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the translated text.</returns>
+    public async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
     {
       try
       {
@@ -36,13 +57,13 @@ namespace Echoglossian.Translators
 
         var content = new FormUrlEncodedContent(new[]
         {
-          new KeyValuePair<string, string>("id", this.GenerateRequestId()),
-          new KeyValuePair<string, string>("srv", "tr-text"),
-          new KeyValuePair<string, string>("lang", langPair),
-          new KeyValuePair<string, string>("reason", "paste"),
-          new KeyValuePair<string, string>("format", "text"),
-          new KeyValuePair<string, string>("text", fixedText),
-        });
+            new KeyValuePair<string, string>("id", this.GenerateRequestId()),
+            new KeyValuePair<string, string>("srv", "tr-text"),
+            new KeyValuePair<string, string>("lang", langPair),
+            new KeyValuePair<string, string>("reason", "paste"),
+            new KeyValuePair<string, string>("format", "text"),
+            new KeyValuePair<string, string>("text", fixedText),
+            });
 
         HttpClient.DefaultRequestHeaders.Clear();
         HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
@@ -75,6 +96,10 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Generates a request identifier.
+    /// </summary>
+    /// <returns>The generated request identifier.</returns>
     private string GenerateRequestId()
     {
       long unixTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

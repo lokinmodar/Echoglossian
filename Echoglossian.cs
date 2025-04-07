@@ -160,6 +160,9 @@ namespace Echoglossian
       sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
       langDict = this.languagesDictionary;
+
+      LanguageEngineSupport.ApplySupportTo(langDict);
+
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
       try

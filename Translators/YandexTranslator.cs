@@ -16,154 +16,176 @@ using Newtonsoft.Json.Linq;
 
 namespace Echoglossian.Translators
 {
-	public partial class YandexTranslator : ITranslator
-	{
-		private readonly IPluginLog pluginLog;
-		private readonly Config config;
-		private static readonly HttpClient HttpClient = new();
-		private readonly int characterQuotaLimit = 1000000;
+  /// <summary>
+  /// Yandex Translator class for translating text using Yandex API.
+  /// </summary>
+  public partial class YandexTranslator : ITranslator
+  {
+    private readonly IPluginLog pluginLog;
+    private readonly Config config;
+    private static readonly HttpClient HttpClient = new();
+    private readonly int characterQuotaLimit = 1000000;
 
-		public YandexTranslator(IPluginLog pluginLog, Config config)
-		{
-			this.pluginLog = pluginLog;
-			this.config = config;
-		}
+    /// <summary>
+    /// Initializes a new instance of the <see cref="YandexTranslator"/> class.
+    /// </summary>
+    /// <param name="pluginLog">The plugin log.</param>
+    /// <param name="config">The configuration settings.</param>
+    public YandexTranslator(IPluginLog pluginLog, Config config)
+    {
+      this.pluginLog = pluginLog;
+      this.config = config;
+    }
 
-		public string Translate(string text, string sourceLanguage, string targetLanguage)
-		{
-			this.pluginLog.Debug("Inside YandexTranslator Translate (sync)");
-			return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
-		}
+    /// <summary>
+    /// Translates the specified text from the source language to the target language.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language code.</param>
+    /// <param name="targetLanguage">The target language code.</param>
+    /// <returns>The translated text.</returns>
+    public string Translate(string text, string sourceLanguage, string targetLanguage)
+    {
+      this.pluginLog.Debug("Inside YandexTranslator Translate (sync)");
+      return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
+    }
 
-		/// <inheritdoc/>
-		public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
-		{
-			this.pluginLog.Debug("Inside YandexTranslator TranslateAsync");
 
-			if (string.IsNullOrWhiteSpace(text))
-			{
-				return string.Empty;
-			}
+    /// <summary>
+    /// Translates the specified text from the source language to the target language asynchronously.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language code.</param>
+    /// <param name="targetLanguage">The target language code.</param>
+    /// <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
+    public async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+    {
+      this.pluginLog.Debug("Inside YandexTranslator TranslateAsync");
 
-			string fixedText = Echoglossian.FixText(text);
-			this.pluginLog.Debug($"Fixed Input Text: {fixedText}");
+      if (string.IsNullOrWhiteSpace(text))
+      {
+        return string.Empty;
+      }
 
-			try
-			{
-				string result = this.config.UsePaidYandexApi || this.config.UseYandexV2ForFreeApi
-						? await this.TranslateWithV2Api(fixedText, sourceLanguage, targetLanguage)
-						: await this.TranslateWithLegacyFreeApi(fixedText, sourceLanguage, targetLanguage);
+      string fixedText = Echoglossian.FixText(text);
+      this.pluginLog.Debug($"Fixed Input Text: {fixedText}");
 
-				string cleanedResult = Echoglossian.FixText(result);
-				this.pluginLog.Debug($"Final Translated Text: {cleanedResult}");
+      try
+      {
+        string result = this.config.UsePaidYandexApi || this.config.UseYandexV2ForFreeApi
+                ? await this.TranslateWithV2Api(fixedText, sourceLanguage, targetLanguage)
+                : await this.TranslateWithLegacyFreeApi(fixedText, sourceLanguage, targetLanguage);
 
-				return cleanedResult;
-			}
-			catch (Exception ex)
-			{
-				this.pluginLog.Warning($"Yandex translation failed: {ex}");
-				return string.Empty;
-			}
-		}
+        string cleanedResult = Echoglossian.FixText(result);
+        this.pluginLog.Debug($"Final Translated Text: {cleanedResult}");
 
-		private async Task<string> TranslateWithLegacyFreeApi(string text, string sourceLang, string targetLang)
-		{
-			string from = Echoglossian.NormalizeLanguageCode(sourceLang);
-			string to = Echoglossian.NormalizeLanguageCode(targetLang);
-			string apiKey = this.config.YandexFreeApiKey;
+        return cleanedResult;
+      }
+      catch (Exception ex)
+      {
+        this.pluginLog.Warning($"Yandex translation failed: {ex}");
+        return string.Empty;
+      }
+    }
 
-			string requestUrl = $"https://translate.yandex.net/api/v1.5/tr.json/translate?key={apiKey}&text={Uri.EscapeDataString(text)}&lang={from}-{to}";
-			this.pluginLog.Debug($"Free API Request URL: {requestUrl}");
+    private async Task<string> TranslateWithLegacyFreeApi(string text, string sourceLang, string targetLang)
+    {
+      string from = Echoglossian.NormalizeLanguageCode(sourceLang);
+      string to = Echoglossian.NormalizeLanguageCode(targetLang);
+      string apiKey = this.config.YandexFreeApiKey;
 
-			var response = await HttpClient.GetAsync(requestUrl);
-			var responseContent = await response.Content.ReadAsStringAsync();
-			this.pluginLog.Debug($"Response: {responseContent}");
+      string requestUrl = $"https://translate.yandex.net/api/v1.5/tr.json/translate?key={apiKey}&text={Uri.EscapeDataString(text)}&lang={from}-{to}";
+      this.pluginLog.Debug($"Free API Request URL: {requestUrl}");
 
-			var parsed = JObject.Parse(responseContent);
-			return parsed["text"]?[0]?.ToString() ?? string.Empty;
-		}
+      var response = await HttpClient.GetAsync(requestUrl);
+      var responseContent = await response.Content.ReadAsStringAsync();
+      this.pluginLog.Debug($"Response: {responseContent}");
 
-		private async Task<string> TranslateWithV2Api(string text, string sourceLang, string targetLang)
-		{
-			string from = Echoglossian.NormalizeLanguageCode(sourceLang);
-			string to = Echoglossian.NormalizeLanguageCode(targetLang);
-			string folderId = this.config.YandexFolderId;
-			string apiKey = this.config.UsePaidYandexApi ? this.config.YandexPaidApiKey : this.config.YandexFreeApiKey;
+      var parsed = JObject.Parse(responseContent);
+      return parsed["text"]?[0]?.ToString() ?? string.Empty;
+    }
 
-			var requestBody = new
-			{
-				folderId,
-				texts = new[] { text },
-				sourceLanguageCode = from,
-				targetLanguageCode = to,
-			};
+    private async Task<string> TranslateWithV2Api(string text, string sourceLang, string targetLang)
+    {
+      string from = Echoglossian.NormalizeLanguageCode(sourceLang);
+      string to = Echoglossian.NormalizeLanguageCode(targetLang);
+      string folderId = this.config.YandexFolderId;
+      string apiKey = this.config.UsePaidYandexApi ? this.config.YandexPaidApiKey : this.config.YandexFreeApiKey;
 
-			var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
+      var requestBody = new
+      {
+        folderId,
+        texts = new[] { text },
+        sourceLanguageCode = from,
+        targetLanguageCode = to,
+      };
 
-			HttpClient.DefaultRequestHeaders.Clear();
-			HttpClient.DefaultRequestHeaders.Add("Authorization", $"Api-Key {apiKey}");
+      var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
 
-			this.pluginLog.Debug($"V2 API request body: {JsonConvert.SerializeObject(requestBody)}");
+      HttpClient.DefaultRequestHeaders.Clear();
+      HttpClient.DefaultRequestHeaders.Add("Authorization", $"Api-Key {apiKey}");
 
-			var response = await HttpClient.PostAsync("https://translate.api.cloud.yandex.net/translate/v2/translate", content);
-			var responseBody = await response.Content.ReadAsStringAsync();
-			this.pluginLog.Debug($"V2 API response: {responseBody}");
+      this.pluginLog.Debug($"V2 API request body: {JsonConvert.SerializeObject(requestBody)}");
 
-			if (!response.IsSuccessStatusCode)
-			{
-				this.HandleApiError(responseBody);
-				return string.Empty;
-			}
+      var response = await HttpClient.PostAsync("https://translate.api.cloud.yandex.net/translate/v2/translate", content);
+      var responseBody = await response.Content.ReadAsStringAsync();
+      this.pluginLog.Debug($"V2 API response: {responseBody}");
 
-			var parsed = JObject.Parse(responseBody);
-			var translation = parsed["translations"]?[0];
-			string translatedText = translation?["text"]?.ToString() ?? string.Empty;
-			string? detectedLang = translation?["detectedLanguageCode"]?.ToString();
+      if (!response.IsSuccessStatusCode)
+      {
+        this.HandleApiError(responseBody);
+        return string.Empty;
+      }
 
-			if (!string.IsNullOrEmpty(detectedLang))
-			{
-				this.pluginLog.Debug($"Detected Language: {detectedLang}");
-			}
+      var parsed = JObject.Parse(responseBody);
+      var translation = parsed["translations"]?[0];
+      string translatedText = translation?["text"]?.ToString() ?? string.Empty;
+      string? detectedLang = translation?["detectedLanguageCode"]?.ToString();
 
-			this.TrackApiUsage(text.Length);
-			return translatedText;
-		}
+      if (!string.IsNullOrEmpty(detectedLang))
+      {
+        this.pluginLog.Debug($"Detected Language: {detectedLang}");
+      }
 
-		private void HandleApiError(string responseBody)
-		{
-			try
-			{
-				var error = JObject.Parse(responseBody);
-				string message = error["message"]?.ToString() ?? "Unknown error";
-				string code = error["code"]?.ToString() ?? "N/A";
-				this.pluginLog.Warning($"Yandex API Error [{code}]: {message}");
-			}
-			catch
-			{
-				this.pluginLog.Warning($"Unexpected error response: {responseBody}");
-			}
-		}
+      this.TrackApiUsage(text.Length);
+      return translatedText;
+    }
 
-		private void TrackApiUsage(int charCount)
-		{
-			try
-			{
-				this.config.YandexCharactersTranslated += charCount;
+    private void HandleApiError(string responseBody)
+    {
+      try
+      {
+        var error = JObject.Parse(responseBody);
+        string message = error["message"]?.ToString() ?? "Unknown error";
+        string code = error["code"]?.ToString() ?? "N/A";
+        this.pluginLog.Warning($"Yandex API Error [{code}]: {message}");
+      }
+      catch
+      {
+        this.pluginLog.Warning($"Unexpected error response: {responseBody}");
+      }
+    }
 
-				Echoglossian.PluginInterface.SavePluginConfig(this.config);
+    private void TrackApiUsage(int charCount)
+    {
+      try
+      {
+        this.config.YandexCharactersTranslated += charCount;
 
-				this.pluginLog.Debug($"Characters translated today (stored in config): {this.config.YandexCharactersTranslated}");
+        Echoglossian.PluginInterface.SavePluginConfig(this.config);
 
-				if (this.config.YandexCharactersTranslated > this.characterQuotaLimit)
-				{
-					this.pluginLog.Warning("Yandex API character quota likely exceeded.");
-				}
-			}
-			catch (Exception ex)
-			{
-				this.pluginLog.Error($"Failed to track API usage: {ex}");
-			}
-		}
+        this.pluginLog.Debug($"Characters translated today (stored in config): {this.config.YandexCharactersTranslated}");
 
-	}
+        if (this.config.YandexCharactersTranslated > this.characterQuotaLimit)
+        {
+          this.pluginLog.Warning("Yandex API character quota likely exceeded.");
+        }
+      }
+      catch (Exception ex)
+      {
+        this.pluginLog.Error($"Failed to track API usage: {ex}");
+      }
+    }
+
+  }
 }
