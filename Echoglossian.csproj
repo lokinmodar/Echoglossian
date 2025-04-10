@@ -259,6 +259,10 @@
     <PackageReference Include="NTextCat" Version="0.3.65" />
     <PackageReference Include="OpenAI" Version="2.1.0" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
+    <PackageReference Include="Selenium.Support" Version="4.31.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.31.0" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="135.0.7049.4200" />
+    <PackageReference Include="SeleniumExtras.WaitHelpers" Version="1.0.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->

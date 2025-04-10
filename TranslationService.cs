@@ -23,9 +23,9 @@ namespace Echoglossian
     /// <summary>
     /// Initializes a new instance of the <see cref="TranslationService"/> class.
     /// </summary>
-    /// <param name="config"></param>
-    /// <param name="pluginLog"></param>
-    /// <param name="sanitizer"></param>
+    /// <param name="config">The configuration settings for the translation service.</param>
+    /// <param name="pluginLog">The plugin logger for logging purposes.</param>
+    /// <param name="sanitizer">The sanitizer used to clean input text before translation.</param>
     public TranslationService(Config config, IPluginLog pluginLog, Sanitizer sanitizer)
     {
       this.sanitizer = sanitizer;
@@ -68,10 +68,11 @@ namespace Echoglossian
         case TransEngines.YandexPublic:
           this.translator = new YandexPublicTranslator(pluginLog);
           break;
-
+        case TransEngines.YandexSelenium:
+          this.translator = new YandexSeleniumTranslator(pluginLog);
+          break;
         case TransEngines.All:
           break;
-        // ... add cases for other translation engines
         default:
           throw new NotSupportedException($"Translation engine {chosenEngine} is not supported.");
       }

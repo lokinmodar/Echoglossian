@@ -965,9 +965,9 @@
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.TranslationService"/> class.
             </summary>
-            <param name="config"></param>
-            <param name="pluginLog"></param>
-            <param name="sanitizer"></param>
+            <param name="config">The configuration settings for the translation service.</param>
+            <param name="pluginLog">The plugin logger for logging purposes.</param>
+            <param name="sanitizer">The sanitizer used to clean input text before translation.</param>
         </member>
         <member name="M:Echoglossian.TranslationService.TranslateAsync(System.String,System.String,System.String)">
              <summary>
@@ -1103,8 +1103,70 @@
             <param name="targetLanguage">The language to translate the text into.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
         </member>
+        <member name="T:Echoglossian.Translators.YandexPublicTranslator">
+            <summary>
+            Translator class using Yandex public API.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.YandexPublicTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.Translators.YandexPublicTranslator"/> class.
+            </summary>
+            <param name="pluginLog">The plugin log.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.YandexPublicTranslator.Translate(System.String,System.String,System.String)">
+            <summary>
+            Translates the specified text synchronously.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <returns>The translated text.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.YandexPublicTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+            Translates the specified text asynchronously.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the translated text.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.YandexPublicTranslator.GenerateRequestId">
+            <summary>
+            Generates a request identifier.
+            </summary>
+            <returns>The generated request identifier.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.YandexTranslator">
+            <summary>
+            Yandex Translator class for translating text using Yandex API.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.YandexTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.Translators.YandexTranslator"/> class.
+            </summary>
+            <param name="pluginLog">The plugin log.</param>
+            <param name="config">The configuration settings.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.YandexTranslator.Translate(System.String,System.String,System.String)">
+            <summary>
+            Translates the specified text from the source language to the target language.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language code.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <returns>The translated text.</returns>
+        </member>
         <member name="M:Echoglossian.Translators.YandexTranslator.TranslateAsync(System.String,System.String,System.String)">
-            <inheritdoc/>
+            <summary>
+            Translates the specified text from the source language to the target language asynchronously.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language code.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
         </member>
     </members>
 </doc>
