@@ -4,11 +4,11 @@
     "net9.0-windows7.0": {
       "AWSSDK.Translate": {
         "type": "Direct",
-        "requested": "[3.7.400.120, )",
-        "resolved": "3.7.400.120",
-        "contentHash": "r+8pDiDdplI5Z98QSQVKuz35GzkF5Nuc5QhAjQfFLVrZ3BP/exFzBHqpSXZuIs0+qaWuf9Klad9TCCRghGc52Q==",
+        "requested": "[3.7.400.131, )",
+        "resolved": "3.7.400.131",
+        "contentHash": "Hx/WRoJlZCfkBpCJIN8+vKskJS92s/PhVTQBI7CgX67zsRGwNTu9vJuFtDfruXdi8+jSbjjA7HBYHB7iBhMDIg==",
         "dependencies": {
-          "AWSSDK.Core": "[3.7.402.26, 4.0.0)"
+          "AWSSDK.Core": "[3.7.402.37, 4.0.0)"
         }
       },
       "Dalamud.NET.Sdk": {
@@ -116,36 +116,6 @@
         "resolved": "112.1.0",
         "contentHash": "bOUGNZqhhv/QeCXHTKEUil846yBjwWXpzPKjO67kFvaAOoF361z7jLY5BMnuZ6WD2WQRA750sNMcK7MSPCQ5Mg=="
       },
-      "Selenium.Support": {
-        "type": "Direct",
-        "requested": "[4.31.0, )",
-        "resolved": "4.31.0",
-        "contentHash": "dAGFDnl5rGc7eG12PJfrEU25+LMWUkBcCzp9VsJh+L4xfa6aQ7/7KSnCWDJUxiK9CjWgWJGkNYWVR7OawGvb1Q==",
-        "dependencies": {
-          "Selenium.WebDriver": "4.31.0"
-        }
-      },
-      "Selenium.WebDriver": {
-        "type": "Direct",
-        "requested": "[4.31.0, )",
-        "resolved": "4.31.0",
-        "contentHash": "RT5Pg6UVyxe/+S/H808VAbfXX4kHQdvo/U28oViwUcCpC4WL7zHq2GgxY/b9zNLTcwJ8zfqu+WmHPifkTx+BCQ=="
-      },
-      "Selenium.WebDriver.ChromeDriver": {
-        "type": "Direct",
-        "requested": "[135.0.7049.4200, )",
-        "resolved": "135.0.7049.4200",
-        "contentHash": "jesl02IzPvgOTrlIZ9HWtKwdfbt5lkrtXo/9upGf1iDqptzttztgeFYN6a0/PHLZgVx8uK8aXaU+xYy0UKbz4w=="
-      },
-      "SeleniumExtras.WaitHelpers": {
-        "type": "Direct",
-        "requested": "[1.0.2, )",
-        "resolved": "1.0.2",
-        "contentHash": "de7m30nkZZLkfCncYBdluUpM27AR/Vkk4kiA4HRQbV+fZI3ps4qGIeJCuj8TAMXdMfQik5Rno8xPnFBIod+ebg==",
-        "dependencies": {
-          "Selenium.WebDriver": "4.0.0-beta2"
-        }
-      },
       "StyleCop.Analyzers": {
         "type": "Direct",
         "requested": "[1.2.0-beta.435, )",
@@ -157,11 +127,11 @@
       },
       "System.Drawing.Common": {
         "type": "Direct",
-        "requested": "[9.0.3, )",
-        "resolved": "9.0.3",
-        "contentHash": "yDxzWfZGvOtk8zk5apWXP/tmro1Nghn7/4bWS5np5CtwIfiVCC74qCc1qvIsnywvXKzVqIbKXRk09wts+xGfeg==",
+        "requested": "[9.0.4, )",
+        "resolved": "9.0.4",
+        "contentHash": "SbtusMUT1bCxZ14904ZPo2GZyelze0rwUni9wXrp8KX9Zlsda8idqpxra1RBvOA85WM0wW+fCI4GLrlCTYiE6A==",
         "dependencies": {
-          "Microsoft.Win32.SystemEvents": "9.0.3"
+          "Microsoft.Win32.SystemEvents": "9.0.4"
         }
       },
       "System.Drawing.Primitives": {
@@ -186,8 +156,8 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "3.7.402.26",
-        "contentHash": "pChqa8AqDplFfVvJoI1JbxkYuBRmp+UAjNRBnNsh18jEoW/mbazIucJjaKpAKFdSWgQMfinpiU2tWWvlnbq6iQ=="
+        "resolved": "3.7.402.37",
+        "contentHash": "SCAW51UFo0vvYxDN+zq7w7voWcX7O2cb31eQDbUniCDwyFvTcwSNRH+tKoNwbv4wRlH7dYFE5q2XvwsUtt5QuA=="
       },
       "Humanizer.Core": {
         "type": "Transitive",
@@ -443,8 +413,8 @@
       },
       "Microsoft.Win32.SystemEvents": {
         "type": "Transitive",
-        "resolved": "9.0.3",
-        "contentHash": "Z0hIB2oeNqPOO0MYD0wkLpEe0LangoF3BSdMLLF5wft/rndYoXhLQvWni1OxymlWj+1adswAps2ZlrPmD9ZhBg=="
+        "resolved": "9.0.4",
+        "contentHash": "kHgtAkXhNEP8oGuAVe3Q5admxsdMlSdWE2rXcA9FfeGDZJQawPccmZgnOswgW3ugUPSJt7VH+TMQPz65mnhGSQ=="
       },
       "Mono.TextTemplating": {
         "type": "Transitive",
@@ -641,8 +611,8 @@
     "net9.0-windows7.0/win-x64": {
       "Microsoft.Win32.SystemEvents": {
         "type": "Transitive",
-        "resolved": "9.0.3",
-        "contentHash": "Z0hIB2oeNqPOO0MYD0wkLpEe0LangoF3BSdMLLF5wft/rndYoXhLQvWni1OxymlWj+1adswAps2ZlrPmD9ZhBg=="
+        "resolved": "9.0.4",
+        "contentHash": "kHgtAkXhNEP8oGuAVe3Q5admxsdMlSdWE2rXcA9FfeGDZJQawPccmZgnOswgW3ugUPSJt7VH+TMQPz65mnhGSQ=="
       },
       "runtime.any.System.Runtime": {
         "type": "Transitive",

@@ -32,7 +32,6 @@ public partial class Echoglossian
     "Amazon",
     "Gemini",
     "YandexPublic",
-    "YandexSelenium",
   };
 
   private void EchoglossianConfigUi()

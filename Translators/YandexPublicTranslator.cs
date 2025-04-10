@@ -1,109 +1,178 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 using Dalamud.Plugin.Services;
-using Newtonsoft.Json.Linq;
 
 namespace Echoglossian.Translators
 {
-  /// <summary>
-  /// Translator class using Yandex public API.
-  /// </summary>
-  public class YandexPublicTranslator : ITranslator
+  public partial class YandexPublicTranslator : ITranslator, IDisposable
   {
-    private readonly IPluginLog pluginLog;
-    private static readonly HttpClient HttpClient = new();
+    private const string ApiUrl = "https://translate.yandex.net/api/v1/tr.json";
+    private const string DefaultUserAgent = "ru.yandex.translate/3.20.2024";
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="YandexPublicTranslator"/> class.
-    /// </summary>
-    /// <param name="pluginLog">The plugin log.</param>
-    public YandexPublicTranslator(IPluginLog pluginLog)
+    private readonly IPluginLog pluginLog;
+    private readonly Config config;
+    private readonly HttpClient httpClient;
+    private CachedObject<Guid> cachedUcid;
+    private bool disposed;
+
+    public YandexPublicTranslator(IPluginLog pluginLog, Config config)
     {
       this.pluginLog = pluginLog;
+      this.config = config;
+
+      this.httpClient = new HttpClient();
+
+      if (this.httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
+      {
+        this.httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+      }
+
+      this.cachedUcid = new CachedObject<Guid>(Guid.NewGuid(), TimeSpan.FromSeconds(360));
     }
 
-    /// <summary>
-    /// Translates the specified text synchronously.
-    /// </summary>
-    /// <param name="text">The text to translate.</param>
-    /// <param name="sourceLanguage">The source language.</param>
-    /// <param name="targetLanguage">The target language.</param>
-    /// <returns>The translated text.</returns>
     public string Translate(string text, string sourceLanguage, string targetLanguage)
     {
-      return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
+      return this.TranslateAsync(text, sourceLanguage, targetLanguage).GetAwaiter().GetResult();
     }
 
-    /// <summary>
-    /// Translates the specified text asynchronously.
-    /// </summary>
-    /// <param name="text">The text to translate.</param>
-    /// <param name="sourceLanguage">The source language.</param>
-    /// <param name="targetLanguage">The target language.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the translated text.</returns>
-    public async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+    public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
     {
       try
       {
-        string fixedText = Echoglossian.FixText(text);
-        string langPair = $"{sourceLanguage}-{targetLanguage}";
-        string url = "https://translate.yandex.net/api/v1/tr.json/translate";
-
-        var content = new FormUrlEncodedContent(new[]
+        if (string.IsNullOrWhiteSpace(text))
         {
-            new KeyValuePair<string, string>("id", this.GenerateRequestId()),
-            new KeyValuePair<string, string>("srv", "tr-text"),
-            new KeyValuePair<string, string>("lang", langPair),
-            new KeyValuePair<string, string>("reason", "paste"),
-            new KeyValuePair<string, string>("format", "text"),
-            new KeyValuePair<string, string>("text", fixedText),
-            });
-
-        HttpClient.DefaultRequestHeaders.Clear();
-        HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-        HttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-        this.pluginLog.Debug($"Sending public Yandex request for: {fixedText}");
-
-        var response = await HttpClient.PostAsync(url, content);
-        var json = await response.Content.ReadAsStringAsync();
-
-        this.pluginLog.Debug($"Response: {json}");
-
-        var parsed = JObject.Parse(json);
-        var translated = parsed["text"]?[0]?.ToString();
-
-        if (!string.IsNullOrEmpty(translated))
-        {
-          string clean = Echoglossian.FixText(translated);
-          this.pluginLog.Debug($"Translated: {clean}");
-          return clean;
+          return string.Empty;
         }
 
-        this.pluginLog.Warning("YandexPublicTranslator: Empty translation result");
-        return string.Empty;
+        return await this.TranslateWithFreeApi(text, sourceLanguage, targetLanguage);
       }
       catch (Exception ex)
       {
-        this.pluginLog.Warning($"YandexPublicTranslator failed: {ex.Message}");
+        this.pluginLog.Error($"Yandex translation failed: {ex}");
         return string.Empty;
       }
     }
 
-    /// <summary>
-    /// Generates a request identifier.
-    /// </summary>
-    /// <returns>The generated request identifier.</returns>
-    private string GenerateRequestId()
+    private async Task<string> TranslateWithFreeApi(string text, string fromLang, string toLang)
     {
-      long unixTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-      return $"{unixTime}-0-0";
+      string langPair = string.IsNullOrEmpty(fromLang)
+          ? YandexHotPatch(toLang)
+          : $"{YandexHotPatch(fromLang)}-{YandexHotPatch(toLang)}";
+
+      string query = $"?ucid={this.GetOrUpdateUcid():N}&srv=android&format=text";
+
+      var data = new Dictionary<string, string>
+            {
+                { "text", text },
+                { "lang", langPair },
+            };
+
+      this.pluginLog.Debug($"Yandex Free API data: {string.Join(", ", data.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+
+      string requestURL = $"{ApiUrl}/translate{query}";
+
+      this.pluginLog.Debug($"Yandex Free API Request URL: {requestURL}");
+
+      using var request = new HttpRequestMessage(HttpMethod.Post, requestURL)
+      {
+        Content = new FormUrlEncodedContent(data),
+      };
+
+      request.Headers.UserAgent.ParseAdd(DefaultUserAgent);
+
+      var response = await this.httpClient.SendAsync(request);
+      if (!response.IsSuccessStatusCode)
+      {
+        this.pluginLog.Warning($"Yandex API returned HTTP {response.StatusCode}");
+        return string.Empty;
+      }
+
+      var result = await response.Content.ReadFromJsonAsync<YandexFreeResult>();
+
+      if (result is null || !result.IsSuccessful)
+      {
+        this.pluginLog.Warning($"Yandex API returned error code {result?.Code}, lang: {result?.Lang}");
+        return string.Empty;
+      }
+
+      return result.Text[0];
+    }
+
+    private static string YandexHotPatch(string lang) => lang switch
+    {
+      "English" => "en",
+      "French" => "fr",
+      "Français" => "fr",
+      "German" => "de",
+      "Deutsch" => "de",
+      "Japanese" => "ja",
+      "日本語" => "ja",
+      "pt-PT" => "pt",
+      "pt" => "pt-BR",
+      "zh-CN" => "zh",
+      _ => lang,
+    };
+
+    private static string ReversePatch(string lang) => lang switch
+    {
+      "pt" => "pt-PT",
+      _ => lang,
+    };
+
+    private Guid GetOrUpdateUcid()
+    {
+      if (this.cachedUcid.IsExpired())
+      {
+        this.cachedUcid = new CachedObject<Guid>(Guid.NewGuid(), TimeSpan.FromSeconds(360));
+      }
+
+      return this.cachedUcid.Value;
+    }
+
+    private class YandexFreeResult
+    {
+      public int Code { get; set; }
+
+      public string Lang { get; set; } = string.Empty;
+
+      public string[] Text { get; set; } = Array.Empty<string>();
+
+      public bool IsSuccessful => this.Code == 200;
+    }
+
+    public class CachedObject<T>
+    {
+      public T Value { get; private set; }
+
+      private readonly TimeSpan lifetime;
+      private DateTime expiresAt;
+
+      public CachedObject(T value, TimeSpan lifetime)
+      {
+        this.lifetime = lifetime;
+        this.Set(value);
+      }
+
+      public bool IsExpired() => DateTime.UtcNow >= this.expiresAt;
+
+      public void Set(T value)
+      {
+        this.Value = value;
+        this.expiresAt = DateTime.UtcNow.Add(this.lifetime);
+      }
+    }
+
+    public void Dispose()
+    {
+      if (!this.disposed)
+      {
+        this.httpClient.Dispose();
+        this.disposed = true;
+      }
     }
   }
 }

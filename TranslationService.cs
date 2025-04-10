@@ -66,10 +66,7 @@ namespace Echoglossian
           this.translator = new LibreTranslateTranslator(pluginLog);
           break;
         case TransEngines.YandexPublic:
-          this.translator = new YandexPublicTranslator(pluginLog);
-          break;
-        case TransEngines.YandexSelenium:
-          this.translator = new YandexSeleniumTranslator(pluginLog);
+          this.translator = new YandexPublicTranslator(pluginLog, config);
           break;
         case TransEngines.All:
           break;

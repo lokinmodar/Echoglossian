@@ -1103,41 +1103,6 @@
             <param name="targetLanguage">The language to translate the text into.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
         </member>
-        <member name="T:Echoglossian.Translators.YandexPublicTranslator">
-            <summary>
-            Translator class using Yandex public API.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Translators.YandexPublicTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.YandexPublicTranslator"/> class.
-            </summary>
-            <param name="pluginLog">The plugin log.</param>
-        </member>
-        <member name="M:Echoglossian.Translators.YandexPublicTranslator.Translate(System.String,System.String,System.String)">
-            <summary>
-            Translates the specified text synchronously.
-            </summary>
-            <param name="text">The text to translate.</param>
-            <param name="sourceLanguage">The source language.</param>
-            <param name="targetLanguage">The target language.</param>
-            <returns>The translated text.</returns>
-        </member>
-        <member name="M:Echoglossian.Translators.YandexPublicTranslator.TranslateAsync(System.String,System.String,System.String)">
-            <summary>
-            Translates the specified text asynchronously.
-            </summary>
-            <param name="text">The text to translate.</param>
-            <param name="sourceLanguage">The source language.</param>
-            <param name="targetLanguage">The target language.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the translated text.</returns>
-        </member>
-        <member name="M:Echoglossian.Translators.YandexPublicTranslator.GenerateRequestId">
-            <summary>
-            Generates a request identifier.
-            </summary>
-            <returns>The generated request identifier.</returns>
-        </member>
         <member name="T:Echoglossian.Translators.YandexTranslator">
             <summary>
             Yandex Translator class for translating text using Yandex API.
