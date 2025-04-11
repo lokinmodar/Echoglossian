@@ -68,6 +68,9 @@ namespace Echoglossian
         case TransEngines.YandexPublic:
           this.translator = new YandexPublicTranslator(pluginLog, config);
           break;
+        case TransEngines.OpenRouter:
+          this.translator = new OpenRouterTranslator(pluginLog, config);
+          break;
         case TransEngines.All:
           break;
         default:

@@ -144,9 +144,10 @@ namespace Echoglossian
       Amazon = 9, // Amazon Translate
       Gemini = 10, // Google Cloud Translate
       YandexPublic = 11, // Yandex Public Translator
+      OpenRouter = 12, // OpenRouter Translator
 
 
-      All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | OpenLlama | LibreTranslate | YandexPublic,
+      All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | OpenLlama | LibreTranslate | YandexPublic | OpenRouter,
     }
 
     /// <summary>
