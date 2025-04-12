@@ -172,12 +172,19 @@ namespace Echoglossian
 
     public float GeminiTemperature = 0.1f;
 
-    internal string? MicrosoftTranslatorApiKey = string.Empty;
-    internal string? MicrosoftTranslatorRegion = string.Empty;
-    internal string? MicrosoftTranslatorEndpoint = "https://api.cognitive.microsofttranslator.com";
+    public string? MicrosoftTranslatorApiKey = string.Empty;
+    public string? MicrosoftTranslatorRegion = string.Empty;
+    public string? MicrosoftTranslatorEndpoint = "https://api.cognitive.microsofttranslator.com";
+
+    public string? OpenRouterModel = string.Empty;
+    public float OpenRouterTemperature = 0.1f;
+    public string? OpenRouterApiKey = string.Empty;
+    public string? OpenRouterBaseUrl = "https://openrouter.ai/api/v1/";
+    public string? OpenRouterPrompt = string.Empty;
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
+
 
     public int Version { get; set; } = 5;
 

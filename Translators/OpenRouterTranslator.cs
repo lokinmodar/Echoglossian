@@ -18,27 +18,32 @@ namespace Echoglossian.Translators
     private readonly IPluginLog pluginLog;
     private readonly string model;
     private readonly string apiKey;
+    private readonly string openRouterUrl;
     private float temperature;
     private Dictionary<string, string> translationCache = new();
 
-    public OpenRouterTranslator(IPluginLog pluginLog, string apiKey, string model = "openai/gpt-4o", float temperature = 0.1f)
+    private readonly string prompt;
+
+    public OpenRouterTranslator(IPluginLog pluginLog, Config config)
     {
       this.pluginLog = pluginLog;
-      this.model = model;
-      this.temperature = temperature;
-      this.apiKey = apiKey;
+      this.model = config.OpenRouterModel;
+      this.temperature = config.OpenRouterTemperature;
+      this.apiKey = config.OpenRouterApiKey;
+      this.openRouterUrl = config.OpenRouterBaseUrl;
+      this.prompt = config.OpenRouterPrompt;
 
-      if (string.IsNullOrWhiteSpace(apiKey))
+      if (string.IsNullOrWhiteSpace(this.apiKey))
       {
         this.pluginLog.Warning(Resources.APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable);
       }
 
       this.httpClient = new HttpClient
       {
-        BaseAddress = new Uri("https://openrouter.ai/api/v1/"),
+        BaseAddress = new Uri(this.openRouterUrl),
       };
 
-      this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+      this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {this.apiKey}");
       this.httpClient.DefaultRequestHeaders.Add("HTTP-Referer", "https://your-plugin-site-or-github-url"); // Optional but recommended
       this.httpClient.DefaultRequestHeaders.Add("X-Title", "Echoglossian Plugin");
     }
@@ -61,21 +66,19 @@ namespace Echoglossian.Translators
         return cachedTranslation;
       }
 
-      string prompt = ;
-
       var request = new
       {
-        model = this.model,
+        this.model,
         messages = new[]
         {
-          new { role = "user", content = prompt },
+          new { role = "user", content = this.prompt },
         },
-        temperature = this.temperature,
+        this.temperature,
       };
 
       try
       {
-        var response = await httpClient.PostAsJsonAsync("chat/completions", request);
+        var response = await this.httpClient.PostAsJsonAsync("chat/completions", request);
         response.EnsureSuccessStatusCode();
 
         var jsonResponse = await response.Content.ReadFromJsonAsync<OpenRouterResponse>();
