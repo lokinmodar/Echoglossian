@@ -11,38 +11,39 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private string editedAiTranslatorPrompt = string.Empty;
+    private string editedPrompt = string.Empty;
+    private string previewResult = string.Empty;
     private bool showPromptInvalidWarning = false;
 
     private readonly string previewSampleText = "My blade is for the Fury.";
     private readonly string previewSourceLang = "English";
     private readonly string previewTargetLang = "Japanese";
-    private string previewResult = string.Empty;
 
     /// <summary>
     /// Draws the AI Translator prompt tab in the UI.
     /// </summary>
-    private void DrawAiTranslatorPromptTab()
+    private void DrawPromptEditor(Config config, PromptType type, string defaultPrompt, string label)
     {
       ImGui.BeginGroup();
       ImGui.Text("AI Translator Prompt Customization");
       ImGui.Separator();
       ImGui.TextWrapped("Customize the prompt used for translation. All of the following placeholders are required:");
 
+
       ImGui.BulletText("{text}");
       ImGui.BulletText("{sourceLanguage}");
       ImGui.BulletText("{targetLanguage}");
 
-      if (string.IsNullOrWhiteSpace(this.editedAiTranslatorPrompt))
+      if (string.IsNullOrWhiteSpace(this.editedPrompt))
       {
-        this.editedAiTranslatorPrompt = this.configuration.AiTranslatorPrompt ?? defaultPrompt;
+        this.editedPrompt = GetPrompt(config, type) ?? defaultPrompt;
       }
 
       ImGui.Spacing();
 
-      if (ImGui.InputTextMultiline("##AiTranslatorPromptInput", ref this.editedAiTranslatorPrompt, 10000, new System.Numerics.Vector2(-1, 160)))
+      if (ImGui.InputTextMultiline($"##PromptInput_{label}", ref this.editedPrompt, 8000, new System.Numerics.Vector2(-1, 200)))
       {
-        this.showPromptInvalidWarning = !IsPromptValid(this.editedAiTranslatorPrompt);
+        this.showPromptInvalidWarning = !IsPromptValid(this.editedPrompt);
       }
 
       if (this.showPromptInvalidWarning)
@@ -52,11 +53,11 @@ namespace Echoglossian
         ImGui.PopStyleColor();
       }
 
-      if (ImGui.Button("Save Prompt"))
+      if (ImGui.Button($"Save##{label}"))
       {
-        if (IsPromptValid(this.editedAiTranslatorPrompt))
+        if (IsPromptValid(this.editedPrompt))
         {
-          this.configuration.AiTranslatorPrompt = this.editedAiTranslatorPrompt;
+          SetPrompt(config, type, this.editedPrompt);
           this.showPromptInvalidWarning = false;
         }
         else
@@ -67,35 +68,27 @@ namespace Echoglossian
 
       ImGui.SameLine();
 
-      if (ImGui.Button("Reset to Default"))
+      if (ImGui.Button($"Reset to Default##{label}"))
       {
-        this.editedAiTranslatorPrompt = defaultPrompt;
-        this.configuration.AiTranslatorPrompt = string.Empty;
+        this.editedPrompt = defaultPrompt;
+        SetPrompt(config, type, null);
         this.showPromptInvalidWarning = false;
       }
 
       ImGui.Separator();
-      ImGui.TextWrapped("Live preview of the prompt with sample variables:");
-
-      this.previewResult = ApplyPromptVariables(
-          this.editedAiTranslatorPrompt,
-          this.previewSampleText,
-          this.previewSourceLang,
-          this.previewTargetLang
-      );
-
+      ImGui.TextWrapped("Live preview with sample input:");
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 1f, 0.5f, 1f));
       ImGui.SetNextItemWidth(-1);
-      ImGui.InputTextMultiline("##PreviewPrompt", ref this.previewResult, 10000, new System.Numerics.Vector2(-1, 160), ImGuiInputTextFlags.ReadOnly);
+      this.previewResult = ApplyPromptVariables(this.editedPrompt, this.previewSampleText, this.previewSourceLang, this.previewTargetLang);
+      ImGui.InputTextMultiline($"##Preview_{label}", ref this.previewResult, 10000, new System.Numerics.Vector2(-1, 200), ImGuiInputTextFlags.ReadOnly);
       ImGui.PopStyleColor();
 
-      if (ImGui.Button("Copy Preview to Clipboard"))
+      if (ImGui.Button($"Copy Preview##{label}"))
       {
         ImGui.SetClipboardText(this.previewResult);
       }
 
       ImGui.EndGroup();
     }
-
   }
 }

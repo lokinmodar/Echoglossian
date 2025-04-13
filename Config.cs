@@ -7,6 +7,7 @@ using System;
 using System.Numerics;
 
 using Dalamud.Configuration;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Echoglossian
 {
@@ -130,6 +131,10 @@ namespace Echoglossian
 
     public string ChatGptEngine = "davinci";
 
+    public string ChatGptModel = "gpt-3.5-turbo-16k-0613";
+
+    public string? ChatGptPrompt = string.Empty;
+
     public string AiTranslatorPrompt = string.Empty;
 
     public float FontScale = 1;
@@ -152,6 +157,8 @@ namespace Echoglossian
 
     public int YandexCharactersTranslated = 0;
 
+    public string? YandexCloudPrompt = string.Empty;
+
     public string DeepSeekBaseUrl = "https://api.deepseek.com/v1";
 
     public string? DeepSeekTranslatorApiKey = string.Empty;
@@ -160,11 +167,15 @@ namespace Echoglossian
 
     public float DeepSeekTemperature = 0.1f;
 
+    public string? DeepSeekPrompt = string.Empty;
+
     public string? AwsRegion = "us-east-1";
 
     public string? AwsAccessKey = string.Empty;
 
     public string? AwsSecretKey = string.Empty;
+    public string? AwsTranslateModel = "general";
+    public string? AmazonPrompt = string.Empty;
 
     public string? GeminiTranslatorApiKey = string.Empty;
 
@@ -172,9 +183,13 @@ namespace Echoglossian
 
     public float GeminiTemperature = 0.1f;
 
+    public string? GeminiPrompt = string.Empty;
+
     public string? MicrosoftTranslatorApiKey = string.Empty;
     public string? MicrosoftTranslatorRegion = string.Empty;
     public string? MicrosoftTranslatorEndpoint = "https://api.cognitive.microsofttranslator.com";
+    public string? MicrosoftTranslatorModel = "general";
+    public string? MicrosoftTranslatorPrompt = string.Empty;
 
     public string? OpenRouterModel = string.Empty;
     public float OpenRouterTemperature = 0.1f;
@@ -185,8 +200,6 @@ namespace Echoglossian
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 
-
     public int Version { get; set; } = 5;
-
   }
 }

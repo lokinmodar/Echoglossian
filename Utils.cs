@@ -24,6 +24,9 @@ namespace Echoglossian
   public partial class Echoglossian
   {
 #if DEBUG
+    /// <summary>
+    /// Lists all available culture information and writes it to a file.
+    /// </summary>
     public void ListCultureInfos()
     {
       using StreamWriter logStream = new(this.configDir + "CultureInfos.txt", append: true);
@@ -36,6 +39,12 @@ namespace Echoglossian
     }
 #endif
 
+    /// <summary>
+    /// Moves the given path up by the specified number of levels.
+    /// </summary>
+    /// <param name="path">Path.</param>
+    /// <param name="noOfLevels"># of levels to move up.</param>
+    /// <returns>Parent path.</returns>
     public string MovePathUp(string path, int noOfLevels)
     {
       string parentPath = path.TrimEnd('/', '\\');
@@ -50,6 +59,9 @@ namespace Echoglossian
       return parentPath;
     }
 
+    /// <summary>
+    /// Resets the plugin settings to their default values. 
+    /// </summary>
     private void ResetSettings()
     {
       this.configuration.Lang = 28;
@@ -101,6 +113,9 @@ namespace Echoglossian
       NotificationManager.AddNotification(settingsResetNotification);
     }
 
+    /// <summary>
+    /// Fixes the configuration file if it is missing or has an incorrect version.
+    /// </summary>
     private void FixConfig()
     {
       if (!File.Exists($"{PluginInterface.ConfigFile.FullName}"))
@@ -124,11 +139,17 @@ namespace Echoglossian
       PluginInterface.GetPluginConfig();
     }
 
+    /// <summary>
+    /// Saves the current configuration to the plugin config file.
+    /// </summary>
     private void SaveConfig()
     {
       PluginInterface.SavePluginConfig(this.configuration);
     }
 
+    /// <summary>
+    /// Enum for the different translation engines.
+    /// </summary>
     [Flags]
     public enum TransEngines
     {
@@ -148,6 +169,20 @@ namespace Echoglossian
 
 
       All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | OpenLlama | LibreTranslate | YandexPublic | OpenRouter,
+    }
+
+    /// <summary>
+    /// Enum for the different prompt types.
+    /// </summary>
+    public enum PromptType
+    {
+      DeepSeek,
+      Gemini,
+      OpenRouter,
+      Microsoft,
+      Amazon,
+      ChatGPT,
+      YandexCloud,
     }
 
     /// <summary>
@@ -254,6 +289,11 @@ namespace Echoglossian
       return true;
     }
 
+    /// <summary>
+    /// Checks if the given time string is in a valid format (e.g., "123:45").
+    /// </summary>
+    /// <param name="time">Time in string format.</param>
+    /// <returns>Returns true if the input is valide time information.</returns>
     private static bool IsValidTimeFormat(string time)
     {
       string pattern = @"(\d{1,3}):(\d{2})";
@@ -269,6 +309,11 @@ namespace Echoglossian
       return false;
     }
 
+    /// <summary>
+    /// Cleans a string by removing line breaks, carriage returns, and double spaces.
+    /// </summary>
+    /// <param name="input">The string to be cleaned.</param>
+    /// <returns>Cleaned string.</returns>
     public static string CleanString(string input)
     {
       if (string.IsNullOrEmpty(input))
@@ -294,6 +339,12 @@ namespace Echoglossian
       return result;
     }
 
+    /// <summary>
+    /// Removes diacritics from a string based on a set of supported characters.
+    /// </summary>
+    /// <param name="text">Text to be cleaned of diacritics.</param>
+    /// <param name="supportedChars">List of chars to be parsed into their plain Latin chars.</param>
+    /// <returns>Cleand text.</returns>
     public string RemoveDiacritics(string text, HashSet<char> supportedChars)
     {
       if (string.IsNullOrEmpty(text))
@@ -335,6 +386,9 @@ namespace Echoglossian
           .Normalize(NormalizationForm.FormC);
     }
 
+    /// <summary>
+    /// Gets the game version from the framework.
+    /// </summary>
     public unsafe void /*string */GetGameVersion()
     {
       // var gameVersion = Framework.Instance()->GameVersionString;
@@ -345,6 +399,11 @@ namespace Echoglossian
       /*return gameVersion;*/
     }
 
+    /// <summary>
+    /// Parses a string into a dictionary.
+    /// </summary>
+    /// <param name="input">String in this format: "key1|value1|key2|value2|key3|value3|..."'.</param>
+    /// <returns>The string converted into a Dictionary.</returns>
     public Dictionary<int, string> ParseStringToDictionary(string input)
     {
       // input string must obey this format "key1|value1|key2|value2|key3|value3|..."
@@ -355,8 +414,7 @@ namespace Echoglossian
           .Where(g => int.TryParse(g.First().value, out _))
           .ToDictionary(
               g => int.Parse(g.First().value),
-              g => g.Skip(1).First().value
-          );
+              g => g.Skip(1).First().value);
 
       // Output the dictionary as JSON
       string jsonOutput = JsonConvert.SerializeObject(dictionary, Formatting.Indented);
@@ -365,6 +423,10 @@ namespace Echoglossian
       return dictionary;
     }
 
+    /// <summary>
+    /// Checks if the player is in an instance.
+    /// </summary>
+    /// <returns>The information of which instance the player is in.</returns>
     public unsafe Tuple<bool, int> IsInInstance()
     {
       var icDirector = EventFramework.Instance() != null ? EventFramework.Instance()->GetInstanceContentDirector() : null;
@@ -379,6 +441,10 @@ namespace Echoglossian
       return new Tuple<bool, int>(isInstanceContent, (int)icDirector->InstanceContentType);
     }
 
+    /// <summary>
+    /// Checks if the translation should be disabled based on the current state.
+    /// </summary>
+    /// <returns>The player state true if the player is in PVP.</returns>
     public bool DisableTranslationAccordingToState()
     {
       var state = ClientStateInterface.IsPvP || ClientStateInterface.IsPvPExcludingDen;

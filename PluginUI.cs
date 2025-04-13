@@ -635,6 +635,7 @@ public partial class Echoglossian
           case 2: // ChatGPT
             ImGui.TextWrapped(Resources.SettingsForChatGptTransText);
             ImGui.Spacing();
+
             if (ImGui.Button(Resources.ChatGPTAPIKeyLink))
             {
               saveConfig = true;
@@ -675,9 +676,19 @@ public partial class Echoglossian
               this.configuration.ChatGptTemperature = temperature;
             }
 
-            this.DrawAiTranslatorPromptTab();
+            // ✅ Shared prompt editor logic
+            var promptType = GetPromptTypeForEngine(this.configuration.ChosenTransEngine);
+            if (promptType.HasValue)
+            {
+              this.DrawPromptEditor(
+                this.configuration,
+                promptType.Value,
+                defaultPrompt, // <- using your global defaultPrompt
+                engines[this.configuration.ChosenTransEngine] // just a display label
+              );
+            }
 
-            ImGui.SameLine();
+            ImGui.Spacing();
             ImGui.Separator();
 
             if (ImGui.Button("Apply"))
@@ -687,6 +698,7 @@ public partial class Echoglossian
             }
 
             break;
+
         }
 
         ImGui.EndGroup();

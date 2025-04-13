@@ -4,6 +4,13 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
+        <member name="M:Echoglossian.Echoglossian.IsPromptValid(System.String)">
+            <summary>
+            Checks if the prompt is valid by ensuring it contains all required placeholders.
+            </summary>
+            <param name="prompt">The API engine text propmt.</param>
+            <returns>Returns 'true' if the promnpt is valid.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian"/> class.
@@ -45,9 +52,47 @@
             <param name="exclusiveCharsToAdd">List of all the needed chars to be added.</param>
             <param name="supportedEngines">Supported translation engines.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.DrawAiTranslatorPromptTab">
+        <member name="M:Echoglossian.Echoglossian.DrawPromptEditor(Echoglossian.Config,Echoglossian.Echoglossian.PromptType,System.String,System.String)">
             <summary>
             Draws the AI Translator prompt tab in the UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
+            <summary>
+            Lists all available culture information and writes it to a file.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
+            <summary>
+            Moves the given path up by the specified number of levels.
+            </summary>
+            <param name="path">Path.</param>
+            <param name="noOfLevels"># of levels to move up.</param>
+            <returns>Parent path.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResetSettings">
+            <summary>
+            Resets the plugin settings to their default values. 
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FixConfig">
+            <summary>
+            Fixes the configuration file if it is missing or has an incorrect version.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SaveConfig">
+            <summary>
+            Saves the current configuration to the plugin config file.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.TransEngines">
+            <summary>
+            Enum for the different translation engines.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.PromptType">
+            <summary>
+            Enum for the different prompt types.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.DrawText(System.String,System.Drawing.Font,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Size})">
@@ -68,6 +113,52 @@
             </summary>
             <param name="image">Image to be converted.</param>
             <returns>Byte array to be used elsewhere.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsValidTimeFormat(System.String)">
+            <summary>
+            Checks if the given time string is in a valid format (e.g., "123:45").
+            </summary>
+            <param name="time">Time in string format.</param>
+            <returns>Returns true if the input is valide time information.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CleanString(System.String)">
+            <summary>
+            Cleans a string by removing line breaks, carriage returns, and double spaces.
+            </summary>
+            <param name="input">The string to be cleaned.</param>
+            <returns>Cleaned string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RemoveDiacritics(System.String,System.Collections.Generic.HashSet{System.Char})">
+            <summary>
+            Removes diacritics from a string based on a set of supported characters.
+            </summary>
+            <param name="text">Text to be cleaned of diacritics.</param>
+            <param name="supportedChars">List of chars to be parsed into their plain Latin chars.</param>
+            <returns>Cleand text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetGameVersion">
+            <summary>
+            Gets the game version from the framework.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseStringToDictionary(System.String)">
+            <summary>
+            Parses a string into a dictionary.
+            </summary>
+            <param name="input">String in this format: "key1|value1|key2|value2|key3|value3|..."'.</param>
+            <returns>The string converted into a Dictionary.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsInInstance">
+            <summary>
+            Checks if the player is in an instance.
+            </summary>
+            <returns>The information of which instance the player is in.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DisableTranslationAccordingToState">
+            <summary>
+            Checks if the translation should be disabled based on the current state.
+            </summary>
+            <returns>The player state true if the player is in PVP.</returns>
         </member>
         <member name="T:Echoglossian.AtkTextNodeBufferWrapper">
             <summary>
