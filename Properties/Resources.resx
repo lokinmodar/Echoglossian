@@ -469,4 +469,34 @@
   <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
     <value>[Microsoft translation unavailable. Please check your API key.]</value>
   </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Customize the prompt used for translation. All of the following placeholders are required:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>AI Translator Prompt Customization</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Missing one or more required placeholders!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Reset to Default</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Live preview with sample input:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Copy Preview</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Prompt Editor</value>
+  </data>
 </root>

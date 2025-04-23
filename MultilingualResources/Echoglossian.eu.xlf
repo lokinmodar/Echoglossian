@@ -473,6 +473,10 @@
           <source>[Microsoft translation unavailable. Please check your API key.]</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">[Microsoften itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</target>
         </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Bidali itzulpenerako erabilitako mezua. Posizio-markagailu hauek guztiak derrigorrezkoak dira:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

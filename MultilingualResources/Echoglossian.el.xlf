@@ -473,6 +473,10 @@
           <source>[Microsoft translation unavailable. Please check your API key.]</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">[Η μετάφραση της Microsoft δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</target>
         </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Προσαρμόστε την προτροπή που χρησιμοποιείται για τη μετάφραση. Απαιτούνται όλα τα ακόλουθα σύμβολα κράτησης θέσης:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

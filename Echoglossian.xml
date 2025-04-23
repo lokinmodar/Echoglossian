@@ -4,12 +4,55 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
+        <member name="F:Echoglossian.Echoglossian.defaultPrompt">
+            <summary>
+            The default prompt for the translation engine.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.RequiredPlaceholders">
+            <summary>
+            The required placeholders for the prompt.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.IsPromptValid(System.String)">
             <summary>
             Checks if the prompt is valid by ensuring it contains all required placeholders.
             </summary>
             <param name="prompt">The API engine text propmt.</param>
             <returns>Returns 'true' if the promnpt is valid.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyPromptVariables(System.String,System.String,System.String,System.String)">
+            <summary>
+            Applies the prompt variables to the template.
+            </summary>
+            <param name="template"></param>
+            <param name="text"></param>
+            <param name="sourceLang"></param>
+            <param name="targetLang"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetPrompt(Echoglossian.Config,Echoglossian.Echoglossian.PromptType)">
+            <summary>
+            Gets the prompt for the specified type.
+            </summary>
+            <param name="config"></param>
+            <param name="type"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetPromptTypeForEngine(System.Int32)">
+            <summary>
+            Gets the prompt type for the specified engine index.
+            </summary>
+            <param name="engineIndex"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SetPrompt(Echoglossian.Config,Echoglossian.Echoglossian.PromptType,System.String)">
+            <summary>
+            Sets the prompt for the specified type.
+            </summary>
+            <param name="config"></param>
+            <param name="type"></param>
+            <param name="prompt"></param>
         </member>
         <member name="M:Echoglossian.Echoglossian.#ctor">
             <summary>

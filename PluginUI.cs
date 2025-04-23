@@ -139,7 +139,7 @@ public partial class Echoglossian
     }
 
     ImGui.Spacing();
-
+    ImGui.BeginGroup();
     if (ImGui.BeginTabBar(
       "TabBar",
       ImGuiTabBarFlags.NoCloseWithMiddleMouseButton))
@@ -633,6 +633,7 @@ public partial class Echoglossian
 
             break;
           case 2: // ChatGPT
+
             ImGui.TextWrapped(Resources.SettingsForChatGptTransText);
             ImGui.Spacing();
 
@@ -775,10 +776,15 @@ public partial class Echoglossian
       ImGui.EndTabBar();
     }
 
-    ImGui.Spacing();
-    var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 100);
+    ImGui.EndGroup();
 
-    ImGui.SetCursorPos(pos);
+
+    ImGui.BeginGroup();
+    ImGui.Spacing();
+    /*    var pos = new Vector2(ImGui.GetWindowContentRegionMin().X, ImGui.GetWindowContentRegionMax().Y - 100);*/
+    var zero = Vector2.Zero;
+
+    ImGui.SetCursorPos(zero);
     ImGui.Separator();
     ImGui.BeginGroup();
     ImGui.TextWrapped(Resources.NEListText);
@@ -835,6 +841,8 @@ public partial class Echoglossian
       saveConfig = true;
       ImGui.OpenPopup(Resources.PixQrWindowLabel);
     }
+
+    ImGui.EndGroup();
 
     // Always center this window when appearing
     var center = ImGui.GetMainViewport().GetCenter();

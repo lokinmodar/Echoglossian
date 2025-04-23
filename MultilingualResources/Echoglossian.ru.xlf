@@ -473,6 +473,10 @@
           <source>[Microsoft translation unavailable. Please check your API key.]</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">[Перевод Microsoft недоступен. Пожалуйста, проверьте свой ключ API.]</target>
         </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Настройте подсказку, используемую для перевода. Все следующие заполнители являются обязательными:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

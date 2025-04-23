@@ -474,6 +474,10 @@
           <source>[Microsoft translation unavailable. Please check your API key.]</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">[Microsoft-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</target>
         </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tilpas den prompt, der bruges til oversættelse. Alle følgende pladsholdere er påkrævet:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

@@ -480,6 +480,10 @@
           <source>[Microsoft translation unavailable. Please check your API key.]</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">[Microsoft-Übersetzung nicht verfügbar. Bitte überprüfen Sie Ihren API-Schlüssel.]</target>
         </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Passen Sie die für die Übersetzung verwendete Eingabeaufforderung an. Alle folgenden Platzhalter sind erforderlich:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

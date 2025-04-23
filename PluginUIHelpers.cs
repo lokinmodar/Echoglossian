@@ -4,7 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-
+using Echoglossian.Properties;
 using ImGuiNET;
 
 namespace Echoglossian
@@ -25,10 +25,9 @@ namespace Echoglossian
     private void DrawPromptEditor(Config config, PromptType type, string defaultPrompt, string label)
     {
       ImGui.BeginGroup();
-      ImGui.Text("AI Translator Prompt Customization");
+      ImGui.Text(Resources.AITranslatorPromptCustomization);
       ImGui.Separator();
-      ImGui.TextWrapped("Customize the prompt used for translation. All of the following placeholders are required:");
-
+      ImGui.TextWrapped(Resources.CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired);
 
       ImGui.BulletText("{text}");
       ImGui.BulletText("{sourceLanguage}");
@@ -41,19 +40,25 @@ namespace Echoglossian
 
       ImGui.Spacing();
 
-      if (ImGui.InputTextMultiline($"##PromptInput_{label}", ref this.editedPrompt, 8000, new System.Numerics.Vector2(-1, 200)))
+      ImGui.Columns(2, null, true); // 2 columns with border
+
+      // Column 1: Prompt Editor
+      ImGui.TextWrapped(Resources.Editor);
+      ImGui.PushItemWidth(-1);
+      if (ImGui.InputTextMultiline($"##{Resources.PromptInput}_{label}", ref this.editedPrompt, 8000, new Vector2(-1, 200)))
       {
         this.showPromptInvalidWarning = !IsPromptValid(this.editedPrompt);
       }
+      ImGui.PopItemWidth();
 
       if (this.showPromptInvalidWarning)
       {
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.5f, 0.5f, 1f));
-        ImGui.Text("⚠ Missing one or more required placeholders!");
+        ImGui.Text(Resources.MissingOneOrMoreRequiredPlaceholders);
         ImGui.PopStyleColor();
       }
 
-      if (ImGui.Button($"Save##{label}"))
+      if (ImGui.Button($"{Resources.Save}##{label}"))
       {
         if (IsPromptValid(this.editedPrompt))
         {
@@ -68,27 +73,38 @@ namespace Echoglossian
 
       ImGui.SameLine();
 
-      if (ImGui.Button($"Reset to Default##{label}"))
+      if (ImGui.Button($"{Resources.ResetToDefault}##{label}"))
       {
         this.editedPrompt = defaultPrompt;
         SetPrompt(config, type, null);
         this.showPromptInvalidWarning = false;
       }
 
-      ImGui.Separator();
-      ImGui.TextWrapped("Live preview with sample input:");
+      ImGui.NextColumn();
+
+      // Column 2: Preview
+      ImGui.TextWrapped(Resources.LivePreviewWithSampleInput);
+
+      this.previewResult = ApplyPromptVariables(
+        this.editedPrompt,
+        this.previewSampleText,
+        this.previewSourceLang,
+        this.previewTargetLang
+      );
+
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 1f, 0.5f, 1f));
-      ImGui.SetNextItemWidth(-1);
-      this.previewResult = ApplyPromptVariables(this.editedPrompt, this.previewSampleText, this.previewSourceLang, this.previewTargetLang);
-      ImGui.InputTextMultiline($"##Preview_{label}", ref this.previewResult, 10000, new System.Numerics.Vector2(-1, 200), ImGuiInputTextFlags.ReadOnly);
+      ImGui.InputTextMultiline($"##{Resources.Preview}_{label}", ref this.previewResult, 10000, new Vector2(-1, 200), ImGuiInputTextFlags.ReadOnly);
       ImGui.PopStyleColor();
 
-      if (ImGui.Button($"Copy Preview##{label}"))
+      if (ImGui.Button($"{Resources.CopyPreview}##{label}"))
       {
         ImGui.SetClipboardText(this.previewResult);
       }
 
+      ImGui.Columns(1); // Reset to 1 column
+
       ImGui.EndGroup();
     }
+
   }
 }

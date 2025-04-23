@@ -479,6 +479,10 @@
           <source>[Microsoft translation unavailable. Please check your API key.]</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">[Traduction Microsoft non disponible. Veuillez vérifier votre clé API.]</target>
         </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Personnalisez l’invite utilisée pour la traduction. Tous les espaces réservés suivants sont requis :</target>
+        </trans-unit>
       </group>
     </body>
   </file>
