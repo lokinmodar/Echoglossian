@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+﻿// <copyright file="MicrosoftTranslator.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
 
-using Dalamud.Plugin.Services;
+using System.Net.Http.Headers;
+
 using Echoglossian.Properties;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

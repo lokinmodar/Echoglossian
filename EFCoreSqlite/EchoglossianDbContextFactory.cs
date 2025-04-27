@@ -3,9 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-using System.IO;
-
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace Echoglossian.EFCoreSqlite

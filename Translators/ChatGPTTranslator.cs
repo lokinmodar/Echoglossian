@@ -3,13 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
 using System.ClientModel;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-using Dalamud.Plugin.Services;
 using Echoglossian.Properties;
 using OpenAI;
 using OpenAI.Chat;

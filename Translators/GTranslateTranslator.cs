@@ -1,7 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿// <copyright file="GTranslateTranslator.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
 
-using Dalamud.Plugin.Services;
 using GTranslate;
 using GTranslate.Translators;
 
@@ -61,8 +62,8 @@ namespace Echoglossian.Translators
       string fixedText = Echoglossian.FixText(text);
       this.pluginLog.Debug($"GTranslate input: {fixedText}");
 
-      pluginLog.Debug($"GTranslate source language: {sourceLanguage}");
-      pluginLog.Debug($"GTranslate target language: {this.gTransTargetLanguage}");
+      this.pluginLog.Debug($"GTranslate source language: {sourceLanguage}");
+      this.pluginLog.Debug($"GTranslate target language: {this.gTransTargetLanguage}");
 
       try
       {

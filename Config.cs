@@ -3,11 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-using System.Numerics;
-
 using Dalamud.Configuration;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Echoglossian
 {

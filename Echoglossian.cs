@@ -3,22 +3,14 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using System.Threading;
 
-using Dalamud.Game.Addon.Lifecycle;
-using Dalamud.Game.Command;
-using Dalamud.Game.Text.Sanitizer;
-using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.IoC;
-using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.LanguagesHandling;
+using Echoglossian.NativeUI;
+using Echoglossian.NativeUI.Helpers;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Properties;
+using Echoglossian.Translators;
 
 namespace Echoglossian
 {

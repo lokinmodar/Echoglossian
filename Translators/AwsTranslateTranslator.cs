@@ -1,11 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿// <copyright file="AwsTranslateTranslator.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
 
 using Amazon;
 using Amazon.Runtime;
 using Amazon.Translate;
 using Amazon.Translate.Model;
-using Dalamud.Plugin.Services;
 
 namespace Echoglossian.Translators
 {

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿// <copyright file="LibreTranslateTranslator.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
 
-using Dalamud.Plugin.Services;
+using System.Net.Http.Headers;
+
 using Newtonsoft.Json.Linq;
 
 namespace Echoglossian.Translators
@@ -25,7 +23,7 @@ namespace Echoglossian.Translators
 
     public string Translate(string text, string sourceLanguage, string targetLanguage)
     {
-      return TranslateAsync(text, sourceLanguage, targetLanguage).Result;
+      return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
     }
 
     public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
@@ -48,12 +46,12 @@ namespace Echoglossian.Translators
         HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Echoglossian LibreTranslate Client");
         HttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-        pluginLog.Debug($"Sending LibreTranslate request for: {fixedText}");
+        this.pluginLog.Debug($"Sending LibreTranslate request for: {fixedText}");
 
         var response = await HttpClient.PostAsync(Endpoint, content);
         var json = await response.Content.ReadAsStringAsync();
 
-        pluginLog.Debug($"Response: {json}");
+        this.pluginLog.Debug($"Response: {json}");
 
         var parsed = JObject.Parse(json);
         var translated = parsed["translatedText"]?.ToString();
@@ -61,16 +59,16 @@ namespace Echoglossian.Translators
         if (!string.IsNullOrEmpty(translated))
         {
           string clean = Echoglossian.FixText(translated);
-          pluginLog.Debug($"Translated: {clean}");
+          this.pluginLog.Debug($"Translated: {clean}");
           return clean;
         }
 
-        pluginLog.Warning("LibreTranslateTranslator: Empty translation result");
+        this.pluginLog.Warning("LibreTranslateTranslator: Empty translation result");
         return string.Empty;
       }
       catch (Exception ex)
       {
-        pluginLog.Warning($"LibreTranslateTranslator failed: {ex.Message}");
+        this.pluginLog.Warning($"LibreTranslateTranslator failed: {ex.Message}");
         return string.Empty;
       }
     }

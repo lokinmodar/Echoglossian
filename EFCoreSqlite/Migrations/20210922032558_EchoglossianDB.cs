@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Echoglossian.EFCoreSqlite.Migrations
