@@ -6,7 +6,7 @@
 using Dalamud.Interface.Utility;
 using Dalamud.Utility;
 using Echoglossian.Properties;
-using ImGuiNET;
+
 using ImGuiScene;
 
 namespace Echoglossian

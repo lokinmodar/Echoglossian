@@ -515,6 +515,23 @@
             Frees the previously allocated buffer.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.Overlays.SimpleWindow.#ctor(System.String,ImGuiNET.ImGuiWindowFlags,System.Boolean,System.String,System.Boolean,System.Int32,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,ImGuiNET.ImFontPtr,System.Boolean,System.Threading.SemaphoreSlim)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Overlays.SimpleWindow"/> class.
+            </summary>
+            <param name="name">Window Name.</param>
+            <param name="flags">Window Flags.</param>
+            <param name="forceMainWindow">Indicates whether to force the window to be the main window.</param>
+            <param name="translation">Translation text to be displayed in the window.</param>
+            <param name="translationSemaphore">Semaphore to control access to the translation resource.</param>
+            <param name="displayTranslation">Indicates whether to display the translation text.</param>
+            <param name="curentTranslationId">Current translation ID.</param>
+            <param name="textDimensions">Dimensions of the text.</param>
+            <param name="textImguiSize">Size of the text in ImGui.</param>
+            <param name="textPosition">Position of the text.</param>
+            <param name="uiFont">Font used for the UI.</param>
+            <param name="fontLoaded">Indicates whether the font is loaded.</param>
+        </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>
               A strongly-typed resource class, for looking up localized strings, etc.
@@ -1346,23 +1363,6 @@
             <param name="sourceLanguage">The source language code.</param>
             <param name="targetLanguage">The target language code.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.SimpleWindow.#ctor(System.String,ImGuiNET.ImGuiWindowFlags,System.Boolean,System.String,System.Boolean,System.Int32,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,ImGuiNET.ImFontPtr,System.Boolean,System.Threading.SemaphoreSlim)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.UIOverlays.SimpleWindow"/> class.
-            </summary>
-            <param name="name">Window Name.</param>
-            <param name="flags">Window Flags.</param>
-            <param name="forceMainWindow">Indicates whether to force the window to be the main window.</param>
-            <param name="translation">Translation text to be displayed in the window.</param>
-            <param name="translationSemaphore">Semaphore to control access to the translation resource.</param>
-            <param name="displayTranslation">Indicates whether to display the translation text.</param>
-            <param name="curentTranslationId">Current translation ID.</param>
-            <param name="textDimensions">Dimensions of the text.</param>
-            <param name="textImguiSize">Size of the text in ImGui.</param>
-            <param name="textPosition">Position of the text.</param>
-            <param name="uiFont">Font used for the UI.</param>
-            <param name="fontLoaded">Indicates whether the font is loaded.</param>
         </member>
     </members>
 </doc>

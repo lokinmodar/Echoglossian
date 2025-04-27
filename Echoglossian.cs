@@ -6,7 +6,6 @@
 
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.LanguagesHandling;
-using Echoglossian.NativeUI;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Properties;
