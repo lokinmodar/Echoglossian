@@ -5,7 +5,6 @@
 
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
-using Humanizer;
 
 namespace Echoglossian
 {

@@ -262,6 +262,8 @@ namespace Echoglossian
 
       this.EgloAddonHandler();
 
+      this.RegisterOverlays();
+
       PluginInterface.UiBuilder.Draw += this.BuildUi;
 
       /* if (ClientStateInterface.IsLoggedIn)
@@ -433,45 +435,20 @@ namespace Echoglossian
         return;
       }
 
-      if (this.configuration.UseImGuiForBattleTalk && this.configuration.TranslateBattleTalk && this.battleTalkDisplayTranslation)
+      foreach (var overlayRegistration in this.registeredOverlays)
       {
-        PluginLog.Debug($"{this.configuration.TranslateBattleTalk} {this.battleTalkDisplayTranslation} {this.battleTalkDisplayTranslation}");
-        this.DrawTranslatedBattleDialogueWindow();
-#if DEBUG
-        // PluginLog.Debug("Showing BattleTalk Translation Overlay.");
-#endif
-      }
+        if (!overlayRegistration.Overlay.Display)
+        {
+          continue;
+        }
 
-      if (this.configuration.UseImGuiForTalk && this.configuration.TranslateTalk && this.talkDisplayTranslation)
-      {
-        this.DrawTranslatedDialogueWindow();
-#if DEBUG
-        // PluginLog.Debug("Showing Talk Translation Overlay.");
-#endif
-      }
+        string? customTitle = overlayRegistration.CustomTitleGetter?.Invoke();
 
-      if (this.configuration.UseImGuiForTalkSubtitle && this.configuration.TranslateTalkSubtitle && this.talkSubtitleDisplayTranslation)
-      {
-        this.DrawTranslatedTalkSubtitleWindow();
-#if DEBUG
-        // PluginLog.Debug("Showing TalkSubtitle Translation Overlay.");
-#endif
-      }
-
-      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateErrorToast && this.errorToastDisplayTranslation)
-      {
-        this.DrawTranslatedErrorToastWindow();
-#if DEBUG
-        // PluginLog.Debug("Showing Error Toast Translation Overlay.");
-#endif
-      }
-
-      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateToast && this.toastDisplayTranslation)
-      {
-        this.DrawTranslatedToastWindow();
-#if DEBUG
-        // PluginLog.Debug("Showing Error Toast Translation Overlay.");
-#endif
+        this.DrawTranslationWindow(
+            overlayRegistration.Overlay,
+            overlayRegistration.Config,
+            customTitle
+        );
       }
     }
 

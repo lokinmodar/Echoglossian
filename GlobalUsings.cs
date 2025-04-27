@@ -9,7 +9,9 @@ global using System.Globalization;
 global using System.Reflection;
 global using System.Numerics;
 global using System.Diagnostics;
-global using System.Threading.Tasks;
+global using System.Threading;
+
+global using Humanizer;
 
 global using Dalamud.Plugin;
 global using Dalamud.Plugin.Services;
@@ -20,13 +22,15 @@ global using Dalamud.Game.Text.SeStringHandling;
 global using Dalamud.Game.ClientState.Objects.SubKinds;
 global using Dalamud.Interface.Textures.TextureWraps;
 global using Dalamud.IoC;
+global using Dalamud.Interface.Utility;
 
 global using Newtonsoft.Json;
 global using ImGuiNET;
 
+global using Echoglossian.Properties;
 global using Echoglossian.PluginUI;
 global using Echoglossian.NativeUI.Handlers;
-global using Echoglossian.NativeUI.Overlays;
+global using Echoglossian.UIOverlays.TranslationOverlay;
 global using Echoglossian.LanguagesHandling;
 global using Echoglossian.Translators;
 global using Echoglossian.EFCoreSqlite;

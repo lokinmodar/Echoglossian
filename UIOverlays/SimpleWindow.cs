@@ -9,7 +9,7 @@ using Dalamud.Utility;
 using Echoglossian.Properties;
 using ImGuiNET;
 
-namespace Echoglossian.NativeUI.Overlays
+namespace Echoglossian.UIOverlays
 {
   internal class SimpleWindow : Window, IDisposable
   {
