@@ -12,10 +12,13 @@ namespace Echoglossian
       TranslationWindowConfig config,
       string? customTitle = null)
     {
+
       if (!overlay.Display)
       {
         return;
       }
+
+      PluginLog.Debug($"Drawing translation window: {overlay.CurrentTextId}");
 
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           overlay.Position.X + (overlay.Dimensions.X / 2) - (overlay.ImGuiSize.X / 2),

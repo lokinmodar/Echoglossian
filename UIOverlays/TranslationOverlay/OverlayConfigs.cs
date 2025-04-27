@@ -67,6 +67,8 @@ namespace Echoglossian
     /// </summary>
     private void RegisterOverlays()
     {
+      PluginLog.Debug("Registering overlays...");
+
       this.registeredOverlays.Add(new OverlayRegistration(
           this.TalkOverlay,
           TalkConfig,
@@ -93,6 +95,8 @@ namespace Echoglossian
           this.ChatBubbleOverlay,
           ChatBubbleConfig
       ));
+
+      PluginLog.Debug($"Overlays registered: {this.registeredOverlays.Count} ");
     }
   }
 }
