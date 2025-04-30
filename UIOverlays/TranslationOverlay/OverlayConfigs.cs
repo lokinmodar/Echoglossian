@@ -71,14 +71,12 @@ namespace Echoglossian
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.TalkOverlay,
-          TalkConfig,
-          () => this.configuration.TranslateNpcNames ? this.GetTranslatedNpcNameForWindow() : null
+          TalkConfig
       ));
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.BattleTalkOverlay,
-          BattleTalkConfig,
-          () => this.configuration.TranslateNpcNames ? this.GetTranslatedSenderNameForWindow() : null
+          BattleTalkConfig
       ));
 
       this.registeredOverlays.Add(new OverlayRegistration(

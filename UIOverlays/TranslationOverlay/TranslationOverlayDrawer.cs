@@ -2,23 +2,82 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
+using FFXIVClientStructs.FFXIV.Component.GUI;
+
 namespace Echoglossian
 {
 
   public partial class Echoglossian
   {
-    private void DrawTranslationWindow(
-      TranslationOverlay overlay,
-      TranslationWindowConfig config,
-      string? customTitle = null)
+    /// <summary>
+    /// Starts tracking the overlay for a specific addon.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="overlay"></param>
+    /// <param name="shouldShowOverlay"></param>
+    /// <param name="shouldStopOverlay"></param>
+    private void StartOverlayTracking(
+    string addonName,
+    TranslationOverlay overlay,
+    Func<bool> shouldShowOverlay,
+    Func<bool> shouldStopOverlay = null)
     {
+      Task.Run(() =>
+      {
+        IntPtr addonPtr = GameGuiInterface.GetAddonByName(addonName, 1);
+        if (addonPtr == IntPtr.Zero)
+        {
+          PluginLog.Debug($"StartOverlayTracking: {addonName} not found.");
+          return;
+        }
 
+        unsafe
+        {
+          AtkUnitBase* addon = (AtkUnitBase*)addonPtr;
+          while (addon->IsVisible && (shouldStopOverlay == null || !shouldStopOverlay()))
+          {
+            if (shouldShowOverlay())
+            {
+              overlay.Position = new Vector2(addon->RootNode->X, addon->RootNode->Y);
+              overlay.Dimensions = new Vector2(addon->RootNode->Width * addon->Scale, addon->RootNode->Height * addon->Scale);
+              overlay.Display = true;
+            }
+
+            Thread.Sleep(100);
+          }
+
+          overlay.Display = false;
+        }
+      });
+    }
+
+
+    /// <summary>
+    /// Draws the translation window.
+    /// </summary>
+    /// <param name="overlay"></param>
+    /// <param name="config"></param>
+    /// <param name="customTitle"></param>
+    private void DrawTranslationWindow(
+        TranslationOverlay overlay,
+        TranslationWindowConfig config,
+        string? customTitle = null)
+    {
       if (!overlay.Display)
       {
         return;
       }
 
-      PluginLog.Debug($"Drawing translation window: {overlay.CurrentTextId}");
+      overlay.Semaphore.Wait();
+      bool shouldDraw = !string.IsNullOrEmpty(overlay.CurrentText) && overlay.CurrentText != Resources.WaitingForTranslation;
+      overlay.Semaphore.Release();
+
+      if (!shouldDraw)
+      {
+        return;
+      }
+
+      PluginLog.Debug($"Drawing translation window: {overlay.CurrentText}");
 
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           overlay.Position.X + (overlay.Dimensions.X / 2) - (overlay.ImGuiSize.X / 2),
@@ -60,15 +119,9 @@ namespace Echoglossian
       ImGui.Begin(customTitle ?? config.DefaultTitle, flags);
       ImGui.SetWindowFontScale(this.configuration.FontScale);
 
-      if (overlay.Semaphore.Wait(0))
-      {
-        ImGui.TextWrapped(overlay.CurrentText);
-        overlay.Semaphore.Release();
-      }
-      else
-      {
-        ImGui.Text(Resources.WaitingForTranslation);
-      }
+      overlay.Semaphore.Wait();
+      ImGui.TextWrapped(overlay.CurrentText);
+      overlay.Semaphore.Release();
 
       overlay.ImGuiSize = ImGui.GetWindowSize();
       ImGui.PopStyleColor(1);

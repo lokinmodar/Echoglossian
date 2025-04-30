@@ -406,11 +406,13 @@ namespace Echoglossian
       }
     }
 
+    /// <summary>
+    /// Builds the UI for the plugin.
+    /// </summary>
     private void BuildUi()
     {
       if (!this.configuration.PluginAssetsDownloaded)
       {
-        // this.PluginAssetsChecker();
         return;
       }
 
@@ -425,8 +427,6 @@ namespace Echoglossian
         {
           this.configuration.FontChangeTime = 0;
           this.FontLoadFailed = false;
-
-          /* PluginInterface.UiBuilder.RebuildFonts();*/
         }
       }
 
@@ -437,12 +437,28 @@ namespace Echoglossian
 
       foreach (var overlayRegistration in this.registeredOverlays)
       {
-        if (!overlayRegistration.Overlay.Display)
+        overlayRegistration.Overlay.Semaphore.Wait();
+        bool shouldDisplay = overlayRegistration.Overlay.Display;
+        overlayRegistration.Overlay.Semaphore.Release();
+
+        if (!shouldDisplay)
         {
           continue;
         }
 
-        string? customTitle = overlayRegistration.CustomTitleGetter?.Invoke();
+        string? customTitle = null;
+
+        if (this.configuration.TranslateNpcNames)
+        {
+          overlayRegistration.Overlay.NameSemaphore.Wait();
+          string titleCandidate = overlayRegistration.Overlay.CurrentName;
+          overlayRegistration.Overlay.NameSemaphore.Release();
+
+          if (!string.IsNullOrWhiteSpace(titleCandidate))
+          {
+            customTitle = titleCandidate;
+          }
+        }
 
         this.DrawTranslationWindow(
             overlayRegistration.Overlay,

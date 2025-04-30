@@ -12,6 +12,11 @@
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.Echoglossian.BuildUi">
+            <summary>
+            Builds the UI for the plugin.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
             <summary>
             Lists all available culture information and writes it to a file.
@@ -222,6 +227,14 @@
             <summary>
             Registers the overlays with their respective configurations.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawTranslationWindow(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.String)">
+            <summary>
+            Draws the translation window.
+            </summary>
+            <param name="overlay"></param>
+            <param name="config"></param>
+            <param name="customTitle"></param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(System.String)">
             <summary>

@@ -22,6 +22,9 @@ namespace Echoglossian
 
     private HashSet<string> translatedBattleTalkTexts = new HashSet<string>();
 
+    private string translatedName = string.Empty;
+    private string translatedText = string.Empty;
+
     private unsafe void ManageBattleTalk()
     {
       Task.Run(() =>

@@ -18,8 +18,16 @@ internal class TranslationOverlay
 
   public SemaphoreSlim Semaphore { get; }
 
+  // NEW: Title Handling (for Talk/BattleTalk)
+  public string CurrentName { get; set; } = string.Empty;
+
+  public volatile int CurrentNameId;
+
+  public SemaphoreSlim NameSemaphore { get; }
+
   public TranslationOverlay()
   {
     this.Semaphore = new SemaphoreSlim(1, 1);
+    this.NameSemaphore = new SemaphoreSlim(1, 1);
   }
 }
