@@ -318,4 +318,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Error de traducción:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[La traducción de DeepSeek no está disponible. Por favor, compruebe su clave API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clave de API está vacía o no es válida. La traducción de DeepSeek no estará disponible.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clave de API está vacía o no es válida. La traducción de Gemini no estará disponible.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[La traducción de Géminis no está disponible. Por favor, compruebe su clave API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clave de API está vacía o no es válida. La traducción de Microsoft no estará disponible.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Traducción de Microsoft no disponible. Por favor, compruebe su clave API.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Personalice el mensaje utilizado para la traducción. Todos los siguientes marcadores de posición son obligatorios:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Personalización de avisos de AI Translator</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ ¡Faltan uno o más marcadores de posición obligatorios!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Restablecer a los valores predeterminados</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Vista previa en vivo con entrada de muestra:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Vista previa de copia</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Vista previa</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput (Entrada Rápida)</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Editor de avisos</value>
+  </data>
 </root>

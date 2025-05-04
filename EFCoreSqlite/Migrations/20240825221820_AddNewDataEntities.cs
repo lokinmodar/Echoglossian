@@ -1,4 +1,8 @@
-﻿using System;
+﻿// <copyright file="20240825221820_AddNewDataEntities.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -25,7 +29,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             GameVersion = table.Column<string>(type: "TEXT", nullable: false),
             CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
             UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
+            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
           },
           constraints: table =>
           {
@@ -46,7 +50,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             GameVersion = table.Column<string>(type: "TEXT", nullable: false),
             CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
             UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
+            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
           },
           constraints: table =>
           {
@@ -66,7 +70,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             TranslationEngine = table.Column<int>(type: "INTEGER", nullable: false),
             CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
             UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
+            RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
           },
           constraints: table =>
           {

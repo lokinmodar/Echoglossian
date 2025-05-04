@@ -3,88 +3,62 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json;
 
 namespace Echoglossian.EFCoreSqlite.Models.Journal
 {
+  /// <summary>
+  /// Represents a quest plate in the database.
+  /// </summary>
   [Table("questplates")]
   public class QuestPlate
   {
     [Key]
     public int Id { get; set; }
 
-    [Required]
+    public string? QuestId { get; set; }
 
-    public string QuestId { get; set; }
+    public string? QuestName { get; set; }
 
-    [Required]
+    public string? OriginalQuestMessage { get; set; }
 
-    public string QuestName { get; set; }
+    public string? OriginalLang { get; set; }
 
-    [Required]
-    public string OriginalQuestMessage { get; set; }
+    public string? TranslatedQuestName { get; set; }
 
-    [Required]
-    public string OriginalLang { get; set; }
+    public string? TranslatedQuestMessage { get; set; }
 
-    [Required]
-    public string TranslatedQuestName { get; set; }
+    public string? TranslationLang { get; set; }
 
-    [Required]
-    public string TranslatedQuestMessage { get; set; }
+    public int? TranslationEngine { get; set; }
 
-    [Required]
-    public string TranslationLang { get; set; }
-
-    [Required]
-    public int TranslationEngine { get; set; }
-
-    [Required]
-    public DateTime CreatedDate { get; set; }
+    public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
 
     [NotMapped]
-    public Dictionary<string, string> Objectives { get; set; }
-
-    public string ObjectivesAsText { get; set; }
+    private Dictionary<string, string>? objectives;
 
     [NotMapped]
-    public Dictionary<string, string> Summaries { get; set; }
+    private Dictionary<string, string>? summaries;
 
-    public string SummariesAsText { get; set; }
+    public string? ObjectivesAsText { get; set; }
+
+    public string? SummariesAsText { get; set; }
 
     [Timestamp]
-    public byte[] RowVersion { get; set; }
-
-    [NotMapped]
-    public Dictionary<string, string> Texts { get; set; }
-
-    public string SerializedTexts { get; set; }
+    public byte[]? RowVersion { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QuestPlate"/> class.
     /// </summary>
-    /// <param name="questName"></param>
-    /// <param name="originalQuestMessage"></param>
-    /// <param name="originalLang"></param>
-    /// <param name="translatedQuestName"></param>
-    /// <param name="translatedQuestMessage"></param>
-    /// <param name="questId"></param>
-    /// <param name="translationLang"></param>
-    /// <param name="translationEngine"></param>
-    /// <param name="createdDate"></param>
-    /// <param name="updatedDate"></param>
     public QuestPlate(
-      string questName, string originalQuestMessage,
-      string originalLang,
-      string translatedQuestName, string translatedQuestMessage,
-      string questId, string translationLang, int translationEngine,
-      DateTime createdDate, DateTime? updatedDate)
+      string? questName, string? originalQuestMessage,
+      string? originalLang,
+      string? translatedQuestName, string? translatedQuestMessage,
+      string? questId, string? translationLang, int? translationEngine,
+      DateTime? createdDate, DateTime? updatedDate)
     {
       this.QuestId = questId;
       this.QuestName = questName;
@@ -96,53 +70,94 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
       this.TranslationEngine = translationEngine;
       this.CreatedDate = createdDate;
       this.UpdatedDate = updatedDate;
-      this.Objectives = new();
-      this.Summaries = new();
-      this.Texts = new();
+      this.objectives = new();
+      this.summaries = new();
     }
 
-    public void UpdateFieldsAsText()
+    /// <summary>
+    /// Lazily loads Objectives from text if needed.
+    /// </summary>
+    [NotMapped]
+    public Dictionary<string, string> Objectives
+    {
+      get
+      {
+        if (this.objectives == null)
+        {
+          // Parentheses are necessary to group the ?? operator inside the ternary
+          this.objectives = !string.IsNullOrEmpty(this.ObjectivesAsText)
+            ? (JsonConvert.DeserializeObject<Dictionary<string, string>>(this.ObjectivesAsText) ?? new Dictionary<string, string>())
+            : new Dictionary<string, string>();
+        }
+        return this.objectives;
+      }
+      set => this.objectives = value;
+    }
+
+    /// <summary>
+    /// Lazily loads Summaries from text if needed.
+    /// </summary>
+    [NotMapped]
+    public Dictionary<string, string> Summaries
+    {
+      get
+      {
+        if (this.summaries == null)
+        {
+          // Parentheses are necessary to group the ?? operator inside the ternary
+          this.summaries = !string.IsNullOrEmpty(this.SummariesAsText)
+            ? (JsonConvert.DeserializeObject<Dictionary<string, string>>(this.SummariesAsText) ?? new Dictionary<string, string>())
+            : new Dictionary<string, string>();
+        }
+        return this.summaries;
+      }
+      set => this.summaries = value;
+    }
+
+    /// <summary>
+    /// Updates the ObjectivesAsText and SummariesAsText fields based on their dictionaries.
+    /// </summary>
+    public void UpdateFieldsAsText(bool prettyPrint = false)
     {
       this.ObjectivesAsText = string.Empty;
       this.SummariesAsText = string.Empty;
-      if (this.Objectives != null && this.Objectives.Count != 0)
+
+      if (this.objectives != null && this.objectives.Count != 0)
       {
-        this.ObjectivesAsText = JsonSerializer.Serialize(this.Objectives);
+        this.ObjectivesAsText = JsonConvert.SerializeObject(
+          this.objectives,
+          prettyPrint ? Formatting.Indented : Formatting.None
+        );
       }
 
-      if (this.Summaries != null && this.Summaries.Count != 0)
+      if (this.summaries != null && this.summaries.Count != 0)
       {
-        this.SummariesAsText = JsonSerializer.Serialize(this.Summaries);
-      }
-
-      if (this.Texts != null && this.Texts.Count != 0)
-      {
-        this.SerializedTexts = JsonSerializer.Serialize(this.Texts);
+        this.SummariesAsText = JsonConvert.SerializeObject(
+          this.summaries,
+          prettyPrint ? Formatting.Indented : Formatting.None
+        );
       }
     }
 
+    /// <summary>
+    /// Forces loading the Objectives and Summaries from the stored text fields.
+    /// </summary>
     public void UpdateFieldsFromText()
     {
-      if (this.ObjectivesAsText != null && this.ObjectivesAsText != string.Empty)
-      {
-        this.Objectives = JsonSerializer.Deserialize<Dictionary<string, string>>(this.ObjectivesAsText);
-      }
+      // Parentheses needed here as well
+      this.objectives = !string.IsNullOrEmpty(this.ObjectivesAsText)
+        ? (JsonConvert.DeserializeObject<Dictionary<string, string>>(this.ObjectivesAsText) ?? new Dictionary<string, string>())
+        : new Dictionary<string, string>();
 
-      if (this.SummariesAsText != null && this.SummariesAsText != string.Empty)
-      {
-        this.Summaries = JsonSerializer.Deserialize<Dictionary<string, string>>(this.SummariesAsText);
-      }
-
-      if (this.SerializedTexts != null && this.SerializedTexts != string.Empty)
-      {
-        this.Texts = JsonSerializer.Deserialize<Dictionary<string, string>>(this.SerializedTexts);
-      }
+      this.summaries = !string.IsNullOrEmpty(this.SummariesAsText)
+        ? (JsonConvert.DeserializeObject<Dictionary<string, string>>(this.SummariesAsText) ?? new Dictionary<string, string>())
+        : new Dictionary<string, string>();
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
       return
-        $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.Objectives}, Summaries: {this.Summaries}, Texts: {this.Texts}";
+        $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.Objectives}, Summaries: {this.Summaries}";
     }
   }
 }

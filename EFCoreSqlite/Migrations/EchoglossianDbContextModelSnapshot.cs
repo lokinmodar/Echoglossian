@@ -23,19 +23,16 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("GameVersion")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalActionTooltip")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalActionTooltipLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -46,7 +43,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedActionTooltip")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
@@ -66,19 +63,16 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalBattleTalkMessage")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalBattleTalkMessageLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalSenderNameLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -87,7 +81,6 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .HasColumnType("BLOB");
 
             b.Property<string>("SenderName")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("TranslatedBattleTalkMessage")
@@ -96,11 +89,10 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedSenderName")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<DateTime?>("UpdatedDate")
@@ -117,19 +109,16 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("GameVersion")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalWindowStrings")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalWindowStringsLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -140,7 +129,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedWindowStrings")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
@@ -150,7 +139,6 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .HasColumnType("TEXT");
 
             b.Property<string>("WindowAddonName")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.HasKey("Id");
@@ -164,19 +152,16 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("GameVersion")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalItemTooltip")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalItemTooltipLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -187,7 +172,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedItemTooltip")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
@@ -207,26 +192,22 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("ObjectivesAsText")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalQuestMessage")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("QuestId")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("QuestName")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -238,18 +219,15 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .HasColumnType("TEXT");
 
             b.Property<string>("TranslatedQuestMessage")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("TranslatedQuestName")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<DateTime?>("UpdatedDate")
@@ -266,15 +244,13 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalLocationName")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalLocationNameLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -285,11 +261,10 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedLocationName")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<DateTime?>("UpdatedDate")
@@ -306,15 +281,13 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalNpcName")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalNpcNameLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -325,11 +298,10 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedNpcName")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<DateTime?>("UpdatedDate")
@@ -346,15 +318,13 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalSelectString")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalSelectStringLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -365,7 +335,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedSelectString")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
@@ -385,19 +355,16 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalSenderNameLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalTalkMessage")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalTalkMessageLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -406,7 +373,6 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .HasColumnType("BLOB");
 
             b.Property<string>("SenderName")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("TranslatedSenderName")
@@ -415,11 +381,10 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedTalkMessage")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<DateTime?>("UpdatedDate")
@@ -436,15 +401,13 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalTalkSubtitleMessage")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalTalkSubtitleMessageLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -455,11 +418,10 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("TranslatedTalkSubtitleMessage")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<DateTime?>("UpdatedDate")
@@ -476,15 +438,13 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .ValueGeneratedOnAdd()
                       .HasColumnType("INTEGER");
 
-            b.Property<DateTime>("CreatedDate")
+            b.Property<DateTime?>("CreatedDate")
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("OriginalToastMessage")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<byte[]>("RowVersion")
@@ -493,17 +453,15 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                       .HasColumnType("BLOB");
 
             b.Property<string>("ToastType")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<string>("TranslatedToastMessage")
                       .HasColumnType("TEXT");
 
-            b.Property<int>("TranslationEngine")
+            b.Property<int?>("TranslationEngine")
                       .HasColumnType("INTEGER");
 
             b.Property<string>("TranslationLang")
-                      .IsRequired()
                       .HasColumnType("TEXT");
 
             b.Property<DateTime?>("UpdatedDate")

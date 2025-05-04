@@ -345,4 +345,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Ошибка перевода:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Перевод DeepSeek недоступен. Пожалуйста, проверьте свой ключ API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Ключ API пуст или недействителен. Перевод с помощью DeepSeek будет недоступен.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Ключ API пуст или недействителен. Перевод Gemini будет недоступен.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Перевод Gemini недоступен. Пожалуйста, проверьте свой ключ API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Ключ API пуст или недействителен. Перевод Microsoft будет недоступен.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Перевод Microsoft недоступен. Пожалуйста, проверьте свой ключ API.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Настройте подсказку, используемую для перевода. Все следующие заполнители являются обязательными:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Настройка подсказок AI Translator</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Отсутствует один или несколько обязательных заполнителей!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Сброс до значений по умолчанию</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Предварительный просмотр в реальном времени с образцом входных данных:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Копировать предварительный просмотр</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Спасать</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Предварительный просмотр</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput (Ввод запросов)</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Редактор подсказок</value>
+  </data>
 </root>

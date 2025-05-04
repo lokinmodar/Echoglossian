@@ -345,4 +345,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Übersetzungsfehler:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[DeepSeek-Übersetzung nicht verfügbar. Bitte überprüfen Sie Ihren API-Schlüssel.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Der API-Schlüssel ist leer oder ungültig. Die DeepSeek-Übersetzung wird nicht verfügbar sein.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Der API-Schlüssel ist leer oder ungültig. Die Gemini-Übersetzung wird nicht verfügbar sein.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Gemini-Übersetzung nicht verfügbar. Bitte überprüfen Sie Ihren API-Schlüssel.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Der API-Schlüssel ist leer oder ungültig. Die Microsoft-Übersetzung wird nicht verfügbar sein.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Microsoft-Übersetzung nicht verfügbar. Bitte überprüfen Sie Ihren API-Schlüssel.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Passen Sie die für die Übersetzung verwendete Eingabeaufforderung an. Alle folgenden Platzhalter sind erforderlich:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Anpassung der Eingabeaufforderung des KI-Übersetzers</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Es fehlen ein oder mehrere erforderliche Platzhalter!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Auf Standard zurücksetzen</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Live-Vorschau mit Beispieleingabe:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Vorschau kopieren</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Retten</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Vorschau</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>Eingabeaufforderung-Eingabe</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Eingabeaufforderungs-Editor</value>
+  </data>
 </root>

@@ -3,9 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-using System.Numerics;
-
 using Dalamud.Configuration;
 
 namespace Echoglossian
@@ -124,19 +121,81 @@ namespace Echoglossian
 
     public string ChatGPTBaseUrl = "https://api.openai.com/v1";
 
-    public string LlmModel = "gpt-4o-mini";
+    public string OpenAILlmModel = "gpt-4o-mini";
 
     public float ChatGptTemperature = 0.1f;
+
+    public string ChatGptEngine = "davinci";
+
+    public string ChatGptModel = "gpt-3.5-turbo-16k-0613";
+
+    public string? ChatGptPrompt = string.Empty;
+
+    public string AiTranslatorPrompt = string.Empty;
 
     public float FontScale = 1;
 
     public float BattleTalkFontScale = 1;
 
-    public string PluginVersion { get; set; } = "2.0.0";
+    public int GoogleTranslateVersion = 2;
 
-    public int Version { get; set; } = 5;
+    public string PluginVersion = "2.0.0";
+
+    public string YandexFreeApiKey = string.Empty;
+
+    public bool UsePaidYandexApi = false;
+
+    public bool UseYandexV2ForFreeApi = false;
+
+    public string YandexFolderId = string.Empty;
+
+    public string YandexPaidApiKey = string.Empty;
+
+    public int YandexCharactersTranslated = 0;
+
+    public string? YandexCloudPrompt = string.Empty;
+
+    public string DeepSeekBaseUrl = "https://api.deepseek.com/v1";
+
+    public string? DeepSeekTranslatorApiKey = string.Empty;
+
+    public string? DeepSeekModel = "deepseek-chat";
+
+    public float DeepSeekTemperature = 0.1f;
+
+    public string? DeepSeekPrompt = string.Empty;
+
+    public string? AwsRegion = "us-east-1";
+
+    public string? AwsAccessKey = string.Empty;
+
+    public string? AwsSecretKey = string.Empty;
+    public string? AwsTranslateModel = "general";
+    public string? AmazonPrompt = string.Empty;
+
+    public string? GeminiTranslatorApiKey = string.Empty;
+
+    public string? GeminiModel = "gemini-pro";
+
+    public float GeminiTemperature = 0.1f;
+
+    public string? GeminiPrompt = string.Empty;
+
+    public string? MicrosoftTranslatorApiKey = string.Empty;
+    public string? MicrosoftTranslatorRegion = string.Empty;
+    public string? MicrosoftTranslatorEndpoint = "https://api.cognitive.microsofttranslator.com";
+    public string? MicrosoftTranslatorModel = "general";
+    public string? MicrosoftTranslatorPrompt = string.Empty;
+
+    public string? OpenRouterModel = string.Empty;
+    public float OpenRouterTemperature = 0.1f;
+    public string? OpenRouterApiKey = string.Empty;
+    public string? OpenRouterBaseUrl = "https://openrouter.ai/api/v1/";
+    public string? OpenRouterPrompt = string.Empty;
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
+
+    public int Version { get; set; } = 5;
   }
 }

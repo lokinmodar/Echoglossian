@@ -449,6 +449,70 @@
           <source>Translation Error:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Itzulpen-akatsa:</target>
         </trans-unit>
+        <trans-unit id="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[DeepSeek translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[ DeepSeeken itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. DeepSeek translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PIIren gakoa hutsik edo ez da baliozkoa. DeepSeeken itzulpena ez da eskuragarri egongo.</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Gemini translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PIIren gakoa hutsik edo ez da baliozkoa. Geminiren itzulpena ez da eskuragarri egongo.</target>
+        </trans-unit>
+        <trans-unit id="GeminiTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Gemini translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Geminisen itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Microsoft translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PIIren gakoa hutsik edo ez da baliozkoa. Microsoften itzulpena ez da eskuragarri egongo.</target>
+        </trans-unit>
+        <trans-unit id="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Microsoft translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Microsoften itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</target>
+        </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Bidali itzulpenerako erabilitako mezua. Posizio-markagailu hauek guztiak derrigorrezkoak dira:</target>
+        </trans-unit>
+        <trans-unit id="AITranslatorPromptCustomization" translate="yes" xml:space="preserve">
+          <source>AI Translator Prompt Customization</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">AI Translator-en abisuen pertsonalizazioa</target>
+        </trans-unit>
+        <trans-unit id="MissingOneOrMoreRequiredPlaceholders" translate="yes" xml:space="preserve">
+          <source>⚠ Missing one or more required placeholders!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">⚠ Derrigorrezko posizio-markagailu bat edo gehiago falta dira!</target>
+        </trans-unit>
+        <trans-unit id="ResetToDefault" translate="yes" xml:space="preserve">
+          <source>Reset to Default</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aurrez zehaztutako balioak berrezartzea</target>
+        </trans-unit>
+        <trans-unit id="LivePreviewWithSampleInput" translate="yes" xml:space="preserve">
+          <source>Live preview with sample input:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aldez aurreko zuzeneko bista, lagin-sarrerarekin:</target>
+        </trans-unit>
+        <trans-unit id="CopyPreview" translate="yes" xml:space="preserve">
+          <source>Copy Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Kopiaren aldez aurreko bista</target>
+        </trans-unit>
+        <trans-unit id="Save" translate="yes" xml:space="preserve">
+          <source>Save</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Salbatu</target>
+        </trans-unit>
+        <trans-unit id="Preview" translate="yes" xml:space="preserve">
+          <source>Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Aurrebista</target>
+        </trans-unit>
+        <trans-unit id="PromptInput" translate="yes" xml:space="preserve">
+          <source>PromptInput</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PromptInput (Entrada Rápida)</target>
+        </trans-unit>
+        <trans-unit id="Editor" translate="yes" xml:space="preserve">
+          <source>Prompt Editor</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Abisuen editorea</target>
+        </trans-unit>
       </group>
     </body>
   </file>

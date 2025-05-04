@@ -345,4 +345,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Μεταφραστικό λάθος:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση DeepSeek δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση DeepSeek δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση Gemini δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση Gemini δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση της Microsoft δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση της Microsoft δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Προσαρμόστε την προτροπή που χρησιμοποιείται για τη μετάφραση. Απαιτούνται όλα τα ακόλουθα σύμβολα κράτησης θέσης:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Προσαρμογή προτροπής μεταφραστή AI</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Λείπουν ένα ή περισσότερα απαιτούμενα σύμβολα κράτησης θέσης!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Επαναφορά στην προεπιλογή</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Ζωντανή προεπισκόπηση με εισαγωγή δείγματος:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Αντιγραφή προεπισκόπησης</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Σώζω</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Προεπισκόπηση</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Επεξεργαστής προτροπής</value>
+  </data>
 </root>

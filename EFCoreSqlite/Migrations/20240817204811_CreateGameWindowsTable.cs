@@ -3,16 +3,12 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-
 using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
 
 namespace Echoglossian.EFCoreSqlite.Migrations
 {
   /// <inheritdoc />
-  public partial class RemoveMaxLengthFromColumns : Migration
+  public partial class CreateGameWindowsTable : Migration
   {
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)

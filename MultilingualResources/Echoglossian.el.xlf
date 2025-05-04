@@ -449,6 +449,70 @@
           <source>Translation Error:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Μεταφραστικό λάθος:</target>
         </trans-unit>
+        <trans-unit id="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[DeepSeek translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Η μετάφραση DeepSeek δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. DeepSeek translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση DeepSeek δεν θα είναι διαθέσιμη.</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Gemini translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση Gemini δεν θα είναι διαθέσιμη.</target>
+        </trans-unit>
+        <trans-unit id="GeminiTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Gemini translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Η μετάφραση Gemini δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Microsoft translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση της Microsoft δεν θα είναι διαθέσιμη.</target>
+        </trans-unit>
+        <trans-unit id="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Microsoft translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Η μετάφραση της Microsoft δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</target>
+        </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Προσαρμόστε την προτροπή που χρησιμοποιείται για τη μετάφραση. Απαιτούνται όλα τα ακόλουθα σύμβολα κράτησης θέσης:</target>
+        </trans-unit>
+        <trans-unit id="AITranslatorPromptCustomization" translate="yes" xml:space="preserve">
+          <source>AI Translator Prompt Customization</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Προσαρμογή προτροπής μεταφραστή AI</target>
+        </trans-unit>
+        <trans-unit id="MissingOneOrMoreRequiredPlaceholders" translate="yes" xml:space="preserve">
+          <source>⚠ Missing one or more required placeholders!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">⚠ Λείπουν ένα ή περισσότερα απαιτούμενα σύμβολα κράτησης θέσης!</target>
+        </trans-unit>
+        <trans-unit id="ResetToDefault" translate="yes" xml:space="preserve">
+          <source>Reset to Default</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Επαναφορά στην προεπιλογή</target>
+        </trans-unit>
+        <trans-unit id="LivePreviewWithSampleInput" translate="yes" xml:space="preserve">
+          <source>Live preview with sample input:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ζωντανή προεπισκόπηση με εισαγωγή δείγματος:</target>
+        </trans-unit>
+        <trans-unit id="CopyPreview" translate="yes" xml:space="preserve">
+          <source>Copy Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Αντιγραφή προεπισκόπησης</target>
+        </trans-unit>
+        <trans-unit id="Save" translate="yes" xml:space="preserve">
+          <source>Save</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Σώζω</target>
+        </trans-unit>
+        <trans-unit id="Preview" translate="yes" xml:space="preserve">
+          <source>Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Προεπισκόπηση</target>
+        </trans-unit>
+        <trans-unit id="PromptInput" translate="yes" xml:space="preserve">
+          <source>PromptInput</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PromptInput</target>
+        </trans-unit>
+        <trans-unit id="Editor" translate="yes" xml:space="preserve">
+          <source>Prompt Editor</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Επεξεργαστής προτροπής</target>
+        </trans-unit>
       </group>
     </body>
   </file>

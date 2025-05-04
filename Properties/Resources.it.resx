@@ -345,4 +345,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Errore di traduzione:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Traduzione DeepSeek non disponibile. Si prega di controllare la chiave API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La chiave API è vuota o non valida. La traduzione di DeepSeek non sarà disponibile.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La chiave API è vuota o non valida. La traduzione di Gemini non sarà disponibile.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Traduzione Gemini non disponibile. Si prega di controllare la chiave API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La chiave API è vuota o non valida. La traduzione Microsoft non sarà disponibile.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Traduzione Microsoft non disponibile. Si prega di controllare la chiave API.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Personalizza il prompt utilizzato per la traduzione. Sono necessari tutti i seguenti segnaposto:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Personalizzazione rapida di AI Translator</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Mancano uno o più segnaposto obbligatori!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Ripristina impostazioni predefinite</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Anteprima dal vivo con input di esempio:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Anteprima copia</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Salvare</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Anteprima</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>Input del prompt</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Prompt Editor</value>
+  </data>
 </root>

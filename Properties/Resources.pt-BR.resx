@@ -318,4 +318,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Erro de tradução:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Tradução do DeepSeek indisponível. Por favor, verifique sua chave de API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>A chave de API está vazia ou é inválida. A tradução do DeepSeek não estará disponível.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>A chave de API está vazia ou é inválida. A tradução do Gemini não estará disponível.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Tradução em Gêmeos indisponível. Por favor, verifique sua chave de API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>A chave de API está vazia ou é inválida. A tradução da Microsoft não estará disponível.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Tradução da Microsoft indisponível. Por favor, verifique sua chave de API.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Personalize o prompt usado para tradução. Todos os placeholders a seguir são necessários:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Personalização de prompt do AI Translator</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Faltando um ou mais espaços reservados necessários!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Redefinir para o padrão</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Visualização ao vivo com entrada de amostra:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Copiar visualização</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Visualizar</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>Entrada de prompt</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Editor de prompts</value>
+  </data>
 </root>

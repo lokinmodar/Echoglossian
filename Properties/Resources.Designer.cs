@@ -61,11 +61,47 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AI Translator Prompt Customization.
+        /// </summary>
+        public static string AITranslatorPromptCustomization {
+            get {
+                return ResourceManager.GetString("AITranslatorPromptCustomization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to API Key is empty or invalid. ChatGPT translation will not be available..
         /// </summary>
         public static string APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable {
             get {
                 return ResourceManager.GetString("APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to API Key is empty or invalid. DeepSeek translation will not be available..
+        /// </summary>
+        public static string APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable {
+            get {
+                return ResourceManager.GetString("APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to API Key is empty or invalid. Gemini translation will not be available..
+        /// </summary>
+        public static string APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable {
+            get {
+                return ResourceManager.GetString("APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to API Key is empty or invalid. Microsoft translation will not be available..
+        /// </summary>
+        public static string APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable {
+            get {
+                return ResourceManager.GetString("APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable", resourceCulture);
             }
         }
         
@@ -305,11 +341,29 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy Preview.
+        /// </summary>
+        public static string CopyPreview {
+            get {
+                return ResourceManager.GetString("CopyPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are the plugin assets downloaded?.
         /// </summary>
         public static string CurrentPluginAssetsStatus {
             get {
                 return ResourceManager.GetString("CurrentPluginAssetsStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Customize the prompt used for translation. All of the following placeholders are required:.
+        /// </summary>
+        public static string CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired {
+            get {
+                return ResourceManager.GetString("CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired", resourceCulture);
             }
         }
         
@@ -347,6 +401,15 @@ namespace Echoglossian.Properties {
         public static string DeepLTranslatorAPIKeyLink {
             get {
                 return ResourceManager.GetString("DeepLTranslatorAPIKeyLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [DeepSeek translation unavailable. Please check your API key.].
+        /// </summary>
+        public static string DeepSeekTranslationUnavailablePleaseCheckYourAPIKey {
+            get {
+                return ResourceManager.GetString("DeepSeekTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
             }
         }
         
@@ -405,6 +468,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prompt Editor.
+        /// </summary>
+        public static string Editor {
+            get {
+                return ResourceManager.GetString("Editor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activate game text realtime translation.
         /// </summary>
         public static string EnableTranslation {
@@ -419,6 +491,15 @@ namespace Echoglossian.Properties {
         public static string FontColorSelectLabel {
             get {
                 return ResourceManager.GetString("FontColorSelectLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Gemini translation unavailable. Please check your API key.].
+        /// </summary>
+        public static string GeminiTranslationUnavailablePleaseCheckYourAPIKey {
+            get {
+                return ResourceManager.GetString("GeminiTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
             }
         }
         
@@ -495,6 +576,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Live preview with sample input:.
+        /// </summary>
+        public static string LivePreviewWithSampleInput {
+            get {
+                return ResourceManager.GetString("LivePreviewWithSampleInput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         public static byte[] logo {
@@ -505,12 +595,30 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [Microsoft translation unavailable. Please check your API key.].
+        /// </summary>
+        public static string MicrosoftTranslationUnavailablePleaseCheckYourAPIKey {
+            get {
+                return ResourceManager.GetString("MicrosoftTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         public static byte[] minfilia {
             get {
                 object obj = ResourceManager.GetObject("minfilia", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ⚠ Missing one or more required placeholders!.
+        /// </summary>
+        public static string MissingOneOrMoreRequiredPlaceholders {
+            get {
+                return ResourceManager.GetString("MissingOneOrMoreRequiredPlaceholders", resourceCulture);
             }
         }
         
@@ -732,6 +840,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Preview.
+        /// </summary>
+        public static string Preview {
+            get {
+                return ResourceManager.GetString("Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PromptInput.
+        /// </summary>
+        public static string PromptInput {
+            get {
+                return ResourceManager.GetString("PromptInput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         public static byte[] prttws {
@@ -765,6 +891,24 @@ namespace Echoglossian.Properties {
         public static string ResetConfigsButton {
             get {
                 return ResourceManager.GetString("ResetConfigsButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset to Default.
+        /// </summary>
+        public static string ResetToDefault {
+            get {
+                return ResourceManager.GetString("ResetToDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save.
+        /// </summary>
+        public static string Save {
+            get {
+                return ResourceManager.GetString("Save", resourceCulture);
             }
         }
         

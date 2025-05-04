@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,44 +14,38 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    public string ToastType { get; set; }
+    public string? ToastType { get; set; }
 
-    [Required]
-    public string OriginalToastMessage { get; set; }
+    public string? OriginalToastMessage { get; set; }
 
-    [Required]
-    public string OriginalLang { get; set; }
+    public string? OriginalLang { get; set; }
 
-    public string TranslatedToastMessage { get; set; }
+    public string? TranslatedToastMessage { get; set; }
 
-    [Required]
-    public string TranslationLang { get; set; }
+    public string? TranslationLang { get; set; }
 
-    [Required]
-    public int TranslationEngine { get; set; }
+    public int? TranslationEngine { get; set; }
 
-    [Required]
-    public DateTime CreatedDate { get; set; }
+    public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
 
     [Timestamp]
-    public byte[] RowVersion { get; set; }
+    public byte[]? RowVersion { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ToastMessage"/> class.
     /// </summary>
-    /// <param name="toastType"></param>
-    /// <param name="originalToastMessage"></param>
-    /// <param name="originalLang"></param>
-    /// <param name="translatedToastMessage"></param>
-    /// <param name="translationLang"></param>
-    /// <param name="translationEngine"></param>
-    /// <param name="createdDate"></param>
-    /// <param name="updatedDate"></param>
-    public ToastMessage(string toastType, string originalToastMessage, string originalLang,
-      string translatedToastMessage, string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)
+    /// <param name="toastType">Type of the toast message.</param>
+    /// <param name="originalToastMessage">The original toast message.</param>
+    /// <param name="originalLang">The original language of the toast message.</param>
+    /// <param name="translatedToastMessage">The translated toast message.</param>
+    /// <param name="translationLang">The language of the translated toast message.</param>
+    /// <param name="translationEngine">The translation engine used.</param>
+    /// <param name="createdDate">The date the toast message was created.</param>
+    /// <param name="updatedDate">The date the toast message was last updated.</param>
+    public ToastMessage(string? toastType, string? originalToastMessage, string? originalLang,
+      string? translatedToastMessage, string? translationLang, int? translationEngine, DateTime? createdDate, DateTime? updatedDate)
     {
       this.ToastType = toastType;
       this.OriginalToastMessage = originalToastMessage;
@@ -64,7 +57,7 @@ namespace Echoglossian.EFCoreSqlite.Models
       this.UpdatedDate = updatedDate;
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
       return
         $"Id: {this.Id}, ToastType: {this.ToastType}, OriginalMsg: {this.OriginalToastMessage}, OriginalLang: {this.OriginalLang}, TranslMsg: {this.TranslatedToastMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}";

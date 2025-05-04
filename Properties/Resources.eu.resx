@@ -345,4 +345,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Itzulpen-akatsa:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[ DeepSeeken itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>PIIren gakoa hutsik edo ez da baliozkoa. DeepSeeken itzulpena ez da eskuragarri egongo.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>PIIren gakoa hutsik edo ez da baliozkoa. Geminiren itzulpena ez da eskuragarri egongo.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Geminisen itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>PIIren gakoa hutsik edo ez da baliozkoa. Microsoften itzulpena ez da eskuragarri egongo.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Microsoften itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Bidali itzulpenerako erabilitako mezua. Posizio-markagailu hauek guztiak derrigorrezkoak dira:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>AI Translator-en abisuen pertsonalizazioa</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Derrigorrezko posizio-markagailu bat edo gehiago falta dira!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Aurrez zehaztutako balioak berrezartzea</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Aldez aurreko zuzeneko bista, lagin-sarrerarekin:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Kopiaren aldez aurreko bista</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Salbatu</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Aurrebista</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput (Entrada Rápida)</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Abisuen editorea</value>
+  </data>
 </root>

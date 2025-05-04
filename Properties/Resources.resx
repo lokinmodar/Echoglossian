@@ -451,4 +451,52 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Translation Error:</value>
   </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[DeepSeek translation unavailable. Please check your API key.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API Key is empty or invalid. DeepSeek translation will not be available.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API Key is empty or invalid. Gemini translation will not be available.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Gemini translation unavailable. Please check your API key.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API Key is empty or invalid. Microsoft translation will not be available.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Microsoft translation unavailable. Please check your API key.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Customize the prompt used for translation. All of the following placeholders are required:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>AI Translator Prompt Customization</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Missing one or more required placeholders!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Reset to Default</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Live preview with sample input:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Copy Preview</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Prompt Editor</value>
+  </data>
 </root>

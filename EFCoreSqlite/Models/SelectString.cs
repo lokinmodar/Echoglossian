@@ -1,4 +1,8 @@
-﻿using System;
+﻿// <copyright file="SelectString.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,38 +14,34 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    public string OriginalSelectString { get; set; }
+    public string? OriginalSelectString { get; set; }
 
-    [Required]
-    public string OriginalSelectStringLang { get; set; }
+    public string? OriginalSelectStringLang { get; set; }
 
-    public string TranslatedSelectString { get; set; }
+    public string? TranslatedSelectString { get; set; }
 
-    public string TranslationLang { get; set; }
+    public string? TranslationLang { get; set; }
 
-    [Required]
-    public int TranslationEngine { get; set; }
+    public int? TranslationEngine { get; set; }
 
-    [Required]
-    public DateTime CreatedDate { get; set; }
+    public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
 
     [Timestamp]
-    public byte[] RowVersion { get; set; }
+    public byte[]? RowVersion { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SelectString"/> class.
     /// </summary>
-    /// <param name="originalSelectString"></param>
-    /// <param name="originalSelectStringLang"></param>
-    /// <param name="translatedSelectString"></param>
-    /// <param name="translationLang"></param>
-    /// <param name="translationEngine"></param>
-    /// <param name="createdDate"></param>
-    /// <param name="updatedDate"></param>
-    public SelectString(string originalSelectString, string originalSelectStringLang, string translatedSelectString, string translationLang, int translationEngine, DateTime createdDate, DateTime? updatedDate)
+    /// <param name="originalSelectString">The original select string.</param>
+    /// <param name="originalSelectStringLang">The language of the original select string.</param>
+    /// <param name="translatedSelectString">The translated select string.</param>
+    /// <param name="translationLang">The language of the translated select string.</param>
+    /// <param name="translationEngine">The translation engine used.</param>
+    /// <param name="createdDate">The date the record was created.</param>
+    /// <param name="updatedDate">The date the record was last updated.</param>
+    public SelectString(string? originalSelectString, string? originalSelectStringLang, string? translatedSelectString, string? translationLang, int? translationEngine, DateTime? createdDate, DateTime? updatedDate)
     {
       this.OriginalSelectString = originalSelectString;
       this.OriginalSelectStringLang = originalSelectStringLang;
@@ -52,7 +52,7 @@ namespace Echoglossian.EFCoreSqlite.Models
       this.UpdatedDate = updatedDate;
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
       return $"Id: {this.Id}, OriginalSelectString: {this.OriginalSelectString}, OriginalSelectStringLang: {this.OriginalSelectStringLang}, TranslatedSelectString: {this.TranslatedSelectString}, TranslationLang: {this.TranslationLang}, TranslationEngine: {this.TranslationEngine}, CreatedDate: {this.CreatedDate}, UpdatedDate: {this.UpdatedDate}";
     }

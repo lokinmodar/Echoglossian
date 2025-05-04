@@ -20,7 +20,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
 #pragma warning disable 612, 618
       modelBuilder.HasAnnotation("ProductVersion", "7.0.12");
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.BattleTalkMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.BattleTalkMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -75,7 +75,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("battletalkmessages");
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.Journal.QuestPlate", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -132,7 +132,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("questplates");
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.LocationName", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.LocationName", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -174,7 +174,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("locationnames");
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.NpcNames", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.NpcNames", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -216,7 +216,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("npcnames");
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TalkMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.TalkMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -271,7 +271,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("talkmessages");
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.TalkSubtitleMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -313,7 +313,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("talksubtitlemessages");
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ToastMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.ToastMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()

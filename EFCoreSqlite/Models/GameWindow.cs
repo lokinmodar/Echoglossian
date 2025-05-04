@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,46 +14,40 @@ namespace Echoglossian.EFCoreSqlite.Models
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    public string WindowAddonName { get; set; }
+    public string? WindowAddonName { get; set; }
 
-    [Required]
-    public string OriginalWindowStrings { get; set; }
+    public string? OriginalWindowStrings { get; set; }
 
-    [Required]
-    public string OriginalWindowStringsLang { get; set; }
+    public string? OriginalWindowStringsLang { get; set; }
 
-    public string TranslatedWindowStrings { get; set; }
+    public string? TranslatedWindowStrings { get; set; }
 
-    public string TranslationLang { get; set; }
+    public string? TranslationLang { get; set; }
 
-    [Required]
-    public int TranslationEngine { get; set; }
+    public int? TranslationEngine { get; set; }
 
-    [Required]
-    public string GameVersion { get; set; }
+    public string? GameVersion { get; set; }
 
-    [Required]
-    public DateTime CreatedDate { get; set; }
+    public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
 
     [Timestamp]
-    public byte[] RowVersion { get; set; }
+    public byte[]? RowVersion { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GameWindow"/> class.
     /// </summary>
-    /// <param name="windowAddonName"></param>
-    /// <param name="originalWindowStrings"></param>
-    /// <param name="originalWindowStringsLang"></param>
-    /// <param name="translatedWindowStrings"></param>
-    /// <param name="translationLang"></param>
-    /// <param name="translationEngine"></param>
-    /// <param name="gameVersion"></param>
-    /// <param name="createdDate"></param>
-    /// <param name="updatedDate"></param>
-    public GameWindow(string windowAddonName, string originalWindowStrings, string originalWindowStringsLang, string translatedWindowStrings, string translationLang, int translationEngine, string gameVersion, DateTime createdDate, DateTime? updatedDate)
+    /// <param name="windowAddonName">The name of the window addon.</param>
+    /// <param name="originalWindowStrings">The original window strings.</param>
+    /// <param name="originalWindowStringsLang">The language of the original window strings.</param>
+    /// <param name="translatedWindowStrings">The translated window strings.</param>
+    /// <param name="translationLang">The language of the translation.</param>
+    /// <param name="translationEngine">The translation engine used.</param>
+    /// <param name="gameVersion">The version of the game.</param>
+    /// <param name="createdDate">The date the record was created.</param>
+    /// <param name="updatedDate">The date the record was last updated.</param>
+    public GameWindow(string? windowAddonName, string? originalWindowStrings, string? originalWindowStringsLang, string? translatedWindowStrings, string? translationLang, int? translationEngine, string? gameVersion, DateTime? createdDate, DateTime? updatedDate)
     {
       this.WindowAddonName = windowAddonName;
       this.OriginalWindowStrings = originalWindowStrings;
@@ -67,7 +60,7 @@ namespace Echoglossian.EFCoreSqlite.Models
       this.UpdatedDate = updatedDate;
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
       return $"GameWindow: Id={this.Id}, WindowAddonName={this.WindowAddonName}, OriginalWindowStrings={this.OriginalWindowStrings}, OriginalWindowStringsLang={this.OriginalWindowStringsLang}, TranslatedWindowStrings={this.TranslatedWindowStrings}, TranslationLang={this.TranslationLang}, TranslationEngine={this.TranslationEngine}, GameVersion={this.GameVersion}, CreatedDate={this.CreatedDate}, UpdatedDate={this.UpdatedDate}";
     }

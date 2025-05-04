@@ -20,7 +20,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
 #pragma warning disable 612, 618
       modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.BattleTalkMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.BattleTalkMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -71,7 +71,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("battletalkmessages", (string)null);
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.GameWindow", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.GameWindow", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -118,7 +118,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("gamewindows", (string)null);
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.Journal.QuestPlate", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -177,7 +177,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("questplates", (string)null);
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.LocationName", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.LocationName", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -217,7 +217,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("locationnames", (string)null);
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.NpcNames", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.NpcNames", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -257,7 +257,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("npcnames", (string)null);
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TalkMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.TalkMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -308,7 +308,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("talkmessages", (string)null);
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.TalkSubtitleMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()
@@ -348,7 +348,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.ToTable("talksubtitlemessages", (string)null);
           });
 
-      modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ToastMessage", b =>
+      modelBuilder.Entity("EFCoreSqlite.Models.ToastMessage", b =>
           {
             b.Property<int>("Id")
                       .ValueGeneratedOnAdd()

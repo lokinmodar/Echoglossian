@@ -4,15 +4,12 @@ using Echoglossian.EFCoreSqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-
-#nullable disable
 
 namespace Echoglossian.EFCoreSqlite.Migrations
 {
   [DbContext(typeof(EchoglossianDbContext))]
   [Migration("20240817204811_RemoveMaxLengthFromColumns")]
-  partial class RemoveMaxLengthFromColumns
+  partial class CreateGameWindowsTable
   {
     /// <inheritdoc />
     protected override void BuildTargetModel(ModelBuilder modelBuilder)

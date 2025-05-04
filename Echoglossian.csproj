@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Dalamud.NET.SDK/12.0.2">
   <PropertyGroup Label="MultilingualAppToolkit">
     <MultilingualAppToolkitVersion>4.0</MultilingualAppToolkitVersion>
     <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
@@ -6,14 +6,14 @@
     <SuppressPseudoWarning Condition="'$(Configuration)' == 'Debug'">true</SuppressPseudoWarning>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <AssemblyName>Echoglossian</AssemblyName>
     <Platforms>x64</Platforms>
     <Authors>lokinmodar</Authors>
     <NeutralLanguage>en</NeutralLanguage>
     <VersionMajor>3</VersionMajor>
-    <VersionMinor>20</VersionMinor>
+    <VersionMinor>21</VersionMinor>
     <VersionPatch Condition="'$(VersionPatch)' == ''">$([System.DateTime]::UtcNow.ToString("yyMM"))</VersionPatch>
     <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
@@ -27,7 +27,7 @@
     <Description>Final Fantasy XIV game text translator</Description>
     <Copyright>lokinmodar - 2021-2024</Copyright>
     <PackageProjectUrl>https://github.com/lokinmodar/Echoglossian/</PackageProjectUrl>
-    <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+    <Nullable>enable</Nullable>
     <ApplicationIcon>minfilia.ico</ApplicationIcon>
     <PackageLicenseExpression>Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License</PackageLicenseExpression>
     <PackageIcon>logo.png</PackageIcon>
@@ -35,7 +35,7 @@
     <RepositoryUrl>https://github.com/lokinmodar/Echoglossian</RepositoryUrl>
     <PackageTags>ffxiv, translation, dll, plugin, XIVLauncher</PackageTags>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets" Label="MultilingualAppToolkit" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\v$(MultilingualAppToolkitVersion)\Microsoft.Multilingual.ResxResources.targets')" />
   <Target Name="MATPrerequisite" BeforeTargets="PrepareForBuild" Condition="!Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets')" Label="MultilingualAppToolkit">
@@ -43,7 +43,7 @@
   </Target>
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+
 
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
@@ -243,11 +243,12 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Translate" Version="3.7.400.69" />
-    <PackageReference Include="DalamudPackager" Version="11.0.0" />
-    <PackageReference Include="DeepL.net" Version="1.11.0" />
-    <PackageReference Include="GTranslate" Version="2.2.8" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
+    <PackageReference Include="Dalamud.NET.Sdk" Version="12.0.2" />
+    <PackageReference Include="AWSSDK.Translate" Version="3.7.400.131" />
+
+    <PackageReference Include="DeepL.net" Version="1.14.0" />
+    <PackageReference Include="GTranslate" Version="2.3.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
@@ -262,7 +263,7 @@
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.4" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Private.Uri" Version="4.3.2" />
   </ItemGroup>
@@ -277,11 +278,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\pix.png" />
     <EmbeddedResource Include="Resources\minfilia.ico" />
-    <None Include="cu.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>cu.targets</DependentUpon>
-    </None>
+
     <XliffResource Include="MultilingualResources\Echoglossian.da.xlf" />
     <XliffResource Include="MultilingualResources\Echoglossian.de.xlf" />
     <XliffResource Include="MultilingualResources\Echoglossian.el.xlf" />
@@ -294,11 +291,7 @@
     <XliffResource Include="MultilingualResources\Echoglossian.ru.xlf" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="cu.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>cu.targets</DependentUpon>
-    </Compile>
+
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -311,32 +304,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Dalamud">
-      <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="FFXIVClientStructs">
-      <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ImGui.NET">
-      <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ImGuiScene">
-      <HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Lumina">
-      <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Lumina.Excel">
-      <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-  </ItemGroup>
+
   <ItemGroup>
     <None Update="Font\symbols.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -345,13 +313,13 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Update="cu.targets">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>cu.cs</LastGenOutput>
-    </None>
+
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DBmanagerUI\" />
   </ItemGroup>
 
 </Project>

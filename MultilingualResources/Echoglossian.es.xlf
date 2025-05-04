@@ -449,6 +449,70 @@
           <source>Translation Error:</source>
           <target state="translated" state-qualifier="mt-suggestion">Error de traducción:</target>
         </trans-unit>
+        <trans-unit id="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[DeepSeek translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[La traducción de DeepSeek no está disponible. Por favor, compruebe su clave API.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. DeepSeek translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">La clave de API está vacía o no es válida. La traducción de DeepSeek no estará disponible.</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Gemini translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">La clave de API está vacía o no es válida. La traducción de Gemini no estará disponible.</target>
+        </trans-unit>
+        <trans-unit id="GeminiTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Gemini translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[La traducción de Géminis no está disponible. Por favor, compruebe su clave API.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Microsoft translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">La clave de API está vacía o no es válida. La traducción de Microsoft no estará disponible.</target>
+        </trans-unit>
+        <trans-unit id="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Microsoft translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Traducción de Microsoft no disponible. Por favor, compruebe su clave API.]</target>
+        </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Personalice el mensaje utilizado para la traducción. Todos los siguientes marcadores de posición son obligatorios:</target>
+        </trans-unit>
+        <trans-unit id="AITranslatorPromptCustomization" translate="yes" xml:space="preserve">
+          <source>AI Translator Prompt Customization</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Personalización de avisos de AI Translator</target>
+        </trans-unit>
+        <trans-unit id="MissingOneOrMoreRequiredPlaceholders" translate="yes" xml:space="preserve">
+          <source>⚠ Missing one or more required placeholders!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">⚠ ¡Faltan uno o más marcadores de posición obligatorios!</target>
+        </trans-unit>
+        <trans-unit id="ResetToDefault" translate="yes" xml:space="preserve">
+          <source>Reset to Default</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Restablecer a los valores predeterminados</target>
+        </trans-unit>
+        <trans-unit id="LivePreviewWithSampleInput" translate="yes" xml:space="preserve">
+          <source>Live preview with sample input:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Vista previa en vivo con entrada de muestra:</target>
+        </trans-unit>
+        <trans-unit id="CopyPreview" translate="yes" xml:space="preserve">
+          <source>Copy Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Vista previa de copia</target>
+        </trans-unit>
+        <trans-unit id="Save" translate="yes" xml:space="preserve">
+          <source>Save</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Salvar</target>
+        </trans-unit>
+        <trans-unit id="Preview" translate="yes" xml:space="preserve">
+          <source>Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Vista previa</target>
+        </trans-unit>
+        <trans-unit id="PromptInput" translate="yes" xml:space="preserve">
+          <source>PromptInput</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PromptInput (Entrada Rápida)</target>
+        </trans-unit>
+        <trans-unit id="Editor" translate="yes" xml:space="preserve">
+          <source>Prompt Editor</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Editor de avisos</target>
+        </trans-unit>
       </group>
     </body>
   </file>

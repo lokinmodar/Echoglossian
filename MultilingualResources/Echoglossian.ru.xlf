@@ -449,6 +449,70 @@
           <source>Translation Error:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ошибка перевода:</target>
         </trans-unit>
+        <trans-unit id="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[DeepSeek translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Перевод DeepSeek недоступен. Пожалуйста, проверьте свой ключ API.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. DeepSeek translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ключ API пуст или недействителен. Перевод с помощью DeepSeek будет недоступен.</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Gemini translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ключ API пуст или недействителен. Перевод Gemini будет недоступен.</target>
+        </trans-unit>
+        <trans-unit id="GeminiTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Gemini translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Перевод Gemini недоступен. Пожалуйста, проверьте свой ключ API.]</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Microsoft translation will not be available.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ключ API пуст или недействителен. Перевод Microsoft будет недоступен.</target>
+        </trans-unit>
+        <trans-unit id="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Microsoft translation unavailable. Please check your API key.]</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Перевод Microsoft недоступен. Пожалуйста, проверьте свой ключ API.]</target>
+        </trans-unit>
+        <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
+          <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Настройте подсказку, используемую для перевода. Все следующие заполнители являются обязательными:</target>
+        </trans-unit>
+        <trans-unit id="AITranslatorPromptCustomization" translate="yes" xml:space="preserve">
+          <source>AI Translator Prompt Customization</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Настройка подсказок AI Translator</target>
+        </trans-unit>
+        <trans-unit id="MissingOneOrMoreRequiredPlaceholders" translate="yes" xml:space="preserve">
+          <source>⚠ Missing one or more required placeholders!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">⚠ Отсутствует один или несколько обязательных заполнителей!</target>
+        </trans-unit>
+        <trans-unit id="ResetToDefault" translate="yes" xml:space="preserve">
+          <source>Reset to Default</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Сброс до значений по умолчанию</target>
+        </trans-unit>
+        <trans-unit id="LivePreviewWithSampleInput" translate="yes" xml:space="preserve">
+          <source>Live preview with sample input:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Предварительный просмотр в реальном времени с образцом входных данных:</target>
+        </trans-unit>
+        <trans-unit id="CopyPreview" translate="yes" xml:space="preserve">
+          <source>Copy Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Копировать предварительный просмотр</target>
+        </trans-unit>
+        <trans-unit id="Save" translate="yes" xml:space="preserve">
+          <source>Save</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Спасать</target>
+        </trans-unit>
+        <trans-unit id="Preview" translate="yes" xml:space="preserve">
+          <source>Preview</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Предварительный просмотр</target>
+        </trans-unit>
+        <trans-unit id="PromptInput" translate="yes" xml:space="preserve">
+          <source>PromptInput</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">PromptInput (Ввод запросов)</target>
+        </trans-unit>
+        <trans-unit id="Editor" translate="yes" xml:space="preserve">
+          <source>Prompt Editor</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Редактор подсказок</target>
+        </trans-unit>
       </group>
     </body>
   </file>

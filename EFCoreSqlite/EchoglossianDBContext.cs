@@ -3,10 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Threading.Tasks;
-
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Microsoft.EntityFrameworkCore;
@@ -40,14 +36,14 @@ namespace Echoglossian.EFCoreSqlite
     public string DbPath { get; }
 
 #if DEBUG
-    private StreamWriter LogStream { get; set; }
+    private StreamWriter? LogStream { get; set; }
 
 #endif
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EchoglossianDbContext"/> class.
     /// </summary>
-    /// <param name="configDir"></param>
+    /// <param name="configDir">The directory where the configuration files are located.</param>
     public EchoglossianDbContext(string configDir)
     {
       this.DbPath = $"{configDir}Echoglossian.db";
