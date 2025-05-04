@@ -228,13 +228,22 @@
             Registers the overlays with their respective configurations.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.StartOverlayTracking(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Func{System.Boolean},System.Func{System.Boolean})">
+            <summary>
+            Starts tracking the overlay for a specific addon.
+            </summary>
+            <param name="addonName">Addon name to be tracked.</param>
+            <param name="overlay">Overlay to be used.</param>
+            <param name="shouldShowOverlay">If the overlay should be shown.</param>
+            <param name="shouldStopOverlay">If the overlay should be hidden.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.DrawTranslationWindow(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.String)">
             <summary>
             Draws the translation window.
             </summary>
-            <param name="overlay"></param>
-            <param name="config"></param>
-            <param name="customTitle"></param>
+            <param name="overlay">Overlay to be drawn.</param>
+            <param name="config">Overlay configurations.</param>
+            <param name="customTitle">Custom overlay title.</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(System.String)">
             <summary>
@@ -515,6 +524,15 @@
             Applies the supported engines to the given dictionary of language information.
             </summary>
             <param name="dictionary">The dictionary containing language information.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.UiAddonHandler.#ctor(Echoglossian.Config,ImGuiNET.ImFontPtr,System.Boolean,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.UiAddonHandler"/> class.
+            </summary>
+            <param name="configuration"></param>
+            <param name="uiFont"></param>
+            <param name="fontLoaded"></param>
+            <param name="langToTranslateTo"></param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>

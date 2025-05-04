@@ -2,20 +2,18 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
-using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace Echoglossian
 {
-
   public partial class Echoglossian
   {
     /// <summary>
     /// Starts tracking the overlay for a specific addon.
     /// </summary>
-    /// <param name="addonName"></param>
-    /// <param name="overlay"></param>
-    /// <param name="shouldShowOverlay"></param>
-    /// <param name="shouldStopOverlay"></param>
+    /// <param name="addonName">Addon name to be tracked.</param>
+    /// <param name="overlay">Overlay to be used.</param>
+    /// <param name="shouldShowOverlay">If the overlay should be shown.</param>
+    /// <param name="shouldStopOverlay">If the overlay should be hidden.</param>
     private void StartOverlayTracking(
     string addonName,
     TranslationOverlay overlay,
@@ -24,6 +22,7 @@ namespace Echoglossian
     {
       Task.Run(() =>
       {
+        PluginLog.Debug($"StartOverlayTracking: {addonName}");
         IntPtr addonPtr = GameGuiInterface.GetAddonByName(addonName, 1);
         if (addonPtr == IntPtr.Zero)
         {
@@ -55,9 +54,9 @@ namespace Echoglossian
     /// <summary>
     /// Draws the translation window.
     /// </summary>
-    /// <param name="overlay"></param>
-    /// <param name="config"></param>
-    /// <param name="customTitle"></param>
+    /// <param name="overlay">Overlay to be drawn.</param>
+    /// <param name="config">Overlay configurations.</param>
+    /// <param name="customTitle">Custom overlay title.</param>
     private void DrawTranslationWindow(
         TranslationOverlay overlay,
         TranslationWindowConfig config,

@@ -371,13 +371,13 @@ namespace Echoglossian
       ToastMessage errorToastToHandle = this.FormatToastMessage("Error", message.TextValue);
 
 #if DEBUG
-      PluginLog.Fatal($"Before DB Query attempt: {errorToastToHandle}");
+      PluginLog.Debug($"Before DB Query attempt: {errorToastToHandle}");
 #endif
 
       bool findings = this.FindErrorToastMessage(errorToastToHandle);
 
 #if DEBUG
-      PluginLog.Fatal(
+      PluginLog.Debug(
         $"After DB Query attempt: {(findings ? "ErrorToastMessage found in Db." : "ErrorToastMessage not found in Db")}");
 #endif
 
@@ -525,7 +525,7 @@ namespace Echoglossian
       bool findings = this.FindToastMessage(toastToHandle);
 
 #if DEBUG
-      PluginLog.Fatal(
+      PluginLog.Debug(
         $"After DB Query attempt: {(findings ? "toastMessage found in Db." : "toastMessage not found in Db")}");
 #endif
 

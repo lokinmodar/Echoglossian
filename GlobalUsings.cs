@@ -10,6 +10,7 @@ global using System.Reflection;
 global using System.Numerics;
 global using System.Diagnostics;
 global using System.Threading;
+global using System.Collections.Concurrent;
 
 global using Humanizer;
 
@@ -19,10 +20,15 @@ global using Dalamud.Game.Addon.Lifecycle;
 global using Dalamud.Game.Command;
 global using Dalamud.Game.Text.Sanitizer;
 global using Dalamud.Game.Text.SeStringHandling;
+global using Dalamud.Game;
+global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+global using Dalamud.Memory;
 global using Dalamud.Game.ClientState.Objects.SubKinds;
 global using Dalamud.Interface.Textures.TextureWraps;
 global using Dalamud.IoC;
 global using Dalamud.Interface.Utility;
+
+global using FFXIVClientStructs.FFXIV.Component.GUI;
 
 global using Newtonsoft.Json;
 global using ImGuiNET;

@@ -180,24 +180,29 @@ namespace Echoglossian
             string textTranslation = this.Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : this.Translate(nameToTranslate);
 
-            this.UpdateTalkOverlay(nameTranslation, textToTranslate);
+            this.UpdateTalkOverlay(nameTranslation, textTranslation);
 
             TalkMessage translatedTalkData = new TalkMessage(
-                      nameToTranslate,
-                      textToTranslate,
-                      ClientStateInterface.ClientLanguage.Humanize(),
-                      ClientStateInterface.ClientLanguage.Humanize(),
-                      nameTranslation,
-                      textTranslation,
-                      langDict[languageInt].Code,
-                      this.configuration.ChosenTransEngine,
-                      DateTime.Now,
-                      DateTime.Now);
+              nameToTranslate,
+              textToTranslate,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              ClientStateInterface.ClientLanguage.Humanize(),
+              nameTranslation,
+              textTranslation,
+              langDict[languageInt].Code,
+              this.configuration.ChosenTransEngine,
+              DateTime.Now,
+              DateTime.Now);
 
             InsertTalkData(translatedTalkData);
           }
 
-          this.TalkHandler("Talk", 1);
+          this.StartOverlayTracking(
+            "Talk",
+            this.TalkOverlay,
+            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.TalkOverlay.CurrentText),
+            () => !this.configuration.UseImGuiForTalk || !this.TalkOverlay.Display);
+
         }
         catch (Exception e)
         {
@@ -212,6 +217,7 @@ namespace Echoglossian
 
       Task.Run(() =>
       {
+        PluginLog.Debug("TranslateTalkUsingImGuiWithoutSwapping Task started");
         try
         {
           TalkMessage talkMessage = this.FormatTalkMessage(nameToTranslate, textToTranslate);
@@ -229,21 +235,26 @@ namespace Echoglossian
             this.UpdateTalkOverlay(nameTranslation, textTranslation);
 
             TalkMessage translatedTalkData = new TalkMessage(
-                      nameToTranslate,
-                      textToTranslate,
-                      ClientStateInterface.ClientLanguage.Humanize(),
-                      ClientStateInterface.ClientLanguage.Humanize(),
-                      nameTranslation,
-                      textTranslation,
-                      langDict[languageInt].Code,
-                      this.configuration.ChosenTransEngine,
-                      DateTime.Now,
-                      DateTime.Now);
+              nameToTranslate,
+              textToTranslate,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              ClientStateInterface.ClientLanguage.Humanize(),
+              nameTranslation,
+              textTranslation,
+              langDict[languageInt].Code,
+              this.configuration.ChosenTransEngine,
+              DateTime.Now,
+              DateTime.Now);
 
             InsertTalkData(translatedTalkData);
           }
 
-          this.TalkHandler("Talk", 1);
+          this.StartOverlayTracking(
+            "Talk",
+            this.TalkOverlay,
+            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.TalkOverlay.CurrentText),
+            () => !this.configuration.UseImGuiForTalk || !this.TalkOverlay.Display);
+
         }
         catch (Exception e)
         {

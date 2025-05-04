@@ -55,7 +55,7 @@ namespace Echoglossian
         BattleTalkMessage battleTalkMessage = this.FormatBattleTalkMessage(senderToTranslate, battleTextToTranslate);
 
 #if DEBUG
-        PluginLog.Fatal($"Before DB Query attempt: {battleTalkMessage}");
+        PluginLog.Debug($"Before DB Query attempt: {battleTalkMessage}");
 #endif
         bool findings = FindBattleTalkMessage(battleTalkMessage);
 #if DEBUG
