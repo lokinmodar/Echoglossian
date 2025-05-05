@@ -3,28 +3,31 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-using Dalamud.Memory;
-using Dalamud.Utility;
-using Echoglossian.EFCoreSqlite.Models;
-using Echoglossian.Properties;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using Humanizer;
-
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private void UpdateTalkOverlay(string translatedName, string translatedText)
+    private void UpdateTalkOverlay(string translatedName, string translatedText, string originalName = "")
     {
       bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
 
-      if (this.configuration.TranslateNpcNames)
+      this.TalkOverlay.NameSemaphore.Wait();
+
+      PluginLog.Debug(
+        $"UpdateTalkOverlay: {translatedName}: {translatedText} - OriginalName: {originalName} - HasValidText: {hasValidText}"
+      );
+
+      if (!string.IsNullOrWhiteSpace(originalName))
       {
-        this.TalkOverlay.NameSemaphore.Wait();
-        this.TalkOverlay.CurrentName = hasValidText ? translatedName : Resources.WaitingForTranslation;
-        this.TalkOverlay.NameSemaphore.Release();
+        this.TalkOverlay.OriginalName = originalName;
       }
+
+      if (!string.IsNullOrWhiteSpace(translatedName))
+      {
+        this.TalkOverlay.CurrentName = translatedName;
+      }
+
+      this.TalkOverlay.NameSemaphore.Release();
 
       this.TalkOverlay.Semaphore.Wait();
       this.TalkOverlay.CurrentText = hasValidText ? translatedText : Resources.WaitingForTranslation;
@@ -45,7 +48,11 @@ namespace Echoglossian
 
           if (foundTalkMessage != null)
           {
-            this.UpdateTalkOverlay(foundTalkMessage.TranslatedSenderName, foundTalkMessage.TranslatedTalkMessage);
+            this.UpdateTalkOverlay(
+              foundTalkMessage.TranslatedSenderName,
+              foundTalkMessage.TranslatedTalkMessage,
+              foundTalkMessage.SenderName
+            );
             PluginLog.Debug($"From database - Name: {foundTalkMessage.TranslatedSenderName}, Message: {foundTalkMessage.TranslatedTalkMessage}");
           }
           else
@@ -53,19 +60,19 @@ namespace Echoglossian
             string textTranslation = this.Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : this.Translate(nameToTranslate);
 
-            this.UpdateTalkOverlay(nameTranslation, textTranslation);
+            this.UpdateTalkOverlay(nameTranslation, textTranslation, nameToTranslate);
 
             TalkMessage translatedTalkData = new TalkMessage(
-                      nameToTranslate,
-                      textToTranslate,
-                      ClientStateInterface.ClientLanguage.Humanize(),
-                      ClientStateInterface.ClientLanguage.Humanize(),
-                      nameTranslation,
-                      textTranslation,
-                      langDict[languageInt].Code,
-                      this.configuration.ChosenTransEngine,
-                      DateTime.Now,
-                      DateTime.Now);
+              nameToTranslate,
+              textToTranslate,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              ClientStateInterface.ClientLanguage.Humanize(),
+              nameTranslation,
+              textTranslation,
+              langDict[languageInt].Code,
+              this.configuration.ChosenTransEngine,
+              DateTime.Now,
+              DateTime.Now);
 
             string result = InsertTalkData(translatedTalkData);
             PluginLog.Debug($"TranslateTalk - Talk Message DB Insert operation result: {result}");
@@ -173,14 +180,18 @@ namespace Echoglossian
 
           if (foundTalkMessage != null)
           {
-            this.UpdateTalkOverlay(foundTalkMessage.TranslatedSenderName, foundTalkMessage.TranslatedTalkMessage);
+            this.UpdateTalkOverlay(
+              foundTalkMessage.TranslatedSenderName,
+              foundTalkMessage.TranslatedTalkMessage,
+              foundTalkMessage.SenderName
+            );
           }
           else
           {
             string textTranslation = this.Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : this.Translate(nameToTranslate);
 
-            this.UpdateTalkOverlay(nameTranslation, textTranslation);
+            this.UpdateTalkOverlay(nameTranslation, textTranslation, nameToTranslate);
 
             TalkMessage translatedTalkData = new TalkMessage(
               nameToTranslate,
@@ -225,14 +236,18 @@ namespace Echoglossian
 
           if (foundTalkMessage != null)
           {
-            this.UpdateTalkOverlay(foundTalkMessage.TranslatedSenderName, foundTalkMessage.TranslatedTalkMessage);
+            this.UpdateTalkOverlay(
+              foundTalkMessage.TranslatedSenderName,
+              foundTalkMessage.TranslatedTalkMessage,
+              foundTalkMessage.SenderName
+            );
           }
           else
           {
             string textTranslation = this.Translate(textToTranslate);
             string nameTranslation = nameToTranslate.IsNullOrEmpty() ? string.Empty : this.Translate(nameToTranslate);
 
-            this.UpdateTalkOverlay(nameTranslation, textTranslation);
+            this.UpdateTalkOverlay(nameTranslation, textTranslation, nameToTranslate);
 
             TalkMessage translatedTalkData = new TalkMessage(
               nameToTranslate,
@@ -315,6 +330,7 @@ namespace Echoglossian
     }
   }
 }
+
 
 
 

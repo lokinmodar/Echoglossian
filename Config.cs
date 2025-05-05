@@ -192,9 +192,11 @@ namespace Echoglossian
     public string? OpenRouterApiKey = string.Empty;
     public string? OpenRouterBaseUrl = "https://openrouter.ai/api/v1/";
     public string? OpenRouterPrompt = string.Empty;
+    public bool ForceShowTitle = true;
 
     [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
+
 
     public int Version { get; set; } = 5;
   }

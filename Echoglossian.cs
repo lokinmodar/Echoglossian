@@ -446,24 +446,10 @@ namespace Echoglossian
           continue;
         }
 
-        string? customTitle = null;
-
-        if (this.configuration.TranslateNpcNames)
-        {
-          overlayRegistration.Overlay.NameSemaphore.Wait();
-          string titleCandidate = overlayRegistration.Overlay.CurrentName;
-          overlayRegistration.Overlay.NameSemaphore.Release();
-
-          if (!string.IsNullOrWhiteSpace(titleCandidate))
-          {
-            customTitle = titleCandidate;
-          }
-        }
-
+        // Title is now resolved inside DrawTranslationWindow, so no need to pass customTitle
         this.DrawTranslationWindow(
             overlayRegistration.Overlay,
-            overlayRegistration.Config,
-            customTitle
+            overlayRegistration.Config
         );
       }
     }

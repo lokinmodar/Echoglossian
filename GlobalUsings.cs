@@ -4,39 +4,39 @@
 // </copyright>
 
 global using System;
-global using System.Collections.Generic;
-global using System.Globalization;
-global using System.Reflection;
-global using System.Numerics;
-global using System.Diagnostics;
-global using System.Threading;
 global using System.Collections.Concurrent;
+global using System.Collections.Generic;
+global using System.Diagnostics;
+global using System.Globalization;
+global using System.Numerics;
+global using System.Reflection;
+global using System.Threading;
 
-global using Humanizer;
-
-global using Dalamud.Plugin;
-global using Dalamud.Plugin.Services;
+global using Dalamud.Game;
 global using Dalamud.Game.Addon.Lifecycle;
+global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+global using Dalamud.Game.ClientState.Objects.SubKinds;
 global using Dalamud.Game.Command;
 global using Dalamud.Game.Text.Sanitizer;
 global using Dalamud.Game.Text.SeStringHandling;
-global using Dalamud.Game;
-global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-global using Dalamud.Memory;
-global using Dalamud.Game.ClientState.Objects.SubKinds;
 global using Dalamud.Interface.Textures.TextureWraps;
-global using Dalamud.IoC;
 global using Dalamud.Interface.Utility;
+global using Dalamud.IoC;
+global using Dalamud.Memory;
+global using Dalamud.Plugin;
+global using Dalamud.Plugin.Services;
+global using Dalamud.Utility;
+
+global using Echoglossian.EFCoreSqlite;
+global using Echoglossian.EFCoreSqlite.Models;
+global using Echoglossian.LanguagesHandling;
+global using Echoglossian.NativeUI.Handlers;
+global using Echoglossian.PluginUI;
+global using Echoglossian.Properties;
+global using Echoglossian.Translators;
+global using Echoglossian.UIOverlays.TranslationOverlay;
 
 global using FFXIVClientStructs.FFXIV.Component.GUI;
-
-global using Newtonsoft.Json;
+global using Humanizer;
 global using ImGuiNET;
-
-global using Echoglossian.Properties;
-global using Echoglossian.PluginUI;
-global using Echoglossian.NativeUI.Handlers;
-global using Echoglossian.UIOverlays.TranslationOverlay;
-global using Echoglossian.LanguagesHandling;
-global using Echoglossian.Translators;
-global using Echoglossian.EFCoreSqlite;
+global using Newtonsoft.Json;

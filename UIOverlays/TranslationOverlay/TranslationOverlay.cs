@@ -12,18 +12,24 @@ internal class TranslationOverlay
   public string CurrentText { get; set; } = string.Empty;
 
   public volatile int CurrentTextId;
+
   public Vector2 Dimensions = Vector2.Zero;
+
   public Vector2 ImGuiSize = Vector2.Zero;
+
   public Vector2 Position = Vector2.Zero;
 
   public SemaphoreSlim Semaphore { get; }
 
-  // NEW: Title Handling (for Talk/BattleTalk)
+  // Current translated name for the overlay title (e.g., translated speaker)
   public string CurrentName { get; set; } = string.Empty;
 
   public volatile int CurrentNameId;
 
   public SemaphoreSlim NameSemaphore { get; }
+
+  // NEW: Original name from the addon, shown as fallback when ForceShowTitle is true
+  public string OriginalName { get; set; } = string.Empty;
 
   public TranslationOverlay()
   {

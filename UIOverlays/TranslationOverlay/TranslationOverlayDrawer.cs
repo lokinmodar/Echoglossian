@@ -76,7 +76,9 @@ namespace Echoglossian
         return;
       }
 
-      PluginLog.Debug($"Drawing translation window: {overlay.CurrentText}");
+      PluginLog.Debug($"Drawing translation window: {overlay.CurrentName} -  {overlay.CurrentText}");
+
+      customTitle ??= overlay.CurrentName;
 
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           overlay.Position.X + (overlay.Dimensions.X / 2) - (overlay.ImGuiSize.X / 2),
