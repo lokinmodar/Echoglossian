@@ -14,56 +14,11 @@ namespace Echoglossian
     private readonly TranslationOverlay ErrorToastOverlay = new();
     private readonly TranslationOverlay ChatBubbleOverlay = new();
 
-    // Configs
-    private static readonly TranslationWindowConfig TalkConfig = new(
-        DefaultTitle: "Talk translation",
-        WidthMultiplier: 1.0f,
-        HeightMultiplier: 1.0f,
-        TextColor: new Vector4(1f, 1f, 1f, 1f),
-        PosCorrection: Vector2.Zero
-    );
-
-    private static readonly TranslationWindowConfig BattleTalkConfig = new(
-        DefaultTitle: "BattleTalk translation",
-        WidthMultiplier: 1.5f,
-        HeightMultiplier: 2.5f,
-        TextColor: new Vector4(1f, 1f, 1f, 1f),
-        PosCorrection: Vector2.Zero,
-        ForceShowTitle: true
-    );
-
-    private static readonly TranslationWindowConfig ToastConfig = new(
-        DefaultTitle: "Toast Translation",
-        WidthMultiplier: 1.0f,
-        HeightMultiplier: 2.0f,
-        TextColor: new Vector4(1f, 1f, 1f, 1f),
-        PosCorrection: Vector2.Zero
-    );
-
-    private static readonly TranslationWindowConfig ErrorToastConfig = new(
-        DefaultTitle: "Error Toast Translation",
-        WidthMultiplier: 1.0f,
-        HeightMultiplier: 2.0f,
-        TextColor: new Vector4(1f, 1f, 1f, 1f),
-        PosCorrection: Vector2.Zero,
-        NoBackground: true
-    );
-
-    private static readonly TranslationWindowConfig ChatBubbleConfig = new(
-        DefaultTitle: "ChatBubble translation",
-        WidthMultiplier: 1.0f,
-        HeightMultiplier: 1.5f,
-        TextColor: new Vector4(1f, 1f, 1f, 1f),
-        PosCorrection: Vector2.Zero
-    );
-
-    /// <summary>
-    /// List of registered overlays.
-    /// </summary>
+    // List of registered overlays
     private readonly List<OverlayRegistration> registeredOverlays = new();
 
     /// <summary>
-    /// Registers the overlays with their respective configurations.
+    /// Registers the overlays with their respective configurations using current plugin config values.
     /// </summary>
     private void RegisterOverlays()
     {
@@ -71,27 +26,27 @@ namespace Echoglossian
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.TalkOverlay,
-          TalkConfig
+          TranslationWindowConfig.FromConfigForTalk(this.configuration)
       ));
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.BattleTalkOverlay,
-          BattleTalkConfig
+          TranslationWindowConfig.FromConfigForBattleTalk(this.configuration)
       ));
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.ToastOverlay,
-          ToastConfig
+          TranslationWindowConfig.FromConfigForToast(this.configuration)
       ));
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.ErrorToastOverlay,
-          ErrorToastConfig
+          TranslationWindowConfig.FromConfigForErrorToast(this.configuration)
       ));
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.ChatBubbleOverlay,
-          ChatBubbleConfig
+          TranslationWindowConfig.FromConfigForChatBubble(this.configuration)
       ));
 
       PluginLog.Debug($"Overlays registered: {this.registeredOverlays.Count} ");

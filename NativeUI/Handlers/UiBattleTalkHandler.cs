@@ -59,7 +59,7 @@ namespace Echoglossian
 #endif
         bool findings = FindBattleTalkMessage(battleTalkMessage);
 #if DEBUG
-        PluginLog.Fatal(
+        PluginLog.Debug(
           $"After DB Query attempt: {(findings ? "Message found in Db." : "Message not found in Db")}");
 #endif
 
@@ -197,7 +197,7 @@ namespace Echoglossian
                 {
                   this.currentSenderTranslation = senderTranslation;
 #if DEBUG
-                  PluginLog.Error($"Using overlay - name found in DB: {senderTranslation} ");
+                  PluginLog.Debug($"Using overlay - name found in DB: {senderTranslation} ");
 #endif
                 }
 
@@ -216,7 +216,7 @@ namespace Echoglossian
               {
                 this.currentBattleTalkTranslation = translatedBattleTalkMessage;
 #if DEBUG
-                PluginLog.Error($"Using overlay - message found in DB: {translatedBattleTalkMessage} ");
+                PluginLog.Debug($"Using overlay - message found in DB: {translatedBattleTalkMessage} ");
 #endif
               }
 

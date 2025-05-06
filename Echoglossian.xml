@@ -218,14 +218,9 @@
             <returns>Returns the translated text passed in the call parameter.</returns>
             <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps.</exception>
         </member>
-        <member name="F:Echoglossian.Echoglossian.registeredOverlays">
-            <summary>
-            List of registered overlays.
-            </summary>
-        </member>
         <member name="M:Echoglossian.Echoglossian.RegisterOverlays">
             <summary>
-            Registers the overlays with their respective configurations.
+            Registers the overlays with their respective configurations using current plugin config values.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.StartOverlayTracking(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Func{System.Boolean},System.Func{System.Boolean})">

@@ -468,7 +468,7 @@ namespace Echoglossian
 
           message = foundToastMessage;
 #if DEBUG
-          PluginLog.Error($"Text replacement - message found in DB: {message.TextValue} ");
+          PluginLog.Debug($"Text replacement - message found in DB: {message.TextValue} ");
 #endif
         }
         else
@@ -493,7 +493,7 @@ namespace Echoglossian
             {
               this.currentErrorToastTranslation = messageTranslation;
 #if DEBUG
-              PluginLog.Error($"Using overlay - message found in DB: {messageTranslation} ");
+              PluginLog.Debug($"Using overlay - message found in DB: {messageTranslation} ");
 #endif
             }
 
@@ -519,7 +519,7 @@ namespace Echoglossian
       ToastMessage toastToHandle = this.FormatToastMessage("NonError", message.TextValue);
 
 #if DEBUG
-      PluginLog.Fatal($"Before DB Query attempt: {toastToHandle}");
+      PluginLog.Debug($"Before DB Query attempt: {toastToHandle}");
 #endif
 
       bool findings = this.FindToastMessage(toastToHandle);
@@ -615,7 +615,7 @@ namespace Echoglossian
 
           message = foundToastMessage;
 #if DEBUG
-          PluginLog.Error($"Text replacement - message found in DB: {message.TextValue} ");
+          PluginLog.Debug($"Text replacement - message found in DB: {message.TextValue} ");
 #endif
         }
         else
@@ -640,7 +640,7 @@ namespace Echoglossian
             {
               this.currentToastTranslation = messageTranslation;
 #if DEBUG
-              PluginLog.Error($"Using overlay - message found in DB: {messageTranslation} ");
+              PluginLog.Debug($"Using overlay - message found in DB: {messageTranslation} ");
 #endif
             }
 
