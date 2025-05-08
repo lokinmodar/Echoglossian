@@ -25,6 +25,7 @@ namespace Echoglossian
     private static readonly uint JournalDetailDescriptionResNodeId = 5;
     private static readonly uint JournalDetailObjectivesResNodeId = 9;
     private static readonly uint JournalDetailSummaryResNodeId = 49;
+    private static readonly uint JournalQuestListNodeId = 25;
     private static readonly uint[] JournalDetailCanvasNodesToTranslate = { JournalDetailDescriptionResNodeId, JournalDetailObjectivesResNodeId, JournalDetailSummaryResNodeId };
 
     private static unsafe List<TextNodePointer> GetComponentTextNodes(AtkComponentBase* component, uint[] parentFilter)
@@ -108,7 +109,7 @@ namespace Echoglossian
 
           var text = node.GetNodeText();
           var translatedText = string.Empty;
-          if (questPlate.Texts.TryGetValue(text, out var storedTranslatedText))
+          if (questPlate.Summaries.TryGetValue(text, out var storedTranslatedText))
           {
             translatedText = storedTranslatedText;
           }
@@ -121,7 +122,7 @@ namespace Echoglossian
               translatedText = this.RemoveDiacritics(translatedText, this.SpecialCharsSupportedByGameFont);
             }
 
-            questPlate.Texts.Add(text, translatedText);
+            questPlate.Summaries.Add(text, translatedText);
           }
 
           node.SetNodeText(translatedText);
@@ -161,9 +162,9 @@ namespace Echoglossian
           return;
         }
 
-        var questName = MemoryHelper.ReadSeStringAsString(out _, (nint)questNameNode->NodeText.StringPtr);
+        var questName = MemoryHelper.ReadSeStringAsString(out _, (nint)questNameNode->NodeText.StringPtr.Value);
         var descriptionNode = description->GetAsAtkTextNode();
-        var questMessage = MemoryHelper.ReadSeStringAsString(out _, (nint)descriptionNode->NodeText.StringPtr);
+        var questMessage = MemoryHelper.ReadSeStringAsString(out _, (nint)descriptionNode->NodeText.StringPtr.Value);
         QuestPlate questPlate = this.FormatQuestPlate(questName, questMessage);
         QuestPlate foundQuestPlate = this.FindQuestPlate(questPlate);
 #if DEBUG
@@ -263,8 +264,8 @@ namespace Echoglossian
       }
 
 #if DEBUG
-      //PluginLog.Debug($"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
-      //PluginLog.Debug($"Translate JournalQuests");
+      PluginLog.Debug($"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
+      PluginLog.Debug($"Translate JournalQuests");
 #endif
       try
       {
@@ -294,7 +295,7 @@ namespace Echoglossian
             continue;
           }
 
-          var questNameText = MemoryHelper.ReadSeStringAsString(out _, (nint)questName->NodeText.StringPtr);
+          var questNameText = MemoryHelper.ReadSeStringAsString(out _, (nint)questName->NodeText.StringPtr.Value);
           if (this.translatedQuestNames.ContainsKey(questNameText))
           {
             continue;
@@ -365,7 +366,7 @@ namespace Echoglossian
     private unsafe void UiJournalQuestHandler(AddonEvent type, AddonArgs args)
     {
 #if DEBUG
-      //PluginLog.Debug($"UiJournalQuestHandler AddonEvent: {type} {args.AddonName}");
+      PluginLog.Debug($"UiJournalQuestHandler AddonEvent: {type} {args.AddonName}");
 #endif
       this.TranslateJournalQuests();
     }
@@ -377,7 +378,7 @@ namespace Echoglossian
 
     public string GetNodeText()
     {
-      return MemoryHelper.ReadSeStringAsString(out _, (nint)this.Node->NodeText.StringPtr);
+      return MemoryHelper.ReadSeStringAsString(out _, (nint)this.Node->NodeText.StringPtr.Value);
     }
 
     public bool IsEmpty()

@@ -328,7 +328,7 @@ namespace Echoglossian
 
     public QuestPlate? FindQuestPlateByName(QuestPlate questPlate)
     {
-      return this.FindQuestPlateByName(questPlate.QuestName, questPlate.TranslationEngine, questPlate.TranslationLang);
+      return this.FindQuestPlateByName(questPlate.QuestName, questPlate.TranslationEngine.Value, questPlate.TranslationLang);
     }
 
     public QuestPlate FindQuestPlateByName(string questName, int translationEngine, string languageCode)
