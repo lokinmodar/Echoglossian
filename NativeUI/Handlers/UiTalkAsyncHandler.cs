@@ -74,7 +74,7 @@ namespace Echoglossian
               DateTime.Now,
               DateTime.Now);
 
-            string result = InsertTalkData(translatedTalkData);
+            string result = InsertTalkData(translatedTalkData).Result;
             PluginLog.Debug($"TranslateTalk - Talk Message DB Insert operation result: {result}");
           }
         }

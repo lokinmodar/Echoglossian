@@ -3,10 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.EFCoreSqlite.Models;
-using Echoglossian.EFCoreSqlite.Models.Journal;
-using Microsoft.EntityFrameworkCore;
-
 namespace Echoglossian.EFCoreSqlite
 {
   public class EchoglossianDbContext : DbContext
@@ -33,37 +29,22 @@ namespace Echoglossian.EFCoreSqlite
 
     public DbSet<LocationName> LocationNames { get; set; }
 
-    public string DbPath { get; }
+    private readonly string? dbPath;
 
-#if DEBUG
-    private StreamWriter? LogStream { get; set; }
+    public EchoglossianDbContext(DbContextOptions<EchoglossianDbContext> options)
+        : base(options) { }
 
-#endif
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EchoglossianDbContext"/> class.
-    /// </summary>
-    /// <param name="configDir">The directory where the configuration files are located.</param>
     public EchoglossianDbContext(string configDir)
     {
-      this.DbPath = $"{configDir}Echoglossian.db";
-
-      Echoglossian.PluginLog.Debug($"DBPath: {this.DbPath}");
-
-#if DEBUG
-      // this.LogStream = new StreamWriter($"{configDir}DBContextLog.txt", append: true);
-      // Echoglossian.PluginLog.Debug($"DBPath {this.DbPath}");
-#endif
+      this.dbPath = Path.Combine(configDir, "Echoglossian.db");
     }
 
-    // The following configures EF to create a Sqlite database file in the
-    // special "local" folder for your platform.
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-      optionsBuilder.UseSqlite($"Data Source={this.DbPath}");
-      /*#if DEBUG
-            optionsBuilder.LogTo(this.LogStream.WriteLine, LogLevel.Trace).EnableSensitiveDataLogging().EnableDetailedErrors();
-      #endif*/
+      if (!optionsBuilder.IsConfigured && this.dbPath != null)
+      {
+        optionsBuilder.UseSqlite($"Data Source={this.dbPath}");
+      }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -84,17 +65,11 @@ namespace Echoglossian.EFCoreSqlite
     public override void Dispose()
     {
       base.Dispose();
-      /*#if DEBUG
-            this.LogStream.Dispose();
-      #endif*/
     }
 
     public override async ValueTask DisposeAsync()
     {
       await base.DisposeAsync();
-      /*#if DEBUG
-            await this.LogStream.DisposeAsync();
-      #endif*/
     }
   }
 }

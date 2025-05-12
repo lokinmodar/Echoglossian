@@ -76,7 +76,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception ex)
       {
-        this.pluginLog.Warning($"GTranslate error: {ex}");
+        this.pluginLog.Error($"GTranslate error: {ex}");
         return string.Empty;
       }
     }

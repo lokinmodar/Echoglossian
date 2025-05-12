@@ -68,7 +68,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception ex)
       {
-        this.pluginLog.Warning($"LibreTranslateTranslator failed: {ex.Message}");
+        this.pluginLog.Error($"LibreTranslateTranslator failed: {ex.Message}");
         return string.Empty;
       }
     }

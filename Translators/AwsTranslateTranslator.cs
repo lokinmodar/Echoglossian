@@ -81,7 +81,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception ex)
       {
-        this.pluginLog.Warning($"AWS Translate error: {ex}");
+        this.pluginLog.Error($"AWS Translate error: {ex}");
         return string.Empty;
       }
     }

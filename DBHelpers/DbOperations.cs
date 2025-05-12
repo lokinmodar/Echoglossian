@@ -427,7 +427,7 @@ namespace Echoglossian
       }
     }
 
-    public static string InsertTalkData(TalkMessage talkMessage)
+    public static async Task<string> InsertTalkData(TalkMessage talkMessage)
     {
       using EchoglossianDbContext context = new EchoglossianDbContext(PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar);
 #if DEBUG
@@ -449,14 +449,15 @@ namespace Echoglossian
           ImGui.SetClipboardText(talkMessage.ToString());
         }
 
-        context.TalkMessage.Attach(talkMessage);
+        context.TalkMessage.Add(talkMessage);
 
-        context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return "Data inserted to TalkMessages table.";
       }
       catch (Exception e)
       {
+        PluginLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
         return $"ErrorSavingData: {e}";
       }
     }

@@ -77,7 +77,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception ex)
       {
-        this.pluginLog.Warning($"Yandex translation failed: {ex}");
+        this.pluginLog.Error($"Yandex translation failed: {ex}");
         return string.Empty;
       }
     }
@@ -156,7 +156,7 @@ namespace Echoglossian.Translators
       }
       catch
       {
-        this.pluginLog.Warning($"Unexpected error response: {responseBody}");
+        this.pluginLog.Error($"Unexpected error response: {responseBody}");
       }
     }
 

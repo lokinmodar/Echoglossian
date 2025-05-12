@@ -93,7 +93,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception exception)
       {
-        this.pluginLog.Warning($"DeepLTranslator Translate: {exception.Message}");
+        this.pluginLog.Error($"DeepLTranslator Translate: {exception.Message}");
         return text;
       }
     }
@@ -118,7 +118,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception exception)
       {
-        this.pluginLog.Warning($"DeepLTranslator TranslateAsync: {exception.Message}");
+        this.pluginLog.Error($"DeepLTranslator TranslateAsync: {exception.Message}");
         return text;
       }
     }
@@ -232,7 +232,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception exception)
       {
-        this.pluginLog.Warning($"DeepLTranslator FreeTranslateAsync: {exception.Message}");
+        this.pluginLog.Error($"DeepLTranslator FreeTranslateAsync: {exception.Message}");
         return text;
       }
     }

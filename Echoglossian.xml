@@ -240,12 +240,6 @@
             <param name="config">Overlay configurations.</param>
             <param name="customTitle">Custom overlay title.</param>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext"/> class.
-            </summary>
-            <param name="configDir">The directory where the configuration files are located.</param>
-        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Migrations.EchoglossianDBupd">
             <inheritdoc />
         </member>

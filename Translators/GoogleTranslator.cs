@@ -87,7 +87,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception e)
       {
-        this.pluginLog.Warning(e.ToString());
+        this.pluginLog.Error(e.ToString());
         throw;
       }
     }
@@ -108,7 +108,7 @@ namespace Echoglossian.Translators
       }
       catch (Exception e)
       {
-        this.pluginLog.Warning(e.ToString());
+        this.pluginLog.Error(e.ToString());
         throw;
       }
     }
@@ -211,12 +211,12 @@ namespace Echoglossian.Translators
           return translatedText;
         }
 
-        this.pluginLog.Warning("Translation not found in response.");
+        this.pluginLog.Error("Translation not found in response.");
         return string.Empty;
       }
       catch (JsonException ex)
       {
-        this.pluginLog.Warning("Error parsing JSON: " + ex.Message);
+        this.pluginLog.Error("Error parsing JSON: " + ex.Message);
         return string.Empty;
       }
     }
