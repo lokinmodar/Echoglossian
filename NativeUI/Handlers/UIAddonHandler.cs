@@ -14,7 +14,7 @@ namespace Echoglossian.NativeUI.Handlers
   internal class UiAddonHandler : IDisposable
   {
     private bool disposedValue;
-    private CancellationTokenSource cts;
+    private CancellationTokenSource cancellationTokenSource;
     private Task translationTask;
 
     private Config configuration;
@@ -62,8 +62,8 @@ namespace Echoglossian.NativeUI.Handlers
       this.translationService = new TranslationService(configuration, PluginLog, new Sanitizer(this.clientLanguage));
       this.translations = new ConcurrentDictionary<int, TranslationEntry>();
       this.configDir = PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar;
-      this.cts = new CancellationTokenSource();
-      this.translationTask = Task.Run(async () => await this.ProcessTranslations(this.cts.Token));
+      this.cancellationTokenSource = new CancellationTokenSource();
+      this.translationTask = Task.Run(async () => await this.ProcessTranslations(this.cancellationTokenSource.Token));
     }
 
 #nullable enable
@@ -1041,7 +1041,7 @@ namespace Echoglossian.NativeUI.Handlers
       {
         if (disposing)
         {
-          this.cts.Cancel();
+          this.cancellationTokenSource.Cancel();
 
           try
           {
@@ -1060,7 +1060,7 @@ namespace Echoglossian.NativeUI.Handlers
           {
             // Dispose of the task and the cancellation token source.
             this.translationTask.Dispose();
-            this.cts.Dispose();
+            this.cancellationTokenSource.Dispose();
           }
         }
 
