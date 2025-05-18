@@ -499,4 +499,10 @@
   <data name="Editor" xml:space="preserve">
     <value>Prompt Editor</value>
   </data>
+  <data name="ResetSettingsMessageText" xml:space="preserve">
+    <value>You can reset Echoglossian's configuration to default using the button below:</value>
+  </data>
+  <data name="ResetSettingsButtonText" xml:space="preserve">
+    <value>Reset configuration to defaults</value>
+  </data>
 </root>

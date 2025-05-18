@@ -1,5 +1,110 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -12,16 +117,94 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Verificando os arquivos do Plugin!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Download de arquivos do plugin completo!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Erro ao baixar os arquivos do plugin:</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Por favor, tente novamente mais tarde. Se o problema persistir, entre em contato com o desenvolvedor do plugin.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Todos os arquivos do plugin estão presentes!</value>
+  </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>O quês, Ondes e Comos</value>
+  </data>
   <data name="ConfigTab1Name" xml:space="preserve">
     <value>Configurações de diálogos</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Configurações de diálogos de batalha</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Configurações de mensagens de sistema</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Configurações de diário</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Configurações de Legendas de cutscenes</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Outras configurações</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Configurações do mecanismo de tradução</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Sobre o Echoglossian</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
     <value>Configuração do Echoglossian</value>
     <comment>Config Window title bar</comment>
   </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>Por favor, apoie-nos contribuindo para o desenvolvimento do projeto, enviando problemas ou nos ajudando com um cafezinho :).</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>Este plugin visa resolver um dos maiores problemas para o público que não fala inglês, alemão, francês ou japonês: Entender os diálogos e outros elementos da Interface do Jogo.</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>Por enquanto, só fazemos traduções automáticas através da API do Google Translate, mas no futuro pretendemos suportar outros sistemas de tradução por ML. Temos até ideias voltadas para traduções crowdsourced, com curadoria da comunidade.</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>Sobre o Echoglossian:</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Baixando arquivos extras do plugin em segundo plano. Por favor, aguarde o download terminar antes de abrir as configurações!</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Atenção!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Ativar tradução em tempo real do texto do jogo</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Cor da fonte da sobreposição:</value>
+  </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Abre janela de configuração do Echoglossian</value>
     <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Ajuste as opções relacionadas à overlay de tradução:</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>A linguagem não pôde ser identificada com um grau aceitável de certeza</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>O idioma selecionado não é suportado pelo backend de tradução disponível atualmente</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>O idioma selecionado só é suportado usando overlays devido a limitações da fonte nativa do jogo</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>Para qual língua traduzir os diálogos do jogo.</value>
@@ -29,32 +212,17 @@
   <data name="LanguageSelectLabelText" xml:space="preserve">
     <value>Linguagem para traduzir para</value>
   </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>A lista (in)completa de problemas e TODOs está disponível no link abaixo:</value>
+  </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
     <value>Ajuste a posição se a sobreposição não estiver centrada em relação à caixa de conversa da UI do jogo.</value>
   </data>
-  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
-    <value>Ajuste de posição</value>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Clique para escolher a cor da fonte da sobreposição</value>
   </data>
-  <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</value>
-  </data>
-  <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicador de largura da sobreposição de tradução de diálogo</value>
-  </data>
-  <data name="PatronButtonLabel" xml:space="preserve">
-    <value>Comprar um café para lokinmodar</value>
-  </data>
-  <data name="SaveCloseButtonLabel" xml:space="preserve">
-    <value>Salvar e fechar janela de Configuração</value>
-  </data>
-  <data name="TransLateBattletalkToggle" xml:space="preserve">
-    <value>Traduzir conversas de batalha</value>
-  </data>
-  <data name="TranslateTalkToggleLabel" xml:space="preserve">
-    <value>Traduzir diálogos do jogo</value>
-  </data>
-  <data name="WaitingForTranslation" xml:space="preserve">
-    <value>Aguardando tradução...</value>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Ajuste a escala de fonte da Overlay</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
     <value>Tamanho da fonte da sobreposição</value>
@@ -62,35 +230,66 @@
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
     <value>Selecione o tamanho da fonte para a sobreposição de texto de diálogo</value>
   </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplicador de altura da overlay de diálogo</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Tradução de diálogos de batalha</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Ajuste de posição</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</value>
+  </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Ajuste a largura da sobreposição de tradução</value>
   </data>
-  <data name="SendPixButton" xml:space="preserve">
-    <value>Mande-me um PIX!</value>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicador de largura da sobreposição de tradução de diálogo</value>
   </data>
-  <data name="WhatToTranslateText" xml:space="preserve">
-    <value>Selecione que tipo de texto deseja que seja traduzido na guia correspondente abaixo!</value>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Caminho absoluto para a pasta Echoglossian (dentro da pasta XIVLauncher -&gt; pluginConfigs)</value>
   </data>
-  <data name="PixText" xml:space="preserve">
-    <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Digite o caminho e salve para que o plugin possa funcionar corretamente!</value>
   </data>
-  <data name="CloseButtonLabel" xml:space="preserve">
-    <value>Fechar</value>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Comprar um café para lokinmodar</value>
   </data>
   <data name="PixQrWindowLabel" xml:space="preserve">
     <value>QRCODE PIX</value>
   </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Escolha o idioma para a janela de configuração do plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Linguagem de janela de config:</value>
+  </data>
   <data name="QRCodeInstructionsText" xml:space="preserve">
     <value>Escaneie o código QR para me enviar um PIX - válido apenas no Brasil</value>
   </data>
-  <data name="TranslateToastToggleText" xml:space="preserve">
-    <value>Traduzir mensagens Toast no jogo</value>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Resetar Configurações</value>
   </data>
-  <data name="LangIdentError" xml:space="preserve">
-    <value>A linguagem não pôde ser identificada com um grau aceitável de certeza</value>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Salvar e fechar janela de Configuração</value>
   </data>
-  <data name="ConfigTab2Name" xml:space="preserve">
-    <value>Configurações de diálogos de batalha</value>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Mande-me um PIX!</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Configurações para o Google Translate:</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Configurações do Echoglossian foram redefinidas para o padrão com sucesso!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Mostrar texto de diálogo original no Overlay e o texto traduzido na caixa de diálogo da IU do jogo</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Ajuste a largura de sobreposição de tradução de Toasts</value>
@@ -98,14 +297,14 @@
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
     <value>Multiplicador de largura para Toasts</value>
   </data>
-  <data name="FontColorSelectLabel" xml:space="preserve">
-    <value>Cor da fonte da sobreposição:</value>
-  </data>
-  <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Clique para escolher a cor da fonte da sobreposição</value>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Lista de TODOs no Github</value>
   </data>
   <data name="TranslateAreaToastToggleText" xml:space="preserve">
     <value>Traduzir mensagens de nome de área</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Traduzir conversas de batalha</value>
   </data>
   <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
     <value>Traduzir mensagens de troca de classe/job</value>
@@ -122,93 +321,11 @@
   <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
     <value>Traduzir no jogo outras mensagens de Toast diversas</value>
   </data>
-  <data name="PluginInterfaceLanguage" xml:space="preserve">
-    <value>Escolha o idioma para a janela de configuração do plugin</value>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Traduzir diálogos do jogo</value>
   </data>
-  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
-    <value>Linguagem de janela de config:</value>
-  </data>
-  <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Mostrar texto de diálogo original no Overlay e o texto traduzido na caixa de diálogo da IU do jogo</value>
-  </data>
-  <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Ajuste a escala de fonte da Overlay</value>
-  </data>
-  <data name="EchoglossianPathModal" xml:space="preserve">
-    <value>Atenção!</value>
-  </data>
-  <data name="PathInputInstructions" xml:space="preserve">
-    <value>Caminho absoluto para a pasta Echoglossian (dentro da pasta XIVLauncher -&gt; pluginConfigs)</value>
-  </data>
-  <data name="PathTypeInstructions" xml:space="preserve">
-    <value>Digite o caminho e salve para que o plugin possa funcionar corretamente!</value>
-  </data>
-  <data name="LanguageNotSupportedText" xml:space="preserve">
-    <value>O idioma selecionado não é suportado pelo backend de tradução disponível atualmente</value>
-  </data>
-  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>O idioma selecionado só é suportado usando overlays devido a limitações da fonte nativa do jogo</value>
-  </data>
-  <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Multiplicador de altura da overlay de diálogo</value>
-  </data>
-  <data name="OverlayName" xml:space="preserve">
-    <value>Tradução de diálogos de batalha</value>
-    <comment>Translation overlay window name</comment>
-  </data>
-  <data name="ConfigTab0Name" xml:space="preserve">
-    <value>O quês, Ondes e Comos</value>
-  </data>
-  <data name="ConfigTab3Name" xml:space="preserve">
-    <value>Configurações de mensagens de sistema</value>
-  </data>
-  <data name="ConfigTab4Name" xml:space="preserve">
-    <value>Configurações de diário</value>
-  </data>
-  <data name="ConfigTab5Name" xml:space="preserve">
-    <value>Configurações de Legendas de cutscenes</value>
-  </data>
-  <data name="ConfigTab6Name" xml:space="preserve">
-    <value>Outras configurações</value>
-  </data>
-  <data name="ConfigTabAbout" xml:space="preserve">
-    <value>Sobre o Echoglossian</value>
-  </data>
-  <data name="TranslationsEnabled" xml:space="preserve">
-    <value>Traduções estão habilitadas!</value>
-  </data>
-  <data name="ConfigTab7Name" xml:space="preserve">
-    <value>Configurações do mecanismo de tradução</value>
-  </data>
-  <data name="EnableTranslation" xml:space="preserve">
-    <value>Ativar tradução em tempo real do texto do jogo</value>
-  </data>
-  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Ajuste as opções relacionadas à overlay de tradução:</value>
-  </data>
-  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
-    <value>Este mecanismo de tradução não requer configurações especiais.</value>
-  </data>
-  <data name="SettingsForGTransText" xml:space="preserve">
-    <value>Configurações para o Google Translate:</value>
-  </data>
-  <data name="TodoUrl" xml:space="preserve">
-    <value>Lista de TODOs no Github</value>
-  </data>
-  <data name="ContribText" xml:space="preserve">
-    <value>Por favor, apoie-nos contribuindo para o desenvolvimento do projeto, enviando problemas ou nos ajudando com um cafezinho :).</value>
-  </data>
-  <data name="DisclaimerText1" xml:space="preserve">
-    <value>Este plugin visa resolver um dos maiores problemas para o público que não fala inglês, alemão, francês ou japonês: Entender os diálogos e outros elementos da Interface do Jogo.</value>
-  </data>
-  <data name="DisclaimerText2" xml:space="preserve">
-    <value>Por enquanto, só fazemos traduções automáticas através da API do Google Translate, mas no futuro pretendemos suportar outros sistemas de tradução por ML. Temos até ideias voltadas para traduções crowdsourced, com curadoria da comunidade.</value>
-  </data>
-  <data name="DisclaimerTitle" xml:space="preserve">
-    <value>Sobre o Echoglossian:</value>
-  </data>
-  <data name="NEListText" xml:space="preserve">
-    <value>A lista (in)completa de problemas e TODOs está disponível no link abaixo:</value>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Traduzir mensagens Toast no jogo</value>
   </data>
   <data name="TranslationDisabled" xml:space="preserve">
     <value>As traduções estão desabilitadas!</value>
@@ -216,35 +333,23 @@
   <data name="TranslationEnabled" xml:space="preserve">
     <value>Traduções estão habilitadas!</value>
   </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Este mecanismo de tradução não requer configurações especiais.</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Traduções estão habilitadas!</value>
+  </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
     <value>Use sobreposição para mostrar traduções de toasts (WIP)</value>
   </data>
-  <data name="ResetConfigsButton" xml:space="preserve">
-    <value>Resetar Configurações</value>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Aguardando tradução...</value>
   </data>
-  <data name="SettingsReset" xml:space="preserve">
-    <value>Configurações do Echoglossian foram redefinidas para o padrão com sucesso!</value>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Selecione que tipo de texto deseja que seja traduzido na guia correspondente abaixo!</value>
   </data>
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Selecione qual tipo de mensagens de toast traduzir</value>
-  </data>
-  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
-    <value>Verificando os arquivos do Plugin!</value>
-  </data>
-  <data name="AssetsDownloadComplete" xml:space="preserve">
-    <value>Download de arquivos do plugin completo!</value>
-  </data>
-  <data name="AssetsDownloadError1stPart" xml:space="preserve">
-    <value>Erro ao baixar os arquivos do plugin:</value>
-  </data>
-  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
-    <value>. Por favor, tente novamente mais tarde. Se o problema persistir, entre em contato com o desenvolvedor do plugin.</value>
-  </data>
-  <data name="AssetsPresentPopupMsg" xml:space="preserve">
-    <value>Todos os arquivos do plugin estão presentes!</value>
-  </data>
-  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
-    <value>Baixando arquivos extras do plugin em segundo plano. Por favor, aguarde o download terminar antes de abrir as configurações!</value>
   </data>
   <data name="ConfigTab8Name" xml:space="preserve">
     <value>Solução de problemas</value>
@@ -279,11 +384,11 @@
   <data name="DeeplTranslatorApiKey" xml:space="preserve">
     <value>Adicione sua chave API DeepL</value>
   </data>
-  <data name="SettingsForDeepLTransText" xml:space="preserve">
-    <value>Configurações opcionais para DeepL:</value>
-  </data>
   <data name="DeepLTranslatorAPIKeyLink" xml:space="preserve">
     <value>Clique aqui para criar uma chave API DeepL</value>
+  </data>
+  <data name="SettingsForDeepLTransText" xml:space="preserve">
+    <value>Configurações opcionais para DeepL:</value>
   </data>
   <data name="TranslationEngineChoose" xml:space="preserve">
     <value>Escolha o mecanismo de tradução</value>
@@ -365,5 +470,8 @@
   </data>
   <data name="Editor" xml:space="preserve">
     <value>Editor de prompts</value>
+  </data>
+  <data name="ResetSettingsButtonText" xml:space="preserve">
+    <value />
   </data>
 </root>

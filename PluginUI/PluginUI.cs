@@ -601,9 +601,26 @@ public partial class Echoglossian
           this.SaveConfigValue = true;
         }
 
-        ImGui.PopStyleColor(3);
 
+
+        ImGui.PopStyleColor(3);
         ImGui.EndGroup();
+
+        ImGui.Spacing();
+
+        ImGui.BeginGroup();
+        ImGui.TextWrapped(Resources.ResetSettingsMessageText);
+        ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
+        if (ImGui.Button(Resources.ResetSettingsButtonText)
+        {
+          //TODO: Add button logic
+        }
+
+        ImGui.PopStyleColor(3);
+        ImGui.EndGroup();
+
         ImGui.EndTabItem();
       }
 

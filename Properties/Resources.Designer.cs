@@ -895,6 +895,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset configuration to defaults.
+        /// </summary>
+        public static string ResetSettingsButtonText {
+            get {
+                return ResourceManager.GetString("ResetSettingsButtonText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can reset Echoglossian&apos;s configuration to default using the button below:.
+        /// </summary>
+        public static string ResetSettingsMessageText {
+            get {
+                return ResourceManager.GetString("ResetSettingsMessageText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reset to Default.
         /// </summary>
         public static string ResetToDefault {

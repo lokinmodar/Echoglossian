@@ -520,6 +520,10 @@
           <source>Prompt Editor</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Eingabeaufforderungs-Editor</target>
         </trans-unit>
+        <trans-unit id="ResetSettingsMessageText" translate="yes" xml:space="preserve">
+          <source>You can reset Echoglossian's configuration to default using the button below:</source>
+          <target state="new">You can reset Echoglossian's configuration to default using the button below:</target>
+        </trans-unit>
       </group>
     </body>
   </file>
