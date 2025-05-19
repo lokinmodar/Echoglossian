@@ -118,7 +118,7 @@ namespace Echoglossian
       }
 
       ImGui.Begin(customTitle ?? config.DefaultTitle, flags);
-      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
 
       overlay.Semaphore.Wait();
       ImGui.TextWrapped(overlay.CurrentText);

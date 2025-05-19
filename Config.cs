@@ -243,11 +243,19 @@ namespace Echoglossian
 
     /// <summary>Scaling factor for Talk font.</summary>
     [DefaultValue(1f)]
-    public float FontScale = 1f;
+    public float TalkFontScale = 1f;
 
     /// <summary>Scaling factor for BattleTalk font.</summary>
     [DefaultValue(1f)]
     public float BattleTalkFontScale = 1f;
+
+    /// <summary>Font scale used for Toast overlay.</summary>
+    [DefaultValue(1f)]
+    public float ToastFontScale = 1f;
+
+    /// <summary>Font scale used for Talk Subtitle overlay.</summary>
+    [DefaultValue(1f)]
+    public float TalkSubtitleFontScale = 1f;
 
     /// <summary>Selected version of Google Translate API (1 or 2).</summary>
     [DefaultValue(2)]

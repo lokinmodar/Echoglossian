@@ -524,6 +524,10 @@
           <source>You can reset Echoglossian's configuration to default using the button below:</source>
           <target state="new">You can reset Echoglossian's configuration to default using the button below:</target>
         </trans-unit>
+        <trans-unit id="ResetSettingsButtonText" translate="yes" xml:space="preserve">
+          <source>Reset configuration to defaults</source>
+          <target state="new">Reset configuration to defaults</target>
+        </trans-unit>
       </group>
     </body>
   </file>

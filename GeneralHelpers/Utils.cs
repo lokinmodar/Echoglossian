@@ -53,44 +53,47 @@ namespace Echoglossian
     }
 
     /// <summary>
-    /// Resets the plugin settings to their default values. 
+    /// Resets the plugin settings to their default values dynamically,
+    /// excluding metadata like PluginVersion and FontChangeTime.
     /// </summary>
     private void ResetSettings()
     {
-      this.configuration.Lang = 28;
+      var defaultConfig = new Config();
+      var configType = typeof(Config);
 
-      this.configuration.FontSize = 24;
+      // Reset all fields except NonSerialized and excluded metadata
+      foreach (var field in configType.GetFields())
+      {
+        if (Attribute.IsDefined(field, typeof(NonSerializedAttribute)))
+        {
+          continue;
+        }
 
-      this.configuration.ShowInCutscenes = true;
+        if (field.Name is nameof(Config.PluginVersion) or nameof(Config.Version))
+        {
+          continue;
+        }
 
-      this.configuration.TranslateBattleTalk = false;
-      this.configuration.TranslateTalk = false;
-      this.configuration.TranslateTalkSubtitle = false;
-      this.configuration.TranslateToast = false;
-      this.configuration.TranslateNpcNames = false;
-      this.configuration.TranslateErrorToast = false;
-      this.configuration.TranslateQuestToast = false;
-      this.configuration.TranslateAreaToast = false;
-      this.configuration.TranslateClassChangeToast = false;
-      this.configuration.TranslateWideTextToast = false;
-      this.configuration.TranslateYesNoScreen = false;
-      this.configuration.TranslateCutSceneSelectString = false;
-      this.configuration.TranslateSelectString = false;
-      this.configuration.TranslateSelectOk = false;
-      this.configuration.TranslateToDoList = false;
-      this.configuration.TranslateScenarioTree = false;
-      this.configuration.TranslateTooltips = false;
-      this.configuration.TranslateJournal = false;
+        field.SetValue(this.configuration, field.GetValue(defaultConfig));
+      }
 
-      this.configuration.UseImGuiForTalk = false;
-      this.configuration.UseImGuiForBattleTalk = false;
-      this.configuration.UseImGuiForToasts = false;
-      this.configuration.SwapTextsUsingImGui = false;
-      this.configuration.ChosenTransEngine = 0;
-      this.configuration.TranslateAlreadyTranslatedTexts = false;
-      this.configuration.DeeplTranslatorApiKey = string.Empty;
-      this.configuration.DeeplTranslatorUsingApiKey = false;
-      this.configuration.ChatGptApiKey = string.Empty;
+      // Reset all settable properties except excluded metadata
+      foreach (var prop in configType.GetProperties())
+      {
+        if (!prop.CanWrite || !prop.CanRead)
+        {
+          continue;
+        }
+
+        if (prop.Name is nameof(Config.PluginVersion) or nameof(Config.Version))
+        {
+          continue;
+        }
+
+        prop.SetValue(this.configuration, prop.GetValue(defaultConfig));
+      }
+
+      // Manually set metadata values
       this.configuration.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
       this.configuration.Version = 5;
 
@@ -103,6 +106,7 @@ namespace Echoglossian
         Icon = NotificationUtilities.ToNotificationIcon(Dalamud.Interface.FontAwesomeIcon.Cog),
         Type = NotificationType.Info,
       };
+
       NotificationManager.AddNotification(settingsResetNotification);
     }
 

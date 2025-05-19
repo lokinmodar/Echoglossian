@@ -185,7 +185,7 @@ public partial class Echoglossian
               ImGui.Text(Resources.ImguiAdjustmentsLabel);
               if (ImGui.SliderFloat(
                 Resources.OverlayFontScaleLabel,
-                ref this.configuration.FontScale, -3f, 3f, "%.2f"))
+                ref this.configuration.TalkFontScale, -3f, 3f, "%.2f"))
               {
                 this.SaveConfigValue = true;
                 this.configuration.FontChangeTime = DateTime.Now.Ticks;
@@ -484,7 +484,7 @@ public partial class Echoglossian
               ImGui.Text(Resources.ImguiAdjustmentsLabel);
               if (ImGui.SliderFloat(
                 Resources.OverlayFontScaleLabel,
-                ref this.configuration.FontScale, -3f, 3f, "%.2f"))
+                ref this.configuration.TalkFontScale, -3f, 3f, "%.2f"))
               {
                 this.SaveConfigValue = true;
                 this.configuration.FontChangeTime = DateTime.Now.Ticks;
@@ -613,9 +613,11 @@ public partial class Echoglossian
         ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
-        if (ImGui.Button(Resources.ResetSettingsButtonText)
+        if (ImGui.Button(Resources.ResetSettingsButtonText))
         {
           //TODO: Add button logic
+          PluginLog.Debug("Resetting settings to default");
+          this.ResetSettings();
         }
 
         ImGui.PopStyleColor(3);

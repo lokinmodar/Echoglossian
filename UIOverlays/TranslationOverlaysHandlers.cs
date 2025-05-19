@@ -213,7 +213,7 @@ namespace Echoglossian
           | ImGuiWindowFlags.NoScrollbar);
       }
 
-      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       if (this.battleTalkTranslationSemaphore.Wait(0))
       {
         ImGui.TextWrapped(this.currentBattleTalkTranslation);
@@ -301,7 +301,7 @@ namespace Echoglossian
           | ImGuiWindowFlags.NoScrollbar);
       }
 
-      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       if (this.talkTranslationSemaphore.Wait(0))
       {
         /*        if (this.configuration.Lang is 2)
@@ -371,7 +371,7 @@ namespace Echoglossian
         | ImGuiWindowFlags.NoMouseInputs
         | ImGuiWindowFlags.NoScrollbar);
 
-      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       if (this.talkSubtitleTranslationSemaphore.Wait(0))
       {
         /*if (this.configuration.Lang is 2)
@@ -510,7 +510,7 @@ namespace Echoglossian
         ImGui.Text(Resources.WaitingForTranslation);
       }
 
-      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       this.errorToastTranslationTextImguiSize = ImGui.GetWindowSize();
       ImGui.PopStyleColor(1);
       ImGui.End();
@@ -573,7 +573,7 @@ namespace Echoglossian
         ImGui.Text(Resources.WaitingForTranslation);
       }
 
-      ImGui.SetWindowFontScale(this.configuration.FontScale);
+      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       this.classChangeToastTranslationTextImguiSize = ImGui.GetWindowSize();
       ImGui.PopStyleColor(1);
       ImGui.End();

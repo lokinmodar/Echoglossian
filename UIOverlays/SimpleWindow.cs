@@ -134,7 +134,7 @@ namespace Echoglossian.UIOverlays
           | ImGuiWindowFlags.NoScrollbar);
       }
 
-      ImGui.SetWindowFontScale(configuration.FontScale);
+      ImGui.SetWindowFontScale(configuration.TalkFontScale);
       if (translationSemaphore.Wait(0))
       {
         ImGui.TextWrapped(translation);

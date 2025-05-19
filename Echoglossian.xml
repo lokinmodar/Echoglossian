@@ -4,6 +4,267 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
+        <member name="F:Echoglossian.Config.DefaultPluginCulture">
+            <summary>The default culture to use for plugin translations (e.g., "en", "ja").</summary>
+        </member>
+        <member name="F:Echoglossian.Config.PluginCultureInt">
+            <summary>Selected plugin culture index, for internal mapping.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.Translate">
+            <summary>Enables translation processing globally.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UnsupportedLanguage">
+            <summary>Indicates whether the selected language is unsupported.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayOnlyLanguage">
+            <summary>Disables translation but still displays overlays (e.g., when language is visual only).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.PluginAssetsDownloaded">
+            <summary>Whether plugin assets have been successfully downloaded.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.Lang">
+            <summary>Game language as internal integer (e.g., 28 for English).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.FontSize">
+            <summary>Font size used in overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ShowInCutscenes">
+            <summary>Show overlays and translations during cutscenes.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateBattleTalk">
+            <summary>Translate BattleTalk messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateTalk">
+            <summary>Translate Talk window messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateTalkSubtitle">
+            <summary>Translate Talk Subtitle messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateToast">
+            <summary>Translate toast popup messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateNpcNames">
+            <summary>Translate NPC names in Talk window.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateErrorToast">
+            <summary>Translate error toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateQuestToast">
+            <summary>Translate quest-related toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateAreaToast">
+            <summary>Translate area name toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateClassChangeToast">
+            <summary>Translate class/job change toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateWideTextToast">
+            <summary>Translate wide-format toast messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateYesNoScreen">
+            <summary>Translate Yes/No selection dialogs.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateCutSceneSelectString">
+            <summary>Translate cutscene-based SelectString dialog options.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateSelectString">
+            <summary>Translate regular SelectString dialogs.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateSelectOk">
+            <summary>Translate confirmation dialog messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateToDoList">
+            <summary>Translate To-Do List entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateScenarioTree">
+            <summary>Translate entries in the scenario tree (progress graph).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateTooltips">
+            <summary>Translate UI tooltips.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateJournal">
+            <summary>Translate entries in the quest journal.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForTalk">
+            <summary>Use ImGui to render Talk overlay instead of modifying game UI.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForBattleTalk">
+            <summary>Use ImGui for BattleTalk overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForToasts">
+            <summary>Use ImGui for toast messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForTalkSubtitle">
+            <summary>Use ImGui for Talk Subtitle overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.SwapTextsUsingImGui">
+            <summary>Render translations via ImGui rather than replacing game text directly.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ChosenTransEngine">
+            <summary>Selected translation engine ID (index-based).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateAlreadyTranslatedTexts">
+            <summary>Allow re-translating content even if it was previously translated and cached.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiWindowPosCorrection">
+            <summary>Position correction for ImGui overlay windows.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiTalkWindowWidthMult">
+            <summary>Width multiplier for Talk ImGui overlay window.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.CopyTranslationToClipboard">
+            <summary>Copy translated text to clipboard automatically.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.RemoveDiacriticsWhenUsingReplacementQuest">
+            <summary>Remove diacritics when translating quest-related text.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.RemoveDiacriticsWhenUsingReplacementTalkBTalk">
+            <summary>Remove diacritics when translating Talk/BattleTalk messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DeeplTranslatorApiKey">
+            <summary>API key for DeepL translator.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DeeplTranslatorUsingApiKey">
+            <summary>Enable use of DeepL API key authentication.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ChatGptApiKey">
+            <summary>API key for OpenAI's ChatGPT service.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ChatGPTBaseUrl">
+            <summary>Base URL for ChatGPT API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenAILlmModel">
+            <summary>OpenAI LLM model for ChatGPT use.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ChatGptTemperature">
+            <summary>Temperature setting for ChatGPT responses.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ChatGptEngine">
+            <summary>Engine identifier for OpenAI API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ChatGptModel">
+            <summary>ChatGPT model used for API calls.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ChatGptPrompt">
+            <summary>Prompt template used for ChatGPT translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AiTranslatorPrompt">
+            <summary>Generic prompt used by all AI translators when applicable.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.FontScale">
+            <summary>Scaling factor for Talk font.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.BattleTalkFontScale">
+            <summary>Scaling factor for BattleTalk font.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.GoogleTranslateVersion">
+            <summary>Selected version of Google Translate API (1 or 2).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.PluginVersion">
+            <summary>Current plugin version.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexFreeApiKey">
+            <summary>Free Yandex API key for translation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UsePaidYandexApi">
+            <summary>Use paid Yandex Cloud API instead of free version.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseYandexV2ForFreeApi">
+            <summary>Use Yandex Cloud V2 API format for free API usage.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexFolderId">
+            <summary>Folder ID for Yandex Cloud translation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexPaidApiKey">
+            <summary>Paid API key for Yandex Cloud translation service.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexCharactersTranslated">
+            <summary>Total characters translated using Yandex (for stats/tracking).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexCloudPrompt">
+            <summary>Prompt for Yandex Cloud translator (used in experimental flows).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DeepSeekBaseUrl">
+            <summary>Base URL for DeepSeek API usage.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DeepSeekTranslatorApiKey">
+            <summary>API key for DeepSeek translation engine.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DeepSeekModel">
+            <summary>Model used with DeepSeek translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DeepSeekTemperature">
+            <summary>Temperature used for DeepSeek responses.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DeepSeekPrompt">
+            <summary>Prompt passed to DeepSeek for contextual translation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AwsRegion">
+            <summary>AWS region for Translate API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AwsAccessKey">
+            <summary>AWS access key for Translate usage.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AwsSecretKey">
+            <summary>AWS secret key for Translate usage.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AwsTranslateModel">
+            <summary>Model name for Amazon Translate.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AmazonPrompt">
+            <summary>Prompt passed to Amazon Translate (if used).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.GeminiTranslatorApiKey">
+            <summary>API key for Gemini translator.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.GeminiModel">
+            <summary>Gemini model ID used for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.GeminiTemperature">
+            <summary>Temperature value used in Gemini translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.GeminiPrompt">
+            <summary>Prompt passed to Gemini for translation context.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorApiKey">
+            <summary>API key for Microsoft Translator service.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorRegion">
+            <summary>Region code for Microsoft Translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorEndpoint">
+            <summary>Endpoint URL for Microsoft Translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorModel">
+            <summary>Translation model used for Microsoft Translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorPrompt">
+            <summary>Prompt passed to Microsoft Translator (if supported).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterModel">
+            <summary>Model identifier for OpenRouter translator.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterTemperature">
+            <summary>Temperature value for OpenRouter translation generation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterApiKey">
+            <summary>API key for OpenRouter.ai service.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterBaseUrl">
+            <summary>Base URL for OpenRouter API calls.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterPrompt">
+            <summary>Prompt passed to OpenRouter translator.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ForceShowTitle">
+            <summary>Always show overlay title bar, even if name translation is off.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.FontChangeTime">
+            <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
+        </member>
+        <member name="P:Echoglossian.Config.Version">
+            <summary>Plugin configuration version number (used during migration).</summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian"/> class.
@@ -1019,6 +1280,16 @@
         <member name="P:Echoglossian.Properties.Resources.ResetConfigsButton">
             <summary>
               Looks up a localized string similar to Reset Settings.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ResetSettingsButtonText">
+            <summary>
+              Looks up a localized string similar to Reset configuration to defaults.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ResetSettingsMessageText">
+            <summary>
+              Looks up a localized string similar to You can reset Echoglossian&apos;s configuration to default using the button below:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ResetToDefault">
