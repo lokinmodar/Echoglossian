@@ -527,6 +527,10 @@
           <source>Reset configuration to defaults</source>
           <target state="new">Reset configuration to defaults</target>
         </trans-unit>
+        <trans-unit id="TalkTabTitle" translate="yes" xml:space="preserve">
+          <source>Talk</source>
+          <target state="new">Talk</target>
+        </trans-unit>
       </group>
     </body>
   </file>

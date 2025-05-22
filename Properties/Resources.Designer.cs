@@ -151,6 +151,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to BattleTalk.
+        /// </summary>
+        public static string BattleTalkTabTitle {
+            get {
+                return ResourceManager.GetString("BattleTalkTabTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ChatGPT API Key.
         /// </summary>
         public static string ChatGptApiKey {
@@ -985,11 +994,29 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to TalkSubtitle.
+        /// </summary>
+        public static string SubtitleTabTitle {
+            get {
+                return ResourceManager.GetString("SubtitleTabTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
         /// </summary>
         public static string SwapTranslationTextToggle {
             get {
                 return ResourceManager.GetString("SwapTranslationTextToggle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Talk.
+        /// </summary>
+        public static string TalkTabTitle {
+            get {
+                return ResourceManager.GetString("TalkTabTitle", resourceCulture);
             }
         }
         
@@ -1008,6 +1035,15 @@ namespace Echoglossian.Properties {
         public static string ToastOverlayWidthScrollLabel {
             get {
                 return ResourceManager.GetString("ToastOverlayWidthScrollLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toast.
+        /// </summary>
+        public static string ToastTabTitle {
+            get {
+                return ResourceManager.GetString("ToastTabTitle", resourceCulture);
             }
         }
         
@@ -1116,6 +1152,15 @@ namespace Echoglossian.Properties {
         public static string TranslateTextsAgain {
             get {
                 return ResourceManager.GetString("TranslateTextsAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate Toast Messages.
+        /// </summary>
+        public static string TranslateToastToggle {
+            get {
+                return ResourceManager.GetString("TranslateToastToggle", resourceCulture);
             }
         }
         

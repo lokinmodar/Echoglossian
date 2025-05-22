@@ -505,4 +505,19 @@
   <data name="ResetSettingsButtonText" xml:space="preserve">
     <value>Reset configuration to defaults</value>
   </data>
+  <data name="TalkTabTitle" xml:space="preserve">
+    <value>Talk</value>
+  </data>
+  <data name="BattleTalkTabTitle" xml:space="preserve">
+    <value>BattleTalk</value>
+  </data>
+  <data name="ToastTabTitle" xml:space="preserve">
+    <value>Toast</value>
+  </data>
+  <data name="SubtitleTabTitle" xml:space="preserve">
+    <value>TalkSubtitle</value>
+  </data>
+  <data name="TranslateToastToggle" xml:space="preserve">
+    <value>Translate Toast Messages</value>
+  </data>
 </root>
