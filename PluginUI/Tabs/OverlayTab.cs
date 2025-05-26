@@ -34,6 +34,7 @@ public static class OverlayTab
         selectedOverlayTab = i;
       }
     }
+
     ImGui.EndChild();
 
     ImGui.SameLine();
@@ -92,8 +93,7 @@ public static class OverlayTab
           ref config.ImGuiWindowPosCorrection,
           ref config.OverlayTalkTextColor,
           Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime
-      );
+          ref config.FontChangeTime);
     }
 
     if (!config.OverlayOnlyLanguage && config.UseImGuiForTalk)
@@ -120,7 +120,14 @@ public static class OverlayTab
       return changed;
     }
 
-    changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForBattleTalk);
+    if (config.OverlayOnlyLanguage)
+    {
+      changed |= AssignIfChanged(ref config.UseImGuiForBattleTalk, true);
+    }
+    else
+    {
+      changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForBattleTalk);
+    }
 
     if (config.UseImGuiForBattleTalk)
     {
@@ -131,8 +138,7 @@ public static class OverlayTab
           ref config.ImGuiBattleTalkWindowPosCorrection,
           ref config.OverlayBattleTalkTextColor,
           Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime
-      );
+          ref config.FontChangeTime);
     }
 
     return changed;
@@ -142,25 +148,51 @@ public static class OverlayTab
   {
     bool changed = false;
 
-    changed |= ImGui.Checkbox(Resources.TranslateToastToggle, ref config.TranslateToast);
+    changed |= ImGui.Checkbox(Resources.TranslateToastToggleText, ref config.TranslateToast);
 
     if (!config.TranslateToast)
     {
       return changed;
     }
 
-    changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForToasts);
+    if (config.OverlayOnlyLanguage)
+    {
+      changed |= AssignIfChanged(ref config.UseImGuiForToasts, true);
+    }
+    else
+    {
+      changed |= ImGui.Checkbox(Resources.UseImGuiForToastsToggle, ref config.UseImGuiForToasts);
+    }
+
+    ImGui.Separator();
+    ImGui.Text(Resources.WhichToastsToTranslate);
+
+    changed |= ImGui.Checkbox(Resources.TranslateErrorToastToggleText, ref config.TranslateErrorToast);
+    changed |= ImGui.Checkbox(Resources.TranslateQuestToastToggleText, ref config.TranslateQuestToast);
+    changed |= ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref config.TranslateAreaToast);
+    changed |= ImGui.Checkbox(Resources.TranslateClassChangeToastToggleText, ref config.TranslateClassChangeToast);
+    changed |= ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText, ref config.TranslateWideTextToast);
+
+    ImGui.Separator();
 
     if (config.UseImGuiForToasts)
     {
+      ImGui.Text(Resources.ImguiAdjustmentsLabel);
+
       changed |= DrawOverlaySettings(
           ref config.ToastFontScale,
           ref config.ImGuiToastWindowWidthMult,
           ref config.ImGuiToastWindowPosCorrection,
           ref config.OverlayToastTextColor,
           Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime
-      );
+          ref config.FontChangeTime);
+
+      ImGui.SameLine();
+      ImGui.Text(Resources.HoverTooltipIndicator);
+      if (ImGui.IsItemHovered())
+      {
+        ImGui.SetTooltip(Resources.ToastOverlayWidthMultiplierOrientations);
+      }
     }
 
     return changed;
@@ -177,7 +209,14 @@ public static class OverlayTab
       return changed;
     }
 
-    changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForTalkSubtitle);
+    if (config.OverlayOnlyLanguage)
+    {
+      changed |= AssignIfChanged(ref config.UseImGuiForTalkSubtitle, true);
+    }
+    else
+    {
+      changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForTalkSubtitle);
+    }
 
     if (config.UseImGuiForTalkSubtitle)
     {
@@ -188,8 +227,7 @@ public static class OverlayTab
           ref config.ImGuiTalkSubtitleWindowPosCorrection,
           ref config.OverlayTalkSubtitleTextColor,
           Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime
-      );
+          ref config.FontChangeTime);
     }
 
     return changed;
@@ -298,7 +336,8 @@ public static class OverlayTab
     return changed;
   }
 
-  private static bool AssignIfChanged<T>(ref T field, T value) where T : notnull
+  private static bool AssignIfChanged<T>(ref T field, T value)
+    where T : notnull
   {
     if (!field.Equals(value))
     {

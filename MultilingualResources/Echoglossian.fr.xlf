@@ -531,6 +531,22 @@
           <source>Talk</source>
           <target state="new">Talk</target>
         </trans-unit>
+        <trans-unit id="BattleTalkTabTitle" translate="yes" xml:space="preserve">
+          <source>BattleTalk</source>
+          <target state="new">BattleTalk</target>
+        </trans-unit>
+        <trans-unit id="ToastTabTitle" translate="yes" xml:space="preserve">
+          <source>Toast</source>
+          <target state="new">Toast</target>
+        </trans-unit>
+        <trans-unit id="SubtitleTabTitle" translate="yes" xml:space="preserve">
+          <source>TalkSubtitle</source>
+          <target state="new">TalkSubtitle</target>
+        </trans-unit>
+        <trans-unit id="TranslateToastToggle" translate="yes" xml:space="preserve">
+          <source>Translate Toast Messages</source>
+          <target state="new">Translate Toast Messages</target>
+        </trans-unit>
       </group>
     </body>
   </file>
