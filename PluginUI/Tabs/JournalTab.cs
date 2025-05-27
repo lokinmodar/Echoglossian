@@ -7,15 +7,21 @@ namespace Echoglossian.Tabs;
 /// </summary>
 public static class JournalTab
 {
-    public static bool Draw(Config config)
+  public static bool Draw(Config config, bool langToRemoveDiacritics)
+  {
+    bool changed = false;
+
+    if (config.Translate)
     {
-        bool changed = false;
-
-        changed |= ImGui.Checkbox(Resources.TranslateJournalLabel, ref config.TranslateJournal);
-        changed |= ImGui.Checkbox(Resources.TranslateTooltipsLabel, ref config.TranslateTooltips);
-        changed |= ImGui.Checkbox(Resources.TranslateToDoListLabel, ref config.TranslateToDoList);
-        changed |= ImGui.Checkbox(Resources.TranslateScenarioTreeLabel, ref config.TranslateScenarioTree);
-
-        return changed;
+      changed |= ImGui.Checkbox(Resources.TranslateJournalToggle, ref config.TranslateJournal);
     }
+
+    if (langToRemoveDiacritics)
+    {
+      changed |= ImGui.Checkbox(Resources.RemoveDiacriticsToggle, ref config.RemoveDiacriticsWhenUsingReplacementQuest);
+    }
+
+    return changed;
+  }
+
 }
