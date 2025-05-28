@@ -172,6 +172,7 @@ public static class OverlayTab
     changed |= ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref config.TranslateAreaToast);
     changed |= ImGui.Checkbox(Resources.TranslateClassChangeToastToggleText, ref config.TranslateClassChangeToast);
     changed |= ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText, ref config.TranslateWideTextToast);
+    // TODO: add _TextGimmickHint addon handling
 
     ImGui.Separator();
 

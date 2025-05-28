@@ -37,136 +37,7 @@ public partial class Echoglossian
     {
 
 
-      if (ImGui.BeginTabItem(Resources.ConfigTab4Name))
-      {
-        if (this.configuration.Translate)
-        {
-          /* - Journal - */
-          this.SaveConfigValue |= ImGui.Checkbox(
-            Resources.TranslateJournalToggle,
-            ref this.configuration.TranslateJournal);
-        }
 
-        if (langToRemoveDiacritics)
-        {
-          this.SaveConfigValue |= ImGui.Checkbox(
-                             Resources.RemoveDiacriticsToggle,
-                             ref this.configuration.RemoveDiacriticsWhenUsingReplacementQuest);
-        }
-
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab5Name))
-      {
-        /* - talk subtitle - */
-        if (this.configuration.Translate)
-        {
-          this.SaveConfigValue |= ImGui.Checkbox(
-            Resources.TranslateTalkSubtitleToggleLabel,
-            ref this.configuration.TranslateTalkSubtitle);
-
-          if (this.configuration.TranslateTalkSubtitle)
-          {
-            if (this.configuration.OverlayOnlyLanguage)
-            {
-              this.SaveConfigValue |=
-                AssignIfChanged(ref this.configuration.UseImGuiForTalkSubtitle, true);
-              this.SaveConfigValue |=
-                AssignIfChanged(
-                  ref this.configuration.SwapTextsUsingImGui,
-                  false);
-            }
-            else
-            {
-              this.SaveConfigValue |= ImGui.Checkbox(
-                Resources.OverlayToggleLabel,
-                ref this.configuration.UseImGuiForTalkSubtitle);
-            }
-
-            ImGui.Spacing();
-            ImGui.Separator();
-
-            if (this.configuration.UseImGuiForTalkSubtitle)
-            {
-              ImGui.Text(Resources.ImguiAdjustmentsLabel);
-              if (ImGui.SliderFloat(
-                Resources.OverlayFontScaleLabel,
-                ref this.configuration.FontScale, -3f, 3f, "%.2f"))
-              {
-                this.SaveConfigValue = true;
-                this.configuration.FontChangeTime = DateTime.Now.Ticks;
-              }
-
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
-              }
-
-              ImGui.Text(Resources.FontColorSelectLabel);
-              ImGui.SameLine();
-              this.SaveConfigValue |= ImGui.ColorEdit3(
-                Resources.OverlayColorSelectName,
-                ref this.configuration.OverlayTalkTextColor,
-                ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
-
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
-              }
-
-              ImGui.Spacing();
-              ImGui.Separator();
-              this.SaveConfigValue |= ImGui.DragFloat(
-                Resources.OverlayWidthScrollLabel,
-                ref this.configuration.ImGuiTalkSubtitleWindowWidthMult, 0.001f, 0.01f,
-                3f);
-
-              ImGui.Separator();
-              this.SaveConfigValue |= ImGui.DragFloat(
-                Resources.OverlayHeightScrollLabel,
-                ref this.configuration.ImGuiTalkSubtitleWindowHeightMult, 0.001f, 0.01f,
-                3f);
-
-              ImGui.Separator();
-              ImGui.Spacing();
-              this.SaveConfigValue |= ImGui.DragFloat2(
-                Resources.OverlayPositionAdjustmentLabel,
-                ref this.configuration.ImGuiTalkSubtitleWindowPosCorrection);
-
-              ImGui.SameLine();
-              ImGui.Text(Resources.HoverTooltipIndicator);
-              if (ImGui.IsItemHovered())
-              {
-                ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
-              }
-            }
-
-            ImGui.Spacing();
-            ImGui.Separator();
-            if (!this.configuration.OverlayOnlyLanguage &&
-                this.configuration.UseImGuiForTalkSubtitle)
-            {
-              this.SaveConfigValue |= ImGui.Checkbox(
-                Resources.SwapTranslationTextToggle,
-                ref this.configuration.SwapTextsUsingImGui);
-            }
-
-            if (this.configuration.SwapTextsUsingImGui && langToRemoveDiacritics)
-            {
-              this.SaveConfigValue |= ImGui.Checkbox(
-                                 Resources.RemoveDiacriticsToggle,
-                                 ref this.configuration.RemoveDiacriticsWhenUsingReplacementTalkBTalk);
-            }
-          }
-        }
-
-        ImGui.EndTabItem();
-      }
 
       /*if (ImGui.BeginTabItem(Resources.ConfigTab6Name))
       {
@@ -174,12 +45,6 @@ public partial class Echoglossian
         ImGui.EndTabItem();
       }*/
 
-      if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
-      {
-        /* - Translation engine - */
-        this.DrawTranslationEnginesTab();
-        ImGui.EndTabItem();
-      }
 
       if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
       {

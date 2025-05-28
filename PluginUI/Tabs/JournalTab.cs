@@ -1,5 +1,3 @@
-using ImGuiNET;
-
 namespace Echoglossian.Tabs;
 
 /// <summary>
@@ -23,5 +21,4 @@ public static class JournalTab
 
     return changed;
   }
-
 }

@@ -4,13 +4,15 @@
 // </copyright>
 
 using System.Diagnostics;
+using System.Numerics;
+using Echoglossian.PluginUI;
 using Echoglossian.Properties;
 using Echoglossian.Translators;
 using ImGuiNET;
-using System.Numerics;
-using Echoglossian.PluginUI;
+using Dalamud.Interface.Utility.Raii;
 
 namespace Echoglossian;
+
 public partial class Echoglossian
 {
   public bool SaveConfigValue = false;
@@ -18,18 +20,9 @@ public partial class Echoglossian
 
   private readonly List<string> enginesList = new()
     {
-        "Google",
-        "DeepL",
-        "ChatGPT",
-        "YandexCloud",
-        "GTranslate",
-        "DeepSeek",
-        "OpenLlama",
-        "LibreTranslate",
-        "Microsoft",
-        "Amazon",
-        "Gemini",
-        "YandexPublic",
+        "Google", "DeepL", "ChatGPT", "YandexCloud", "GTranslate",
+        "DeepSeek", "OpenLlama", "LibreTranslate", "Microsoft",
+        "Amazon", "Gemini", "YandexPublic"
     };
 
   private void EchoglossianConfigUi()
@@ -44,7 +37,7 @@ public partial class Echoglossian
     ImGui.SetNextWindowSizeConstraints(new Vector2(900, 700), new Vector2(1920, 1080));
     ImGui.Begin($"{Resources.ConfigWindowTitle} - Plugin Version: {this.configuration.PluginVersion}", ref this.config);
 
-    // header
+    // Header
     ImGui.BeginGroup();
     UINewFontHandler.GeneralFontHandle.Push();
 
@@ -160,7 +153,7 @@ public partial class Echoglossian
 
       if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
       {
-        this.SaveConfigValue |= Tabs.TranslationEnginesTab.Draw(this.configuration);
+        this.DrawTranslationEnginesTab();
         ImGui.EndTabItem();
       }
 

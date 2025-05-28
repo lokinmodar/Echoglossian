@@ -3,15 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Drawing;
-using System.Drawing.Text;
-using System.Text;
-using System.Text.RegularExpressions;
-
-using Dalamud.Interface.ImGuiNotification;
-using Echoglossian.Properties;
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
-
 namespace Echoglossian
 {
   public partial class Echoglossian
@@ -56,7 +47,7 @@ namespace Echoglossian
     /// Resets the plugin settings to their default values dynamically,
     /// excluding metadata like PluginVersion and FontChangeTime.
     /// </summary>
-    private void ResetSettings()
+    public static void ResetSettings(Config config, Action saveCallback)
     {
       var defaultConfig = new Config();
       var configType = typeof(Config);
@@ -74,7 +65,7 @@ namespace Echoglossian
           continue;
         }
 
-        field.SetValue(this.configuration, field.GetValue(defaultConfig));
+        field.SetValue(config, field.GetValue(defaultConfig));
       }
 
       // Reset all settable properties except excluded metadata
@@ -90,14 +81,15 @@ namespace Echoglossian
           continue;
         }
 
-        prop.SetValue(this.configuration, prop.GetValue(defaultConfig));
+        prop.SetValue(config, prop.GetValue(defaultConfig));
       }
 
       // Manually set metadata values
-      this.configuration.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
-      this.configuration.Version = 5;
+      config.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+      config.Version = 5;
 
-      this.SaveConfig();
+      // Call the provided save callback to persist
+      saveCallback?.Invoke();
 
       var settingsResetNotification = new Notification
       {
@@ -113,15 +105,14 @@ namespace Echoglossian
     /// <summary>
     /// Fixes the configuration file if it is missing or has an incorrect version.
     /// </summary>
-    private void FixConfig()
+    public void FixConfig()
     {
-      if (!File.Exists($"{PluginInterface.ConfigFile.FullName}"))
+      if (!File.Exists(PluginInterface.ConfigFile.FullName))
       {
 #if DEBUG
         PluginLog.Debug($"Inside config file fixer - Config File Info: {PluginInterface.ConfigFile.FullName}");
 #endif
-
-        this.SaveConfig();
+        Echoglossian.SaveConfig(this.configuration);
         return;
       }
 
@@ -131,17 +122,18 @@ namespace Echoglossian
       }
 
       PluginInterface.ConfigFile.Delete();
-      this.SaveConfig();
-      this.ResetSettings();
+      Echoglossian.SaveConfig(this.configuration);
+      Echoglossian.ResetSettings(this.configuration, () => Echoglossian.SaveConfig(this.configuration));
+
       PluginInterface.GetPluginConfig();
     }
 
     /// <summary>
     /// Saves the current configuration to the plugin config file.
     /// </summary>
-    private void SaveConfig()
+    public static void SaveConfig(Config config)
     {
-      PluginInterface.SavePluginConfig(this.configuration);
+      PluginInterface.SavePluginConfig(config);
     }
 
     /// <summary>

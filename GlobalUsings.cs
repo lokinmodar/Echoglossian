@@ -11,6 +11,10 @@ global using System.Globalization;
 global using System.Numerics;
 global using System.Reflection;
 global using System.Threading;
+global using System.Drawing;
+global using System.Drawing.Text;
+global using System.Text;
+global using System.Text.RegularExpressions;
 
 global using Dalamud.Game;
 global using Dalamud.Game.Addon.Lifecycle;
@@ -20,6 +24,7 @@ global using Dalamud.Game.Text.Sanitizer;
 global using Dalamud.Game.Text.SeStringHandling;
 global using Dalamud.Interface.Textures.TextureWraps;
 global using Dalamud.Interface.Utility;
+global using Dalamud.Interface.ImGuiNotification;
 global using Dalamud.IoC;
 global using Dalamud.Memory;
 global using Dalamud.Plugin;
@@ -36,6 +41,8 @@ global using Echoglossian.UIOverlays.TranslationOverlay;
 global using Echoglossian.EFCoreSqlite.Models.Journal;
 
 global using FFXIVClientStructs.FFXIV.Component.GUI;
+global using FFXIVClientStructs.FFXIV.Client.Game.Event;
+
 global using Humanizer;
 global using ImGuiNET;
 global using Newtonsoft.Json;
