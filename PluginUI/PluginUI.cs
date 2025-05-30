@@ -171,7 +171,7 @@ public partial class Echoglossian
 
       if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
       {
-        this.SaveConfigValue |= Tabs.AboutTab.Draw(this.configuration);
+        this.SaveConfigValue |= Tabs.AboutTab.Draw(this.configuration, this.logo.ImGuiHandle);
         ImGui.EndTabItem();
       }
 
@@ -183,7 +183,7 @@ public partial class Echoglossian
     PluginConfigWindowFooter.DrawFooter(
         ref this.config,
         ref this.SaveConfigValue,
-        this.SaveConfig,
+        () => Echoglossian.SaveConfig(this.configuration),
         this.pixImage.ImGuiHandle
     );
 
@@ -191,7 +191,7 @@ public partial class Echoglossian
 
     if (this.SaveConfigValue)
     {
-      this.SaveConfig();
+      Echoglossian.SaveConfig(this.configuration);
     }
   }
 
@@ -202,7 +202,7 @@ public partial class Echoglossian
     this.configuration.TranslateErrorToast = false;
     this.configuration.TranslateQuestToast = false;
     this.configuration.TranslateWideTextToast = false;
-    this.SaveConfig();
+    Echoglossian.SaveConfig(this.configuration);
     return true;
   }
 }

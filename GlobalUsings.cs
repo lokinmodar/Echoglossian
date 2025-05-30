@@ -22,6 +22,7 @@ global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 global using Dalamud.Game.Command;
 global using Dalamud.Game.Text.Sanitizer;
 global using Dalamud.Game.Text.SeStringHandling;
+global using Dalamud.Interface;
 global using Dalamud.Interface.Textures.TextureWraps;
 global using Dalamud.Interface.Utility;
 global using Dalamud.Interface.ImGuiNotification;

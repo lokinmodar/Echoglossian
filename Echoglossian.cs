@@ -170,13 +170,15 @@ namespace Echoglossian
       }
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
-      this.assetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
-
-      this.AssetFiles.Add("NotoSansCJKhk-Regular.otf");
-      this.AssetFiles.Add("NotoSansCJKjp-Regular.otf");
-      this.AssetFiles.Add("NotoSansCJKkr-Regular.otf");
-      this.AssetFiles.Add("NotoSansCJKsc-Regular.otf");
-      this.AssetFiles.Add("NotoSansCJKtc-Regular.otf");
+      AssetsManager.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
+      AssetsManager.AssetFiles = new List<string>
+{
+  "NotoSansCJKhk-Regular.otf",
+  "NotoSansCJKjp-Regular.otf",
+  "NotoSansCJKkr-Regular.otf",
+  "NotoSansCJKsc-Regular.otf",
+  "NotoSansCJKtc-Regular.otf"
+};
 
       ComplementaryFont3FilePath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-3.ttf";
       ComplementaryFont4FilePath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-4.ttf";
@@ -200,7 +202,7 @@ namespace Echoglossian
 #endif
       if (!this.pluginAssetsState)
       {
-        this.PluginAssetsChecker();
+        AssetsManager.PluginAssetsChecker();
       }
 
       SelectedLanguage = this.languagesDictionary[this.configuration.Lang];

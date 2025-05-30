@@ -16,7 +16,7 @@ public partial class Echoglossian
 
 
 
-  private void EchoglossianConfigUi()
+  private void EchoglossianConfigUiOld()
   {
 
 
@@ -35,102 +35,6 @@ public partial class Echoglossian
       "TabBar",
       ImGuiTabBarFlags.NoCloseWithMiddleMouseButton))
     {
-
-
-
-
-      /*if (ImGui.BeginTabItem(Resources.ConfigTab6Name))
-      {
-        ImGui.Text("This is the Onion tab!\nblah blah blah blah blah");
-        ImGui.EndTabItem();
-      }*/
-
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
-      {
-        var pluginAssetsStatus = this.configuration.PluginAssetsDownloaded;
-
-        ImGui.BeginGroup();
-        /*if (pluginAssetsStatus)
-        {
-          // TODO: Add a button to re-download the assets
-          ImGui.Text(Resources.PluginAssetsDownloadedText);
-        }
-        else
-        {*/
-        ImGui.TextWrapped(Resources.CurrentPluginAssetsStatus + ": " + pluginAssetsStatus);
-        ImGui.TextWrapped(Resources.PluginAssetsNotDownloadedText);
-        ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
-        if (ImGui.Button(Resources.DownloadPluginAssetsButtonText))
-        {
-          this.DownloadAssets(0);
-          this.DownloadAssets(1);
-          this.DownloadAssets(2);
-          this.DownloadAssets(3);
-          this.DownloadAssets(4);
-          this.PluginAssetsChecker();
-          this.SaveConfigValue = true;
-        }
-
-
-
-        ImGui.PopStyleColor(3);
-        ImGui.EndGroup();
-
-        ImGui.Spacing();
-
-        ImGui.BeginGroup();
-        ImGui.TextWrapped(Resources.ResetSettingsMessageText);
-        ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
-        if (ImGui.Button(Resources.ResetSettingsButtonText))
-        {
-          //TODO: Add button logic
-          PluginLog.Debug("Resetting settings to default");
-          this.ResetSettings();
-        }
-
-        ImGui.PopStyleColor(3);
-        ImGui.EndGroup();
-
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab9Name))
-      {
-        ImGui.Text(Resources.ConfigTab9Text);
-
-        ImGui.Checkbox(Resources.ConfigTab9CheckboxClipboardText, ref this.configuration.CopyTranslationToClipboard);
-        ImGui.TextWrapped(Resources.ConfigTab9CheckboxClipboardTooltipText);
-
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
-      {
-        if (ImGui.BeginTable("columns", 2))
-        {
-          ImGui.TableNextColumn();
-          ImGui.BeginGroup();
-          ImGui.TextColored(new Vector4(247, 247, 7, 255), Resources.DisclaimerTitle);
-          ImGui.Spacing();
-          ImGui.TextWrapped(Resources.DisclaimerText1);
-          ImGui.TextWrapped(Resources.DisclaimerText2);
-          ImGui.TextWrapped(Resources.ContribText);
-          ImGui.EndGroup();
-
-          ImGui.TableNextColumn();
-          var posLogo = new Vector2(ImGui.GetWindowContentRegionMax().X - 300, ImGui.GetWindowContentRegionMin().Y + 150);
-          ImGui.SetCursorPos(posLogo);
-          ImGui.Image(this.logo.ImGuiHandle, new Vector2(300, 300));
-          ImGui.EndTable();
-        }
-
-        ImGui.EndTabItem();
-      }
 
       ImGui.EndTabBar();
     }
@@ -230,18 +134,8 @@ public partial class Echoglossian
 
     if (this.SaveConfigValue)
     {
-      this.SaveConfig();
+      //this.SaveConfig();
     }
   }
 
-  private bool DisableAllToastTranslations()
-  {
-    this.configuration.TranslateAreaToast = false;
-    this.configuration.TranslateClassChangeToast = false;
-    this.configuration.TranslateErrorToast = false;
-    this.configuration.TranslateQuestToast = false;
-    this.configuration.TranslateWideTextToast = false;
-    this.SaveConfig();
-    return true;
-  }
 }

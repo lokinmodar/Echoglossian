@@ -1,21 +1,31 @@
+// <copyright file="TranslationEnginesTab.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
 using ImGuiNET;
+using Echoglossian.Properties;
 
 namespace Echoglossian.Tabs;
 
 /// <summary>
-/// Renders the Translation Engine settings tab.
+/// Renders the translation engines tab.
 /// </summary>
 public static class TranslationEnginesTab
 {
-    public static bool Draw(Config config)
+  /// <summary>
+  /// Draws the translation engine tab by invoking the plugin's shared draw method.
+  /// </summary>
+  /// <param name="config">The current plugin configuration.</param>
+  /// <returns>Always returns false, since this tab's draw state is handled internally.</returns>
+  public static bool Draw(Config config)
+  {
+    if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
     {
-        bool changed = false;
-
-        changed |= ImGui.Combo(Resources.EngineSelectLabel, ref config.ChosenTransEngine, Resources.EngineList, Resources.EngineList.Length);
-        changed |= ImGui.Checkbox(Resources.TranslateAlreadyTranslatedTextsLabel, ref config.TranslateAlreadyTranslatedTexts);
-
-        // Further engine settings (DeepL, ChatGPT, Gemini, etc.) to be added here
-
-        return changed;
+      Echoglossian.DrawTranslationEnginesTab(config); // TODO: FIx this. It is broken now
+      ImGui.EndTabItem();
     }
+
+    return false;
+  }
 }

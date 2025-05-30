@@ -174,7 +174,7 @@ public static class AssetsManager
       {
         Content = Resources.AssetsPresentPopupMsg,
         Title = Resources.Name,
-        Icon = NotificationUtilities.ToNotificationIcon(Dalamud.Interface.FontAwesomeIcon.Vault),
+        Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Vault),
         Type = NotificationType.Success,
       });
     }
