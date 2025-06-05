@@ -10,7 +10,7 @@ namespace Echoglossian
     /// <summary>
     /// The default prompt for the translation engine.
     /// </summary>
-    private const string DefaultPrompt = @"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
+    public static string DefaultPrompt = @"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
 1. Preserve the original tone, humor, personality, and emotional nuances of the dialogue, considering the unique style and atmosphere of Final Fantasy XIV.
 2. Adapt idioms, cultural references, and wordplay to resonate naturally with native {targetLanguage} speakers while maintaining the fantasy RPG context.
@@ -106,7 +106,7 @@ Please provide only the translated text in your response, without any explanatio
         6 => PromptType.Microsoft,
         7 => PromptType.Amazon,
         8 => PromptType.YandexCloud,
-        _ => null
+        _ => null,
       };
     }
 

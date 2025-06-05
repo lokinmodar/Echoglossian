@@ -31,12 +31,23 @@ global using Dalamud.Memory;
 global using Dalamud.Plugin;
 global using Dalamud.Plugin.Services;
 global using Dalamud.Utility;
+global using Dalamud.Interface.Utility.Raii;
+
+
+
+global using Echoglossian;
+
+global using static Echoglossian.Echoglossian;
 
 global using Echoglossian.EFCoreSqlite;
 global using Echoglossian.EFCoreSqlite.Models;
 global using Echoglossian.LanguagesHandling;
 global using Echoglossian.NativeUI.Handlers;
 global using Echoglossian.Properties;
+global using Echoglossian.Helpers;
+global using Echoglossian.PluginUI.Helpers;
+global using Echoglossian.PluginUI;
+global using Echoglossian.PluginUI.EngineConfigUI;
 global using Echoglossian.Translators;
 global using Echoglossian.UIOverlays.TranslationOverlay;
 global using Echoglossian.EFCoreSqlite.Models.Journal;

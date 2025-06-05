@@ -59,9 +59,9 @@ namespace Echoglossian
 
     private const string SlashCommand = "/eglo";
     private string configDir;
-    private static int languageInt = 28;
+    public static int languageInt = 28;
     private static int fontSize = 24;
-    private static int chosenTransEngine;
+    public static int chosenTransEngine;
     private static string transEngineName;
 
     public static string ScriptCharList { get; set; }
@@ -89,7 +89,7 @@ namespace Echoglossian
     public string LangToTranslateTo = string.Empty;
 
     private bool pluginAssetsState;
-    private static Dictionary<int, LanguageInfo> langDict;
+    public static Dictionary<int, LanguageInfo> langDict;
     private bool config;
 
     private Config configuration;
@@ -118,7 +118,7 @@ namespace Echoglossian
 
     private readonly CultureInfo cultureInfo;
 
-    private static Sanitizer sanitizer;
+    public static Sanitizer sanitizer;
 
     private AtkTextNodeBufferWrapper AtkTextNodeBufferWrapper;
 
@@ -126,7 +126,7 @@ namespace Echoglossian
     private UiAddonHandler uiTalkAddonHandler;
     private UiAddonHandler uiTalkSubtitleHandler;
 
-    private TranslationService translationService;
+    public static TranslationService translationService;
 
     public List<ToastMessage> ErrorToastsCache { get; set; }
 
@@ -177,7 +177,7 @@ namespace Echoglossian
   "NotoSansCJKjp-Regular.otf",
   "NotoSansCJKkr-Regular.otf",
   "NotoSansCJKsc-Regular.otf",
-  "NotoSansCJKtc-Regular.otf"
+  "NotoSansCJKtc-Regular.otf",
 };
 
       ComplementaryFont3FilePath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-3.ttf";
@@ -232,7 +232,7 @@ namespace Echoglossian
 
       TransEngines t = (TransEngines)chosenTransEngine;
       transEngineName = t.ToString();
-      this.translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
+      translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
 
       this.AtkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 

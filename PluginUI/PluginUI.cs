@@ -22,7 +22,7 @@ public partial class Echoglossian
     {
         "Google", "DeepL", "ChatGPT", "YandexCloud", "GTranslate",
         "DeepSeek", "OpenLlama", "LibreTranslate", "Microsoft",
-        "Amazon", "Gemini", "YandexPublic"
+        "Amazon", "Gemini", "YandexPublic",
     };
 
   private void EchoglossianConfigUi()

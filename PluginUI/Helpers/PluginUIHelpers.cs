@@ -1,27 +1,14 @@
-﻿// <copyright file="PluginUIHelpers.cs" company="lokinmodar">
-// Copyright (c) lokinmodar. All rights reserved.
-// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
-// </copyright>
-
-using Echoglossian.Properties;
+﻿using Echoglossian.Properties;
 using ImGuiNET;
 
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private string editedPrompt = string.Empty;
-    private string previewResult = string.Empty;
-    private bool showPromptInvalidWarning = false;
-
-    private readonly string previewSampleText = "My blade is for the Fury.";
-    private readonly string previewSourceLang = "English";
-    private readonly string previewTargetLang = "Japanese";
-
     /// <summary>
     /// Draws the AI Translator prompt tab in the UI.
     /// </summary>
-    private void DrawPromptEditor(Config config, PromptType type, string defaultPrompt, string label)
+    public static void DrawPromptEditor(Config config, PromptType type, string defaultPrompt, string label)
     {
       ImGui.BeginGroup();
       ImGui.Text(Resources.AITranslatorPromptCustomization);
@@ -32,26 +19,27 @@ namespace Echoglossian
       ImGui.BulletText("{sourceLanguage}");
       ImGui.BulletText("{targetLanguage}");
 
-      if (string.IsNullOrWhiteSpace(this.editedPrompt))
+      ref var state = ref PromptEditorState.Get(label);
+
+      if (string.IsNullOrWhiteSpace(state.EditedPrompt))
       {
-        this.editedPrompt = GetPrompt(config, type) ?? defaultPrompt;
+        state.EditedPrompt = GetPrompt(config, type) ?? defaultPrompt;
       }
 
       ImGui.Spacing();
+      ImGui.Columns(2, null, true);
 
-      ImGui.Columns(2, null, true); // 2 columns with border
-
-      // Column 1: Prompt Editor
       ImGui.TextWrapped(Resources.Editor);
       ImGui.PushItemWidth(-1);
-      if (ImGui.InputTextMultiline($"##{Resources.PromptInput}_{label}", ref this.editedPrompt, 8000, new Vector2(-1, 200)))
+
+      if (ImGui.InputTextMultiline($"##{Resources.PromptInput}_{label}", ref state.EditedPrompt, 8000, new Vector2(-1, 200)))
       {
-        this.showPromptInvalidWarning = !IsPromptValid(this.editedPrompt);
+        state.ShowPromptInvalidWarning = !IsPromptValid(state.EditedPrompt);
       }
 
       ImGui.PopItemWidth();
 
-      if (this.showPromptInvalidWarning)
+      if (state.ShowPromptInvalidWarning)
       {
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.5f, 0.5f, 1f));
         ImGui.Text(Resources.MissingOneOrMoreRequiredPlaceholders);
@@ -60,14 +48,14 @@ namespace Echoglossian
 
       if (ImGui.Button($"{Resources.Save}##{label}"))
       {
-        if (IsPromptValid(this.editedPrompt))
+        if (IsPromptValid(state.EditedPrompt))
         {
-          SetPrompt(config, type, this.editedPrompt);
-          this.showPromptInvalidWarning = false;
+          SetPrompt(config, type, state.EditedPrompt);
+          state.ShowPromptInvalidWarning = false;
         }
         else
         {
-          this.showPromptInvalidWarning = true;
+          state.ShowPromptInvalidWarning = true;
         }
       }
 
@@ -75,36 +63,58 @@ namespace Echoglossian
 
       if (ImGui.Button($"{Resources.ResetToDefault}##{label}"))
       {
-        this.editedPrompt = defaultPrompt;
+        state.EditedPrompt = defaultPrompt;
         SetPrompt(config, type, null);
-        this.showPromptInvalidWarning = false;
+        state.ShowPromptInvalidWarning = false;
       }
 
       ImGui.NextColumn();
-
-      // Column 2: Preview
       ImGui.TextWrapped(Resources.LivePreviewWithSampleInput);
 
-      this.previewResult = ApplyPromptVariables(
-        this.editedPrompt,
-        this.previewSampleText,
-        this.previewSourceLang,
-        this.previewTargetLang
+      state.PreviewResult = ApplyPromptVariables(
+        state.EditedPrompt,
+        state.PreviewSampleText,
+        state.PreviewSourceLang,
+        state.PreviewTargetLang
       );
 
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 1f, 0.5f, 1f));
-      ImGui.InputTextMultiline($"##{Resources.Preview}_{label}", ref this.previewResult, 10000, new Vector2(-1, 200), ImGuiInputTextFlags.ReadOnly);
+      ImGui.InputTextMultiline($"##{Resources.Preview}_{label}", ref state.PreviewResult, 10000, new Vector2(-1, 200), ImGuiInputTextFlags.ReadOnly);
       ImGui.PopStyleColor();
 
       if (ImGui.Button($"{Resources.CopyPreview}##{label}"))
       {
-        ImGui.SetClipboardText(this.previewResult);
+        ImGui.SetClipboardText(state.PreviewResult);
       }
 
-      ImGui.Columns(1); // Reset to 1 column
-
+      ImGui.Columns(1);
       ImGui.EndGroup();
     }
 
+    private static class PromptEditorState
+    {
+      private static readonly Dictionary<string, State> states = new();
+
+      public static ref State Get(string label)
+      {
+        if (!states.TryGetValue(label, out var s))
+        {
+          s = new State();
+          states[label] = s;
+        }
+
+        return ref states[label];
+      }
+
+      public class State
+      {
+        public string EditedPrompt = string.Empty;
+        public string PreviewResult = string.Empty;
+        public bool ShowPromptInvalidWarning = false;
+        public readonly string PreviewSampleText = "My blade is for the Fury.";
+        public readonly string PreviewSourceLang = "English";
+        public readonly string PreviewTargetLang = "Japanese";
+      }
+    }
   }
 }

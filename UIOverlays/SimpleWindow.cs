@@ -61,14 +61,14 @@ namespace Echoglossian.UIOverlays
   SemaphoreSlim? translationSemaphore = default)
   : base(name, flags, forceMainWindow)
     {
-      WindowName = name;
+      this.WindowName = name;
       this.translation = translation;
       this.displayTranslation = displayTranslation;
-      currentTranslationId = curentTranslationId;
+      this.currentTranslationId = curentTranslationId;
       this.textDimensions = textDimensions;
       this.textImguiSize = textImguiSize;
       this.textPosition = textPosition;
-      configuration = Echoglossian.PluginInterface.GetPluginConfig() as Config;
+      this.configuration = Echoglossian.PluginInterface.GetPluginConfig() as Config;
       this.translationSemaphore = translationSemaphore;
       this.uiFont = uiFont;
       this.fontLoaded = fontLoaded;
@@ -80,9 +80,9 @@ namespace Echoglossian.UIOverlays
       // PluginLog.Debug("Inside DrawTranslatedDialogueWindow method!");
 #endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-          textPosition.X + textDimensions.X / 2 - textImguiSize.X / 2,
-          textPosition.Y - textImguiSize.Y - 20) + configuration.ImGuiWindowPosCorrection);
-      if (fontLoaded)
+          this.textPosition.X + this.textDimensions.X / 2 - this.textImguiSize.X / 2,
+          this.textPosition.Y - this.textImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+      if (this.fontLoaded)
       {
 #if DEBUG
         // PluginLog.Debug("Pushing font");
@@ -92,11 +92,11 @@ namespace Echoglossian.UIOverlays
       }
 
       float size = Math.Min(
-          textDimensions.X * configuration.ImGuiTalkWindowWidthMult + ImGui.GetStyle().WindowPadding.X * 2,
-          ImGui.CalcTextSize(translation).X * 1.25f + ImGui.GetStyle().WindowPadding.X * 2);
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, textDimensions.Y * configuration.ImGuiTalkWindowHeightMult));
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(configuration.OverlayTalkTextColor, 255));
-      if (configuration.TranslateNpcNames)
+          this.textDimensions.X * this.configuration.ImGuiTalkWindowWidthMult + ImGui.GetStyle().WindowPadding.X * 2,
+          ImGui.CalcTextSize(this.translation).X * 1.25f + ImGui.GetStyle().WindowPadding.X * 2);
+      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.textDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
+      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
+      if (this.configuration.TranslateNpcNames)
       {
         string name = string.Empty; // GetTranslatedNpcNameForWindow();
         if (!name.IsNullOrEmpty())
@@ -134,24 +134,24 @@ namespace Echoglossian.UIOverlays
           | ImGuiWindowFlags.NoScrollbar);
       }
 
-      ImGui.SetWindowFontScale(configuration.TalkFontScale);
-      if (translationSemaphore.Wait(0))
+      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
+      if (this.translationSemaphore.Wait(0))
       {
-        ImGui.TextWrapped(translation);
+        ImGui.TextWrapped(this.translation);
 
-        translationSemaphore.Release();
+        this.translationSemaphore.Release();
       }
       else
       {
         ImGui.Text(Resources.WaitingForTranslation);
       }
 
-      textImguiSize = ImGui.GetWindowSize();
+      this.textImguiSize = ImGui.GetWindowSize();
 
       ImGui.PopStyleColor(1);
 
       ImGui.End();
-      if (fontLoaded)
+      if (this.fontLoaded)
       {
 #if DEBUG
         // PluginLog.Debug("Popping font!");
@@ -162,20 +162,20 @@ namespace Echoglossian.UIOverlays
 
     protected virtual void Dispose(bool disposing)
     {
-      if (!disposedValue)
+      if (!this.disposedValue)
       {
         if (disposing)
         {
-          translationSemaphore.Dispose();
+          this.translationSemaphore.Dispose();
         }
 
-        disposedValue = true;
+        this.disposedValue = true;
       }
     }
 
     public void Dispose()
     {
-      Dispose(disposing: true);
+      this.Dispose(disposing: true);
       GC.SuppressFinalize(this);
     }
   }

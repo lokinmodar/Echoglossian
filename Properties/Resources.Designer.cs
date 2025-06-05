@@ -976,6 +976,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings for DeepSeek.
+        /// </summary>
+        public static string SettingsForDeepSeekText {
+            get {
+                return ResourceManager.GetString("SettingsForDeepSeekText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings for Google Translate:.
         /// </summary>
         public static string SettingsForGTransText {
