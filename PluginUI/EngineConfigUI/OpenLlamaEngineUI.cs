@@ -14,16 +14,17 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class OpenLlamaEngineUI
 {
-  public static bool Draw(Config config)
+  public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
     bool changed = false;
 
-    ImGui.TextWrapped("Settings for OpenLlama translator.");
+    ImGui.TextWrapped(Resources.SettingsForOpenLlamaText);
+
     changed |= ImGui.InputText("Model Endpoint", ref config.OpenLlamaBaseUrl, 400);
     if (string.IsNullOrWhiteSpace(config.OpenLlamaBaseUrl))
-      FieldValidationHelper.ShowFieldRequiredWarning("Model Endpoint");
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("Model Endpoint");
 
-    PromptTemplateManager.DrawPromptEditor(config, PromptType.OpenLlama, PromptTemplateManager.DefaultPrompt, "OpenLlama");
+    PromptEditorUI.Draw(promptManager, PromptType.OpenLlama, DefaultPrompt, TransEngines.OpenLlama.ToString());
 
     return changed;
   }

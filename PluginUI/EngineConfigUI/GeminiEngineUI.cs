@@ -6,24 +6,22 @@
 using Echoglossian.Helpers;
 using ImGuiNET;
 
-namespace Echoglossian.PluginUI.EngineConfigUI;
 
+namespace Echoglossian.PluginUI.Helpers.Engines;
 
-/// <summary>
-/// Renders the configuration UI for Google Gemini.
-/// </summary>
 public static class GeminiEngineUI
 {
-  public static bool Draw(Config config)
+  public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
     bool changed = false;
 
-    ImGui.TextWrapped("Settings for Gemini Translator.");
-    changed |= ImGui.InputText("Gemini API Key", ref config.GeminiApiKey, 300);
-    if (string.IsNullOrWhiteSpace(config.GeminiApiKey))
-      FieldValidationHelper.ShowFieldRequiredWarning("Gemini API Key");
+    ImGui.TextWrapped(Resources.SettingsForGeminiText);
 
-    PromptTemplateManager.DrawPromptEditor(config, PromptType.Gemini, PromptTemplateManager.DefaultPrompt, "Gemini");
+    changed |= ImGui.InputText("Gemini API Key", ref config.GeminiTranslatorApiKey, 300);
+    if (string.IsNullOrWhiteSpace(config.GeminiTranslatorApiKey))
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("Gemini API Key");
+
+    PromptEditorUI.Draw(promptManager, PromptType.Gemini, DefaultPrompt, TransEngines.Gemini.ToString());
 
     return changed;
   }

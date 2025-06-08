@@ -65,7 +65,7 @@ public partial class Echoglossian
       if (!langDict[languageInt].SupportedEngines.Contains(this.configuration.ChosenTransEngine))
       {
         this.configuration.ChosenTransEngine = 0;
-        this.translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
+       translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
       }
 
       this.SaveConfigValue = true;

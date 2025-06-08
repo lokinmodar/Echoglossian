@@ -172,6 +172,8 @@ namespace Echoglossian
       Amazon,
       ChatGPT,
       YandexCloud,
+      LibreTranslate,
+      OpenLlama,
     }
 
     /// <summary>

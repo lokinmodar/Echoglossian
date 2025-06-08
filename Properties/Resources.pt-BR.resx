@@ -471,7 +471,7 @@
   <data name="Editor" xml:space="preserve">
     <value>Editor de prompts</value>
   </data>
-  <data name="SettingsForDeepSeekText" xml:space="preserve">
+  <data name="SettingsForOpenRouterText" xml:space="preserve">
     <value />
   </data>
 </root>

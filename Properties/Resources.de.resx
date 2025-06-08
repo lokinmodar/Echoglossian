@@ -499,7 +499,7 @@
   <data name="Editor" xml:space="preserve">
     <value>Eingabeaufforderungs-Editor</value>
   </data>
-  <data name="SettingsForDeepSeekText" xml:space="preserve">
+  <data name="SettingsForOpenRouterText" xml:space="preserve">
     <value />
   </data>
 </root>

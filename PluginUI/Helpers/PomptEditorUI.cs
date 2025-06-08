@@ -4,18 +4,18 @@ using ImGuiNET;
 
 namespace Echoglossian.PluginUI.Helpers;
 
-/// <summary>  
-/// Provides UI functionality for editing prompts.  
-/// </summary>  
+/// <summary>
+/// Provides UI functionality for editing prompts.
+/// </summary>
 public static class PromptEditorUI
 {
-  /// <summary>  
-  /// Draws the editable prompt box for a specific engine.  
-  /// </summary>  
-  /// <param name="templateManager">The manager responsible for handling prompt templates.</param>  
-  /// <param name="type">The type of the prompt being edited.</param>  
-  /// <param name="defaultPrompt">The default prompt text to use if no custom prompt is set.</param>  
-  /// <param name="label">The label used to identify the prompt editor instance.</param>  
+  /// <summary>
+  /// Draws the editable prompt box for a specific engine.
+  /// </summary>
+  /// <param name="templateManager">The manager responsible for handling prompt templates.</param>
+  /// <param name="type">The type of the prompt being edited.</param>
+  /// <param name="defaultPrompt">The default prompt text to use if no custom prompt is set.</param>
+  /// <param name="label">The label used to identify the prompt editor instance.</param>
   public static void Draw(PromptTemplateManager templateManager, PromptType type, string defaultPrompt, string label)
   {
     var state = PromptEditorStateManager.Get(label);

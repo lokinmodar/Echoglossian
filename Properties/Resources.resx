@@ -523,4 +523,7 @@
   <data name="SettingsForDeepSeekText" xml:space="preserve">
     <value>Settings for DeepSeek</value>
   </data>
+  <data name="SettingsForOpenRouterText" xml:space="preserve">
+    <value>Settings for OpenRouter Engine</value>
+  </data>
 </root>

@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.PluginUI.Helpers.Engines;
+
 namespace Echoglossian.PluginUI.Helpers;
 
 /// <summary>
@@ -74,6 +76,9 @@ public static class PluginUITranslationEnginesTab
         break;
       case TransEngines.YandexPublic:
         changed |= YandexPublicEngineUI.Draw(config);
+        break;
+      case TransEngines.OpenRouter:
+        changed |= OpenRouterEngineUI.Draw(config);
         break;
       default:
         ImGui.Text(Resources.NoSettingsForEngine);

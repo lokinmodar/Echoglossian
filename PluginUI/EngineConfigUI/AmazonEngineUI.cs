@@ -13,24 +13,26 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class AmazonEngineUI
 {
-  public static bool Draw(Config config)
+  public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
     bool changed = false;
 
-    ImGui.TextWrapped("Settings for Amazon Translate.");
+    ImGui.TextWrapped(Resources.SettingsForAmazonTranslateText);
+
     changed |= ImGui.InputText("AWS Access Key", ref config.AwsAccessKey, 200);
     if (string.IsNullOrWhiteSpace(config.AwsAccessKey))
-      FieldValidationHelper.ShowFieldRequiredWarning("AWS Access Key");
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("AWS Access Key");
 
     changed |= ImGui.InputText("AWS Secret Key", ref config.AwsSecretKey, 200);
     if (string.IsNullOrWhiteSpace(config.AwsSecretKey))
-      FieldValidationHelper.ShowFieldRequiredWarning("AWS Secret Key");
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("AWS Secret Key");
 
     changed |= ImGui.InputText("Region", ref config.AwsRegion, 100);
     if (string.IsNullOrWhiteSpace(config.AwsRegion))
-      FieldValidationHelper.ShowFieldRequiredWarning("Region");
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("Region");
 
-    PromptTemplateManager.DrawPromptEditor(config, PromptType.Amazon, PromptTemplateManager.DefaultPrompt, "Amazon");
+    PromptEditorUI.Draw(promptManager, PromptType.Amazon, DefaultPrompt, TransEngines.Amazon.ToString());
+
 
     return changed;
   }

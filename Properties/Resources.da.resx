@@ -470,7 +470,7 @@
   <data name="Editor" xml:space="preserve">
     <value>Prompt Editor</value>
   </data>
-  <data name="SettingsForDeepSeekText" xml:space="preserve">
+  <data name="SettingsForOpenRouterText" xml:space="preserve">
     <value />
   </data>
 </root>

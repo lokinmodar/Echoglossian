@@ -994,6 +994,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings for OpenRouter Engine.
+        /// </summary>
+        public static string SettingsForOpenRouterText {
+            get {
+                return ResourceManager.GetString("SettingsForOpenRouterText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Echoglossian settings reset to default successfully!.
         /// </summary>
         public static string SettingsReset {

@@ -15,20 +15,21 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class YandexCloudEngineUI
 {
-  public static bool Draw(Config config)
+  public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
     bool changed = false;
 
     ImGui.TextWrapped(Resources.SettingsForYandexCloudText);
-    ImGui.Spacing();
 
     changed |= ImGui.InputText(Resources.YandexCloudFolderId, ref config.YandexFolderId, 200);
     if (string.IsNullOrWhiteSpace(config.YandexFolderId))
-      FieldValidationHelper.ShowFieldRequiredWarning(Resources.YandexCloudFolderId);
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty(Resources.YandexCloudFolderId);
 
-    changed |= ImGui.InputText(Resources.YandexCloudApiKey, ref config.YandexApiKey, 300);
-    if (string.IsNullOrWhiteSpace(config.YandexApiKey))
-      FieldValidationHelper.ShowFieldRequiredWarning(Resources.YandexCloudApiKey);
+    changed |= ImGui.InputText(Resources.YandexCloudApiKey, ref config.YandexPaidApiKey, 300);
+    if (string.IsNullOrWhiteSpace(config.YandexPaidApiKey))
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty(Resources.YandexCloudApiKey);
+
+    PromptEditorUI.Draw(promptManager, PromptType.YandexCloud, DefaultPrompt, TransEngines.YandexCloud.ToString());
 
     return changed;
   }

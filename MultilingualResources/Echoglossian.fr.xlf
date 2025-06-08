@@ -521,31 +521,35 @@
         </trans-unit>
         <trans-unit id="ResetSettingsMessageText" translate="yes" xml:space="preserve">
           <source>You can reset Echoglossian's configuration to default using the button below:</source>
-          <target state="new">You can reset Echoglossian's configuration to default using the button below:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Vous pouvez réinitialiser la configuration par défaut d’Echoglossian en utilisant le bouton ci-dessous :</target>
         </trans-unit>
         <trans-unit id="ResetSettingsButtonText" translate="yes" xml:space="preserve">
           <source>Reset configuration to defaults</source>
-          <target state="new">Reset configuration to defaults</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Réinitialiser la configuration par défaut</target>
         </trans-unit>
         <trans-unit id="TalkTabTitle" translate="yes" xml:space="preserve">
           <source>Talk</source>
-          <target state="new">Talk</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Parler</target>
         </trans-unit>
         <trans-unit id="BattleTalkTabTitle" translate="yes" xml:space="preserve">
           <source>BattleTalk</source>
-          <target state="new">BattleTalk</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Discussion sur la bataille</target>
         </trans-unit>
         <trans-unit id="ToastTabTitle" translate="yes" xml:space="preserve">
           <source>Toast</source>
-          <target state="new">Toast</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Toast</target>
         </trans-unit>
         <trans-unit id="SubtitleTabTitle" translate="yes" xml:space="preserve">
           <source>TalkSubtitle</source>
-          <target state="new">TalkSubtitle</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">DiscussionSous-titres</target>
         </trans-unit>
         <trans-unit id="TranslateToastToggle" translate="yes" xml:space="preserve">
           <source>Translate Toast Messages</source>
-          <target state="new">Translate Toast Messages</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduire les messages toast</target>
+        </trans-unit>
+        <trans-unit id="SettingsForDeepSeekText" translate="yes" xml:space="preserve">
+          <source>Settings for DeepSeek</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Paramètres de DeepSeek</target>
         </trans-unit>
       </group>
     </body>

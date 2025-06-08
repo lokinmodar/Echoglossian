@@ -13,20 +13,21 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class MicrosoftEngineUI
 {
-  public static bool Draw(Config config)
+  public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
     bool changed = false;
 
-    ImGui.TextWrapped("Settings for Microsoft Translator.");
-    changed |= ImGui.InputText("Microsoft Translator API Key", ref config.MicrosoftApiKey, 200);
-    if (string.IsNullOrWhiteSpace(config.MicrosoftApiKey))
-      FieldValidationHelper.ShowFieldRequiredWarning("API Key");
+    ImGui.TextWrapped(Resources.SettingsForMicrosoftText);
 
-    changed |= ImGui.InputText("Region", ref config.MicrosoftRegion, 100);
-    if (string.IsNullOrWhiteSpace(config.MicrosoftRegion))
-      FieldValidationHelper.ShowFieldRequiredWarning("Region");
+    changed |= ImGui.InputText("Microsoft Translator API Key", ref config.MicrosoftTranslatorApiKey, 200);
+    if (string.IsNullOrWhiteSpace(config.MicrosoftTranslatorApiKey))
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("API Key");
 
-    PromptTemplateManager.DrawPromptEditor(config, PromptType.Microsoft, PromptTemplateManager.DefaultPrompt, "Microsoft");
+    changed |= ImGui.InputText("Region", ref config.MicrosoftTranslatorRegion, 100);
+    if (string.IsNullOrWhiteSpace(config.MicrosoftTranslatorRegion))
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("Region");
+
+    PromptEditorUI.Draw(promptManager, PromptType.Microsoft, DefaultPrompt, TransEngines.Microsoft.ToString());
 
     return changed;
   }

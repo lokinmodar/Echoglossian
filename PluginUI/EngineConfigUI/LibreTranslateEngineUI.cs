@@ -13,16 +13,17 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class LibreTranslateEngineUI
 {
-  public static bool Draw(Config config)
+  public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
     bool changed = false;
 
-    ImGui.TextWrapped("Settings for LibreTranslate.");
+    ImGui.TextWrapped(Resources.SettingsForLibreTranslateText);
+
     changed |= ImGui.InputText("LibreTranslate API Endpoint", ref config.LibreTranslateUrl, 300);
     if (string.IsNullOrWhiteSpace(config.LibreTranslateUrl))
-      FieldValidationHelper.ShowFieldRequiredWarning("LibreTranslate API Endpoint");
+      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("LibreTranslate API Endpoint");
 
-    PromptTemplateManager.DrawPromptEditor(config, PromptType.LibreTranslate, PromptTemplateManager.DefaultPrompt, "LibreTranslate");
+    PromptEditorUI.Draw(promptManager, PromptType.LibreTranslate, DefaultPrompt, TransEngines.LibreTranslate.ToString());
 
     return changed;
   }
