@@ -1,4 +1,4 @@
-namespace Echoglossian.Tabs;
+namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
 /// Renders the settings tab for journal, quest, and tooltip translation.
@@ -17,6 +17,12 @@ public static class JournalTab
     if (langToRemoveDiacritics)
     {
       changed |= ImGui.Checkbox(Resources.RemoveDiacriticsToggle, ref config.RemoveDiacriticsWhenUsingReplacementQuest);
+    }
+
+    if (ImGui.Button(Resources.Save))
+    {
+      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+      SaveConfig(config);
     }
 
     return changed;

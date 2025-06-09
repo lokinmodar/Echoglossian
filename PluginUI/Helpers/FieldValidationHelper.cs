@@ -3,10 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using ImGuiNET;
-using System.Numerics;
-using System.Collections.Generic;
-
 namespace Echoglossian.Helpers;
 
 /// <summary>
@@ -68,5 +64,49 @@ public static class FieldValidationHelper
   public static void MarkFieldAsTouched(string label)
   {
     fieldTouched[label] = true;
+  }
+
+  /// <summary>
+  /// Marks all known user-editable config fields as "touched" to trigger validation warnings.
+  /// Call this from a "Save" or "Submit" action if needed.
+  /// </summary>
+  /// <param name="config">The plugin configuration instance.</param>
+  public static void MarkAllRequiredFieldsTouched(Config config)
+  {
+    // OpenRouter
+    MarkFieldAsTouched(Resources.APIKey);
+    MarkFieldAsTouched(Resources.ModelEndpoint);
+    MarkFieldAsTouched(Resources.LLMModel);
+
+    // ChatGPT
+    MarkFieldAsTouched(Resources.ChatGptApiKey);
+    MarkFieldAsTouched(Resources.ModelEndpoint);
+    MarkFieldAsTouched(Resources.LLMModel);
+
+    // Amazon
+    MarkFieldAsTouched(Resources.AWSAccessKey);
+    MarkFieldAsTouched(Resources.AWSSecretKey);
+    MarkFieldAsTouched(Resources.Region);
+
+    // DeepSeek
+    MarkFieldAsTouched(Resources.APIKey);
+    MarkFieldAsTouched(Resources.Endpoint);
+
+    // Gemini
+    MarkFieldAsTouched(Resources.GeminiAPIKey);
+
+    // LibreTranslate
+    MarkFieldAsTouched(Resources.LibreTranslateAPIEndpoint);
+
+    // Microsoft
+    MarkFieldAsTouched(Resources.MicrosoftTranslatorAPIKey);
+    MarkFieldAsTouched(Resources.Region);
+
+    // OpenLlama
+    MarkFieldAsTouched(Resources.ModelEndpoint);
+
+    // Yandex Cloud
+    MarkFieldAsTouched(Resources.YandexCloudFolderId);
+    MarkFieldAsTouched(Resources.YandexCloudApiKey);
   }
 }

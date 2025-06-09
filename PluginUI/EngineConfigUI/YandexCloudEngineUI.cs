@@ -1,19 +1,4 @@
-﻿// <copyright file="YandexCloudEngineUI.cs" company="lokinmodar">
-// Copyright (c) lokinmodar. All rights reserved.
-// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
-// </copyright>
-
-using Echoglossian.Helpers;
-using Echoglossian.Properties;
-using ImGuiNET;
-
-namespace Echoglossian.PluginUI.EngineConfigUI;
-
-
-/// <summary>
-/// Renders the configuration UI for Yandex Cloud Translator.
-/// </summary>
-public static class YandexCloudEngineUI
+﻿public static class YandexCloudEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
@@ -21,15 +6,19 @@ public static class YandexCloudEngineUI
 
     ImGui.TextWrapped(Resources.SettingsForYandexCloudText);
 
-    changed |= ImGui.InputText(Resources.YandexCloudFolderId, ref config.YandexFolderId, 200);
-    if (string.IsNullOrWhiteSpace(config.YandexFolderId))
-      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty(Resources.YandexCloudFolderId);
+    bool isFolderIdInvalid;
+    changed |= FieldValidationHelper.ValidatedInputText(Resources.YandexCloudFolderId, ref config.YandexFolderId, 200, out isFolderIdInvalid);
 
-    changed |= ImGui.InputText(Resources.YandexCloudApiKey, ref config.YandexPaidApiKey, 300);
-    if (string.IsNullOrWhiteSpace(config.YandexPaidApiKey))
-      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty(Resources.YandexCloudApiKey);
+    bool isApiKeyInvalid;
+    changed |= FieldValidationHelper.ValidatedInputText(Resources.YandexCloudApiKey, ref config.YandexPaidApiKey, 300, out isApiKeyInvalid);
 
     PromptEditorUI.Draw(promptManager, PromptType.YandexCloud, DefaultPrompt, TransEngines.YandexCloud.ToString());
+
+    if (ImGui.Button(Resources.Save))
+    {
+      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+      SaveConfig(config);
+    }
 
     return changed;
   }

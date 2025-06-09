@@ -3,14 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.Helpers;
-using ImGuiNET;
-
-namespace Echoglossian.PluginUI.EngineConfigUI;
-
-/// <summary>
-/// Renders the configuration UI for Amazon Translate.
-/// </summary>
 public static class AmazonEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
@@ -19,21 +11,24 @@ public static class AmazonEngineUI
 
     ImGui.TextWrapped(Resources.SettingsForAmazonTranslateText);
 
-    changed |= ImGui.InputText("AWS Access Key", ref config.AwsAccessKey, 200);
-    if (string.IsNullOrWhiteSpace(config.AwsAccessKey))
-      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("AWS Access Key");
+    bool isAccessKeyInvalid;
+    changed |= FieldValidationHelper.ValidatedInputText(Resources.AWSAccessKey, ref config.AwsAccessKey, 200, out isAccessKeyInvalid);
 
-    changed |= ImGui.InputText("AWS Secret Key", ref config.AwsSecretKey, 200);
-    if (string.IsNullOrWhiteSpace(config.AwsSecretKey))
-      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("AWS Secret Key");
+    bool isSecretKeyInvalid;
+    changed |= FieldValidationHelper.ValidatedInputText(Resources.AWSSecretKey, ref config.AwsSecretKey, 200, out isSecretKeyInvalid);
 
-    changed |= ImGui.InputText("Region", ref config.AwsRegion, 100);
-    if (string.IsNullOrWhiteSpace(config.AwsRegion))
-      FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("Region");
+    bool isRegionInvalid;
+    changed |= FieldValidationHelper.ValidatedInputText(Resources.Region, ref config.AwsRegion, 100, out isRegionInvalid);
 
     PromptEditorUI.Draw(promptManager, PromptType.Amazon, DefaultPrompt, TransEngines.Amazon.ToString());
 
+    if (ImGui.Button(Resources.Save))
+    {
+      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+      SaveConfig(config);
+    }
 
     return changed;
   }
+}
 }

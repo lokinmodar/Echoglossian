@@ -6,7 +6,7 @@
 using Echoglossian.Properties;
 using ImGuiNET;
 
-namespace Echoglossian.Tabs;
+namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
 /// Renders the miscellaneous settings tab in the plugin configuration UI.
@@ -30,6 +30,12 @@ public static class MiscTab
     }
 
     ImGui.TextWrapped(Resources.ConfigTab9CheckboxClipboardTooltipText);
+
+    if (ImGui.Button(Resources.Save))
+    {
+      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+      SaveConfig(config);
+    }
 
     return changed;
   }

@@ -545,6 +545,118 @@
           <source>Settings for DeepSeek</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">DeepSeek-en konfigurazioa</target>
         </trans-unit>
+        <trans-unit id="SettingsForOpenRouterText" translate="yes" xml:space="preserve">
+          <source>Settings for OpenRouter Engine</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">OpenRouter Engine-rako konfigurazioa</target>
+        </trans-unit>
+        <trans-unit id="AWSAccessKey" translate="yes" xml:space="preserve">
+          <source>AWS Access Key</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">AWSren sarbide-gakoa</target>
+        </trans-unit>
+        <trans-unit id="SettingsForAmazonTranslateText" translate="yes" xml:space="preserve">
+          <source>Settings for Amazon Translate:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Amazon Translateren konfigurazioa:</target>
+        </trans-unit>
+        <trans-unit id="AWSSecretKey" translate="yes" xml:space="preserve">
+          <source>AWS Secret Key</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">AWSren gako sekretua</target>
+        </trans-unit>
+        <trans-unit id="Region" translate="yes" xml:space="preserve">
+          <source>Region</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Eskualdea</target>
+        </trans-unit>
+        <trans-unit id="APIKey" translate="yes" xml:space="preserve">
+          <source>API Key</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">API klabea</target>
+        </trans-unit>
+        <trans-unit id="Endpoint" translate="yes" xml:space="preserve">
+          <source>Endpoint</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Muturra</target>
+        </trans-unit>
+        <trans-unit id="SettingsForMicrosoftText" translate="yes" xml:space="preserve">
+          <source>Settings for Microsoft Translator</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Microsoft Translatorren konfigurazioa</target>
+        </trans-unit>
+        <trans-unit id="MicrosoftTranslatorAPIKey" translate="yes" xml:space="preserve">
+          <source>Microsoft Translator API Key</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Microsoft Translatorren API klabea</target>
+        </trans-unit>
+        <trans-unit id="ModelEndpoint" translate="yes" xml:space="preserve">
+          <source>Model endpoint</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ereduaren konexio-puntua</target>
+        </trans-unit>
+        <trans-unit id="LLMModel" translate="yes" xml:space="preserve">
+          <source>LLM Model</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">LLM eredua</target>
+        </trans-unit>
+        <trans-unit id="Temperature" translate="yes" xml:space="preserve">
+          <source>Temperature</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tenperatura</target>
+        </trans-unit>
+        <trans-unit id="NoSettingsForEngine" translate="yes" xml:space="preserve">
+          <source>No settings required for this engine</source>
+          <target state="new">No settings required for this engine</target>
+        </trans-unit>
+        <trans-unit id="SettingsForGeminiText" translate="yes" xml:space="preserve">
+          <source>Settings for Gemini:</source>
+          <target state="new">Settings for Gemini:</target>
+        </trans-unit>
+        <trans-unit id="SettingsForLibreTranslateText" translate="yes" xml:space="preserve">
+          <source>Settings for LibreTranslate:</source>
+          <target state="new">Settings for LibreTranslate:</target>
+        </trans-unit>
+        <trans-unit id="LibreTranslateAPIEndpoint" translate="yes" xml:space="preserve">
+          <source>LibreTranslate API Endpoint</source>
+          <target state="new">LibreTranslate API Endpoint</target>
+        </trans-unit>
+        <trans-unit id="SettingsForOpenLlamaText" translate="yes" xml:space="preserve">
+          <source>Settings for OpenLlama:</source>
+          <target state="new">Settings for OpenLlama:</target>
+        </trans-unit>
+        <trans-unit id="YandexCloudFolderId" translate="yes" xml:space="preserve">
+          <source>Folder ID</source>
+          <target state="new">Folder ID</target>
+        </trans-unit>
+        <trans-unit id="SettingsForYandexCloudText" translate="yes" xml:space="preserve">
+          <source>Settings for YandexCloud:</source>
+          <target state="new">Settings for YandexCloud:</target>
+        </trans-unit>
+        <trans-unit id="YandexCloudApiKey" translate="yes" xml:space="preserve">
+          <source>YandexCloud Api Key</source>
+          <target state="new">YandexCloud Api Key</target>
+        </trans-unit>
+        <trans-unit id="ShowInCutscenesLabel" translate="yes" xml:space="preserve">
+          <source>Show in Cutscenes</source>
+          <target state="new">Show in Cutscenes</target>
+        </trans-unit>
+        <trans-unit id="CopyTranslationToClipboardLabel" translate="yes" xml:space="preserve">
+          <source>Copy translation to clipboard</source>
+          <target state="new">Copy translation to clipboard</target>
+        </trans-unit>
+        <trans-unit id="FontSizeLabel" translate="yes" xml:space="preserve">
+          <source>Font Size:</source>
+          <target state="new">Font Size:</target>
+        </trans-unit>
+        <trans-unit id="TranslateYesNoScreenLabel" translate="yes" xml:space="preserve">
+          <source>Translate Yes/No Screen</source>
+          <target state="new">Translate Yes/No Screen</target>
+        </trans-unit>
+        <trans-unit id="TranslateCutSceneSelectStringLabel" translate="yes" xml:space="preserve">
+          <source>Translate CutSceneSelectString</source>
+          <target state="new">Translate CutSceneSelectString</target>
+        </trans-unit>
+        <trans-unit id="TranslateSelectStringLabel" translate="yes" xml:space="preserve">
+          <source>Translate SelectString</source>
+          <target state="new">Translate SelectString</target>
+        </trans-unit>
+        <trans-unit id="TranslateSelectOkLabel" translate="yes" xml:space="preserve">
+          <source>Translate SelectOk</source>
+          <target state="new">Translate SelectOk</target>
+        </trans-unit>
+        <trans-unit id="GeminiAPIKey" translate="yes" xml:space="preserve">
+          <source>Gemini API Key</source>
+          <target state="new">Gemini API Key</target>
+        </trans-unit>
       </group>
     </body>
   </file>

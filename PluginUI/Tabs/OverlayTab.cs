@@ -2,7 +2,7 @@ using ImGuiNET;
 using System;
 using System.Numerics;
 
-namespace Echoglossian.Tabs;
+namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
 /// Renders the configuration settings related to overlay-based translations using vertical tabs.
@@ -58,6 +58,13 @@ public static class OverlayTab
     }
 
     ImGui.EndChild();
+
+    if (ImGui.Button(Resources.Save))
+    {
+      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+      SaveConfig(config);
+    }
+
     return changed;
   }
 

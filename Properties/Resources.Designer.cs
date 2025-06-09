@@ -70,6 +70,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to API Key.
+        /// </summary>
+        public static string APIKey {
+            get {
+                return ResourceManager.GetString("APIKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to API Key is empty or invalid. ChatGPT translation will not be available..
         /// </summary>
         public static string APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable {
@@ -147,6 +156,24 @@ namespace Echoglossian.Properties {
         public static string AssetsPresentPopupMsg {
             get {
                 return ResourceManager.GetString("AssetsPresentPopupMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AWS Access Key.
+        /// </summary>
+        public static string AWSAccessKey {
+            get {
+                return ResourceManager.GetString("AWSAccessKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AWS Secret Key.
+        /// </summary>
+        public static string AWSSecretKey {
+            get {
+                return ResourceManager.GetString("AWSSecretKey", resourceCulture);
             }
         }
         
@@ -359,6 +386,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy translation to clipboard.
+        /// </summary>
+        public static string CopyTranslationToClipboardLabel {
+            get {
+                return ResourceManager.GetString("CopyTranslationToClipboardLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are the plugin assets downloaded?.
         /// </summary>
         public static string CurrentPluginAssetsStatus {
@@ -495,11 +531,38 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Endpoint.
+        /// </summary>
+        public static string Endpoint {
+            get {
+                return ResourceManager.GetString("Endpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overlay font color:.
         /// </summary>
         public static string FontColorSelectLabel {
             get {
                 return ResourceManager.GetString("FontColorSelectLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Font Size:.
+        /// </summary>
+        public static string FontSizeLabel {
+            get {
+                return ResourceManager.GetString("FontSizeLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gemini API Key.
+        /// </summary>
+        public static string GeminiAPIKey {
+            get {
+                return ResourceManager.GetString("GeminiAPIKey", resourceCulture);
             }
         }
         
@@ -585,11 +648,29 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to LibreTranslate API Endpoint.
+        /// </summary>
+        public static string LibreTranslateAPIEndpoint {
+            get {
+                return ResourceManager.GetString("LibreTranslateAPIEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Live preview with sample input:.
         /// </summary>
         public static string LivePreviewWithSampleInput {
             get {
                 return ResourceManager.GetString("LivePreviewWithSampleInput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LLM Model.
+        /// </summary>
+        public static string LLMModel {
+            get {
+                return ResourceManager.GetString("LLMModel", resourceCulture);
             }
         }
         
@@ -613,6 +694,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Microsoft Translator API Key.
+        /// </summary>
+        public static string MicrosoftTranslatorAPIKey {
+            get {
+                return ResourceManager.GetString("MicrosoftTranslatorAPIKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         public static byte[] minfilia {
@@ -632,6 +722,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Model endpoint.
+        /// </summary>
+        public static string ModelEndpoint {
+            get {
+                return ResourceManager.GetString("ModelEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Echoglossian.
         /// </summary>
         public static string Name {
@@ -646,6 +745,15 @@ namespace Echoglossian.Properties {
         public static string NEListText {
             get {
                 return ResourceManager.GetString("NEListText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No settings required for this engine.
+        /// </summary>
+        public static string NoSettingsForEngine {
+            get {
+                return ResourceManager.GetString("NoSettingsForEngine", resourceCulture);
             }
         }
         
@@ -886,6 +994,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Region.
+        /// </summary>
+        public static string Region {
+            get {
+                return ResourceManager.GetString("Region", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Parse the translated text replacing diacritics with their common letter equivalents.
         /// </summary>
         public static string RemoveDiacriticsToggle {
@@ -958,6 +1075,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings for Amazon Translate:.
+        /// </summary>
+        public static string SettingsForAmazonTranslateText {
+            get {
+                return ResourceManager.GetString("SettingsForAmazonTranslateText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings for ChatGPT.
         /// </summary>
         public static string SettingsForChatGptTransText {
@@ -985,11 +1111,47 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings for Gemini:.
+        /// </summary>
+        public static string SettingsForGeminiText {
+            get {
+                return ResourceManager.GetString("SettingsForGeminiText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings for Google Translate:.
         /// </summary>
         public static string SettingsForGTransText {
             get {
                 return ResourceManager.GetString("SettingsForGTransText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings for LibreTranslate:.
+        /// </summary>
+        public static string SettingsForLibreTranslateText {
+            get {
+                return ResourceManager.GetString("SettingsForLibreTranslateText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings for Microsoft Translator.
+        /// </summary>
+        public static string SettingsForMicrosoftText {
+            get {
+                return ResourceManager.GetString("SettingsForMicrosoftText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings for OpenLlama:.
+        /// </summary>
+        public static string SettingsForOpenLlamaText {
+            get {
+                return ResourceManager.GetString("SettingsForOpenLlamaText", resourceCulture);
             }
         }
         
@@ -1003,11 +1165,29 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings for YandexCloud:.
+        /// </summary>
+        public static string SettingsForYandexCloudText {
+            get {
+                return ResourceManager.GetString("SettingsForYandexCloudText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Echoglossian settings reset to default successfully!.
         /// </summary>
         public static string SettingsReset {
             get {
                 return ResourceManager.GetString("SettingsReset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show in Cutscenes.
+        /// </summary>
+        public static string ShowInCutscenesLabel {
+            get {
+                return ResourceManager.GetString("ShowInCutscenesLabel", resourceCulture);
             }
         }
         
@@ -1035,6 +1215,15 @@ namespace Echoglossian.Properties {
         public static string TalkTabTitle {
             get {
                 return ResourceManager.GetString("TalkTabTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Temperature.
+        /// </summary>
+        public static string Temperature {
+            get {
+                return ResourceManager.GetString("Temperature", resourceCulture);
             }
         }
         
@@ -1102,6 +1291,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Translate CutSceneSelectString.
+        /// </summary>
+        public static string TranslateCutSceneSelectStringLabel {
+            get {
+                return ResourceManager.GetString("TranslateCutSceneSelectStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Translate in-game Error Toast Messages.
         /// </summary>
         public static string TranslateErrorToastToggleText {
@@ -1147,6 +1345,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Translate SelectOk.
+        /// </summary>
+        public static string TranslateSelectOkLabel {
+            get {
+                return ResourceManager.GetString("TranslateSelectOkLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate SelectString.
+        /// </summary>
+        public static string TranslateSelectStringLabel {
+            get {
+                return ResourceManager.GetString("TranslateSelectStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Translate Cutscene Subtitles.
         /// </summary>
         public static string TranslateTalkSubtitleToggleLabel {
@@ -1188,6 +1404,15 @@ namespace Echoglossian.Properties {
         public static string TranslateToastToggleText {
             get {
                 return ResourceManager.GetString("TranslateToastToggleText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Translate Yes/No Screen.
+        /// </summary>
+        public static string TranslateYesNoScreenLabel {
+            get {
+                return ResourceManager.GetString("TranslateYesNoScreenLabel", resourceCulture);
             }
         }
         
@@ -1278,6 +1503,24 @@ namespace Echoglossian.Properties {
         public static string WhichToastsToTranslate {
             get {
                 return ResourceManager.GetString("WhichToastsToTranslate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to YandexCloud Api Key.
+        /// </summary>
+        public static string YandexCloudApiKey {
+            get {
+                return ResourceManager.GetString("YandexCloudApiKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder ID.
+        /// </summary>
+        public static string YandexCloudFolderId {
+            get {
+                return ResourceManager.GetString("YandexCloudFolderId", resourceCulture);
             }
         }
     }

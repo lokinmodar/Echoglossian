@@ -389,6 +389,14 @@ namespace Echoglossian
     [DefaultValue("")]
     public string? OpenRouterPrompt = string.Empty;
 
+    /// <summary>LibreTranslate URL</summary>
+    [DefaultValue("https://libretranslate.de/")]
+    public string LibreTranslateUrl = "https://libretranslate.de/";
+
+    ///<summary>OpenLlama URL</summary>
+    [DefaultValue("https://api.openllama.org/v1/")]
+    public string OpenLlamaUrl = "https://api.openllama.org/v1/";
+
     /// <summary>Always show overlay title bar, even if name translation is off.</summary>
     [DefaultValue(true)]
     public bool ForceShowTitle = true;

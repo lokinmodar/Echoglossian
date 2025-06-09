@@ -30,7 +30,9 @@ public static class DeepLEngineUI
 			changed |= ImGui.InputText(Resources.DeeplTranslatorApiKey, ref config.DeeplTranslatorApiKey, 100);
 
 			if (string.IsNullOrWhiteSpace(config.DeeplTranslatorApiKey))
-				FieldValidationHelper.ShowFieldRequiredWarningIfEmpty(Resources.DeeplTranslatorApiKey);
+			{
+				FieldValidationHelper.ValidatedInputText(Resources.DeeplTranslatorApiKey);
+			}
 		}
 
 		return changed;

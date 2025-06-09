@@ -1,16 +1,6 @@
-﻿using System.Diagnostics;
-using Echoglossian.Helpers;
-using Echoglossian.Properties;
-using ImGuiNET;
-
-namespace Echoglossian.PluginUI.EngineConfigUI;
-
-/// <summary>
-/// Renders the configuration UI for ChatGPT Translator.
-/// </summary>
-public static class ChatGptEngineUI
+﻿public static class ChatGPTEngineUI
 {
-	public static bool Draw(Config config)
+	public static bool Draw(Config config, PromptTemplateManager promptManager)
 	{
 		bool changed = false;
 
@@ -26,26 +16,29 @@ public static class ChatGptEngineUI
 			});
 		}
 
-		changed |= ImGui.InputText(Resources.ChatGptApiKey, ref config.ChatGptApiKey, 400);
-		if (string.IsNullOrWhiteSpace(config.ChatGptApiKey))
-			FieldValidationHelper.ShowFieldRequiredWarningIfEmpty(Resources.ChatGptApiKey);
+		bool isApiKeyInvalid;
+		changed |= FieldValidationHelper.ValidatedInputText(Resources.ChatGptApiKey, ref config.ChatGptApiKey, 400, out isApiKeyInvalid);
 
-		changed |= ImGui.InputText("Model endpoint", ref config.ChatGPTBaseUrl, 400);
-		if (string.IsNullOrWhiteSpace(config.ChatGPTBaseUrl))
-			FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("Model endpoint");
+		bool isBaseUrlInvalid;
+		changed |= FieldValidationHelper.ValidatedInputText(Resources.ModelEndpoint, ref config.ChatGPTBaseUrl, 400, out isBaseUrlInvalid);
 
-		changed |= ImGui.InputText("LLM Model", ref config.OpenAILlmModel, 400);
-		if (string.IsNullOrWhiteSpace(config.OpenAILlmModel))
-			FieldValidationHelper.ShowFieldRequiredWarningIfEmpty("LLM Model");
+		bool isModelInvalid;
+		changed |= FieldValidationHelper.ValidatedInputText(Resources.LLMModel, ref config.OpenAILlmModel, 400, out isModelInvalid);
 
-		float temperature = config.ChatGptTemperature;
-		if (ImGui.SliderFloat("Temperature", ref temperature, 0.1f, 1.0f, "%.1f"))
+		float temp = config.ChatGptTemperature;
+		if (ImGui.SliderFloat(Resources.Temperature, ref temp, 0.1f, 1.0f, "%.1f"))
 		{
-			config.ChatGptTemperature = temperature;
+			config.ChatGptTemperature = temp;
 			changed = true;
 		}
 
-		PromptTemplateManager.DrawPromptEditor(config, PromptType.ChatGPT, PromptTemplateManager.DefaultPrompt, "ChatGPT");
+		PromptEditorUI.Draw(promptManager, PromptType.ChatGPT, DefaultPrompt, TransEngines.ChatGPT.ToString());
+
+		if (ImGui.Button(Resources.Save))
+		{
+			FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+			SaveConfig(config);
+		}
 
 		return changed;
 	}

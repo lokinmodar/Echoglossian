@@ -5,7 +5,7 @@
 
 using System.Diagnostics;
 using System.Numerics;
-using Echoglossian.PluginUI;
+using Echoglossian.PluginUI.Tabs;
 using Echoglossian.Properties;
 using Echoglossian.Translators;
 using ImGuiNET;
@@ -65,7 +65,7 @@ public partial class Echoglossian
       if (!langDict[languageInt].SupportedEngines.Contains(this.configuration.ChosenTransEngine))
       {
         this.configuration.ChosenTransEngine = 0;
-       translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
+        translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
       }
 
       this.SaveConfigValue = true;
@@ -129,49 +129,49 @@ public partial class Echoglossian
     {
       if (ImGui.BeginTabItem(Resources.ConfigTab0Name))
       {
-        this.SaveConfigValue |= Tabs.GeneralTab.Draw(this.configuration);
+        this.SaveConfigValue |= GeneralTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 
       if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
       {
-        this.SaveConfigValue |= Tabs.OverlayTab.Draw(this.configuration);
+        this.SaveConfigValue |= OverlayTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 
       if (ImGui.BeginTabItem(Resources.ConfigTab4Name))
       {
-        this.SaveConfigValue |= Tabs.JournalTab.Draw(this.configuration, langToRemoveDiacritics);
+        this.SaveConfigValue |= JournalTab.Draw(this.configuration, langToRemoveDiacritics);
         ImGui.EndTabItem();
       }
 
       if (ImGui.BeginTabItem(Resources.ConfigTab6Name))
       {
-        this.SaveConfigValue |= Tabs.OtherSettingsTab.Draw(this.configuration);
+        this.SaveConfigValue |= OtherSettingsTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 
       if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
       {
-        this.DrawTranslationEnginesTab();
+        this.SaveConfigValue |= TranslationEnginesTab.Draw(this.configuration, );
         ImGui.EndTabItem();
       }
 
       if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
       {
-        this.SaveConfigValue |= Tabs.TroubleshootingTab.Draw(this.configuration);
+        this.SaveConfigValue |= TroubleshootingTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 
       if (ImGui.BeginTabItem(Resources.ConfigTab9Name))
       {
-        this.SaveConfigValue |= Tabs.MiscTab.Draw(this.configuration);
+        this.SaveConfigValue |= MiscTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 
       if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
       {
-        this.SaveConfigValue |= Tabs.AboutTab.Draw(this.configuration, this.logo.ImGuiHandle);
+        this.SaveConfigValue |= AboutTab.Draw(this.configuration, this.logo.ImGuiHandle);
         ImGui.EndTabItem();
       }
 

@@ -3,7 +3,7 @@ using ImGuiNET;
 using System.Diagnostics;
 using System.Numerics;
 
-namespace Echoglossian.Tabs;
+namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
 /// Renders the troubleshooting tab for plugin assets management and resetting settings.
@@ -57,6 +57,12 @@ public static class TroubleshootingTab
 
     ImGui.PopStyleColor(3);
     ImGui.EndGroup();
+
+    if (ImGui.Button(Resources.Save))
+    {
+      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+      SaveConfig(config);
+    }
 
     return changed;
   }
