@@ -1,4 +1,5 @@
-﻿public static class OpenRouterEngineUI
+﻿namespace Echoglossian.PluginUI.EngineConfigUI;
+public static class OpenRouterEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
   {

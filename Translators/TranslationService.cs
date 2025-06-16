@@ -29,13 +29,13 @@ namespace Echoglossian.Translators
 
       switch (chosenEngine)
       {
-        case TransEngines.Google:
+        case TransEngines.Google: // validated!
           this.translator = new GoogleTranslator(pluginLog, config);
           break;
         case TransEngines.Deepl:
           this.translator = new DeepLTranslator(pluginLog, config.DeeplTranslatorUsingApiKey, config.DeeplTranslatorApiKey);
           break;
-        case TransEngines.ChatGPT:
+        case TransEngines.ChatGPT: // validated!
           this.translator = new ChatGPTTranslator(pluginLog, config.ChatGPTBaseUrl, config.ChatGptApiKey, config.OpenAILlmModel, config.ChatGptTemperature);
           break;
         case TransEngines.YandexCloud:

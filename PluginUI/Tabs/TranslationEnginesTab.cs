@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
@@ -11,11 +10,28 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class TranslationEnginesTab
 {
-  public static bool Draw(Config config, int languageIndex, List<string> languageList, List<string> availableEngines, Action rebuildTranslationService)
+  /// <summary>
+  /// Draws the translation engine settings UI, allowing users to select and configure translation engines.
+  /// </summary>
+  /// <param name="config">The configuration object containing translation settings.</param>
+  /// <param name="languageIndex">The index of the selected language in the language list.</param>
+  /// <param name="languageList">The list of available languages.</param>
+  /// <param name="availableEngines">The list of available translation engines.</param>
+  /// <param name="langDict">Dictionary mapping language indices to their information, including supported engines.</param>
+  /// <param name="rebuildTranslationService">The action to rebuild the translation service when settings change.</param>
+  /// <returns>True if any settings were changed; otherwise, false.</returns>
+  public static bool Draw(
+  Config config,
+  int languageIndex,
+  List<string> languageList,
+  List<string> availableEngines,
+  Dictionary<int, LanguageInfo> langDict,
+  Action rebuildTranslationService)
   {
     bool changed = false;
 
     using var scrollingChild = ImRaii.Child("TranslatinEngineSettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
+
     if (!scrollingChild)
     {
       return false;
@@ -23,8 +39,14 @@ public static class TranslationEnginesTab
 
     ImGui.Checkbox(Resources.TranslateTextsAgain, ref config.TranslateAlreadyTranslatedTexts);
 
-    var supportedEngines = config.GetLanguageInfo(languageIndex)?.SupportedEngines ?? new();
-    var filteredEngines = availableEngines.Where((_, i) => supportedEngines.Contains(i)).ToArray();
+    var supportedEngines = langDict.TryGetValue(languageIndex, out var langInfo)
+      ? langInfo.SupportedEngines
+      : new List<int>();
+
+    var filteredEngines = availableEngines
+      .Where((_, i) => supportedEngines.Contains(i))
+      .ToArray();
+
     var selected = supportedEngines.IndexOf(config.ChosenTransEngine);
 
     if (ImGui.Combo(Resources.TranslationEngineChoose, ref selected, filteredEngines, filteredEngines.Length))
@@ -38,6 +60,7 @@ public static class TranslationEnginesTab
     ImGui.BeginGroup();
 
     var engine = (TransEngines)config.ChosenTransEngine;
+
     switch (engine)
     {
       case TransEngines.Google:
@@ -85,6 +108,8 @@ public static class TranslationEnginesTab
     }
 
     ImGui.EndGroup();
+
     return changed;
   }
+
 }

@@ -1120,6 +1120,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings for GTranslate translator.
+        /// </summary>
+        public static string SettingsForGTranslateText {
+            get {
+                return ResourceManager.GetString("SettingsForGTranslateText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings for Google Translate:.
         /// </summary>
         public static string SettingsForGTransText {
@@ -1170,6 +1179,15 @@ namespace Echoglossian.Properties {
         public static string SettingsForYandexCloudText {
             get {
                 return ResourceManager.GetString("SettingsForYandexCloudText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings for Yandex public Translator.
+        /// </summary>
+        public static string SettingsForYandexPublic {
+            get {
+                return ResourceManager.GetString("SettingsForYandexPublic", resourceCulture);
             }
         }
         

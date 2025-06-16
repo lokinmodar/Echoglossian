@@ -19,7 +19,7 @@ namespace Echoglossian
       ImGui.BulletText("{sourceLanguage}");
       ImGui.BulletText("{targetLanguage}");
 
-      ref var state = ref PromptEditorState.Get(label);
+      var state = PromptEditorState.Get(label);
 
       if (string.IsNullOrWhiteSpace(state.EditedPrompt))
       {
@@ -95,7 +95,7 @@ namespace Echoglossian
     {
       private static readonly Dictionary<string, State> states = new();
 
-      public static ref State Get(string label)
+      public static State Get(string label)
       {
         if (!states.TryGetValue(label, out var s))
         {
@@ -103,7 +103,7 @@ namespace Echoglossian
           states[label] = s;
         }
 
-        return ref states[label];
+        return s;
       }
 
       public class State

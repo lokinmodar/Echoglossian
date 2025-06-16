@@ -1,4 +1,5 @@
-﻿public static class DeepSeekEngineUI
+﻿namespace Echoglossian.PluginUI.EngineConfigUI;
+public static class DeepSeekEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
   {

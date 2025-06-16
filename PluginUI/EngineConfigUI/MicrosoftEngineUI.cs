@@ -1,4 +1,5 @@
-﻿public static class MicrosoftEngineUI
+﻿namespace Echoglossian.PluginUI.EngineConfigUI;
+public static class MicrosoftEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
   {

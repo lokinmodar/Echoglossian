@@ -595,67 +595,75 @@
         </trans-unit>
         <trans-unit id="NoSettingsForEngine" translate="yes" xml:space="preserve">
           <source>No settings required for this engine</source>
-          <target state="new">No settings required for this engine</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Não são necessárias configurações para este mecanismo</target>
         </trans-unit>
         <trans-unit id="SettingsForGeminiText" translate="yes" xml:space="preserve">
           <source>Settings for Gemini:</source>
-          <target state="new">Settings for Gemini:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para Gemini:</target>
         </trans-unit>
         <trans-unit id="SettingsForLibreTranslateText" translate="yes" xml:space="preserve">
           <source>Settings for LibreTranslate:</source>
-          <target state="new">Settings for LibreTranslate:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações do LibreTranslate:</target>
         </trans-unit>
         <trans-unit id="LibreTranslateAPIEndpoint" translate="yes" xml:space="preserve">
           <source>LibreTranslate API Endpoint</source>
-          <target state="new">LibreTranslate API Endpoint</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ponto final da API LibreTranslate</target>
         </trans-unit>
         <trans-unit id="SettingsForOpenLlamaText" translate="yes" xml:space="preserve">
           <source>Settings for OpenLlama:</source>
-          <target state="new">Settings for OpenLlama:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para OpenLlama:</target>
         </trans-unit>
         <trans-unit id="YandexCloudFolderId" translate="yes" xml:space="preserve">
           <source>Folder ID</source>
-          <target state="new">Folder ID</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">ID da pasta</target>
         </trans-unit>
         <trans-unit id="SettingsForYandexCloudText" translate="yes" xml:space="preserve">
           <source>Settings for YandexCloud:</source>
-          <target state="new">Settings for YandexCloud:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para YandexCloud:</target>
         </trans-unit>
         <trans-unit id="YandexCloudApiKey" translate="yes" xml:space="preserve">
           <source>YandexCloud Api Key</source>
-          <target state="new">YandexCloud Api Key</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave de API YandexCloud</target>
         </trans-unit>
         <trans-unit id="ShowInCutscenesLabel" translate="yes" xml:space="preserve">
           <source>Show in Cutscenes</source>
-          <target state="new">Show in Cutscenes</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Mostrar em cenas</target>
         </trans-unit>
         <trans-unit id="CopyTranslationToClipboardLabel" translate="yes" xml:space="preserve">
           <source>Copy translation to clipboard</source>
-          <target state="new">Copy translation to clipboard</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Copiar tradução para a área de transferência</target>
         </trans-unit>
         <trans-unit id="FontSizeLabel" translate="yes" xml:space="preserve">
           <source>Font Size:</source>
-          <target state="new">Font Size:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tamanho da fonte:</target>
         </trans-unit>
         <trans-unit id="TranslateYesNoScreenLabel" translate="yes" xml:space="preserve">
           <source>Translate Yes/No Screen</source>
-          <target state="new">Translate Yes/No Screen</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir tela Sim/Não</target>
         </trans-unit>
         <trans-unit id="TranslateCutSceneSelectStringLabel" translate="yes" xml:space="preserve">
           <source>Translate CutSceneSelectString</source>
-          <target state="new">Translate CutSceneSelectString</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir CutSceneSelectString</target>
         </trans-unit>
         <trans-unit id="TranslateSelectStringLabel" translate="yes" xml:space="preserve">
           <source>Translate SelectString</source>
-          <target state="new">Translate SelectString</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir SelectString</target>
         </trans-unit>
         <trans-unit id="TranslateSelectOkLabel" translate="yes" xml:space="preserve">
           <source>Translate SelectOk</source>
-          <target state="new">Translate SelectOk</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir SelectOk</target>
         </trans-unit>
         <trans-unit id="GeminiAPIKey" translate="yes" xml:space="preserve">
           <source>Gemini API Key</source>
-          <target state="new">Gemini API Key</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave de API Gemini</target>
+        </trans-unit>
+        <trans-unit id="SettingsForYandexPublic" translate="yes" xml:space="preserve">
+          <source>Settings for Yandex public Translator</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para o Yandex public Translator</target>
+        </trans-unit>
+        <trans-unit id="SettingsForGTranslateText" translate="yes" xml:space="preserve">
+          <source>Settings for GTranslate translator</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para o tradutor GTranslate</target>
         </trans-unit>
       </group>
     </body>

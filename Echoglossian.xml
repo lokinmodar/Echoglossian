@@ -151,11 +151,17 @@
         <member name="F:Echoglossian.Config.AiTranslatorPrompt">
             <summary>Generic prompt used by all AI translators when applicable.</summary>
         </member>
-        <member name="F:Echoglossian.Config.FontScale">
+        <member name="F:Echoglossian.Config.TalkFontScale">
             <summary>Scaling factor for Talk font.</summary>
         </member>
         <member name="F:Echoglossian.Config.BattleTalkFontScale">
             <summary>Scaling factor for BattleTalk font.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ToastFontScale">
+            <summary>Font scale used for Toast overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TalkSubtitleFontScale">
+            <summary>Font scale used for Talk Subtitle overlay.</summary>
         </member>
         <member name="F:Echoglossian.Config.GoogleTranslateVersion">
             <summary>Selected version of Google Translate API (1 or 2).</summary>
@@ -256,6 +262,12 @@
         <member name="F:Echoglossian.Config.OpenRouterPrompt">
             <summary>Prompt passed to OpenRouter translator.</summary>
         </member>
+        <member name="F:Echoglossian.Config.LibreTranslateUrl">
+            <summary>LibreTranslate URL</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenLlamaUrl">
+            <summary>OpenLlama URL</summary>
+        </member>
         <member name="F:Echoglossian.Config.ForceShowTitle">
             <summary>Always show overlay title bar, even if name translation is off.</summary>
         </member>
@@ -291,9 +303,10 @@
             <param name="noOfLevels"># of levels to move up.</param>
             <returns>Parent path.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ResetSettings">
+        <member name="M:Echoglossian.Echoglossian.ResetSettings(Echoglossian.Config,System.Action)">
             <summary>
-            Resets the plugin settings to their default values. 
+            Resets the plugin settings to their default values dynamically,
+            excluding metadata like PluginVersion and FontChangeTime.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.FixConfig">
@@ -301,7 +314,7 @@
             Fixes the configuration file if it is missing or has an incorrect version.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.SaveConfig">
+        <member name="M:Echoglossian.Echoglossian.SaveConfig(Echoglossian.Config)">
             <summary>
             Saves the current configuration to the plugin config file.
             </summary>
@@ -444,16 +457,6 @@
         <member name="M:Echoglossian.Echoglossian.DrawPromptEditor(Echoglossian.Config,Echoglossian.Echoglossian.PromptType,System.String,System.String)">
             <summary>
             Draws the AI Translator prompt tab in the UI.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationEnginesTab">
-            <summary>
-            Draws the translation engines tab in the UI.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationEnginesTabContent">
-            <summary>
-            Draws the content of the translation engines tab.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.LangIdentify(System.String)">
@@ -806,6 +809,212 @@
             Frees the previously allocated buffer.
             </summary>
         </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.DeepLEngineUI">
+            <summary>
+            Renders the configuration UI for DeepL Translator.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.GoogleEngineUI">
+            <summary>
+            Renders the configuration UI for the Google Translate engine.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.GoogleEngineUI.Draw(Echoglossian.Config)">
+            <summary>
+            Draws the Google Translate engine settings.
+            </summary>
+            <param name="config">The plugin configuration.</param>
+            <returns>True if any setting was changed.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.GTranslateEngineUI">
+            <summary>
+            Renders the configuration UI for GTranslate.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.YandexPublicEngineUI">
+            <summary>
+            Renders the configuration UI for the Yandex Public Translator (no custom prompts).
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorStateManager">
+            <summary>
+            Manages UI editing state for each translation prompt engine tab.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.PromptEditorStateManager.Get(System.String)">
+            <summary>
+            Gets the editor state for a given tab label.
+            </summary>
+            <param name="label">Label identifying the translation engine or tab.</param>
+            <returns>A mutable reference to the editor state.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorState">
+            <summary>
+            Stores the editor UI state for a single prompt editing session.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorUI">
+            <summary>
+            Provides UI functionality for editing prompts.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.PromptEditorUI.Draw(Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.PromptType,System.String,System.String)">
+            <summary>
+            Draws the editable prompt box for a specific engine.
+            </summary>
+            <param name="templateManager">The manager responsible for handling prompt templates.</param>
+            <param name="type">The type of the prompt being edited.</param>
+            <param name="defaultPrompt">The default prompt text to use if no custom prompt is set.</param>
+            <param name="label">The label used to identify the prompt editor instance.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.PromptTemplateManager">
+            <summary>
+            Manages prompt validation, retrieval, and dynamic substitution for translator prompts.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.UIWarningHelpers">
+            <summary>
+            Utility methods for drawing UI warnings.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.UIWarningHelpers.ShowFieldRequiredWarningIfEmpty(System.String)">
+            <summary>
+            Shows a styled warning text to indicate a required field.
+            </summary>
+            <param name="fieldName">The name of the required field.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigWindowFooter">
+            <summary>
+            Renders the footer of the Plugin Configuration Window.
+            Includes Save, Donation, Project Links, and Pix QR popup.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,System.IntPtr)">
+            <summary>
+            Draws the footer section with buttons and Pix QR popup.
+            </summary>
+            <param name="config">The window open/close flag.</param>
+            <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
+            <param name="saveCallback">Callback function to invoke when saving.</param>
+            <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.AboutTab">
+            <summary>
+            Displays the "About Echoglossian" tab content with logo and disclaimer.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.AboutTab.Draw(Echoglossian.Config,System.IntPtr)">
+            <summary>
+            Draws the About tab.
+            </summary>
+            <param name="config">The plugin config object.</param>
+            <param name="logoHandle">The ImGui handle for the logo image.</param>
+            <returns>True if any changes were made (always false here).</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.GeneralTab">
+            <summary>
+            Provides methods to render the "Whats, Whens and Hows" general configuration tab.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.GeneralTab.Draw(Echoglossian.Config)">
+            <summary>
+            Renders the general configuration tab and handles user interactions.
+            </summary>
+            <param name="config">The configuration object to be modified based on user input.</param>
+            <returns>True if any configuration value was changed; otherwise, false.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.JournalTab">
+            <summary>
+            Renders the settings tab for journal, quest, and tooltip translation.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.MiscTab">
+            <summary>
+            Renders the miscellaneous settings tab in the plugin configuration UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.MiscTab.Draw(Echoglossian.Config)">
+            <summary>
+            Draws the miscellaneous settings UI.
+            </summary>
+            <param name="config">The plugin configuration.</param>
+            <returns>True if any value has changed, otherwise false.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.OtherSettingsTab">
+            <summary>
+            Renders additional settings for select strings, confirmations, and UI elements.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.OverlayTab">
+            <summary>
+            Renders the configuration settings related to overlay-based translations using vertical tabs.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.Draw(Echoglossian.Config)">
+            <summary>
+            Draws the full Overlay tab with vertical sub-tabs.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
+            <summary>
+            Draw settings for overlays that have width, height, position, color, and font scale.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
+            <summary>
+            Draw settings for overlays that do not have a height adjustment (e.g., Toast).
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.TranslationEnginesTab">
+            <summary>
+            Renders the Translation Engines tab, supporting engine selection and per-engine configuration.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.Int32,Echoglossian.Echoglossian.LanguageInfo},System.Action)">
+            <summary>
+            Draws the translation engine settings UI, allowing users to select and configure translation engines.
+            </summary>
+            <param name="config">The configuration object containing translation settings.</param>
+            <param name="languageIndex">The index of the selected language in the language list.</param>
+            <param name="languageList">The list of available languages.</param>
+            <param name="availableEngines">The list of available translation engines.</param>
+            <param name="langDict">Dictionary mapping language indices to their information, including supported engines.</param>
+            <param name="rebuildTranslationService">The action to rebuild the translation service when settings change.</param>
+            <returns>True if any settings were changed; otherwise, false.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.TroubleshootingTab">
+            <summary>
+            Renders the troubleshooting tab for plugin assets management and resetting settings.
+            Fully self-contained using static Echoglossian methods.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Helpers.FieldValidationHelper">
+            <summary>
+            Provides UI helpers to display field validation warnings.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Helpers.FieldValidationHelper.ShowFieldRequiredWarningIfEmpty(System.String,System.String)">
+            <summary>
+            Displays a warning message if the field value is null or whitespace.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Helpers.FieldValidationHelper.ValidatedInputText(System.String,System.String@,System.Int32,System.Boolean@)">
+            <summary>
+            Draws a validated input text field. Highlights red and shows warning only after first interaction.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Helpers.FieldValidationHelper.MarkFieldAsTouched(System.String)">
+            <summary>
+            Forces a field to be considered "touched", useful for triggering validation manually (e.g., on submit).
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Helpers.FieldValidationHelper.MarkAllRequiredFieldsTouched(Echoglossian.Config)">
+            <summary>
+            Marks all known user-editable config fields as "touched" to trigger validation warnings.
+            Call this from a "Save" or "Submit" action if needed.
+            </summary>
+            <param name="config">The plugin configuration instance.</param>
+        </member>
         <member name="T:Echoglossian.Properties.Resources">
             <summary>
               A strongly-typed resource class, for looking up localized strings, etc.
@@ -825,6 +1034,11 @@
         <member name="P:Echoglossian.Properties.Resources.AITranslatorPromptCustomization">
             <summary>
               Looks up a localized string similar to AI Translator Prompt Customization.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.APIKey">
+            <summary>
+              Looks up a localized string similar to API Key.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable">
@@ -870,6 +1084,21 @@
         <member name="P:Echoglossian.Properties.Resources.AssetsPresentPopupMsg">
             <summary>
               Looks up a localized string similar to All plugin assets present!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AWSAccessKey">
+            <summary>
+              Looks up a localized string similar to AWS Access Key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AWSSecretKey">
+            <summary>
+              Looks up a localized string similar to AWS Secret Key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.BattleTalkTabTitle">
+            <summary>
+              Looks up a localized string similar to BattleTalk.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ChatGptApiKey">
@@ -982,6 +1211,11 @@
               Looks up a localized string similar to Copy Preview.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.CopyTranslationToClipboardLabel">
+            <summary>
+              Looks up a localized string similar to Copy translation to clipboard.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.CurrentPluginAssetsStatus">
             <summary>
               Looks up a localized string similar to Are the plugin assets downloaded?.
@@ -1057,9 +1291,24 @@
               Looks up a localized string similar to Activate game text realtime translation.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.Endpoint">
+            <summary>
+              Looks up a localized string similar to Endpoint.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">
             <summary>
               Looks up a localized string similar to Overlay font color:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.FontSizeLabel">
+            <summary>
+              Looks up a localized string similar to Font Size:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.GeminiAPIKey">
+            <summary>
+              Looks up a localized string similar to Gemini API Key.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.GeminiTranslationUnavailablePleaseCheckYourAPIKey">
@@ -1107,9 +1356,19 @@
               Looks up a localized string similar to Language to translate to.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.LibreTranslateAPIEndpoint">
+            <summary>
+              Looks up a localized string similar to LibreTranslate API Endpoint.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.LivePreviewWithSampleInput">
             <summary>
               Looks up a localized string similar to Live preview with sample input:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LLMModel">
+            <summary>
+              Looks up a localized string similar to LLM Model.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.logo">
@@ -1122,6 +1381,11 @@
               Looks up a localized string similar to [Microsoft translation unavailable. Please check your API key.].
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.MicrosoftTranslatorAPIKey">
+            <summary>
+              Looks up a localized string similar to Microsoft Translator API Key.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.minfilia">
             <summary>
               Looks up a localized resource of type System.Byte[].
@@ -1132,6 +1396,11 @@
               Looks up a localized string similar to ⚠ Missing one or more required placeholders!.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ModelEndpoint">
+            <summary>
+              Looks up a localized string similar to Model endpoint.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.Name">
             <summary>
               Looks up a localized string similar to Echoglossian.
@@ -1140,6 +1409,11 @@
         <member name="P:Echoglossian.Properties.Resources.NEListText">
             <summary>
               Looks up a localized string similar to The non-exhaustive list of issues and TODOs is available in the link below:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.NoSettingsForEngine">
+            <summary>
+              Looks up a localized string similar to No settings required for this engine.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayAdjustmentOrientations">
@@ -1272,6 +1546,11 @@
               Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.Region">
+            <summary>
+              Looks up a localized string similar to Region.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.RemoveDiacriticsToggle">
             <summary>
               Looks up a localized string similar to Parse the translated text replacing diacritics with their common letter equivalents.
@@ -1312,6 +1591,11 @@
               Looks up a localized string similar to Send me a PIX donation!.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForAmazonTranslateText">
+            <summary>
+              Looks up a localized string similar to Settings for Amazon Translate:.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsForChatGptTransText">
             <summary>
               Looks up a localized string similar to Settings for ChatGPT.
@@ -1322,9 +1606,54 @@
               Looks up a localized string similar to Optional settings for DeepL:.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForDeepSeekText">
+            <summary>
+              Looks up a localized string similar to Settings for DeepSeek.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForGeminiText">
+            <summary>
+              Looks up a localized string similar to Settings for Gemini:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForGTranslateText">
+            <summary>
+              Looks up a localized string similar to Settings for GTranslate translator.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsForGTransText">
             <summary>
               Looks up a localized string similar to Settings for Google Translate:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForLibreTranslateText">
+            <summary>
+              Looks up a localized string similar to Settings for LibreTranslate:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForMicrosoftText">
+            <summary>
+              Looks up a localized string similar to Settings for Microsoft Translator.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForOpenLlamaText">
+            <summary>
+              Looks up a localized string similar to Settings for OpenLlama:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForOpenRouterText">
+            <summary>
+              Looks up a localized string similar to Settings for OpenRouter Engine.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForYandexCloudText">
+            <summary>
+              Looks up a localized string similar to Settings for YandexCloud:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForYandexPublic">
+            <summary>
+              Looks up a localized string similar to Settings for Yandex public Translator.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsReset">
@@ -1332,9 +1661,29 @@
               Looks up a localized string similar to Echoglossian settings reset to default successfully!.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ShowInCutscenesLabel">
+            <summary>
+              Looks up a localized string similar to Show in Cutscenes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SubtitleTabTitle">
+            <summary>
+              Looks up a localized string similar to TalkSubtitle.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.SwapTranslationTextToggle">
             <summary>
               Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TalkTabTitle">
+            <summary>
+              Looks up a localized string similar to Talk.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Temperature">
+            <summary>
+              Looks up a localized string similar to Temperature.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthMultiplierOrientations">
@@ -1345,6 +1694,11 @@
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthScrollLabel">
             <summary>
               Looks up a localized string similar to Toast Overlay Width multiplier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastTabTitle">
+            <summary>
+              Looks up a localized string similar to Toast.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TodoUrl">
@@ -1365,6 +1719,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslateClassChangeToastToggleText">
             <summary>
               Looks up a localized string similar to Translate in-game Class/Job change Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateCutSceneSelectStringLabel">
+            <summary>
+              Looks up a localized string similar to Translate CutSceneSelectString.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateErrorToastToggleText">
@@ -1392,6 +1751,16 @@
               Looks up a localized string similar to Translate other in-game miscellaneous Toast Messages.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateSelectOkLabel">
+            <summary>
+              Looks up a localized string similar to Translate SelectOk.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateSelectStringLabel">
+            <summary>
+              Looks up a localized string similar to Translate SelectString.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateTalkSubtitleToggleLabel">
             <summary>
               Looks up a localized string similar to Translate Cutscene Subtitles.
@@ -1407,9 +1776,19 @@
               Looks up a localized string similar to Translate again stored translated texts with the selected translation engine.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateToastToggle">
+            <summary>
+              Looks up a localized string similar to Translate Toast Messages.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateToastToggleText">
             <summary>
               Looks up a localized string similar to Translate in-game Toast Messages.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateYesNoScreenLabel">
+            <summary>
+              Looks up a localized string similar to Translate Yes/No Screen.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationDisabled">
@@ -1460,6 +1839,16 @@
         <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslate">
             <summary>
               Looks up a localized string similar to Select which kind of in-game message toasts to translate.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.YandexCloudApiKey">
+            <summary>
+              Looks up a localized string similar to YandexCloud Api Key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.YandexCloudFolderId">
+            <summary>
+              Looks up a localized string similar to Folder ID.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single)">

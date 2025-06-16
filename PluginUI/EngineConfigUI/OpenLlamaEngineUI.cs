@@ -1,4 +1,5 @@
-﻿public static class OpenLlamaEngineUI
+﻿namespace Echoglossian.PluginUI.EngineConfigUI;
+public static class OpenLlamaEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
   {

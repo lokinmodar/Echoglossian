@@ -1,4 +1,5 @@
-﻿public static class GeminiEngineUI
+﻿namespace Echoglossian.PluginUI.EngineConfigUI;
+public static class GeminiEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
   {

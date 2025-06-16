@@ -607,4 +607,10 @@
   <data name="GeminiAPIKey" xml:space="preserve">
     <value>Gemini API Key</value>
   </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Settings for Yandex public Translator</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Settings for GTranslate translator</value>
+  </data>
 </root>

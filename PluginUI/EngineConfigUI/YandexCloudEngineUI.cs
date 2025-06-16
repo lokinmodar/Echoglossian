@@ -1,4 +1,5 @@
-﻿public static class YandexCloudEngineUI
+﻿namespace Echoglossian.PluginUI.EngineConfigUI;
+public static class YandexCloudEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
   {
