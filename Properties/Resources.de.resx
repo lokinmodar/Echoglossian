@@ -453,4 +453,58 @@
   <data name="Temperature" xml:space="preserve">
     <value>Temperatur</value>
   </data>
+  <data name="NoSettingsForEngine" xml:space="preserve">
+    <value>Für diesen Motor sind keine Einstellungen erforderlich</value>
+  </data>
+  <data name="SettingsForGeminiText" xml:space="preserve">
+    <value>Einstellungen für Zwillinge:</value>
+  </data>
+  <data name="SettingsForLibreTranslateText" xml:space="preserve">
+    <value>Einstellungen für LibreTranslate:</value>
+  </data>
+  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
+    <value>LibreTranslate API-Endpunkt</value>
+  </data>
+  <data name="SettingsForOpenLlamaText" xml:space="preserve">
+    <value>Einstellungen für OpenLlama:</value>
+  </data>
+  <data name="YandexCloudFolderId" xml:space="preserve">
+    <value>Ordner-ID</value>
+  </data>
+  <data name="SettingsForYandexCloudText" xml:space="preserve">
+    <value>Einstellungen für YandexCloud:</value>
+  </data>
+  <data name="YandexCloudApiKey" xml:space="preserve">
+    <value>YandexCloud API-Schlüssel</value>
+  </data>
+  <data name="ShowInCutscenesLabel" xml:space="preserve">
+    <value>In Zwischensequenzen anzeigen</value>
+  </data>
+  <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
+    <value>Übersetzung in die Zwischenablage kopieren</value>
+  </data>
+  <data name="FontSizeLabel" xml:space="preserve">
+    <value>Schriftgrad:</value>
+  </data>
+  <data name="TranslateYesNoScreenLabel" xml:space="preserve">
+    <value>Ja/Nein-Bildschirm übersetzen</value>
+  </data>
+  <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
+    <value>Übersetzen von CutSceneSelectString</value>
+  </data>
+  <data name="TranslateSelectStringLabel" xml:space="preserve">
+    <value>SelectString übersetzen</value>
+  </data>
+  <data name="TranslateSelectOkLabel" xml:space="preserve">
+    <value>Übersetzen SelectOk</value>
+  </data>
+  <data name="GeminiAPIKey" xml:space="preserve">
+    <value>Gemini-API-Schlüssel</value>
+  </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Einstellungen für Yandex Public Translator</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Einstellungen für GTranslate-Übersetzer</value>
+  </data>
 </root>

@@ -15,6 +15,11 @@ internal record TranslationWindowConfig(
     bool NoBackground = false
 )
 {
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for talk translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
   public static TranslationWindowConfig FromConfigForTalk(Config config)
   {
     return new TranslationWindowConfig(
@@ -27,6 +32,11 @@ internal record TranslationWindowConfig(
     );
   }
 
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for battle talk translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
   public static TranslationWindowConfig FromConfigForBattleTalk(Config config)
   {
     return new TranslationWindowConfig(
@@ -39,6 +49,28 @@ internal record TranslationWindowConfig(
     );
   }
 
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for talk subtitle translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigTalkSubtitle(Config config)
+  {
+    return new TranslationWindowConfig(
+        DefaultTitle: "Talk Subtitle translation",
+        WidthMultiplier: config.ImGuiTalkSubtitleWindowWidthMult,
+        HeightMultiplier: config.ImGuiTalkSubtitleWindowHeightMult,
+        TextColor: new Vector4(config.OverlayTalkSubtitleTextColor.X, config.OverlayTalkSubtitleTextColor.Y, config.OverlayTalkSubtitleTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiWindowPosCorrection,
+        ForceShowTitle: config.ForceShowTitle
+    );
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for toast translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
   public static TranslationWindowConfig FromConfigForToast(Config config)
   {
     return new TranslationWindowConfig(
@@ -51,6 +83,11 @@ internal record TranslationWindowConfig(
     );
   }
 
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for error toast translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
   public static TranslationWindowConfig FromConfigForErrorToast(Config config)
   {
     return new TranslationWindowConfig(
@@ -64,6 +101,11 @@ internal record TranslationWindowConfig(
     );
   }
 
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for chat bubble translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
   public static TranslationWindowConfig FromConfigForChatBubble(Config config)
   {
     return new TranslationWindowConfig(

@@ -156,7 +156,6 @@ namespace Echoglossian
       YandexPublic = 11, // Yandex Public Translator
       OpenRouter = 12, // OpenRouter Translator
 
-
       All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | OpenLlama | LibreTranslate | YandexPublic | OpenRouter,
     }
 

@@ -404,6 +404,59 @@
             <param name="exclusiveCharsToAdd">List of all the needed chars to be added.</param>
             <param name="supportedEngines">Supported translation engines.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateTalkOverlay(System.String,System.String,System.String)">
+            <summary>
+            Handles the translation of the Talk addon messages asynchronously.
+            </summary>
+            <param name="translatedName"></param>
+            <param name="translatedText"></param>
+            <param name="originalName"></param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TranslateTalk(System.String,System.String)">
+            <summary>
+            Formats the talk message for translation.
+            </summary>
+            <param name="nameToTranslate"></param>
+            <param name="textToTranslate"></param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TranslateTalkReplacing">
+            <summary>
+            Replaces the text in the Talk addon with translated text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TranslateTalkUsingImGui(System.String,System.String)">
+            <summary>
+            Translates the talk message using ImGui, either swapping texts or not based on configuration.
+            </summary>
+            <param name="nameToTranslate"></param>
+            <param name="textToTranslate"></param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TranslateTalkUsingImGuiAndSwapping(System.String,System.String)">
+            <summary>
+            Translates the talk message using ImGui and swaps the texts in the overlay.
+            </summary>
+            <param name="nameToTranslate"></param>
+            <param name="textToTranslate"></param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TranslateTalkUsingImGuiWithoutSwapping(System.String,System.String)">
+            <summary>
+            Translates the talk message using ImGui without swapping the texts in the overlay.
+            </summary>
+            <param name="nameToTranslate"></param>
+            <param name="textToTranslate"></param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UiTalkAsyncHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Handles the UI Talk events asynchronously, translating the talk messages as needed.
+            </summary>
+            <param name="type"></param>
+            <param name="args"></param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseUi">
+            <summary>
+            Parses the UI elements from the Addon sheet in the game data.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.DefaultPrompt">
             <summary>
             The default prompt for the translation engine.
@@ -777,15 +830,6 @@
             Applies the supported engines to the given dictionary of language information.
             </summary>
             <param name="dictionary">The dictionary containing language information.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.UiAddonHandler.#ctor(Echoglossian.Config,ImGuiNET.ImFontPtr,System.Boolean,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.UiAddonHandler"/> class.
-            </summary>
-            <param name="configuration"></param>
-            <param name="uiFont"></param>
-            <param name="fontLoaded"></param>
-            <param name="langToTranslateTo"></param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>
@@ -2037,22 +2081,47 @@
             <param name="targetLanguage">The target language code.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
         </member>
-        <member name="M:Echoglossian.UIOverlays.SimpleWindow.#ctor(System.String,ImGuiNET.ImGuiWindowFlags,System.Boolean,System.String,System.Boolean,System.Int32,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,ImGuiNET.ImFontPtr,System.Boolean,System.Threading.SemaphoreSlim)">
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTalk(Echoglossian.Config)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.UIOverlays.SimpleWindow"/> class.
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for talk translations.
             </summary>
-            <param name="name">Window Name.</param>
-            <param name="flags">Window Flags.</param>
-            <param name="forceMainWindow">Indicates whether to force the window to be the main window.</param>
-            <param name="translation">Translation text to be displayed in the window.</param>
-            <param name="translationSemaphore">Semaphore to control access to the translation resource.</param>
-            <param name="displayTranslation">Indicates whether to display the translation text.</param>
-            <param name="curentTranslationId">Current translation ID.</param>
-            <param name="textDimensions">Dimensions of the text.</param>
-            <param name="textImguiSize">Size of the text in ImGui.</param>
-            <param name="textPosition">Position of the text.</param>
-            <param name="uiFont">Font used for the UI.</param>
-            <param name="fontLoaded">Indicates whether the font is loaded.</param>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForBattleTalk(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for battle talk translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigTalkSubtitle(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for talk subtitle translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForToast(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for toast translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForErrorToast(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for error toast translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForChatBubble(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for chat bubble translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
         </member>
     </members>
 </doc>

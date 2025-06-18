@@ -453,4 +453,58 @@
   <data name="Temperature" xml:space="preserve">
     <value>Температура</value>
   </data>
+  <data name="NoSettingsForEngine" xml:space="preserve">
+    <value>Для этого движка не требуется никаких настроек</value>
+  </data>
+  <data name="SettingsForGeminiText" xml:space="preserve">
+    <value>Настройки для Близнецов:</value>
+  </data>
+  <data name="SettingsForLibreTranslateText" xml:space="preserve">
+    <value>Настройки для LibreTranslate:</value>
+  </data>
+  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
+    <value>Конечная точка API LibreTranslate</value>
+  </data>
+  <data name="SettingsForOpenLlamaText" xml:space="preserve">
+    <value>Настройки для OpenLlama:</value>
+  </data>
+  <data name="YandexCloudFolderId" xml:space="preserve">
+    <value>Идентификатор папки</value>
+  </data>
+  <data name="SettingsForYandexCloudText" xml:space="preserve">
+    <value>Настройки для YandexCloud:</value>
+  </data>
+  <data name="YandexCloudApiKey" xml:space="preserve">
+    <value>Ключ YandexCloud Api</value>
+  </data>
+  <data name="ShowInCutscenesLabel" xml:space="preserve">
+    <value>Шоу в катсценах</value>
+  </data>
+  <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
+    <value>Скопировать перевод в буфер обмена</value>
+  </data>
+  <data name="FontSizeLabel" xml:space="preserve">
+    <value>Размер шрифта:</value>
+  </data>
+  <data name="TranslateYesNoScreenLabel" xml:space="preserve">
+    <value>Перевести экран Да/Нет</value>
+  </data>
+  <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
+    <value>Перевод CutSceneSelectString</value>
+  </data>
+  <data name="TranslateSelectStringLabel" xml:space="preserve">
+    <value>Перевод SelectString</value>
+  </data>
+  <data name="TranslateSelectOkLabel" xml:space="preserve">
+    <value>Перевести SelectOk</value>
+  </data>
+  <data name="GeminiAPIKey" xml:space="preserve">
+    <value>Ключ API Gemini</value>
+  </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Настройки для публичного переводчика Яндекса</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Настройки для переводчика GTranslate</value>
+  </data>
 </root>

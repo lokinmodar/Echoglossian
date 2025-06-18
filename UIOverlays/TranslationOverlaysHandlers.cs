@@ -3,14 +3,11 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Dalamud.Interface.Utility;
-using Dalamud.Utility;
-using Echoglossian.Properties;
-
 using ImGuiScene;
 
 namespace Echoglossian
 {
+  // old logic for overlays
   public partial class Echoglossian
   {
     private bool talkDisplayTranslation;
@@ -144,22 +141,14 @@ namespace Echoglossian
       return name;
     }
 
-    private void DrawTranslatedBattleDialogueWindow()
+    private void DrawTranslatedBattleTalkWindow()
     {
-      PluginLog.Debug("Inside DrawTranslatedBattleDialogueWindow method!");
-      PluginLog.Debug($"BattleTalkDisplayTranslation: {this.battleTalkDisplayTranslation}");
-      PluginLog.Debug($"{this.currentBattleTalkTranslation}");
+      PluginLog.Debug("Using BattleTalk Overlay - Inside DrawTranslatedBattleTalkWindow method!");
 
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
   this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
   this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
-      /*      if (this.configuration.TranslateNpcNames)
-            {
-              if ((this.battleTalkTextDimensions.X * 2) < ImGui.CalcTextSize(this.currentNameTranslation).X)
-              {
 
-              }
-            }*/
       float size = Math.Min(
         this.battleTalkTextDimensions.X * this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
         ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 3));
@@ -240,11 +229,10 @@ namespace Echoglossian
       }
     }
 
-    private void DrawTranslatedDialogueWindow()
+    private void DrawTranslatedTalkWindow()
     {
-#if DEBUG
-      // PluginLog.Debug("Inside DrawTranslatedDialogueWindow method!");
-#endif
+      PluginLog.Debug("Using Talk Overlay - Inside DrawTranslatedTalkWindow method!");
+
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
           this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
@@ -304,14 +292,6 @@ namespace Echoglossian
       ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       if (this.talkTranslationSemaphore.Wait(0))
       {
-        /*        if (this.configuration.Lang is 2)
-                {
-                  ImGui.Image(
-                    this.currentTalkTranslationTexture.ImGuiHandle,
-                    new Vector2(
-                      size,
-                      this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
-                }*/
 
         ImGui.TextWrapped(this.currentTalkTranslation);
 
@@ -340,9 +320,9 @@ namespace Echoglossian
 
     private void DrawTranslatedTalkSubtitleWindow()
     {
-#if DEBUG
-      // PluginLog.Debug("Inside DrawTranslatedTalkSubtitleWindow method!");
-#endif
+
+      PluginLog.Debug("Using TalkSubtitle Overlay - Inside DrawTranslatedTalkSubtitleWindow method!");
+
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.talkSubtitleTextPosition.X + (this.talkSubtitleTextDimensions.X / 2) - (this.talkSubtitleTextImguiSize.X / 2),
           this.talkSubtitleTextPosition.Y - this.talkSubtitleTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
@@ -374,15 +354,6 @@ namespace Echoglossian
       ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       if (this.talkSubtitleTranslationSemaphore.Wait(0))
       {
-        /*if (this.configuration.Lang is 2)
-        {
-          ImGui.Image(
-            this.currentTalkSubtitleTranslationTexture.ImGuiHandle,
-            new Vector2(
-              size,
-              this.talkSubtitleTextDimensions.Y * this.configuration.ImGuiTalkSubtitleWindowHeightMult));
-        }*/
-
         ImGui.TextWrapped(this.currentTalkSubtitleTranslation);
 
         this.talkSubtitleTranslationSemaphore.Release();
@@ -410,6 +381,7 @@ namespace Echoglossian
 
     private void DrawTranslatedToastWindow()
     {
+      PluginLog.Debug("Using Toast Overlay - inside Draw Toast Overlay");
       if (this.configuration.UseImGuiForToasts && this.configuration.TranslateToast && this.toastDisplayTranslation)
       {
         ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
@@ -464,22 +436,18 @@ namespace Echoglossian
 
     private void DrawTranslatedErrorToastWindow()
     {
-#if DEBUG
-      // PluginLog.Debug("Using Toast Overlay - inside Draw Error toast Overlay");
-#endif
+
+      PluginLog.Debug("Using Toast Overlay - inside Draw Error toast Overlay");
+
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.errorToastTranslationTextPosition.X + (this.errorToastTranslationTextDimensions.X / 2) - (this.errorToastTranslationTextImguiSize.X / 2),
         this.errorToastTranslationTextPosition.Y - this.errorToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
       float size = Math.Min(
         this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentErrorToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
-#if DEBUG
-      // PluginLog.Debug($"size: {size}");
-#endif
+
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2));
-#if DEBUG
-      // PluginLog.Debug($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2)}");
-#endif
+
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
 
       if (this.configuration.SwapTextsUsingImGui == true)
@@ -527,22 +495,17 @@ namespace Echoglossian
 
     private void DrawTranslatedClassChangeToastWindow()
     {
-#if DEBUG
-      // PluginLog.Debug("Using Toast Overlay - inside Draw Class change toast Overlay");
-#endif
+      PluginLog.Debug("Using Toast Overlay - inside Draw Class change toast Overlay");
+
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
         this.classChangeToastTranslationTextPosition.X + (this.classChangeToastTranslationTextDimensions.X / 2) - (this.classChangeToastTranslationTextImguiSize.X / 2),
         this.classChangeToastTranslationTextPosition.Y - this.classChangeToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
       float size = Math.Min(
         this.classChangeToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
         ImGui.CalcTextSize(this.currentClassChangeToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
-#if DEBUG
-      PluginLog.Debug($"size: {size}");
-#endif
+
       ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4, this.classChangeToastTranslationTextDimensions.Y * 2));
-#if DEBUG
-      PluginLog.Debug($"size min: {new Vector2(size, 0)}, Size max: {new Vector2(size * 4, this.classChangeToastTranslationTextDimensions.Y * 2)}");
-#endif
+
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
 
       if (this.configuration.SwapTextsUsingImGui == true)

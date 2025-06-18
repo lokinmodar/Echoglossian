@@ -2,7 +2,7 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
-
+/*
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
@@ -77,7 +77,7 @@ namespace Echoglossian.UIOverlays
     public override void Draw()
     {
 #if DEBUG
-      // PluginLog.Debug("Inside DrawTranslatedDialogueWindow method!");
+      // PluginLog.Debug("Inside DrawTranslatedTalkWindow method!");
 #endif
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           this.textPosition.X + this.textDimensions.X / 2 - this.textImguiSize.X / 2,
@@ -179,4 +179,4 @@ namespace Echoglossian.UIOverlays
       GC.SuppressFinalize(this);
     }
   }
-}
+} */

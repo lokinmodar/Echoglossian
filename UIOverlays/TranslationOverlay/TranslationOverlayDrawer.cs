@@ -50,7 +50,6 @@ namespace Echoglossian
       });
     }
 
-
     /// <summary>
     /// Draws the translation window.
     /// </summary>
@@ -62,6 +61,7 @@ namespace Echoglossian
         TranslationWindowConfig config,
         string? customTitle = null)
     {
+      PluginLog.Debug($"DrawTranslationWindow: {overlay.CurrentName} - {overlay.CurrentText}");
       if (!overlay.Display)
       {
         return;

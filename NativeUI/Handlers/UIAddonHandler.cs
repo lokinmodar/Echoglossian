@@ -3,15 +3,11 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.EFCoreSqlite.Models;
-
-using static Echoglossian.Echoglossian;
-
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian.NativeUI.Handlers
 {
-  internal class UiAddonHandler : IDisposable
+  /*internal class UiAddonHandler : IDisposable
   {
     private bool disposedValue;
     private CancellationTokenSource cancellationTokenSource;
@@ -67,6 +63,11 @@ namespace Echoglossian.NativeUI.Handlers
     }
 
 #nullable enable
+    /// <summary>
+    /// Handles the addon logic based on the addon name and optional arguments.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="setupArgs"></param>
     public void EgloAddonHandler(string addonName, AddonSetupArgs? setupArgs = null)
     {
       this.addonName = addonName;
@@ -78,6 +79,11 @@ namespace Echoglossian.NativeUI.Handlers
       this.HandleCommonLogic();
     }
 
+    /// <summary>
+    /// Handles the addon logic based on the addon name and optional receive event arguments.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="receiveEventArgs"></param>
     public void EgloAddonHandler(string addonName, AddonReceiveEventArgs? receiveEventArgs = null)
     {
       this.addonName = addonName;
@@ -89,6 +95,11 @@ namespace Echoglossian.NativeUI.Handlers
       this.HandleCommonLogic();
     }
 
+    /// <summary>
+    /// Handles the addon logic based on the addon name and optional update arguments.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="updateArgs"></param>
     public void EgloAddonHandler(string addonName, AddonUpdateArgs? updateArgs = null)
     {
       this.addonName = addonName;
@@ -100,6 +111,11 @@ namespace Echoglossian.NativeUI.Handlers
       this.HandleCommonLogic();
     }
 
+    /// <summary>
+    /// Handles the addon logic based on the addon name and optional draw arguments.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="drawArgs"></param>
     public void EgloAddonHandler(string addonName, AddonDrawArgs? drawArgs = null)
     {
       this.addonName = addonName;
@@ -111,6 +127,11 @@ namespace Echoglossian.NativeUI.Handlers
       this.HandleCommonLogic();
     }
 
+    /// <summary>
+    /// Handles the addon logic based on the addon name and optional finalize arguments.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="finalizeArgs"></param>
     public void EgloAddonHandler(string addonName, AddonFinalizeArgs? finalizeArgs = null)
     {
       this.addonName = addonName;
@@ -122,6 +143,11 @@ namespace Echoglossian.NativeUI.Handlers
       this.HandleCommonLogic();
     }
 
+    /// <summary>
+    /// Handles the addon logic based on the addon name and optional requested update arguments.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="requestedUpdateArgs"></param>
     public void EgloAddonHandler(string addonName, AddonRequestedUpdateArgs? requestedUpdateArgs = null)
     {
       this.addonName = addonName;
@@ -133,6 +159,11 @@ namespace Echoglossian.NativeUI.Handlers
       this.HandleCommonLogic();
     }
 
+    /// <summary>
+    /// Handles the addon logic based on the addon name and optional refresh arguments.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="refreshArgs"></param>
     public void EgloAddonHandler(string addonName, AddonRefreshArgs? refreshArgs = null)
     {
       this.addonName = addonName;
@@ -144,6 +175,9 @@ namespace Echoglossian.NativeUI.Handlers
       this.HandleCommonLogic();
     }
 
+    /// <summary>
+    /// Handles common logic for the addon based on the addon name.
+    /// </summary>
     private void HandleCommonLogic()
     {
       if (string.IsNullOrEmpty(this.addonName))
@@ -156,6 +190,9 @@ namespace Echoglossian.NativeUI.Handlers
       this.ExploreAddon();
     }
 
+    /// <summary>
+    /// Determines the characteristics of the addon based on its name.
+    /// </summary>
     private void DetermineAddonCharacteristics()
     {
       switch (this.addonName)
@@ -223,6 +260,9 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
+    /// <summary>
+    /// Adjusts the flags for addon nodes based on the addon name.
+    /// </summary>
     private void AdjustAddonNodesFlags()
     {
       this.addonNodesFlags = new Dictionary<int, TextFlags>();
@@ -243,6 +283,9 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
+    /// <summary>
+    /// Explores the addon to retrieve its nodes and process the text for translation.
+    /// </summary>
     private unsafe void ExploreAddon()
     {
       AtkUnitBase* foundAddon = null;
@@ -394,6 +437,9 @@ namespace Echoglossian.NativeUI.Handlers
       this.CheckDatabaseForTranslation();
     }
 
+    /// <summary>
+    /// Checks the database for existing translations of the addon messages and names.
+    /// </summary>
     private void CheckDatabaseForTranslation()
     {
       if (this.addonName == "Talk")
@@ -461,7 +507,11 @@ namespace Echoglossian.NativeUI.Handlers
         }
       }
     }
-
+    /// <summary>
+    /// Translates the given text for the addon and updates the corresponding message or talk message.
+    /// </summary>
+    /// <param name="originalText"></param>
+    /// <param name="addonType"></param>
     private void TranslateTexts(string originalText, string addonType)
     {
       Task.Run(async () =>
@@ -494,6 +544,12 @@ namespace Echoglossian.NativeUI.Handlers
       });
     }
 
+    /// <summary>
+    /// Saves the translation to the database for the given original and translated text based on the addon type.
+    /// </summary>
+    /// <param name="originalText"></param>
+    /// <param name="translatedText"></param>
+    /// <param name="addonType"></param>
     private void SaveTranslationToDatabase(string originalText, string translatedText, string addonType)
     {
       if (addonType == "Talk")
@@ -528,6 +584,11 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
+    /// <summary>
+    /// Processes translations in a loop until cancellation is requested.
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns></returns>
     private async Task ProcessTranslations(CancellationToken token)
     {
       while (!token.IsCancellationRequested)
@@ -550,7 +611,12 @@ namespace Echoglossian.NativeUI.Handlers
         }
       }
     }
-
+    /// <summary>
+    /// Translates the given text and updates the translation entry in the dictionary.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="text"></param>
+    /// <returns></returns>
     private async Task TranslateText(int id, string text)
     {
       try
@@ -571,6 +637,9 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
+    /// <summary>
+    /// Sets the translation to the addon if it is visible and has the required nodes.
+    /// </summary>
     public unsafe void SetTranslationToAddon()
     {
       PluginLog.Debug($"Called SetTranslationToAddon for addon {this.addonName}.");
@@ -783,6 +852,10 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
+    /// <summary>
+    /// Sets the translation to the addon using the provided AddonRefreshArgs.
+    /// </summary>
+    /// <param name="addonRefreshArgs"></param>
     public unsafe void SetTranslationToAddonViaAddonRefreshArgs(AddonRefreshArgs addonRefreshArgs)
     {
       PluginLog.Debug($"Called SetTranslationToAddon for addon {this.addonName}.");
@@ -1035,6 +1108,10 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
+    /// <summary>
+    /// Disposes of the resources used by the AddonTranslationService.
+    /// </summary>
+    /// <param name="disposing"></param>
     protected virtual void Dispose(bool disposing)
     {
       if (!this.disposedValue)
@@ -1119,5 +1196,5 @@ namespace Echoglossian.NativeUI.Handlers
         return $"AddonName: {this.AddonName}, IsComplexAddon: {this.IsComplexAddon}, NameNodeId: {this.NameNodeId}, MessageNodeId: {this.MessageNodeId}, ComplexStructure: {this.ComplexStructure}, TalkMessage: {this.TalkMessage}, BattleTalkMessage: {this.BattleTalkMessage}, TalkSubtitleMessage: {this.TalkSubtitleMessage}";
       }
     }
-  }
+  }*/
 }

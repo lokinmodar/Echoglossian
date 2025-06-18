@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.LanguagesHandling;
 using Echoglossian.NativeUI.Helpers;
@@ -122,9 +121,9 @@ namespace Echoglossian
 
     private AtkTextNodeBufferWrapper AtkTextNodeBufferWrapper;
 
-    private UiAddonHandler uiBattleTalkAddonHandler;
-    private UiAddonHandler uiTalkAddonHandler;
-    private UiAddonHandler uiTalkSubtitleHandler;
+    /* private UiAddonHandler uiBattleTalkAddonHandler;
+     private UiAddonHandler uiTalkAddonHandler;
+     private UiAddonHandler uiTalkSubtitleHandler;*/
 
     public static TranslationService translationService;
 
@@ -258,9 +257,9 @@ namespace Echoglossian
       ToastGuiInterface.ErrorToast += this.OnErrorToast;
       ToastGuiInterface.QuestToast += this.OnQuestToast;
 
-      this.uiTalkAddonHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);
-      this.uiBattleTalkAddonHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);
-      this.uiTalkSubtitleHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);
+      /*      this.uiTalkAddonHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);
+            this.uiBattleTalkAddonHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);
+            this.uiTalkSubtitleHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);*/
 
       this.EgloAddonHandler();
 
@@ -314,15 +313,22 @@ namespace Echoglossian
 
       PluginInterface.UiBuilder.Draw -= this.BuildUi;
 
-      this.uiTalkAddonHandler?.Dispose();
-      this.uiBattleTalkAddonHandler?.Dispose();
-      this.uiTalkSubtitleHandler?.Dispose();
+      /*      this.uiTalkAddonHandler?.Dispose();
+            this.uiBattleTalkAddonHandler?.Dispose();
+            this.uiTalkSubtitleHandler?.Dispose();*/
 
       this.pixImage?.Dispose();
       this.choiceImage?.Dispose();
       this.cutsceneChoiceImage?.Dispose();
       this.talkImage?.Dispose();
       this.logo?.Dispose();
+
+      this.TalkOverlay.Dispose();
+      this.BattleTalkOverlay.Dispose();
+      this.TalkSubtitleOverlay.Dispose();
+      this.ToastOverlay.Dispose();
+      this.ErrorToastOverlay.Dispose();
+      this.ChatBubbleOverlay.Dispose();
 
       if (this.configuration.TranslateTalk)
       {

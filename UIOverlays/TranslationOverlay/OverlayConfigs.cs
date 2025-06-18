@@ -10,6 +10,7 @@ namespace Echoglossian
     // Overlays
     private readonly TranslationOverlay TalkOverlay = new();
     private readonly TranslationOverlay BattleTalkOverlay = new();
+    private readonly TranslationOverlay TalkSubtitleOverlay = new();
     private readonly TranslationOverlay ToastOverlay = new();
     private readonly TranslationOverlay ErrorToastOverlay = new();
     private readonly TranslationOverlay ChatBubbleOverlay = new();
@@ -33,6 +34,8 @@ namespace Echoglossian
           this.BattleTalkOverlay,
           TranslationWindowConfig.FromConfigForBattleTalk(this.configuration)
       ));
+
+      this.registeredOverlays.Add(new OverlayRegistration(this.TalkSubtitleOverlay, TranslationWindowConfig.FromConfigTalkSubtitle(this.configuration)));
 
       this.registeredOverlays.Add(new OverlayRegistration(
           this.ToastOverlay,

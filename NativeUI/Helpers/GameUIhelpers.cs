@@ -13,6 +13,9 @@ namespace Echoglossian
   {
     public HashSet<string> UiElementsLabels = new();
 
+    /// <summary>
+    /// Parses the UI elements from the Addon sheet in the game data.
+    /// </summary>
     public void ParseUi()
     {
       ExcelSheet<Addon> uiStuffz = DManager.GetExcelSheet<Addon>(ClientStateInterface.ClientLanguage);

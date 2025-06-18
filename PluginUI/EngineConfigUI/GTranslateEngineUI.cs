@@ -5,7 +5,6 @@
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
 
-
 /// <summary>
 /// Renders the configuration UI for GTranslate.
 /// </summary>

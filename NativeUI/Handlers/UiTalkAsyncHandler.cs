@@ -7,6 +7,12 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
+    /// <summary>
+    /// Handles the translation of the Talk addon messages asynchronously.
+    /// </summary>
+    /// <param name="translatedName"></param>
+    /// <param name="translatedText"></param>
+    /// <param name="originalName"></param>
     private void UpdateTalkOverlay(string translatedName, string translatedText, string originalName = "")
     {
       bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
@@ -35,6 +41,11 @@ namespace Echoglossian
       this.TalkOverlay.Semaphore.Release();
     }
 
+    /// <summary>
+    /// Formats the talk message for translation.
+    /// </summary>
+    /// <param name="nameToTranslate"></param>
+    /// <param name="textToTranslate"></param>
     private unsafe void TranslateTalk(string nameToTranslate, string textToTranslate)
     {
       PluginLog.Debug($"TranslateTalk: {nameToTranslate}: {textToTranslate}");
@@ -85,6 +96,9 @@ namespace Echoglossian
       });
     }
 
+    /// <summary>
+    /// Replaces the text in the Talk addon with translated text.
+    /// </summary>
     private unsafe void TranslateTalkReplacing()
     {
       PluginLog.Debug("TranslateTalkReplacing");
@@ -153,6 +167,11 @@ namespace Echoglossian
       }
     }
 
+    /// <summary>
+    /// Translates the talk message using ImGui, either swapping texts or not based on configuration.
+    /// </summary>
+    /// <param name="nameToTranslate"></param>
+    /// <param name="textToTranslate"></param>
     private unsafe void TranslateTalkUsingImGui(string nameToTranslate, string textToTranslate)
     {
       PluginLog.Debug($"TranslateTalkUsingImGui: {nameToTranslate}: {textToTranslate}");
@@ -167,6 +186,11 @@ namespace Echoglossian
       }
     }
 
+    /// <summary>
+    /// Translates the talk message using ImGui and swaps the texts in the overlay.
+    /// </summary>
+    /// <param name="nameToTranslate"></param>
+    /// <param name="textToTranslate"></param>
     private unsafe void TranslateTalkUsingImGuiAndSwapping(string nameToTranslate, string textToTranslate)
     {
       PluginLog.Debug($"TranslateTalkUsingImGuiAndSwapping: {nameToTranslate}: {textToTranslate}");
@@ -222,6 +246,11 @@ namespace Echoglossian
       });
     }
 
+    /// <summary>
+    /// Translates the talk message using ImGui without swapping the texts in the overlay.
+    /// </summary>
+    /// <param name="nameToTranslate"></param>
+    /// <param name="textToTranslate"></param>
     private unsafe void TranslateTalkUsingImGuiWithoutSwapping(string nameToTranslate, string textToTranslate)
     {
       PluginLog.Debug($"TranslateTalkUsingImGuiWithoutSwapping: {nameToTranslate}: {textToTranslate}");
@@ -278,6 +307,11 @@ namespace Echoglossian
       });
     }
 
+    /// <summary>
+    /// Handles the UI Talk events asynchronously, translating the talk messages as needed.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="args"></param>
     private unsafe void UiTalkAsyncHandler(AddonEvent type, AddonArgs args)
     {
       PluginLog.Debug($"UiTalkAsyncHandler: {type} {args.AddonName}");

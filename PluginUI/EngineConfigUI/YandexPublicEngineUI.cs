@@ -4,7 +4,6 @@
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
 
-
 /// <summary>
 /// Renders the configuration UI for the Yandex Public Translator (no custom prompts).
 /// </summary>

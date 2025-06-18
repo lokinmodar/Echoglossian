@@ -425,4 +425,58 @@
   <data name="Temperature" xml:space="preserve">
     <value>Temperatur</value>
   </data>
+  <data name="NoSettingsForEngine" xml:space="preserve">
+    <value>Ingen indstillinger kræves til denne motor</value>
+  </data>
+  <data name="SettingsForGeminiText" xml:space="preserve">
+    <value>Indstillinger for Gemini:</value>
+  </data>
+  <data name="SettingsForLibreTranslateText" xml:space="preserve">
+    <value>Indstillinger for LibreTranslate:</value>
+  </data>
+  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
+    <value>LibreTranslate API-slutpunkt</value>
+  </data>
+  <data name="SettingsForOpenLlamaText" xml:space="preserve">
+    <value>Indstillinger for OpenLlama:</value>
+  </data>
+  <data name="YandexCloudFolderId" xml:space="preserve">
+    <value>Mappe-id</value>
+  </data>
+  <data name="SettingsForYandexCloudText" xml:space="preserve">
+    <value>Indstillinger for YandexCloud:</value>
+  </data>
+  <data name="YandexCloudApiKey" xml:space="preserve">
+    <value>YandexCloud API-nøgle</value>
+  </data>
+  <data name="ShowInCutscenesLabel" xml:space="preserve">
+    <value>Vis i mellemsekvenser</value>
+  </data>
+  <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
+    <value>Kopier oversættelse til udklipsholder</value>
+  </data>
+  <data name="FontSizeLabel" xml:space="preserve">
+    <value>Skrifttypestørrelse:</value>
+  </data>
+  <data name="TranslateYesNoScreenLabel" xml:space="preserve">
+    <value>Oversæt Ja/Nej-skærm</value>
+  </data>
+  <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
+    <value>Oversæt CutSceneSelectString</value>
+  </data>
+  <data name="TranslateSelectStringLabel" xml:space="preserve">
+    <value>Oversæt SelectString</value>
+  </data>
+  <data name="TranslateSelectOkLabel" xml:space="preserve">
+    <value>Oversæt SelectOk</value>
+  </data>
+  <data name="GeminiAPIKey" xml:space="preserve">
+    <value>Gemini API-nøgle</value>
+  </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Indstillinger for Yandex public Translator</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Indstillinger for GTranslate oversætter</value>
+  </data>
 </root>

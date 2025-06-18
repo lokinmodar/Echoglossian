@@ -44,7 +44,6 @@ namespace Echoglossian.Translators
       return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
     }
 
-
     /// <summary>
     /// Translates the specified text from the source language to the target language asynchronously.
     /// </summary>

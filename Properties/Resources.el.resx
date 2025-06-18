@@ -453,4 +453,58 @@
   <data name="Temperature" xml:space="preserve">
     <value>Θερμοκρασία</value>
   </data>
+  <data name="NoSettingsForEngine" xml:space="preserve">
+    <value>Δεν απαιτούνται ρυθμίσεις για αυτόν τον κινητήρα</value>
+  </data>
+  <data name="SettingsForGeminiText" xml:space="preserve">
+    <value>Ρυθμίσεις για τους Διδύμους:</value>
+  </data>
+  <data name="SettingsForLibreTranslateText" xml:space="preserve">
+    <value>Ρυθμίσεις για το LibreTranslate:</value>
+  </data>
+  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
+    <value>Τελικό σημείο API LibreTranslate</value>
+  </data>
+  <data name="SettingsForOpenLlamaText" xml:space="preserve">
+    <value>Ρυθμίσεις για το OpenLlama:</value>
+  </data>
+  <data name="YandexCloudFolderId" xml:space="preserve">
+    <value>Αναγνωριστικό φακέλου</value>
+  </data>
+  <data name="SettingsForYandexCloudText" xml:space="preserve">
+    <value>Ρυθμίσεις για το YandexCloud:</value>
+  </data>
+  <data name="YandexCloudApiKey" xml:space="preserve">
+    <value>Κλειδί API YandexCloud</value>
+  </data>
+  <data name="ShowInCutscenesLabel" xml:space="preserve">
+    <value>Εμφάνιση σε cutscenes</value>
+  </data>
+  <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
+    <value>Αντιγραφή μετάφρασης στο πρόχειρο</value>
+  </data>
+  <data name="FontSizeLabel" xml:space="preserve">
+    <value>Μέγεθος γραμματοσειράς:</value>
+  </data>
+  <data name="TranslateYesNoScreenLabel" xml:space="preserve">
+    <value>Μετάφραση οθόνης Ναι/Όχι</value>
+  </data>
+  <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
+    <value>Μετάφραση του CutSceneSelectString</value>
+  </data>
+  <data name="TranslateSelectStringLabel" xml:space="preserve">
+    <value>Μετάφραση του SelectString</value>
+  </data>
+  <data name="TranslateSelectOkLabel" xml:space="preserve">
+    <value>Μετάφραση του SelectOk</value>
+  </data>
+  <data name="GeminiAPIKey" xml:space="preserve">
+    <value>Κλειδί API Gemini</value>
+  </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Ρυθμίσεις για το δημόσιο μεταφραστή Yandex</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Ρυθμίσεις για GTranslate μεταφραστής</value>
+  </data>
 </root>

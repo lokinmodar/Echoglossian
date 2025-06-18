@@ -3,16 +3,17 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-using Dalamud.Memory;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian
 {
   public partial class Echoglossian
   {
+    /*/// <summary>
+    /// Handles neutral addon events for the specified addon name and events to watch.
+    /// </summary>
+    /// <param name="addonName"></param>
+    /// <param name="eventsToWatch"></param>
     public void EgloNeutralAddonHandler(string addonName, string[] eventsToWatch)
     {
       if (string.IsNullOrEmpty(addonName) || eventsToWatch.Length <= 0)
@@ -71,6 +72,11 @@ namespace Echoglossian
       }
     }
 
+    /// <summary>
+    /// Grabs the addon event information based on the type and arguments provided.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="args"></param>
     private void GrabAddonEventInfo(AddonEvent type, AddonArgs args)
     {
       if (args == null)
@@ -108,6 +114,10 @@ namespace Echoglossian
       }
     }
 
+    /// <summary>
+    /// Handles the setup arguments for the specified addon.
+    /// </summary>
+    /// <param name="args"></param>
     private unsafe void HandleSetupArgs(AddonSetupArgs args)
     {
       PluginLog.Debug($"Addonargs in HandleSetupArgs: {args}");
@@ -369,6 +379,6 @@ namespace Echoglossian
       {
         PluginLog.Error($"Error in HandleReceiveEvent: {e}");
       }
-    }
+    }*/
   }
 }

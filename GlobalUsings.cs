@@ -33,8 +33,6 @@ global using Dalamud.Plugin.Services;
 global using Dalamud.Utility;
 global using Dalamud.Interface.Utility.Raii;
 
-
-
 global using Echoglossian;
 
 global using static Echoglossian.Echoglossian;
