@@ -87,8 +87,22 @@ Please provide only the translated text in your response, without any explanatio
           PromptType.Amazon => config.AmazonPrompt,
           PromptType.ChatGPT => config.ChatGptPrompt,
           PromptType.YandexCloud => config.YandexCloudPrompt,
+          PromptType.OpenLlama => config.OpenLlamaPrompt,
           _ => null,
         };
+    /// <summary>
+    /// Gets the prompt for the specified type, or returns the default prompt if it is not set or empty.
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static string GetPromptOrDefault(Config config, PromptType type)
+    {
+      var prompt = GetPrompt(config, type);
+      return string.IsNullOrWhiteSpace(prompt)
+        ? Echoglossian.DefaultPrompt
+        : prompt;
+    }
 
     /// <summary>
     /// Gets the prompt type for the specified engine index.
@@ -106,6 +120,7 @@ Please provide only the translated text in your response, without any explanatio
         6 => PromptType.Microsoft,
         7 => PromptType.Amazon,
         8 => PromptType.YandexCloud,
+        9 => PromptType.OpenLlama,
         _ => null,
       };
     }
@@ -127,6 +142,7 @@ Please provide only the translated text in your response, without any explanatio
         case PromptType.Amazon: config.AmazonPrompt = prompt; break;
         case PromptType.ChatGPT: config.ChatGptPrompt = prompt; break;
         case PromptType.YandexCloud: config.YandexCloudPrompt = prompt; break;
+        case PromptType.OpenLlama: config.OpenLlamaPrompt = prompt; break;
       }
     }
   }

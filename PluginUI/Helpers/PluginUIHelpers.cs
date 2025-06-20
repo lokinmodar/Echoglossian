@@ -8,6 +8,7 @@ namespace Echoglossian
     /// <summary>
     /// Draws the AI Translator prompt tab in the UI.
     /// </summary>
+    /// 
     public static void DrawPromptEditor(Config config, PromptType type, string defaultPrompt, string label)
     {
       ImGui.BeginGroup();
@@ -23,7 +24,7 @@ namespace Echoglossian
 
       if (string.IsNullOrWhiteSpace(state.EditedPrompt))
       {
-        state.EditedPrompt = GetPrompt(config, type) ?? defaultPrompt;
+        state.EditedPrompt = GetPromptOrDefault(config, type) ?? defaultPrompt;
       }
 
       ImGui.Spacing();

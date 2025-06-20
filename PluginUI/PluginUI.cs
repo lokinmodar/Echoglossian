@@ -17,6 +17,7 @@ public partial class Echoglossian
 {
   public bool SaveConfigValue = false;
   private List<string> languageList;
+  public static bool LangToRemoveDiacritics;
 
   private readonly List<string> enginesList = new()
     {
@@ -41,7 +42,7 @@ public partial class Echoglossian
     ImGui.BeginGroup();
     UINewFontHandler.GeneralFontHandle.Push();
 
-    var langToRemoveDiacritics = this.configuration.Lang is 24 or 25 or 44 or 60 or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
+    LangToRemoveDiacritics = this.configuration.Lang is 24 or 25 or 44 or 60 or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
 
     if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languageList.ToArray(), this.languageList.Count))
     {
@@ -127,27 +128,15 @@ public partial class Echoglossian
 
     if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.NoCloseWithMiddleMouseButton))
     {
-      if (ImGui.BeginTabItem(Resources.ConfigTab0Name))
+      if (ImGui.BeginTabItem(Resources.ConfigTabGeneralName))
       {
         this.SaveConfigValue |= GeneralTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 
-      if (ImGui.BeginTabItem(Resources.ConfigTab1Name))
+      if (ImGui.BeginTabItem(Resources.ConfigTab0Name))
       {
         this.SaveConfigValue |= OverlayTab.Draw(this.configuration);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab4Name))
-      {
-        this.SaveConfigValue |= JournalTab.Draw(this.configuration, langToRemoveDiacritics);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab6Name))
-      {
-        this.SaveConfigValue |= OtherSettingsTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 
@@ -163,12 +152,6 @@ public partial class Echoglossian
       if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
       {
         this.SaveConfigValue |= TroubleshootingTab.Draw(this.configuration);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab9Name))
-      {
-        this.SaveConfigValue |= MiscTab.Draw(this.configuration);
         ImGui.EndTabItem();
       }
 

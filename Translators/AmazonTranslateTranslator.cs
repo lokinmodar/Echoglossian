@@ -10,13 +10,13 @@ using Amazon.Translate.Model;
 
 namespace Echoglossian.Translators
 {
-  public class AwsTranslateTranslator : ITranslator
+  public class AmazonTranslateTranslator : ITranslator
   {
     private readonly IPluginLog pluginLog;
     private readonly Config config;
     private readonly AmazonTranslateClient translateClient;
 
-    public AwsTranslateTranslator(IPluginLog pluginLog, Config config)
+    public AmazonTranslateTranslator(IPluginLog pluginLog, Config config)
     {
       this.pluginLog = pluginLog;
       this.config = config;
@@ -49,12 +49,26 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Synchronously translates the given text from source language to target language using AWS Translate.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
     public string Translate(string text, string sourceLanguage, string targetLanguage)
     {
       this.pluginLog.Debug("AWS Translate sync translate requested.");
       return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
     }
 
+    /// <summary>
+    /// Asynchronously translates the given text from source language to target language using AWS Translate.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
     public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
     {
       if (string.IsNullOrWhiteSpace(text))

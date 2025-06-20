@@ -23,28 +23,33 @@ namespace Echoglossian.PluginUI.Helpers
 
       var allUnicodeRanges = UnicodeRanges.All;
 
-      Echoglossian.PluginLog.Debug($"SymbolsFontPath: ${Echoglossian.SymbolsFontFilePath}");
-      Echoglossian.PluginLog.Debug($"FontFilePath: ${Echoglossian.FontFilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont3FilePath: ${Echoglossian.ComplementaryFont3FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont4FilePath: ${Echoglossian.ComplementaryFont4FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont5FilePath: ${Echoglossian.ComplementaryFont5FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont6FilePath: ${Echoglossian.ComplementaryFont6FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont7FilePath: ${Echoglossian.ComplementaryFont7FilePath}");
-      Echoglossian.PluginLog.Debug($"SpecialFontFilePath: ${Echoglossian.SpecialFontFilePath}");
-      Echoglossian.PluginLog.Debug($"LangComboFontFilePath: ${Echoglossian.LangComboFontFilePath}");
-      Echoglossian.PluginLog.Debug($"DummyFontFilePath: ${Echoglossian.DummyFontFilePath}");
-      Echoglossian.PluginLog.Debug($"UndicodeRanges.All: ${UnicodeRanges.All.ToString()}");
+      Echoglossian.PluginLog.Debug($"SymbolsFontPath: {SymbolsFontFilePath}");
+      Echoglossian.PluginLog.Debug($"FontFilePath: {FontFilePath}");
+      Echoglossian.PluginLog.Debug($"ComplementaryFont3FilePath: {ComplementaryFont3FilePath}");
+      Echoglossian.PluginLog.Debug($"ComplementaryFont4FilePath: {ComplementaryFont4FilePath}");
+      Echoglossian.PluginLog.Debug($"ComplementaryFont5FilePath: {ComplementaryFont5FilePath}");
+      Echoglossian.PluginLog.Debug($"ComplementaryFont6FilePath: {ComplementaryFont6FilePath}");
+      Echoglossian.PluginLog.Debug($"ComplementaryFont7FilePath: {ComplementaryFont7FilePath}");
+      Echoglossian.PluginLog.Debug($"SpecialFontFilePath: {SpecialFontFilePath}");
+      Echoglossian.PluginLog.Debug($"LangComboFontFilePath: {Echoglossian.LangComboFontFilePath}");
+      Echoglossian.PluginLog.Debug($"DummyFontFilePath: {Echoglossian.DummyFontFilePath}");
+      Echoglossian.PluginLog.Debug($"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
 
       this.GeneralFontHandle = Echoglossian.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(
         e => e.OnPreBuild(tk =>
         {
+          PluginLog.Debug("Building font atlas for general use...");
+          PluginLog.Debug($"Font size: {this.configuration?.FontSize} px");
+          PluginLog.Debug($"Glyph ranges: {Echoglossian.LangComboItems.Length} items, {Echoglossian.CharsToAddToAll.Length} chars, {Echoglossian.ScriptCharList.Length} script chars, {Echoglossian.PuaCharCodes.Length} PUA codes, {Echoglossian.PuaChars.Length} PUA chars");
+
           var rangeBuilder = default(FluentGlyphRangeBuilder)
+            .With(Echoglossian.LangComboItems.AsSpan())
             .With(Echoglossian.CharsToAddToAll.AsSpan())
             .With(Echoglossian.ScriptCharList.AsSpan())
             .With(Echoglossian.PuaCharCodes.AsSpan())
             .With(Echoglossian.PuaChars.AsSpan())
-            .With(allUnicodeRanges.FirstCodePoint, allUnicodeRanges.FirstCodePoint + allUnicodeRanges.Length - 1)
-            .With(Echoglossian.LangComboItems.AsSpan());
+            .With(allUnicodeRanges.FirstCodePoint, allUnicodeRanges.FirstCodePoint + allUnicodeRanges.Length - 1);
+
 
           // more ranges here
           this.sfc = new SafeFontConfig
@@ -69,6 +74,12 @@ namespace Echoglossian.PluginUI.Helpers
       this.LanguageFontHandle = Echoglossian.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(
         e => e.OnPreBuild(tk =>
         {
+          PluginLog.Debug("Building font atlas for language-specific use...");
+          PluginLog.Debug($"Font size: {this.configuration?.FontSize} px");
+          PluginLog.Debug($"Glyph ranges: {Echoglossian.CharsToAddToAll.Length} chars, {Echoglossian.ScriptCharList.Length} script chars, {Echoglossian.PuaCharCodes.Length} PUA codes, {Echoglossian.PuaChars.Length} PUA chars");
+          PluginLog.Debug($"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
+          PluginLog.Debug($"Selected language: {Echoglossian.SelectedLanguage.LanguageName}");
+
           var rangeBuilder = default(FluentGlyphRangeBuilder)
             .With(Echoglossian.CharsToAddToAll.AsSpan())
             .With(Echoglossian.ScriptCharList.AsSpan())

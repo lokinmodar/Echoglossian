@@ -40,7 +40,7 @@ global using static Echoglossian.Echoglossian;
 global using Echoglossian.EFCoreSqlite;
 global using Echoglossian.EFCoreSqlite.Models;
 global using Echoglossian.LanguagesHandling;
-global using Echoglossian.NativeUI.Handlers;
+// global using Echoglossian.NativeUI.Handlers;
 global using Echoglossian.Properties;
 global using Echoglossian.Helpers;
 global using Echoglossian.PluginUI.Helpers;

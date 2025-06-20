@@ -14,6 +14,8 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
+    private readonly int delayBetweenVisibilityCheckForOverlay = 100;
+
     private unsafe void TranslateTalkSubtitle(string textToTranslate)
     {
       PluginLog.Debug("Translating Talk Subtitle: " + textToTranslate);

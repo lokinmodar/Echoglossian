@@ -17,6 +17,8 @@ public static class OverlayTab
         Resources.BattleTalkTabTitle,
         Resources.ToastTabTitle,
         Resources.SubtitleTabTitle,
+        Resources.ConfigTab4Name,
+        Resources.OtherUIElementsTabTitle,
   };
 
   /// <summary>
@@ -55,11 +57,17 @@ public static class OverlayTab
       case 3:
         changed |= DrawSubtitleOverlay(config);
         break;
+      case 4:
+        changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
+        break;
+      case 5:
+        changed |= OtherUIElementsSettingsTab.Draw(config);
+        break;
     }
 
     ImGui.EndChild();
 
-    if (ImGui.Button(Resources.Save))
+    if (changed)
     {
       FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
       SaveConfig(config);

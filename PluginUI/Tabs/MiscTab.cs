@@ -13,30 +13,21 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class MiscTab
 {
-  /// <summary>
-  /// Draws the miscellaneous settings UI.
-  /// </summary>
-  /// <param name="config">The plugin configuration.</param>
-  /// <returns>True if any value has changed, otherwise false.</returns>
-  public static bool Draw(Config config)
-  {
-    bool changed = false;
+	/// <summary>
+	/// Draws the miscellaneous settings UI.
+	/// </summary>
+	/// <param name="config">The plugin configuration.</param>
+	/// <returns>True if any value has changed, otherwise false.</returns>
+	public static bool Draw(Config config)
+	{
+		bool changed = false;
 
-    ImGui.Text(Resources.ConfigTab9Text);
+		if (changed)
+		{
+			FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+			SaveConfig(config);
+		}
 
-    if (ImGui.Checkbox(Resources.ConfigTab9CheckboxClipboardText, ref config.CopyTranslationToClipboard))
-    {
-      changed = true;
-    }
-
-    ImGui.TextWrapped(Resources.ConfigTab9CheckboxClipboardTooltipText);
-
-    if (ImGui.Button(Resources.Save))
-    {
-      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-      SaveConfig(config);
-    }
-
-    return changed;
-  }
+		return changed;
+	}
 }

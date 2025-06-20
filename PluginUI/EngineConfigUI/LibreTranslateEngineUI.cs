@@ -5,23 +5,23 @@
 namespace Echoglossian.PluginUI.EngineConfigUI;
 public static class LibreTranslateEngineUI
 {
-  public static bool Draw(Config config, PromptTemplateManager promptManager)
-  {
-    bool changed = false;
+	public static bool Draw(Config config, PromptTemplateManager promptManager)
+	{
+		bool changed = false;
 
-    ImGui.TextWrapped(Resources.SettingsForLibreTranslateText);
+		ImGui.TextWrapped(Resources.SettingsForLibreTranslateText);
 
-    bool isEndpointInvalid;
-    changed |= FieldValidationHelper.ValidatedInputText(Resources.LibreTranslateAPIEndpoint, ref config.LibreTranslateUrl, 300, out isEndpointInvalid);
+		bool isEndpointInvalid;
+		changed |= FieldValidationHelper.ValidatedInputText(Resources.LibreTranslateAPIEndpoint, ref config.LibreTranslateUrl, 300, out isEndpointInvalid);
 
-    PromptEditorUI.Draw(promptManager, PromptType.LibreTranslate, DefaultPrompt, TransEngines.LibreTranslate.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.LibreTranslate, DefaultPrompt, TransEngines.LibreTranslate.ToString());
 
-    if (ImGui.Button(Resources.Save))
-    {
-      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-      SaveConfig(config);
-    }
+		if (changed)
+		{
+			FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+			SaveConfig(config);
+		}
 
-    return changed;
-  }
+		return changed;
+	}
 }

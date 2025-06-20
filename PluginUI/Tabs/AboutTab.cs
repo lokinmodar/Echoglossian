@@ -17,11 +17,8 @@ public static class AboutTab
   /// <returns>True if any changes were made (always false here).</returns>
   public static bool Draw(Config config, nint logoHandle)
   {
-    if (!ImGui.BeginTabItem(Resources.ConfigTabAbout))
-    {
-      return false;
-    }
 
+    bool changed = false;
     if (ImGui.BeginTable("columns", 2))
     {
       ImGui.TableNextColumn();
@@ -40,7 +37,6 @@ public static class AboutTab
       ImGui.EndTable();
     }
 
-    ImGui.EndTabItem();
-    return false;
+    return changed;
   }
 }

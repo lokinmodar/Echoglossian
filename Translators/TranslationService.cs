@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using static Echoglossian.Echoglossian;
-
 namespace Echoglossian.Translators
 {
   /// <summary>
@@ -45,7 +43,7 @@ namespace Echoglossian.Translators
           this.translator = new GTranslateTranslator(pluginLog, config);
           break;
         case TransEngines.Amazon:
-          this.translator = new AwsTranslateTranslator(pluginLog, config);
+          this.translator = new AmazonTranslateTranslator(pluginLog, config);
           break;
         case TransEngines.Microsoft:
           this.translator = new MicrosoftTranslator(pluginLog, config);

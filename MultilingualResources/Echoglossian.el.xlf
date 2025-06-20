@@ -51,8 +51,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Αναδυόμενες ρυθμίσεις</target>
         </trans-unit>
         <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
-          <source>Journal settings</source>
+          <source>Journal</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ρυθμίσεις χρονικού</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
           <source>TalkSubtitle settings</source>
@@ -664,6 +665,14 @@
         <trans-unit id="SettingsForGTranslateText" translate="yes" xml:space="preserve">
           <source>Settings for GTranslate translator</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ρυθμίσεις για GTranslate μεταφραστής</target>
+        </trans-unit>
+        <trans-unit id="ConfigTabGeneralName" translate="yes" xml:space="preserve">
+          <source>General Settings</source>
+          <target state="new">General Settings</target>
+        </trans-unit>
+        <trans-unit id="OtherUIElementsTabTitle" translate="yes" xml:space="preserve">
+          <source>Other UI elements</source>
+          <target state="new">Other UI elements</target>
         </trans-unit>
       </group>
     </body>

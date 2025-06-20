@@ -5,7 +5,7 @@ namespace Echoglossian.PluginUI.Tabs;
 /// <summary>
 /// Renders additional settings for select strings, confirmations, and UI elements.
 /// </summary>
-public static class OtherSettingsTab
+public static class OtherUIElementsSettingsTab
 {
   public static bool Draw(Config config)
   {
@@ -16,7 +16,7 @@ public static class OtherSettingsTab
     changed |= ImGui.Checkbox(Resources.TranslateSelectStringLabel, ref config.TranslateSelectString);
     changed |= ImGui.Checkbox(Resources.TranslateSelectOkLabel, ref config.TranslateSelectOk);
 
-    if (ImGui.Button(Resources.Save))
+    if (changed)
     {
       FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
       SaveConfig(config);

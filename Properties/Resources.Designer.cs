@@ -269,7 +269,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Journal settings.
+        ///   Looks up a localized string similar to Journal.
         /// </summary>
         public static string ConfigTab4Name {
             get {
@@ -355,6 +355,15 @@ namespace Echoglossian.Properties {
         public static string ConfigTabAbout {
             get {
                 return ResourceManager.GetString("ConfigTabAbout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to General Settings.
+        /// </summary>
+        public static string ConfigTabGeneralName {
+            get {
+                return ResourceManager.GetString("ConfigTabGeneralName", resourceCulture);
             }
         }
         
@@ -754,6 +763,15 @@ namespace Echoglossian.Properties {
         public static string NoSettingsForEngine {
             get {
                 return ResourceManager.GetString("NoSettingsForEngine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other UI elements.
+        /// </summary>
+        public static string OtherUIElementsTabTitle {
+            get {
+                return ResourceManager.GetString("OtherUIElementsTabTitle", resourceCulture);
             }
         }
         

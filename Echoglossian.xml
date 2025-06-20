@@ -268,11 +268,21 @@
         <member name="F:Echoglossian.Config.OpenLlamaUrl">
             <summary>OpenLlama URL</summary>
         </member>
+        <member name="F:Echoglossian.Config.OpenLlamaModel">
+            <summary>OpenLlama model to use for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenLlamaTemperature">
+            <summary>OpenLlama temperature setting for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenLlamaPrompt">
+            <summary>Prompt used for OpenLlama translations.</summary>
+        </member>
         <member name="F:Echoglossian.Config.ForceShowTitle">
             <summary>Always show overlay title bar, even if name translation is off.</summary>
         </member>
         <member name="F:Echoglossian.Config.FontChangeTime">
             <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
+            [NonSerialized]
         </member>
         <member name="P:Echoglossian.Config.Version">
             <summary>Plugin configuration version number (used during migration).</summary>
@@ -492,6 +502,14 @@
             <param name="type"></param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.GetPromptOrDefault(Echoglossian.Config,Echoglossian.Echoglossian.PromptType)">
+            <summary>
+            Gets the prompt for the specified type, or returns the default prompt if it is not set or empty.
+            </summary>
+            <param name="config"></param>
+            <param name="type"></param>
+            <returns></returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.GetPromptTypeForEngine(System.Int32)">
             <summary>
             Gets the prompt type for the specified engine index.
@@ -511,6 +529,7 @@
             <summary>
             Draws the AI Translator prompt tab in the UI.
             </summary>
+            
         </member>
         <member name="M:Echoglossian.Echoglossian.LangIdentify(System.String)">
             <summary>
@@ -984,7 +1003,7 @@
             <param name="config">The plugin configuration.</param>
             <returns>True if any value has changed, otherwise false.</returns>
         </member>
-        <member name="T:Echoglossian.PluginUI.Tabs.OtherSettingsTab">
+        <member name="T:Echoglossian.PluginUI.Tabs.OtherUIElementsSettingsTab">
             <summary>
             Renders additional settings for select strings, confirmations, and UI elements.
             </summary>
@@ -1192,7 +1211,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab4Name">
             <summary>
-              Looks up a localized string similar to Journal settings.
+              Looks up a localized string similar to Journal.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigTab5Name">
@@ -1238,6 +1257,11 @@
         <member name="P:Echoglossian.Properties.Resources.ConfigTabAbout">
             <summary>
               Looks up a localized string similar to About Echoglossian.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigTabGeneralName">
+            <summary>
+              Looks up a localized string similar to General Settings.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ConfigWindowTitle">
@@ -1458,6 +1482,11 @@
         <member name="P:Echoglossian.Properties.Resources.NoSettingsForEngine">
             <summary>
               Looks up a localized string similar to No settings required for this engine.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OtherUIElementsTabTitle">
+            <summary>
+              Looks up a localized string similar to Other UI elements.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayAdjustmentOrientations">
@@ -1894,6 +1923,24 @@
             <summary>
               Looks up a localized string similar to Folder ID.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.Translate(System.String,System.String,System.String)">
+            <summary>
+            Synchronously translates the given text from source language to target language using AWS Translate.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+            Asynchronously translates the given text from source language to target language using AWS Translate.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
         </member>
         <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single)">
             <summary>

@@ -152,7 +152,7 @@
     <value>Toast settings</value>
   </data>
   <data name="ConfigTab4Name" xml:space="preserve">
-    <value>Journal settings</value>
+    <value>Journal</value>
   </data>
   <data name="ConfigTab5Name" xml:space="preserve">
     <value>TalkSubtitle settings</value>
@@ -612,5 +612,11 @@
   </data>
   <data name="SettingsForGTranslateText" xml:space="preserve">
     <value>Settings for GTranslate translator</value>
+  </data>
+  <data name="ConfigTabGeneralName" xml:space="preserve">
+    <value>General Settings</value>
+  </data>
+  <data name="OtherUIElementsTabTitle" xml:space="preserve">
+    <value>Other UI elements</value>
   </data>
 </root>

@@ -5,26 +5,26 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class JournalTab
 {
-  public static bool Draw(Config config, bool langToRemoveDiacritics)
-  {
-    bool changed = false;
+	public static bool Draw(Config config, bool langToRemoveDiacritics)
+	{
+		bool changed = false;
 
-    if (config.Translate)
-    {
-      changed |= ImGui.Checkbox(Resources.TranslateJournalToggle, ref config.TranslateJournal);
-    }
+		if (config.Translate)
+		{
+			changed |= ImGui.Checkbox(Resources.TranslateJournalToggle, ref config.TranslateJournal);
+		}
 
-    if (langToRemoveDiacritics)
-    {
-      changed |= ImGui.Checkbox(Resources.RemoveDiacriticsToggle, ref config.RemoveDiacriticsWhenUsingReplacementQuest);
-    }
+		if (langToRemoveDiacritics)
+		{
+			changed |= ImGui.Checkbox(Resources.RemoveDiacriticsToggle, ref config.RemoveDiacriticsWhenUsingReplacementQuest);
+		}
 
-    if (ImGui.Button(Resources.Save))
-    {
-      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-      SaveConfig(config);
-    }
+		if (changed)
+		{
+			FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+			SaveConfig(config);
+		}
 
-    return changed;
-  }
+		return changed;
+	}
 }

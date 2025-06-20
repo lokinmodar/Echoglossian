@@ -7,32 +7,32 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace Echoglossian
 {
-  public partial class Echoglossian
-  {
-    private readonly int delayBetweenVisibilityCheckForOverlay = 100;
-
-    private unsafe void TalkHandler(string addonName, int index)
+  /*  public partial class Echoglossian
     {
-      IntPtr talk = GameGuiInterface.GetAddonByName(addonName, index);
-      if (talk != IntPtr.Zero)
+      private readonly int delayBetweenVisibilityCheckForOverlay = 100;
+
+      private unsafe void TalkHandler(string addonName, int index)
       {
-        AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
-        while (talkMaster->IsVisible)
+        IntPtr talk = GameGuiInterface.GetAddonByName(addonName, index);
+        if (talk != IntPtr.Zero)
         {
-          this.talkDisplayTranslation = true;
-          this.talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
-          this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
-          this.talkTextPosition.X = talkMaster->RootNode->X;
-          this.talkTextPosition.Y = talkMaster->RootNode->Y;
+          AtkUnitBase* talkMaster = (AtkUnitBase*)talk;
+          while (talkMaster->IsVisible)
+          {
+            this.talkDisplayTranslation = true;
+            this.talkTextDimensions.X = talkMaster->RootNode->Width * talkMaster->Scale;
+            this.talkTextDimensions.Y = talkMaster->RootNode->Height * talkMaster->Scale;
+            this.talkTextPosition.X = talkMaster->RootNode->X;
+            this.talkTextPosition.Y = talkMaster->RootNode->Y;
 
-          Thread.Sleep(this.delayBetweenVisibilityCheckForOverlay);
-#if DEBUG
-          // PluginLog.Debug("Inside Talk Handler.");
-#endif
+            Thread.Sleep(this.delayBetweenVisibilityCheckForOverlay);
+  #if DEBUG
+            // PluginLog.Debug("Inside Talk Handler.");
+  #endif
+          }
+
+          this.talkDisplayTranslation = false;
         }
-
-        this.talkDisplayTranslation = false;
       }
-    }
-  }
+    }*/
 }

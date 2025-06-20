@@ -397,12 +397,24 @@ namespace Echoglossian
     [DefaultValue("https://api.openllama.org/v1/")]
     public string OpenLlamaUrl = "https://api.openllama.org/v1/";
 
+    /// <summary>OpenLlama model to use for translations.</summary>
+    [DefaultValue("open-llama-3-8b")]
+    public string OpenLlamaModel = "open-llama-3-8b";
+
+    /// <summary>OpenLlama temperature setting for translations.</summary>
+    [DefaultValue(0.1f)]
+    public float OpenLlamaTemperature = 0.1f;
+
+    /// <summary>Prompt used for OpenLlama translations.</summary>
+    [DefaultValue("")]
+    public string OpenLlamaPrompt = string.Empty;
+
     /// <summary>Always show overlay title bar, even if name translation is off.</summary>
     [DefaultValue(true)]
     public bool ForceShowTitle = true;
 
     /// <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
-    [NonSerialized]
+    /// [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 
     /// <summary>Plugin configuration version number (used during migration).</summary>
