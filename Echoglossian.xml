@@ -315,9 +315,13 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.ResetSettings(Echoglossian.Config,System.Action)">
             <summary>
-            Resets the plugin settings to their default values dynamically,
-            excluding metadata like PluginVersion and FontChangeTime.
+            Fully resets the plugin configuration to its default values,
+            including all fields and properties. Prompts are explicitly assigned
+            from <see cref="F:Echoglossian.Echoglossian.DefaultPrompt" />. Metadata like
+            <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
             </summary>
+            <param name="config">The config instance to reset.</param>
+            <param name="saveCallback">A callback that saves the config.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.FixConfig">
             <summary>
@@ -935,6 +939,14 @@
             Manages prompt validation, retrieval, and dynamic substitution for translator prompts.
             </summary>
         </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.ResetConfigButtonHelper.Draw(Echoglossian.Config,System.Action,System.String)">
+            <summary>
+            Draws a button that resets the plugin config to default values, with a confirmation popup.
+            </summary>
+            <param name="config">The plugin config instance to reset.</param>
+            <param name="saveCallback">Callback to persist the config after reset.</param>
+            <param name="buttonLabel">Optional label for the button (defaults to "Reset Settings to Default").</param>
+        </member>
         <member name="T:Echoglossian.PluginUI.Helpers.UIWarningHelpers">
             <summary>
             Utility methods for drawing UI warnings.
@@ -1124,6 +1136,11 @@
               Looks up a localized string similar to API Key is empty or invalid. Microsoft translation will not be available..
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.AreYouSureYouWantToResetAllSettingsToDefault">
+            <summary>
+              Looks up a localized string similar to Are you sure you want to reset all settings to default?.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.AssetsCheckingPopupMsg">
             <summary>
               Looks up a localized string similar to Checking Plugin assets!.
@@ -1162,6 +1179,11 @@
         <member name="P:Echoglossian.Properties.Resources.BattleTalkTabTitle">
             <summary>
               Looks up a localized string similar to BattleTalk.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Cancel">
+            <summary>
+              Looks up a localized string similar to Cancel.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ChatGptApiKey">
@@ -1644,6 +1666,11 @@
               Looks up a localized string similar to You can reset Echoglossian&apos;s configuration to default using the button below:.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ResetSettingsToDefault">
+            <summary>
+              Looks up a localized string similar to Reset ALL Echoglossian Settings to Default.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.ResetToDefault">
             <summary>
               Looks up a localized string similar to Reset to Default.
@@ -1922,6 +1949,11 @@
         <member name="P:Echoglossian.Properties.Resources.YandexCloudFolderId">
             <summary>
               Looks up a localized string similar to Folder ID.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.YesReset">
+            <summary>
+              Looks up a localized string similar to Yes, reset.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.Translate(System.String,System.String,System.String)">

@@ -479,4 +479,10 @@
   <data name="SettingsForGTranslateText" xml:space="preserve">
     <value>Indstillinger for GTranslate oversætter</value>
   </data>
+  <data name="ConfigTabGeneralName" xml:space="preserve">
+    <value>Generelle indstillinger</value>
+  </data>
+  <data name="OtherUIElementsTabTitle" xml:space="preserve">
+    <value>Andre elementer i brugergrænsefladen</value>
+  </data>
 </root>

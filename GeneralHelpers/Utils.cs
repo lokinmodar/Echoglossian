@@ -44,23 +44,22 @@ namespace Echoglossian
     }
 
     /// <summary>
-    /// Resets the plugin settings to their default values dynamically,
-    /// excluding metadata like PluginVersion and FontChangeTime.
+    /// Fully resets the plugin configuration to its default values,
+    /// including all fields and properties. Prompts are explicitly assigned
+    /// from <see cref="Echoglossian.DefaultPrompt" />. Metadata like
+    /// <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
     /// </summary>
+    /// <param name="config">The config instance to reset.</param>
+    /// <param name="saveCallback">A callback that saves the config.</param>
     public static void ResetSettings(Config config, Action saveCallback)
     {
       var defaultConfig = new Config();
       var configType = typeof(Config);
 
-      // Reset all fields except NonSerialized and excluded metadata
-      foreach (var field in configType.GetFields())
+      // Reset all fields
+      foreach (var field in configType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
       {
         if (Attribute.IsDefined(field, typeof(NonSerializedAttribute)))
-        {
-          continue;
-        }
-
-        if (field.Name is nameof(Config.PluginVersion) or nameof(Config.Version))
         {
           continue;
         }
@@ -68,15 +67,10 @@ namespace Echoglossian
         field.SetValue(config, field.GetValue(defaultConfig));
       }
 
-      // Reset all settable properties except excluded metadata
-      foreach (var prop in configType.GetProperties())
+      // Reset all properties
+      foreach (var prop in configType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
       {
-        if (!prop.CanWrite || !prop.CanRead)
-        {
-          continue;
-        }
-
-        if (prop.Name is nameof(Config.PluginVersion) or nameof(Config.Version))
+        if (!prop.CanRead || !prop.CanWrite)
         {
           continue;
         }
@@ -84,13 +78,34 @@ namespace Echoglossian
         prop.SetValue(config, prop.GetValue(defaultConfig));
       }
 
-      // Manually set metadata values
-      config.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+      // Manually assign prompts with fallback to DefaultPrompt
+      void SetPromptIfEmpty(string fieldName)
+      {
+        var field = configType.GetField(fieldName);
+        if (field is { } f && string.IsNullOrWhiteSpace(f.GetValue(config) as string))
+        {
+          f.SetValue(config, Echoglossian.DefaultPrompt);
+        }
+      }
+
+      SetPromptIfEmpty(nameof(Config.ChatGptPrompt));
+      SetPromptIfEmpty(nameof(Config.DeepSeekPrompt));
+      SetPromptIfEmpty(nameof(Config.GeminiPrompt));
+      SetPromptIfEmpty(nameof(Config.OpenRouterPrompt));
+      SetPromptIfEmpty(nameof(Config.MicrosoftTranslatorPrompt));
+      SetPromptIfEmpty(nameof(Config.AmazonPrompt));
+      SetPromptIfEmpty(nameof(Config.YandexCloudPrompt));
+      SetPromptIfEmpty(nameof(Config.OpenLlamaPrompt));
+
+      // Restore runtime-mutable metadata
+      config.FontChangeTime = DateTime.Now.Ticks;
+      config.PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown";
       config.Version = 5;
 
-      // Call the provided save callback to persist
+      // Persist config
       saveCallback?.Invoke();
 
+      // Show notification
       var settingsResetNotification = new Notification
       {
         Content = Resources.SettingsReset,

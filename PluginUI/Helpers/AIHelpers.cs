@@ -90,6 +90,7 @@ Please provide only the translated text in your response, without any explanatio
           PromptType.OpenLlama => config.OpenLlamaPrompt,
           _ => null,
         };
+
     /// <summary>
     /// Gets the prompt for the specified type, or returns the default prompt if it is not set or empty.
     /// </summary>

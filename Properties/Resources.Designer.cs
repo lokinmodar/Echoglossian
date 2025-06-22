@@ -115,6 +115,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to reset all settings to default?.
+        /// </summary>
+        public static string AreYouSureYouWantToResetAllSettingsToDefault {
+            get {
+                return ResourceManager.GetString("AreYouSureYouWantToResetAllSettingsToDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checking Plugin assets!.
         /// </summary>
         public static string AssetsCheckingPopupMsg {
@@ -183,6 +192,15 @@ namespace Echoglossian.Properties {
         public static string BattleTalkTabTitle {
             get {
                 return ResourceManager.GetString("BattleTalkTabTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string Cancel {
+            get {
+                return ResourceManager.GetString("Cancel", resourceCulture);
             }
         }
         
@@ -1057,6 +1075,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset ALL Echoglossian Settings to Default.
+        /// </summary>
+        public static string ResetSettingsToDefault {
+            get {
+                return ResourceManager.GetString("ResetSettingsToDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reset to Default.
         /// </summary>
         public static string ResetToDefault {
@@ -1557,6 +1584,15 @@ namespace Echoglossian.Properties {
         public static string YandexCloudFolderId {
             get {
                 return ResourceManager.GetString("YandexCloudFolderId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yes, reset.
+        /// </summary>
+        public static string YesReset {
+            get {
+                return ResourceManager.GetString("YesReset", resourceCulture);
             }
         }
     }

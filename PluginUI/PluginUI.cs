@@ -18,12 +18,23 @@ public partial class Echoglossian
   public bool SaveConfigValue = false;
   private List<string> languageList;
   public static bool LangToRemoveDiacritics;
+  private bool showResetPopup = false;
 
   private readonly List<string> enginesList = new()
     {
-        "Google", "DeepL", "ChatGPT", "YandexCloud", "GTranslate",
-        "DeepSeek", "OpenLlama", "LibreTranslate", "Microsoft",
-        "Amazon", "Gemini", "YandexPublic",
+        "Google",
+        "DeepL",
+        "ChatGPT",
+        "YandexCloud",
+        "GTranslate",
+        "DeepSeek",
+        "OpenLlama",
+        "LibreTranslate",
+        "Microsoft",
+        "Amazon",
+        "Gemini",
+        "YandexPublic",
+        "OpenRouter",
     };
 
   private void EchoglossianConfigUi()

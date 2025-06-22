@@ -669,11 +669,27 @@
         </trans-unit>
         <trans-unit id="ConfigTabGeneralName" translate="yes" xml:space="preserve">
           <source>General Settings</source>
-          <target state="new">General Settings</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Generelle indstillinger</target>
         </trans-unit>
         <trans-unit id="OtherUIElementsTabTitle" translate="yes" xml:space="preserve">
           <source>Other UI elements</source>
-          <target state="new">Other UI elements</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Andre elementer i brugergrænsefladen</target>
+        </trans-unit>
+        <trans-unit id="AreYouSureYouWantToResetAllSettingsToDefault" translate="yes" xml:space="preserve">
+          <source>Are you sure you want to reset all settings to default?</source>
+          <target state="new">Are you sure you want to reset all settings to default?</target>
+        </trans-unit>
+        <trans-unit id="YesReset" translate="yes" xml:space="preserve">
+          <source>Yes, reset</source>
+          <target state="new">Yes, reset</target>
+        </trans-unit>
+        <trans-unit id="ResetSettingsToDefault" translate="yes" xml:space="preserve">
+          <source>Reset ALL Echoglossian Settings to Default</source>
+          <target state="new">Reset ALL Echoglossian Settings to Default</target>
+        </trans-unit>
+        <trans-unit id="Cancel" translate="yes" xml:space="preserve">
+          <source>Cancel</source>
+          <target state="new">Cancel</target>
         </trans-unit>
       </group>
     </body>

@@ -507,4 +507,10 @@
   <data name="SettingsForGTranslateText" xml:space="preserve">
     <value>Impostazioni per il traduttore GTranslate</value>
   </data>
+  <data name="ConfigTabGeneralName" xml:space="preserve">
+    <value>Impostazioni generali</value>
+  </data>
+  <data name="OtherUIElementsTabTitle" xml:space="preserve">
+    <value>Altri elementi dell'interfaccia utente</value>
+  </data>
 </root>
