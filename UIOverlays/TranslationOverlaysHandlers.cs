@@ -292,7 +292,6 @@ namespace Echoglossian
       ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
       if (this.talkTranslationSemaphore.Wait(0))
       {
-
         ImGui.TextWrapped(this.currentTalkTranslation);
 
         this.talkTranslationSemaphore.Release();
@@ -320,7 +319,6 @@ namespace Echoglossian
 
     private void DrawTranslatedTalkSubtitleWindow()
     {
-
       PluginLog.Debug("Using TalkSubtitle Overlay - Inside DrawTranslatedTalkSubtitleWindow method!");
 
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
@@ -436,7 +434,6 @@ namespace Echoglossian
 
     private void DrawTranslatedErrorToastWindow()
     {
-
       PluginLog.Debug("Using Toast Overlay - inside Draw Error toast Overlay");
 
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(

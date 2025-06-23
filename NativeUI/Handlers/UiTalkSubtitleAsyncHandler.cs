@@ -36,7 +36,7 @@ namespace Echoglossian
             string textTranslation = this.Translate(textToTranslate);
 
             TalkSubtitleMessage translatedTalkSubtitleData = new TalkSubtitleMessage(
-              textToTranslate, ClientStateInterface.ClientLanguage.Humanize(), textTranslation, langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+              textToTranslate, ClientStateInterface.ClientLanguage.Humanize(), textTranslation, LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
 
             string result = InsertTalkSubtitleData(translatedTalkSubtitleData);
             PluginLog.Debug("TalkSubtitle Insert Result: " + result);

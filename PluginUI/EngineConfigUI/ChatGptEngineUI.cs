@@ -33,7 +33,7 @@ public static class ChatGPTEngineUI
 			changed = true;
 		}
 
-		PromptEditorUI.Draw(promptManager, PromptType.ChatGPT, DefaultPrompt, TransEngines.ChatGPT.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.ChatGPT, PromptTemplateManager.DefaultPrompt, TransEngines.ChatGPT.ToString());
 
 		if (changed)
 		{

@@ -23,7 +23,7 @@ namespace Echoglossian
     private static string LangIdentify(string message)
     {
       // Sanitizer sanitizer = new(ClientLanguage);
-      string sanitizedString = sanitizer.Sanitize(message);
+      string sanitizedString = Sanitizer.Sanitize(message);
 
 #if DEBUG
       PluginLog.Debug($"Message in Lang Method: {sanitizedString}");
@@ -45,7 +45,7 @@ namespace Echoglossian
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
     private string Translate(string text)
     {
-      return translationService.Translate(text, ClientStateInterface.ClientLanguage.Humanize(), langDict[languageInt].Code);
+      return TranslationService.Translate(text, ClientStateInterface.ClientLanguage.Humanize(), LangDict[LanguageInt].Code);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ namespace Echoglossian
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
     private Task<string> TranslateAsync(string text)
     {
-      return translationService.TranslateAsync(text, ClientStateInterface.ClientLanguage.Humanize(), langDict[languageInt].Code);
+      return TranslationService.TranslateAsync(text, ClientStateInterface.ClientLanguage.Humanize(), LangDict[LanguageInt].Code);
     }
   }
 }

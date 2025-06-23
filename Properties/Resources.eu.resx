@@ -513,4 +513,16 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Erabiltzailearen interfazearen beste elementu batzuk</value>
   </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Ziur al zaude konfigurazio guztiak aurrez zehaztutako balioetara itzuli nahi dituzula?</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Bai, berriro hastea</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Konfigurazio ekoglosiarrak aurrez zehaztutako balioetara berrezartzea</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Ezeztatu</value>
+  </data>
 </root>

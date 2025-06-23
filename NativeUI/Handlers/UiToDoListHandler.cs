@@ -158,7 +158,7 @@ namespace Echoglossian
 
           // because sometimes the quest name translation is the same as the original name but the objectives are not
           var questWithObjectives = quest.Text + string.Join<ToDoItem>(",", objectives);
-          if (this.translatedQuestNames.ContainsKey(sanitizer.Sanitize(questWithObjectives)))
+          if (this.translatedQuestNames.ContainsKey(Sanitizer.Sanitize(questWithObjectives)))
           {
             continue;
           }
@@ -245,7 +245,7 @@ namespace Echoglossian
             translatedNameText,
             string.Empty,
             string.Empty,
-            langDict[languageInt].Code,
+            LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             DateTime.Now,
             DateTime.Now);

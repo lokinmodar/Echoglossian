@@ -8,12 +8,12 @@ namespace Echoglossian
   public partial class Echoglossian
   {
     // Overlays
-    private readonly TranslationOverlay TalkOverlay = new();
-    private readonly TranslationOverlay BattleTalkOverlay = new();
-    private readonly TranslationOverlay TalkSubtitleOverlay = new();
-    private readonly TranslationOverlay ToastOverlay = new();
-    private readonly TranslationOverlay ErrorToastOverlay = new();
-    private readonly TranslationOverlay ChatBubbleOverlay = new();
+    private readonly TranslationOverlay talkOverlay = new();
+    private readonly TranslationOverlay battleTalkOverlay = new();
+    private readonly TranslationOverlay talkSubtitleOverlay = new();
+    private readonly TranslationOverlay toastOverlay = new();
+    private readonly TranslationOverlay errorToastOverlay = new();
+    private readonly TranslationOverlay chatBubbleOverlay = new();
 
     // List of registered overlays
     private readonly List<OverlayRegistration> registeredOverlays = new();
@@ -26,31 +26,26 @@ namespace Echoglossian
       PluginLog.Debug("Registering overlays...");
 
       this.registeredOverlays.Add(new OverlayRegistration(
-          this.TalkOverlay,
-          TranslationWindowConfig.FromConfigForTalk(this.configuration)
-      ));
+          this.talkOverlay,
+          TranslationWindowConfig.FromConfigForTalk(this.configuration)));
 
       this.registeredOverlays.Add(new OverlayRegistration(
-          this.BattleTalkOverlay,
-          TranslationWindowConfig.FromConfigForBattleTalk(this.configuration)
-      ));
+          this.battleTalkOverlay,
+          TranslationWindowConfig.FromConfigForBattleTalk(this.configuration)));
 
-      this.registeredOverlays.Add(new OverlayRegistration(this.TalkSubtitleOverlay, TranslationWindowConfig.FromConfigTalkSubtitle(this.configuration)));
-
-      this.registeredOverlays.Add(new OverlayRegistration(
-          this.ToastOverlay,
-          TranslationWindowConfig.FromConfigForToast(this.configuration)
-      ));
+      this.registeredOverlays.Add(new OverlayRegistration(this.talkSubtitleOverlay, TranslationWindowConfig.FromConfigTalkSubtitle(this.configuration)));
 
       this.registeredOverlays.Add(new OverlayRegistration(
-          this.ErrorToastOverlay,
-          TranslationWindowConfig.FromConfigForErrorToast(this.configuration)
-      ));
+          this.toastOverlay,
+          TranslationWindowConfig.FromConfigForToast(this.configuration)));
 
       this.registeredOverlays.Add(new OverlayRegistration(
-          this.ChatBubbleOverlay,
-          TranslationWindowConfig.FromConfigForChatBubble(this.configuration)
-      ));
+          this.errorToastOverlay,
+          TranslationWindowConfig.FromConfigForErrorToast(this.configuration)));
+
+      this.registeredOverlays.Add(new OverlayRegistration(
+          this.chatBubbleOverlay,
+          TranslationWindowConfig.FromConfigForChatBubble(this.configuration)));
 
       PluginLog.Debug($"Overlays registered: {this.registeredOverlays.Count} ");
     }

@@ -12,8 +12,7 @@ internal record TranslationWindowConfig(
     Vector4 TextColor,
     Vector2 PosCorrection,
     bool ForceShowTitle = false,
-    bool NoBackground = false
-)
+    bool NoBackground = false)
 {
   /// <summary>
   /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for talk translations.
@@ -28,8 +27,7 @@ internal record TranslationWindowConfig(
         HeightMultiplier: config.ImGuiTalkWindowHeightMult,
         TextColor: new Vector4(config.OverlayTalkTextColor.X, config.OverlayTalkTextColor.Y, config.OverlayTalkTextColor.Z, 1.0f),
         PosCorrection: config.ImGuiWindowPosCorrection,
-        ForceShowTitle: config.ForceShowTitle
-    );
+        ForceShowTitle: config.ForceShowTitle);
   }
 
   /// <summary>
@@ -45,8 +43,7 @@ internal record TranslationWindowConfig(
         HeightMultiplier: config.ImGuiBattleTalkWindowHeightMult,
         TextColor: new Vector4(config.OverlayBattleTalkTextColor.X, config.OverlayBattleTalkTextColor.Y, config.OverlayBattleTalkTextColor.Z, 1.0f),
         PosCorrection: config.ImGuiBattleTalkWindowPosCorrection,
-        ForceShowTitle: config.ForceShowTitle
-    );
+        ForceShowTitle: config.ForceShowTitle);
   }
 
   /// <summary>
@@ -62,8 +59,7 @@ internal record TranslationWindowConfig(
         HeightMultiplier: config.ImGuiTalkSubtitleWindowHeightMult,
         TextColor: new Vector4(config.OverlayTalkSubtitleTextColor.X, config.OverlayTalkSubtitleTextColor.Y, config.OverlayTalkSubtitleTextColor.Z, 1.0f),
         PosCorrection: config.ImGuiWindowPosCorrection,
-        ForceShowTitle: config.ForceShowTitle
-    );
+        ForceShowTitle: config.ForceShowTitle);
   }
 
   /// <summary>
@@ -79,8 +75,7 @@ internal record TranslationWindowConfig(
         HeightMultiplier: 2.0f,
         TextColor: new Vector4(config.OverlayToastTextColor.X, config.OverlayToastTextColor.Y, config.OverlayToastTextColor.Z, 1.0f),
         PosCorrection: config.ImGuiToastWindowPosCorrection,
-        ForceShowTitle: config.ForceShowTitle
-    );
+        ForceShowTitle: config.ForceShowTitle);
   }
 
   /// <summary>
@@ -97,8 +92,7 @@ internal record TranslationWindowConfig(
         TextColor: new Vector4(config.OverlayToastTextColor.X, config.OverlayToastTextColor.Y, config.OverlayToastTextColor.Z, 1.0f),
         PosCorrection: config.ImGuiToastWindowPosCorrection,
         ForceShowTitle: config.ForceShowTitle,
-        NoBackground: true
-    );
+        NoBackground: true);
   }
 
   /// <summary>
@@ -114,7 +108,6 @@ internal record TranslationWindowConfig(
         HeightMultiplier: 1.5f,
         TextColor: new Vector4(1f, 1f, 1f, 1f),
         PosCorrection: Vector2.Zero,
-        ForceShowTitle: config.ForceShowTitle
-    );
+        ForceShowTitle: config.ForceShowTitle);
   }
 }

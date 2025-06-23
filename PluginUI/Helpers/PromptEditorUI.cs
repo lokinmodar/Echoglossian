@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+
 using Echoglossian.Properties;
 using ImGuiNET;
 
@@ -22,8 +23,16 @@ public static class PromptEditorUI
 
     if (string.IsNullOrWhiteSpace(state.EditedPrompt))
     {
-      state.EditedPrompt = templateManager.GetPrompt(type) ?? defaultPrompt;
+      state.EditedPrompt = templateManager.GetPromptOrDefault(type) ?? defaultPrompt;
     }
+
+    ImGui.Text(Resources.AITranslatorPromptCustomization);
+    ImGui.Separator();
+    ImGui.TextWrapped(Resources.CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired);
+
+    ImGui.BulletText("{text}");
+    ImGui.BulletText("{sourceLanguage}");
+    ImGui.BulletText("{targetLanguage}");
 
     ImGui.Columns(2, null, true);
     ImGui.TextWrapped(Resources.Editor);
@@ -72,8 +81,7 @@ public static class PromptEditorUI
       state.EditedPrompt,
       state.PreviewSampleText,
       state.PreviewSourceLang,
-      state.PreviewTargetLang
-    );
+      state.PreviewTargetLang);
 
     ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 1f, 0.5f, 1f));
     ImGui.InputTextMultiline($"##{Resources.Preview}_{label}", ref state.PreviewResult, 10000, new Vector2(-1, 200), ImGuiInputTextFlags.ReadOnly);

@@ -179,6 +179,5 @@ namespace Echoglossian.Translators
         this.pluginLog.Error($"Failed to track API usage: {ex}");
       }
     }
-
   }
 }

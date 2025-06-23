@@ -14,7 +14,7 @@ public static class LibreTranslateEngineUI
 		bool isEndpointInvalid;
 		changed |= FieldValidationHelper.ValidatedInputText(Resources.LibreTranslateAPIEndpoint, ref config.LibreTranslateUrl, 300, out isEndpointInvalid);
 
-		PromptEditorUI.Draw(promptManager, PromptType.LibreTranslate, DefaultPrompt, TransEngines.LibreTranslate.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.LibreTranslate, PromptTemplateManager.DefaultPrompt, TransEngines.LibreTranslate.ToString());
 
 		if (changed)
 		{

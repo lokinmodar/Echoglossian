@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Numerics;
+
 using Dalamud.Configuration;
 
 namespace Echoglossian
@@ -389,11 +390,11 @@ namespace Echoglossian
     [DefaultValue("")]
     public string? OpenRouterPrompt = string.Empty;
 
-    /// <summary>LibreTranslate URL</summary>
+    /// <summary>LibreTranslate URL.</summary>
     [DefaultValue("https://libretranslate.de/")]
     public string LibreTranslateUrl = "https://libretranslate.de/";
 
-    ///<summary>OpenLlama URL</summary>
+    /// <summary>OpenLlama URL.</summary>
     [DefaultValue("https://api.openllama.org/v1/")]
     public string OpenLlamaUrl = "https://api.openllama.org/v1/";
 

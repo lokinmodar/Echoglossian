@@ -243,8 +243,7 @@
         </trans-unit>
         <trans-unit id="ConfigTab4Name" translate="yes" xml:space="preserve">
           <source>Journal</source>
-          <target state="needs-review-translation" state-qualifier="tm-suggestion">Configurações de diário</target>
-          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+          <target state="translated">Diário</target>
         </trans-unit>
         <trans-unit id="ConfigTab5Name" translate="yes" xml:space="preserve">
           <source>TalkSubtitle settings</source>
@@ -363,8 +362,9 @@
           <target state="translated">Arquivos adicionais do plugin baixados!</target>
         </trans-unit>
         <trans-unit id="PluginAssetsNotDownloadedText" translate="yes" xml:space="preserve">
-          <source>If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them.</source>
-          <target state="translated">Se você vir texto distorcido ou caracteres inválidos na janela de tradução\né um indicativo de que algumas fontes de ativos de plug-in podem estar ausentes ou corrompidas.\n\n Clicar no botão abaixo aciona uma verificação de aquivos e os baixa novamente.</target>
+          <source>If you see garbled text or invalid characters in the translation window it is an indicative that some plugin asset fonts may be missing or corrupted. Clicking the button below triggers an asset check and re-downloads them.</source>
+          <target state="needs-review-translation">Se você vir texto distorcido ou caracteres inválidos na janela de tradução\né um indicativo de que algumas fontes de ativos de plug-in podem estar ausentes ou corrompidas.\n\n Clicar no botão abaixo aciona uma verificação de aquivos e os baixa novamente.</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="DownloadPluginAssetsButtonText" translate="yes" xml:space="preserve">
           <source>Force re-download plugin assets</source>
@@ -452,243 +452,243 @@
         </trans-unit>
         <trans-unit id="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
           <source>[DeepSeek translation unavailable. Please check your API key.]</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Tradução do DeepSeek indisponível. Por favor, verifique sua chave de API.]</target>
+          <target state="translated" state-qualifier="mt-suggestion">[Tradução do DeepSeek indisponível. Por favor, verifique sua chave de API.]</target>
         </trans-unit>
         <trans-unit id="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
           <source>API Key is empty or invalid. DeepSeek translation will not be available.</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">A chave de API está vazia ou é inválida. A tradução do DeepSeek não estará disponível.</target>
+          <target state="translated" state-qualifier="mt-suggestion">A chave de API está vazia ou é inválida. A tradução do DeepSeek não estará disponível.</target>
         </trans-unit>
         <trans-unit id="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
           <source>API Key is empty or invalid. Gemini translation will not be available.</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">A chave de API está vazia ou é inválida. A tradução do Gemini não estará disponível.</target>
+          <target state="translated" state-qualifier="mt-suggestion">A chave de API está vazia ou é inválida. A tradução do Gemini não estará disponível.</target>
         </trans-unit>
         <trans-unit id="GeminiTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
           <source>[Gemini translation unavailable. Please check your API key.]</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Tradução em Gêmeos indisponível. Por favor, verifique sua chave de API.]</target>
+          <target state="translated" state-qualifier="mt-suggestion">[Tradução em Gêmeos indisponível. Por favor, verifique sua chave de API.]</target>
         </trans-unit>
         <trans-unit id="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
           <source>API Key is empty or invalid. Microsoft translation will not be available.</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">A chave de API está vazia ou é inválida. A tradução da Microsoft não estará disponível.</target>
+          <target state="translated" state-qualifier="mt-suggestion">A chave de API está vazia ou é inválida. A tradução da Microsoft não estará disponível.</target>
         </trans-unit>
         <trans-unit id="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
           <source>[Microsoft translation unavailable. Please check your API key.]</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">[Tradução da Microsoft indisponível. Por favor, verifique sua chave de API.]</target>
+          <target state="translated" state-qualifier="mt-suggestion">[Tradução da Microsoft indisponível. Por favor, verifique sua chave de API.]</target>
         </trans-unit>
         <trans-unit id="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" translate="yes" xml:space="preserve">
           <source>Customize the prompt used for translation. All of the following placeholders are required:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Personalize o prompt usado para tradução. Todos os placeholders a seguir são necessários:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Personalize o prompt usado para tradução. Todos os placeholders a seguir são necessários:</target>
         </trans-unit>
         <trans-unit id="AITranslatorPromptCustomization" translate="yes" xml:space="preserve">
           <source>AI Translator Prompt Customization</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Personalização de prompt do AI Translator</target>
+          <target state="translated" state-qualifier="mt-suggestion">Personalização de prompt do AI Translator</target>
         </trans-unit>
         <trans-unit id="MissingOneOrMoreRequiredPlaceholders" translate="yes" xml:space="preserve">
           <source>⚠ Missing one or more required placeholders!</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">⚠ Faltando um ou mais espaços reservados necessários!</target>
+          <target state="translated" state-qualifier="mt-suggestion">⚠ Faltando um ou mais espaços reservados necessários!</target>
         </trans-unit>
         <trans-unit id="ResetToDefault" translate="yes" xml:space="preserve">
           <source>Reset to Default</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Redefinir para o padrão</target>
+          <target state="translated" state-qualifier="mt-suggestion">Redefinir para o padrão</target>
         </trans-unit>
         <trans-unit id="LivePreviewWithSampleInput" translate="yes" xml:space="preserve">
           <source>Live preview with sample input:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Visualização ao vivo com entrada de amostra:</target>
+          <target state="translated">Visualização em tempo real com amostra:</target>
         </trans-unit>
         <trans-unit id="CopyPreview" translate="yes" xml:space="preserve">
           <source>Copy Preview</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Copiar visualização</target>
+          <target state="translated">Copiar preview</target>
         </trans-unit>
         <trans-unit id="Save" translate="yes" xml:space="preserve">
           <source>Save</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Salvar</target>
+          <target state="translated" state-qualifier="mt-suggestion">Salvar</target>
         </trans-unit>
         <trans-unit id="Preview" translate="yes" xml:space="preserve">
           <source>Preview</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Visualizar</target>
+          <target state="translated">Preview</target>
         </trans-unit>
         <trans-unit id="PromptInput" translate="yes" xml:space="preserve">
           <source>PromptInput</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Entrada de prompt</target>
+          <target state="translated" state-qualifier="mt-suggestion">Entrada de prompt</target>
         </trans-unit>
         <trans-unit id="Editor" translate="yes" xml:space="preserve">
           <source>Prompt Editor</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Editor de prompts</target>
+          <target state="translated" state-qualifier="mt-suggestion">Editor de prompts</target>
         </trans-unit>
         <trans-unit id="ResetSettingsMessageText" translate="yes" xml:space="preserve">
           <source>You can reset Echoglossian's configuration to default using the button below:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Você pode redefinir a configuração do Echoglossian para o padrão usando o botão abaixo:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Você pode redefinir a configuração do Echoglossian para o padrão usando o botão abaixo:</target>
         </trans-unit>
         <trans-unit id="ResetSettingsButtonText" translate="yes" xml:space="preserve">
           <source>Reset configuration to defaults</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Redefinir a configuração para os padrões</target>
+          <target state="translated" state-qualifier="mt-suggestion">Redefinir a configuração para os padrões</target>
         </trans-unit>
-        <trans-unit id="TalkTabTitle" translate="yes" xml:space="preserve">
+        <trans-unit id="TalkTabTitle" translate="no" xml:space="preserve">
           <source>Talk</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Falar</target>
+          <target state="final">Talk</target>
         </trans-unit>
-        <trans-unit id="BattleTalkTabTitle" translate="yes" xml:space="preserve">
+        <trans-unit id="BattleTalkTabTitle" translate="no" xml:space="preserve">
           <source>BattleTalk</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Conversa de batalha</target>
+          <target state="final">BattleTalk</target>
         </trans-unit>
-        <trans-unit id="ToastTabTitle" translate="yes" xml:space="preserve">
+        <trans-unit id="ToastTabTitle" translate="no" xml:space="preserve">
           <source>Toast</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Brindar</target>
+          <target state="final">Toast</target>
         </trans-unit>
-        <trans-unit id="SubtitleTabTitle" translate="yes" xml:space="preserve">
+        <trans-unit id="SubtitleTabTitle" translate="no" xml:space="preserve">
           <source>TalkSubtitle</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Legenda de discussão</target>
+          <target state="final">TalkSubtitle</target>
         </trans-unit>
         <trans-unit id="TranslateToastToggle" translate="yes" xml:space="preserve">
           <source>Translate Toast Messages</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir mensagens do sistema</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traduzir mensagens do sistema</target>
         </trans-unit>
         <trans-unit id="SettingsForDeepSeekText" translate="yes" xml:space="preserve">
           <source>Settings for DeepSeek</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações do DeepSeek</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações do DeepSeek</target>
         </trans-unit>
         <trans-unit id="SettingsForOpenRouterText" translate="yes" xml:space="preserve">
           <source>Settings for OpenRouter Engine</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações do OpenRouter Engine</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações do OpenRouter Engine</target>
         </trans-unit>
-        <trans-unit id="AWSAccessKey" translate="yes" xml:space="preserve">
+        <trans-unit id="AWSAccessKey" translate="no" xml:space="preserve">
           <source>AWS Access Key</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave de acesso da AWS</target>
+          <target state="final">AWS Access Key</target>
         </trans-unit>
         <trans-unit id="SettingsForAmazonTranslateText" translate="yes" xml:space="preserve">
           <source>Settings for Amazon Translate:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações do Amazon Translate:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações do Amazon Translate:</target>
         </trans-unit>
-        <trans-unit id="AWSSecretKey" translate="yes" xml:space="preserve">
+        <trans-unit id="AWSSecretKey" translate="no" xml:space="preserve">
           <source>AWS Secret Key</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave secreta da AWS</target>
+          <target state="final">AWS Secret Key</target>
         </trans-unit>
         <trans-unit id="Region" translate="yes" xml:space="preserve">
           <source>Region</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Região</target>
+          <target state="translated" state-qualifier="mt-suggestion">Região</target>
         </trans-unit>
         <trans-unit id="APIKey" translate="yes" xml:space="preserve">
           <source>API Key</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave de API</target>
+          <target state="translated" state-qualifier="mt-suggestion">Chave de API</target>
         </trans-unit>
-        <trans-unit id="Endpoint" translate="yes" xml:space="preserve">
+        <trans-unit id="Endpoint" translate="no" xml:space="preserve">
           <source>Endpoint</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Extremidade</target>
+          <target state="final">Endpoint</target>
         </trans-unit>
         <trans-unit id="SettingsForMicrosoftText" translate="yes" xml:space="preserve">
           <source>Settings for Microsoft Translator</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações do Microsoft Translator</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações do Microsoft Translator</target>
         </trans-unit>
         <trans-unit id="MicrosoftTranslatorAPIKey" translate="yes" xml:space="preserve">
           <source>Microsoft Translator API Key</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave de API do Microsoft Translator</target>
+          <target state="translated" state-qualifier="mt-suggestion">Chave de API do Microsoft Translator</target>
         </trans-unit>
-        <trans-unit id="ModelEndpoint" translate="yes" xml:space="preserve">
+        <trans-unit id="ModelEndpoint" translate="no" xml:space="preserve">
           <source>Model endpoint</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ponto de extremidade do modelo</target>
+          <target state="final">Model endpoint</target>
         </trans-unit>
         <trans-unit id="LLMModel" translate="yes" xml:space="preserve">
           <source>LLM Model</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Modelo LLM</target>
+          <target state="translated" state-qualifier="mt-suggestion">Modelo LLM</target>
         </trans-unit>
         <trans-unit id="Temperature" translate="yes" xml:space="preserve">
           <source>Temperature</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Temperatura</target>
+          <target state="translated" state-qualifier="mt-suggestion">Temperatura</target>
         </trans-unit>
         <trans-unit id="NoSettingsForEngine" translate="yes" xml:space="preserve">
           <source>No settings required for this engine</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Não são necessárias configurações para este mecanismo</target>
+          <target state="translated" state-qualifier="mt-suggestion">Não são necessárias configurações para este mecanismo</target>
         </trans-unit>
         <trans-unit id="SettingsForGeminiText" translate="yes" xml:space="preserve">
           <source>Settings for Gemini:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para Gemini:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações para Gemini:</target>
         </trans-unit>
         <trans-unit id="SettingsForLibreTranslateText" translate="yes" xml:space="preserve">
           <source>Settings for LibreTranslate:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações do LibreTranslate:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações do LibreTranslate:</target>
         </trans-unit>
-        <trans-unit id="LibreTranslateAPIEndpoint" translate="yes" xml:space="preserve">
+        <trans-unit id="LibreTranslateAPIEndpoint" translate="no" xml:space="preserve">
           <source>LibreTranslate API Endpoint</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ponto final da API LibreTranslate</target>
+          <target state="final">LibreTranslate API Endpoint</target>
         </trans-unit>
         <trans-unit id="SettingsForOpenLlamaText" translate="yes" xml:space="preserve">
           <source>Settings for OpenLlama:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para OpenLlama:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações para OpenLlama:</target>
         </trans-unit>
-        <trans-unit id="YandexCloudFolderId" translate="yes" xml:space="preserve">
+        <trans-unit id="YandexCloudFolderId" translate="no" xml:space="preserve">
           <source>Folder ID</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">ID da pasta</target>
+          <target state="final">Folder ID</target>
         </trans-unit>
         <trans-unit id="SettingsForYandexCloudText" translate="yes" xml:space="preserve">
           <source>Settings for YandexCloud:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para YandexCloud:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações para YandexCloud:</target>
         </trans-unit>
         <trans-unit id="YandexCloudApiKey" translate="yes" xml:space="preserve">
           <source>YandexCloud Api Key</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave de API YandexCloud</target>
+          <target state="translated" state-qualifier="mt-suggestion">Chave de API YandexCloud</target>
         </trans-unit>
         <trans-unit id="ShowInCutscenesLabel" translate="yes" xml:space="preserve">
           <source>Show in Cutscenes</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Mostrar em cenas</target>
+          <target state="translated" state-qualifier="mt-suggestion">Mostrar em cenas</target>
         </trans-unit>
         <trans-unit id="CopyTranslationToClipboardLabel" translate="yes" xml:space="preserve">
           <source>Copy translation to clipboard</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Copiar tradução para a área de transferência</target>
+          <target state="translated" state-qualifier="mt-suggestion">Copiar tradução para a área de transferência</target>
         </trans-unit>
         <trans-unit id="FontSizeLabel" translate="yes" xml:space="preserve">
           <source>Font Size:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tamanho da fonte:</target>
+          <target state="translated" state-qualifier="mt-suggestion">Tamanho da fonte:</target>
         </trans-unit>
         <trans-unit id="TranslateYesNoScreenLabel" translate="yes" xml:space="preserve">
           <source>Translate Yes/No Screen</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir tela Sim/Não</target>
+          <target state="translated">Traduzir tela Yes/No</target>
         </trans-unit>
         <trans-unit id="TranslateCutSceneSelectStringLabel" translate="yes" xml:space="preserve">
           <source>Translate CutSceneSelectString</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir CutSceneSelectString</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traduzir CutSceneSelectString</target>
         </trans-unit>
         <trans-unit id="TranslateSelectStringLabel" translate="yes" xml:space="preserve">
           <source>Translate SelectString</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir SelectString</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traduzir SelectString</target>
         </trans-unit>
         <trans-unit id="TranslateSelectOkLabel" translate="yes" xml:space="preserve">
           <source>Translate SelectOk</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduzir SelectOk</target>
+          <target state="translated" state-qualifier="mt-suggestion">Traduzir SelectOk</target>
         </trans-unit>
         <trans-unit id="GeminiAPIKey" translate="yes" xml:space="preserve">
           <source>Gemini API Key</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Chave de API Gemini</target>
+          <target state="translated" state-qualifier="mt-suggestion">Chave de API Gemini</target>
         </trans-unit>
         <trans-unit id="SettingsForYandexPublic" translate="yes" xml:space="preserve">
           <source>Settings for Yandex public Translator</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para o Yandex public Translator</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações para o Yandex public Translator</target>
         </trans-unit>
         <trans-unit id="SettingsForGTranslateText" translate="yes" xml:space="preserve">
           <source>Settings for GTranslate translator</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações para o tradutor GTranslate</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações para o tradutor GTranslate</target>
         </trans-unit>
         <trans-unit id="ConfigTabGeneralName" translate="yes" xml:space="preserve">
           <source>General Settings</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Configurações gerais</target>
+          <target state="translated" state-qualifier="mt-suggestion">Configurações gerais</target>
         </trans-unit>
         <trans-unit id="OtherUIElementsTabTitle" translate="yes" xml:space="preserve">
           <source>Other UI elements</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Outros elementos da interface do usuário</target>
+          <target state="translated" state-qualifier="mt-suggestion">Outros elementos da interface do usuário</target>
         </trans-unit>
         <trans-unit id="AreYouSureYouWantToResetAllSettingsToDefault" translate="yes" xml:space="preserve">
           <source>Are you sure you want to reset all settings to default?</source>
-          <target state="new">Are you sure you want to reset all settings to default?</target>
+          <target state="translated" state-qualifier="mt-suggestion">Tem certeza de que deseja redefinir todas as configurações para o padrão?</target>
         </trans-unit>
         <trans-unit id="YesReset" translate="yes" xml:space="preserve">
           <source>Yes, reset</source>
-          <target state="new">Yes, reset</target>
+          <target state="translated" state-qualifier="mt-suggestion">Sim, redefinir</target>
         </trans-unit>
         <trans-unit id="ResetSettingsToDefault" translate="yes" xml:space="preserve">
           <source>Reset ALL Echoglossian Settings to Default</source>
-          <target state="new">Reset ALL Echoglossian Settings to Default</target>
+          <target state="translated" state-qualifier="mt-suggestion">Redefinir TODAS as configurações do Echoglossian para o padrão</target>
         </trans-unit>
         <trans-unit id="Cancel" translate="yes" xml:space="preserve">
           <source>Cancel</source>
-          <target state="new">Cancel</target>
+          <target state="translated" state-qualifier="mt-suggestion">Cancelar</target>
         </trans-unit>
       </group>
     </body>

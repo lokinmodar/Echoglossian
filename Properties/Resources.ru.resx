@@ -513,4 +513,16 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Другие элементы пользовательского интерфейса</value>
   </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Вы уверены, что хотите сбросить все настройки до значений по умолчанию?</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Да, сброс</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Сбросить ВСЕ настройки эхоглоссии до значений по умолчанию</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
 </root>

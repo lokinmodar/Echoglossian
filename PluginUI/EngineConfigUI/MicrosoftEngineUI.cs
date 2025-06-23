@@ -13,7 +13,7 @@ public static class MicrosoftEngineUI
 		bool isRegionInvalid;
 		changed |= FieldValidationHelper.ValidatedInputText(Resources.Region, ref config.MicrosoftTranslatorRegion, 100, out isRegionInvalid);
 
-		PromptEditorUI.Draw(promptManager, PromptType.Microsoft, DefaultPrompt, TransEngines.Microsoft.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.Microsoft, PromptTemplateManager.DefaultPrompt, TransEngines.Microsoft.ToString());
 
 		if (changed)
 		{

@@ -26,7 +26,7 @@ public static class OpenRouterEngineUI
 
 		ImGui.Separator();
 
-		PromptEditorUI.Draw(promptManager, PromptType.OpenRouter, DefaultPrompt, TransEngines.OpenRouter.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.OpenRouter, PromptTemplateManager.DefaultPrompt, TransEngines.OpenRouter.ToString());
 
 		if (changed)
 		{

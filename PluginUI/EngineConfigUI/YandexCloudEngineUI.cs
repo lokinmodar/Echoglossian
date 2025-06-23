@@ -13,7 +13,7 @@ public static class YandexCloudEngineUI
 		bool isApiKeyInvalid;
 		changed |= FieldValidationHelper.ValidatedInputText(Resources.YandexCloudApiKey, ref config.YandexPaidApiKey, 300, out isApiKeyInvalid);
 
-		PromptEditorUI.Draw(promptManager, PromptType.YandexCloud, DefaultPrompt, TransEngines.YandexCloud.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.YandexCloud, PromptTemplateManager.DefaultPrompt, TransEngines.YandexCloud.ToString());
 
 		if (changed)
 		{

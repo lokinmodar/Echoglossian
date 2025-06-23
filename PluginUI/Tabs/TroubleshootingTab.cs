@@ -1,5 +1,6 @@
 using Dalamud.Plugin.Services;
 using ImGuiNET;
+
 using System.Diagnostics;
 using System.Numerics;
 
@@ -44,9 +45,7 @@ public static class TroubleshootingTab
     ImGui.BeginGroup();
     ImGui.TextWrapped(Resources.ResetSettingsMessageText);
 
-
     ResetConfigButtonHelper.Draw(config, () => SaveConfig(config));
-
 
     ImGui.EndGroup();
 

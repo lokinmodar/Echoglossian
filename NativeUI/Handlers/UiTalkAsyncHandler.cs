@@ -17,28 +17,27 @@ namespace Echoglossian
     {
       bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
 
-      this.TalkOverlay.NameSemaphore.Wait();
+      this.talkOverlay.NameSemaphore.Wait();
 
       PluginLog.Debug(
-        $"UpdateTalkOverlay: {translatedName}: {translatedText} - OriginalName: {originalName} - HasValidText: {hasValidText}"
-      );
+        $"UpdateTalkOverlay: {translatedName}: {translatedText} - OriginalName: {originalName} - HasValidText: {hasValidText}");
 
       if (!string.IsNullOrWhiteSpace(originalName))
       {
-        this.TalkOverlay.OriginalName = originalName;
+        this.talkOverlay.OriginalName = originalName;
       }
 
       if (!string.IsNullOrWhiteSpace(translatedName))
       {
-        this.TalkOverlay.CurrentName = translatedName;
+        this.talkOverlay.CurrentName = translatedName;
       }
 
-      this.TalkOverlay.NameSemaphore.Release();
+      this.talkOverlay.NameSemaphore.Release();
 
-      this.TalkOverlay.Semaphore.Wait();
-      this.TalkOverlay.CurrentText = hasValidText ? translatedText : Resources.WaitingForTranslation;
-      this.TalkOverlay.Display = hasValidText;
-      this.TalkOverlay.Semaphore.Release();
+      this.talkOverlay.Semaphore.Wait();
+      this.talkOverlay.CurrentText = hasValidText ? translatedText : Resources.WaitingForTranslation;
+      this.talkOverlay.Display = hasValidText;
+      this.talkOverlay.Semaphore.Release();
     }
 
     /// <summary>
@@ -62,8 +61,7 @@ namespace Echoglossian
             this.UpdateTalkOverlay(
               foundTalkMessage.TranslatedSenderName,
               foundTalkMessage.TranslatedTalkMessage,
-              foundTalkMessage.SenderName
-            );
+              foundTalkMessage.SenderName);
             PluginLog.Debug($"From database - Name: {foundTalkMessage.TranslatedSenderName}, Message: {foundTalkMessage.TranslatedTalkMessage}");
           }
           else
@@ -80,7 +78,7 @@ namespace Echoglossian
               ClientStateInterface.ClientLanguage.Humanize(),
               nameTranslation,
               textTranslation,
-              langDict[languageInt].Code,
+              LangDict[LanguageInt].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -110,6 +108,8 @@ namespace Echoglossian
 
       try
       {
+        // TODO: adapt the structure to use AtkValues instead of nodes for better performance
+
         var addon = GameGuiInterface.GetAddonByName("Talk");
         var talkAddon = (AtkUnitBase*)addon;
         if (talkAddon == null || !talkAddon->IsVisible)
@@ -126,9 +126,9 @@ namespace Echoglossian
 
         if (this.configuration.TranslateNpcNames && nameNode != null && !nameNode->NodeText.IsEmpty)
         {
-          this.TalkOverlay.NameSemaphore.Wait();
-          var translatedName = this.TalkOverlay.CurrentName;
-          this.TalkOverlay.NameSemaphore.Release();
+          this.talkOverlay.NameSemaphore.Wait();
+          var translatedName = this.talkOverlay.CurrentName;
+          this.talkOverlay.NameSemaphore.Release();
 
           if (this.configuration.RemoveDiacriticsWhenUsingReplacementTalkBTalk)
           {
@@ -140,10 +140,10 @@ namespace Echoglossian
 
         var parentNode = talkAddon->GetNodeById(10);
 
-        this.TalkOverlay.Semaphore.Wait();
-        var translatedText = this.TalkOverlay.CurrentText;
-        bool shouldDisplay = this.TalkOverlay.Display;
-        this.TalkOverlay.Semaphore.Release();
+        this.talkOverlay.Semaphore.Wait();
+        var translatedText = this.talkOverlay.CurrentText;
+        bool shouldDisplay = this.talkOverlay.Display;
+        this.talkOverlay.Semaphore.Release();
 
         if (!shouldDisplay)
         {
@@ -207,8 +207,7 @@ namespace Echoglossian
             this.UpdateTalkOverlay(
               foundTalkMessage.TranslatedSenderName,
               foundTalkMessage.TranslatedTalkMessage,
-              foundTalkMessage.SenderName
-            );
+              foundTalkMessage.SenderName);
           }
           else
           {
@@ -224,7 +223,7 @@ namespace Echoglossian
               ClientStateInterface.ClientLanguage.Humanize(),
               nameTranslation,
               textTranslation,
-              langDict[languageInt].Code,
+              LangDict[LanguageInt].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -234,10 +233,9 @@ namespace Echoglossian
 
           this.StartOverlayTracking(
             "Talk",
-            this.TalkOverlay,
-            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.TalkOverlay.CurrentText),
-            () => !this.configuration.UseImGuiForTalk || !this.TalkOverlay.Display);
-
+            this.talkOverlay,
+            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.talkOverlay.CurrentText),
+            () => !this.configuration.UseImGuiForTalk || !this.talkOverlay.Display);
         }
         catch (Exception e)
         {
@@ -268,8 +266,7 @@ namespace Echoglossian
             this.UpdateTalkOverlay(
               foundTalkMessage.TranslatedSenderName,
               foundTalkMessage.TranslatedTalkMessage,
-              foundTalkMessage.SenderName
-            );
+              foundTalkMessage.SenderName);
           }
           else
           {
@@ -285,7 +282,7 @@ namespace Echoglossian
               ClientStateInterface.ClientLanguage.Humanize(),
               nameTranslation,
               textTranslation,
-              langDict[languageInt].Code,
+              LangDict[LanguageInt].Code,
               this.configuration.ChosenTransEngine,
               DateTime.Now,
               DateTime.Now);
@@ -295,10 +292,9 @@ namespace Echoglossian
 
           this.StartOverlayTracking(
             "Talk",
-            this.TalkOverlay,
-            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.TalkOverlay.CurrentText),
-            () => !this.configuration.UseImGuiForTalk || !this.TalkOverlay.Display);
-
+            this.talkOverlay,
+            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.talkOverlay.CurrentText),
+            () => !this.configuration.UseImGuiForTalk || !this.talkOverlay.Display);
         }
         catch (Exception e)
         {

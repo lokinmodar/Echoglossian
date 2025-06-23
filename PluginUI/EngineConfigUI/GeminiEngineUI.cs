@@ -10,7 +10,7 @@ public static class GeminiEngineUI
 		bool isGeminiApiKeyInvalid;
 		changed |= FieldValidationHelper.ValidatedInputText("Gemini API Key", ref config.GeminiTranslatorApiKey, 300, out isGeminiApiKeyInvalid);
 
-		PromptEditorUI.Draw(promptManager, PromptType.Gemini, DefaultPrompt, TransEngines.Gemini.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.Gemini, PromptTemplateManager.DefaultPrompt, TransEngines.Gemini.ToString());
 
 		if (changed)
 		{

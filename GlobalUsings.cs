@@ -8,8 +8,10 @@ global using System.Collections.Concurrent;
 global using System.Collections.Generic;
 global using System.Diagnostics;
 global using System.Globalization;
+global using System.Net;
 global using System.Numerics;
 global using System.Reflection;
+global using System.Runtime.InteropServices;
 global using System.Threading;
 global using System.Drawing;
 global using System.Drawing.Text;
@@ -20,6 +22,7 @@ global using Dalamud.Game;
 global using Dalamud.Game.Addon.Lifecycle;
 global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 global using Dalamud.Game.Command;
+global using Dalamud.Game.Gui.Toast;
 global using Dalamud.Game.Text.Sanitizer;
 global using Dalamud.Game.Text.SeStringHandling;
 global using Dalamud.Interface;
@@ -33,14 +36,12 @@ global using Dalamud.Plugin.Services;
 global using Dalamud.Utility;
 global using Dalamud.Interface.Utility.Raii;
 
-global using Echoglossian;
-
 global using static Echoglossian.Echoglossian;
 
 global using Echoglossian.EFCoreSqlite;
 global using Echoglossian.EFCoreSqlite.Models;
 global using Echoglossian.LanguagesHandling;
-// global using Echoglossian.NativeUI.Handlers;
+
 global using Echoglossian.Properties;
 global using Echoglossian.Helpers;
 global using Echoglossian.PluginUI.Helpers;

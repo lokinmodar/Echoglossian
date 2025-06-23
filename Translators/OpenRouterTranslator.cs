@@ -80,7 +80,7 @@ namespace Echoglossian.Translators
 
         var jsonResponse = await response.Content.ReadFromJsonAsync<OpenRouterResponse>();
 
-        string result = jsonResponse?.choices?.FirstOrDefault()?.message?.content?.Trim() ?? string.Empty;
+        string result = jsonResponse?.Choices?.FirstOrDefault()?.Message?.Content?.Trim() ?? string.Empty;
 
         result = result.Trim('"');
 
@@ -101,19 +101,19 @@ namespace Echoglossian.Translators
 
     private class OpenRouterResponse
     {
-      public List<Choice>? choices { get; set; }
+      public List<Choice>? Choices { get; set; }
     }
 
     private class Choice
     {
-      public Message? message { get; set; }
+      public Message? Message { get; set; }
     }
 
     private class Message
     {
-      public string? role { get; set; }
+      public string? Role { get; set; }
 
-      public string? content { get; set; }
+      public string? Content { get; set; }
     }
   }
 }

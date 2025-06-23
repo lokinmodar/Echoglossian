@@ -370,8 +370,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Plugin-Assets heruntergeladen!</target>
         </trans-unit>
         <trans-unit id="PluginAssetsNotDownloadedText" translate="yes" xml:space="preserve">
-          <source>If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them.</source>
+          <source>If you see garbled text or invalid characters in the translation window it is an indicative that some plugin asset fonts may be missing or corrupted. Clicking the button below triggers an asset check and re-downloads them.</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Wenn Sie verstümmelten Text oder ungültige Zeichen im Übersetzungsfenster sehen, ist dies ein Hinweis darauf, dass einige Plugin-Asset-Schriftarten fehlen oder beschädigt sind.\n\n Wenn Sie auf die Schaltfläche unten klicken, wird eine Asset-Prüfung ausgelöst und sie erneut heruntergeladen.</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="DownloadPluginAssetsButtonText" translate="yes" xml:space="preserve">
           <source>Force re-download plugin assets</source>
@@ -683,19 +684,19 @@
         </trans-unit>
         <trans-unit id="AreYouSureYouWantToResetAllSettingsToDefault" translate="yes" xml:space="preserve">
           <source>Are you sure you want to reset all settings to default?</source>
-          <target state="new">Are you sure you want to reset all settings to default?</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Sind Sie sicher, dass Sie alle Einstellungen auf die Standardeinstellungen zurücksetzen möchten?</target>
         </trans-unit>
         <trans-unit id="YesReset" translate="yes" xml:space="preserve">
           <source>Yes, reset</source>
-          <target state="new">Yes, reset</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ja, zurücksetzen</target>
         </trans-unit>
         <trans-unit id="ResetSettingsToDefault" translate="yes" xml:space="preserve">
           <source>Reset ALL Echoglossian Settings to Default</source>
-          <target state="new">Reset ALL Echoglossian Settings to Default</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">ALLE Echoglossian-Einstellungen auf Standard zurücksetzen</target>
         </trans-unit>
         <trans-unit id="Cancel" translate="yes" xml:space="preserve">
           <source>Cancel</source>
-          <target state="new">Cancel</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Abbrechen</target>
         </trans-unit>
       </group>
     </body>

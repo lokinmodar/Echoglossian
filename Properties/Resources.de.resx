@@ -513,4 +513,16 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Andere UI-Elemente</value>
   </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Sind Sie sicher, dass Sie alle Einstellungen auf die Standardeinstellungen zurücksetzen möchten?</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Ja, zurücksetzen</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>ALLE Echoglossian-Einstellungen auf Standard zurücksetzen</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
 </root>

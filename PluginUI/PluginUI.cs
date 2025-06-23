@@ -5,6 +5,7 @@
 
 using System.Diagnostics;
 using System.Numerics;
+
 using Echoglossian.PluginUI.Tabs;
 using Echoglossian.Properties;
 using Echoglossian.Translators;
@@ -46,7 +47,7 @@ public partial class Echoglossian
       this.languageList.Add(l.Value.LanguageName);
     }
 
-    ImGui.SetNextWindowSizeConstraints(new Vector2(900, 700), new Vector2(1920, 1080));
+    ImGui.SetNextWindowSizeConstraints(new Vector2(900, 900), new Vector2(1920, 1080));
     ImGui.Begin($"{Resources.ConfigWindowTitle} - Plugin Version: {this.configuration.PluginVersion}", ref this.config);
 
     // Header
@@ -55,10 +56,10 @@ public partial class Echoglossian
 
     LangToRemoveDiacritics = this.configuration.Lang is 24 or 25 or 44 or 60 or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
 
-    if (ImGui.Combo(Resources.LanguageSelectLabelText, ref languageInt, this.languageList.ToArray(), this.languageList.Count))
+    if (ImGui.Combo(Resources.LanguageSelectLabelText, ref LanguageInt, this.languageList.ToArray(), this.languageList.Count))
     {
-      this.configuration.Lang = languageInt;
-      SpecialFontFileName = langDict[this.configuration.Lang].FontName;
+      this.configuration.Lang = LanguageInt;
+      SpecialFontFileName = LangDict[this.configuration.Lang].FontName;
       SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
 
       var languageNotSupported = this.configuration.Lang is 2 or 3 or 5 or 6 or 11 or 13 or 40 or 42 or 57 or 78 or 82 or 106 or 108 or 111 or 112 or 116;
@@ -74,15 +75,15 @@ public partial class Echoglossian
         this.configuration.OverlayOnlyLanguage = languageOnlySupportedThruOverlay;
       }
 
-      if (!langDict[languageInt].SupportedEngines.Contains(this.configuration.ChosenTransEngine))
+      if (!LangDict[LanguageInt].SupportedEngines.Contains(this.configuration.ChosenTransEngine))
       {
         this.configuration.ChosenTransEngine = 0;
-        translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
+        TranslationService = new TranslationService(this.configuration, PluginLog, Sanitizer);
       }
 
       this.SaveConfigValue = true;
-      PluginLog.Debug("Language selected: " + langDict[this.configuration.Lang].LanguageName);
-      PluginLog.Debug("Language font: " + langDict[this.configuration.Lang].FontName);
+      PluginLog.Debug("Language selected: " + LangDict[this.configuration.Lang].LanguageName);
+      PluginLog.Debug("Language font: " + LangDict[this.configuration.Lang].FontName);
 
       MountFontPaths();
       PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync();
@@ -153,9 +154,9 @@ public partial class Echoglossian
 
       if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
       {
-        this.SaveConfigValue |= TranslationEnginesTab.Draw(this.configuration, languageInt, this.languageList, this.enginesList, langDict, () =>
+        this.SaveConfigValue |= TranslationEnginesTab.Draw(this.configuration, LanguageInt, this.languageList, this.enginesList, LangDict, () =>
           {
-            translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
+            TranslationService = new TranslationService(this.configuration, PluginLog, Sanitizer);
           });
         ImGui.EndTabItem();
       }
@@ -181,8 +182,7 @@ public partial class Echoglossian
         ref this.config,
         ref this.SaveConfigValue,
         () => SaveConfig(this.configuration),
-        this.pixImage.ImGuiHandle
-    );
+        this.pixImage.ImGuiHandle);
 
     ImGui.End();
 

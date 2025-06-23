@@ -111,7 +111,6 @@ Please provide only the translated text in your response, without any explanatio
             {
               this.temperature,
             },
-
           };
 
           var jsonContent = JsonConvert.SerializeObject(requestData);

@@ -3,13 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Runtime.InteropServices;
-
-using Dalamud.Game.Gui.Toast;
-using Dalamud.Game.Text.SeStringHandling;
-using Echoglossian.EFCoreSqlite.Models;
-using Echoglossian.Properties;
-using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace Echoglossian
 {
@@ -401,7 +394,7 @@ namespace Echoglossian
             message = translatedToastMessage;
 
             ToastMessage translatedToastData = new ToastMessage("Error", messageTextToTranslate, LangIdentify(messageTextToTranslate),
-              translatedToastMessage, langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
+              translatedToastMessage, LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
             /*#if DEBUG
                         logStream.WriteLineAsync($"Before Toast Messages table data insertion:  {translatedToastData}");
@@ -436,7 +429,7 @@ namespace Echoglossian
               {
                 ToastMessage translatedErrorToastData = new ToastMessage("Error", messageTextToTranslate,
                   errorToastToHandle.OriginalLang, this.currentErrorToastTranslation,
-                  langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+                  LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                 string result = this.InsertErrorToastMessageData(translatedErrorToastData);
 #if DEBUG
                 PluginLog.Debug($"ToastMessage DB Insert operation result: {result}");
@@ -549,7 +542,7 @@ namespace Echoglossian
             message = translatedToastMessage;
 
             ToastMessage translatedToastData = new ToastMessage("NonError", messageTextToTranslate, LangIdentify(messageTextToTranslate),
-              translatedToastMessage, langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
+              translatedToastMessage, LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
             /*#if DEBUG
                         logStream.WriteLineAsync($"Before Toast Messages table data insertion:  {translatedToastData}");
@@ -584,7 +577,7 @@ namespace Echoglossian
               {
                 ToastMessage translatedToastData = new ToastMessage("NonError", messageTextToTranslate,
                   toastToHandle.OriginalLang, this.currentToastTranslation,
-                  langDict[languageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+                  LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
                 string result = this.InsertOtherToastMessageData(translatedToastData);
 #if DEBUG
                 PluginLog.Debug($"ToastMessage DB Insert operation result: {result}");

@@ -263,10 +263,10 @@
             <summary>Prompt passed to OpenRouter translator.</summary>
         </member>
         <member name="F:Echoglossian.Config.LibreTranslateUrl">
-            <summary>LibreTranslate URL</summary>
+            <summary>LibreTranslate URL.</summary>
         </member>
         <member name="F:Echoglossian.Config.OpenLlamaUrl">
-            <summary>OpenLlama URL</summary>
+            <summary>OpenLlama URL.</summary>
         </member>
         <member name="F:Echoglossian.Config.OpenLlamaModel">
             <summary>OpenLlama model to use for translations.</summary>
@@ -317,7 +317,7 @@
             <summary>
             Fully resets the plugin configuration to its default values,
             including all fields and properties. Prompts are explicitly assigned
-            from <see cref="F:Echoglossian.Echoglossian.DefaultPrompt" />. Metadata like
+            from <see cref="!:Echoglossian.PromptTemplateManager.DefaultPrompt" />. Metadata like
             <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
             </summary>
             <param name="config">The config instance to reset.</param>
@@ -470,70 +470,6 @@
             <summary>
             Parses the UI elements from the Addon sheet in the game data.
             </summary>
-        </member>
-        <member name="F:Echoglossian.Echoglossian.DefaultPrompt">
-            <summary>
-            The default prompt for the translation engine.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Echoglossian.RequiredPlaceholders">
-            <summary>
-            The required placeholders for the prompt.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.IsPromptValid(System.String)">
-            <summary>
-            Checks if the prompt is valid by ensuring it contains all required placeholders.
-            </summary>
-            <param name="prompt">The API engine text propmt.</param>
-            <returns>Returns 'true' if the promnpt is valid.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyPromptVariables(System.String,System.String,System.String,System.String)">
-            <summary>
-            Applies the prompt variables to the template.
-            </summary>
-            <param name="template"></param>
-            <param name="text"></param>
-            <param name="sourceLang"></param>
-            <param name="targetLang"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetPrompt(Echoglossian.Config,Echoglossian.Echoglossian.PromptType)">
-            <summary>
-            Gets the prompt for the specified type.
-            </summary>
-            <param name="config"></param>
-            <param name="type"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetPromptOrDefault(Echoglossian.Config,Echoglossian.Echoglossian.PromptType)">
-            <summary>
-            Gets the prompt for the specified type, or returns the default prompt if it is not set or empty.
-            </summary>
-            <param name="config"></param>
-            <param name="type"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetPromptTypeForEngine(System.Int32)">
-            <summary>
-            Gets the prompt type for the specified engine index.
-            </summary>
-            <param name="engineIndex"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SetPrompt(Echoglossian.Config,Echoglossian.Echoglossian.PromptType,System.String)">
-            <summary>
-            Sets the prompt for the specified type.
-            </summary>
-            <param name="config"></param>
-            <param name="type"></param>
-            <param name="prompt"></param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawPromptEditor(Echoglossian.Config,Echoglossian.Echoglossian.PromptType,System.String,System.String)">
-            <summary>
-            Draws the AI Translator prompt tab in the UI.
-            </summary>
-            
         </member>
         <member name="M:Echoglossian.Echoglossian.LangIdentify(System.String)">
             <summary>
@@ -937,6 +873,11 @@
         <member name="T:Echoglossian.PluginUI.Helpers.PromptTemplateManager">
             <summary>
             Manages prompt validation, retrieval, and dynamic substitution for translator prompts.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.PromptTemplateManager.DefaultPrompt">
+            <summary>
+            Default prompt used when no custom prompt is defined.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Helpers.ResetConfigButtonHelper.Draw(Echoglossian.Config,System.Action,System.String)">
@@ -2002,6 +1943,62 @@
             <param name="targetLanguage">The target language for the translation.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
         </member>
+        <member name="T:Echoglossian.Translators.DeepLTranslator">
+            <summary>
+            Provides translation services using the DeepL API or Free API based on the configuration.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.Echoglossian#Translators#ITranslator#TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+            Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration. 
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.Echoglossian#Translators#ITranslator#Translate(System.String,System.String,System.String)">
+            <summary>
+            Synchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.Translate(System.String,System.String,System.String)">
+            <summary>
+            Synchronously translates the given text from source language to target language using the DeepL API.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+            Asynchronously translates the given text from source language to target language using the DeepL API.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.GetICount(System.String)">
+            <summary>
+            Counts the number of 'i' characters in the translated text.
+            </summary>
+            <param name="translateText"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.GetTimestamp(System.Int32)">
+            <summary>
+            Generates a timestamp based on the current time and the count of 'i' characters in the text.
+            </summary>
+            <param name="iCount"></param>
+            <returns></returns>
+        </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.FreeTranslateAsync(System.String,System.String,System.String)">
             <summary>
             Translates a string using the Free DeepL API.
@@ -2010,6 +2007,42 @@
             <param name="sourceLanguage">The source language of the text.</param>
             <param name="targetLanguage">The target language for the translation.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> representing the result of the asynchronous operation.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.FormatSourceLanguage(System.String)">
+            <summary>
+            Formats the source language for the DeepL API.
+            </summary>
+            <param name="source"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.FormatTargetLanguage(System.String)">
+            <summary>
+            Formats the target language for the DeepL API.
+            </summary>
+            <param name="source"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.FormatFreeTargetLanguage(System.String)">
+            <summary>
+            Formats the target language for the Free DeepL API.
+            </summary>
+            <param name="source"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Echoglossian.Translators.DeepLResponse">
+            <summary>
+            Represents the response from the DeepL translation service.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Translators.DeepLResult">
+            <summary>
+            Represents the result of a DeepL translation operation.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Translators.DeepLTextResult">
+            <summary>
+            Represents a text result from the DeepL translation service.
+            </summary>
         </member>
         <member name="M:Echoglossian.Translators.DeepSeekTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
             <summary>

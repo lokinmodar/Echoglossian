@@ -513,4 +513,16 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Άλλα στοιχεία περιβάλλοντος εργασίας χρήστη</value>
   </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Είστε βέβαιοι ότι θέλετε να επαναφέρετε όλες τις ρυθμίσεις στις προεπιλογές;</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Ναι, επαναφορά</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Επαναφέρετε ΟΛΕΣ τις ρυθμίσεις Echoglossian στις προεπιλογές</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Ακυρώνω</value>
+  </data>
 </root>

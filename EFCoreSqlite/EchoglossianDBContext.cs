@@ -32,7 +32,9 @@ namespace Echoglossian.EFCoreSqlite
     private readonly string? dbPath;
 
     public EchoglossianDbContext(DbContextOptions<EchoglossianDbContext> options)
-        : base(options) { }
+        : base(options)
+    {
+    }
 
     public EchoglossianDbContext(string configDir)
     {

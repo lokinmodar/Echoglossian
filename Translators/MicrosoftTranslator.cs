@@ -178,6 +178,5 @@ namespace Echoglossian.Translators
 
       return string.Empty;
     }
-
   }
 }

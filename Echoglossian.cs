@@ -58,9 +58,9 @@ namespace Echoglossian
 
     private const string SlashCommand = "/eglo";
     private string configDir;
-    public static int languageInt = 28;
+    public static int LanguageInt = 28;
     private static int fontSize = 24;
-    public static int chosenTransEngine;
+    public static int ChosenTransEngine;
     private static string transEngineName;
 
     public static string ScriptCharList { get; set; }
@@ -88,7 +88,7 @@ namespace Echoglossian
     public string LangToTranslateTo = string.Empty;
 
     private bool pluginAssetsState;
-    public static Dictionary<int, LanguageInfo> langDict;
+    public static Dictionary<int, LanguageInfo> LangDict;
     private bool config;
 
     private Config configuration;
@@ -117,15 +117,15 @@ namespace Echoglossian
 
     private readonly CultureInfo cultureInfo;
 
-    public static Sanitizer sanitizer;
+    public static Sanitizer Sanitizer;
 
-    private AtkTextNodeBufferWrapper AtkTextNodeBufferWrapper;
+    private AtkTextNodeBufferWrapper atkTextNodeBufferWrapper;
 
     /* private UiAddonHandler uiBattleTalkAddonHandler;
      private UiAddonHandler uiTalkAddonHandler;
      private UiAddonHandler uiTalkSubtitleHandler;*/
 
-    public static TranslationService translationService;
+    public static TranslationService TranslationService;
 
     public List<ToastMessage> ErrorToastsCache { get; set; }
 
@@ -147,11 +147,11 @@ namespace Echoglossian
         HelpMessage = Resources.HelpMessage,
       });
 
-      sanitizer = PluginInterface.Sanitizer as Sanitizer;
+      Sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
-      langDict = this.languagesDictionary;
+      LangDict = this.languagesDictionary;
 
-      LanguageEngineSupport.ApplySupportTo(langDict);
+      LanguageEngineSupport.ApplySupportTo(LangDict);
 
       identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
 
@@ -217,23 +217,23 @@ namespace Echoglossian
 
       PluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
 
-      languageInt = this.configuration.Lang;
+      LanguageInt = this.configuration.Lang;
 
       fontSize = this.configuration.FontSize;
 
-      chosenTransEngine = this.configuration.ChosenTransEngine;
+      ChosenTransEngine = this.configuration.ChosenTransEngine;
 
-      this.LangToTranslateTo = langDict[languageInt].Code;
+      this.LangToTranslateTo = LangDict[LanguageInt].Code;
 
       MountFontPaths();
 
       Echoglossian.UINewFontHandler = new UINewFontHandler(this.configuration);
 
-      TransEngines t = (TransEngines)chosenTransEngine;
+      TransEngines t = (TransEngines)ChosenTransEngine;
       transEngineName = t.ToString();
-      translationService = new TranslationService(this.configuration, PluginLog, sanitizer);
+      TranslationService = new TranslationService(this.configuration, PluginLog, Sanitizer);
 
-      this.AtkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
+      this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 
       this.LoadAllErrorToasts();
       this.LoadAllOtherToasts();
@@ -323,12 +323,12 @@ namespace Echoglossian
       this.talkImage?.Dispose();
       this.logo?.Dispose();
 
-      this.TalkOverlay.Dispose();
-      this.BattleTalkOverlay.Dispose();
-      this.TalkSubtitleOverlay.Dispose();
-      this.ToastOverlay.Dispose();
-      this.ErrorToastOverlay.Dispose();
-      this.ChatBubbleOverlay.Dispose();
+      this.talkOverlay.Dispose();
+      this.battleTalkOverlay.Dispose();
+      this.talkSubtitleOverlay.Dispose();
+      this.toastOverlay.Dispose();
+      this.errorToastOverlay.Dispose();
+      this.chatBubbleOverlay.Dispose();
 
       if (this.configuration.TranslateTalk)
       {
@@ -457,8 +457,7 @@ namespace Echoglossian
         // Title is now resolved inside DrawTranslationWindow, so no need to pass customTitle
         this.DrawTranslationWindow(
             overlayRegistration.Overlay,
-            overlayRegistration.Config
-        );
+            overlayRegistration.Config);
       }
     }
 

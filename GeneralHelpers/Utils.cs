@@ -46,7 +46,7 @@ namespace Echoglossian
     /// <summary>
     /// Fully resets the plugin configuration to its default values,
     /// including all fields and properties. Prompts are explicitly assigned
-    /// from <see cref="Echoglossian.DefaultPrompt" />. Metadata like
+    /// from <see cref="Echoglossian.PromptTemplateManager.DefaultPrompt" />. Metadata like
     /// <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
     /// </summary>
     /// <param name="config">The config instance to reset.</param>
@@ -78,13 +78,13 @@ namespace Echoglossian
         prop.SetValue(config, prop.GetValue(defaultConfig));
       }
 
-      // Manually assign prompts with fallback to DefaultPrompt
+      // Manually assign prompts with fallback to PromptTemplateManager.DefaultPrompt
       void SetPromptIfEmpty(string fieldName)
       {
         var field = configType.GetField(fieldName);
         if (field is { } f && string.IsNullOrWhiteSpace(f.GetValue(config) as string))
         {
-          f.SetValue(config, Echoglossian.DefaultPrompt);
+          f.SetValue(config, PromptTemplateManager.DefaultPrompt);
         }
       }
 
@@ -110,7 +110,7 @@ namespace Echoglossian
       {
         Content = Resources.SettingsReset,
         Title = Resources.Name,
-        Icon = NotificationUtilities.ToNotificationIcon(Dalamud.Interface.FontAwesomeIcon.Cog),
+        Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Cog),
         Type = NotificationType.Info,
       };
 

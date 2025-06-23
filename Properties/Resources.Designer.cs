@@ -966,7 +966,7 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them..
+        ///   Looks up a localized string similar to If you see garbled text or invalid characters in the translation window it is an indicative that some plugin asset fonts may be missing or corrupted. Clicking the button below triggers an asset check and re-downloads them..
         /// </summary>
         public static string PluginAssetsNotDownloadedText {
             get {

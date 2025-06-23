@@ -10,7 +10,7 @@ public static class OpenLlamaEngineUI
 		bool isEndpointInvalid;
 		changed |= FieldValidationHelper.ValidatedInputText("Model Endpoint", ref config.OpenLlamaUrl, 400, out isEndpointInvalid);
 
-		PromptEditorUI.Draw(promptManager, PromptType.OpenLlama, DefaultPrompt, TransEngines.OpenLlama.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.OpenLlama, PromptTemplateManager.DefaultPrompt, TransEngines.OpenLlama.ToString());
 
 		if (changed)
 		{

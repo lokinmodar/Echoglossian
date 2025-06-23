@@ -13,7 +13,7 @@ public static class DeepSeekEngineUI
 		bool isEndpointInvalid;
 		changed |= FieldValidationHelper.ValidatedInputText(Resources.Endpoint, ref config.DeepSeekBaseUrl, 300, out isEndpointInvalid);
 
-		PromptEditorUI.Draw(promptManager, PromptType.DeepSeek, DefaultPrompt, TransEngines.DeepSeek.ToString());
+		PromptEditorUI.Draw(promptManager, PromptType.DeepSeek, PromptTemplateManager.DefaultPrompt, TransEngines.DeepSeek.ToString());
 
 		if (changed)
 		{

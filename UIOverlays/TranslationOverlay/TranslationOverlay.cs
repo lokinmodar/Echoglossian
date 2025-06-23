@@ -7,15 +7,20 @@ namespace Echoglossian.UIOverlays.TranslationOverlay;
 internal class TranslationOverlay : IDisposable
 {
   public bool Display { get; set; }
+
   public string CurrentText { get; set; } = string.Empty;
+
   public volatile int CurrentTextId;
   public Vector2 Dimensions = Vector2.Zero;
   public Vector2 ImGuiSize = Vector2.Zero;
   public Vector2 Position = Vector2.Zero;
 
   public SemaphoreSlim Semaphore { get; }
+
   public string CurrentName { get; set; } = string.Empty;
+
   public volatile int CurrentNameId;
+
   public SemaphoreSlim NameSemaphore { get; }
 
   public string OriginalName { get; set; } = string.Empty;

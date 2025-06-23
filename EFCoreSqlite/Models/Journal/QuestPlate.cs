@@ -89,6 +89,7 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
             ? (JsonConvert.DeserializeObject<Dictionary<string, string>>(this.ObjectivesAsText) ?? new Dictionary<string, string>())
             : new Dictionary<string, string>();
         }
+
         return this.objectives;
       }
       set => this.objectives = value;
@@ -109,6 +110,7 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
             ? (JsonConvert.DeserializeObject<Dictionary<string, string>>(this.SummariesAsText) ?? new Dictionary<string, string>())
             : new Dictionary<string, string>();
         }
+
         return this.summaries;
       }
       set => this.summaries = value;
@@ -126,16 +128,14 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
       {
         this.ObjectivesAsText = JsonConvert.SerializeObject(
           this.objectives,
-          prettyPrint ? Formatting.Indented : Formatting.None
-        );
+          prettyPrint ? Formatting.Indented : Formatting.None);
       }
 
       if (this.summaries != null && this.summaries.Count != 0)
       {
         this.SummariesAsText = JsonConvert.SerializeObject(
           this.summaries,
-          prettyPrint ? Formatting.Indented : Formatting.None
-        );
+          prettyPrint ? Formatting.Indented : Formatting.None);
       }
     }
 

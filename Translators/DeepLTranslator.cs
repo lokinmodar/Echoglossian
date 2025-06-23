@@ -3,14 +3,13 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Net;
-using System.Text;
-
 using DeepL;
-using Newtonsoft.Json;
 
 namespace Echoglossian.Translators
 {
+  /// <summary>
+  /// Provides translation services using the DeepL API or Free API based on the configuration.
+  /// </summary>
   public partial class DeepLTranslator : ITranslator
   {
     private readonly IPluginLog pluginLog;
@@ -54,6 +53,13 @@ namespace Echoglossian.Translators
       this.httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
     }
 
+    /// <summary>
+    /// Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration. 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
     async Task<string?> ITranslator.TranslateAsync(string text, string sourceLanguage, string targetLanguage)
     {
       if (this.isUsingAPIKey)
@@ -66,6 +72,13 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Synchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
     string? ITranslator.Translate(string text, string sourceLanguage, string targetLanguage)
     {
       if (this.isUsingAPIKey)
@@ -78,6 +91,13 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Synchronously translates the given text from source language to target language using the DeepL API.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
     private string? Translate(string text, string sourceLanguage, string targetLanguage)
     {
       this.pluginLog.Debug("inside DeepLTranslator Translate method");
@@ -98,6 +118,14 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Asynchronously translates the given text from source language to target language using the DeepL API.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     private async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
     {
       this.pluginLog.Debug("inside DeepLTranslator TranslateAsync method");
@@ -123,11 +151,21 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Counts the number of 'i' characters in the translated text.
+    /// </summary>
+    /// <param name="translateText"></param>
+    /// <returns></returns>
     private int GetICount(string translateText)
     {
       return translateText.Count(c => c == 'i');
     }
 
+    /// <summary>
+    /// Generates a timestamp based on the current time and the count of 'i' characters in the text.
+    /// </summary>
+    /// <param name="iCount"></param>
+    /// <returns></returns>
     private long GetTimestamp(int iCount)
     {
       long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -137,7 +175,7 @@ namespace Echoglossian.Translators
       }
 
       iCount++;
-      return timestamp - timestamp % iCount + iCount;
+      return timestamp - (timestamp % iCount) + iCount;
     }
 
     /// <summary>
@@ -237,6 +275,11 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Formats the source language for the DeepL API.
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
     private string FormatSourceLanguage(string source)
     {
       switch (source)
@@ -254,6 +297,11 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Formats the target language for the DeepL API.
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
     private string FormatTargetLanguage(string source)
     {
       switch (source)
@@ -275,6 +323,11 @@ namespace Echoglossian.Translators
       }
     }
 
+    /// <summary>
+    /// Formats the target language for the Free DeepL API.
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
     private string FormatFreeTargetLanguage(string source)
     {
       switch (source)
@@ -296,7 +349,9 @@ namespace Echoglossian.Translators
       }
     }
   }
-
+  /// <summary>
+  /// Represents the response from the DeepL translation service.
+  /// </summary>
   public class DeepLResponse
   {
     public string Id { get; set; }
@@ -305,14 +360,18 @@ namespace Echoglossian.Translators
 
     public DeepLResult Result { get; set; }
   }
-
+  /// <summary>
+  /// Represents the result of a DeepL translation operation.
+  /// </summary>
   public class DeepLResult
   {
     public DeepLTextResult[] Texts { get; set; }
 
     public string Lang { get; set; }
   }
-
+  /// <summary>
+  /// Represents a text result from the DeepL translation service.
+  /// </summary>
   public class DeepLTextResult
   {
     public string Text { get; set; }

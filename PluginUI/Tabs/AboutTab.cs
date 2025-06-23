@@ -17,7 +17,6 @@ public static class AboutTab
   /// <returns>True if any changes were made (always false here).</returns>
   public static bool Draw(Config config, nint logoHandle)
   {
-
     bool changed = false;
     if (ImGui.BeginTable("columns", 2))
     {

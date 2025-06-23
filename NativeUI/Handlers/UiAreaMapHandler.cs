@@ -69,7 +69,7 @@ namespace Echoglossian
             translatedNameText,
             string.Empty,
             string.Empty,
-            langDict[languageInt].Code,
+            LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             DateTime.Now,
             DateTime.Now);

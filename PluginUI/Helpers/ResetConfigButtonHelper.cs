@@ -34,6 +34,7 @@ public static class ResetConfigButtonHelper
         ImGui.Text(Resources.AreYouSureYouWantToResetAllSettingsToDefault);
         ImGui.Separator();
 
+        ImGui.PushID(9);
         ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
@@ -46,6 +47,7 @@ public static class ResetConfigButtonHelper
         }
 
         ImGui.PopStyleColor(3);
+        ImGui.PopID();
 
         ImGui.SameLine();
 

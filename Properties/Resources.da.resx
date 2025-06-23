@@ -485,4 +485,16 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Andre elementer i brugergrænsefladen</value>
   </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Er du sikker på, at du vil nulstille alle indstillinger til standard?</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Ja, nulstil</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Nulstil ALLE Echoglossian-indstillinger til standard</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Aflyse</value>
+  </data>
 </root>

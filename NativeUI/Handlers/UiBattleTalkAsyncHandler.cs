@@ -55,7 +55,7 @@ namespace Echoglossian
             }
 
             var textToTranslate = MemoryHelper.ReadSeStringAsString(out _, (nint)textNode->NodeText.StringPtr.Value);
-            if (this.translatedBattleTalkTexts.Contains(sanitizer.Sanitize(textToTranslate)))
+            if (this.translatedBattleTalkTexts.Contains(Sanitizer.Sanitize(textToTranslate)))
             {
               Thread.Sleep(this.delayBetweenTriesToTranslateBattleTalk);
               continue;
@@ -69,7 +69,7 @@ namespace Echoglossian
                   originalSenderNameLang: ClientStateInterface.ClientLanguage.Humanize(),
                   translatedBattleTalkMessage: string.Empty,
                   originalBattleTalkMessageLang: ClientStateInterface.ClientLanguage.Humanize(),
-                  translationLang: langDict[languageInt].Code,
+                  translationLang: LangDict[LanguageInt].Code,
                   translationEngine: this.configuration.ChosenTransEngine,
                   translatedSenderName: string.Empty,
                   createdDate: DateTime.Now,

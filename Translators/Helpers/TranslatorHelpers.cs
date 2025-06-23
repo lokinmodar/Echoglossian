@@ -10,7 +10,6 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-
     private static readonly Dictionary<string, string> LanguageCodeMap = new()
     {
       { "zh", "zh-CN" },

@@ -163,7 +163,7 @@
     <value>Configurações de mensagens de sistema</value>
   </data>
   <data name="ConfigTab4Name" xml:space="preserve">
-    <value>Configurações de diário</value>
+    <value>Diário</value>
   </data>
   <data name="ConfigTab5Name" xml:space="preserve">
     <value>Configurações de Legendas de cutscenes</value>
@@ -349,16 +349,16 @@
     <value>Redefinir para o padrão</value>
   </data>
   <data name="LivePreviewWithSampleInput" xml:space="preserve">
-    <value>Visualização ao vivo com entrada de amostra:</value>
+    <value>Visualização em tempo real com amostra:</value>
   </data>
   <data name="CopyPreview" xml:space="preserve">
-    <value>Copiar visualização</value>
+    <value>Copiar preview</value>
   </data>
   <data name="Save" xml:space="preserve">
     <value>Salvar</value>
   </data>
   <data name="Preview" xml:space="preserve">
-    <value>Visualizar</value>
+    <value>Preview</value>
   </data>
   <data name="PromptInput" xml:space="preserve">
     <value>Entrada de prompt</value>
@@ -372,18 +372,6 @@
   <data name="ResetSettingsButtonText" xml:space="preserve">
     <value>Redefinir a configuração para os padrões</value>
   </data>
-  <data name="TalkTabTitle" xml:space="preserve">
-    <value>Falar</value>
-  </data>
-  <data name="BattleTalkTabTitle" xml:space="preserve">
-    <value>Conversa de batalha</value>
-  </data>
-  <data name="ToastTabTitle" xml:space="preserve">
-    <value>Brindar</value>
-  </data>
-  <data name="SubtitleTabTitle" xml:space="preserve">
-    <value>Legenda de discussão</value>
-  </data>
   <data name="TranslateToastToggle" xml:space="preserve">
     <value>Traduzir mensagens do sistema</value>
   </data>
@@ -393,14 +381,8 @@
   <data name="SettingsForOpenRouterText" xml:space="preserve">
     <value>Configurações do OpenRouter Engine</value>
   </data>
-  <data name="AWSAccessKey" xml:space="preserve">
-    <value>Chave de acesso da AWS</value>
-  </data>
   <data name="SettingsForAmazonTranslateText" xml:space="preserve">
     <value>Configurações do Amazon Translate:</value>
-  </data>
-  <data name="AWSSecretKey" xml:space="preserve">
-    <value>Chave secreta da AWS</value>
   </data>
   <data name="Region" xml:space="preserve">
     <value>Região</value>
@@ -408,17 +390,11 @@
   <data name="APIKey" xml:space="preserve">
     <value>Chave de API</value>
   </data>
-  <data name="Endpoint" xml:space="preserve">
-    <value>Extremidade</value>
-  </data>
   <data name="SettingsForMicrosoftText" xml:space="preserve">
     <value>Configurações do Microsoft Translator</value>
   </data>
   <data name="MicrosoftTranslatorAPIKey" xml:space="preserve">
     <value>Chave de API do Microsoft Translator</value>
-  </data>
-  <data name="ModelEndpoint" xml:space="preserve">
-    <value>Ponto de extremidade do modelo</value>
   </data>
   <data name="LLMModel" xml:space="preserve">
     <value>Modelo LLM</value>
@@ -435,14 +411,8 @@
   <data name="SettingsForLibreTranslateText" xml:space="preserve">
     <value>Configurações do LibreTranslate:</value>
   </data>
-  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
-    <value>Ponto final da API LibreTranslate</value>
-  </data>
   <data name="SettingsForOpenLlamaText" xml:space="preserve">
     <value>Configurações para OpenLlama:</value>
-  </data>
-  <data name="YandexCloudFolderId" xml:space="preserve">
-    <value>ID da pasta</value>
   </data>
   <data name="SettingsForYandexCloudText" xml:space="preserve">
     <value>Configurações para YandexCloud:</value>
@@ -460,7 +430,7 @@
     <value>Tamanho da fonte:</value>
   </data>
   <data name="TranslateYesNoScreenLabel" xml:space="preserve">
-    <value>Traduzir tela Sim/Não</value>
+    <value>Traduzir tela Yes/No</value>
   </data>
   <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
     <value>Traduzir CutSceneSelectString</value>
@@ -485,5 +455,17 @@
   </data>
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Outros elementos da interface do usuário</value>
+  </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Tem certeza de que deseja redefinir todas as configurações para o padrão?</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Sim, redefinir</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Redefinir TODAS as configurações do Echoglossian para o padrão</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancelar</value>
   </data>
 </root>

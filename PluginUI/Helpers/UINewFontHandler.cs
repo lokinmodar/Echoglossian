@@ -50,7 +50,6 @@ namespace Echoglossian.PluginUI.Helpers
             .With(Echoglossian.PuaChars.AsSpan())
             .With(allUnicodeRanges.FirstCodePoint, allUnicodeRanges.FirstCodePoint + allUnicodeRanges.Length - 1);
 
-
           // more ranges here
           this.sfc = new SafeFontConfig
           {
