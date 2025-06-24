@@ -15,8 +15,11 @@ global using System.Runtime.InteropServices;
 global using System.Threading;
 global using System.Drawing;
 global using System.Drawing.Text;
+global using System.Drawing.Imaging;
 global using System.Text;
 global using System.Text.RegularExpressions;
+global using System.Linq;
+global using System.IO;
 
 global using Dalamud.Game;
 global using Dalamud.Game.Addon.Lifecycle;
@@ -40,6 +43,7 @@ global using static Echoglossian.Echoglossian;
 
 global using Echoglossian.EFCoreSqlite;
 global using Echoglossian.EFCoreSqlite.Models;
+global using Echoglossian.ImageGeneration;
 global using Echoglossian.LanguagesHandling;
 
 global using Echoglossian.Properties;

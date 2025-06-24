@@ -1,12 +1,13 @@
 ﻿// <copyright file="TextImageRenderer.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
-// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 namespace Echoglossian.ImageGeneration;
 
 /// <summary>
-/// Renders RTL or styled LTR text into a bitmap using a private font collection.
+/// Renders RTL (right-to-left) shaped text into a bitmap using a private font collection.
+/// Supports multiline wrapping and right alignment.
 /// </summary>
 public sealed class TextImageRenderer : IDisposable
 {
@@ -30,22 +31,23 @@ public sealed class TextImageRenderer : IDisposable
     }
     catch (Exception)
     {
-      // Fall back to default UI font
       this.font = new Font(SystemFonts.DefaultFont.FontFamily, fontSize, style);
       this.fallbackFontUsed = true;
     }
   }
 
   /// <summary>
-  /// Renders shaped or LTR text into a bitmap.
+  /// Renders RTL-shaped text into a bitmap.
+  /// Text will wrap automatically and be right-aligned.
   /// </summary>
-  /// <param name="text">The text to render.</param>
+  /// <param name="text">The RTL text to render.</param>
   /// <param name="textColor">The color of the text.</param>
   /// <param name="backgroundColor">The background color.</param>
-  /// <returns>A bitmap image containing the shaped text.</returns>
-  public Bitmap RenderShapedText(string text, Color textColor, Color backgroundColor)
+  /// <param name="maxWidth">Optional max width in pixels. If set, will cause line breaks.</param>
+  /// <returns>A bitmap containing the shaped RTL text.</returns>
+  public Bitmap RenderShapedText(string text, Color textColor, Color backgroundColor, int? maxWidth = null)
   {
-    Size size = this.MeasureTextSize(text);
+    Size size = this.MeasureTextSize(text, maxWidth);
     Bitmap bitmap = new(size.Width, size.Height);
     using Graphics graphics = Graphics.FromImage(bitmap);
 
@@ -53,14 +55,22 @@ public sealed class TextImageRenderer : IDisposable
     graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
 
     using SolidBrush brush = new(textColor);
-    using StringFormat format = new(StringFormatFlags.DirectionRightToLeft);
+    using StringFormat format = new(StringFormatFlags.DirectionRightToLeft)
+    {
+      Alignment = StringAlignment.Far,
+      LineAlignment = StringAlignment.Near,
+      FormatFlags = StringFormatFlags.DirectionRightToLeft,
+      Trimming = StringTrimming.Word,
+    };
 
-    graphics.DrawString(text, this.font, brush, new RectangleF(0, 0, size.Width, size.Height), format);
+    RectangleF layoutRect = new(0, 0, size.Width, size.Height);
+    graphics.DrawString(text, this.font, brush, layoutRect, format);
+
     return bitmap;
   }
 
   /// <summary>
-  /// Gets a value indicating whether fallback font was used.
+  /// Gets a value indicating whether a fallback font was used due to font load failure.
   /// </summary>
   public bool FallbackFontUsed => this.fallbackFontUsed;
 
@@ -72,13 +82,21 @@ public sealed class TextImageRenderer : IDisposable
     GC.SuppressFinalize(this);
   }
 
-  private Size MeasureTextSize(string text)
+  private Size MeasureTextSize(string text, int? maxWidth = null)
   {
     using Bitmap dummy = new(1, 1);
     using Graphics graphics = Graphics.FromImage(dummy);
-    using StringFormat format = new(StringFormatFlags.DirectionRightToLeft);
 
-    SizeF sizeF = graphics.MeasureString(text, this.font, int.MaxValue, format);
-    return new Size((int)Math.Ceiling(sizeF.Width), (int)Math.Ceiling(sizeF.Height));
+    using StringFormat format = new(StringFormatFlags.DirectionRightToLeft)
+    {
+      Alignment = StringAlignment.Far,
+      LineAlignment = StringAlignment.Near,
+      Trimming = StringTrimming.Word,
+    };
+
+    int layoutWidth = maxWidth ?? int.MaxValue;
+    SizeF measured = graphics.MeasureString(text, this.font, layoutWidth, format);
+
+    return new Size((int)Math.Ceiling(measured.Width), (int)Math.Ceiling(measured.Height));
   }
 }

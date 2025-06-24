@@ -20,11 +20,18 @@ public static class ResetConfigButtonHelper
     buttonLabel ??= Resources.ResetSettingsButtonText;
     var popupId = "ConfirmResetSettingsPopup##" + buttonLabel;
 
+    ImGui.PushID(19);
+    ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
+    ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
+    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
     if (ImGui.Button(buttonLabel))
     {
       showResetPopup = true;
       ImGui.OpenPopup(popupId);
     }
+
+    ImGui.PopStyleColor(3);
+    ImGui.PopID();
 
     if (showResetPopup)
     {

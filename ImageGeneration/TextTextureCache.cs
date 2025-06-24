@@ -5,36 +5,112 @@
 
 namespace Echoglossian.ImageGeneration;
 
-
 /// <summary>
-/// Caches generated text textures to avoid redundant rendering.
+/// LRU cache for storing generated text textures with timeout and memory tracking.
 /// </summary>
 public sealed class TextTextureCache : IDisposable
 {
-  private readonly ConcurrentDictionary<string, ITextureWrap> cache = new();
+  private readonly ConcurrentDictionary<string, CachedTextureEntry> cache = new();
+  private readonly LinkedList<string> accessOrder = new();
+
+  private readonly object syncLock = new();
+  private readonly int maxCapacity;
+  private readonly TimeSpan inactivityThreshold;
 
   /// <summary>
-  /// Gets an existing texture from the cache, or creates and stores it using the provided generator.
+  /// Initializes a new instance of the <see cref="TextTextureCache"/> class.
   /// </summary>
-  /// <param name="key">A unique key representing the cached text and parameters.</param>
-  /// <param name="generator">A factory function to create the texture if not cached.</param>
-  /// <returns>The ITextureWrap for the text.</returns>
-  public ITextureWrap GetOrCreate(string key, Func<ITextureWrap> generator)
+  /// <param name="maxCapacity">Maximum number of textures allowed.</param>
+  /// <param name="inactivityTimeoutSeconds">Seconds after which inactive entries are evicted.</param>
+  public TextTextureCache(int maxCapacity = 128, int inactivityTimeoutSeconds = 60)
   {
-    return this.cache.GetOrAdd(key, _ => generator());
+    this.maxCapacity = maxCapacity;
+    this.inactivityThreshold = TimeSpan.FromSeconds(inactivityTimeoutSeconds);
   }
 
   /// <summary>
-  /// Clears all cached textures and disposes them.
+  /// Gets or creates a texture from cache using an LRU policy.
+  /// </summary>
+  public IDalamudTextureWrap GetOrCreate(string key, Func<IDalamudTextureWrap> generator)
+  {
+    lock (this.syncLock)
+    {
+      this.PruneStaleEntries();
+
+      if (this.cache.TryGetValue(key, out var entry))
+      {
+        entry.LastAccessed = DateTime.UtcNow;
+
+        this.accessOrder.Remove(key);
+        this.accessOrder.AddLast(key);
+
+        return entry.Texture;
+      }
+
+      IDalamudTextureWrap texture = generator();
+      var newEntry = new CachedTextureEntry(texture);
+
+      if (this.cache.Count >= this.maxCapacity)
+      {
+        this.EvictLeastRecentlyUsed();
+      }
+
+      this.cache[key] = newEntry;
+      this.accessOrder.AddLast(key);
+
+      return texture;
+    }
+  }
+
+  private void EvictLeastRecentlyUsed()
+  {
+    if (this.accessOrder.First is not { } oldestKey)
+    {
+      return;
+    }
+
+    if (this.cache.TryRemove(oldestKey.Value, out var entry))
+    {
+      entry.Texture.Dispose();
+    }
+
+    this.accessOrder.RemoveFirst();
+  }
+
+  private void PruneStaleEntries()
+  {
+    var now = DateTime.UtcNow;
+    var toRemove = this.cache
+      .Where(pair => now - pair.Value.LastAccessed > this.inactivityThreshold)
+      .Select(pair => pair.Key)
+      .ToList();
+
+    foreach (string key in toRemove)
+    {
+      if (this.cache.TryRemove(key, out var entry))
+      {
+        entry.Texture.Dispose();
+      }
+
+      this.accessOrder.Remove(key);
+    }
+  }
+
+  /// <summary>
+  /// Clears the cache completely.
   /// </summary>
   public void Clear()
   {
-    foreach (var wrap in this.cache.Values)
+    lock (this.syncLock)
     {
-      wrap.Dispose();
-    }
+      foreach (var entry in this.cache.Values)
+      {
+        entry.Texture.Dispose();
+      }
 
-    this.cache.Clear();
+      this.cache.Clear();
+      this.accessOrder.Clear();
+    }
   }
 
   /// <inheritdoc/>
@@ -42,5 +118,18 @@ public sealed class TextTextureCache : IDisposable
   {
     this.Clear();
     GC.SuppressFinalize(this);
+  }
+
+  /// <summary>
+  /// Returns stats about memory usage and count.
+  /// </summary>
+  public (int Count, long EstimatedMemoryBytes) GetDebugStats()
+  {
+    lock (this.syncLock)
+    {
+      int count = this.cache.Count;
+      long bytes = this.cache.Values.Sum(e => e.EstimateMemoryBytes());
+      return (count, bytes);
+    }
   }
 }
