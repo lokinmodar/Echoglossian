@@ -82,6 +82,12 @@ public sealed class TextImageRenderer : IDisposable
     GC.SuppressFinalize(this);
   }
 
+  /// <summary>
+  /// Measures the size of the given text when rendered with the current font.
+  /// </summary>
+  /// <param name="text"></param>
+  /// <param name="maxWidth"></param>
+  /// <returns></returns>
   private Size MeasureTextSize(string text, int? maxWidth = null)
   {
     using Bitmap dummy = new(1, 1);

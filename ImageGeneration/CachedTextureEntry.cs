@@ -1,4 +1,4 @@
-﻿// <copyright file="ChachedTextureEntry.cs" company="lokinmodar">
+﻿// <copyright file="CachedTextureEntry.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>

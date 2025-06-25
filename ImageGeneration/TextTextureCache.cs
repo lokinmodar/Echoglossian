@@ -29,8 +29,11 @@ public sealed class TextTextureCache : IDisposable
   }
 
   /// <summary>
-  /// Gets or creates a texture from cache using an LRU policy.
+  /// Gets or creates a texture by key using the provided generator function.
   /// </summary>
+  /// <param name="key"></param>
+  /// <param name="generator"></param>
+  /// <returns></returns>
   public IDalamudTextureWrap GetOrCreate(string key, Func<IDalamudTextureWrap> generator)
   {
     lock (this.syncLock)
@@ -62,6 +65,9 @@ public sealed class TextTextureCache : IDisposable
     }
   }
 
+  /// <summary>
+  /// Evicts the least recently used texture from the cache if it exceeds capacity.
+  /// </summary>
   private void EvictLeastRecentlyUsed()
   {
     if (this.accessOrder.First is not { } oldestKey)
@@ -77,6 +83,9 @@ public sealed class TextTextureCache : IDisposable
     this.accessOrder.RemoveFirst();
   }
 
+  /// <summary>
+  /// Prunes stale entries that have not been accessed within the inactivity threshold.
+  /// </summary>
   private void PruneStaleEntries()
   {
     var now = DateTime.UtcNow;
@@ -121,8 +130,9 @@ public sealed class TextTextureCache : IDisposable
   }
 
   /// <summary>
-  /// Returns stats about memory usage and count.
+  /// Gets debug statistics about the cache.
   /// </summary>
+  /// <returns></returns>
   public (int Count, long EstimatedMemoryBytes) GetDebugStats()
   {
     lock (this.syncLock)
