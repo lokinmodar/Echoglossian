@@ -153,7 +153,7 @@ namespace Echoglossian
 
       LanguageEngineSupport.ApplySupportTo(LangDict);
 
-      identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");
+      /*      identifier = Factory.Load($"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Wiki82.profile.xml");*/
 
       try
       {

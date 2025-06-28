@@ -11,31 +11,31 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    private static readonly RankedLanguageIdentifierFactory Factory = new();
+    /*    private static readonly RankedLanguageIdentifierFactory Factory = new();
 
-    private static RankedLanguageIdentifier identifier;
+        private static RankedLanguageIdentifier identifier;
 
-    /// <summary>
-    /// Detects which language the source text is in.
-    /// </summary>
-    /// <param name="message">text to have the source language identified.</param>
-    /// <returns>Returns the detected language code.</returns>
-    private static string LangIdentify(string message)
-    {
-      // Sanitizer sanitizer = new(ClientLanguage);
-      string sanitizedString = Sanitizer.Sanitize(message);
+        /// <summary>
+        /// Detects which language the source text is in.
+        /// </summary>
+        /// <param name="message">text to have the source language identified.</param>
+        /// <returns>Returns the detected language code.</returns>
+        private static string LangIdentify(string message)
+        {
+          // Sanitizer sanitizer = new(ClientLanguage);
+          string sanitizedString = Sanitizer.Sanitize(message);
 
-#if DEBUG
-      PluginLog.Debug($"Message in Lang Method: {sanitizedString}");
-#endif
-      Tuple<NTextCat.LanguageInfo, double> mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
-#if DEBUG
-      PluginLog.Debug($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
-#endif
-      return mostCertainLanguage != null
-        ? mostCertainLanguage.Item1.Iso639_2T
-        : Resources.LangIdentError;
-    }
+    #if DEBUG
+          PluginLog.Debug($"Message in Lang Method: {sanitizedString}");
+    #endif
+          Tuple<NTextCat.LanguageInfo, double> mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
+    #if DEBUG
+          PluginLog.Debug($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
+    #endif
+          return mostCertainLanguage != null
+            ? mostCertainLanguage.Item1.Iso639_2T
+            : Resources.LangIdentError;
+        }*/
 
     /// <summary>
     /// Translates the sentences passed to it using the selected engine.

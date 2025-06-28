@@ -774,6 +774,118 @@
             <param name="createdDate">The date the toast message was created.</param>
             <param name="updatedDate">The date the toast message was last updated.</param>
         </member>
+        <member name="T:Echoglossian.ImageGeneration.CachedTextureEntry">
+            <summary>
+            Represents a cached texture entry with last access time and memory info.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.CachedTextureEntry.#ctor(Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.ImageGeneration.CachedTextureEntry"/> class.
+            </summary>
+            <param name="texture">The cached texture.</param>
+        </member>
+        <member name="P:Echoglossian.ImageGeneration.CachedTextureEntry.Texture">
+            <summary>
+            Gets the wrapped texture.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.ImageGeneration.CachedTextureEntry.LastAccessed">
+            <summary>
+            Gets or sets the last time this texture was accessed.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.CachedTextureEntry.EstimateMemoryBytes">
+            <summary>
+            Estimates the memory usage of the texture in bytes.
+            </summary>
+            <returns>Estimated memory footprint in bytes (width × height × 4).</returns>
+        </member>
+        <member name="T:Echoglossian.ImageGeneration.TextImageRenderer">
+            <summary>
+            Renders RTL (right-to-left) shaped text into a bitmap using a private font collection.
+            Supports multiline wrapping and right alignment.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.#ctor(System.String,System.Single,System.Drawing.FontStyle)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.ImageGeneration.TextImageRenderer"/> class.
+            </summary>
+            <param name="fontPath">The path to the TTF font file to use.</param>
+            <param name="fontSize">The font size to use.</param>
+            <param name="style">The font style to apply (bold, italic, etc.).</param>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.RenderShapedText(System.String,System.Drawing.Color,System.Drawing.Color,System.Nullable{System.Int32})">
+            <summary>
+            Renders RTL-shaped text into a bitmap.
+            Text will wrap automatically and be right-aligned.
+            </summary>
+            <param name="text">The RTL text to render.</param>
+            <param name="textColor">The color of the text.</param>
+            <param name="backgroundColor">The background color.</param>
+            <param name="maxWidth">Optional max width in pixels. If set, will cause line breaks.</param>
+            <returns>A bitmap containing the shaped RTL text.</returns>
+        </member>
+        <member name="P:Echoglossian.ImageGeneration.TextImageRenderer.FallbackFontUsed">
+            <summary>
+            Gets a value indicating whether a fallback font was used due to font load failure.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.MeasureTextSize(System.String,System.Nullable{System.Int32})">
+            <summary>
+            Measures the size of the given text when rendered with the current font.
+            </summary>
+            <param name="text"></param>
+            <param name="maxWidth"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Echoglossian.ImageGeneration.TextTextureCache">
+            <summary>
+            LRU cache for storing generated text textures with timeout and memory tracking.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.ImageGeneration.TextTextureCache"/> class.
+            </summary>
+            <param name="maxCapacity">Maximum number of textures allowed.</param>
+            <param name="inactivityTimeoutSeconds">Seconds after which inactive entries are evicted.</param>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.GetOrCreate(System.String,System.Func{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap})">
+            <summary>
+            Gets or creates a texture by key using the provided generator function.
+            </summary>
+            <param name="key"></param>
+            <param name="generator"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.EvictLeastRecentlyUsed">
+            <summary>
+            Evicts the least recently used texture from the cache if it exceeds capacity.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.PruneStaleEntries">
+            <summary>
+            Prunes stale entries that have not been accessed within the inactivity threshold.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.Clear">
+            <summary>
+            Clears the cache completely.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.GetDebugStats">
+            <summary>
+            Gets debug statistics about the cache.
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:Echoglossian.LanguagesHandling.LanguageEngineSupport">
             <summary>
             Class to manage language engine support.
@@ -1549,7 +1661,7 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.PluginAssetsNotDownloadedText">
             <summary>
-              Looks up a localized string similar to If you see garbled text or invalid characters in the translation window\nit is an indicative that some plugin asset fonts may be missing or corrupted.\n\n Clicking the button below triggers an asset check and re-downloads them..
+              Looks up a localized string similar to If you see garbled text or invalid characters in the translation window it is an indicative that some plugin asset fonts may be missing or corrupted. Clicking the button below triggers an asset check and re-downloads them..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PluginInterfaceLanguage">
@@ -2233,6 +2345,30 @@
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for chat bubble translations.
             </summary>
             <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="T:TextTextureGenerator">
+            <summary>
+            Generates textures from text using a specified font and size.
+            </summary>
+        </member>
+        <member name="M:TextTextureGenerator.#ctor(Dalamud.Plugin.Services.ITextureProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TextTextureGenerator"/> class.
+            </summary>
+            <param name="textureProvider"></param>
+        </member>
+        <member name="M:TextTextureGenerator.CreateTextTextureAsync(System.String,System.String,System.Single,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Drawing.FontStyle,System.Nullable{System.Int32})">
+            <summary>
+            Creates a texture from the specified text using the given font and size.
+            </summary>
+            <param name="text"></param>
+            <param name="fontPath"></param>
+            <param name="fontSize"></param>
+            <param name="textColor"></param>
+            <param name="backgroundColor"></param>
+            <param name="fontStyle"></param>
+            <param name="maxWidth"></param>
             <returns></returns>
         </member>
     </members>

@@ -12,13 +12,13 @@ namespace Echoglossian
   {
     public TalkMessage FormatTalkMessage(string sender, string text)
     {
-      return new TalkMessage(sender, text, ClientStateInterface.ClientLanguage.Humanize(), LangIdentify(sender), string.Empty, string.Empty,
+      return new TalkMessage(sender, text, ClientStateInterface.ClientLanguage.Humanize(), sender, string.Empty, string.Empty,
         this.languagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
     }
 
     public BattleTalkMessage FormatBattleTalkMessage(string sender, string text)
     {
-      return new BattleTalkMessage(sender, text, ClientStateInterface.ClientLanguage.Humanize(), LangIdentify(sender), string.Empty, string.Empty,
+      return new BattleTalkMessage(sender, text, ClientStateInterface.ClientLanguage.Humanize(), sender, string.Empty, string.Empty,
         this.languagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
     }
 
