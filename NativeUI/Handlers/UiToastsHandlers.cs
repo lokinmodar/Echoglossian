@@ -393,7 +393,7 @@ namespace Echoglossian
 
             message = translatedToastMessage;
 
-            ToastMessage translatedToastData = new ToastMessage("Error", messageTextToTranslate, messageTextToTranslate,
+            ToastMessage translatedToastData = new ToastMessage("Error", messageTextToTranslate, ClientStateInterface.ClientLanguage.Humanize(),
               translatedToastMessage, LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
             /*#if DEBUG
@@ -541,7 +541,7 @@ namespace Echoglossian
 
             message = translatedToastMessage;
 
-            ToastMessage translatedToastData = new ToastMessage("NonError", messageTextToTranslate, messageTextToTranslate,
+            ToastMessage translatedToastData = new ToastMessage("NonError", messageTextToTranslate, ClientStateInterface.ClientLanguage.Humanize(),
               translatedToastMessage, LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now,
               DateTime.Now);
             /*#if DEBUG

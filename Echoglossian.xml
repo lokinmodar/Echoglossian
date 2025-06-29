@@ -136,6 +136,11 @@
         <member name="F:Echoglossian.Config.OpenAILlmModel">
             <summary>OpenAI LLM model for ChatGPT use.</summary>
         </member>
+        <member name="F:Echoglossian.Config.UseOpenAILiveModelList">
+            <summary>
+            Use live model list from OpenAI instead of static list.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.ChatGptTemperature">
             <summary>Temperature setting for ChatGPT responses.</summary>
         </member>
@@ -470,13 +475,6 @@
             <summary>
             Parses the UI elements from the Addon sheet in the game data.
             </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LangIdentify(System.String)">
-            <summary>
-            Detects which language the source text is in.
-            </summary>
-            <param name="message">text to have the source language identified.</param>
-            <returns>Returns the detected language code.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
             <summary>

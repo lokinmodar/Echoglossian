@@ -5,6 +5,7 @@
 
 using Amazon;
 using Amazon.Runtime;
+using Amazon.Runtime.Credentials;
 using Amazon.Translate;
 using Amazon.Translate.Model;
 
@@ -34,7 +35,7 @@ namespace Echoglossian.Translators
         else
         {
           pluginLog.Warning("Using default AWS credentials provider chain.");
-          credentials = FallbackCredentialsFactory.GetCredentials();
+          credentials = DefaultAWSCredentialsIdentityResolver.GetCredentials();
         }
 
         this.translateClient = new AmazonTranslateClient(credentials, new AmazonTranslateConfig
@@ -76,7 +77,7 @@ namespace Echoglossian.Translators
         return string.Empty;
       }
 
-      string fixedText = Echoglossian.FixText(text);
+      string fixedText = FixText(text);
       this.pluginLog.Debug($"AWS Translate input: {fixedText}");
 
       try
@@ -89,7 +90,7 @@ namespace Echoglossian.Translators
         };
 
         var response = await this.translateClient.TranslateTextAsync(request);
-        string cleaned = Echoglossian.FixText(response.TranslatedText);
+        string cleaned = FixText(response.TranslatedText);
         this.pluginLog.Debug($"AWS Translate result: {cleaned}");
         return cleaned;
       }

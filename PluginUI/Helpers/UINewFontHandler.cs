@@ -23,31 +23,31 @@ namespace Echoglossian.PluginUI.Helpers
 
       var allUnicodeRanges = UnicodeRanges.All;
 
-      Echoglossian.PluginLog.Debug($"SymbolsFontPath: {SymbolsFontFilePath}");
-      Echoglossian.PluginLog.Debug($"FontFilePath: {FontFilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont3FilePath: {ComplementaryFont3FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont4FilePath: {ComplementaryFont4FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont5FilePath: {ComplementaryFont5FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont6FilePath: {ComplementaryFont6FilePath}");
-      Echoglossian.PluginLog.Debug($"ComplementaryFont7FilePath: {ComplementaryFont7FilePath}");
-      Echoglossian.PluginLog.Debug($"SpecialFontFilePath: {SpecialFontFilePath}");
-      Echoglossian.PluginLog.Debug($"LangComboFontFilePath: {Echoglossian.LangComboFontFilePath}");
-      Echoglossian.PluginLog.Debug($"DummyFontFilePath: {Echoglossian.DummyFontFilePath}");
-      Echoglossian.PluginLog.Debug($"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
+      PluginLog.Debug($"SymbolsFontPath: {SymbolsFontFilePath}");
+      PluginLog.Debug($"FontFilePath: {FontFilePath}");
+      PluginLog.Debug($"ComplementaryFont3FilePath: {ComplementaryFont3FilePath}");
+      PluginLog.Debug($"ComplementaryFont4FilePath: {ComplementaryFont4FilePath}");
+      PluginLog.Debug($"ComplementaryFont5FilePath: {ComplementaryFont5FilePath}");
+      PluginLog.Debug($"ComplementaryFont6FilePath: {ComplementaryFont6FilePath}");
+      PluginLog.Debug($"ComplementaryFont7FilePath: {ComplementaryFont7FilePath}");
+      PluginLog.Debug($"SpecialFontFilePath: {SpecialFontFilePath}");
+      PluginLog.Debug($"LangComboFontFilePath: {LangComboFontFilePath}");
+      PluginLog.Debug($"DummyFontFilePath: {DummyFontFilePath}");
+      PluginLog.Debug($"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
 
-      this.GeneralFontHandle = Echoglossian.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(
+      this.GeneralFontHandle = PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(
         e => e.OnPreBuild(tk =>
         {
           PluginLog.Debug("Building font atlas for general use...");
           PluginLog.Debug($"Font size: {this.configuration?.FontSize} px");
-          PluginLog.Debug($"Glyph ranges: {Echoglossian.LangComboItems.Length} items, {Echoglossian.CharsToAddToAll.Length} chars, {Echoglossian.ScriptCharList.Length} script chars, {Echoglossian.PuaCharCodes.Length} PUA codes, {Echoglossian.PuaChars.Length} PUA chars");
+          PluginLog.Debug($"Glyph ranges: {LangComboItems.Length} items, {CharsToAddToAll.Length} chars, {ScriptCharList.Length} script chars, {PuaCharCodes.Length} PUA codes, {PuaChars.Length} PUA chars");
 
           var rangeBuilder = default(FluentGlyphRangeBuilder)
-            .With(Echoglossian.LangComboItems.AsSpan())
-            .With(Echoglossian.CharsToAddToAll.AsSpan())
-            .With(Echoglossian.ScriptCharList.AsSpan())
-            .With(Echoglossian.PuaCharCodes.AsSpan())
-            .With(Echoglossian.PuaChars.AsSpan())
+            .With(LangComboItems.AsSpan())
+            .With(CharsToAddToAll.AsSpan())
+            .With(ScriptCharList.AsSpan())
+            .With(PuaCharCodes.AsSpan())
+            .With(PuaChars.AsSpan())
             .With(allUnicodeRanges.FirstCodePoint, allUnicodeRanges.FirstCodePoint + allUnicodeRanges.Length - 1);
 
           // more ranges here
@@ -56,49 +56,49 @@ namespace Echoglossian.PluginUI.Helpers
             SizePx = (float)this.configuration?.FontSize,
             GlyphRanges = rangeBuilder.Build(),
           };
-          this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(Echoglossian.LangComboFontFilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.SymbolsFontFilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.FontFilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.ComplementaryFont3FilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.ComplementaryFont4FilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.ComplementaryFont5FilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.ComplementaryFont6FilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.ComplementaryFont7FilePath, this.sfc);
-          if (!string.IsNullOrWhiteSpace(Echoglossian.SpecialFontFilePath))
+          this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(LangComboFontFilePath, this.sfc);
+          tk.AddFontFromFile(SymbolsFontFilePath, this.sfc);
+          tk.AddFontFromFile(FontFilePath, this.sfc);
+          tk.AddFontFromFile(ComplementaryFont3FilePath, this.sfc);
+          tk.AddFontFromFile(ComplementaryFont4FilePath, this.sfc);
+          tk.AddFontFromFile(ComplementaryFont5FilePath, this.sfc);
+          tk.AddFontFromFile(ComplementaryFont6FilePath, this.sfc);
+          tk.AddFontFromFile(ComplementaryFont7FilePath, this.sfc);
+          if (!string.IsNullOrWhiteSpace(SpecialFontFilePath))
           {
-            tk.AddFontFromFile(Echoglossian.SpecialFontFilePath, this.sfc);
+            tk.AddFontFromFile(SpecialFontFilePath, this.sfc);
           }
         }));
 
-      this.LanguageFontHandle = Echoglossian.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(
+      this.LanguageFontHandle = PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(
         e => e.OnPreBuild(tk =>
         {
           PluginLog.Debug("Building font atlas for language-specific use...");
           PluginLog.Debug($"Font size: {this.configuration?.FontSize} px");
-          PluginLog.Debug($"Glyph ranges: {Echoglossian.CharsToAddToAll.Length} chars, {Echoglossian.ScriptCharList.Length} script chars, {Echoglossian.PuaCharCodes.Length} PUA codes, {Echoglossian.PuaChars.Length} PUA chars");
+          PluginLog.Debug($"Glyph ranges: {CharsToAddToAll.Length} chars, {ScriptCharList.Length} script chars, {PuaCharCodes.Length} PUA codes, {PuaChars.Length} PUA chars");
           PluginLog.Debug($"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
-          PluginLog.Debug($"Selected language: {Echoglossian.SelectedLanguage.LanguageName}");
+          PluginLog.Debug($"Selected language: {SelectedLanguage.LanguageName}");
 
           var rangeBuilder = default(FluentGlyphRangeBuilder)
-            .With(Echoglossian.CharsToAddToAll.AsSpan())
-            .With(Echoglossian.ScriptCharList.AsSpan())
-            .With(Echoglossian.PuaCharCodes.AsSpan())
-            .With(Echoglossian.PuaChars.AsSpan())
+            .With(CharsToAddToAll.AsSpan())
+            .With(ScriptCharList.AsSpan())
+            .With(PuaCharCodes.AsSpan())
+            .With(PuaChars.AsSpan())
             .With(allUnicodeRanges.FirstCodePoint, allUnicodeRanges.FirstCodePoint + allUnicodeRanges.Length - 1)
-            .With(Echoglossian.SelectedLanguage.ExclusiveCharsToAdd.AsSpan());
+            .With(SelectedLanguage.ExclusiveCharsToAdd.AsSpan());
 
           // more ranges here
           this.sfc = new SafeFontConfig
           {
-            SizePx = this.configuration.FontSize,
+            SizePx = (float)this.configuration?.FontSize,
             GlyphRanges = rangeBuilder.Build(),
           };
-          this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(Echoglossian.DummyFontFilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.SymbolsFontFilePath, this.sfc);
-          tk.AddFontFromFile(Echoglossian.FontFilePath, this.sfc);
-          if (!string.IsNullOrWhiteSpace(Echoglossian.SpecialFontFilePath))
+          this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(DummyFontFilePath, this.sfc);
+          tk.AddFontFromFile(SymbolsFontFilePath, this.sfc);
+          tk.AddFontFromFile(FontFilePath, this.sfc);
+          if (!string.IsNullOrWhiteSpace(SpecialFontFilePath))
           {
-            tk.AddFontFromFile(Echoglossian.SpecialFontFilePath, this.sfc);
+            tk.AddFontFromFile(SpecialFontFilePath, this.sfc);
           }
         }));
     }

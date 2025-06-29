@@ -3,10 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.Properties;
-using Humanizer;
-using NTextCat;
-
 namespace Echoglossian
 {
   public partial class Echoglossian

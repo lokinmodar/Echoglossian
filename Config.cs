@@ -222,6 +222,12 @@ namespace Echoglossian
     [DefaultValue("gpt-4o-mini")]
     public string OpenAILlmModel = "gpt-4o-mini";
 
+    /// <summary>
+    /// Use live model list from OpenAI instead of static list.
+    /// </summary>
+    [DefaultValue(false)]
+    public bool UseOpenAILiveModelList = false;
+
     /// <summary>Temperature setting for ChatGPT responses.</summary>
     [DefaultValue(0.1f)]
     public float ChatGptTemperature = 0.1f;
@@ -231,8 +237,8 @@ namespace Echoglossian
     public string ChatGptEngine = "davinci";
 
     /// <summary>ChatGPT model used for API calls.</summary>
-    [DefaultValue("gpt-3.5-turbo-16k-0613")]
-    public string ChatGptModel = "gpt-3.5-turbo-16k-0613";
+    [DefaultValue("gpt-4.1-mini")]
+    public string ChatGptModel = "gpt-4.1-mini";
 
     /// <summary>Prompt template used for ChatGPT translations.</summary>
     [DefaultValue("")]
