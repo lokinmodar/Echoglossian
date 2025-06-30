@@ -1,4 +1,9 @@
-﻿namespace Echoglossian.Translators.OpenAI;
+﻿// <copyright file="OpenAITextModel.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+namespace Echoglossian.Translators.OpenAI;
 
 public sealed record OpenAITextModel(
     string Id,
@@ -6,5 +11,7 @@ public sealed record OpenAITextModel(
     bool SupportsText,
     bool SupportsVision,
     bool IsTurbo,
-    bool IsMini
+    bool IsMini,
+    bool IsDefault = false,
+    string EngineName = ""
 );

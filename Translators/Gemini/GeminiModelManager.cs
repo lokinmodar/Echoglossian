@@ -1,22 +1,24 @@
-﻿// <copyright file="OpenAIModelManager.cs" company="lokinmodar">
+﻿// <copyright file="GeminiModelManager.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-namespace Echoglossian.Translators.OpenAI;
+using Echoglossian.Translators.OpenAI;
 
-public static class OpenAIModelManager
+namespace Echoglossian.Translators.Gemini;
+
+public static class GeminiModelManager
 {
   private static readonly HttpClient httpClient = new();
   private static readonly object syncLock = new();
 
-  public static List<OpenAITextModel> CurrentModelList { get; private set; } = OpenAITextModelDefaults.PredefinedModels;
+  public static List<OpenAITextModel> CurrentModelList { get; private set; } = GeminiTextModelDefaults.PredefinedModels;
 
   public static void ResetToDefault()
   {
     lock (syncLock)
     {
-      CurrentModelList = OpenAITextModelDefaults.PredefinedModels;
+      CurrentModelList = GeminiTextModelDefaults.PredefinedModels;
     }
   }
 
@@ -29,8 +31,8 @@ public static class OpenAIModelManager
 
     try
     {
-      var request = new HttpRequestMessage(HttpMethod.Get, "https://api.openai.com/v1/models");
-      request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+      var url = $"https://generativelanguage.googleapis.com/v1beta/models?key={apiKey}";
+      var request = new HttpRequestMessage(HttpMethod.Get, url);
       request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
       var response = await httpClient.SendAsync(request);
@@ -41,40 +43,42 @@ public static class OpenAIModelManager
 
       string json = await response.Content.ReadAsStringAsync();
       var root = JObject.Parse(json);
-      var data = root["data"] as JArray;
-      if (data == null)
+      var modelsToken = root["models"];
+
+      if (modelsToken is not JArray modelsArray)
       {
         return;
       }
 
       var models = new List<OpenAITextModel>();
 
-      foreach (var item in data)
+      foreach (var item in modelsArray)
       {
-        var id = item["id"]?.ToString();
+        var id = item["name"]?.ToString()?.Split('/').Last();
         if (string.IsNullOrWhiteSpace(id))
         {
           continue;
         }
 
-        // ✅ Filter out non-text models
-        if (id.StartsWith("dall-e") || id.StartsWith("whisper") || id.StartsWith("tts") || id.Contains("embedding") || id.Contains("moderation"))
+        // ✅ Optional filter: Skip if not text-capable
+        var supportedInterfaces = item["supportedGenerationMethods"] as JArray;
+        if (supportedInterfaces == null || !supportedInterfaces.Any(m => m?.ToString() == "generateContent"))
         {
           continue;
         }
 
         string displayName = id switch
         {
-          "gpt-4" => "🧠 GPT-4",
-          "gpt-4o" => "👁 GPT-4o",
-          "gpt-3.5-turbo" => "⚡ GPT-3.5 Turbo",
+          "gemini-pro" => "🔷 Gemini Pro",
+          "gemini-1.5-pro" => "🟢 Gemini 1.5 Pro",
+          "gemini-1.5-flash" => "⚡ Gemini 1.5 Flash",
           _ => $"🧩 {id}",
         };
 
-        bool isMini = id.Contains("mini");
-        bool isTurbo = id.Contains("turbo");
+        bool isMini = id.Contains("flash");
+        bool isTurbo = id.Contains("flash") || id.Contains("pro");
         bool supportsText = true;
-        bool supportsVision = id.Contains("gpt-4o");
+        bool supportsVision = false;
 
         models.Add(new OpenAITextModel(
           Id: id,
@@ -84,7 +88,7 @@ public static class OpenAIModelManager
           IsTurbo: isTurbo,
           IsMini: isMini,
           IsDefault: false,
-          EngineName: "OpenAI"
+          EngineName: "Gemini"
         ));
       }
 
@@ -98,7 +102,7 @@ public static class OpenAIModelManager
     }
     catch
     {
-      ResetToDefault();
+      ResetToDefault(); // fallback on error
     }
   }
 }

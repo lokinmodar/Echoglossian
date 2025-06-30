@@ -175,7 +175,7 @@ public static class LanguageEngineSupport
     ["tk"] = new() { 0, 8 },
     ["tzm"] = new() { 8 },
     ["ug"] = new() { 0, 8 },
-    ["yi"] = new() { 0, 8 }
+    ["yi"] = new() { 0, 8 },
   };
 
   /// <summary>

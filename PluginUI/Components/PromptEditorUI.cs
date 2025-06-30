@@ -1,9 +1,13 @@
-﻿using System.Numerics;
+﻿// <copyright file="PromptEditorUI.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
 
+using System.Numerics;
 using Echoglossian.Properties;
 using ImGuiNET;
 
-namespace Echoglossian.PluginUI.Helpers;
+namespace Echoglossian.PluginUI.Components;
 
 /// <summary>
 /// Provides UI functionality for editing prompts.

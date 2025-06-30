@@ -1,7 +1,13 @@
-﻿using Echoglossian.Translators.DeepSeek;
-using Echoglossian.Translators.OpenAI;
+﻿// <copyright file="DeepSeekEngineUI.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using Echoglossian.PluginUI.Components;
+using Echoglossian.Translators.DeepSeek;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
+
 public static class DeepSeekEngineUI
 {
   public static bool Draw(Config config, PromptTemplateManager promptManager)
@@ -16,44 +22,38 @@ public static class DeepSeekEngineUI
     bool isEndpointInvalid;
     changed |= FieldValidationHelper.ValidatedInputText(Resources.Endpoint, ref config.DeepSeekBaseUrl, 300, out isEndpointInvalid);
 
-    var models = DeepSeekTextModelDefaults.PredefinedModels;
-    int currentIndex = models.FindIndex(m => m.Id == config.DeepSeekModel);
-    if (currentIndex == -1) currentIndex = 0;
-
-    string LabelFor(OpenAITextModel model)
+    // Live model fetch toggle
+    bool prev = config.UseLiveDeepSeekModelList;
+    if (ImGui.Checkbox("Fetch DeepSeek model list live", ref config.UseLiveDeepSeekModelList))
     {
-      var flags = new List<string>();
-      if (model.IsTurbo) flags.Add("Turbo");
-      if (model.IsMini) flags.Add("Mini");
-      string meta = flags.Count > 0 ? $" ({string.Join(", ", flags)})" : string.Empty;
-      return $"{model.DisplayName}{meta}";
-    }
-
-    string currentLabel = LabelFor(models[currentIndex]);
-
-    if (ImGui.BeginCombo(Resources.LLMModel, currentLabel))
-    {
-      for (int i = 0; i < models.Count; i++)
+      changed = true;
+      if (config.UseLiveDeepSeekModelList && !prev)
       {
-        var model = models[i];
-        bool isSelected = i == currentIndex;
-        string display = LabelFor(model);
-
-        if (ImGui.Selectable(display, isSelected))
-        {
-          config.DeepSeekModel = model.Id;
-          changed = true;
-        }
-
-        if (isSelected)
-        {
-          ImGui.SetItemDefaultFocus();
-        }
+        _ = Task.Run(() => DeepSeekModelManager.RefreshAsync(config.DeepSeekTranslatorApiKey, config.DeepSeekBaseUrl));
       }
-      ImGui.EndCombo();
+      else if (!config.UseLiveDeepSeekModelList)
+      {
+        DeepSeekModelManager.ResetToDefault();
+      }
     }
 
-    ImGui.TextColored(new Vector4(1f, 1f, 0.6f, 1f), $"Model ID: {config.DeepSeekModel}");
+    var tooltips = new Dictionary<string, string>
+    {
+      ["deepseek-chat"] = "💬 Optimized for general chat and speed",
+      ["deepseek-reasoner"] = "🧠 Reasoning and problem-solving tasks",
+    };
+
+    var models = config.UseLiveDeepSeekModelList
+      ? DeepSeekModelManager.CurrentModelList
+      : DeepSeekTextModelDefaults.PredefinedModels;
+
+    changed |= ModelDropdownUI.Draw(
+      Resources.LLMModel,
+      ref config.DeepSeekLlmModel,
+      models,
+      engine: "DeepSeek",
+      tooltips: tooltips
+    );
 
     PromptEditorUI.Draw(promptManager, PromptType.DeepSeek, PromptTemplateManager.DefaultPrompt, TransEngines.DeepSeek.ToString());
 

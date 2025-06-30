@@ -399,8 +399,7 @@ public partial class Echoglossian
     [149] = new LanguageInfo("ug", "ئۇيغۇرچە; Uyghur", "NotoSansArabic-Medium.ttf",
   "اەبپتجچخدەرزسشغفقككلمنوۋۇۈۆھىي", new List<int> { 0, 8 }),
     [150] = new LanguageInfo("yi", "ייִדיש; Yiddish", "NotoSansHebrew-Medium.ttf",
-  "אבגדהוזחטיךכלםמןנסעףפץצקרשת", new List<int> { 0, 8 })
-
+  "אבגדהוזחטיךכלםמןנסעףפץצקרשת", new List<int> { 0, 8 }),
   };
 
   public class LanguageInfo

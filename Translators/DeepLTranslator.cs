@@ -54,7 +54,7 @@ namespace Echoglossian.Translators
     }
 
     /// <summary>
-    /// Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration. 
+    /// Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
     /// </summary>
     /// <param name="text"></param>
     /// <param name="sourceLanguage"></param>
@@ -349,6 +349,7 @@ namespace Echoglossian.Translators
       }
     }
   }
+
   /// <summary>
   /// Represents the response from the DeepL translation service.
   /// </summary>
@@ -360,6 +361,7 @@ namespace Echoglossian.Translators
 
     public DeepLResult Result { get; set; }
   }
+
   /// <summary>
   /// Represents the result of a DeepL translation operation.
   /// </summary>
@@ -369,6 +371,7 @@ namespace Echoglossian.Translators
 
     public string Lang { get; set; }
   }
+
   /// <summary>
   /// Represents a text result from the DeepL translation service.
   /// </summary>

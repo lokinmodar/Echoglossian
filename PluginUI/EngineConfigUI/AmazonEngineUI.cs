@@ -2,6 +2,8 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
+using Echoglossian.PluginUI.Components;
+
 namespace Echoglossian.PluginUI.EngineConfigUI;
 public static class AmazonEngineUI
 {

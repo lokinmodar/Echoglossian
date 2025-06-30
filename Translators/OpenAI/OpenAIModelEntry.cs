@@ -1,4 +1,9 @@
-﻿namespace Echoglossian.Translators.OpenAI;
+﻿// <copyright file="OpenAIModelEntry.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+namespace Echoglossian.Translators.OpenAI;
 
 public class OpenAIModelResponse
 {

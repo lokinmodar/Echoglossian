@@ -3,7 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-namespace Echoglossian.PluginUI;
+namespace Echoglossian.PluginUI.Components;
 
 /// <summary>
 /// Renders the footer of the Plugin Configuration Window.
@@ -18,7 +18,7 @@ public static class PluginConfigWindowFooter
   /// <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
   /// <param name="saveCallback">Callback function to invoke when saving.</param>
   /// <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
-  public static void DrawFooter(ref bool config, ref bool saveConfigValue, Action saveCallback, IntPtr pixImageHandle)
+  public static void DrawFooter(ref bool config, ref bool saveConfigValue, Action saveCallback, nint pixImageHandle)
   {
     var windowSize = ImGui.GetWindowContentRegionMax();
 

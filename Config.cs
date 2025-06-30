@@ -1,4 +1,9 @@
-﻿using System;
+﻿// <copyright file="Config.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using System;
 using System.ComponentModel;
 using System.Numerics;
 
@@ -226,7 +231,7 @@ namespace Echoglossian
     /// Use live model list from OpenAI instead of static list.
     /// </summary>
     [DefaultValue(false)]
-    public bool UseOpenAILiveModelList = false;
+    public bool UseLiveOpenAIModelList = false;
 
     /// <summary>Temperature setting for ChatGPT responses.</summary>
     [DefaultValue(0.1f)]
@@ -312,6 +317,10 @@ namespace Echoglossian
     [DefaultValue("deepseek-chat")]
     public string? DeepSeekModel = "deepseek-chat";
 
+    /// <summary>Temperature setting for DeepSeek responses.</summary>
+    [DefaultValue(false)]
+    public bool UseLiveDeepSeekModelList = false;
+
     /// <summary>Temperature used for DeepSeek responses.</summary>
     [DefaultValue(0.1f)]
     public float DeepSeekTemperature = 0.1f;
@@ -348,6 +357,18 @@ namespace Echoglossian
     [DefaultValue("gemini-pro")]
     public string? GeminiModel = "gemini-pro";
 
+    /// <summary>
+    /// Model identifier for Gemini translations.
+    /// </summary>
+    [DefaultValue("gemini-pro")]
+    public string GeminiModelId = "gemini-pro"; // or "gemini-1.5-flash"
+
+    /// <summary>
+    /// Use live Gemini model list instead of static defaults.
+    /// </summary>
+    [DefaultValue(false)]
+    public bool UseLiveGeminiModelList = false;
+
     /// <summary>Temperature value used in Gemini translations.</summary>
     [DefaultValue(0.1f)]
     public float GeminiTemperature = 0.1f;
@@ -377,8 +398,8 @@ namespace Echoglossian
     public string? MicrosoftTranslatorPrompt = string.Empty;
 
     /// <summary>Model identifier for OpenRouter translator.</summary>
-    [DefaultValue("")]
-    public string? OpenRouterModel = string.Empty;
+    [DefaultValue("mistral")]
+    public string? OpenRouterModel = "mistral";
 
     /// <summary>Temperature value for OpenRouter translation generation.</summary>
     [DefaultValue(0.1f)]
@@ -395,6 +416,12 @@ namespace Echoglossian
     /// <summary>Prompt passed to OpenRouter translator.</summary>
     [DefaultValue("")]
     public string? OpenRouterPrompt = string.Empty;
+
+    /// <summary>
+    /// Use live model list from OpenRouter instead of static defaults.
+    /// </summary>
+    [DefaultValue(false)]
+    public bool? UseLiveOpenRouterModelList = false;
 
     /// <summary>LibreTranslate URL.</summary>
     [DefaultValue("https://libretranslate.de/")]

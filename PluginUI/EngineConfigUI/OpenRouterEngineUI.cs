@@ -1,39 +1,71 @@
-﻿namespace Echoglossian.PluginUI.EngineConfigUI;
+﻿// <copyright file="OpenRouterEngineUI.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using Echoglossian.PluginUI.Components;
+using Echoglossian.Translators.OpenAI;
+using Echoglossian.Translators.OpenRouter;
+
+namespace Echoglossian.PluginUI.EngineConfigUI;
+
 public static class OpenRouterEngineUI
 {
-	public static bool Draw(Config config, PromptTemplateManager promptManager)
-	{
-		bool changed = false;
+  private static List<OpenAITextModel> models = OpenRouterModelManager.CurrentModelList;
 
-		ImGui.TextWrapped(Resources.SettingsForOpenRouterText);
-		ImGui.Spacing();
+  public static bool Draw(Config config, PromptTemplateManager promptManager)
+  {
+    bool changed = false;
 
-		bool isApiKeyInvalid;
-		changed |= FieldValidationHelper.ValidatedInputText("API Key", ref config.OpenRouterApiKey, 300, out isApiKeyInvalid);
+    ImGui.TextWrapped(Resources.SettingsForOpenRouterText);
+    ImGui.Spacing();
 
-		bool isBaseUrlInvalid;
-		changed |= FieldValidationHelper.ValidatedInputText("Model Endpoint", ref config.OpenRouterBaseUrl, 400, out isBaseUrlInvalid);
+    bool isApiKeyInvalid;
+    changed |= FieldValidationHelper.ValidatedInputText("API Key", ref config.OpenRouterApiKey, 300, out isApiKeyInvalid);
 
-		bool isModelInvalid;
-		changed |= FieldValidationHelper.ValidatedInputText("LLM Model", ref config.OpenRouterModel, 200, out isModelInvalid);
+    bool isBaseUrlInvalid;
+    changed |= FieldValidationHelper.ValidatedInputText("Model Endpoint", ref config.OpenRouterBaseUrl, 400, out isBaseUrlInvalid);
 
-		float temp = config.OpenRouterTemperature;
-		if (ImGui.SliderFloat("Temperature", ref temp, 0.1f, 1.0f, "%.1f"))
-		{
-			config.OpenRouterTemperature = temp;
-			changed = true;
-		}
+    // Live model list toggle
+    bool newToggle = config.UseLiveOpenRouterModelList;
+    if (ImGui.Checkbox("Use Live Model List", ref newToggle))
+    {
+      config.UseLiveOpenRouterModelList = newToggle;
+      changed = true;
 
-		ImGui.Separator();
+      if (newToggle)
+      {
+        Task.Run(async () =>
+        {
+          await OpenRouterModelManager.RefreshAsync(config.OpenRouterApiKey, config.OpenRouterBaseUrl);
+          models = OpenRouterModelManager.CurrentModelList;
+        });
+      }
+      else
+      {
+        OpenRouterModelManager.ResetToDefault();
+        models = OpenRouterModelManager.CurrentModelList;
+      }
+    }
 
-		PromptEditorUI.Draw(promptManager, PromptType.OpenRouter, PromptTemplateManager.DefaultPrompt, TransEngines.OpenRouter.ToString());
+    // Dropdown model selection
+    changed |= ModelDropdownUI.Draw("LLM Model", ref config.OpenRouterModel, models, "OpenRouter");
 
-		if (changed)
-		{
-			FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-			SaveConfig(config);
-		}
+    float temp = config.OpenRouterTemperature;
+    if (ImGui.SliderFloat("Temperature", ref temp, 0.1f, 1.0f, "%.1f"))
+    {
+      config.OpenRouterTemperature = temp;
+      changed = true;
+    }
 
-		return changed;
-	}
+    PromptEditorUI.Draw(promptManager, PromptType.OpenRouter, PromptTemplateManager.DefaultPrompt, TransEngines.OpenRouter.ToString());
+
+    if (changed)
+    {
+      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+      SaveConfig(config);
+    }
+
+    return changed;
+  }
 }

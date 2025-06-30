@@ -11,6 +11,7 @@ using Echoglossian.Properties;
 using Echoglossian.Translators;
 using ImGuiNET;
 using Dalamud.Interface.Utility.Raii;
+using Echoglossian.PluginUI.Components;
 
 namespace Echoglossian;
 
