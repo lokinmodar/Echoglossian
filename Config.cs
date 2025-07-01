@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Numerics;
 
 using Dalamud.Configuration;
+using Echoglossian.Translators.LibreTranslate;
 
 namespace Echoglossian
 {
@@ -421,11 +422,23 @@ namespace Echoglossian
     /// Use live model list from OpenRouter instead of static defaults.
     /// </summary>
     [DefaultValue(false)]
-    public bool? UseLiveOpenRouterModelList = false;
+    public bool UseLiveOpenRouterModelList = false;
+
+    /// <summary>
+    /// Type of LibreTranslate instance to use for translations.
+    /// </summary>
+    [DefaultValue(LibreTranslateInstanceType.De)]
+    public LibreTranslateInstanceType LibreTranslateInstanceType = LibreTranslateInstanceType.De;
 
     /// <summary>LibreTranslate URL.</summary>
     [DefaultValue("https://libretranslate.de/")]
     public string LibreTranslateUrl = "https://libretranslate.de/";
+
+    /// <summary>
+    /// API key for LibreTranslate service.
+    /// </summary>
+    [DefaultValue("")]
+    public string LibreTranslateApiKey = string.Empty;
 
     /// <summary>OpenLlama URL.</summary>
     [DefaultValue("https://api.openllama.org/v1/")]
