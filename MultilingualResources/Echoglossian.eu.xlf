@@ -611,9 +611,9 @@
           <source>LibreTranslate API Endpoint</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">LibreTranslate-ren API-aren azken puntua</target>
         </trans-unit>
-        <trans-unit id="SettingsForOpenLlamaText" translate="yes" xml:space="preserve">
-          <source>Settings for OpenLlama:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">OpenLlamaren konfigurazioa:</target>
+        <trans-unit id="SettingsForOllamaText" translate="yes" xml:space="preserve">
+          <source>Settings for Ollama:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ollamaren konfigurazioa:</target>
         </trans-unit>
         <trans-unit id="YandexCloudFolderId" translate="yes" xml:space="preserve">
           <source>Folder ID</source>

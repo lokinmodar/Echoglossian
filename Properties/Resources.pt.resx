@@ -465,8 +465,8 @@
   <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
     <value>Ponto final da API LibreTranslate</value>
   </data>
-  <data name="SettingsForOpenLlamaText" xml:space="preserve">
-    <value>Configurações para OpenLlama:</value>
+  <data name="SettingsForOllamaText" xml:space="preserve">
+    <value>Configurações para Ollama:</value>
   </data>
   <data name="YandexCloudFolderId" xml:space="preserve">
     <value>ID da pasta</value>

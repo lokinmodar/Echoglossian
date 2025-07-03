@@ -13,5 +13,5 @@ public sealed record OpenAITextModel(
     bool IsTurbo,
     bool IsMini,
     bool IsDefault = false,
-    string EngineName = ""
-);
+    string EngineName = "",
+    string? TierOverride = null);

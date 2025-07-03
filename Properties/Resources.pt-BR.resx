@@ -411,8 +411,8 @@
   <data name="SettingsForLibreTranslateText" xml:space="preserve">
     <value>Configurações do LibreTranslate:</value>
   </data>
-  <data name="SettingsForOpenLlamaText" xml:space="preserve">
-    <value>Configurações para OpenLlama:</value>
+  <data name="SettingsForOllamaText" xml:space="preserve">
+    <value>Configurações para Ollama:</value>
   </data>
   <data name="SettingsForYandexCloudText" xml:space="preserve">
     <value>Configurações para YandexCloud:</value>

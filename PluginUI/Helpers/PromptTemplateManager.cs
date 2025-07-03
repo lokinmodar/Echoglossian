@@ -68,7 +68,7 @@ Please provide only the translated text in your response, without any explanatio
       PromptType.Amazon => this.config.AmazonPrompt,
       PromptType.ChatGPT => this.config.ChatGptPrompt,
       PromptType.YandexCloud => this.config.YandexCloudPrompt,
-      PromptType.OpenLlama => this.config.OpenLlamaPrompt,
+      PromptType.Ollama => this.config.OllamaPrompt,
       _ => null,
     };
   }
@@ -90,7 +90,7 @@ Please provide only the translated text in your response, without any explanatio
       case PromptType.Amazon: this.config.AmazonPrompt = prompt; break;
       case PromptType.ChatGPT: this.config.ChatGptPrompt = prompt; break;
       case PromptType.YandexCloud: this.config.YandexCloudPrompt = prompt; break;
-      case PromptType.OpenLlama: this.config.OpenLlamaPrompt = prompt; break;
+      case PromptType.Ollama: this.config.OllamaPrompt = prompt; break;
     }
   }
 
@@ -105,7 +105,7 @@ Please provide only the translated text in your response, without any explanatio
       6 => PromptType.Microsoft,
       7 => PromptType.Amazon,
       8 => PromptType.YandexCloud,
-      9 => PromptType.OpenLlama,
+      9 => PromptType.Ollama,
       _ => null,
     };
   }

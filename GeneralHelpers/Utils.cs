@@ -95,7 +95,7 @@ namespace Echoglossian
       SetPromptIfEmpty(nameof(Config.MicrosoftTranslatorPrompt));
       SetPromptIfEmpty(nameof(Config.AmazonPrompt));
       SetPromptIfEmpty(nameof(Config.YandexCloudPrompt));
-      SetPromptIfEmpty(nameof(Config.OpenLlamaPrompt));
+      SetPromptIfEmpty(nameof(Config.OllamaPrompt));
 
       // Restore runtime-mutable metadata
       config.FontChangeTime = DateTime.Now.Ticks;
@@ -163,7 +163,7 @@ namespace Echoglossian
       YandexCloud = 3, // Yandex Translator
       GTranslate = 4, // Uses Google, Bing and Yandex (free engines)
       DeepSeek = 5,
-      OpenLlama = 6,
+      Ollama = 6,
       LibreTranslate = 7,
       Microsoft = 8, // Microsoft Bing Translator (free engine)
       Amazon = 9, // Amazon Translate
@@ -171,7 +171,7 @@ namespace Echoglossian
       YandexPublic = 11, // Yandex Public Translator
       OpenRouter = 12, // OpenRouter Translator
 
-      All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | OpenLlama | LibreTranslate | YandexPublic | OpenRouter,
+      All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | Ollama | LibreTranslate | YandexPublic | OpenRouter,
     }
 
     /// <summary>
@@ -187,7 +187,7 @@ namespace Echoglossian
       ChatGPT,
       YandexCloud,
       LibreTranslate,
-      OpenLlama,
+      Ollama,
     }
 
     /// <summary>

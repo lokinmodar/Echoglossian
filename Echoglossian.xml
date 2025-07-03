@@ -136,7 +136,7 @@
         <member name="F:Echoglossian.Config.OpenAILlmModel">
             <summary>OpenAI LLM model for ChatGPT use.</summary>
         </member>
-        <member name="F:Echoglossian.Config.UseOpenAILiveModelList">
+        <member name="F:Echoglossian.Config.UseLiveOpenAIModelList">
             <summary>
             Use live model list from OpenAI instead of static list.
             </summary>
@@ -204,6 +204,9 @@
         <member name="F:Echoglossian.Config.DeepSeekModel">
             <summary>Model used with DeepSeek translator API.</summary>
         </member>
+        <member name="F:Echoglossian.Config.UseLiveDeepSeekModelList">
+            <summary>Temperature setting for DeepSeek responses.</summary>
+        </member>
         <member name="F:Echoglossian.Config.DeepSeekTemperature">
             <summary>Temperature used for DeepSeek responses.</summary>
         </member>
@@ -230,6 +233,16 @@
         </member>
         <member name="F:Echoglossian.Config.GeminiModel">
             <summary>Gemini model ID used for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.GeminiModelId">
+            <summary>
+            Model identifier for Gemini translations.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveGeminiModelList">
+            <summary>
+            Use live Gemini model list instead of static defaults.
+            </summary>
         </member>
         <member name="F:Echoglossian.Config.GeminiTemperature">
             <summary>Temperature value used in Gemini translations.</summary>
@@ -267,20 +280,40 @@
         <member name="F:Echoglossian.Config.OpenRouterPrompt">
             <summary>Prompt passed to OpenRouter translator.</summary>
         </member>
+        <member name="F:Echoglossian.Config.UseLiveOpenRouterModelList">
+            <summary>
+            Use live model list from OpenRouter instead of static defaults.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.LibreTranslateInstanceType">
+            <summary>
+            Type of LibreTranslate instance to use for translations.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.LibreTranslateUrl">
             <summary>LibreTranslate URL.</summary>
         </member>
-        <member name="F:Echoglossian.Config.OpenLlamaUrl">
-            <summary>OpenLlama URL.</summary>
+        <member name="F:Echoglossian.Config.LibreTranslateApiKey">
+            <summary>
+            API key for LibreTranslate service.
+            </summary>
         </member>
-        <member name="F:Echoglossian.Config.OpenLlamaModel">
-            <summary>OpenLlama model to use for translations.</summary>
+        <member name="F:Echoglossian.Config.OllamaUrl">
+            <summary>Ollama URL.</summary>
         </member>
-        <member name="F:Echoglossian.Config.OpenLlamaTemperature">
-            <summary>OpenLlama temperature setting for translations.</summary>
+        <member name="F:Echoglossian.Config.OllamaModel">
+            <summary>Ollama model to use for translations.</summary>
         </member>
-        <member name="F:Echoglossian.Config.OpenLlamaPrompt">
-            <summary>Prompt used for OpenLlama translations.</summary>
+        <member name="F:Echoglossian.Config.OllamaTemperature">
+            <summary>Ollama temperature setting for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OllamaPrompt">
+            <summary>Prompt used for Ollama translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveOllamaModelList">
+            <summary>
+            Use live model list from Ollama instead of static defaults.
+            </summary>
         </member>
         <member name="F:Echoglossian.Config.ForceShowTitle">
             <summary>Always show overlay title bar, even if name translation is off.</summary>
@@ -922,6 +955,35 @@
             Frees the previously allocated buffer.
             </summary>
         </member>
+        <member name="T:Echoglossian.PluginUI.Components.PluginConfigWindowFooter">
+            <summary>
+            Renders the footer of the Plugin Configuration Window.
+            Includes Save, Donation, Project Links, and Pix QR popup.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,System.IntPtr)">
+            <summary>
+            Draws the footer section with buttons and Pix QR popup.
+            </summary>
+            <param name="config">The window open/close flag.</param>
+            <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
+            <param name="saveCallback">Callback function to invoke when saving.</param>
+            <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Components.PromptEditorUI">
+            <summary>
+            Provides UI functionality for editing prompts.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Components.PromptEditorUI.Draw(Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.PromptType,System.String,System.String)">
+            <summary>
+            Draws the editable prompt box for a specific engine.
+            </summary>
+            <param name="templateManager">The manager responsible for handling prompt templates.</param>
+            <param name="type">The type of the prompt being edited.</param>
+            <param name="defaultPrompt">The default prompt text to use if no custom prompt is set.</param>
+            <param name="label">The label used to identify the prompt editor instance.</param>
+        </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.DeepLEngineUI">
             <summary>
             Renders the configuration UI for DeepL Translator.
@@ -966,20 +1028,6 @@
             Stores the editor UI state for a single prompt editing session.
             </summary>
         </member>
-        <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorUI">
-            <summary>
-            Provides UI functionality for editing prompts.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.PluginUI.Helpers.PromptEditorUI.Draw(Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.PromptType,System.String,System.String)">
-            <summary>
-            Draws the editable prompt box for a specific engine.
-            </summary>
-            <param name="templateManager">The manager responsible for handling prompt templates.</param>
-            <param name="type">The type of the prompt being edited.</param>
-            <param name="defaultPrompt">The default prompt text to use if no custom prompt is set.</param>
-            <param name="label">The label used to identify the prompt editor instance.</param>
-        </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptTemplateManager">
             <summary>
             Manages prompt validation, retrieval, and dynamic substitution for translator prompts.
@@ -1008,21 +1056,6 @@
             Shows a styled warning text to indicate a required field.
             </summary>
             <param name="fieldName">The name of the required field.</param>
-        </member>
-        <member name="T:Echoglossian.PluginUI.PluginConfigWindowFooter">
-            <summary>
-            Renders the footer of the Plugin Configuration Window.
-            Includes Save, Donation, Project Links, and Pix QR popup.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.PluginUI.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,System.IntPtr)">
-            <summary>
-            Draws the footer section with buttons and Pix QR popup.
-            </summary>
-            <param name="config">The window open/close flag.</param>
-            <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
-            <param name="saveCallback">Callback function to invoke when saving.</param>
-            <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.AboutTab">
             <summary>
@@ -1787,9 +1820,9 @@
               Looks up a localized string similar to Settings for Microsoft Translator.
             </summary>
         </member>
-        <member name="P:Echoglossian.Properties.Resources.SettingsForOpenLlamaText">
+        <member name="P:Echoglossian.Properties.Resources.SettingsForOllamaText">
             <summary>
-              Looks up a localized string similar to Settings for OpenLlama:.
+              Looks up a localized string similar to Settings for Ollama:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsForOpenRouterText">
@@ -2060,7 +2093,7 @@
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.Echoglossian#Translators#ITranslator#TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration. 
+            Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
@@ -2241,6 +2274,22 @@
             <param name="sourceLanguage">The language of the text to translate.</param>
             <param name="targetLanguage">The language to translate the text into.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.LibreTranslateTranslator.DetermineEndpoint(Echoglossian.Config)">
+            <summary>
+            Determines the endpoint URL for LibreTranslate based on the configuration.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.LibreTranslateTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+            Asynchronously translates the specified text from the source language to the target language using LibreTranslate.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
         </member>
         <member name="T:Echoglossian.Translators.TranslationService">
             <summary>

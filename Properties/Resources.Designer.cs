@@ -1201,11 +1201,11 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Settings for OpenLlama:.
+        ///   Looks up a localized string similar to Settings for Ollama:.
         /// </summary>
-        public static string SettingsForOpenLlamaText {
+        public static string SettingsForOllamaText {
             get {
-                return ResourceManager.GetString("SettingsForOpenLlamaText", resourceCulture);
+                return ResourceManager.GetString("SettingsForOllamaText", resourceCulture);
             }
         }
         

@@ -9,14 +9,14 @@ namespace Echoglossian.Translators.OpenRouter
 {
   public static class OpenRouterModelManager
   {
-    private static readonly HttpClient httpClient = new();
-    private static readonly object syncLock = new();
+    private static readonly HttpClient HttpClient = new();
+    private static readonly object SyncLock = new();
 
     public static List<OpenAITextModel> CurrentModelList { get; private set; } = OpenRouterTextModelDefaults.PredefinedModels;
 
     public static void ResetToDefault()
     {
-      lock (syncLock)
+      lock (SyncLock)
       {
         CurrentModelList = OpenRouterTextModelDefaults.PredefinedModels;
       }
@@ -34,7 +34,7 @@ namespace Echoglossian.Translators.OpenRouter
         var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/v1/models");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
-        var response = await httpClient.SendAsync(request);
+        var response = await HttpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
           return;
@@ -77,11 +77,10 @@ namespace Echoglossian.Translators.OpenRouter
             IsTurbo: isTurbo,
             IsMini: isMini,
             IsDefault: false,
-            EngineName: "OpenRouter"
-          ));
+            EngineName: "OpenRouter"));
         }
 
-        lock (syncLock)
+        lock (SyncLock)
         {
           if (models.Count > 0)
           {

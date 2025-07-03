@@ -465,8 +465,8 @@
   <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
     <value>Τελικό σημείο API LibreTranslate</value>
   </data>
-  <data name="SettingsForOpenLlamaText" xml:space="preserve">
-    <value>Ρυθμίσεις για το OpenLlama:</value>
+  <data name="SettingsForOllamaText" xml:space="preserve">
+    <value>Ρυθμίσεις για το Ollama:</value>
   </data>
   <data name="YandexCloudFolderId" xml:space="preserve">
     <value>Αναγνωριστικό φακέλου</value>

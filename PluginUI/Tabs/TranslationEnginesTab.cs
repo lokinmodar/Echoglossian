@@ -29,8 +29,9 @@ public static class TranslationEnginesTab
   Action rebuildTranslationService)
   {
     bool changed = false;
+    var promptManager = new PromptTemplateManager(config);
 
-    using var scrollingChild = ImRaii.Child("TranslatinEngineSettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
+    using var scrollingChild = ImRaii.Child("TranslatinEngineSettings", new Vector2(-1, -150), false, ImGuiWindowFlags.NoBackground);
 
     if (!scrollingChild)
     {
@@ -70,37 +71,46 @@ public static class TranslationEnginesTab
         changed |= DeepLEngineUI.Draw(config);
         break;
       case TransEngines.ChatGPT:
-        changed |= ChatGPTEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= ChatGPTEngineUI.Draw(config, promptManager);
         break;
       case TransEngines.YandexCloud:
-        changed |= YandexCloudEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= YandexCloudEngineUI.Draw(config, promptManager);
         break;
       case TransEngines.GTranslate:
         changed |= GTranslateEngineUI.Draw(config);
         break;
       case TransEngines.DeepSeek:
-        changed |= DeepSeekEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= DeepSeekEngineUI.Draw(config, promptManager);
         break;
-      case TransEngines.OpenLlama:
-        changed |= OpenLlamaEngineUI.Draw(config, new PromptTemplateManager(config));
+      case TransEngines.Ollama:
+        try
+        {
+          changed |= OllamaEngineUI.Draw(config, promptManager);
+        }
+        catch (Exception ex)
+        {
+          PluginLog.Error($"OllamaEngineUI failed: {ex.Message}, {ex.StackTrace}");
+          ImGui.TextColored(new Vector4(1f, 0.4f, 0.4f, 1f), "Ollama engine UI failed to render.");
+        }
+
         break;
       case TransEngines.LibreTranslate:
-        changed |= LibreTranslateEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= LibreTranslateEngineUI.Draw(config, promptManager);
         break;
       case TransEngines.Microsoft:
-        changed |= MicrosoftEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= MicrosoftEngineUI.Draw(config, promptManager);
         break;
       case TransEngines.Amazon:
-        changed |= AmazonEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= AmazonEngineUI.Draw(config, promptManager);
         break;
       case TransEngines.Gemini:
-        changed |= GeminiEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= GeminiEngineUI.Draw(config, promptManager);
         break;
       case TransEngines.YandexPublic:
         changed |= YandexPublicEngineUI.Draw(config);
         break;
       case TransEngines.OpenRouter:
-        changed |= OpenRouterEngineUI.Draw(config, new PromptTemplateManager(config));
+        changed |= OpenRouterEngineUI.Draw(config, promptManager);
         break;
       default:
         ImGui.Text(Resources.NoSettingsForEngine);

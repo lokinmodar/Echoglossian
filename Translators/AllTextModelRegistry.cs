@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Translators.Ollama;
 using Echoglossian.Translators.OpenAI;
 
 namespace Echoglossian.Translators
@@ -13,6 +14,7 @@ namespace Echoglossian.Translators
         .Concat(OpenAI.OpenAITextModelDefaults.PredefinedModels)
         .Concat(Gemini.GeminiTextModelDefaults.PredefinedModels)
         .Concat(DeepSeek.DeepSeekTextModelDefaults.PredefinedModels)
+        .Concat(Ollama.OllamaTextModelDefaults.PredefinedModels)
         .ToList();
 
     public static IReadOnlyList<OpenAITextModel> ByEngine(string engineName) =>

@@ -44,14 +44,17 @@ public static class ModelDropdownUI
     out OpenAITextModel? selectedModel)
   {
     selectedModel = null;
-    if (models.Count == 0)
+
+    if (models == null || models.Count == 0)
     {
+      ImGui.TextColored(new Vector4(1f, 0.6f, 0.6f, 1f), "No models available.");
       return false;
     }
 
-    var sortedModels = (sortOverride ?? BuildTooltipSort(tooltips)).Invoke != null
-      ? models.OrderBy(sortOverride ?? BuildTooltipSort(tooltips)).ToList()
-      : models.ToList();
+    var sorter = sortOverride ?? BuildTooltipSort(tooltips);
+    List<OpenAITextModel> sortedModels = sorter != null
+        ? models.OrderBy(sorter).ToList()
+        : models.ToList();
 
     string selectedModelId = modelId;
     int currentIndex = sortedModels.FindIndex(m => m.Id == selectedModelId);
@@ -91,6 +94,7 @@ public static class ModelDropdownUI
         "openai" => new Vector4(0.5f, 0.75f, 1f, 1f),
         "gemini" => new Vector4(0.85f, 0.6f, 1f, 1f),
         "deepseek" => new Vector4(0.6f, 1f, 0.6f, 1f),
+        "ollama" => new Vector4(1f, 1f, 0.6f, 1f),
         _ => new Vector4(1f, 1f, 1f, 1f),
       };
     }
@@ -100,46 +104,51 @@ public static class ModelDropdownUI
 
     if (ImGui.BeginCombo(label, currentLabel))
     {
-      string? lastGroup = null;
-
-      for (int i = 0; i < sortedModels.Count; i++)
+      try
       {
-        var model = sortedModels[i];
-        string group = GetEngineTierGroup(model);
+        string? lastGroup = null;
 
-        if (group != lastGroup)
+        for (int i = 0; i < sortedModels.Count; i++)
         {
-          ImGui.Separator();
-          ImGui.TextDisabled(group);
-          lastGroup = group;
-        }
+          var model = sortedModels[i];
+          string group = GetEngineTierGroup(model);
 
-        bool isSelected = i == currentIndex;
-        string labelText = LabelFor(model);
+          if (group != lastGroup)
+          {
+            ImGui.Separator();
+            ImGui.TextDisabled(group);
+            lastGroup = group;
+          }
 
-        ImGui.PushStyleColor(ImGuiCol.Text, GetColor(model.EngineName));
+          bool isSelected = i == currentIndex;
+          string labelText = LabelFor(model);
 
-        if (ImGui.Selectable(labelText, isSelected))
-        {
-          modelId = model.Id;
-          selectedModel = model;
-          changed = true;
-        }
+          ImGui.PushStyleColor(ImGuiCol.Text, GetColor(model.EngineName));
 
-        if (ImGui.IsItemHovered() && tooltips?.TryGetValue(model.Id, out var tip) == true)
-        {
-          ImGui.SetTooltip(tip);
-        }
+          if (ImGui.Selectable(labelText, isSelected))
+          {
+            modelId = model.Id;
+            selectedModel = model;
+            changed = true;
+          }
 
-        ImGui.PopStyleColor();
+          if (ImGui.IsItemHovered() && tooltips?.TryGetValue(model.Id, out var tip) == true)
+          {
+            ImGui.SetTooltip(tip);
+          }
 
-        if (isSelected)
-        {
-          ImGui.SetItemDefaultFocus();
+          ImGui.PopStyleColor();
+
+          if (isSelected)
+          {
+            ImGui.SetItemDefaultFocus();
+          }
         }
       }
-
-      ImGui.EndCombo();
+      finally
+      {
+        ImGui.EndCombo(); // ✅ Always close!
+      }
     }
 
     ImGui.TextColored(new Vector4(1f, 1f, 0.6f, 1f), $"Model ID: {modelId}");

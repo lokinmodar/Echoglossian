@@ -30,7 +30,7 @@ public partial class Echoglossian
         "YandexCloud",
         "GTranslate",
         "DeepSeek",
-        "OpenLlama",
+        "Ollama",
         "LibreTranslate",
         "Microsoft",
         "Amazon",

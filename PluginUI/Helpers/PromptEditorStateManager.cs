@@ -12,7 +12,7 @@ namespace Echoglossian.PluginUI.Helpers;
 /// </summary>
 public static class PromptEditorStateManager
 {
-  private static readonly ConcurrentDictionary<string, PromptEditorState> states = new();
+  private static readonly ConcurrentDictionary<string, PromptEditorState> States = new();
 
   /// <summary>
   /// Gets the editor state for a given tab label.
@@ -21,7 +21,7 @@ public static class PromptEditorStateManager
   /// <returns>A mutable reference to the editor state.</returns>
   public static PromptEditorState Get(string label)
   {
-    return states.GetOrAdd(label, _ => new PromptEditorState());
+    return States.GetOrAdd(label, _ => new PromptEditorState());
   }
 }
 

@@ -9,14 +9,14 @@ namespace Echoglossian.Translators.Gemini;
 
 public static class GeminiModelManager
 {
-  private static readonly HttpClient httpClient = new();
-  private static readonly object syncLock = new();
+  private static readonly HttpClient HttpClient = new();
+  private static readonly object SyncLock = new();
 
   public static List<OpenAITextModel> CurrentModelList { get; private set; } = GeminiTextModelDefaults.PredefinedModels;
 
   public static void ResetToDefault()
   {
-    lock (syncLock)
+    lock (SyncLock)
     {
       CurrentModelList = GeminiTextModelDefaults.PredefinedModels;
     }
@@ -35,7 +35,7 @@ public static class GeminiModelManager
       var request = new HttpRequestMessage(HttpMethod.Get, url);
       request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-      var response = await httpClient.SendAsync(request);
+      var response = await HttpClient.SendAsync(request);
       if (!response.IsSuccessStatusCode)
       {
         return;
@@ -88,11 +88,10 @@ public static class GeminiModelManager
           IsTurbo: isTurbo,
           IsMini: isMini,
           IsDefault: false,
-          EngineName: "Gemini"
-        ));
+          EngineName: "Gemini"));
       }
 
-      lock (syncLock)
+      lock (SyncLock)
       {
         if (models.Count > 0)
         {

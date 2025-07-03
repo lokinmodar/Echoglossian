@@ -49,11 +49,10 @@ public static class DeepSeekEngineUI
 
     changed |= ModelDropdownUI.Draw(
       Resources.LLMModel,
-      ref config.DeepSeekLlmModel,
+      ref config.DeepSeekModel,
       models,
       engine: "DeepSeek",
-      tooltips: tooltips
-    );
+      tooltips: tooltips);
 
     PromptEditorUI.Draw(promptManager, PromptType.DeepSeek, PromptTemplateManager.DefaultPrompt, TransEngines.DeepSeek.ToString());
 

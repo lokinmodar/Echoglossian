@@ -19,8 +19,7 @@ public static class OpenRouterTextModelDefaults
       IsTurbo: false,
       IsMini: false,
       IsDefault: true,
-      EngineName: "OpenRouter"
-    ),
+      EngineName: "OpenRouter"),
     new(
       Id: "openchat/openchat-3.5",
       DisplayName: "🛰 OpenChat 3.5",
@@ -29,8 +28,7 @@ public static class OpenRouterTextModelDefaults
       IsTurbo: true,
       IsMini: false,
       IsDefault: false,
-      EngineName: "OpenRouter"
-    ),
+      EngineName: "OpenRouter"),
     new(
       Id: "gryphe/mythomax-l2-13b",
       DisplayName: "🛰 Mythomax L2 13B",
@@ -39,8 +37,7 @@ public static class OpenRouterTextModelDefaults
       IsTurbo: false,
       IsMini: false,
       IsDefault: false,
-      EngineName: "OpenRouter"
-    ),
+      EngineName: "OpenRouter"),
     new(
       Id: "meta-llama/llama-3-70b-instruct",
       DisplayName: "🛰 LLaMA 3 70B",
@@ -49,8 +46,7 @@ public static class OpenRouterTextModelDefaults
       IsTurbo: false,
       IsMini: false,
       IsDefault: false,
-      EngineName: "OpenRouter"
-    ),
+      EngineName: "OpenRouter"),
     new(
       Id: "google/gemini-pro",
       DisplayName: "🛰 Gemini Pro via OpenRouter",
@@ -59,7 +55,6 @@ public static class OpenRouterTextModelDefaults
       IsTurbo: true,
       IsMini: false,
       IsDefault: false,
-      EngineName: "OpenRouter"
-    ),
+      EngineName: "OpenRouter"),
   };
 }

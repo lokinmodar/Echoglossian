@@ -69,8 +69,7 @@ public static class ChatGPTEngineUI
       ref config.OpenAILlmModel,
       models,
       engine: "OpenAI",
-      tooltips: tooltips
-    );
+      tooltips: tooltips);
 
     float temp = config.ChatGptTemperature;
     if (ImGui.SliderFloat(Resources.Temperature, ref temp, 0.1f, 1.0f, "%.1f"))

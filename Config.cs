@@ -440,21 +440,27 @@ namespace Echoglossian
     [DefaultValue("")]
     public string LibreTranslateApiKey = string.Empty;
 
-    /// <summary>OpenLlama URL.</summary>
-    [DefaultValue("https://api.openllama.org/v1/")]
-    public string OpenLlamaUrl = "https://api.openllama.org/v1/";
+    /// <summary>Ollama URL.</summary>
+    [DefaultValue("http://localhost:11434")]
+    public string OllamaUrl = "http://localhost:11434";
 
-    /// <summary>OpenLlama model to use for translations.</summary>
-    [DefaultValue("open-llama-3-8b")]
-    public string OpenLlamaModel = "open-llama-3-8b";
+    /// <summary>Ollama model to use for translations.</summary>
+    [DefaultValue("llama3")]
+    public string OllamaModel = "llama3";
 
-    /// <summary>OpenLlama temperature setting for translations.</summary>
+    /// <summary>Ollama temperature setting for translations.</summary>
     [DefaultValue(0.1f)]
-    public float OpenLlamaTemperature = 0.1f;
+    public float OllamaTemperature = 0.1f;
 
-    /// <summary>Prompt used for OpenLlama translations.</summary>
+    /// <summary>Prompt used for Ollama translations.</summary>
     [DefaultValue("")]
-    public string OpenLlamaPrompt = string.Empty;
+    public string OllamaPrompt = string.Empty;
+
+    /// <summary>
+    /// Use live model list from Ollama instead of static defaults.
+    /// </summary>
+    [DefaultValue(false)]
+    public bool UseLiveOllamaModelList = false;
 
     /// <summary>Always show overlay title bar, even if name translation is off.</summary>
     [DefaultValue(true)]

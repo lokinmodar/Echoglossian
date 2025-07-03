@@ -7,14 +7,14 @@ namespace Echoglossian.Translators.OpenAI;
 
 public static class OpenAIModelManager
 {
-  private static readonly HttpClient httpClient = new();
-  private static readonly object syncLock = new();
+  private static readonly HttpClient HttpClient = new();
+  private static readonly object SyncLock = new();
 
   public static List<OpenAITextModel> CurrentModelList { get; private set; } = OpenAITextModelDefaults.PredefinedModels;
 
   public static void ResetToDefault()
   {
-    lock (syncLock)
+    lock (SyncLock)
     {
       CurrentModelList = OpenAITextModelDefaults.PredefinedModels;
     }
@@ -33,7 +33,7 @@ public static class OpenAIModelManager
       request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
       request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-      var response = await httpClient.SendAsync(request);
+      var response = await HttpClient.SendAsync(request);
       if (!response.IsSuccessStatusCode)
       {
         return;
@@ -84,11 +84,10 @@ public static class OpenAIModelManager
           IsTurbo: isTurbo,
           IsMini: isMini,
           IsDefault: false,
-          EngineName: "OpenAI"
-        ));
+          EngineName: "OpenAI"));
       }
 
-      lock (syncLock)
+      lock (SyncLock)
       {
         if (models.Count > 0)
         {

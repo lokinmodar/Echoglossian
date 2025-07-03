@@ -1,0 +1,70 @@
+﻿// <copyright file="OllamaModelManager.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using Echoglossian.Translators.OpenAI;
+using Newtonsoft.Json.Linq;
+
+namespace Echoglossian.Translators.Ollama;
+
+public static class OllamaModelManager
+{
+  private static readonly List<OpenAITextModel> FallbackModels = OllamaTextModelDefaults.PredefinedModels;
+  private static readonly List<OpenAITextModel> CurrentModels = new();
+  private static Dictionary<string, string>? tooltips;
+
+  public static IReadOnlyList<OpenAITextModel> CurrentModelList => CurrentModels.Count > 0 ? CurrentModels : FallbackModels;
+
+  public static async Task RefreshAsync(string baseUrl)
+  {
+    try
+    {
+      using var client = new HttpClient();
+      var url = baseUrl.TrimEnd('/') + "/api/tags";
+      var response = await client.GetStringAsync(url);
+      var root = JObject.Parse(response);
+      var tags = root["models"]?.Select(m => m["name"]?.ToString()).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct().ToList();
+
+      CurrentModels.Clear();
+      tooltips = new Dictionary<string, string>();
+
+      if (tags != null)
+      {
+        foreach (var name in tags)
+        {
+          string tier = name?.Split(':')[0] ?? "unknown";
+          var model = new OpenAITextModel(
+            Id: name!,
+            DisplayName: $"🦙 {name}",
+            SupportsText: true,
+            SupportsVision: false,
+            IsTurbo: false,
+            IsMini: false,
+            IsDefault: name == "llama3",
+            EngineName: "Ollama",
+            TierOverride: tier);
+
+          CurrentModels.Add(model);
+          tooltips[name!] = $"🦙 Ollama model: {tier}";
+        }
+      }
+    }
+    catch (Exception ex)
+    {
+      Echoglossian.PluginLog.Warning($"[OllamaModelManager] Failed to fetch model list from Ollama: {ex.Message}");
+      ResetToDefault();
+    }
+  }
+
+  public static void ResetToDefault()
+  {
+    CurrentModels.Clear();
+    tooltips = null;
+  }
+
+  public static Dictionary<string, string>? GetTooltips()
+  {
+    return tooltips;
+  }
+}

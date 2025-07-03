@@ -54,10 +54,10 @@ namespace Echoglossian.Translators
         case TransEngines.DeepSeek:
           this.translator = new DeepSeekTranslator(pluginLog, config);
           break;
-        case TransEngines.OpenLlama:
+        case TransEngines.Ollama:
           break;
         case TransEngines.LibreTranslate:
-          this.translator = new LibreTranslateTranslator(pluginLog);
+          this.translator = new LibreTranslateTranslator(pluginLog, config);
           break;
         case TransEngines.YandexPublic:
           this.translator = new YandexPublicTranslator(pluginLog, config);

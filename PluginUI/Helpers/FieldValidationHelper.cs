@@ -10,7 +10,7 @@ namespace Echoglossian.Helpers;
 /// </summary>
 public static class FieldValidationHelper
 {
-  private static readonly Dictionary<string, bool> fieldTouched = new();
+  private static readonly Dictionary<string, bool> FieldTouched = new();
 
   /// <summary>
   /// Displays a warning message if the field value is null or whitespace.
@@ -30,21 +30,21 @@ public static class FieldValidationHelper
   /// </summary>
   public static bool ValidatedInputText(string label, ref string value, int maxLength, out bool isInvalid)
   {
-    if (!fieldTouched.ContainsKey(label))
+    if (!FieldTouched.ContainsKey(label))
     {
-      fieldTouched[label] = false;
+      FieldTouched[label] = false;
     }
 
     bool changed = ImGui.InputText(label, ref value, (uint)maxLength);
 
     if (ImGui.IsItemActive() || changed)
     {
-      fieldTouched[label] = true;
+      FieldTouched[label] = true;
     }
 
     isInvalid = string.IsNullOrWhiteSpace(value);
 
-    if (fieldTouched[label] && isInvalid)
+    if (FieldTouched[label] && isInvalid)
     {
       ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.5f, 0.1f, 0.1f, 1f));
       ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(1f, 0.2f, 0.2f, 1f));
@@ -63,7 +63,7 @@ public static class FieldValidationHelper
   /// </summary>
   public static void MarkFieldAsTouched(string label)
   {
-    fieldTouched[label] = true;
+    FieldTouched[label] = true;
   }
 
   /// <summary>
@@ -102,7 +102,7 @@ public static class FieldValidationHelper
     MarkFieldAsTouched(Resources.MicrosoftTranslatorAPIKey);
     MarkFieldAsTouched(Resources.Region);
 
-    // OpenLlama
+    // Ollama
     MarkFieldAsTouched(Resources.ModelEndpoint);
 
     // Yandex Cloud

@@ -465,8 +465,8 @@
   <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
     <value>LibreTranslate-ren API-aren azken puntua</value>
   </data>
-  <data name="SettingsForOpenLlamaText" xml:space="preserve">
-    <value>OpenLlamaren konfigurazioa:</value>
+  <data name="SettingsForOllamaText" xml:space="preserve">
+    <value>Ollamaren konfigurazioa:</value>
   </data>
   <data name="YandexCloudFolderId" xml:space="preserve">
     <value>Karpeta-IDa</value>

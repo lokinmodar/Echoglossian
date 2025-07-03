@@ -52,8 +52,7 @@ public static class GeminiEngineUI
       ref config.GeminiModelId,
       models,
       engine: "Gemini",
-      tooltips: tooltips
-    );
+      tooltips: tooltips);
 
     PromptEditorUI.Draw(promptManager, PromptType.Gemini, PromptTemplateManager.DefaultPrompt, TransEngines.Gemini.ToString());
 
