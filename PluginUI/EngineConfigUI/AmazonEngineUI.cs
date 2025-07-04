@@ -22,8 +22,6 @@ public static class AmazonEngineUI
     bool isRegionInvalid;
     changed |= FieldValidationHelper.ValidatedInputText(Resources.Region, ref config.AwsRegion, 100, out isRegionInvalid);
 
-    PromptEditorUI.Draw(promptManager, PromptType.Amazon, PromptTemplateManager.DefaultPrompt, TransEngines.Amazon.ToString());
-
     if (changed)
     {
       FieldValidationHelper.MarkAllRequiredFieldsTouched(config);

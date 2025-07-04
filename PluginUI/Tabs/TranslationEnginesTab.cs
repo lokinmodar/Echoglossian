@@ -31,7 +31,7 @@ public static class TranslationEnginesTab
     bool changed = false;
     var promptManager = new PromptTemplateManager(config);
 
-    using var scrollingChild = ImRaii.Child("TranslatinEngineSettings", new Vector2(-1, -150), false, ImGuiWindowFlags.NoBackground);
+    using var scrollingChild = ImRaii.Child("TranslationEngineSettings", new Vector2(-1, -100), false, ImGuiWindowFlags.NoBackground);
 
     if (!scrollingChild)
     {

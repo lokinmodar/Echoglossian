@@ -509,6 +509,11 @@
             Parses the UI elements from the Addon sheet in the game data.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.EchoglossianConfigUi">
+            <summary>
+            Draws the Echoglossian configuration UI.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
             <summary>
             Translates the sentences passed to it using the selected engine.
@@ -954,6 +959,47 @@
             <summary>
             Frees the previously allocated buffer.
             </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
+            <summary>
+            Provides helper methods for rendering a language dropdown in the UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.Initialize(System.Collections.Generic.Dictionary{System.Int32,Echoglossian.Echoglossian.LanguageInfo})">
+            <summary>
+            Builds or reuses the sorted language list based on the provided dictionary.
+            </summary>
+            <param name="languagesDictionary">
+            A dictionary where the key is the original index of the language, and the value is a <see cref="T:Echoglossian.Echoglossian.LanguageInfo"/> object containing details about the language.
+            </param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.GetDisplayNames">
+            <summary>
+            Returns the language display names for UI rendering.
+            </summary>
+            <returns>An array of strings representing the display names of the languages.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.MapOriginalToSorted(System.Int32)">
+            <summary>
+            Returns the sorted index for a given original language index.
+            </summary>
+            <param name="originalIndex">The original index of the language in the unsorted list.</param>
+            <returns>The index of the language in the sorted list, or 0 if not found.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.MapSortedToOriginal(System.Int32)">
+            <summary>
+            Returns the original index for a selected sorted dropdown index.
+            </summary>
+            <param name="sortedIndex">The index of the language in the sorted dropdown list.</param>
+            <returns>The original index corresponding to the sorted dropdown index.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.DrawLanguageDropdown(System.Int32@,System.String)">
+            <summary>
+            Draws the language dropdown using ImGui, returning true if the value changed.
+            </summary>
+            <param name="selectedOriginalIndex">The original index of the selected language. This value will be updated if the selection changes.</param>
+            <param name="label">The label to display next to the dropdown in the UI.</param>
+            <returns>True if the selected language index changed; otherwise, false.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.PluginConfigWindowFooter">
             <summary>

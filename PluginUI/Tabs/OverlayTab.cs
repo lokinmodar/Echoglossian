@@ -34,6 +34,13 @@ public static class OverlayTab
   {
     bool changed = false;
 
+    using var scrollingChild = ImRaii.Child("OvverlaysSettings", new Vector2(-1, -100), false, ImGuiWindowFlags.NoBackground);
+
+    if (!scrollingChild)
+    {
+      return false;
+    }
+
     ImGui.BeginChild("overlay_tab_left", new Vector2(150, 0), true);
     for (var i = 0; i < OverlayTabs.Length; i++)
     {
@@ -86,6 +93,13 @@ public static class OverlayTab
   {
     bool changed = false;
 
+    using var scrollingChildTalk = ImRaii.Child("TalkOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
+
+    if (!scrollingChildTalk)
+    {
+      return false;
+    }
+
     changed |= ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref config.TranslateTalk);
 
     if (!config.TranslateTalk)
@@ -134,6 +148,13 @@ public static class OverlayTab
   {
     bool changed = false;
 
+    using var scrollingChildBattleTalk = ImRaii.Child("BattleTalkOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
+
+    if (!scrollingChildBattleTalk)
+    {
+      return false;
+    }
+
     changed |= ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref config.TranslateBattleTalk);
 
     if (!config.TranslateBattleTalk)
@@ -168,6 +189,13 @@ public static class OverlayTab
   private static bool DrawToastOverlay(Config config)
   {
     bool changed = false;
+
+    using var scrollingChildToast = ImRaii.Child("ToastOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
+
+    if (!scrollingChildToast)
+    {
+      return false;
+    }
 
     changed |= ImGui.Checkbox(Resources.TranslateToastToggleText, ref config.TranslateToast);
 
@@ -223,6 +251,13 @@ public static class OverlayTab
   private static bool DrawSubtitleOverlay(Config config)
   {
     bool changed = false;
+
+    using var scrollingChildSubtitle = ImRaii.Child("SubtitleOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
+
+    if (!scrollingChildSubtitle)
+    {
+      return false;
+    }
 
     changed |= ImGui.Checkbox(Resources.TranslateTalkSubtitleToggleLabel, ref config.TranslateTalkSubtitle);
 

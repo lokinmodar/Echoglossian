@@ -227,7 +227,7 @@ namespace Echoglossian
 
       MountFontPaths();
 
-     UINewFontHandler = new UINewFontHandler(this.configuration);
+      UINewFontHandler = new UINewFontHandler(this.configuration);
 
       TransEngines t = (TransEngines)ChosenTransEngine;
       transEngineName = t.ToString();

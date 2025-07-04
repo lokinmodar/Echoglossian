@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Numerics;
+
 using Echoglossian.Properties;
 using ImGuiNET;
 

@@ -39,14 +39,12 @@ public partial class Echoglossian
         "OpenRouter",
     };
 
+  /// <summary>
+  /// Draws the Echoglossian configuration UI.
+  /// </summary>
   private void EchoglossianConfigUi()
   {
-    this.languageList = new List<string>();
-
-    foreach (var l in this.languagesDictionary)
-    {
-      this.languageList.Add(l.Value.LanguageName);
-    }
+    LanguageDropdownHelper.Initialize(this.languagesDictionary);
 
     ImGui.SetNextWindowSizeConstraints(new Vector2(900, 900), new Vector2(1920, 1080));
     ImGui.Begin($"{Resources.ConfigWindowTitle} - Plugin Version: {this.configuration.PluginVersion}", ref this.config);
@@ -57,24 +55,17 @@ public partial class Echoglossian
 
     LangToRemoveDiacritics = this.configuration.Lang is 24 or 25 or 44 or 60 or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
 
-    if (ImGui.Combo(Resources.LanguageSelectLabelText, ref LanguageInt, this.languageList.ToArray(), this.languageList.Count))
+    if (LanguageDropdownHelper.DrawLanguageDropdown(ref this.configuration.Lang, Resources.LanguageSelectLabelText))
     {
-      this.configuration.Lang = LanguageInt;
+      LanguageInt = this.configuration.Lang;
       SpecialFontFileName = LangDict[this.configuration.Lang].FontName;
       SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
 
       var languageNotSupported = this.configuration.Lang is 2 or 3 or 5 or 6 or 11 or 13 or 40 or 42 or 57 or 78 or 82 or 106 or 108 or 111 or 112 or 116;
       var languageOnlySupportedThruOverlay = this.configuration.Lang is 4 or 8 or 9 or 10 or 12 or 14 or 15 or 16 or 18 or 19 or 21 or 22 or 29 or 35 or 37 or 38 or 41 or 43 or 45 or 46 or 51 or 52 or 53 or 55 or 56 or 58 or 64 or 67 or 69 or 70 or 71 or 72 or 76 or 77 or 85 or 86 or 89 or 90 or 92 or 99 or 100 or 101 or 102 or 103 or 107;
 
-      if (languageNotSupported)
-      {
-        this.configuration.UnsupportedLanguage = true;
-      }
-      else
-      {
-        this.configuration.UnsupportedLanguage = false;
-        this.configuration.OverlayOnlyLanguage = languageOnlySupportedThruOverlay;
-      }
+      this.configuration.UnsupportedLanguage = languageNotSupported;
+      this.configuration.OverlayOnlyLanguage = !languageNotSupported && languageOnlySupportedThruOverlay;
 
       if (!LangDict[LanguageInt].SupportedEngines.Contains(this.configuration.ChosenTransEngine))
       {
@@ -155,10 +146,10 @@ public partial class Echoglossian
 
       if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
       {
-        this.SaveConfigValue |= TranslationEnginesTab.Draw(this.configuration, LanguageInt, this.languageList, this.enginesList, LangDict, () =>
-          {
-            TranslationService = new TranslationService(this.configuration, PluginLog, Sanitizer);
-          });
+        this.SaveConfigValue |= TranslationEnginesTab.Draw(this.configuration, LanguageInt, LanguageDropdownHelper.GetDisplayNames().ToList(), this.enginesList, LangDict, () =>
+        {
+          TranslationService = new TranslationService(this.configuration, PluginLog, Sanitizer);
+        });
         ImGui.EndTabItem();
       }
 

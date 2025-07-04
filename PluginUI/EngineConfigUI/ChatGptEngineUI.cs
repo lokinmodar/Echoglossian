@@ -7,6 +7,7 @@ using Echoglossian.PluginUI.Components;
 using Echoglossian.Translators;
 using Echoglossian.Translators.OpenAI;
 using ImGuiNET;
+
 using System.Numerics;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
