@@ -3,10 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Dalamud.Memory;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using Newtonsoft.Json;
-
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian
@@ -14,8 +10,15 @@ namespace Echoglossian
   public partial class Echoglossian
   {
     public bool GatheringCharacterWindowAtkValuesComplete = false;
-    public Dictionary<int, string> CharacterWindowAtkValues = new Dictionary<int, string>();
-    public string CharacterWindowAtkValuesString = string.Empty; // New string to store the concatenated output
+
+    // Holds string values or null for all AtkValues to maintain consistent indexing
+    public Dictionary<int, string?> CharacterWindowAtkValues = new Dictionary<int, string?>();
+
+    // Holds only non-null string values for translation
+    public Dictionary<int, string> FilteredCharacterWindowStringAtkValues = new Dictionary<int, string>();
+
+    // Pipe-separated string for sending to translation service
+    public string CharacterWindowAtkValuesString = string.Empty;
 
     private unsafe void TranslateCharacterWindow()
     {
@@ -29,79 +32,94 @@ namespace Echoglossian
 
       var cwAtkVals = characterWB->AtkValues;
       var cwAtkValsCount = characterWB->AtkValuesCount;
-      var atkValuesSpan = characterWB->AtkValuesSpan;
 
       if (cwAtkVals == null)
       {
         return;
       }
 
-      // Use LINQ to gather values into the dictionary
+      // Store all values with their index; string values are parsed, others are set to null
       this.CharacterWindowAtkValues = Enumerable.Range(0, cwAtkValsCount)
-          .Where(i => cwAtkVals[i].Type == ValueType.String || cwAtkVals[i].Type == ValueType.String8)
-          .Select(i => new
+        .ToDictionary(
+          i => i,
+          i =>
           {
-            Index = i,
-            Value = MemoryHelper.ReadSeStringAsString(out _, (nint)cwAtkVals[i].String.Value),
-          })
-          .Where(x => x.Value != null)
-          .ToDictionary(x => x.Index, x => x.Value);
+            var type = cwAtkVals[i].Type;
+            return type == ValueType.String || type == ValueType.String8 || type == ValueType.ManagedString
+              ? MemoryHelper.ReadSeStringAsString(out _, (nint)cwAtkVals[i].String.Value)
+              : null;
+          });
 
-      if (this.CharacterWindowAtkValues.Count > 0)
+      // Build a filtered dictionary with only valid string entries for translation
+      this.FilteredCharacterWindowStringAtkValues = Enumerable.Range(0, cwAtkValsCount)
+        .Where(i => cwAtkVals[i].Type == ValueType.String || cwAtkVals[i].Type == ValueType.String8 || cwAtkVals[i].Type == ValueType.ManagedString)
+        .Select(i => new
+        {
+          Index = i,
+          Value = MemoryHelper.ReadSeStringAsString(out _, (nint)cwAtkVals[i].String.Value),
+        })
+        .Where(x => x.Value != null)
+        .ToDictionary(x => x.Index, x => x.Value!); // use ! to assure compiler that nulls are filtered
+
+      // If we have any strings to translate
+      if (this.FilteredCharacterWindowStringAtkValues.Count > 0)
       {
-        string jsonOutput = JsonConvert.SerializeObject(this.CharacterWindowAtkValues, Formatting.Indented);
+        // Log the values we're about to translate
+        string jsonOutput = JsonConvert.SerializeObject(this.FilteredCharacterWindowStringAtkValues, Formatting.Indented);
         PluginLog.Debug($"Character window AtkValues: {jsonOutput}");
 
-        // Concatenate key-value pairs into a single string
-        this.CharacterWindowAtkValuesString = string.Join("|", this.CharacterWindowAtkValues.Select(kvp => $"{kvp.Key}|{kvp.Value}"));
+        // Build the translation string in the format: key|value|key|value|...
+        this.CharacterWindowAtkValuesString = string.Join("|", this.FilteredCharacterWindowStringAtkValues.Select(kvp => $"{kvp.Key}|{kvp.Value}"));
       }
 
-      bool isGatheringComplete = this.CharacterWindowAtkValues.Count > 0;
+      bool isGatheringComplete = this.FilteredCharacterWindowStringAtkValues.Count > 0;
       this.GatheringCharacterWindowAtkValuesComplete = isGatheringComplete;
 
-      if (isGatheringComplete)
+      if (!isGatheringComplete)
       {
-        PluginLog.Debug("Finished gathering all Character window AtkValues.");
-        PluginLog.Debug($"Character window AtkValues string: {this.CharacterWindowAtkValuesString}");
-
-        // send the string to the translation service
-
-        var translation = this.Translate(this.CharacterWindowAtkValuesString);
-
-        if (string.IsNullOrEmpty(translation))
-        {
-          PluginLog.Error("Translation failed for Character window AtkValues.");
-          return;
-        }
-
-        // Use LINQ to replace the original values in their positions in the dictionary with the translated values the translated values are on a string in the format key|value|next_key|next_value and so on
-        var translatedValues = translation.Split('|')
-            .Where((_, index) => index % 2 == 1) // Get only the values (odd indices)
-            .ToArray();
-        PluginLog.Debug($"Translated values count: {translatedValues.Length}");
-        // Update the CharacterWindowAtkValues dictionary with the translated values in their indexes in the CharacterWindowAtkValues dictionary
-        for (int i = 0; i < translatedValues.Length; i++)
-        {
-          if (this.CharacterWindowAtkValues.ContainsKey(i))
-          {
-            this.CharacterWindowAtkValues[i] = translatedValues[i];
-          }
-        }
-
-        // Set the updated CharacterWindowAtkValues back to the addon
-        var values = new Span<AtkValue>((void*)cwAtkVals, (int)cwAtkValsCount);
-
-        for (int i = 0; i < cwAtkValsCount; i++)
-        {
-          if (values[i].Type == ValueType.String || values[i].Type == ValueType.String8)
-          {
-            // Update the value with the translated string
-            values[i].SetManagedString(this.CharacterWindowAtkValues[i]);
-          }
-        }
-
-        PluginLog.Debug($"CharacterWindow Translation result: {translation}");
+        return;
       }
+
+      PluginLog.Debug("Finished gathering all Character window AtkValues.");
+      PluginLog.Debug($"Character window AtkValues string: {this.CharacterWindowAtkValuesString}");
+
+      // Call the translation service
+      var translation = this.Translate(this.CharacterWindowAtkValuesString);
+
+      if (string.IsNullOrEmpty(translation))
+      {
+        PluginLog.Error("Translation failed for Character window AtkValues.");
+        return;
+      }
+
+      // Parse translation result: expected format is "index|value|index|value|..."
+      var parts = translation.Split('|');
+
+      for (int i = 0; i < parts.Length - 1; i += 2)
+      {
+        if (int.TryParse(parts[i], out int index))
+        {
+          this.FilteredCharacterWindowStringAtkValues[index] = parts[i + 1];
+        }
+      }
+
+      PluginLog.Debug($"Translated values count: {this.FilteredCharacterWindowStringAtkValues.Count}");
+
+      // Replace original addon text values with their translated counterparts
+      var values = new Span<AtkValue>((void*)cwAtkVals, (int)cwAtkValsCount);
+
+      for (int i = 0; i < cwAtkValsCount; i++)
+      {
+        if (values[i].Type == ValueType.String || values[i].Type == ValueType.String8 || values[i].Type == ValueType.ManagedString)
+        {
+          if (this.FilteredCharacterWindowStringAtkValues.TryGetValue(i, out var translated))
+          {
+            values[i].SetManagedString(translated);
+          }
+        }
+      }
+
+      PluginLog.Debug($"CharacterWindow Translation result: {translation}");
     }
   }
 }
