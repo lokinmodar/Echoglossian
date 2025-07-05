@@ -29,6 +29,7 @@ namespace Echoglossian
 
       var cwAtkVals = characterWB->AtkValues;
       var cwAtkValsCount = characterWB->AtkValuesCount;
+      var atkValuesSpan = characterWB->AtkValuesSpan;
 
       if (cwAtkVals == null)
       {
@@ -62,6 +63,44 @@ namespace Echoglossian
       {
         PluginLog.Debug("Finished gathering all Character window AtkValues.");
         PluginLog.Debug($"Character window AtkValues string: {this.CharacterWindowAtkValuesString}");
+
+        // send the string to the translation service
+
+        var translation = this.Translate(this.CharacterWindowAtkValuesString);
+
+        if (string.IsNullOrEmpty(translation))
+        {
+          PluginLog.Error("Translation failed for Character window AtkValues.");
+          return;
+        }
+
+        // Use LINQ to replace the original values in their positions in the dictionary with the translated values the translated values are on a string in the format key|value|next_key|next_value and so on
+        var translatedValues = translation.Split('|')
+            .Where((_, index) => index % 2 == 1) // Get only the values (odd indices)
+            .ToArray();
+        PluginLog.Debug($"Translated values count: {translatedValues.Length}");
+        // Update the CharacterWindowAtkValues dictionary with the translated values in their indexes in the CharacterWindowAtkValues dictionary
+        for (int i = 0; i < translatedValues.Length; i++)
+        {
+          if (this.CharacterWindowAtkValues.ContainsKey(i))
+          {
+            this.CharacterWindowAtkValues[i] = translatedValues[i];
+          }
+        }
+
+        // Set the updated CharacterWindowAtkValues back to the addon
+        var values = new Span<AtkValue>((void*)cwAtkVals, (int)cwAtkValsCount);
+
+        for (int i = 0; i < cwAtkValsCount; i++)
+        {
+          if (values[i].Type == ValueType.String || values[i].Type == ValueType.String8)
+          {
+            // Update the value with the translated string
+            values[i].SetManagedString(this.CharacterWindowAtkValues[i]);
+          }
+        }
+
+        PluginLog.Debug($"CharacterWindow Translation result: {translation}");
       }
     }
   }
