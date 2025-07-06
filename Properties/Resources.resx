@@ -631,4 +631,7 @@
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>Translate "Character" Window</value>
+  </data>
 </root>

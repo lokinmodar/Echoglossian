@@ -121,6 +121,12 @@ namespace Echoglossian
     [DefaultValue(false)]
     public bool TranslateJournal = false;
 
+    /// <summary>
+    /// Translate character window text.
+    /// </summary>
+    [DefaultValue(false)]
+    public bool TranslateCharacterWindow = false;
+
     /// <summary>Use ImGui to render Talk overlay instead of modifying game UI.</summary>
     [DefaultValue(false)]
     public bool UseImGuiForTalk = false;

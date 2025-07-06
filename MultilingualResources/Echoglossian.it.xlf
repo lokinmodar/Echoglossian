@@ -691,6 +691,10 @@
           <source>Cancel</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Annulla</target>
         </trans-unit>
+        <trans-unit id="TranslateCharacterWindow" translate="yes" xml:space="preserve">
+          <source>Translate "Character" Window</source>
+          <target state="new">Translate "Character" Window</target>
+        </trans-unit>
       </group>
     </body>
   </file>

@@ -20,6 +20,7 @@ public static class OtherUIElementsSettingsTab
     changed |= ImGui.Checkbox(Resources.TranslateCutSceneSelectStringLabel, ref config.TranslateCutSceneSelectString);
     changed |= ImGui.Checkbox(Resources.TranslateSelectStringLabel, ref config.TranslateSelectString);
     changed |= ImGui.Checkbox(Resources.TranslateSelectOkLabel, ref config.TranslateSelectOk);
+    changed |= ImGui.Checkbox(Resources.TranslateCharacterWindow, ref config.TranslateCharacterWindow);
 
     if (changed)
     {

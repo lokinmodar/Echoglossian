@@ -119,7 +119,7 @@ namespace Echoglossian
         }
       }
 
-      PluginLog.Debug($"CharacterWindow Translation result: {translation}");
+
     }
   }
 }

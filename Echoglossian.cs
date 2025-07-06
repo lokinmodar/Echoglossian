@@ -5,6 +5,7 @@
 
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.LanguagesHandling;
+using Echoglossian.NativeUI.Handlers;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Properties;
@@ -127,6 +128,8 @@ namespace Echoglossian
 
     public static TranslationService TranslationService;
 
+    private CharacterWindowHandler characterWindowHandler;
+
     public List<ToastMessage> ErrorToastsCache { get; set; }
 
     public List<ToastMessage> QuestToastsCache { get; set; }
@@ -235,6 +238,8 @@ namespace Echoglossian
 
       this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 
+      this.characterWindowHandler = new CharacterWindowHandler(configuration, TranslationService);
+
       this.LoadAllErrorToasts();
       this.LoadAllOtherToasts();
 
@@ -257,9 +262,6 @@ namespace Echoglossian
       ToastGuiInterface.ErrorToast += this.OnErrorToast;
       ToastGuiInterface.QuestToast += this.OnQuestToast;
 
-      /*      this.uiTalkAddonHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);
-            this.uiBattleTalkAddonHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);
-            this.uiTalkSubtitleHandler = new UiAddonHandler(this.configuration, this.UiFont, this.FontLoaded, this.LangToTranslateTo);*/
 
       this.EgloAddonHandler();
 
@@ -313,9 +315,6 @@ namespace Echoglossian
 
       PluginInterface.UiBuilder.Draw -= this.BuildUi;
 
-      /*      this.uiTalkAddonHandler?.Dispose();
-            this.uiBattleTalkAddonHandler?.Dispose();
-            this.uiTalkSubtitleHandler?.Dispose();*/
 
       this.pixImage?.Dispose();
       this.choiceImage?.Dispose();
@@ -329,6 +328,13 @@ namespace Echoglossian
       this.toastOverlay.Dispose();
       this.errorToastOverlay.Dispose();
       this.chatBubbleOverlay.Dispose();
+
+      if (this.configuration.TranslateCharacterWindow)
+      {
+        AddonLifecycle.UnregisterListener(AddonEvent.PreSetup, "Character", this.characterWindowHandler.ExtractAndTranslateValues);
+        AddonLifecycle.UnregisterListener(AddonEvent.PostRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+        AddonLifecycle.UnregisterListener(AddonEvent.PostRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+      }
 
       if (this.configuration.TranslateTalk)
       {
@@ -377,15 +383,7 @@ namespace Echoglossian
     {
       if (!this.configuration.Translate)
       {
-#if DEBUG
-        // PluginLog.Debug("Translations are disabled!");
-#endif
         return;
-      }
-
-      if (ClientStateInterface.IsLoggedIn && !this.GatheringCharacterWindowAtkValuesComplete)
-      {
-        this.TranslateCharacterWindow();
       }
 
       switch (this.configuration.UseImGuiForTalk || this.configuration.UseImGuiForBattleTalk ||
@@ -473,12 +471,26 @@ namespace Echoglossian
 
     private void EgloAddonHandler()
     {
-#if DEBUG
       PluginLog.Debug("EgloAddonHandler called.");
-#endif
+
+      /*      if (ClientStateInterface.IsLoggedIn && !this.GatheringCharacterWindowAtkValuesComplete)
+            {
+              this.TranslateCharacterWindow();
+            }*/
+
+      if (this.configuration.TranslateCharacterWindow)
+      {
+        PluginLog.Debug("Registering CharacterWindowHandler listeners.");
+        AddonLifecycle.RegisterListener(AddonEvent.PreSetup, "Character", this.characterWindowHandler.ExtractAndTranslateValues);
+        AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+        AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+      }
+
+
 
       if (this.configuration.TranslateTalk)
       {
+        PluginLog.Debug("Registering Talk addon listeners for translation.");
         // this.EgloNeutralAddonHandler("Talk", new string[] {  /* "PreUpdate", "PostUpdate",*/ "PreDraw",/* "PostDraw",  "PreReceiveEvent", "PostReceiveEvent", "PreRequestedUpdate", "PostRequestedUpdate" ,*/ "PreRefresh",/* "PostRefresh"*/ });
         AddonLifecycle.RegisterListener(AddonEvent.PreRefresh, "Talk", this.UiTalkAsyncHandler);
         AddonLifecycle.RegisterListener(AddonEvent.PreDraw, "Talk", this.UiTalkAsyncHandler);
@@ -487,6 +499,7 @@ namespace Echoglossian
 
       if (this.configuration.TranslateBattleTalk)
       {
+        PluginLog.Debug("Registering _BattleTalk addon listeners for translation.");
         // this.EgloNeutralAddonHandler("_BattleTalk", new string[] { /* "PreUpdate", "PostUpdate",*/ "PreDraw",/* "PostDraw",  "PreReceiveEvent", "PostReceiveEvent", "PreRequestedUpdate", "PostRequestedUpdate" ,*/ "PreRefresh",/* "PostRefresh"*/});
         AddonLifecycle.RegisterListener(AddonEvent.PreRefresh, "_BattleTalk", this.UiBattleTalkAsyncHandler);
         AddonLifecycle.RegisterListener(AddonEvent.PreDraw, "_BattleTalk", this.UiBattleTalkAsyncHandler);
@@ -495,6 +508,7 @@ namespace Echoglossian
 
       if (this.configuration.TranslateTalkSubtitle)
       {
+        PluginLog.Debug("Registering TalkSubtitle addon listeners for translation.");
         // this.EgloNeutralAddonHandler("TalkSubtitle", new string[] {/* "PreUpdate", "PostUpdate",*/ "PreDraw",/* "PostDraw",  "PreReceiveEvent", "PostReceiveEvent", "PreRequestedUpdate", "PostRequestedUpdate" ,*/ "PreRefresh",/* "PostRefresh"*/});
         AddonLifecycle.RegisterListener(AddonEvent.PreSetup, "TalkSubtitle", this.UiTalkSubtitleAsyncHandler);
         AddonLifecycle.RegisterListener(AddonEvent.PreRefresh, "TalkSubtitle", this.UiTalkSubtitleAsyncHandler);
@@ -502,6 +516,7 @@ namespace Echoglossian
 
       if (this.configuration.TranslateJournal)
       {
+        PluginLog.Debug("Registering Journal addon listeners for translation.");
         AddonLifecycle.RegisterListener(AddonEvent.PreSetup, "JournalResult", this.UiJournalResultHandler);
         AddonLifecycle.RegisterListener(AddonEvent.PostReceiveEvent, "RecommendList", this.UiRecommendListHandler);
         AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, "RecommendList", this.UiRecommendListHandlerAsync);

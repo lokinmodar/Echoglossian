@@ -1345,6 +1345,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Translate &quot;Character&quot; Window.
+        /// </summary>
+        public static string TranslateCharacterWindow {
+            get {
+                return ResourceManager.GetString("TranslateCharacterWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Translate in-game Class/Job change Toast Messages.
         /// </summary>
         public static string TranslateClassChangeToastToggleText {

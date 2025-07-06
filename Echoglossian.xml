@@ -85,6 +85,11 @@
         <member name="F:Echoglossian.Config.TranslateJournal">
             <summary>Translate entries in the quest journal.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateCharacterWindow">
+            <summary>
+            Translate character window text.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.UseImGuiForTalk">
             <summary>Use ImGui to render Talk overlay instead of modifying game UI.</summary>
         </member>
@@ -937,6 +942,30 @@
             Applies the supported engines to the given dictionary of language information.
             </summary>
             <param name="dictionary">The dictionary containing language information.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Handlers.CharacterWindowHandler">
+            <summary>
+            Responsible for extracting, translating, and applying translated AtkValues for the Character window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.CharacterWindowHandler"/> class.
+            </summary>
+            <param name="config">Configuration settings.</param>
+            <param name="translationService">The translation service to use.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.ExtractAndTranslateValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Extracts AtkValues from the Character addon and prepares the translated values.
+            </summary>
+            <returns>True if extraction and translation were successful, otherwise false.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.ApplyTranslatedValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Applies the translated AtkValues to the Character window.
+            </summary>
+            <returns>True if values were applied, otherwise false.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>
@@ -1944,6 +1973,11 @@
         <member name="P:Echoglossian.Properties.Resources.TransLateBattletalkToggle">
             <summary>
               Looks up a localized string similar to Translate battle talk.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateCharacterWindow">
+            <summary>
+              Looks up a localized string similar to Translate &quot;Character&quot; Window.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateClassChangeToastToggleText">
