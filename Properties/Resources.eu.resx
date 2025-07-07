@@ -525,4 +525,22 @@
   <data name="Cancel" xml:space="preserve">
     <value>Ezeztatu</value>
   </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>"pertsonaia" itzulpen leihoa</value>
+  </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>API konexio-puntua</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>LMStudioaren konfigurazioa:</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Zuzeneko ereduak lortzea</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Eredua</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Autentifikazioa erabili</value>
+  </data>
 </root>

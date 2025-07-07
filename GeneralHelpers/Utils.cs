@@ -7,6 +7,11 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
+    /// <summary>
+    /// Regex used to help filtering out numeric-like strings.
+    /// </summary>
+    public static readonly Regex NumericLikePattern = new(@"^\s*([€£$¥]?\s*\d+([.,]\d+)?\s*[%€£$¥]?\s*|(\d+/\d+))\s*$", RegexOptions.Compiled);
+
 #if DEBUG
     /// <summary>
     /// Lists all available culture information and writes it to a file.
@@ -96,6 +101,7 @@ namespace Echoglossian
       SetPromptIfEmpty(nameof(Config.AmazonPrompt));
       SetPromptIfEmpty(nameof(Config.YandexCloudPrompt));
       SetPromptIfEmpty(nameof(Config.OllamaPrompt));
+      SetPromptIfEmpty(nameof(Config.LmStudioPrompt));
 
       // Restore runtime-mutable metadata
       config.FontChangeTime = DateTime.Now.Ticks;
@@ -170,8 +176,9 @@ namespace Echoglossian
       Gemini = 10, // Google Cloud Translate
       YandexPublic = 11, // Yandex Public Translator
       OpenRouter = 12, // OpenRouter Translator
+      LmStudio = 13, // LM Studio Translator
 
-      All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | Ollama | LibreTranslate | YandexPublic | OpenRouter,
+      All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft | ChatGPT | Gemini | DeepSeek | Ollama | LibreTranslate | YandexPublic | OpenRouter | LmStudio,
     }
 
     /// <summary>
@@ -188,6 +195,7 @@ namespace Echoglossian
       YandexCloud,
       LibreTranslate,
       Ollama,
+      LmStudio,
     }
 
     /// <summary>

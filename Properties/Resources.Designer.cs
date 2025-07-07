@@ -70,6 +70,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to API Endpoint.
+        /// </summary>
+        public static string APIEndpoint {
+            get {
+                return ResourceManager.GetString("APIEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to API Key.
         /// </summary>
         public static string APIKey {
@@ -567,6 +576,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fetch Live Models.
+        /// </summary>
+        public static string FetchLiveModels {
+            get {
+                return ResourceManager.GetString("FetchLiveModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overlay font color:.
         /// </summary>
         public static string FontColorSelectLabel {
@@ -745,6 +763,15 @@ namespace Echoglossian.Properties {
         public static string MissingOneOrMoreRequiredPlaceholders {
             get {
                 return ResourceManager.GetString("MissingOneOrMoreRequiredPlaceholders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model.
+        /// </summary>
+        public static string Model {
+            get {
+                return ResourceManager.GetString("Model", resourceCulture);
             }
         }
         
@@ -1192,6 +1219,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings for LMStudio:.
+        /// </summary>
+        public static string SettingsForLmStudioText {
+            get {
+                return ResourceManager.GetString("SettingsForLmStudioText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings for Microsoft Translator.
         /// </summary>
         public static string SettingsForMicrosoftText {
@@ -1539,6 +1575,15 @@ namespace Echoglossian.Properties {
         public static string TranslationsEnabled {
             get {
                 return ResourceManager.GetString("TranslationsEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Authentication.
+        /// </summary>
+        public static string UseAuthentication {
+            get {
+                return ResourceManager.GetString("UseAuthentication", resourceCulture);
             }
         }
         

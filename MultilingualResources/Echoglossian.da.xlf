@@ -694,7 +694,27 @@
         </trans-unit>
         <trans-unit id="TranslateCharacterWindow" translate="yes" xml:space="preserve">
           <source>Translate "Character" Window</source>
-          <target state="new">Translate "Character" Window</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Oversæt vinduet "Tegn"</target>
+        </trans-unit>
+        <trans-unit id="APIEndpoint" translate="yes" xml:space="preserve">
+          <source>API Endpoint</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">API-slutpunkt</target>
+        </trans-unit>
+        <trans-unit id="SettingsForLmStudioText" translate="yes" xml:space="preserve">
+          <source>Settings for LMStudio:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Indstillinger for LMStudio:</target>
+        </trans-unit>
+        <trans-unit id="FetchLiveModels" translate="yes" xml:space="preserve">
+          <source>Fetch Live Models</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Hent levende modeller</target>
+        </trans-unit>
+        <trans-unit id="Model" translate="yes" xml:space="preserve">
+          <source>Model</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Model</target>
+        </trans-unit>
+        <trans-unit id="UseAuthentication" translate="yes" xml:space="preserve">
+          <source>Use Authentication</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Brug godkendelse</target>
         </trans-unit>
       </group>
     </body>

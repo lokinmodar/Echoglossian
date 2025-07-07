@@ -320,12 +320,41 @@
             Use live model list from Ollama instead of static defaults.
             </summary>
         </member>
+        <member name="F:Echoglossian.Config.LmStudioBaseUrl">
+            <summary>
+            Base URL for LM Studio API (local or remote instance).
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLmStudioAuth">
+            <summary>
+            API key for LM Studio authentication (if required).
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.LmStudioApiKey">
+            <summary>
+            API key for LM Studio API access.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveLmStudioModelList">
+            <summary>
+            Selected LM Studio model for translations.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.ForceShowTitle">
             <summary>Always show overlay title bar, even if name translation is off.</summary>
         </member>
+        <member name="F:Echoglossian.Config.LmStudioModel">
+            <summary>Selected LM Studio model for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.LmStudioPrompt">
+            <summary>Prompt template used for LM Studio translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.LmStudioTemperature">
+            <summary>Temperature setting for LM Studio translations.</summary>
+        </member>
         <member name="F:Echoglossian.Config.FontChangeTime">
-            <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
-            [NonSerialized]
+             <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
+            
         </member>
         <member name="P:Echoglossian.Config.Version">
             <summary>Plugin configuration version number (used during migration).</summary>
@@ -341,6 +370,11 @@
         <member name="M:Echoglossian.Echoglossian.BuildUi">
             <summary>
             Builds the UI for the plugin.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
+            <summary>
+            Regex used to help filtering out numeric-like strings.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
@@ -959,13 +993,18 @@
             <summary>
             Extracts AtkValues from the Character addon and prepares the translated values.
             </summary>
-            <returns>True if extraction and translation were successful, otherwise false.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.ApplyTranslatedValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
             Applies the translated AtkValues to the Character window.
             </summary>
-            <returns>True if values were applied, otherwise false.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.ApplyTranslatedArrayDataValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Applies the translated string array data values to the Character window.
+            </summary>
+            <param name="type"></param>
+            <param name="args"></param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>
@@ -1085,6 +1124,19 @@
             <summary>
             Renders the configuration UI for the Yandex Public Translator (no custom prompts).
             </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI">
+            <summary>
+            UI for configuring LM Studio translator engine.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+            <summary>
+            Draws the LM Studio engine configuration panel.
+            </summary>
+            <param name="config">Current plugin configuration.</param>
+            <param name="promptManager">Prompt manager instance.</param>
+            <returns>True if any settings changed.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorStateManager">
             <summary>
@@ -1268,6 +1320,11 @@
         <member name="P:Echoglossian.Properties.Resources.AITranslatorPromptCustomization">
             <summary>
               Looks up a localized string similar to AI Translator Prompt Customization.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.APIEndpoint">
+            <summary>
+              Looks up a localized string similar to API Endpoint.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.APIKey">
@@ -1545,6 +1602,11 @@
               Looks up a localized string similar to Endpoint.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.FetchLiveModels">
+            <summary>
+              Looks up a localized string similar to Fetch Live Models.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.FontColorSelectLabel">
             <summary>
               Looks up a localized string similar to Overlay font color:.
@@ -1643,6 +1705,11 @@
         <member name="P:Echoglossian.Properties.Resources.MissingOneOrMoreRequiredPlaceholders">
             <summary>
               Looks up a localized string similar to ⚠ Missing one or more required placeholders!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Model">
+            <summary>
+              Looks up a localized string similar to Model.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ModelEndpoint">
@@ -1890,6 +1957,11 @@
               Looks up a localized string similar to Settings for LibreTranslate:.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForLmStudioText">
+            <summary>
+              Looks up a localized string similar to Settings for LMStudio:.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsForMicrosoftText">
             <summary>
               Looks up a localized string similar to Settings for Microsoft Translator.
@@ -2083,6 +2155,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">
             <summary>
               Looks up a localized string similar to Translations are Enabled!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.UseAuthentication">
+            <summary>
+              Looks up a localized string similar to Use Authentication.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.UseImGuiForToastsToggle">
@@ -2370,6 +2447,52 @@
             <param name="sourceLanguage"></param>
             <param name="targetLanguage"></param>
             <returns></returns>
+        </member>
+        <member name="T:Echoglossian.Translators.LmStudioTranslator">
+            <summary>
+            Translator implementation for LM Studio, using OpenAI-compatible local API.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.LmStudioTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.Translators.LmStudioTranslator"/> class.
+            </summary>
+            <param name="pluginLog">Plugin log for diagnostic output.</param>
+            <param name="config">User configuration containing model and credentials.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.LmStudioTranslator.Translate(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.Translators.LmStudioTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Echoglossian.Translators.LmStudio.LmStudioModelManager">
+            <summary>
+            Manages dynamic model fetching for LM Studio.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Translators.LmStudio.LmStudioModelManager.CurrentModelList">
+            <summary>
+            Gets the current list of LM Studio models.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.LmStudio.LmStudioModelManager.RefreshAsync(System.String,System.String)">
+            <summary>
+            Refreshes the LM Studio model list from the live API.
+            </summary>
+            <param name="baseUrl">Base API URL.</param>
+            <param name="apiKey">Optional API key.</param>
+            <returns>Awaitable task.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.LmStudio.LmStudioTextModelDefaults">
+            <summary>
+            Provides default model list for LM Studio usage.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Translators.LmStudio.LmStudioTextModelDefaults.PredefinedModels">
+            <summary>
+            Predefined LM Studio-compatible models for offline use.
+            </summary>
         </member>
         <member name="T:Echoglossian.Translators.TranslationService">
             <summary>

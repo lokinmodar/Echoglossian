@@ -634,4 +634,19 @@
   <data name="TranslateCharacterWindow" xml:space="preserve">
     <value>Translate "Character" Window</value>
   </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>API Endpoint</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>Settings for LMStudio:</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Fetch Live Models</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Use Authentication</value>
+  </data>
 </root>

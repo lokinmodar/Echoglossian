@@ -497,4 +497,22 @@
   <data name="Cancel" xml:space="preserve">
     <value>Aflyse</value>
   </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>Oversæt vinduet "Tegn"</value>
+  </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>API-slutpunkt</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>Indstillinger for LMStudio:</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Hent levende modeller</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Brug godkendelse</value>
+  </data>
 </root>

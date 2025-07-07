@@ -525,4 +525,22 @@
   <data name="Cancel" xml:space="preserve">
     <value>Annuler</value>
   </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>Traduire la fenêtre « Caractère »</value>
+  </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>Point de terminaison de l’API</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>Paramètres pour LMStudio :</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Récupération de modèles dynamiques</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Modèle</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Utiliser l’authentification</value>
+  </data>
 </root>

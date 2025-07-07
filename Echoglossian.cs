@@ -332,8 +332,8 @@ namespace Echoglossian
       if (this.configuration.TranslateCharacterWindow)
       {
         AddonLifecycle.UnregisterListener(AddonEvent.PreSetup, "Character", this.characterWindowHandler.ExtractAndTranslateValues);
-        AddonLifecycle.UnregisterListener(AddonEvent.PostRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
-        AddonLifecycle.UnregisterListener(AddonEvent.PostRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+        AddonLifecycle.UnregisterListener(AddonEvent.PreRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+        AddonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
       }
 
       if (this.configuration.TranslateTalk)
@@ -482,8 +482,8 @@ namespace Echoglossian
       {
         PluginLog.Debug("Registering CharacterWindowHandler listeners.");
         AddonLifecycle.RegisterListener(AddonEvent.PreSetup, "Character", this.characterWindowHandler.ExtractAndTranslateValues);
-        AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
-        AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+        AddonLifecycle.RegisterListener(AddonEvent.PreRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+        AddonLifecycle.RegisterListener(AddonEvent.PreRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
       }
 
 

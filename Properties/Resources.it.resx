@@ -525,4 +525,22 @@
   <data name="Cancel" xml:space="preserve">
     <value>Annulla</value>
   </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>Traduci finestra "Carattere"</value>
+  </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>API Endpoint</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>Impostazioni per LMStudio:</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Recupera modelli live</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Modello</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Usa l'autenticazione</value>
+  </data>
 </root>

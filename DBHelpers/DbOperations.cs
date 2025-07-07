@@ -21,6 +21,9 @@ namespace Echoglossian
 
     public static TalkSubtitleMessage? FoundTalkSubtitleMessage { get; set; }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public async void CreateOrUseDb()
     {
       using (EchoglossianDbContext context = new EchoglossianDbContext(this.configDir))
@@ -53,6 +56,11 @@ namespace Echoglossian
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="talkMessage"></param>
+    /// <returns></returns>
     public TalkMessage? FindAndReturnTalkMessage(TalkMessage talkMessage)
     {
       using EchoglossianDbContext context = new EchoglossianDbContext(Echoglossian.PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar);

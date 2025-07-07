@@ -26,7 +26,7 @@ public class OllamaTranslator : ITranslator
 
     this.httpClient = new HttpClient
     {
-      BaseAddress = new Uri(this.endpoint)
+      BaseAddress = new Uri(this.endpoint),
     };
     this.httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
   }
@@ -52,7 +52,7 @@ public class OllamaTranslator : ITranslator
       model = this.model,
       prompt = prompt,
       temperature = this.temperature,
-      stream = false
+      stream = false,
     };
 
     try

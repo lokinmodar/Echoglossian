@@ -37,6 +37,7 @@ public partial class Echoglossian
         "Gemini",
         "YandexPublic",
         "OpenRouter",
+        "LmStudio",
     };
 
   /// <summary>

@@ -468,12 +468,49 @@ namespace Echoglossian
     [DefaultValue(false)]
     public bool UseLiveOllamaModelList = false;
 
+    /// <summary>
+    /// Base URL for LM Studio API (local or remote instance).
+    /// </summary>
+    [DefaultValue("http://localhost:1234/v1")]
+    public string LmStudioBaseUrl = "http://localhost:1234/v1";
+
+    /// <summary>
+    /// API key for LM Studio authentication (if required).
+    /// </summary>
+    [DefaultValue(false)]
+    public bool UseLmStudioAuth = false;
+
+    /// <summary>
+    /// API key for LM Studio API access.
+    /// </summary>
+    [DefaultValue("")]
+    public string LmStudioApiKey = string.Empty;
+
+    /// <summary>
+    /// Selected LM Studio model for translations.
+    /// </summary>
+    [DefaultValue(false)]
+    public bool UseLiveLmStudioModelList = false;
+
     /// <summary>Always show overlay title bar, even if name translation is off.</summary>
-    [DefaultValue(true)]
-    public bool ForceShowTitle = true;
+    [DefaultValue(false)]
+    public bool ForceShowTitle = false;
+
+    /// <summary>Selected LM Studio model for translations.</summary>
+    [DefaultValue("llama3")]
+    public string LmStudioModel = "llama3";
+
+    /// <summary>Prompt template used for LM Studio translations.</summary>
+    [DefaultValue("")]
+    public string LmStudioPrompt = string.Empty;
+
+    /// <summary>Temperature setting for LM Studio translations.</summary>
+    [DefaultValue(0.1f)]
+    public float LmStudioTemperature = 0.1f;
 
     /// <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
-    /// [NonSerialized]
+    ///
+    [NonSerialized]
     public long FontChangeTime = DateTime.Now.Ticks;
 
     /// <summary>Plugin configuration version number (used during migration).</summary>
