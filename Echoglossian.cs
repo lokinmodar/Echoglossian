@@ -5,6 +5,7 @@
 
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.LanguagesHandling;
+using Echoglossian.NativeUI.AddonHandlers;
 using Echoglossian.NativeUI.Handlers;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.PluginUI.Helpers;
@@ -122,13 +123,15 @@ namespace Echoglossian
 
     private AtkTextNodeBufferWrapper atkTextNodeBufferWrapper;
 
-    /* private UiAddonHandler uiBattleTalkAddonHandler;
-     private UiAddonHandler uiTalkAddonHandler;
-     private UiAddonHandler uiTalkSubtitleHandler;*/
+    /// <summary>
+    /// List of registered addon handlers for the plugin.
+    /// </summary>
+    private List<(string AddonName, IAddonTranslationHandler Handler)> registeredAddonHandlers;
+
 
     public static TranslationService TranslationService;
 
-    private CharacterWindowHandler characterWindowHandler;
+    // private CharacterWindowHandler characterWindowHandler;
 
     public List<ToastMessage> ErrorToastsCache { get; set; }
 
@@ -238,7 +241,7 @@ namespace Echoglossian
 
       this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 
-      this.characterWindowHandler = new CharacterWindowHandler(configuration, TranslationService);
+      // this.characterWindowHandler = new CharacterWindowHandler(this.configuration, TranslationService);
 
       this.LoadAllErrorToasts();
       this.LoadAllOtherToasts();
@@ -261,7 +264,6 @@ namespace Echoglossian
       ToastGuiInterface.Toast += this.OnToast;
       ToastGuiInterface.ErrorToast += this.OnErrorToast;
       ToastGuiInterface.QuestToast += this.OnQuestToast;
-
 
       this.EgloAddonHandler();
 
@@ -315,7 +317,6 @@ namespace Echoglossian
 
       PluginInterface.UiBuilder.Draw -= this.BuildUi;
 
-
       this.pixImage?.Dispose();
       this.choiceImage?.Dispose();
       this.cutsceneChoiceImage?.Dispose();
@@ -329,11 +330,16 @@ namespace Echoglossian
       this.errorToastOverlay.Dispose();
       this.chatBubbleOverlay.Dispose();
 
-      if (this.configuration.TranslateCharacterWindow)
+      /*if (this.configuration.TranslateCharacterWindow)
       {
         AddonLifecycle.UnregisterListener(AddonEvent.PreSetup, "Character", this.characterWindowHandler.ExtractAndTranslateValues);
         AddonLifecycle.UnregisterListener(AddonEvent.PreRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
         AddonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
+      }*/
+
+      if (disposing && this.registeredAddonHandlers != null)
+      {
+        AddonHandlerRegistrar.UnregisterMany(this.registeredAddonHandlers, AddonLifecycle);
       }
 
       if (this.configuration.TranslateTalk)
@@ -478,15 +484,20 @@ namespace Echoglossian
               this.TranslateCharacterWindow();
             }*/
 
-      if (this.configuration.TranslateCharacterWindow)
+      this.registeredAddonHandlers = new List<(string AddonName, IAddonTranslationHandler Handler)>
+      {
+        (AddonName: "Character", Handler: new CharacterWindowHandler(this.configuration, TranslationService)),
+      };
+
+      AddonHandlerRegistrar.RegisterMany(this.registeredAddonHandlers, AddonLifecycle);
+
+      /*if (this.configuration.TranslateCharacterWindow)
       {
         PluginLog.Debug("Registering CharacterWindowHandler listeners.");
         AddonLifecycle.RegisterListener(AddonEvent.PreSetup, "Character", this.characterWindowHandler.ExtractAndTranslateValues);
         AddonLifecycle.RegisterListener(AddonEvent.PreRefresh, "Character", this.characterWindowHandler.ApplyTranslatedValues);
         AddonLifecycle.RegisterListener(AddonEvent.PreRequestedUpdate, "Character", this.characterWindowHandler.ApplyTranslatedValues);
-      }
-
-
+      }*/
 
       if (this.configuration.TranslateTalk)
       {

@@ -359,6 +359,23 @@
         <member name="P:Echoglossian.Config.Version">
             <summary>Plugin configuration version number (used during migration).</summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.CreateOrUseDb">
+             <summary>
+            
+             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnTalkMessage(Echoglossian.EFCoreSqlite.Models.TalkMessage)">
+             <summary>
+            
+             </summary>
+             <param name="talkMessage"></param>
+             <returns></returns>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.registeredAddonHandlers">
+            <summary>
+            List of registered addon handlers for the plugin.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian"/> class.
@@ -977,34 +994,115 @@
             </summary>
             <param name="dictionary">The dictionary containing language information.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.Handlers.CharacterWindowHandler">
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.CharacterWindowHandler">
             <summary>
-            Responsible for extracting, translating, and applying translated AtkValues for the Character window.
+            Handles the translation and lifecycle events for the Character Window addon.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.CharacterWindowHandler"/> class.
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.CharacterWindowHandler"/> class.
             </summary>
-            <param name="config">Configuration settings.</param>
-            <param name="translationService">The translation service to use.</param>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.ExtractAndTranslateValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="T:Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate">
             <summary>
-            Extracts AtkValues from the Character addon and prepares the translated values.
+            Local delegate used internally for event dispatching.
+            </summary>
+            <param name="evt">The addon event being handled.</param>
+            <param name="args">The arguments associated with the addon event.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler">
+            <summary>
+            Generic, reusable base class for translating interface addons using AtkValues and/or StringArrayData.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.ApplyTranslatedValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType})">
             <summary>
-            Applies the translated AtkValues to the Character window.
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler"/> class.
+            </summary>
+            <param name="addonName">The name of the addon being handled.</param>
+            <param name="config">The configuration settings for the addon handler.</param>
+            <param name="translationService">The translation service used for translating addon data.</param>
+            <param name="useAtkValues">Indicates whether AtkValues should be used for translation.</param>
+            <param name="useStringArray">Indicates whether StringArrayData should be used for translation.</param>
+            <param name="stringArrayDataType">The type of StringArrayData to be used, if applicable.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+            Registers a local handler for a given Dalamud AddonEvent.
+            </summary>
+            <param name="evt">The addon event to register the handler for.</param>
+            <param name="handler">The delegate to handle the specified addon event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.GetEventHandlers">
+            <summary>
+            Returns a combined dictionary of Dalamud event delegates for AddonLifecycle.
+            </summary>
+            <returns>A dictionary mapping addon events to their respective delegates.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ExtractAndTranslate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Default logic for extracting and translating values from an addon.
+            Subclasses may call this in their custom handler.
+            </summary>
+            <param name="type">Type of the addon event being handled.</param>
+            <param name="args">Arguments containing the addon event type and name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ApplyTranslated(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Default logic for applying previously translated values back into the addon.
+            Subclasses may call this in their custom handler.
+            </summary>
+            <param name="type">Type of the addon event being handled.</param>
+            <param name="args">Arguments containing the addon event type and name.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Handlers.IAddonTranslationHandler">
+            <summary>
+            Interface for a reusable addon handler that maps AddonEvents to their delegates.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.CharacterWindowHandler.ApplyTranslatedArrayDataValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.Handlers.IAddonTranslationHandler.GetEventHandlers">
             <summary>
-            Applies the translated string array data values to the Character window.
+            Returns a mapping of event types to their combined delegate(s).
             </summary>
-            <param name="type"></param>
-            <param name="args"></param>
+            <returns>A dictionary mapping <see cref="T:Dalamud.Game.Addon.Lifecycle.AddonEvent"/> to their corresponding <see cref="T:Dalamud.Plugin.Services.IAddonLifecycle.AddonEventDelegate"/>.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar">
+            <summary>
+            Utility for registering and unregistering addon translation handlers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.Register(System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler,Dalamud.Plugin.Services.IAddonLifecycle)">
+            <summary>
+            Registers an addon translation handler with the specified addon lifecycle.
+            </summary>
+            <param name="addonName">The name of the addon to register the handler for.</param>
+            <param name="handler">The handler responsible for addon translation.</param>
+            <param name="addonLifecycle">The lifecycle manager for the addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.RegisterMany(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}},Dalamud.Plugin.Services.IAddonLifecycle)">
+            <summary>
+            Registers multiple addon translation handlers with the specified addon lifecycle.
+            </summary>
+            <param name="handlers">A collection of addon names and their corresponding handlers.</param>
+            <param name="addonLifecycle">The lifecycle manager for the addons.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.Unregister(System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler,Dalamud.Plugin.Services.IAddonLifecycle)">
+            <summary>
+            Unregisters an addon translation handler from the specified addon lifecycle.
+            </summary>
+            <param name="addonName">The name of the addon to unregister the handler for.</param>
+            <param name="handler">The handler responsible for addon translation.</param>
+            <param name="addonLifecycle">The lifecycle manager for the addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.UnregisterMany(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}},Dalamud.Plugin.Services.IAddonLifecycle)">
+            <summary>
+            Unregisters multiple addon translation handlers from the specified addon lifecycle.
+            </summary>
+            <param name="handlers">A collection of addon names and their corresponding handlers.</param>
+            <param name="addonLifecycle">The lifecycle manager for the addons.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>
@@ -1120,11 +1218,6 @@
             Renders the configuration UI for GTranslate.
             </summary>
         </member>
-        <member name="T:Echoglossian.PluginUI.EngineConfigUI.YandexPublicEngineUI">
-            <summary>
-            Renders the configuration UI for the Yandex Public Translator (no custom prompts).
-            </summary>
-        </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI">
             <summary>
             UI for configuring LM Studio translator engine.
@@ -1137,6 +1230,11 @@
             <param name="config">Current plugin configuration.</param>
             <param name="promptManager">Prompt manager instance.</param>
             <returns>True if any settings changed.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.YandexPublicEngineUI">
+            <summary>
+            Renders the configuration UI for the Yandex Public Translator (no custom prompts).
+            </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorStateManager">
             <summary>

@@ -22,7 +22,7 @@ namespace Echoglossian
     public static TalkSubtitleMessage? FoundTalkSubtitleMessage { get; set; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public async void CreateOrUseDb()
     {
@@ -57,7 +57,7 @@ namespace Echoglossian
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="talkMessage"></param>
     /// <returns></returns>

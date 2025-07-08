@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Net.Http.Json;
+
 using Echoglossian.Properties;
 
 namespace Echoglossian.Translators;

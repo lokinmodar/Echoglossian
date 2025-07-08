@@ -35,7 +35,6 @@ public static class GeminiEngineUI
       }
     }
 
-
     // Tooltip info per model
     var tooltips = new Dictionary<string, string>
     {

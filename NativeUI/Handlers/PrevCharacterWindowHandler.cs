@@ -13,7 +13,7 @@ namespace Echoglossian.NativeUI.Handlers;
 /// <summary>
 /// Responsible for extracting, translating, and applying translated AtkValues for the Character window.
 /// </summary>
-public unsafe class CharacterWindowHandler
+public unsafe class PrevCharacterWindowHandler
 {
   private readonly TranslationService translationService;
 
