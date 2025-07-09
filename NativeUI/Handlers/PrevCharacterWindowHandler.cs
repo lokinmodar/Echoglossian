@@ -6,6 +6,7 @@
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Text;
 using Lumina.Text.ReadOnly;
+
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian.NativeUI.Handlers;
@@ -46,7 +47,7 @@ public unsafe class PrevCharacterWindowHandler
   /// </summary>
   /// <param name="config">Configuration settings.</param>
   /// <param name="translationService">The translation service to use.</param>
-  public CharacterWindowHandler(Config config, TranslationService translationService)
+  public PrevCharacterWindowHandler(Config config, TranslationService translationService)
   {
     this.translationService = translationService;
     this.Config = config;

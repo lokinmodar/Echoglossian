@@ -81,6 +81,8 @@ namespace Echoglossian.Translators
     /// <returns>The translated text as a string.</returns>
     public string Translate(string text, string sourceLanguage, string targetLanguage)
     {
+      PluginLog.Debug($"TranslationService: Translate called with text: {text}, sourceLanguage: {sourceLanguage}, targetLanguage: {targetLanguage}");
+
       var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
       if (!shouldTranslate)
       {

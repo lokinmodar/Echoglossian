@@ -3,12 +3,18 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+// <copyright file="CharacterWindowHandler.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
 using Echoglossian.NativeUI.Handlers;
 
 namespace Echoglossian.NativeUI.AddonHandlers;
 
 /// <summary>
-/// Handles the translation and lifecycle events for the Character Window addon.
+/// Handles translation for the "Character" addon using AtkValues and StringArrayData.
+/// Lifecycle-safe: extracts and applies values within valid memory scope per frame.
 /// </summary>
 public unsafe class CharacterWindowHandler : GenericAddonHandler
 {

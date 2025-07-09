@@ -5,64 +5,90 @@
 
 using Lumina.Text.ReadOnly;
 
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
-
 using static Dalamud.Plugin.Services.IAddonLifecycle;
+
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian.NativeUI.Handlers;
 
 /// <summary>
-/// Local delegate used internally for event dispatching.
+/// Represents a delegate for handling local addon events.
 /// </summary>
 /// <param name="evt">The addon event being handled.</param>
 /// <param name="args">The arguments associated with the addon event.</param>
 public delegate void LocalAddonHandlerDelegate(AddonEvent evt, AddonArgs args);
 
 /// <summary>
-/// Generic, reusable base class for translating interface addons using AtkValues and/or StringArrayData.
+/// Represents a generic handler for addon translation.
 /// </summary>
 public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
 {
+  /// <summary>
+  /// Gets the translation service used for translating addon content.
+  /// </summary>
   protected readonly TranslationService TranslationService;
+
+  /// <summary>
+  /// Gets the configuration settings for the addon handler.
+  /// </summary>
   protected readonly Config Config;
+
+  /// <summary>
+  /// Gets the name of the addon being handled.
+  /// </summary>
   protected readonly string AddonName;
+
+  /// <summary>
+  /// Gets a value indicating whether ATK values are used for translation.
+  /// </summary>
   protected readonly bool UseAtkValues;
+
+  /// <summary>
+  /// Gets a value indicating whether string arrays are used for translation.
+  /// </summary>
   protected readonly bool UseStringArray;
+
+  /// <summary>
+  /// Gets the type of string array data, if applicable.
+  /// </summary>
   protected readonly StringArrayType? StringArrayDataType;
 
-  protected AtkUnitBase* AddonPtr = null;
-  protected AtkValue* AtkValuesPtr = null;
-  protected int AtkValuesCount = 0;
-
-  protected byte** StringArrayDataPtr = null;
-  protected int StringArraySize = 0;
-
-  protected Dictionary<int, string?> RawAtkValues = new();
+  /// <summary>
+  /// Stores filtered ATK values for translation.
+  /// </summary>
   protected Dictionary<int, string> FilteredAtkValues = new();
 
-  protected Dictionary<int, string> RawStringArrayData = new();
+  /// <summary>
+  /// Stores filtered string array data for translation.
+  /// </summary>
   protected Dictionary<int, string> FilteredStringArrayData = new();
 
+  /// <summary>
+  /// A regular expression pattern for identifying numeric-like strings.
+  /// </summary>
   private static readonly Regex NumericLikePattern = new(@"^\s*([€£$¥]?\s*\d+([.,]\d+)?\s*[%€£$¥]?\s*|(\d+/\d+))\s*$", RegexOptions.Compiled);
 
+  /// <summary>
+  /// Stores event handlers for addon events.
+  /// </summary>
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>> eventHandlers = new();
 
   /// <summary>
   /// Initializes a new instance of the <see cref="GenericAddonHandler"/> class.
   /// </summary>
-  /// <param name="addonName">The name of the addon being handled.</param>
-  /// <param name="config">The configuration settings for the addon handler.</param>
-  /// <param name="translationService">The translation service used for translating addon data.</param>
-  /// <param name="useAtkValues">Indicates whether AtkValues should be used for translation.</param>
-  /// <param name="useStringArray">Indicates whether StringArrayData should be used for translation.</param>
-  /// <param name="stringArrayDataType">The type of StringArrayData to be used, if applicable.</param>
+  /// <param name="addonName">The name of the addon.</param>
+  /// <param name="config">The configuration settings.</param>
+  /// <param name="translationService">The translation service.</param>
+  /// <param name="useAtkValues">Indicates whether ATK values are used.</param>
+  /// <param name="useStringArray">Indicates whether string arrays are used.</param>
+  /// <param name="stringArrayDataType">The type of string array data, if applicable.</param>
   protected GenericAddonHandler(
-   string addonName,
-   Config config,
-   TranslationService translationService,
-   bool useAtkValues,
-   bool useStringArray,
-   StringArrayType? stringArrayDataType = null)
+      string addonName,
+      Config config,
+      TranslationService translationService,
+      bool useAtkValues,
+      bool useStringArray,
+      StringArrayType? stringArrayDataType = null)
   {
     this.AddonName = addonName;
     this.Config = config;
@@ -73,10 +99,10 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
   }
 
   /// <summary>
-  /// Registers a local handler for a given Dalamud AddonEvent.
+  /// Registers a handler for a specific addon event.
   /// </summary>
-  /// <param name="evt">The addon event to register the handler for.</param>
-  /// <param name="handler">The delegate to handle the specified addon event.</param>
+  /// <param name="evt">The addon event to handle.</param>
+  /// <param name="handler">The delegate to handle the event.</param>
   public void RegisterHandler(AddonEvent evt, LocalAddonHandlerDelegate handler)
   {
     if (!this.eventHandlers.TryGetValue(evt, out var list))
@@ -89,9 +115,9 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
   }
 
   /// <summary>
-  /// Returns a combined dictionary of Dalamud event delegates for AddonLifecycle.
+  /// Gets the registered event handlers for addon events.
   /// </summary>
-  /// <returns>A dictionary mapping addon events to their respective delegates.</returns>
+  /// <returns>A dictionary of addon events and their corresponding delegates.</returns>
   public Dictionary<AddonEvent, AddonEventDelegate> GetEventHandlers()
   {
     return this.eventHandlers.ToDictionary(
@@ -106,11 +132,10 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
   }
 
   /// <summary>
-  /// Default logic for extracting and translating values from an addon.
-  /// Subclasses may call this in their custom handler.
+  /// Extracts and translates addon content based on the specified event and arguments.
   /// </summary>
-  /// <param name="type">Type of the addon event being handled.</param>
-  /// <param name="args">Arguments containing the addon event type and name.</param>
+  /// <param name="type">The type of addon event.</param>
+  /// <param name="args">The arguments associated with the addon event.</param>
   protected void ExtractAndTranslate(AddonEvent type, AddonArgs args)
   {
     if (args.AddonName != this.AddonName)
@@ -121,24 +146,22 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
     PluginLog.Debug($"[{this.AddonName}] ExtractAndTranslate - {type}");
 
     var atkStage = AtkStage.Instance();
-    this.AddonPtr = atkStage->RaptureAtkUnitManager->GetAddonByName(this.AddonName);
-
-    if (this.AddonPtr == null || !this.AddonPtr->IsVisible)
+    var addon = atkStage->RaptureAtkUnitManager->GetAddonByName(this.AddonName);
+    if (addon == null || !addon->IsVisible)
     {
       return;
     }
 
-    // StringArrayData translation
     if (this.UseStringArray && this.StringArrayDataType.HasValue)
     {
-      var stringArray = atkStage->GetStringArrayData(this.StringArrayDataType.Value)->StringArray;
-      this.StringArrayDataPtr = stringArray;
-      this.StringArraySize = atkStage->GetStringArrayData(this.StringArrayDataType.Value)->Size;
+      var stringArrayData = atkStage->GetStringArrayData(this.StringArrayDataType.Value);
+      var stringArray = stringArrayData->StringArray;
+      var size = stringArrayData->Size;
 
-      this.RawStringArrayData = Enumerable.Range(0, this.StringArraySize)
+      var raw = Enumerable.Range(0, size)
         .ToDictionary(i => i, i => new ReadOnlySeStringSpan(stringArray[i]).ExtractText());
 
-      this.FilteredStringArrayData = this.RawStringArrayData
+      this.FilteredStringArrayData = raw
         .Where(kvp =>
           !string.IsNullOrWhiteSpace(kvp.Value) &&
           !kvp.Value.All(char.IsPunctuation) &&
@@ -161,27 +184,25 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
       }
     }
 
-    // AtkValues translation
     if (this.UseAtkValues)
     {
-      this.AtkValuesPtr = this.AddonPtr->AtkValues;
-      this.AtkValuesCount = this.AddonPtr->AtkValuesCount;
-
-      if (this.AtkValuesPtr == null || this.AtkValuesCount <= 0)
+      var atkValues = addon->AtkValues;
+      var count = addon->AtkValuesCount;
+      if (atkValues == null || count <= 0)
       {
         return;
       }
 
-      this.RawAtkValues = Enumerable.Range(0, this.AtkValuesCount)
+      var raw = Enumerable.Range(0, count)
         .ToDictionary(i => i, i =>
         {
-          var type = this.AtkValuesPtr[i].Type;
+          var type = atkValues[i].Type;
           return type is ValueType.String or ValueType.String8 or ValueType.ManagedString
-            ? MemoryHelper.ReadSeStringAsString(out _, (nint)this.AtkValuesPtr[i].String.Value)
+            ? MemoryHelper.ReadSeStringAsString(out _, (nint)atkValues[i].String.Value)
             : null;
         });
 
-      this.FilteredAtkValues = this.RawAtkValues
+      this.FilteredAtkValues = raw
         .Where(kvp =>
           !string.IsNullOrWhiteSpace(kvp.Value) &&
           !kvp.Value.All(char.IsPunctuation) &&
@@ -189,10 +210,14 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!);
 
       string input = string.Join("|", this.FilteredAtkValues.Select(kvp => $"{kvp.Key}|{kvp.Value}"));
+
+      // TODO: Add logic to retrieve from DB if available
       string translated = this.TranslationService.Translate(
         input,
         Echoglossian.ClientStateInterface.ClientLanguage.Humanize(),
         Echoglossian.LangDict[Echoglossian.LanguageInt].Code);
+
+      // TODO: Add logic to handle translation errors or empty results and logic to save to DB if it is a new translation
 
       var parts = translated.Split('|');
       for (int i = 0; i < parts.Length - 1; i += 2)
@@ -203,14 +228,18 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
         }
       }
     }
+
+    PluginLog.Debug($"[{this.AddonName}] ExtractAndTranslate - Completed with {this.FilteredAtkValues.Count} ATK values and {this.FilteredStringArrayData.Count} string array entries filtered.");
+
+    // Apply the translated content to the addon
+    this.ApplyTranslated(type, args);
   }
 
   /// <summary>
-  /// Default logic for applying previously translated values back into the addon.
-  /// Subclasses may call this in their custom handler.
+  /// Applies translated content to the addon based on the specified event and arguments.
   /// </summary>
-  /// <param name="type">Type of the addon event being handled.</param>
-  /// <param name="args">Arguments containing the addon event type and name.</param>
+  /// <param name="type">The type of addon event.</param>
+  /// <param name="args">The arguments associated with the addon event.</param>
   protected void ApplyTranslated(AddonEvent type, AddonArgs args)
   {
     if (args.AddonName != this.AddonName)
@@ -220,25 +249,39 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
 
     PluginLog.Debug($"[{this.AddonName}] ApplyTranslated - {type}");
 
-    if (this.UseStringArray && this.StringArrayDataPtr != null && this.StringArraySize > 0)
+    var atkStage = AtkStage.Instance();
+    var addon = atkStage->RaptureAtkUnitManager->GetAddonByName(this.AddonName);
+    if (addon == null || !addon->IsVisible)
     {
-      for (int i = 0; i < this.StringArraySize; i++)
+      return;
+    }
+
+    if (this.UseStringArray && this.StringArrayDataType.HasValue)
+    {
+      var stringArrayData = atkStage->GetStringArrayData(this.StringArrayDataType.Value);
+      var size = stringArrayData->Size;
+
+      for (int i = 0; i < size; i++)
       {
         if (this.FilteredStringArrayData.TryGetValue(i, out var translated))
         {
           var ro = new ReadOnlySeString(translated);
-          AtkStage.Instance()->GetStringArrayData(this.StringArrayDataType!.Value)->SetValueAndUpdate(
-            i,
-            new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(),
-            true, true);
+          stringArrayData->SetValueAndUpdate(i, new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(), true, true);
         }
       }
     }
 
-    if (this.UseAtkValues && this.AtkValuesPtr != null && this.AtkValuesCount > 0)
+    if (this.UseAtkValues)
     {
-      var span = new Span<AtkValue>(this.AtkValuesPtr, this.AtkValuesCount);
-      for (int i = 0; i < this.AtkValuesCount; i++)
+      var atkValues = addon->AtkValues;
+      var count = addon->AtkValuesCount;
+      if (atkValues == null || count <= 0)
+      {
+        return;
+      }
+
+      var span = new Span<AtkValue>(atkValues, count);
+      for (int i = 0; i < count; i++)
       {
         if (span[i].Type is ValueType.String or ValueType.String8 or ValueType.ManagedString)
         {
@@ -249,7 +292,7 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
         }
       }
 
-      this.AddonPtr->OnRefresh((uint)this.AtkValuesCount, this.AtkValuesPtr);
+      addon->OnRefresh((uint)count, atkValues);
     }
   }
 }
