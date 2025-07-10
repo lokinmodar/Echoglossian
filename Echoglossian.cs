@@ -6,6 +6,7 @@
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.LanguagesHandling;
 using Echoglossian.NativeUI.AddonHandlers;
+using Echoglossian.NativeUI.AddonHandlers.Character;
 using Echoglossian.NativeUI.Handlers;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.PluginUI.Helpers;
@@ -164,15 +165,13 @@ namespace Echoglossian
       try
       {
         this.CreateOrUseDb();
+        PluginLog.Debug("Eglo database created or used successfully.");
       }
       catch (Exception e)
       {
         PluginLog.Error($"Error creating or using database: {e}");
       }
-      finally
-      {
-        PluginLog.Debug("Eglo database created or used successfully.");
-      }
+
 
       this.cultureInfo = new CultureInfo(this.configuration.DefaultPluginCulture);
       AssetsManager.AssetsPath = $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
@@ -487,6 +486,9 @@ namespace Echoglossian
       this.registeredAddonHandlers = new List<(string AddonName, IAddonTranslationHandler Handler)>
       {
         (AddonName: "Character", Handler: new CharacterWindowHandler(this.configuration, TranslationService)),
+        (AddonName: "CharacterClass", Handler: new CharacterClassSubWindowHandler(this.configuration, TranslationService)),
+        (AddonName: "CharacterRepute", Handler: new CharacterReputeSubWindowHandler(this.configuration, TranslationService)),
+        (AddonName: "CharacterProfile", Handler: new CharacterProfileSubWindowHandler(this.configuration, TranslationService)),
       };
 
       AddonHandlerRegistrar.RegisterMany(this.registeredAddonHandlers, AddonLifecycle);

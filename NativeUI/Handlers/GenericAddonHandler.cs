@@ -64,6 +64,11 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
   protected Dictionary<int, string> FilteredStringArrayData = new();
 
   /// <summary>
+  /// Stores the original string array values to restore after translation.
+  /// </summary>
+  protected Dictionary<int, string> OriginalStringArrayData = new();
+
+  /// <summary>
   /// A regular expression pattern for identifying numeric-like strings.
   /// </summary>
   private static readonly Regex NumericLikePattern = new(@"^\s*([€£$¥]?\s*\d+([.,]\d+)?\s*[%€£$¥]?\s*|(\d+/\d+))\s*$", RegexOptions.Compiled);
@@ -159,15 +164,15 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
       var stringArray = stringArrayData->StringArray;
       var size = stringArrayData->Size;
 
-      var raw = Enumerable.Range(0, size)
+      this.OriginalStringArrayData = Enumerable.Range(0, size)
         .ToDictionary(i => i, i => new ReadOnlySeStringSpan(stringArray[i]).ExtractText());
 
-      this.FilteredStringArrayData = raw
-        .Where(kvp =>
-          !string.IsNullOrWhiteSpace(kvp.Value) &&
-          !kvp.Value.All(char.IsPunctuation) &&
-          !NumericLikePattern.IsMatch(kvp.Value))
-        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!);
+      this.FilteredStringArrayData = this.OriginalStringArrayData
+              .Where(kvp =>
+                !string.IsNullOrWhiteSpace(kvp.Value) &&
+                !kvp.Value.All(char.IsPunctuation) &&
+                !NumericLikePattern.IsMatch(kvp.Value))
+              .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!);
 
       string input = string.Join("|", this.FilteredStringArrayData.Select(kvp => $"{kvp.Key}|{kvp.Value}"));
       string translated = this.TranslationService.Translate(
@@ -221,6 +226,9 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
       // TODO: Add logic to handle translation errors or empty results and logic to save to DB if it is a new translation
 
       var parts = translated.Split('|');
+      // trim starting and ending whitespace from each part
+      parts = parts.Select(p => p.Trim()).ToArray();
+
       for (int i = 0; i < parts.Length - 1; i += 2)
       {
         if (int.TryParse(parts[i], out int index))
@@ -272,6 +280,9 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
         break;
 
       case AddonEvent.PreRequestedUpdate when this.UseStringArray && this.StringArrayDataType.HasValue:
+        this.ApplyTranslatedStringArray(atkStage);
+        break;
+      case AddonEvent.PostRequestedUpdate when this.UseStringArray && this.StringArrayDataType.HasValue:
         this.ApplyTranslatedStringArray(atkStage);
         break;
 
@@ -326,6 +337,27 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
       if (this.FilteredStringArrayData.TryGetValue(i, out var translated))
       {
         var ro = new ReadOnlySeString(translated);
+        stringArrayData->SetValue(i, new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(), readBeforeWrite: true, managed: true, suppressUpdates: true);
+      }
+    }
+  }
+
+  /// <summary>
+  /// Restores the original string array data to the addon, if available.
+  /// </summary>
+  /// <param name="atkStage">The ATK stage instance containing the string array data.</param>
+  private unsafe void RestoreOriginalStringArray(AtkStage* atkStage)
+  {
+    PluginLog.Debug($"[{this.AddonName}] RestoreOriginalStringArray called");
+
+    var stringArrayData = atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
+    var size = stringArrayData->Size;
+
+    for (int i = 0; i < size; i++)
+    {
+      if (this.OriginalStringArrayData.TryGetValue(i, out var original))
+      {
+        var ro = new ReadOnlySeString(original);
         stringArrayData->SetValue(i, new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(), readBeforeWrite: true, managed: true, suppressUpdates: true);
       }
     }

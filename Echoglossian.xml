@@ -994,15 +994,54 @@
             </summary>
             <param name="dictionary">The dictionary containing language information.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.CharacterWindowHandler">
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler">
+            <summary>
+            Handles translation for the "CharacterClass" addon using AtkValues and StringArrayData.
+            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler"/> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler">
+            <summary>
+            Handles translation for the "CharacterClass" addon using AtkValues and StringArrayData.
+            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler"/> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler">
+            <summary>
+            Handles translation for the "CharacterClass" addon using AtkValues and StringArrayData.
+            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler"/> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler">
             <summary>
             Handles translation for the "Character" addon using AtkValues and StringArrayData.
             Lifecycle-safe: extracts and applies values within valid memory scope per frame.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.CharacterWindowHandler"/> class.
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler"/> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
@@ -1057,6 +1096,11 @@
         <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.FilteredStringArrayData">
             <summary>
             Stores filtered string array data for translation.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.OriginalStringArrayData">
+            <summary>
+            Stores the original string array values to restore after translation.
             </summary>
         </member>
         <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.NumericLikePattern">
@@ -1116,6 +1160,12 @@
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ApplyTranslatedStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
             <summary>
             Applies translated strings from the string array data to the addon.
+            </summary>
+            <param name="atkStage">The ATK stage instance containing the string array data.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.RestoreOriginalStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
+            <summary>
+            Restores the original string array data to the addon, if available.
             </summary>
             <param name="atkStage">The ATK stage instance containing the string array data.</param>
         </member>

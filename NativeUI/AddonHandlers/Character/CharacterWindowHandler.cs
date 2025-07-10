@@ -10,7 +10,7 @@
 
 using Echoglossian.NativeUI.Handlers;
 
-namespace Echoglossian.NativeUI.AddonHandlers;
+namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
 /// <summary>
 /// Handles translation for the "Character" addon using AtkValues and StringArrayData.
@@ -29,5 +29,6 @@ public unsafe class CharacterWindowHandler : GenericAddonHandler
     this.RegisterHandler(AddonEvent.PreSetup, this.ApplyTranslated /*this.ExtractAndTranslate*/);
     this.RegisterHandler(AddonEvent.PreRefresh, /*this.ApplyTranslated*/this.ExtractAndTranslate);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.ApplyTranslated);
+    this.RegisterHandler(AddonEvent.PostRequestedUpdate, this.ApplyTranslated);
   }
 }
