@@ -283,7 +283,7 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
         this.ApplyTranslatedStringArray(atkStage);
         break;
       case AddonEvent.PostRequestedUpdate when this.UseStringArray && this.StringArrayDataType.HasValue:
-        this.ApplyTranslatedStringArray(atkStage);
+        this.RestoreOriginalStringArray(atkStage);
         break;
 
       default:
@@ -358,7 +358,7 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
       if (this.OriginalStringArrayData.TryGetValue(i, out var original))
       {
         var ro = new ReadOnlySeString(original);
-        stringArrayData->SetValue(i, new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(), readBeforeWrite: true, managed: true, suppressUpdates: true);
+        stringArrayData->SetValue(i, new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(), readBeforeWrite: true, managed: true, suppressUpdates: false);
       }
     }
   }
