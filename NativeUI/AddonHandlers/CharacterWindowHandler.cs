@@ -26,8 +26,8 @@ public unsafe class CharacterWindowHandler : GenericAddonHandler
   public CharacterWindowHandler(Config config, TranslationService translationService)
     : base("Character", config, translationService, useAtkValues: true, useStringArray: true, stringArrayDataType: StringArrayType.Character)
   {
-    this.RegisterHandler(AddonEvent.PreSetup, this.ExtractAndTranslate);
-    this.RegisterHandler(AddonEvent.PreRefresh, this.ApplyTranslated);
+    this.RegisterHandler(AddonEvent.PreSetup, this.ApplyTranslated /*this.ExtractAndTranslate*/);
+    this.RegisterHandler(AddonEvent.PreRefresh, /*this.ApplyTranslated*/this.ExtractAndTranslate);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.ApplyTranslated);
   }
 }

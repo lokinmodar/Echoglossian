@@ -1107,6 +1107,18 @@
             <param name="type">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ApplyTranslatedAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+            Applies translated ATK values to the addon, updating string values as needed.
+            </summary>
+            <param name="addon">The ATK unit base addon to apply translations to.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ApplyTranslatedStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
+            <summary>
+            Applies translated strings from the string array data to the addon.
+            </summary>
+            <param name="atkStage">The ATK stage instance containing the string array data.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.Handlers.IAddonTranslationHandler">
             <summary>
             Interface for a reusable addon handler that maps AddonEvents to their delegates.

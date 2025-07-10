@@ -138,6 +138,7 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
   /// <param name="args">The arguments associated with the addon event.</param>
   protected void ExtractAndTranslate(AddonEvent type, AddonArgs args)
   {
+    PluginLog.Debug($"1 - [{this.AddonName}] Called ExtractAndTranslate - {type} - Args: {args}");
     if (args.AddonName != this.AddonName)
     {
       return;
@@ -232,7 +233,10 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
     PluginLog.Debug($"[{this.AddonName}] ExtractAndTranslate - Completed with {this.FilteredAtkValues.Count} ATK values and {this.FilteredStringArrayData.Count} string array entries filtered.");
 
     // Apply the translated content to the addon
-    this.ApplyTranslated(type, args);
+
+    // addon->OnRefresh((uint)addon->AtkValuesCount, addon->AtkValues);
+    // this.ApplyTranslated(type, args);
+    // addon->OnSetup((uint)addon->AtkValuesCount, addon->AtkValues); // Ensure the addon is set up with the updated values
   }
 
   /// <summary>
@@ -242,6 +246,7 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
   /// <param name="args">The arguments associated with the addon event.</param>
   protected void ApplyTranslated(AddonEvent type, AddonArgs args)
   {
+    PluginLog.Debug($"[{this.AddonName}] Called ApplyTranslated - {type} - Args: {args}");
     if (args.AddonName != this.AddonName)
     {
       return;
@@ -256,43 +261,73 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
       return;
     }
 
-    if (this.UseStringArray && this.StringArrayDataType.HasValue)
+    switch (type)
     {
-      var stringArrayData = atkStage->GetStringArrayData(this.StringArrayDataType.Value);
-      var size = stringArrayData->Size;
+      case AddonEvent.PreSetup when this.UseAtkValues:
+        this.ApplyTranslatedAtkValues(addon);
+        this.ApplyTranslatedStringArray(atkStage);
+        break;
+      case AddonEvent.PreRefresh when this.UseAtkValues:
+        this.ApplyTranslatedAtkValues(addon);
+        break;
 
-      for (int i = 0; i < size; i++)
+      case AddonEvent.PreRequestedUpdate when this.UseStringArray && this.StringArrayDataType.HasValue:
+        this.ApplyTranslatedStringArray(atkStage);
+        break;
+
+      default:
+        PluginLog.Verbose($"[{this.AddonName}] ApplyTranslated skipped for event: {type}");
+        break;
+    }
+  }
+
+  /// <summary>
+  /// Applies translated ATK values to the addon, updating string values as needed.
+  /// </summary>
+  /// <param name="addon">The ATK unit base addon to apply translations to.</param>
+  private unsafe void ApplyTranslatedAtkValues(AtkUnitBase* addon)
+  {
+    PluginLog.Debug($"2 - [{this.AddonName}] ApplyTranslatedAtkValues called");
+    var atkValues = addon->AtkValues;
+    var count = addon->AtkValuesCount;
+    if (atkValues == null || count <= 0)
+    {
+      return;
+    }
+
+    var span = new Span<AtkValue>(atkValues, count);
+    for (int i = 0; i < count; i++)
+    {
+      if (span[i].Type is ValueType.String or ValueType.String8 or ValueType.ManagedString)
       {
-        if (this.FilteredStringArrayData.TryGetValue(i, out var translated))
+        if (this.FilteredAtkValues.TryGetValue(i, out var translated))
         {
-          var ro = new ReadOnlySeString(translated);
-          stringArrayData->SetValueAndUpdate(i, new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(), true, true);
+          span[i].SetManagedString(translated);
         }
       }
     }
 
-    if (this.UseAtkValues)
+    // addon->OnRefresh((uint)count, atkValues); // Uncomment if refresh is required
+    // addon->OnSetup((uint)count, atkValues); // Ensure the addon is set up with the updated values
+  }
+
+  /// <summary>
+  /// Applies translated strings from the string array data to the addon.
+  /// </summary>
+  /// <param name="atkStage">The ATK stage instance containing the string array data.</param>
+  private unsafe void ApplyTranslatedStringArray(AtkStage* atkStage)
+  {
+    PluginLog.Debug($"3 - [{this.AddonName}] ApplyTranslatedStringArray called");
+    var stringArrayData = atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
+    var size = stringArrayData->Size;
+
+    for (int i = 0; i < size; i++)
     {
-      var atkValues = addon->AtkValues;
-      var count = addon->AtkValuesCount;
-      if (atkValues == null || count <= 0)
+      if (this.FilteredStringArrayData.TryGetValue(i, out var translated))
       {
-        return;
+        var ro = new ReadOnlySeString(translated);
+        stringArrayData->SetValue(i, new Lumina.Text.SeStringBuilder().Append(ro).GetViewAsSpan(), readBeforeWrite: true, managed: true, suppressUpdates: true);
       }
-
-      var span = new Span<AtkValue>(atkValues, count);
-      for (int i = 0; i < count; i++)
-      {
-        if (span[i].Type is ValueType.String or ValueType.String8 or ValueType.ManagedString)
-        {
-          if (this.FilteredAtkValues.TryGetValue(i, out var translated))
-          {
-            span[i].SetManagedString(translated);
-          }
-        }
-      }
-
-      addon->OnRefresh((uint)count, atkValues);
     }
   }
 }
