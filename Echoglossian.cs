@@ -486,9 +486,9 @@ namespace Echoglossian
       this.registeredAddonHandlers = new List<(string AddonName, IAddonTranslationHandler Handler)>
       {
         (AddonName: "Character", Handler: new CharacterWindowHandler(this.configuration, TranslationService)),
-        (AddonName: "CharacterClass", Handler: new CharacterClassSubWindowHandler(this.configuration, TranslationService)),
+/*        (AddonName: "CharacterClass", Handler: new CharacterClassSubWindowHandler(this.configuration, TranslationService)),
         (AddonName: "CharacterRepute", Handler: new CharacterReputeSubWindowHandler(this.configuration, TranslationService)),
-        (AddonName: "CharacterProfile", Handler: new CharacterProfileSubWindowHandler(this.configuration, TranslationService)),
+        (AddonName: "CharacterProfile", Handler: new CharacterProfileSubWindowHandler(this.configuration, TranslationService)),*/
       };
 
       AddonHandlerRegistrar.RegisterMany(this.registeredAddonHandlers, AddonLifecycle);
