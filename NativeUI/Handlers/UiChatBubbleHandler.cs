@@ -4,6 +4,7 @@
 // </copyright>
 
 using Dalamud.Game.Text.SeStringHandling;
+
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace Echoglossian

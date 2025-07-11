@@ -6,10 +6,13 @@
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Memory;
 using Dalamud.Utility;
+
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
+
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+
 using Humanizer;
 
 namespace Echoglossian

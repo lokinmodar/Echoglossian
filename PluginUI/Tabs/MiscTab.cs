@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Properties;
+
 using ImGuiNET;
 
 namespace Echoglossian.PluginUI.Tabs;

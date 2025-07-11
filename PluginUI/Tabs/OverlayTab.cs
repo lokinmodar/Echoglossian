@@ -3,10 +3,10 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using ImGuiNET;
-
 using System;
 using System.Numerics;
+
+using ImGuiNET;
 
 namespace Echoglossian.PluginUI.Tabs;
 

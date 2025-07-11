@@ -4,6 +4,7 @@
 // </copyright>
 
 using Dalamud.Plugin.Services;
+
 using Echoglossian.NativeUI.Handlers;
 
 namespace Echoglossian.NativeUI.Helpers;

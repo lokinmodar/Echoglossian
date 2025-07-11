@@ -6,6 +6,7 @@
 using System.Numerics;
 
 using Echoglossian.Properties;
+
 using ImGuiNET;
 
 namespace Echoglossian.PluginUI.Components;

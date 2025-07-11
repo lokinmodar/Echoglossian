@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.OpenAI;
+
 using Newtonsoft.Json.Linq;
 
 namespace Echoglossian.Translators.LmStudio;

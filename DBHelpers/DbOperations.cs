@@ -6,7 +6,9 @@
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
+
 using ImGuiNET;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Echoglossian

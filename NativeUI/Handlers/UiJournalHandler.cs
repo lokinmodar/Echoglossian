@@ -7,8 +7,11 @@ using System.Collections.Concurrent;
 
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Memory;
+
 using Echoglossian.EFCoreSqlite.Models.Journal;
+
 using FFXIVClientStructs.FFXIV.Component.GUI;
+
 using Humanizer;
 
 namespace Echoglossian

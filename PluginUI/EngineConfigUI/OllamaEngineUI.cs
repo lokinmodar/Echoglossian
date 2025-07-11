@@ -3,12 +3,13 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Numerics;
+
 using Echoglossian.PluginUI.Components;
 using Echoglossian.Translators.Ollama;
 using Echoglossian.Translators.OpenAI;
-using ImGuiNET;
 
-using System.Numerics;
+using ImGuiNET;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
 

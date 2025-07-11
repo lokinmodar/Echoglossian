@@ -6,6 +6,7 @@
 using System.ClientModel;
 
 using Echoglossian.Properties;
+
 using OpenAI;
 using OpenAI.Chat;
 

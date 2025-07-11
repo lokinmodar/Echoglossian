@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Numerics;
 
 using Dalamud.Configuration;
+
 using Echoglossian.Translators.LibreTranslate;
 
 namespace Echoglossian

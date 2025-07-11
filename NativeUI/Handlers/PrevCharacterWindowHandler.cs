@@ -4,6 +4,7 @@
 // </copyright>
 
 using FFXIVClientStructs.FFXIV.Component.GUI;
+
 using Lumina.Text;
 using Lumina.Text.ReadOnly;
 
