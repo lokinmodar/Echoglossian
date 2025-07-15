@@ -3,41 +3,109 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.EFCoreSqlite.Models;
-using Echoglossian.EFCoreSqlite.Models.Journal;
+namespace Echoglossian;
 
-namespace Echoglossian
+public partial class Echoglossian
 {
-  public partial class Echoglossian
-  {
+    /// <summary>
+    ///     Formats a <see cref="TalkMessage" /> for the database.
+    /// </summary>
+    /// <param name="sender">Message sender name.</param>
+    /// <param name="text">Message text.</param>
+    /// <returns>Returns <see cref="TalkMessage" />.</returns>
     public TalkMessage FormatTalkMessage(string sender, string text)
     {
-      return new TalkMessage(sender, text, ClientStateInterface.ClientLanguage.Humanize(), ClientStateInterface.ClientLanguage.Humanize(), string.Empty, string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        return new TalkMessage(
+            sender,
+            text,
+            ClientStateInterface.ClientLanguage.Humanize(),
+            ClientStateInterface.ClientLanguage.Humanize(),
+            string.Empty,
+            string.Empty,
+            this.languagesDictionary[this.configuration.Lang].Code,
+            this.configuration.ChosenTransEngine,
+            DateTime.Now,
+            DateTime.Now);
     }
 
+    /// <summary>
+    ///     Formats a <see cref="BattleTalkMessage" /> for the database.
+    /// </summary>
+    /// <param name="sender">Message sender name.</param>
+    /// <param name="text">Message text.</param>
+    /// <returns>Returns <see cref="BattleTalkMessage" />.</returns>
     public BattleTalkMessage FormatBattleTalkMessage(string sender, string text)
     {
-      return new BattleTalkMessage(sender, text, ClientStateInterface.ClientLanguage.Humanize(), ClientStateInterface.ClientLanguage.Humanize(), string.Empty, string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        return new BattleTalkMessage(
+            sender,
+            text,
+            ClientStateInterface.ClientLanguage.Humanize(),
+            ClientStateInterface.ClientLanguage.Humanize(),
+            string.Empty,
+            string.Empty,
+            this.languagesDictionary[this.configuration.Lang].Code,
+            this.configuration.ChosenTransEngine,
+            DateTime.Now,
+            DateTime.Now);
     }
 
     public ToastMessage FormatToastMessage(string type, string text)
     {
-      return new ToastMessage(type, text, ClientStateInterface.ClientLanguage.Humanize(), string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        return new ToastMessage(
+            type,
+            text,
+            ClientStateInterface.ClientLanguage.Humanize(),
+            string.Empty,
+            this.languagesDictionary[this.configuration.Lang].Code,
+            this.configuration.ChosenTransEngine,
+            DateTime.Now,
+            DateTime.Now);
     }
 
     public QuestPlate FormatQuestPlate(string questName, string questMessage)
     {
-      return new QuestPlate(questName, questMessage, ClientStateInterface.ClientLanguage.Humanize(), string.Empty, string.Empty, string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        return new QuestPlate(
+            questName,
+            questMessage,
+            ClientStateInterface.ClientLanguage.Humanize(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            this.languagesDictionary[this.configuration.Lang].Code,
+            this.configuration.ChosenTransEngine,
+            DateTime.Now,
+            DateTime.Now);
     }
 
     public TalkSubtitleMessage FormatTalkSubtitleMessage(string text)
     {
-      return new TalkSubtitleMessage(text, ClientStateInterface.ClientLanguage.Humanize(), string.Empty,
-               this.languagesDictionary[this.configuration.Lang].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+        return new TalkSubtitleMessage(
+            text,
+            ClientStateInterface.ClientLanguage.Humanize(),
+            string.Empty,
+            this.languagesDictionary[this.configuration.Lang].Code,
+            this.configuration.ChosenTransEngine,
+            DateTime.Now,
+            DateTime.Now);
     }
-  }
+
+    public GameWindow FormatGameWindow(
+        string windowAddonName,
+        string originalWindowStrings,
+        string originalWindowStringsLang,
+        string translatedWindowStrings,
+        string translationLang,
+        int? translationEngine)
+    {
+        return new GameWindow(
+            windowAddonName,
+            originalWindowStrings,
+            originalWindowStringsLang,
+            translatedWindowStrings,
+            translationLang,
+            translationEngine,
+            this.GetGameVersion(),
+            DateTime.Now,
+            DateTime.Now);
+    }
 }

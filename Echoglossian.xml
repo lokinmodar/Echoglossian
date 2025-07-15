@@ -359,22 +359,49 @@
         <member name="P:Echoglossian.Config.Version">
             <summary>Plugin configuration version number (used during migration).</summary>
         </member>
+        <member name="T:Echoglossian.Echoglossian">
+            <summary>
+            Represents the Echoglossian plugin, which provides translation services and UI enhancements for Dalamud-based applications. This class integrates various plugin services and manages translation operations for different UI components.
+            </summary>
+            <remarks>The Echoglossian class is responsible for initializing and managing the plugin's configuration, handling commands, and registering UI overlays and translation handlers. It utilizes several Dalamud services to interact with the game client and perform translations. Ensure that all required services are properly initialized before using this class.</remarks>
+        </member>
         <member name="M:Echoglossian.Echoglossian.CreateOrUseDb">
-             <summary>
-            
-             </summary>
+            <summary>
+             
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindAndReturnTalkMessage(Echoglossian.EFCoreSqlite.Models.TalkMessage)">
-             <summary>
-            
-             </summary>
-             <param name="talkMessage"></param>
-             <returns></returns>
+            <summary>
+            Finds and returns a TalkMessage from the database.
+            </summary>
+            <param name="talkMessage">TalkMessage to be found on the Database.</param>
+            <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage"/>.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindEntity``1(System.Func{``0,System.Boolean})">
+            <summary>
+            Finds an entity in the database matching the given filter.
+            </summary>
+            <typeparam name="T">Type of entity.</typeparam>
+            <param name="predicate">Predicate to match.</param>
+            <returns>Matching entity or null.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertEntity``1(``0)">
+            <summary>
+            Inserts an entity into the database.
+            </summary>
+            <typeparam name="T">Entity type.</typeparam>
+            <param name="entity">Entity to insert.</param>
         </member>
         <member name="F:Echoglossian.Echoglossian.registeredAddonHandlers">
             <summary>
             List of registered addon handlers for the plugin.
             </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.TranslationService">
+            <summary>
+            Provides access to the translation service for converting text between different languages.
+            </summary>
+            <remarks>This static field holds an instance of the <see cref="F:Echoglossian.Echoglossian.TranslationService"/> class, which can be used to perform language translations. Ensure that the service is properly initialized before use.</remarks>
         </member>
         <member name="M:Echoglossian.Echoglossian.#ctor">
             <summary>
@@ -482,6 +509,7 @@
             <summary>
             Gets the game version from the framework.
             </summary>
+            <returns>Game version as a string.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ParseStringToDictionary(System.String)">
             <summary>
@@ -723,6 +751,11 @@
             <param name="createdDate">The date the message was created.</param>
             <param name="updatedDate">The date the message was last updated.</param>
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.GameWindow">
+            <summary>
+            Provides <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity"/> implementation for the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> entity.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> class.
@@ -736,6 +769,68 @@
             <param name="gameVersion">The version of the game.</param>
             <param name="createdDate">The date the record was created.</param>
             <param name="updatedDate">The date the record was last updated.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity">
+            <summary>
+            Represents a common contract for translation entities in the database.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetOriginalText">
+            <summary>
+            Gets the original text (untranslated) used as the DB lookup key.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetTranslatedText">
+            <summary>
+            Gets the translated text stored in the DB.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetTranslatedText(System.String)">
+            <summary>
+            Sets the translated text to the entity.
+            </summary>
+            <param name="translated">The translated text to set.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetTranslationLang">
+            <summary>
+            Gets the translation language of the stored entry.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetTranslationEngine">
+            <summary>
+            Gets the engine ID used for translation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetGameVersion">
+            <summary>
+            Gets the current game version tied to this entry.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetEntityKey">
+            <summary>
+            Gets the addon name or unique key that identifies this entity context.
+            </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
@@ -1046,6 +1141,32 @@
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler">
+            <summary>
+            Handles translation for the "Hud" addon using AtkValues and StringArrayData.
+            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler"/> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler">
+            <summary>
+            Handles translation for the "Hud" addon using AtkValues and StringArrayData.
+            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler"/> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate">
             <summary>
             Represents a delegate for handling local addon events.
@@ -1180,39 +1301,6 @@
             Returns a mapping of event types to their combined delegate(s).
             </summary>
             <returns>A dictionary mapping <see cref="T:Dalamud.Game.Addon.Lifecycle.AddonEvent"/> to their corresponding <see cref="T:Dalamud.Plugin.Services.IAddonLifecycle.AddonEventDelegate"/>.</returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Handlers.PrevCharacterWindowHandler">
-            <summary>
-            Responsible for extracting, translating, and applying translated AtkValues for the Character window.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.PrevCharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
-            <summary>
-            Initializes a new instance of the <see cref="!:CharacterWindowHandler"/> class.
-            </summary>
-            <param name="config">Configuration settings.</param>
-            <param name="translationService">The translation service to use.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.PrevCharacterWindowHandler.ExtractAndTranslateValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-            Extracts AtkValues from the Character addon and prepares the translated values.
-            </summary>
-            <param name="type">The type of addon event.</param>
-            <param name="args">The arguments containing the addon event type and name.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.PrevCharacterWindowHandler.ApplyTranslatedValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-            Applies the translated AtkValues to the Character window.
-            </summary>
-            <param name="type">The type of addon event.</param>
-            <param name="args">The arguments containing the addon event type and name.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.PrevCharacterWindowHandler.ApplyTranslatedArrayDataValues(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-            Applies the translated string array data values to the Character window.
-            </summary>
-            <param name="type">The type of addon event.</param>
-            <param name="args">The arguments containing the addon event type and name.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar">
             <summary>
