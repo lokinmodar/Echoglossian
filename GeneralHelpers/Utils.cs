@@ -441,7 +441,7 @@ public partial class Echoglossian
     ///     Gets the game version from the framework.
     /// </summary>
     /// <returns>Game version as a string.</returns>
-    public /* void*/ string? GetGameVersion()
+    public /* void*/ static string? GetGameVersion()
     {
         // var gameVersion = Framework.Instance()->GameVersionString;
 

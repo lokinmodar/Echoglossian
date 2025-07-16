@@ -1,49 +1,49 @@
-﻿// <copyright file="ActionTooltip.partial.cs" company="PlaceholderCompany">
+﻿// <copyright file="SelectString.partial.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
 namespace Echoglossian.EFCoreSqlite.Models;
 
 /// <summary>
-///     Partial implementation of <see cref="ActionTooltip" /> to support generic
+///     Partial implementation of <see cref="SelectString" /> to support generic
 ///     translation access via <see cref="IGenericEntity" />.
 /// </summary>
-public partial class ActionTooltip : IGenericEntity
+public partial class SelectString : IGenericEntity
 {
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalActionTooltip;
+        return this.OriginalSelectString;
     }
 
     /// <inheritdoc />
     public void SetOriginalText(string original)
     {
-        this.OriginalActionTooltip = original;
+        this.OriginalSelectString = original;
     }
 
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalActionTooltipLang;
+        return this.OriginalSelectStringLang;
     }
 
     /// <inheritdoc />
     public void SetOriginalLang(string lang)
     {
-        this.OriginalActionTooltipLang = lang;
+        this.OriginalSelectStringLang = lang;
     }
 
     /// <inheritdoc />
     public string? GetTranslatedText()
     {
-        return this.TranslatedActionTooltip;
+        return this.TranslatedSelectString;
     }
 
     /// <inheritdoc />
     public void SetTranslatedText(string translated)
     {
-        this.TranslatedActionTooltip = translated;
+        this.TranslatedSelectString = translated;
     }
 
     /// <inheritdoc />
@@ -78,13 +78,13 @@ public partial class ActionTooltip : IGenericEntity
     /// <inheritdoc />
     public string? GetGameVersion()
     {
-        return this.GameVersion;
+        return null;
     }
 
     /// <inheritdoc />
     public void SetGameVersion(string version)
     {
-        this.GameVersion = version;
+        // No game version for SelectString entities.
     }
 
     /// <inheritdoc />

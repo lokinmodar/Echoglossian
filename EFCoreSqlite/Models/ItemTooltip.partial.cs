@@ -1,49 +1,49 @@
-﻿// <copyright file="ActionTooltip.partial.cs" company="PlaceholderCompany">
+﻿// <copyright file="ItemTooltip.partial.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
 namespace Echoglossian.EFCoreSqlite.Models;
 
 /// <summary>
-///     Partial implementation of <see cref="ActionTooltip" /> to support generic
+///     Partial implementation of <see cref="ItemTooltip" /> to support generic
 ///     translation access via <see cref="IGenericEntity" />.
 /// </summary>
-public partial class ActionTooltip : IGenericEntity
+public partial class ItemTooltip : IGenericEntity
 {
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalActionTooltip;
+        return this.OriginalItemTooltip;
     }
 
     /// <inheritdoc />
     public void SetOriginalText(string original)
     {
-        this.OriginalActionTooltip = original;
+        this.OriginalItemTooltip = original;
     }
 
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalActionTooltipLang;
+        return this.OriginalItemTooltipLang;
     }
 
     /// <inheritdoc />
     public void SetOriginalLang(string lang)
     {
-        this.OriginalActionTooltipLang = lang;
+        this.OriginalItemTooltipLang = lang;
     }
 
     /// <inheritdoc />
     public string? GetTranslatedText()
     {
-        return this.TranslatedActionTooltip;
+        return this.TranslatedItemTooltip;
     }
 
     /// <inheritdoc />
     public void SetTranslatedText(string translated)
     {
-        this.TranslatedActionTooltip = translated;
+        this.TranslatedItemTooltip = translated;
     }
 
     /// <inheritdoc />

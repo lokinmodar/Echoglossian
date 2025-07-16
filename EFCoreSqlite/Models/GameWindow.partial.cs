@@ -18,6 +18,24 @@ public partial class GameWindow : IGenericEntity
     }
 
     /// <inheritdoc />
+    public void SetOriginalText(string original)
+    {
+        this.OriginalWindowStrings = original;
+    }
+
+    /// <inheritdoc />
+    public string GetOriginalLang()
+    {
+        return this.OriginalWindowStringsLang;
+    }
+
+    /// <inheritdoc />
+    public void SetOriginalLang(string lang)
+    {
+        this.OriginalWindowStringsLang = lang;
+    }
+
+    /// <inheritdoc />
     public string? GetTranslatedText()
     {
         return this.TranslatedWindowStrings;
@@ -36,9 +54,33 @@ public partial class GameWindow : IGenericEntity
     }
 
     /// <inheritdoc />
+    public void SetTranslationLang(string lang)
+    {
+        this.TranslationLang = lang;
+    }
+
+    /// <inheritdoc />
     public int? GetTranslationEngine()
     {
         return this.TranslationEngine;
+    }
+
+    /// <inheritdoc />
+    public void SetTranslationEngine(int engine)
+    {
+        this.TranslationEngine = engine;
+    }
+
+    /// <inheritdoc />
+    public string GetEntityKey()
+    {
+        return this.WindowAddonName;
+    }
+
+    /// <inheritdoc />
+    public void SetEntityKey(string key)
+    {
+        this.WindowAddonName = key;
     }
 
     /// <inheritdoc />
@@ -48,8 +90,8 @@ public partial class GameWindow : IGenericEntity
     }
 
     /// <inheritdoc />
-    public string GetEntityKey()
+    public void SetGameVersion(string version)
     {
-        return this.WindowAddonName;
+        this.GameVersion = version;
     }
 }

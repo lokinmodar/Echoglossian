@@ -20,7 +20,13 @@ public delegate void LocalAddonHandlerDelegate(AddonEvent evt, AddonArgs args);
 /// <summary>
 ///     Represents a generic handler for addon translation.
 /// </summary>
-public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
+/// <typeparam name="TGenericEntity">
+///     The database entity type implementing
+///     IGenericEntity.
+/// </typeparam>
+public abstract unsafe class
+    GenericAddonHandler<TGenericEntity> : IAddonTranslationHandler
+    where TGenericEntity : class, IGenericEntity, new()
 {
     /// <summary>
     ///     A regular expression pattern for identifying numeric-like strings.
@@ -180,7 +186,8 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
     /// </summary>
     private void ExtractStringArrayData(AtkStage* atkStage)
     {
-        var data = atkStage->GetStringArrayData(this.StringArrayDataType.Value);
+        var data =
+            atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
         var array = data->StringArray;
         var size = data->Size;
 
@@ -202,6 +209,129 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
     }
 
     /// <summary>
+    ///     Attempts to load a cached translation from the database for this addon.
+    /// </summary>
+    /// <returns>True if translation was found and applied; otherwise, false.</returns>
+    protected bool TryLoadTranslationFromDatabase()
+    {
+        var original = this.SerializeOriginalData();
+
+        var entity = FindEntity<TGenericEntity>(e =>
+            e.GetOriginalText() == original &&
+            e.GetEntityKey() == this.AddonName &&
+            e.GetTranslationLang() == LangDict[LanguageInt].Code &&
+            (e.GetGameVersion() == null ||
+             e.GetGameVersion() == GetGameVersion()));
+
+        if (entity is null)
+        {
+            PluginLog.Debug($"[{this.AddonName}] No cached translation found.");
+            return false;
+        }
+
+        this.ParseTranslatedData(entity.GetTranslatedText());
+        PluginLog.Debug($"[{this.AddonName}] Loaded translated data from DB.");
+        return true;
+    }
+
+    /// <summary>
+    ///     Serializes the original extracted content (ATK and string array data) to a
+    ///     combined string.
+    ///     Used to compare against DB entries to avoid unnecessary translation.
+    /// </summary>
+    /// <returns>A single string representing all original content used as DB key.</returns>
+    private string SerializeOriginalData()
+    {
+        var pairs = new List<string>();
+
+        foreach (var pair in this.FilteredAtkValues)
+        {
+            pairs.Add($"a{pair.Key}|{pair.Value}");
+        }
+
+        foreach (var pair in this.FilteredStringArrayData)
+        {
+            pairs.Add($"s{pair.Key}|{pair.Value}");
+        }
+
+        var result = string.Join("|", pairs);
+        PluginLog.Debug(
+            $"[{this.AddonName}] SerializeOriginalData => \"{result}\"");
+        return result;
+    }
+
+    /// <summary>
+    ///     Parses JSON-formatted translated data retrieved from the DB and repopulates
+    ///     FilteredAtkValues and FilteredStringArrayData.
+    /// </summary>
+    /// <param name="translatedJson">
+    ///     The JSON string retrieved from the entity's
+    ///     translated field.
+    /// </param>
+    private void ParseTranslatedData(string? translatedJson)
+    {
+        if (string.IsNullOrWhiteSpace(translatedJson))
+        {
+            PluginLog.Warning(
+                $"[{this.AddonName}] ParseTranslatedData - JSON is null or empty.");
+            return;
+        }
+
+        try
+        {
+            var parsed =
+                JsonConvert.DeserializeObject<CombinedTranslationData>(
+                    translatedJson);
+            if (parsed == null)
+            {
+                PluginLog.Warning(
+                    $"[{this.AddonName}] ParseTranslatedData - Failed to deserialize.");
+                return;
+            }
+
+            if (parsed.atkValues != null)
+            {
+                this.FilteredAtkValues = parsed.atkValues;
+                PluginLog.Debug(
+                    $"[{this.AddonName}] Loaded {parsed.atkValues.Count} atkValues from DB.");
+            }
+
+            if (parsed.stringArrayData != null)
+            {
+                this.FilteredStringArrayData = parsed.stringArrayData;
+                PluginLog.Debug(
+                    $"[{this.AddonName}] Loaded {parsed.stringArrayData.Count} stringArrayData from DB.");
+            }
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Error(
+                $"[{this.AddonName}] ParseTranslatedData - Error parsing JSON: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    ///     Serializes the current translation data into a JSON string.
+    /// </summary>
+    /// <returns>
+    ///     A JSON string representing translated ATK values and string array
+    ///     data.
+    /// </returns>
+    private string SerializeTranslatedData()
+    {
+        var payload = new
+        {
+            atk = this.FilteredAtkValues,
+            array = this.FilteredStringArrayData
+        };
+
+        var json = JsonConvert.SerializeObject(payload);
+        PluginLog.Debug(
+            $"[{this.AddonName}] Serialized translated payload: {json.Length} bytes");
+        return json;
+    }
+
+    /// <summary>
     ///     Serializes combined translation result into JSON.
     /// </summary>
     private string SerializeTranslationResult()
@@ -218,15 +348,14 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
     /// <summary>
     ///     Extracts and translates addon content based on the specified event and
     ///     arguments.
+    ///     Performs DB lookup before calling external translation.
     /// </summary>
+    /// <typeparam name="TGenericEntity">The type of the generic DB entity.</typeparam>
     /// <param name="evt">The type of addon event.</param>
     /// <param name="args">The arguments associated with the addon event.</param>
-    /// <summary>
-    ///     Extracts and filters both AtkValues and StringArrayData for translation.
-    ///     Combines extracted strings into the translation dictionary and calls
-    ///     Translate.
-    /// </summary>
-    protected void ExtractAndTranslate(AddonEvent evt, AddonArgs args)
+    protected void ExtractAndTranslate<TGenericEntity>(
+        AddonEvent evt,
+        AddonArgs args) where TGenericEntity : class, IGenericEntity, new()
     {
         if (args.AddonName != this.AddonName)
         {
@@ -258,83 +387,138 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
             this.ExtractStringArrayData(atkStage);
         }
 
-        // Merge values for combined translation
-        var combined = new Dictionary<int, string>();
-        foreach (var pair in this.FilteredAtkValues)
-        {
-            combined[$"a{pair.Key}".GetHashCode()] = pair.Value;
-        }
-
-        foreach (var pair in this.FilteredStringArrayData)
-        {
-            combined[$"s{pair.Key}".GetHashCode()] = pair.Value;
-        }
-
-        if (combined.Count == 0)
+        // Early exit if nothing to translate
+        if (this.FilteredAtkValues.Count == 0 &&
+            this.FilteredStringArrayData.Count == 0)
         {
             PluginLog.Debug($"[{this.AddonName}] Nothing to translate.");
             return;
         }
 
+        // Generate original payload as a key
+        var originalJson = this.SerializeOriginalData();
+        var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
+        var targetLang = LangDict[LanguageInt].Code;
+
+        var existing = FindEntity<TGenericEntity>(e =>
+            e.GetEntityKey() == this.AddonName &&
+            e.GetOriginalText() == originalJson &&
+            e.GetTranslationLang() == targetLang &&
+            e.GetGameVersion() == GetGameVersion());
+
+        if (existing != null)
+        {
+            PluginLog.Debug(
+                $"[{this.AddonName}] Translation retrieved from DB.");
+            this.ParseTranslatedData(existing.GetTranslatedText());
+            return;
+        }
+
+        // Prepare input for translation
+        var merged = this.FilteredAtkValues.ToDictionary(
+            kvp => $"a{kvp.Key}".GetHashCode(),
+            kvp => kvp.Value);
+
+        foreach (var kvp in this.FilteredStringArrayData)
+        {
+            merged[$"s{kvp.Key}".GetHashCode()] = kvp.Value;
+        }
+
         var input = string.Join(
             "|",
-            combined.Select(kvp => $"{kvp.Key}|{kvp.Value}"));
+            merged.Select(kvp => $"{kvp.Key}|{kvp.Value}"));
+
+        PluginLog.Debug(
+            $"[{this.AddonName}] Sending input to translation engine...");
 
         var translated = this.TranslationService.Translate(
             input,
-            ClientStateInterface.ClientLanguage.Humanize(),
-            LangDict[LanguageInt].Code);
+            sourceLang,
+            targetLang);
 
+        if (string.IsNullOrWhiteSpace(translated))
+        {
+            PluginLog.Warning(
+                $"[{this.AddonName}] Translation service returned empty result.");
+            return;
+        }
+
+        // Parse result
         var parts = translated.Split('|');
         var parsed = new Dictionary<int, string>();
         for (var i = 0; i < parts.Length - 1; i += 2)
         {
-            if (int.TryParse(parts[i], out var key))
+            if (int.TryParse(parts[i], out var hash))
             {
-                parsed[key] = parts[i + 1];
+                parsed[hash] = parts[i + 1];
             }
         }
 
-        foreach (var pair in this.FilteredAtkValues.Keys.ToList())
+        foreach (var key in this.FilteredAtkValues.Keys.ToList())
         {
-            var hash = $"a{pair}".GetHashCode();
-            if (parsed.TryGetValue(hash, out var value))
+            if (parsed.TryGetValue($"a{key}".GetHashCode(), out var val))
             {
-                this.FilteredAtkValues[pair] = value;
+                this.FilteredAtkValues[key] = val;
             }
         }
 
-        foreach (var pair in this.FilteredStringArrayData.Keys.ToList())
+        foreach (var key in this.FilteredStringArrayData.Keys.ToList())
         {
-            var hash = $"s{pair}".GetHashCode();
-            if (parsed.TryGetValue(hash, out var value))
+            if (parsed.TryGetValue($"s{key}".GetHashCode(), out var val))
             {
-                this.FilteredStringArrayData[pair] = value;
+                this.FilteredStringArrayData[key] = val;
             }
         }
 
-        // Save translated result to DB
-        var entity = Echoglossian.FormatGameWindow(
-            this.AddonName,
-            "[combined]", // You can replace this with raw-extracted data if needed
-            ClientStateInterface.ClientLanguage.Humanize(),
-            this.SerializeTranslationResult(),
-            LangDict[LanguageInt].Code,
-            this.Config.ChosenTransEngine);
+        // Save to DB
+        var translatedJson = this.SerializeTranslatedData();
 
-        Echoglossian.InsertGameWindow(entity);
+        var entity = new TGenericEntity();
+        if (entity is IGenericEntity generic)
+        {
+            generic.SetTranslatedText(translatedJson);
+            if (generic is not IMultiTextEntity)
+            {
+                generic.SetOriginalText(originalJson);
+            }
+
+            generic.SetTranslationEngine(this.Config.ChosenTransEngine);
+            generic.SetTranslationLang(targetLang);
+            generic.SetEntityKey(this.AddonName);
+
+            if (generic.GetGameVersion() is null &&
+                generic is not IMultiTextEntity)
+            {
+                generic.SetGameVersion(GetGameVersion());
+            }
+
+            InsertEntity(generic);
+            PluginLog.Debug($"[{this.AddonName}] Translation saved to DB.");
+        }
+        else
+        {
+            PluginLog.Error(
+                $"[{this.AddonName}] TGenericEntity does not implement IGenericEntity properly.");
+        }
     }
 
     /// <summary>
     ///     Applies translated content to the addon based on the specified event and
     ///     arguments.
+    ///     Loads translated data from DB if available.
     /// </summary>
+    /// <typeparam name="TGenericEntity">
+    ///     The generic entity type implementing
+    ///     IGenericEntity.
+    /// </typeparam>
     /// <param name="type">The type of addon event.</param>
     /// <param name="args">The arguments associated with the addon event.</param>
-    protected void ApplyTranslated(AddonEvent type, AddonArgs args)
+    protected void ApplyTranslated<TGenericEntity>(
+        AddonEvent type,
+        AddonArgs args) where TGenericEntity : class, IGenericEntity, new()
     {
         PluginLog.Debug(
-            $"[{this.AddonName}] Called ApplyTranslated - {type} - Args: {args.Type}");
+            $"[{this.AddonName}] Called ApplyTranslated<{typeof(TGenericEntity).Name}> - {type} - Args: {args.Type}");
         if (args.AddonName != this.AddonName)
         {
             PluginLog.Debug(
@@ -342,14 +526,38 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
             return;
         }
 
-        PluginLog.Debug($"[{this.AddonName}] ApplyTranslated - {type}");
-
         var atkStage = AtkStage.Instance();
         var addon =
             atkStage->RaptureAtkUnitManager->GetAddonByName(this.AddonName);
         if (addon == null || !addon->IsVisible)
         {
+            PluginLog.Debug(
+                $"[{this.AddonName}] ApplyTranslated - Addon not found or not visible.");
             return;
+        }
+
+        // If translation data not present in memory, attempt to load from DB
+        if (this.FilteredAtkValues.Count == 0 &&
+            this.FilteredStringArrayData.Count == 0)
+        {
+            var originalData = this.SerializeOriginalData();
+            var entity = FindEntity<TGenericEntity>(e =>
+                e.GetEntityKey() == this.AddonName &&
+                e.GetOriginalText() == originalData &&
+                e.GetTranslationLang() == LangDict[LanguageInt].Code &&
+                e.GetGameVersion() == GetGameVersion());
+
+            if (entity != null)
+            {
+                this.ParseTranslatedData(entity.GetTranslatedText());
+                PluginLog.Debug(
+                    $"[{this.AddonName}] Loaded translated data from DB for ApplyTranslated.");
+            }
+            else
+            {
+                PluginLog.Debug(
+                    $"[{this.AddonName}] No DB match found for ApplyTranslated.");
+            }
         }
 
         switch (type)
@@ -357,30 +565,6 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
             case AddonEvent.PreSetup when this.UseAtkValues:
                 this.ApplyTranslatedAtkValues(addon);
                 this.ApplyTranslatedStringArray(atkStage);
-                break;
-            case AddonEvent.PostSetup:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PostSetup event.");
-                break;
-            case AddonEvent.PreUpdate when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PreUpdate event.");
-                break;
-            case AddonEvent.PostUpdate when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PostUpdate event.");
-                break;
-            case AddonEvent.PreDraw when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PreDraw event.");
-                break;
-            case AddonEvent.PostDraw when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PostDraw event.");
-                break;
-            case AddonEvent.PreFinalize when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PreFinalize event.");
                 break;
             case AddonEvent.PreRequestedUpdate when this.UseStringArray &&
                                                     this.StringArrayDataType
@@ -390,27 +574,14 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
                 break;
             case AddonEvent.PostRequestedUpdate when this.UseStringArray &&
                 this.StringArrayDataType.HasValue:
-                // this.ApplyTranslatedStringArray(atkStage);
                 this.RestoreOriginalStringArray(atkStage);
                 break;
             case AddonEvent.PreRefresh when this.UseAtkValues:
                 this.ApplyTranslatedAtkValues(addon);
                 this.ApplyTranslatedStringArray(atkStage);
                 break;
-            case AddonEvent.PostRefresh when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PostRefresh event.");
-                break;
-            case AddonEvent.PreReceiveEvent when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PreReceiveEvent event.");
-                break;
-            case AddonEvent.PostReceiveEvent when this.UseAtkValues:
-                PluginLog.Debug(
-                    $"[{this.AddonName}] ApplyTranslated skipped for PostReceiveEvent event.");
-                break;
             default:
-                PluginLog.Debug(
+                PluginLog.Verbose(
                     $"[{this.AddonName}] ApplyTranslated skipped for event: {type}");
                 break;
         }
@@ -423,8 +594,8 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
     /// <param name="addon">The ATK unit base addon to apply translations to.</param>
     private void ApplyTranslatedAtkValues(AtkUnitBase* addon)
     {
-        PluginLog.Debug(
-            $"2 - [{this.AddonName}] ApplyTranslatedAtkValues called");
+        PluginLog.Debug($"[{this.AddonName}] ApplyTranslatedAtkValues called");
+
         var atkValues = addon->AtkValues;
         var count = addon->AtkValuesCount;
         if (atkValues == null || count <= 0)
@@ -456,9 +627,6 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
                 }
             }
         }
-
-        // addon->OnRefresh((uint)count, atkValues); // Uncomment if refresh is required
-        // addon->OnSetup((uint)count, atkValues); // Ensure the addon is set up with the updated values
     }
 
     /// <summary>
@@ -468,7 +636,7 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
     private void ApplyTranslatedStringArray(AtkStage* atkStage)
     {
         PluginLog.Debug(
-            $"3 - [{this.AddonName}] ApplyTranslatedStringArray called");
+            $"[{this.AddonName}] ApplyTranslatedStringArray called");
 
         if (!this.StringArrayDataType.HasValue)
         {
@@ -498,17 +666,10 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
                 {
                     try
                     {
-                        // Use SeStringBuilder for proper encoding
-                        var seStringBuilder = new SeStringBuilder();
-                        seStringBuilder.Append(translated);
-                        var translatedSpan = seStringBuilder.GetViewAsSpan();
-
-                        stringArrayData->SetValue(
-                            i,
-                            translatedSpan,
-                            true,
-                            true,
-                            true);
+                        var builder = new SeStringBuilder();
+                        builder.Append(translated);
+                        var span = builder.GetViewAsSpan();
+                        stringArrayData->SetValue(i, span, true, true, true);
 
                         PluginLog.Debug(
                             $"[{this.AddonName}] Applied translation to index {i}: '{translated}'");
@@ -565,7 +726,6 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
                 {
                     try
                     {
-                        // Restore using the exact original byte data
                         var originalSpan =
                             new ReadOnlySpan<byte>(originalBytes);
                         stringArrayData->SetValue(
@@ -591,5 +751,25 @@ public abstract unsafe class GenericAddonHandler : IAddonTranslationHandler
             PluginLog.Error(
                 $"[{this.AddonName}] Error in RestoreOriginalStringArray: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    ///     JSON payload structure used for serialization of translated values.
+    /// </summary>
+    private class TranslatedPayload
+    {
+        public Dictionary<int, string>? atk { get; set; }
+
+        public Dictionary<int, string>? array { get; set; }
+    }
+
+    /// <summary>
+    ///     Structure used to deserialize combined translation data from the DB.
+    /// </summary>
+    private class CombinedTranslationData
+    {
+        public Dictionary<int, string>? atkValues { get; set; }
+
+        public Dictionary<int, string>? stringArrayData { get; set; }
     }
 }

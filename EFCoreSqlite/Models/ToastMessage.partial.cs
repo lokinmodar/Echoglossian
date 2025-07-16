@@ -1,49 +1,50 @@
-﻿// <copyright file="ActionTooltip.partial.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="ToastMessage.partial.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 namespace Echoglossian.EFCoreSqlite.Models;
 
 /// <summary>
-///     Partial implementation of <see cref="ActionTooltip" /> to support generic
-///     translation access via <see cref="IGenericEntity" />.
+///     Adapter to enable <see cref="ToastMessage" /> to be handled via
+///     <see cref="IGenericEntity" />.
 /// </summary>
-public partial class ActionTooltip : IGenericEntity
+public partial class ToastMessage : IGenericEntity
 {
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalActionTooltip;
+        return this.OriginalToastMessage;
     }
 
     /// <inheritdoc />
     public void SetOriginalText(string original)
     {
-        this.OriginalActionTooltip = original;
+        this.OriginalToastMessage = original;
     }
 
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalActionTooltipLang;
+        return this.OriginalLang;
     }
 
     /// <inheritdoc />
     public void SetOriginalLang(string lang)
     {
-        this.OriginalActionTooltipLang = lang;
+        this.OriginalLang = lang;
     }
 
     /// <inheritdoc />
     public string? GetTranslatedText()
     {
-        return this.TranslatedActionTooltip;
+        return this.TranslatedToastMessage;
     }
 
     /// <inheritdoc />
     public void SetTranslatedText(string translated)
     {
-        this.TranslatedActionTooltip = translated;
+        this.TranslatedToastMessage = translated;
     }
 
     /// <inheritdoc />
@@ -52,6 +53,7 @@ public partial class ActionTooltip : IGenericEntity
         return this.TranslationLang;
     }
 
+    /// <inheritdoc />
     public void SetTranslationLang(string lang)
     {
         this.TranslationLang = lang;
@@ -70,26 +72,26 @@ public partial class ActionTooltip : IGenericEntity
     }
 
     /// <inheritdoc />
+    public string GetEntityKey()
+    {
+        return this.OriginalToastMessage;
+    }
+
+    /// <inheritdoc />
     public void SetEntityKey(string key)
     {
-        this.RowVersion = key.Select(c => (byte)c).ToArray();
+        this.OriginalToastMessage = key;
     }
 
     /// <inheritdoc />
     public string? GetGameVersion()
     {
-        return this.GameVersion;
+        return null;
     }
 
     /// <inheritdoc />
     public void SetGameVersion(string version)
     {
-        this.GameVersion = version;
-    }
-
-    /// <inheritdoc />
-    public string GetEntityKey()
-    {
-        return this.RowVersion?.ToString();
+        /* Ignored — ToastMessage does not use game version */
     }
 }

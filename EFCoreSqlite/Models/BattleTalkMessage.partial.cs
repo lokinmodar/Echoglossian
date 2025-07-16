@@ -1,5 +1,6 @@
-﻿// <copyright file="BattleTalkMessage.partial.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="BattleTalkMessage.partial.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 namespace Echoglossian.EFCoreSqlite.Models;
@@ -17,6 +18,36 @@ public partial class BattleTalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
+    public void SetOriginalText(string original)
+    {
+        this.SenderName = original;
+    }
+
+    /// <inheritdoc />
+    public string GetOriginalLang()
+    {
+        return this.OriginalBattleTalkMessageLang;
+    }
+
+    /// <inheritdoc />
+    public void SetOriginalLang(string lang)
+    {
+        this.OriginalBattleTalkMessageLang = lang;
+    }
+
+    /// <inheritdoc />
+    public string GetOriginalSecondaryText()
+    {
+        return this.OriginalBattleTalkMessage;
+    }
+
+    /// <inheritdoc />
+    public void SetOriginalSecondaryText(string originalSecondary)
+    {
+        this.OriginalBattleTalkMessage = originalSecondary;
+    }
+
+    /// <inheritdoc />
     public string? GetTranslatedText()
     {
         return this.TranslatedSenderName;
@@ -29,21 +60,15 @@ public partial class BattleTalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
-    public string GetOriginalSecondaryText()
-    {
-        return this.OriginalBattleTalkMessage;
-    }
-
-    /// <inheritdoc />
     public string? GetTranslatedSecondaryText()
     {
         return this.TranslatedBattleTalkMessage;
     }
 
     /// <inheritdoc />
-    public void SetTranslatedSecondaryText(string translated)
+    public void SetTranslatedSecondaryText(string translatedSecondary)
     {
-        this.TranslatedBattleTalkMessage = translated;
+        this.TranslatedBattleTalkMessage = translatedSecondary;
     }
 
     /// <inheritdoc />
@@ -53,9 +78,21 @@ public partial class BattleTalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
+    public void SetTranslationLang(string lang)
+    {
+        this.TranslationLang = lang;
+    }
+
+    /// <inheritdoc />
     public int? GetTranslationEngine()
     {
         return this.TranslationEngine;
+    }
+
+    /// <inheritdoc />
+    public void SetTranslationEngine(int engine)
+    {
+        this.TranslationEngine = engine;
     }
 
     /// <inheritdoc />
@@ -65,10 +102,20 @@ public partial class BattleTalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
+    public void SetEntityKey(string key)
+    {
+        this.SenderName = key;
+    }
+
+    /// <inheritdoc />
     public string? GetGameVersion()
     {
         return null;
+    }
 
-        // Not applicable for BattleTalkMessage
+    /// <inheritdoc />
+    public void SetGameVersion(string version)
+    {
+        /* Ignored — BattleTalkMessage does not use game version */
     }
 }

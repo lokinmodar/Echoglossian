@@ -1,5 +1,6 @@
-﻿// <copyright file="TalkMessage.partial.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="TalkMessage.partial.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 namespace Echoglossian.EFCoreSqlite.Models;
@@ -17,6 +18,36 @@ public partial class TalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
+    public void SetOriginalText(string original)
+    {
+        this.SenderName = original;
+    }
+
+    /// <inheritdoc />
+    public string GetOriginalLang()
+    {
+        return this.OriginalTalkMessageLang;
+    }
+
+    /// <inheritdoc />
+    public void SetOriginalLang(string lang)
+    {
+        this.OriginalTalkMessageLang = lang;
+    }
+
+    /// <inheritdoc />
+    public string GetOriginalSecondaryText()
+    {
+        return this.OriginalTalkMessage;
+    }
+
+    /// <inheritdoc />
+    public void SetOriginalSecondaryText(string originalSecondary)
+    {
+        this.OriginalTalkMessage = originalSecondary;
+    }
+
+    /// <inheritdoc />
     public string? GetTranslatedText()
     {
         return this.TranslatedSenderName;
@@ -29,21 +60,15 @@ public partial class TalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
-    public string GetOriginalSecondaryText()
-    {
-        return this.OriginalTalkMessage;
-    }
-
-    /// <inheritdoc />
     public string? GetTranslatedSecondaryText()
     {
         return this.TranslatedTalkMessage;
     }
 
     /// <inheritdoc />
-    public void SetTranslatedSecondaryText(string translated)
+    public void SetTranslatedSecondaryText(string translatedSecondary)
     {
-        this.TranslatedTalkMessage = translated;
+        this.TranslatedTalkMessage = translatedSecondary;
     }
 
     /// <inheritdoc />
@@ -53,9 +78,21 @@ public partial class TalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
+    public void SetTranslationLang(string lang)
+    {
+        this.TranslationLang = lang;
+    }
+
+    /// <inheritdoc />
     public int? GetTranslationEngine()
     {
         return this.TranslationEngine;
+    }
+
+    /// <inheritdoc />
+    public void SetTranslationEngine(int engine)
+    {
+        this.TranslationEngine = engine;
     }
 
     /// <inheritdoc />
@@ -65,10 +102,20 @@ public partial class TalkMessage : IMultiTextEntity
     }
 
     /// <inheritdoc />
+    public void SetEntityKey(string key)
+    {
+        this.SenderName = key;
+    }
+
+    /// <inheritdoc />
     public string? GetGameVersion()
     {
         return null;
+    }
 
-        // Not applicable for TalkMessage
+    /// <inheritdoc />
+    public void SetGameVersion(string version)
+    {
+        /* Ignored — TalkMessage does not use game version */
     }
 }

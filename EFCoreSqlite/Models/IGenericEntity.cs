@@ -18,6 +18,24 @@ public interface IGenericEntity
     string GetOriginalText();
 
     /// <summary>
+    ///     Sets the original (untranslated) string(s).
+    /// </summary>
+    /// <param name="original">The original text string.</param>
+    void SetOriginalText(string original);
+
+    /// <summary>
+    ///     Gets the language code of the original text (e.g., "en", "ja").
+    /// </summary>
+    /// <returns>Returns originalLang for the text.</returns>
+    string GetOriginalLang();
+
+    /// <summary>
+    ///     Sets the language code of the original text.
+    /// </summary>
+    /// <param name="lang">Language of the original text</param>
+    void SetOriginalLang(string lang);
+
+    /// <summary>
     ///     Gets the translated string(s).
     /// </summary>
     /// <returns>The translated string.</returns>
@@ -36,10 +54,22 @@ public interface IGenericEntity
     string? GetTranslationLang();
 
     /// <summary>
+    ///     Sets the language code of the translation.
+    /// </summary>
+    /// <param name="lang">The language code (e.g., "en").</param>
+    void SetTranslationLang(string lang);
+
+    /// <summary>
     ///     Gets the engine ID used for the translation.
     /// </summary>
     /// <returns>The translation engine identifier.</returns>
     int? GetTranslationEngine();
+
+    /// <summary>
+    ///     Sets the engine ID used for the translation.
+    /// </summary>
+    /// <param name="engine">The translation engine ID.</param>
+    void SetTranslationEngine(int engine);
 
     /// <summary>
     ///     Gets a key to identify this entity uniquely (e.g., addon name, toast type,
@@ -49,9 +79,21 @@ public interface IGenericEntity
     string GetEntityKey();
 
     /// <summary>
+    ///     Sets a key to identify this entity uniquely.
+    /// </summary>
+    /// <param name="key">The identifying key (e.g., addon name).</param>
+    void SetEntityKey(string key);
+
+    /// <summary>
     ///     Gets the game version (if applicable). May return null for entities where
-    ///     version is irrelevant.
+    ///     the version is irrelevant.
     /// </summary>
     /// <returns>The game version string or null.</returns>
     string? GetGameVersion();
+
+    /// <summary>
+    ///     Sets the game version associated with this entity.
+    /// </summary>
+    /// <param name="version">The game version string.</param>
+    void SetGameVersion(string version);
 }

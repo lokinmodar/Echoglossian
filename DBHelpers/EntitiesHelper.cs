@@ -89,6 +89,16 @@ public partial class Echoglossian
             DateTime.Now);
     }
 
+    /// <summary>
+    ///     Formats a <see cref="GameWindow" />.
+    /// </summary>
+    /// <param name="windowAddonName"></param>
+    /// <param name="originalWindowStrings"></param>
+    /// <param name="originalWindowStringsLang"></param>
+    /// <param name="translatedWindowStrings"></param>
+    /// <param name="translationLang"></param>
+    /// <param name="translationEngine"></param>
+    /// <returns>Returns a formatted <see cref="GameWindow" />.</returns>
     public GameWindow FormatGameWindow(
         string windowAddonName,
         string originalWindowStrings,
@@ -104,7 +114,7 @@ public partial class Echoglossian
             translatedWindowStrings,
             translationLang,
             translationEngine,
-            this.GetGameVersion(),
+            GetGameVersion(),
             DateTime.Now,
             DateTime.Now);
     }

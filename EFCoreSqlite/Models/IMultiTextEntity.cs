@@ -19,6 +19,12 @@ public interface IMultiTextEntity : IGenericEntity
     string GetOriginalSecondaryText();
 
     /// <summary>
+    ///     Sets the original value of the secondary text field.
+    /// </summary>
+    /// <param name="secondaryText">The original secondary text value.</param>
+    void SetOriginalSecondaryText(string secondaryText);
+
+    /// <summary>
     ///     Gets the secondary translated text (e.g., translated message text).
     /// </summary>
     /// <returns>The secondary translated text value.</returns>

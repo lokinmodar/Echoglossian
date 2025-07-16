@@ -1,49 +1,49 @@
-﻿// <copyright file="ActionTooltip.partial.cs" company="PlaceholderCompany">
+﻿// <copyright file="TalkSubtitleMessage.partial.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
 namespace Echoglossian.EFCoreSqlite.Models;
 
 /// <summary>
-///     Partial implementation of <see cref="ActionTooltip" /> to support generic
-///     translation access via <see cref="IGenericEntity" />.
+///     Adapter to enable <see cref="TalkSubtitleMessage" /> to be handled via
+///     <see cref="IGenericEntity" />.
 /// </summary>
-public partial class ActionTooltip : IGenericEntity
+public partial class TalkSubtitleMessage : IGenericEntity
 {
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalActionTooltip;
+        return this.OriginalTalkSubtitleMessage;
     }
 
     /// <inheritdoc />
     public void SetOriginalText(string original)
     {
-        this.OriginalActionTooltip = original;
+        this.OriginalTalkSubtitleMessage = original;
     }
 
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalActionTooltipLang;
+        return this.OriginalTalkSubtitleMessageLang;
     }
 
     /// <inheritdoc />
     public void SetOriginalLang(string lang)
     {
-        this.OriginalActionTooltipLang = lang;
+        this.OriginalTalkSubtitleMessageLang = lang;
     }
 
     /// <inheritdoc />
     public string? GetTranslatedText()
     {
-        return this.TranslatedActionTooltip;
+        return this.TranslatedTalkSubtitleMessage;
     }
 
     /// <inheritdoc />
     public void SetTranslatedText(string translated)
     {
-        this.TranslatedActionTooltip = translated;
+        this.TranslatedTalkSubtitleMessage = translated;
     }
 
     /// <inheritdoc />
@@ -52,6 +52,7 @@ public partial class ActionTooltip : IGenericEntity
         return this.TranslationLang;
     }
 
+    /// <inheritdoc />
     public void SetTranslationLang(string lang)
     {
         this.TranslationLang = lang;
@@ -70,26 +71,26 @@ public partial class ActionTooltip : IGenericEntity
     }
 
     /// <inheritdoc />
-    public void SetEntityKey(string key)
+    public string GetEntityKey()
     {
-        this.RowVersion = key.Select(c => (byte)c).ToArray();
+        return this.OriginalTalkSubtitleMessage;
+    }
+
+    /// <inheritdoc />
+    public void SetEntityKey(string entityKey)
+    {
+        this.OriginalTalkSubtitleMessage = entityKey;
     }
 
     /// <inheritdoc />
     public string? GetGameVersion()
     {
-        return this.GameVersion;
+        return null;
     }
 
     /// <inheritdoc />
-    public void SetGameVersion(string version)
+    public void SetGameVersion(string? gameVersion)
     {
-        this.GameVersion = version;
-    }
-
-    /// <inheritdoc />
-    public string GetEntityKey()
-    {
-        return this.RowVersion?.ToString();
+        // No implementation needed for TalkSubtitleMessage
     }
 }
