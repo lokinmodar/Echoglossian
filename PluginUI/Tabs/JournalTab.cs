@@ -6,30 +6,34 @@
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
-/// Renders the settings tab for journal, quest, and tooltip translation.
+///     Renders the settings tab for journal, quest, and tooltip translation.
 /// </summary>
 public static class JournalTab
 {
-  public static bool Draw(Config config, bool langToRemoveDiacritics)
-  {
-    bool changed = false;
-
-    if (config.Translate)
+    public static bool Draw(Config config, bool langToRemoveDiacritics)
     {
-      changed |= ImGui.Checkbox(Resources.TranslateJournalToggle, ref config.TranslateJournal);
-    }
+        var changed = false;
 
-    if (langToRemoveDiacritics)
-    {
-      changed |= ImGui.Checkbox(Resources.RemoveDiacriticsToggle, ref config.RemoveDiacriticsWhenUsingReplacementQuest);
-    }
+        if (config.Translate)
+        {
+            changed |= ImGui.Checkbox(
+                Resources.TranslateJournalToggle,
+                ref config.TranslateJournal);
+        }
 
-    if (changed)
-    {
-      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-      SaveConfig(config);
-    }
+        if (langToRemoveDiacritics)
+        {
+            changed |= ImGui.Checkbox(
+                Resources.RemoveDiacriticsToggle,
+                ref config.RemoveDiacriticsWhenUsingReplacementQuest);
+        }
 
-    return changed;
-  }
+        if (changed)
+        {
+            FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+            Echoglossian.SaveConfig(config);
+        }
+
+        return changed;
+    }
 }

@@ -5,378 +5,432 @@
 
 using DeepL;
 
-namespace Echoglossian.Translators
-{
-  /// <summary>
-  /// Provides translation services using the DeepL API or Free API based on the configuration.
-  /// </summary>
-  public partial class DeepLTranslator : ITranslator
-  {
-    private readonly IPluginLog pluginLog;
+namespace Echoglossian.Translators;
 
-    private readonly bool isUsingAPIKey;
+/// <summary>
+///     Provides translation services using the DeepL API or Free API based on the
+///     configuration.
+/// </summary>
+public class DeepLTranslator : ITranslator
+{
+    private const string FreeEndpoint = "https://www2.deepl.com/jsonrpc";
     private readonly Translator? client;
 
     private readonly HttpClient? httpClient;
 
+    private readonly bool isUsingAPIKey;
+    private readonly IPluginLog pluginLog;
+
     private readonly Random? rndId;
 
-    private const string FreeEndpoint = "https://www2.deepl.com/jsonrpc";
-
-    public DeepLTranslator(IPluginLog pluginLog, bool isUsingAPIKey, string translatorKey)
+    public DeepLTranslator(
+        IPluginLog pluginLog,
+        bool isUsingAPIKey,
+        string translatorKey)
     {
-      this.pluginLog = pluginLog;
-      this.isUsingAPIKey = isUsingAPIKey;
-      if (isUsingAPIKey && !string.IsNullOrEmpty(translatorKey))
-      {
-        this.client = new(translatorKey);
-        return;
-      }
-
-      this.rndId = new Random(Guid.NewGuid().GetHashCode());
-      HttpClientHandler handler = new HttpClientHandler()
-      {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
-      };
-      this.httpClient = new HttpClient(handler);
-
-      // Setting HTTP headers to mimic a request from the DeepL iOS App
-      this.httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
-      this.httpClient.DefaultRequestHeaders.Add("x-app-os-name", "iOS");
-      this.httpClient.DefaultRequestHeaders.Add("x-app-os-version", "16.3.0");
-      this.httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-      this.httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
-      this.httpClient.DefaultRequestHeaders.Add("x-app-device", "iPhone13,2");
-      this.httpClient.DefaultRequestHeaders.Add("User-Agent", "DeepL-iOS/2.9.1 iOS 16.3.0 (iPhone13,2)");
-      this.httpClient.DefaultRequestHeaders.Add("x-app-build", "510265");
-      this.httpClient.DefaultRequestHeaders.Add("x-app-version", "2.9.1");
-      this.httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
-    }
-
-    /// <summary>
-    /// Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <param name="sourceLanguage"></param>
-    /// <param name="targetLanguage"></param>
-    /// <returns></returns>
-    async Task<string?> ITranslator.TranslateAsync(string text, string sourceLanguage, string targetLanguage)
-    {
-      if (this.isUsingAPIKey)
-      {
-        return await this.TranslateAsync(text, sourceLanguage, targetLanguage);
-      }
-      else
-      {
-        return await this.FreeTranslateAsync(text, sourceLanguage, targetLanguage);
-      }
-    }
-
-    /// <summary>
-    /// Synchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <param name="sourceLanguage"></param>
-    /// <param name="targetLanguage"></param>
-    /// <returns></returns>
-    string? ITranslator.Translate(string text, string sourceLanguage, string targetLanguage)
-    {
-      if (this.isUsingAPIKey)
-      {
-        return this.Translate(text, sourceLanguage, targetLanguage);
-      }
-      else
-      {
-        return this.FreeTranslateAsync(text, sourceLanguage, targetLanguage).Result;
-      }
-    }
-
-    /// <summary>
-    /// Synchronously translates the given text from source language to target language using the DeepL API.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <param name="sourceLanguage"></param>
-    /// <param name="targetLanguage"></param>
-    /// <returns></returns>
-    private string? Translate(string text, string sourceLanguage, string targetLanguage)
-    {
-      this.pluginLog.Debug("inside DeepLTranslator Translate method");
-
-      try
-      {
-        var translation = this.client?.TranslateTextAsync(
-          text,
-          this.FormatSourceLanguage(sourceLanguage),
-          this.FormatTargetLanguage(targetLanguage)).Result;
-        this.pluginLog.Debug($"FinalTranslatedText: {translation?.Text}");
-        return translation?.Text;
-      }
-      catch (Exception exception)
-      {
-        this.pluginLog.Error($"DeepLTranslator Translate: {exception.Message}");
-        return text;
-      }
-    }
-
-    /// <summary>
-    /// Asynchronously translates the given text from source language to target language using the DeepL API.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <param name="sourceLanguage"></param>
-    /// <param name="targetLanguage"></param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    private async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
-    {
-      this.pluginLog.Debug("inside DeepLTranslator TranslateAsync method");
-
-      try
-      {
-        if (this.client == null)
+        this.pluginLog = pluginLog;
+        this.isUsingAPIKey = isUsingAPIKey;
+        if (isUsingAPIKey && !string.IsNullOrEmpty(translatorKey))
         {
-          throw new InvalidOperationException("DeepL client is not initialized.");
+            this.client = new Translator(translatorKey);
+            return;
         }
 
-        var translation = await this.client.TranslateTextAsync(
-          text,
-          this.FormatSourceLanguage(sourceLanguage),
-          this.FormatTargetLanguage(targetLanguage));
-        this.pluginLog.Debug($"FinalTranslatedText: {translation.Text}");
-        return translation.Text;
-      }
-      catch (Exception exception)
-      {
-        this.pluginLog.Error($"DeepLTranslator TranslateAsync: {exception.Message}");
-        return text;
-      }
+        this.rndId = new Random(Guid.NewGuid().GetHashCode());
+        var handler = new HttpClientHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip |
+                                     DecompressionMethods.Deflate |
+                                     DecompressionMethods.Brotli
+        };
+        this.httpClient = new HttpClient(handler);
+
+        // Setting HTTP headers to mimic a request from the DeepL iOS App
+        this.httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
+        this.httpClient.DefaultRequestHeaders.Add("x-app-os-name", "iOS");
+        this.httpClient.DefaultRequestHeaders.Add("x-app-os-version", "16.3.0");
+        this.httpClient.DefaultRequestHeaders.Add(
+            "Accept-Language",
+            "en-US,en;q=0.9");
+        this.httpClient.DefaultRequestHeaders.Add(
+            "Accept-Encoding",
+            "gzip, deflate, br");
+        this.httpClient.DefaultRequestHeaders.Add("x-app-device", "iPhone13,2");
+        this.httpClient.DefaultRequestHeaders.Add(
+            "User-Agent",
+            "DeepL-iOS/2.9.1 iOS 16.3.0 (iPhone13,2)");
+        this.httpClient.DefaultRequestHeaders.Add("x-app-build", "510265");
+        this.httpClient.DefaultRequestHeaders.Add("x-app-version", "2.9.1");
+        this.httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
     }
 
     /// <summary>
-    /// Counts the number of 'i' characters in the translated text.
+    ///     Asynchronously translates the given text from source language to target
+    ///     language using the DeepL API or Free API based on the configuration.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
+    async Task<string?> ITranslator.TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
+    {
+        if (this.isUsingAPIKey)
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage);
+        }
+
+        return await this.FreeTranslateAsync(
+            text,
+            sourceLanguage,
+            targetLanguage);
+    }
+
+    /// <summary>
+    ///     Synchronously translates the given text from source language to target
+    ///     language using the DeepL API or Free API based on the configuration.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
+    string? ITranslator.Translate(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
+    {
+        if (this.isUsingAPIKey)
+        {
+            return this.Translate(text, sourceLanguage, targetLanguage);
+        }
+
+        return this.FreeTranslateAsync(text, sourceLanguage, targetLanguage)
+            .Result;
+    }
+
+    /// <summary>
+    ///     Synchronously translates the given text from source language to target
+    ///     language using the DeepL API.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
+    private string? Translate(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
+    {
+        this.pluginLog.Debug("inside DeepLTranslator Translate method");
+
+        try
+        {
+            var translation = this.client?.TranslateTextAsync(
+                text,
+                this.FormatSourceLanguage(sourceLanguage),
+                this.FormatTargetLanguage(targetLanguage)).Result;
+            this.pluginLog.Debug($"FinalTranslatedText: {translation?.Text}");
+            return translation?.Text;
+        }
+        catch (Exception exception)
+        {
+            this.pluginLog.Error(
+                $"DeepLTranslator Translate: {exception.Message}");
+            return text;
+        }
+    }
+
+    /// <summary>
+    ///     Asynchronously translates the given text from source language to target
+    ///     language using the DeepL API.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLanguage"></param>
+    /// <param name="targetLanguage"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException">Invalid Operation Exception.</exception>
+    private async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
+    {
+        this.pluginLog.Debug("inside DeepLTranslator TranslateAsync method");
+
+        try
+        {
+            if (this.client == null)
+            {
+                throw new InvalidOperationException(
+                    "DeepL client is not initialized.");
+            }
+
+            var translation = await this.client.TranslateTextAsync(
+                text,
+                this.FormatSourceLanguage(sourceLanguage),
+                this.FormatTargetLanguage(targetLanguage));
+            this.pluginLog.Debug($"FinalTranslatedText: {translation.Text}");
+            return translation.Text;
+        }
+        catch (Exception exception)
+        {
+            this.pluginLog.Error(
+                $"DeepLTranslator TranslateAsync: {exception.Message}");
+            return text;
+        }
+    }
+
+    /// <summary>
+    ///     Counts the number of 'i' characters in the translated text.
     /// </summary>
     /// <param name="translateText"></param>
     /// <returns></returns>
     private int GetICount(string translateText)
     {
-      return translateText.Count(c => c == 'i');
+        return translateText.Count(c => c == 'i');
     }
 
     /// <summary>
-    /// Generates a timestamp based on the current time and the count of 'i' characters in the text.
+    ///     Generates a timestamp based on the current time and the count of 'i'
+    ///     characters in the text.
     /// </summary>
     /// <param name="iCount"></param>
     /// <returns></returns>
     private long GetTimestamp(int iCount)
     {
-      long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-      if (iCount == 0)
-      {
-        return timestamp;
-      }
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        if (iCount == 0)
+        {
+            return timestamp;
+        }
 
-      iCount++;
-      return timestamp - (timestamp % iCount) + iCount;
+        iCount++;
+        return timestamp - (timestamp % iCount) + iCount;
     }
 
     /// <summary>
-    /// Translates a string using the Free DeepL API.
+    ///     Translates a string using the Free DeepL API.
     /// </summary>
     /// <param name="text">The text to translate.</param>
     /// <param name="sourceLanguage">The source language of the text.</param>
     /// <param name="targetLanguage">The target language for the translation.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
-    private async Task<string> FreeTranslateAsync(string text, string sourceLanguage, string targetLanguage)
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> representing the result of the
+    ///     asynchronous operation.
+    /// </returns>
+    private async Task<string> FreeTranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      this.pluginLog.Debug("inside DeepLTranslator FreeTranslateAsync method");
+        this.pluginLog.Debug(
+            "inside DeepLTranslator FreeTranslateAsync method");
 
-      try
-      {
-        long timestamp = this.GetTimestamp(this.GetICount(text));
-        var id = this.rndId?.Next(11111111, 99999999) ?? throw new InvalidOperationException("Random number generator not initialized.");
-
-        var requestBody = new
+        try
         {
-          jsonrpc = "2.0",
-          method = "LMT_handle_texts",
-          @params = new
-          {
-            splitting = "newlines",
-            lang = new
+            var timestamp = this.GetTimestamp(this.GetICount(text));
+            var id = this.rndId?.Next(11111111, 99999999) ??
+                     throw new InvalidOperationException(
+                         "Random number generator not initialized.");
+
+            var requestBody = new
             {
-              target_lang = this.FormatFreeTargetLanguage(targetLanguage),
-              source_lang_user_selected = this.FormatSourceLanguage(sourceLanguage),
-            },
-            commonJobParams = new
+                jsonrpc = "2.0",
+                method = "LMT_handle_texts",
+                @params = new
+                {
+                    splitting = "newlines",
+                    lang = new
+                    {
+                        target_lang =
+                            this.FormatFreeTargetLanguage(targetLanguage),
+                        source_lang_user_selected =
+                            this.FormatSourceLanguage(sourceLanguage)
+                    },
+                    commonJobParams = new
+                    {
+                        wasSpoken = false,
+                        transcribe_as = string.Empty
+                    },
+                    texts = new[]
+                    {
+                        new
+                        {
+                            text,
+                            request_alternatives = 3
+                        }
+                    },
+                    timestamp
+                },
+                id
+            };
+
+            var requestBodyText = JsonConvert.SerializeObject(requestBody);
+
+            // Adding spaces to the JSON string based on the ID to adhere to DeepL's request formatting rules
+            if ((id + 5) % 29 == 0 || (id + 3) % 13 == 0)
             {
-              wasSpoken = false,
-              transcribe_as = string.Empty,
-            },
-            texts = new[]
+                requestBodyText = requestBodyText.Replace(
+                    "\"method\":\"",
+                    "\"method\" : \"");
+            }
+            else
             {
-              new
-              {
-                text,
-                request_alternatives = 3,
-              },
-            },
-            timestamp,
-          },
-          id,
-        };
+                requestBodyText = requestBodyText.Replace(
+                    "\"method\":\"",
+                    "\"method\": \"");
+            }
 
-        var requestBodyText = JsonConvert.SerializeObject(requestBody);
+            if (this.httpClient == null)
+            {
+                throw new InvalidOperationException(
+                    "DeepL HttpClient is not initialized.");
+            }
 
-        // Adding spaces to the JSON string based on the ID to adhere to DeepL's request formatting rules
-        if ((id + 5) % 29 == 0 || (id + 3) % 13 == 0)
-        {
-          requestBodyText = requestBodyText.Replace("\"method\":\"", "\"method\" : \"");
-        }
-        else
-        {
-          requestBodyText = requestBodyText.Replace("\"method\":\"", "\"method\": \"");
-        }
+            var response = await this.httpClient.PostAsync(
+                FreeEndpoint,
+                new StringContent(
+                    requestBodyText,
+                    Encoding.UTF8,
+                    "application/json"));
 
-        if (this.httpClient == null)
-        {
-          throw new InvalidOperationException("DeepL HttpClient is not initialized.");
-        }
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var deepLResponse =
+                    JsonConvert.DeserializeObject<DeepLResponse>(jsonString);
+                if (deepLResponse?.Result?.Texts != null &&
+                    deepLResponse.Result.Texts.Length > 0)
+                {
+                    var finalTranslatedText =
+                        deepLResponse.Result.Texts[0].Text;
+                    this.pluginLog.Debug(
+                        $"FinalTranslatedText: {finalTranslatedText}");
+                    return finalTranslatedText;
+                }
 
-        var response = await this.httpClient.PostAsync(FreeEndpoint, new StringContent(
-             requestBodyText,
-             Encoding.UTF8,
-             "application/json"));
+                this.pluginLog.Warning(
+                    "DeepLTranslator FreeTranslateAsync: No translation result found.");
+                return text;
+            }
 
-        if (response.IsSuccessStatusCode)
-        {
-          var jsonString = await response.Content.ReadAsStringAsync();
-          var deepLResponse = JsonConvert.DeserializeObject<DeepLResponse>(jsonString);
-          if (deepLResponse?.Result?.Texts != null && deepLResponse.Result.Texts.Length > 0)
-          {
-            var finalTranslatedText = deepLResponse.Result.Texts[0].Text;
-            this.pluginLog.Debug($"FinalTranslatedText: {finalTranslatedText}");
-            return finalTranslatedText;
-          }
-          else
-          {
-            this.pluginLog.Warning("DeepLTranslator FreeTranslateAsync: No translation result found.");
+            this.pluginLog.Warning(
+                $"DeepLTranslator FreeTranslateAsync error: {response.StatusCode}");
             return text;
-          }
         }
-        else
+        catch (Exception exception)
         {
-          this.pluginLog.Warning($"DeepLTranslator FreeTranslateAsync error: {response.StatusCode}");
-          return text;
+            this.pluginLog.Error(
+                $"DeepLTranslator FreeTranslateAsync: {exception.Message}");
+            return text;
         }
-      }
-      catch (Exception exception)
-      {
-        this.pluginLog.Error($"DeepLTranslator FreeTranslateAsync: {exception.Message}");
-        return text;
-      }
     }
 
     /// <summary>
-    /// Formats the source language for the DeepL API.
+    ///     Formats the source language for the DeepL API.
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
     private string FormatSourceLanguage(string source)
     {
-      switch (source)
-      {
-        case "Japanese":
-          return "JA";
-        case "English":
-          return "EN";
-        case "German":
-          return "DE";
-        case "French":
-          return "FR";
-        default:
-          return "EN";
-      }
+        switch (source)
+        {
+            case "Japanese":
+                return "JA";
+            case "English":
+                return "EN";
+            case "German":
+                return "DE";
+            case "French":
+                return "FR";
+            default:
+                return "EN";
+        }
     }
 
     /// <summary>
-    /// Formats the target language for the DeepL API.
+    ///     Formats the target language for the DeepL API.
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
     private string FormatTargetLanguage(string source)
     {
-      switch (source)
-      {
-        case "en":
-          return "EN-US";
-        case "no":
-          return "NB";
-        case "pt":
-          return "PT-BR";
-        case "zh-CN":
-          return "ZH";
-        case "pt-PT":
-          return "PT-PT";
-        case "it":
-          return "IT";
-        default:
-          return source.ToUpper();
-      }
+        switch (source)
+        {
+            case "en":
+                return "EN-US";
+            case "no":
+                return "NB";
+            case "pt":
+                return "PT-BR";
+            case "zh-CN":
+                return "ZH";
+            case "pt-PT":
+                return "PT-PT";
+            case "it":
+                return "IT";
+            default:
+                return source.ToUpper();
+        }
     }
 
     /// <summary>
-    /// Formats the target language for the Free DeepL API.
+    ///     Formats the target language for the Free DeepL API.
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
     private string FormatFreeTargetLanguage(string source)
     {
-      switch (source)
-      {
-        case "en":
-          return "EN-US";
-        case "no":
-          return "NB";
-        case "pt":
-          return "PT-BR";
-        case "zh-CN":
-          return "ZH";
-        case "pt-PT":
-          return "PT-PT";
-        case "it":
-          return "IT";
-        default:
-          return source.ToUpper();
-      }
+        switch (source)
+        {
+            case "en":
+                return "EN-US";
+            case "no":
+                return "NB";
+            case "pt":
+                return "PT-BR";
+            case "zh-CN":
+                return "ZH";
+            case "pt-PT":
+                return "PT-PT";
+            case "it":
+                return "IT";
+            default:
+                return source.ToUpper();
+        }
     }
-  }
+}
 
-  /// <summary>
-  /// Represents the response from the DeepL translation service.
-  /// </summary>
-  public class DeepLResponse
-  {
+/// <summary>
+///     Represents the response from the DeepL translation service.
+/// </summary>
+public class DeepLResponse
+{
     public string Id { get; set; }
 
     public string Jsonrpc { get; set; }
 
     public DeepLResult Result { get; set; }
-  }
+}
 
-  /// <summary>
-  /// Represents the result of a DeepL translation operation.
-  /// </summary>
-  public class DeepLResult
-  {
+/// <summary>
+///     Represents the result of a DeepL translation operation.
+/// </summary>
+public class DeepLResult
+{
     public DeepLTextResult[] Texts { get; set; }
 
     public string Lang { get; set; }
-  }
+}
 
-  /// <summary>
-  /// Represents a text result from the DeepL translation service.
-  /// </summary>
-  public class DeepLTextResult
-  {
+/// <summary>
+///     Represents a text result from the DeepL translation service.
+/// </summary>
+public class DeepLTextResult
+{
     public string Text { get; set; }
-  }
 }

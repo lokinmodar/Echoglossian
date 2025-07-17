@@ -7,6 +7,8 @@ using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian;
 
+using ValueType = ValueType;
+
 public partial class Echoglossian
 {
     private unsafe void UiAreaMapHandler(AddonEvent type, AddonArgs args)

@@ -5,67 +5,71 @@
 
 using Echoglossian.Translators.OpenAI;
 
-using Newtonsoft.Json.Linq;
-
 namespace Echoglossian.Translators.Ollama;
 
 public static class OllamaModelManager
 {
-  private static readonly List<OpenAITextModel> FallbackModels = OllamaTextModelDefaults.PredefinedModels;
-  private static readonly List<OpenAITextModel> CurrentModels = new();
-  private static Dictionary<string, string>? tooltips;
+    private static readonly List<OpenAITextModel> FallbackModels =
+        OllamaTextModelDefaults.PredefinedModels;
 
-  public static IReadOnlyList<OpenAITextModel> CurrentModelList => CurrentModels.Count > 0 ? CurrentModels : FallbackModels;
+    private static readonly List<OpenAITextModel> CurrentModels = new();
+    private static Dictionary<string, string>? tooltips;
 
-  public static async Task RefreshAsync(string baseUrl)
-  {
-    try
+    public static IReadOnlyList<OpenAITextModel> CurrentModelList =>
+        CurrentModels.Count > 0 ? CurrentModels : FallbackModels;
+
+    public static async Task RefreshAsync(string baseUrl)
     {
-      using var client = new HttpClient();
-      var url = baseUrl.TrimEnd('/') + "/api/tags";
-      var response = await client.GetStringAsync(url);
-      var root = JObject.Parse(response);
-      var tags = root["models"]?.Select(m => m["name"]?.ToString()).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct().ToList();
-
-      CurrentModels.Clear();
-      tooltips = new Dictionary<string, string>();
-
-      if (tags != null)
-      {
-        foreach (var name in tags)
+        try
         {
-          string tier = name?.Split(':')[0] ?? "unknown";
-          var model = new OpenAITextModel(
-            Id: name!,
-            DisplayName: $"🦙 {name}",
-            SupportsText: true,
-            SupportsVision: false,
-            IsTurbo: false,
-            IsMini: false,
-            IsDefault: name == "llama3",
-            EngineName: "Ollama",
-            TierOverride: tier);
+            using var client = new HttpClient();
+            var url = baseUrl.TrimEnd('/') + "/api/tags";
+            var response = await client.GetStringAsync(url);
+            var root = JObject.Parse(response);
+            var tags = root["models"]?.Select(m => m["name"]?.ToString())
+                .Where(name => !string.IsNullOrWhiteSpace(name)).Distinct()
+                .ToList();
 
-          CurrentModels.Add(model);
-          tooltips[name!] = $"🦙 Ollama model: {tier}";
+            CurrentModels.Clear();
+            tooltips = new Dictionary<string, string>();
+
+            if (tags != null)
+            {
+                foreach (var name in tags)
+                {
+                    var tier = name?.Split(':')[0] ?? "unknown";
+                    var model = new OpenAITextModel(
+                        name!,
+                        $"🦙 {name}",
+                        true,
+                        false,
+                        false,
+                        false,
+                        name == "llama3",
+                        "Ollama",
+                        tier);
+
+                    CurrentModels.Add(model);
+                    tooltips[name!] = $"🦙 Ollama model: {tier}";
+                }
+            }
         }
-      }
+        catch (Exception ex)
+        {
+            PluginLog.Warning(
+                $"[OllamaModelManager] Failed to fetch model list from Ollama: {ex.Message}");
+            ResetToDefault();
+        }
     }
-    catch (Exception ex)
+
+    public static void ResetToDefault()
     {
-      Echoglossian.PluginLog.Warning($"[OllamaModelManager] Failed to fetch model list from Ollama: {ex.Message}");
-      ResetToDefault();
+        CurrentModels.Clear();
+        tooltips = null;
     }
-  }
 
-  public static void ResetToDefault()
-  {
-    CurrentModels.Clear();
-    tooltips = null;
-  }
-
-  public static Dictionary<string, string>? GetTooltips()
-  {
-    return tooltips;
-  }
+    public static Dictionary<string, string>? GetTooltips()
+    {
+        return tooltips;
+    }
 }

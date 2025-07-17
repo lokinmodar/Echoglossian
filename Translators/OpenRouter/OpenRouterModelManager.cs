@@ -5,93 +5,99 @@
 
 using Echoglossian.Translators.OpenAI;
 
-namespace Echoglossian.Translators.OpenRouter
+namespace Echoglossian.Translators.OpenRouter;
+
+public static class OpenRouterModelManager
 {
-  public static class OpenRouterModelManager
-  {
     private static readonly HttpClient HttpClient = new();
     private static readonly object SyncLock = new();
 
-    public static List<OpenAITextModel> CurrentModelList { get; private set; } = OpenRouterTextModelDefaults.PredefinedModels;
+    public static List<OpenAITextModel> CurrentModelList { get; private set; } =
+        OpenRouterTextModelDefaults.PredefinedModels;
 
     public static void ResetToDefault()
     {
-      lock (SyncLock)
-      {
-        CurrentModelList = OpenRouterTextModelDefaults.PredefinedModels;
-      }
+        lock (SyncLock)
+        {
+            CurrentModelList = OpenRouterTextModelDefaults.PredefinedModels;
+        }
     }
 
     public static async Task RefreshAsync(string apiKey, string baseUrl)
     {
-      if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(baseUrl))
-      {
-        return;
-      }
-
-      try
-      {
-        var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/v1/models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
-        var response = await HttpClient.SendAsync(request);
-        if (!response.IsSuccessStatusCode)
+        if (string.IsNullOrWhiteSpace(apiKey) ||
+            string.IsNullOrWhiteSpace(baseUrl))
         {
-          return;
+            return;
         }
 
-        string json = await response.Content.ReadAsStringAsync();
-        var root = JObject.Parse(json);
-        var modelsArray = root["data"] as JArray;
-        if (modelsArray == null)
+        try
         {
-          return;
+            var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                $"{baseUrl.TrimEnd('/')}/v1/models");
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", apiKey);
+
+            var response = await HttpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var root = JObject.Parse(json);
+            var modelsArray = root["data"] as JArray;
+            if (modelsArray == null)
+            {
+                return;
+            }
+
+            var models = new List<OpenAITextModel>();
+
+            foreach (var item in modelsArray)
+            {
+                var id = item["id"]?.ToString();
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    continue;
+                }
+
+                // Filter out non-text models
+                if (id.Contains("dall-e") || id.Contains("tts") ||
+                    id.Contains("embed") || id.Contains("whisper"))
+                {
+                    continue;
+                }
+
+                var displayName = $"🛰 {id}";
+                var isTurbo = id.Contains("turbo") || id.Contains("flash");
+                var isMini = id.Contains("mini");
+                var supportsText = true;
+
+                models.Add(
+                    new OpenAITextModel(
+                        id,
+                        displayName,
+                        supportsText,
+                        false,
+                        isTurbo,
+                        isMini,
+                        false,
+                        "OpenRouter"));
+            }
+
+            lock (SyncLock)
+            {
+                if (models.Count > 0)
+                {
+                    CurrentModelList = models;
+                }
+            }
         }
-
-        var models = new List<OpenAITextModel>();
-
-        foreach (var item in modelsArray)
+        catch
         {
-          var id = item["id"]?.ToString();
-          if (string.IsNullOrWhiteSpace(id))
-          {
-            continue;
-          }
-
-          // Filter out non-text models
-          if (id.Contains("dall-e") || id.Contains("tts") || id.Contains("embed") || id.Contains("whisper"))
-          {
-            continue;
-          }
-
-          var displayName = $"🛰 {id}";
-          bool isTurbo = id.Contains("turbo") || id.Contains("flash");
-          bool isMini = id.Contains("mini");
-          bool supportsText = true;
-
-          models.Add(new OpenAITextModel(
-            Id: id,
-            DisplayName: displayName,
-            SupportsText: supportsText,
-            SupportsVision: false,
-            IsTurbo: isTurbo,
-            IsMini: isMini,
-            IsDefault: false,
-            EngineName: "OpenRouter"));
+            ResetToDefault();
         }
-
-        lock (SyncLock)
-        {
-          if (models.Count > 0)
-          {
-            CurrentModelList = models;
-          }
-        }
-      }
-      catch
-      {
-        ResetToDefault();
-      }
     }
-  }
 }

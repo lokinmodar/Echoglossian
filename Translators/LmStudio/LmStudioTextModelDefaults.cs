@@ -8,23 +8,23 @@ using Echoglossian.Translators.OpenAI;
 namespace Echoglossian.Translators.LmStudio;
 
 /// <summary>
-/// Provides default model list for LM Studio usage.
+///     Provides default model list for LM Studio usage.
 /// </summary>
 public static class LmStudioTextModelDefaults
 {
-  /// <summary>
-  /// Predefined LM Studio-compatible models for offline use.
-  /// </summary>
-  public static readonly List<OpenAITextModel> PredefinedModels = new()
-  {
-    new OpenAITextModel(
-      Id: "lmstudio/llama3",
-      DisplayName: "🦙 LLaMA 3",
-      SupportsText: true,
-      SupportsVision: false,
-      IsTurbo: false,
-      IsMini: false,
-      IsDefault: true,
-      EngineName: "LmStudio"),
-  };
+    /// <summary>
+    ///     Predefined LM Studio-compatible models for offline use.
+    /// </summary>
+    public static readonly List<OpenAITextModel> PredefinedModels = new()
+    {
+        new OpenAITextModel(
+            "lmstudio/llama3",
+            "🦙 LLaMA 3",
+            true,
+            false,
+            false,
+            false,
+            true,
+            "LmStudio")
+    };
 }

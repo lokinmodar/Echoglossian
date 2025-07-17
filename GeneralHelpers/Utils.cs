@@ -5,6 +5,9 @@
 
 namespace Echoglossian;
 
+/// <summary>
+///     General utility methods for the Echoglossian plugin.
+/// </summary>
 public partial class Echoglossian
 {
     /// <summary>
@@ -98,7 +101,7 @@ public partial class Echoglossian
     /// <summary>
     ///     Fully resets the plugin configuration to its default values,
     ///     including all fields and properties. Prompts are explicitly assigned
-    ///     from <see cref="Echoglossian.PromptTemplateManager.DefaultPrompt" />.
+    ///     from <see cref="PromptTemplateManager.DefaultPrompt" />.
     ///     Metadata like
     ///     <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
     /// </summary>
@@ -233,9 +236,8 @@ public partial class Echoglossian
         Color? backColorOptional = null,
         Size? minSizeOptional = null)
     {
-#if DEBUG
         PluginLog.Debug("Inside image creation method");
-#endif
+
         PrivateFontCollection pfc = new();
         pfc.AddFontFile(
             $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{SpecialFontFileName}");
@@ -303,9 +305,9 @@ public partial class Echoglossian
                 drawing.Save();
             }
         }
-#if DEBUG
+
         PluginLog.Debug("Before returning the image created");
-#endif
+
         return textAsImage;
     }
 
@@ -316,9 +318,8 @@ public partial class Echoglossian
     /// <returns>Byte array to be used elsewhere.</returns>
     private byte[] TranslationImageConverter(Image image)
     {
-#if DEBUG
         PluginLog.Debug("Conversion to byte");
-#endif
+
         var imageConverter = new ImageConverter();
         return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));
     }

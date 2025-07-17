@@ -5,45 +5,17 @@
 
 using ImGuiScene;
 
-namespace Echoglossian
+namespace Echoglossian;
+
+// old logic for overlays
+public partial class Echoglossian
 {
-  // old logic for overlays
-  public partial class Echoglossian
-  {
-    private bool talkDisplayTranslation;
+    private readonly string currentNameTranslation = string.Empty;
 
-    private string currentNameTranslation = string.Empty;
-    private TextureWrap currentNameTranslationTexture;
-    private volatile int currentNameTranslationId;
+    private readonly string currentTalkTranslation = string.Empty;
 
-    private string currentTalkTranslation = string.Empty;
-    private TextureWrap currentTalkTranslationTexture;
-    private volatile int currentTalkTranslationId;
-
-    private Vector2 talkTextDimensions = Vector2.Zero;
-    private Vector2 talkTextImguiSize = Vector2.Zero;
-    private Vector2 talkTextPosition = Vector2.Zero;
-
-    private bool talkSubtitleDisplayTranslation;
-
-    private string currentTalkSubtitleTranslation = string.Empty;
-    private volatile int currentTalkSubtitleTranslationId;
-
-    private Vector2 talkSubtitleTextDimensions = Vector2.Zero;
-    private Vector2 talkSubtitleTextImguiSize = Vector2.Zero;
-    private Vector2 talkSubtitleTextPosition = Vector2.Zero;
-
-    private bool battleTalkDisplayTranslation;
-
-    private string currentSenderTranslation = string.Empty;
-    private volatile int currentSenderTranslationId;
-
-    private string currentBattleTalkTranslation = string.Empty;
-    private volatile int currentBattleTalkTranslationId;
-
-    private Vector2 battleTalkTextDimensions = Vector2.Zero;
-    private Vector2 battleTalkTextImguiSize = Vector2.Zero;
-    private Vector2 battleTalkTextPosition = Vector2.Zero;
+    private readonly Vector2 talkTextDimensions = Vector2.Zero;
+    private readonly Vector2 talkTextPosition = Vector2.Zero;
 
     private bool addonDisplayTranslation;
 
@@ -51,26 +23,17 @@ namespace Echoglossian
     private Vector2 addonTranslationTextImguiSize = Vector2.Zero;
     private Vector2 addonTranslationTextPosition = Vector2.Zero;
 
-    private bool toastDisplayTranslation;
+    private bool areaToastDisplayTranslation;
 
-    private string currentToastTranslation = string.Empty;
-    private volatile int currentToastTranslationId;
+    private Vector2 areaToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 areaToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 areaToastTranslationTextPosition = Vector2.Zero;
 
-    private Vector2 toastTranslationTextDimensions = Vector2.Zero;
-    private Vector2 toastTranslationTextImguiSize = Vector2.Zero;
-    private Vector2 toastTranslationTextPosition = Vector2.Zero;
+    private bool battleTalkDisplayTranslation;
 
-    private string currentQuestToastTranslation = string.Empty;
-    private volatile int currentQuestToastTranslationId;
-
-    private bool questToastDisplayTranslation;
-
-    private Vector2 questToastTranslationTextDimensions = Vector2.Zero;
-    private Vector2 questToastTranslationTextImguiSize = Vector2.Zero;
-    private Vector2 questToastTranslationTextPosition = Vector2.Zero;
-
-    private string currentClassChangeToastTranslation = string.Empty;
-    private volatile int currentClassChangeToastTranslationId;
+    private Vector2 battleTalkTextDimensions = Vector2.Zero;
+    private Vector2 battleTalkTextImguiSize = Vector2.Zero;
+    private Vector2 battleTalkTextPosition = Vector2.Zero;
 
     private bool classChangeToastDisplayTranslation;
 
@@ -78,26 +41,36 @@ namespace Echoglossian
     private Vector2 classChangeToastTranslationTextImguiSize = Vector2.Zero;
     private Vector2 classChangeToastTranslationTextPosition = Vector2.Zero;
 
-    private string currentWideTextToastTranslation = string.Empty;
-    private volatile int currentWideTextToastTranslationId;
-
-    private bool wideTextToastDisplayTranslation;
-
-    private Vector2 wideTextToastTranslationTextDimensions = Vector2.Zero;
-    private Vector2 wideTextToastTranslationTextImguiSize = Vector2.Zero;
-    private Vector2 wideTextToastTranslationTextPosition = Vector2.Zero;
-
     private string currentAreaToastTranslation = string.Empty;
     private volatile int currentAreaToastTranslationId;
 
-    private bool areaToastDisplayTranslation;
+    private string currentBattleTalkTranslation = string.Empty;
+    private volatile int currentBattleTalkTranslationId;
 
-    private Vector2 areaToastTranslationTextDimensions = Vector2.Zero;
-    private Vector2 areaToastTranslationTextImguiSize = Vector2.Zero;
-    private Vector2 areaToastTranslationTextPosition = Vector2.Zero;
+    private string currentClassChangeToastTranslation = string.Empty;
+    private volatile int currentClassChangeToastTranslationId;
 
     private string currentErrorToastTranslation = string.Empty;
     private volatile int currentErrorToastTranslationId;
+    private volatile int currentNameTranslationId;
+    private TextureWrap currentNameTranslationTexture;
+
+    private string currentQuestToastTranslation = string.Empty;
+    private volatile int currentQuestToastTranslationId;
+
+    private string currentSenderTranslation = string.Empty;
+    private volatile int currentSenderTranslationId;
+
+    private string currentTalkSubtitleTranslation = string.Empty;
+    private volatile int currentTalkSubtitleTranslationId;
+    private volatile int currentTalkTranslationId;
+    private TextureWrap currentTalkTranslationTexture;
+
+    private string currentToastTranslation = string.Empty;
+    private volatile int currentToastTranslationId;
+
+    private string currentWideTextToastTranslation = string.Empty;
+    private volatile int currentWideTextToastTranslationId;
 
     private bool errorToastDisplayTranslation;
 
@@ -105,447 +78,543 @@ namespace Echoglossian
     private Vector2 errorToastTranslationTextImguiSize = Vector2.Zero;
     private Vector2 errorToastTranslationTextPosition = Vector2.Zero;
 
+    private bool questToastDisplayTranslation;
+
+    private Vector2 questToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 questToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 questToastTranslationTextPosition = Vector2.Zero;
+    private bool talkDisplayTranslation;
+
+    private bool talkSubtitleDisplayTranslation;
+
+    private Vector2 talkSubtitleTextDimensions = Vector2.Zero;
+    private Vector2 talkSubtitleTextImguiSize = Vector2.Zero;
+    private Vector2 talkSubtitleTextPosition = Vector2.Zero;
+    private Vector2 talkTextImguiSize = Vector2.Zero;
+
+    private bool toastDisplayTranslation;
+
+    private Vector2 toastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 toastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 toastTranslationTextPosition = Vector2.Zero;
+
+    private bool wideTextToastDisplayTranslation;
+
+    private Vector2 wideTextToastTranslationTextDimensions = Vector2.Zero;
+    private Vector2 wideTextToastTranslationTextImguiSize = Vector2.Zero;
+    private Vector2 wideTextToastTranslationTextPosition = Vector2.Zero;
+
     public string GetTranslatedNpcNameForWindow()
     {
-      string name;
+        string name;
 
-      if (this.nameTranslationSemaphore.Wait(0))
-      {
-        name = this.currentNameTranslation;
+        if (this.nameTranslationSemaphore.Wait(0))
+        {
+            name = this.currentNameTranslation;
 
-        this.nameTranslationSemaphore.Release();
-      }
-      else
-      {
-        name = Resources.WaitingForTranslation;
-      }
+            this.nameTranslationSemaphore.Release();
+        }
+        else
+        {
+            name = Resources.WaitingForTranslation;
+        }
 
-      return name;
+        return name;
     }
 
     public string GetTranslatedSenderNameForWindow()
     {
-      string name;
+        string name;
 
-      if (this.senderTranslationSemaphore.Wait(0))
-      {
-        name = this.currentSenderTranslation;
+        if (this.senderTranslationSemaphore.Wait(0))
+        {
+            name = this.currentSenderTranslation;
 
-        this.senderTranslationSemaphore.Release();
-      }
-      else
-      {
-        name = Resources.WaitingForTranslation;
-      }
+            this.senderTranslationSemaphore.Release();
+        }
+        else
+        {
+            name = Resources.WaitingForTranslation;
+        }
 
-      return name;
+        return name;
     }
 
     private void DrawTranslatedBattleTalkWindow()
     {
-      PluginLog.Debug("Using BattleTalk Overlay - Inside DrawTranslatedBattleTalkWindow method!");
+        PluginLog.Debug(
+            "Using BattleTalk Overlay - Inside DrawTranslatedBattleTalkWindow method!");
 
-      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-  this.battleTalkTextPosition.X + (this.battleTalkTextDimensions.X / 2) - (this.battleTalkTextImguiSize.X / 2),
-  this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
+            new Vector2(
+                this.battleTalkTextPosition.X +
+                (this.battleTalkTextDimensions.X / 2) -
+                (this.battleTalkTextImguiSize.X / 2),
+                this.battleTalkTextPosition.Y - this.battleTalkTextImguiSize.Y -
+                20) + this.configuration.ImGuiWindowPosCorrection);
 
-      float size = Math.Min(
-        this.battleTalkTextDimensions.X * this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
-        ImGui.CalcTextSize(this.currentBattleTalkTranslation).X + (ImGui.GetStyle().WindowPadding.X * 3));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.battleTalkTextDimensions.Y * 2.5f * this.configuration.ImGuiBattleTalkWindowHeightMult));
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayBattleTalkTextColor, 255));
+        var size = Math.Min(
+            this.battleTalkTextDimensions.X *
+            this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
+            ImGui.CalcTextSize(this.currentBattleTalkTranslation).X +
+            (ImGui.GetStyle().WindowPadding.X * 3));
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(size, 0),
+            new Vector2(
+                size,
+                this.battleTalkTextDimensions.Y * 2.5f * this.configuration
+                    .ImGuiBattleTalkWindowHeightMult));
+        ImGui.PushStyleColor(
+            ImGuiCol.Text,
+            new Vector4(this.configuration.OverlayBattleTalkTextColor, 255));
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Push();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Push();
-      }
-
-      if (this.configuration.TranslateNpcNames)
-      {
-        string name = this.GetTranslatedSenderNameForWindow();
-        if (!name.IsNullOrEmpty())
+        if (this.configuration.SwapTextsUsingImGui)
         {
-          ImGui.Begin(
-            name,
-            ImGuiWindowFlags.NoNav
-            | ImGuiWindowFlags.NoCollapse
-            | ImGuiWindowFlags.AlwaysAutoResize
-            | ImGuiWindowFlags.NoFocusOnAppearing
-            | ImGuiWindowFlags.NoMouseInputs
-            | ImGuiWindowFlags.NoScrollbar);
+            UINewFontHandler.GeneralFontHandle.Push();
         }
         else
         {
-          ImGui.Begin(
-            "BattleTalk translation",
-            ImGuiWindowFlags.NoTitleBar
-            | ImGuiWindowFlags.NoNav
-            | ImGuiWindowFlags.AlwaysAutoResize
-            | ImGuiWindowFlags.NoFocusOnAppearing
-            | ImGuiWindowFlags.NoMouseInputs
-            | ImGuiWindowFlags.NoScrollbar);
+            UINewFontHandler.LanguageFontHandle.Push();
         }
-      }
-      else
-      {
-        ImGui.Begin(
-          "BattleTalk translation",
-          ImGuiWindowFlags.NoTitleBar
-          | ImGuiWindowFlags.NoNav
-          | ImGuiWindowFlags.AlwaysAutoResize
-          | ImGuiWindowFlags.NoFocusOnAppearing
-          | ImGuiWindowFlags.NoMouseInputs
-          | ImGuiWindowFlags.NoScrollbar);
-      }
 
-      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
-      if (this.battleTalkTranslationSemaphore.Wait(0))
-      {
-        ImGui.TextWrapped(this.currentBattleTalkTranslation);
+        if (this.configuration.TranslateNpcNames)
+        {
+            var name = this.GetTranslatedSenderNameForWindow();
+            if (!name.IsNullOrEmpty())
+            {
+                ImGui.Begin(
+                    name,
+                    ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse |
+                    ImGuiWindowFlags.AlwaysAutoResize |
+                    ImGuiWindowFlags.NoFocusOnAppearing |
+                    ImGuiWindowFlags.NoMouseInputs |
+                    ImGuiWindowFlags.NoScrollbar);
+            }
+            else
+            {
+                ImGui.Begin(
+                    "BattleTalk translation",
+                    ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+                    ImGuiWindowFlags.AlwaysAutoResize |
+                    ImGuiWindowFlags.NoFocusOnAppearing |
+                    ImGuiWindowFlags.NoMouseInputs |
+                    ImGuiWindowFlags.NoScrollbar);
+            }
+        }
+        else
+        {
+            ImGui.Begin(
+                "BattleTalk translation",
+                ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+                ImGuiWindowFlags.AlwaysAutoResize |
+                ImGuiWindowFlags.NoFocusOnAppearing |
+                ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoScrollbar);
+        }
 
-        this.battleTalkTranslationSemaphore.Release();
-      }
-      else
-      {
-        ImGui.Text(Resources.WaitingForTranslation);
-      }
+        ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
+        if (this.battleTalkTranslationSemaphore.Wait(0))
+        {
+            ImGui.TextWrapped(this.currentBattleTalkTranslation);
 
-      this.battleTalkTextImguiSize = ImGui.GetWindowSize();
-      ImGui.PopStyleColor(1);
+            this.battleTalkTranslationSemaphore.Release();
+        }
+        else
+        {
+            ImGui.Text(Resources.WaitingForTranslation);
+        }
 
-      ImGui.End();
+        this.battleTalkTextImguiSize = ImGui.GetWindowSize();
+        ImGui.PopStyleColor(1);
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Pop();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Pop();
-      }
+        ImGui.End();
+
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Pop();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Pop();
+        }
     }
 
     private void DrawTranslatedTalkWindow()
     {
-      PluginLog.Debug("Using Talk Overlay - Inside DrawTranslatedTalkWindow method!");
+        PluginLog.Debug(
+            "Using Talk Overlay - Inside DrawTranslatedTalkWindow method!");
 
-      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-          this.talkTextPosition.X + (this.talkTextDimensions.X / 2) - (this.talkTextImguiSize.X / 2),
-          this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
+            new Vector2(
+                this.talkTextPosition.X + (this.talkTextDimensions.X / 2) -
+                (this.talkTextImguiSize.X / 2),
+                this.talkTextPosition.Y - this.talkTextImguiSize.Y - 20) +
+            this.configuration.ImGuiWindowPosCorrection);
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Push();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Push();
-      }
-
-      float size = Math.Min(
-          (this.talkTextDimensions.X * this.configuration.ImGuiTalkWindowWidthMult) + (ImGui.GetStyle().WindowPadding.X * 2),
-          (ImGui.CalcTextSize(this.currentTalkTranslation).X * 1.25f) + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkTextDimensions.Y * this.configuration.ImGuiTalkWindowHeightMult));
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
-      if (this.configuration.TranslateNpcNames)
-      {
-        string name = this.GetTranslatedNpcNameForWindow();
-        if (!name.IsNullOrEmpty())
+        if (this.configuration.SwapTextsUsingImGui)
         {
-          ImGui.Begin(
-            name,
-            ImGuiWindowFlags.NoNav
-            | ImGuiWindowFlags.NoCollapse
-            | ImGuiWindowFlags.AlwaysAutoResize
-            | ImGuiWindowFlags.NoFocusOnAppearing
-            | ImGuiWindowFlags.NoMouseInputs
-            | ImGuiWindowFlags.NoScrollbar);
+            UINewFontHandler.GeneralFontHandle.Push();
         }
         else
         {
-          ImGui.Begin(
-            "Talk translation",
-            ImGuiWindowFlags.NoTitleBar
-            | ImGuiWindowFlags.NoNav
-            | ImGuiWindowFlags.AlwaysAutoResize
-            | ImGuiWindowFlags.NoFocusOnAppearing
-            | ImGuiWindowFlags.NoMouseInputs
-            | ImGuiWindowFlags.NoScrollbar);
+            UINewFontHandler.LanguageFontHandle.Push();
         }
-      }
-      else
-      {
-        ImGui.Begin(
-          "Talk translation",
-          ImGuiWindowFlags.NoTitleBar
-          | ImGuiWindowFlags.NoNav
-          | ImGuiWindowFlags.AlwaysAutoResize
-          | ImGuiWindowFlags.NoFocusOnAppearing
-          | ImGuiWindowFlags.NoMouseInputs
-          | ImGuiWindowFlags.NoScrollbar);
-      }
 
-      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
-      if (this.talkTranslationSemaphore.Wait(0))
-      {
-        ImGui.TextWrapped(this.currentTalkTranslation);
+        var size = Math.Min(
+            (this.talkTextDimensions.X *
+             this.configuration.ImGuiTalkWindowWidthMult) +
+            (ImGui.GetStyle().WindowPadding.X * 2),
+            (ImGui.CalcTextSize(this.currentTalkTranslation).X * 1.25f) +
+            (ImGui.GetStyle().WindowPadding.X * 2));
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(size, 0),
+            new Vector2(
+                size,
+                this.talkTextDimensions.Y *
+                this.configuration.ImGuiTalkWindowHeightMult));
+        ImGui.PushStyleColor(
+            ImGuiCol.Text,
+            new Vector4(this.configuration.OverlayTalkTextColor, 255));
+        if (this.configuration.TranslateNpcNames)
+        {
+            var name = this.GetTranslatedNpcNameForWindow();
+            if (!name.IsNullOrEmpty())
+            {
+                ImGui.Begin(
+                    name,
+                    ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse |
+                    ImGuiWindowFlags.AlwaysAutoResize |
+                    ImGuiWindowFlags.NoFocusOnAppearing |
+                    ImGuiWindowFlags.NoMouseInputs |
+                    ImGuiWindowFlags.NoScrollbar);
+            }
+            else
+            {
+                ImGui.Begin(
+                    "Talk translation",
+                    ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+                    ImGuiWindowFlags.AlwaysAutoResize |
+                    ImGuiWindowFlags.NoFocusOnAppearing |
+                    ImGuiWindowFlags.NoMouseInputs |
+                    ImGuiWindowFlags.NoScrollbar);
+            }
+        }
+        else
+        {
+            ImGui.Begin(
+                "Talk translation",
+                ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+                ImGuiWindowFlags.AlwaysAutoResize |
+                ImGuiWindowFlags.NoFocusOnAppearing |
+                ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoScrollbar);
+        }
 
-        this.talkTranslationSemaphore.Release();
-      }
-      else
-      {
-        ImGui.Text(Resources.WaitingForTranslation);
-      }
+        ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
+        if (this.talkTranslationSemaphore.Wait(0))
+        {
+            ImGui.TextWrapped(this.currentTalkTranslation);
 
-      this.talkTextImguiSize = ImGui.GetWindowSize();
+            this.talkTranslationSemaphore.Release();
+        }
+        else
+        {
+            ImGui.Text(Resources.WaitingForTranslation);
+        }
 
-      ImGui.PopStyleColor(1);
+        this.talkTextImguiSize = ImGui.GetWindowSize();
 
-      ImGui.End();
+        ImGui.PopStyleColor(1);
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Pop();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Pop();
-      }
+        ImGui.End();
+
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Pop();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Pop();
+        }
     }
 
     private void DrawTranslatedTalkSubtitleWindow()
     {
-      PluginLog.Debug("Using TalkSubtitle Overlay - Inside DrawTranslatedTalkSubtitleWindow method!");
+        PluginLog.Debug(
+            "Using TalkSubtitle Overlay - Inside DrawTranslatedTalkSubtitleWindow method!");
 
-      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-          this.talkSubtitleTextPosition.X + (this.talkSubtitleTextDimensions.X / 2) - (this.talkSubtitleTextImguiSize.X / 2),
-          this.talkSubtitleTextPosition.Y - this.talkSubtitleTextImguiSize.Y - 20) + this.configuration.ImGuiWindowPosCorrection);
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
+            new Vector2(
+                this.talkSubtitleTextPosition.X +
+                (this.talkSubtitleTextDimensions.X / 2) -
+                (this.talkSubtitleTextImguiSize.X / 2),
+                this.talkSubtitleTextPosition.Y -
+                this.talkSubtitleTextImguiSize.Y - 20) +
+            this.configuration.ImGuiWindowPosCorrection);
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Push();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Push();
-      }
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Push();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Push();
+        }
 
-      float size = Math.Min(
-          (this.talkSubtitleTextDimensions.X * this.configuration.ImGuiTalkSubtitleWindowWidthMult) + (ImGui.GetStyle().WindowPadding.X * 2),
-          (ImGui.CalcTextSize(this.currentTalkSubtitleTranslation).X * 1.25f) + (ImGui.GetStyle().WindowPadding.X * 2));
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size, this.talkSubtitleTextDimensions.Y * this.configuration.ImGuiTalkSubtitleWindowHeightMult));
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
+        var size = Math.Min(
+            (this.talkSubtitleTextDimensions.X * this.configuration
+                .ImGuiTalkSubtitleWindowWidthMult) +
+            (ImGui.GetStyle().WindowPadding.X * 2),
+            (ImGui.CalcTextSize(this.currentTalkSubtitleTranslation).X *
+             1.25f) + (ImGui.GetStyle().WindowPadding.X * 2));
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(size, 0),
+            new Vector2(
+                size,
+                this.talkSubtitleTextDimensions.Y * this.configuration
+                    .ImGuiTalkSubtitleWindowHeightMult));
+        ImGui.PushStyleColor(
+            ImGuiCol.Text,
+            new Vector4(this.configuration.OverlayTalkTextColor, 255));
 
-      ImGui.Begin(
-        "TalkSubtitle translation",
-        ImGuiWindowFlags.NoTitleBar
-        | ImGuiWindowFlags.NoNav
-        | ImGuiWindowFlags.AlwaysAutoResize
-        | ImGuiWindowFlags.NoFocusOnAppearing
-        | ImGuiWindowFlags.NoMouseInputs
-        | ImGuiWindowFlags.NoScrollbar);
+        ImGui.Begin(
+            "TalkSubtitle translation",
+            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+            ImGuiWindowFlags.AlwaysAutoResize |
+            ImGuiWindowFlags.NoFocusOnAppearing |
+            ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoScrollbar);
 
-      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
-      if (this.talkSubtitleTranslationSemaphore.Wait(0))
-      {
-        ImGui.TextWrapped(this.currentTalkSubtitleTranslation);
+        ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
+        if (this.talkSubtitleTranslationSemaphore.Wait(0))
+        {
+            ImGui.TextWrapped(this.currentTalkSubtitleTranslation);
 
-        this.talkSubtitleTranslationSemaphore.Release();
-      }
-      else
-      {
-        ImGui.Text(Resources.WaitingForTranslation);
-      }
+            this.talkSubtitleTranslationSemaphore.Release();
+        }
+        else
+        {
+            ImGui.Text(Resources.WaitingForTranslation);
+        }
 
-      this.talkSubtitleTextImguiSize = ImGui.GetWindowSize();
+        this.talkSubtitleTextImguiSize = ImGui.GetWindowSize();
 
-      ImGui.PopStyleColor(1);
+        ImGui.PopStyleColor(1);
 
-      ImGui.End();
+        ImGui.End();
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Pop();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Pop();
-      }
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Pop();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Pop();
+        }
     }
 
     private void DrawTranslatedToastWindow()
     {
-      PluginLog.Debug("Using Toast Overlay - inside Draw Toast Overlay");
-      if (this.configuration.UseImGuiForToasts && this.configuration.TranslateToast && this.toastDisplayTranslation)
-      {
-        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-          this.toastTranslationTextPosition.X + (this.toastTranslationTextDimensions.X / 2) - (this.toastTranslationTextImguiSize.X / 2),
-          this.toastTranslationTextPosition.Y - this.toastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
-        float size = Math.Min(
-          this.toastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
-          ImGui.CalcTextSize(this.currentToastTranslation).X + (ImGui.GetStyle().WindowPadding.X * 2));
-        ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4f, this.toastTranslationTextDimensions.Y * 2));
-        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
+        PluginLog.Debug("Using Toast Overlay - inside Draw Toast Overlay");
+        if (this.configuration.UseImGuiForToasts &&
+            this.configuration.TranslateToast && this.toastDisplayTranslation)
+        {
+            ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
+                new Vector2(
+                    this.toastTranslationTextPosition.X +
+                    (this.toastTranslationTextDimensions.X / 2) -
+                    (this.toastTranslationTextImguiSize.X / 2),
+                    this.toastTranslationTextPosition.Y -
+                    this.toastTranslationTextImguiSize.Y - 20) +
+                this.configuration.ImGuiToastWindowPosCorrection);
+            var size = Math.Min(
+                this.toastTranslationTextDimensions.X *
+                this.configuration.ImGuiToastWindowWidthMult,
+                ImGui.CalcTextSize(this.currentToastTranslation).X +
+                (ImGui.GetStyle().WindowPadding.X * 2));
+            ImGui.SetNextWindowSizeConstraints(
+                new Vector2(size, 0),
+                new Vector2(
+                    size * 4f,
+                    this.toastTranslationTextDimensions.Y * 2));
+            ImGui.PushStyleColor(
+                ImGuiCol.Text,
+                new Vector4(this.configuration.OverlayTalkTextColor, 255));
 
-        if (this.configuration.SwapTextsUsingImGui == true)
-        {
-          UINewFontHandler.GeneralFontHandle.Push();
-        }
-        else
-        {
-          UINewFontHandler.LanguageFontHandle.Push();
-        }
+            if (this.configuration.SwapTextsUsingImGui)
+            {
+                UINewFontHandler.GeneralFontHandle.Push();
+            }
+            else
+            {
+                UINewFontHandler.LanguageFontHandle.Push();
+            }
 
-        ImGui.Begin(
-          "Toast Translation",
-          ImGuiWindowFlags.NoTitleBar
-          | ImGuiWindowFlags.NoNav
-          | ImGuiWindowFlags.AlwaysAutoResize
-          | ImGuiWindowFlags.NoFocusOnAppearing
-          | ImGuiWindowFlags.NoMouseInputs);
+            ImGui.Begin(
+                "Toast Translation",
+                ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+                ImGuiWindowFlags.AlwaysAutoResize |
+                ImGuiWindowFlags.NoFocusOnAppearing |
+                ImGuiWindowFlags.NoMouseInputs);
 
-        if (this.toastTranslationSemaphore.Wait(0))
-        {
-          ImGui.Text(this.currentToastTranslation);
-          this.toastTranslationSemaphore.Release();
-        }
-        else
-        {
-          ImGui.Text(Resources.WaitingForTranslation);
-        }
+            if (this.toastTranslationSemaphore.Wait(0))
+            {
+                ImGui.Text(this.currentToastTranslation);
+                this.toastTranslationSemaphore.Release();
+            }
+            else
+            {
+                ImGui.Text(Resources.WaitingForTranslation);
+            }
 
-        this.toastTranslationTextImguiSize = ImGui.GetWindowSize();
-        ImGui.PopStyleColor(1);
-        ImGui.End();
-        if (this.configuration.SwapTextsUsingImGui == true)
-        {
-          UINewFontHandler.GeneralFontHandle.Pop();
+            this.toastTranslationTextImguiSize = ImGui.GetWindowSize();
+            ImGui.PopStyleColor(1);
+            ImGui.End();
+            if (this.configuration.SwapTextsUsingImGui)
+            {
+                UINewFontHandler.GeneralFontHandle.Pop();
+            }
+            else
+            {
+                UINewFontHandler.LanguageFontHandle.Pop();
+            }
         }
-        else
-        {
-          UINewFontHandler.LanguageFontHandle.Pop();
-        }
-      }
     }
 
     private void DrawTranslatedErrorToastWindow()
     {
-      PluginLog.Debug("Using Toast Overlay - inside Draw Error toast Overlay");
+        PluginLog.Debug(
+            "Using Toast Overlay - inside Draw Error toast Overlay");
 
-      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-        this.errorToastTranslationTextPosition.X + (this.errorToastTranslationTextDimensions.X / 2) - (this.errorToastTranslationTextImguiSize.X / 2),
-        this.errorToastTranslationTextPosition.Y - this.errorToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
-      float size = Math.Min(
-        this.errorToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
-        ImGui.CalcTextSize(this.currentErrorToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
+            new Vector2(
+                this.errorToastTranslationTextPosition.X +
+                (this.errorToastTranslationTextDimensions.X / 2) -
+                (this.errorToastTranslationTextImguiSize.X / 2),
+                this.errorToastTranslationTextPosition.Y -
+                this.errorToastTranslationTextImguiSize.Y - 20) +
+            this.configuration.ImGuiToastWindowPosCorrection);
+        var size = Math.Min(
+            this.errorToastTranslationTextDimensions.X *
+            this.configuration.ImGuiToastWindowWidthMult,
+            ImGui.CalcTextSize(this.currentErrorToastTranslation).X +
+            ImGui.GetStyle().WindowPadding.X);
 
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4, this.errorToastTranslationTextDimensions.Y * 2));
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(size, 0),
+            new Vector2(
+                size * 4,
+                this.errorToastTranslationTextDimensions.Y * 2));
 
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
+        ImGui.PushStyleColor(
+            ImGuiCol.Text,
+            new Vector4(this.configuration.OverlayTalkTextColor, 255));
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Push();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Push();
-      }
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Push();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Push();
+        }
 
-      ImGui.Begin(
-        "Error Toast Translation",
-        ImGuiWindowFlags.NoTitleBar
-        | ImGuiWindowFlags.NoNav
-        | ImGuiWindowFlags.AlwaysAutoResize
-        | ImGuiWindowFlags.NoFocusOnAppearing
-        | ImGuiWindowFlags.NoMouseInputs
-        | ImGuiWindowFlags.NoBackground);
+        ImGui.Begin(
+            "Error Toast Translation",
+            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+            ImGuiWindowFlags.AlwaysAutoResize |
+            ImGuiWindowFlags.NoFocusOnAppearing |
+            ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoBackground);
 
-      if (this.errorToastTranslationSemaphore.Wait(0))
-      {
-        ImGui.Text(this.currentErrorToastTranslation);
-        this.errorToastTranslationSemaphore.Release();
-      }
-      else
-      {
-        ImGui.Text(Resources.WaitingForTranslation);
-      }
+        if (this.errorToastTranslationSemaphore.Wait(0))
+        {
+            ImGui.Text(this.currentErrorToastTranslation);
+            this.errorToastTranslationSemaphore.Release();
+        }
+        else
+        {
+            ImGui.Text(Resources.WaitingForTranslation);
+        }
 
-      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
-      this.errorToastTranslationTextImguiSize = ImGui.GetWindowSize();
-      ImGui.PopStyleColor(1);
-      ImGui.End();
+        ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
+        this.errorToastTranslationTextImguiSize = ImGui.GetWindowSize();
+        ImGui.PopStyleColor(1);
+        ImGui.End();
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Pop();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Pop();
-      }
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Pop();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Pop();
+        }
     }
 
     private void DrawTranslatedClassChangeToastWindow()
     {
-      PluginLog.Debug("Using Toast Overlay - inside Draw Class change toast Overlay");
+        PluginLog.Debug(
+            "Using Toast Overlay - inside Draw Class change toast Overlay");
 
-      ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
-        this.classChangeToastTranslationTextPosition.X + (this.classChangeToastTranslationTextDimensions.X / 2) - (this.classChangeToastTranslationTextImguiSize.X / 2),
-        this.classChangeToastTranslationTextPosition.Y - this.classChangeToastTranslationTextImguiSize.Y - 20) + this.configuration.ImGuiToastWindowPosCorrection);
-      float size = Math.Min(
-        this.classChangeToastTranslationTextDimensions.X * this.configuration.ImGuiToastWindowWidthMult,
-        ImGui.CalcTextSize(this.currentClassChangeToastTranslation).X + ImGui.GetStyle().WindowPadding.X);
+        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
+            new Vector2(
+                this.classChangeToastTranslationTextPosition.X +
+                (this.classChangeToastTranslationTextDimensions.X / 2) -
+                (this.classChangeToastTranslationTextImguiSize.X / 2),
+                this.classChangeToastTranslationTextPosition.Y -
+                this.classChangeToastTranslationTextImguiSize.Y - 20) +
+            this.configuration.ImGuiToastWindowPosCorrection);
+        var size = Math.Min(
+            this.classChangeToastTranslationTextDimensions.X *
+            this.configuration.ImGuiToastWindowWidthMult,
+            ImGui.CalcTextSize(this.currentClassChangeToastTranslation).X +
+            ImGui.GetStyle().WindowPadding.X);
 
-      ImGui.SetNextWindowSizeConstraints(new Vector2(size, 0), new Vector2(size * 4, this.classChangeToastTranslationTextDimensions.Y * 2));
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(size, 0),
+            new Vector2(
+                size * 4,
+                this.classChangeToastTranslationTextDimensions.Y * 2));
 
-      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(this.configuration.OverlayTalkTextColor, 255));
+        ImGui.PushStyleColor(
+            ImGuiCol.Text,
+            new Vector4(this.configuration.OverlayTalkTextColor, 255));
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Push();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Push();
-      }
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Push();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Push();
+        }
 
-      ImGui.Begin(
-        "Error Toast Translation",
-        ImGuiWindowFlags.NoTitleBar
-        | ImGuiWindowFlags.NoNav
-        | ImGuiWindowFlags.AlwaysAutoResize
-        | ImGuiWindowFlags.NoFocusOnAppearing
-        | ImGuiWindowFlags.NoMouseInputs
-        | ImGuiWindowFlags.NoBackground);
+        ImGui.Begin(
+            "Error Toast Translation",
+            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoNav |
+            ImGuiWindowFlags.AlwaysAutoResize |
+            ImGuiWindowFlags.NoFocusOnAppearing |
+            ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoBackground);
 
-      if (this.classChangeToastTranslationSemaphore.Wait(0))
-      {
-        ImGui.Text(this.currentClassChangeToastTranslation);
-        this.classChangeToastTranslationSemaphore.Release();
-      }
-      else
-      {
-        ImGui.Text(Resources.WaitingForTranslation);
-      }
+        if (this.classChangeToastTranslationSemaphore.Wait(0))
+        {
+            ImGui.Text(this.currentClassChangeToastTranslation);
+            this.classChangeToastTranslationSemaphore.Release();
+        }
+        else
+        {
+            ImGui.Text(Resources.WaitingForTranslation);
+        }
 
-      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
-      this.classChangeToastTranslationTextImguiSize = ImGui.GetWindowSize();
-      ImGui.PopStyleColor(1);
-      ImGui.End();
+        ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
+        this.classChangeToastTranslationTextImguiSize = ImGui.GetWindowSize();
+        ImGui.PopStyleColor(1);
+        ImGui.End();
 
-      if (this.configuration.SwapTextsUsingImGui == true)
-      {
-        UINewFontHandler.GeneralFontHandle.Pop();
-      }
-      else
-      {
-        UINewFontHandler.LanguageFontHandle.Pop();
-      }
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            UINewFontHandler.GeneralFontHandle.Pop();
+        }
+        else
+        {
+            UINewFontHandler.LanguageFontHandle.Pop();
+        }
     }
-  }
 }

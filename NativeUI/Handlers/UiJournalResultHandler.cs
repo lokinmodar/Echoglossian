@@ -3,99 +3,105 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-using Dalamud.Memory;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
-using Echoglossian.EFCoreSqlite.Models.Journal;
+namespace Echoglossian;
 
-using FFXIVClientStructs.FFXIV.Component.GUI;
-
-using Humanizer;
-
-namespace Echoglossian
+public partial class Echoglossian
 {
-  public partial class Echoglossian
-  {
     private unsafe void UiJournalResultHandler(AddonEvent type, AddonArgs args)
     {
-      if (!this.configuration.TranslateJournal)
-      {
-        return;
-      }
-
-      if (args is not AddonSetupArgs setupArgs)
-      {
-        return;
-      }
-
-      var setupAtkValues = (AtkValue*)setupArgs.AtkValues;
-      if (setupAtkValues == null)
-      {
-        return;
-      }
-
-      try
-      {
-        if (setupAtkValues[1].Type != FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String || setupAtkValues[1].String == null)
+        if (!this.configuration.TranslateJournal)
         {
-          return;
+            return;
         }
 
-        var questNameText = MemoryHelper.ReadSeStringAsString(out _, (nint)setupAtkValues[1].String.Value);
-        if (questNameText == string.Empty)
+        if (args is not AddonSetupArgs setupArgs)
         {
-          return;
+            return;
         }
 
-        QuestPlate questPlate = this.FormatQuestPlate(questNameText, string.Empty);
-        QuestPlate foundQuestPlate = this.FindQuestPlateByName(questPlate);
-        if (foundQuestPlate != null)
+        var setupAtkValues = (AtkValue*)setupArgs.AtkValues;
+        if (setupAtkValues == null)
         {
+            return;
+        }
+
+        try
+        {
+            if (setupAtkValues[1].Type != ValueType.String ||
+                setupAtkValues[1].String == null)
+            {
+                return;
+            }
+
+            var questNameText = MemoryHelper.ReadSeStringAsString(
+                out _,
+                (nint)setupAtkValues[1].String.Value);
+            if (questNameText == string.Empty)
+            {
+                return;
+            }
+
+            var questPlate = this.FormatQuestPlate(questNameText, string.Empty);
+            var foundQuestPlate = this.FindQuestPlateByName(questPlate);
+            if (foundQuestPlate != null)
+            {
 #if DEBUG
-          PluginLog.Debug($"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
+                PluginLog.Debug(
+                    $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
-          if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
-          {
-            foundQuestPlate.TranslatedQuestName = this.RemoveDiacritics(foundQuestPlate.TranslatedQuestName, this.SpecialCharsSupportedByGameFont);
-          }
+                if (this.configuration
+                    .RemoveDiacriticsWhenUsingReplacementQuest)
+                {
+                    foundQuestPlate.TranslatedQuestName = this.RemoveDiacritics(
+                        foundQuestPlate.TranslatedQuestName,
+                        this.SpecialCharsSupportedByGameFont);
+                }
 
-          setupAtkValues[1].SetManagedString(foundQuestPlate.TranslatedQuestName);
+                setupAtkValues[1]
+                    .SetManagedString(foundQuestPlate.TranslatedQuestName);
+            }
+            else
+            {
+                var translatedNameText = this.Translate(questNameText);
+#if DEBUG
+                PluginLog.Debug(
+                    $"Name translated: {questNameText} -> {translatedNameText}");
+#endif
+                QuestPlate translatedQuestPlate = new(
+                    questNameText,
+                    string.Empty,
+                    ClientStateInterface.ClientLanguage.Humanize(),
+                    translatedNameText,
+                    string.Empty,
+                    string.Empty,
+                    LangDict[LanguageInt].Code,
+                    this.configuration.ChosenTransEngine,
+                    DateTime.Now,
+                    DateTime.Now);
+
+                var result = this.InsertQuestPlate(translatedQuestPlate);
+#if DEBUG
+                PluginLog.Debug(
+                    $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+
+                if (this.configuration
+                    .RemoveDiacriticsWhenUsingReplacementQuest)
+                {
+                    translatedNameText = this.RemoveDiacritics(
+                        translatedNameText,
+                        this.SpecialCharsSupportedByGameFont);
+                }
+
+                setupAtkValues[1].SetManagedString(translatedNameText);
+            }
         }
-        else
+        catch (Exception e)
         {
-          var translatedNameText = this.Translate(questNameText);
-#if DEBUG
-          PluginLog.Debug($"Name translated: {questNameText} -> {translatedNameText}");
-#endif
-          QuestPlate translatedQuestPlate = new(
-            questNameText,
-            string.Empty,
-            ClientStateInterface.ClientLanguage.Humanize(),
-            translatedNameText,
-            string.Empty,
-            string.Empty,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            DateTime.Now,
-            DateTime.Now);
-
-          string result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-          PluginLog.Debug($"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
-#endif
-
-          if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
-          {
-            translatedNameText = this.RemoveDiacritics(translatedNameText, this.SpecialCharsSupportedByGameFont);
-          }
-
-          setupAtkValues[1].SetManagedString(translatedNameText);
+            PluginLog.Error(
+                "UiJournalResultHandler Exception: " + e.StackTrace);
         }
-      }
-      catch (Exception e)
-      {
-        PluginLog.Error("UiJournalResultHandler Exception: " + e.StackTrace);
-      }
     }
-  }
 }

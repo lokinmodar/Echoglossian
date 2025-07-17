@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.NativeUI.Handlers;
-
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
 /// <summary>
@@ -13,7 +11,7 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 ///     Lifecycle-safe: extracts and applies values within valid memory scope per
 ///     frame.
 /// </summary>
-public class CharacterWindowHandler : GenericAddonHandler
+public class CharacterWindowHandler : GenericAddonHandler<GameWindow>
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="CharacterWindowHandler" />

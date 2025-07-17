@@ -3,76 +3,84 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Net.Http.Headers;
+namespace Echoglossian.Translators;
 
-using Echoglossian.Properties;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-namespace Echoglossian.Translators
+public class GeminiTranslator : ITranslator
 {
-  public class GeminiTranslator : ITranslator
-  {
+    private readonly string apiKey;
     private readonly HttpClient? httpClient;
-    private readonly IPluginLog pluginLog;
-    private readonly string model;
-    private readonly float temperature = 0.1f;
-    private readonly Dictionary<string, string> translationCache = new Dictionary<string, string>();
-    private string apiKey;
-    private readonly int maxRetries = 3;
     private readonly TimeSpan initialBackoff = TimeSpan.FromSeconds(1);
+    private readonly int maxRetries = 3;
+    private readonly string model;
+    private readonly IPluginLog pluginLog;
+    private readonly float temperature = 0.1f;
+    private readonly Dictionary<string, string> translationCache = new();
 
     public GeminiTranslator(IPluginLog pluginLog, Config config)
     {
-      this.apiKey = config.GeminiTranslatorApiKey ?? string.Empty;
-      this.model = config.GeminiModel ?? "gemini-pro"; // Default model
-      this.temperature = config.GeminiTemperature;
-      this.pluginLog = pluginLog;
+        this.apiKey = config.GeminiTranslatorApiKey ?? string.Empty;
+        this.model = config.GeminiModel ?? "gemini-pro"; // Default model
+        this.temperature = config.GeminiTemperature;
+        this.pluginLog = pluginLog;
 
-      if (string.IsNullOrWhiteSpace(this.apiKey))
-      {
-        this.pluginLog.Warning(Resources.APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable);
-        this.httpClient = null;
-      }
-      else
-      {
-        try
+        if (string.IsNullOrWhiteSpace(this.apiKey))
         {
-          pluginLog.Debug($"GeminiTranslator: {this.model}, {this.apiKey[..20]}***{this.apiKey[^5..]}, {this.temperature}");
+            this.pluginLog.Warning(
+                Resources
+                    .APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable);
+            this.httpClient = null;
+        }
+        else
+        {
+            try
+            {
+                pluginLog.Debug(
+                    $"GeminiTranslator: {this.model}, {this.apiKey[..20]}***{this.apiKey[^5..]}, {this.temperature}");
 
-          this.httpClient = new HttpClient();
-          this.httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                this.httpClient = new HttpClient();
+                this.httpClient.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json"));
+            }
+            catch (Exception ex)
+            {
+                this.pluginLog.Error(
+                    $"Failed to initialize Gemini HTTP client: {ex.Message}");
+                this.httpClient = null;
+            }
         }
-        catch (Exception ex)
-        {
-          this.pluginLog.Error($"Failed to initialize Gemini HTTP client: {ex.Message}");
-          this.httpClient = null;
-        }
-      }
     }
 
-    public string Translate(string text, string sourceLanguage, string targetLanguage)
+    public string Translate(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      return this.TranslateAsync(text, sourceLanguage, targetLanguage).GetAwaiter().GetResult() ?? string.Empty;
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage)
+            .GetAwaiter().GetResult() ?? string.Empty;
     }
 
-    public async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      if (this.httpClient == null)
-      {
-        return Resources.GeminiTranslationUnavailablePleaseCheckYourAPIKey;
-      }
+        if (this.httpClient == null)
+        {
+            return Resources.GeminiTranslationUnavailablePleaseCheckYourAPIKey;
+        }
 
-      string cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
-      if (this.translationCache.TryGetValue(cacheKey, out string? cachedTranslation))
-      {
-        return cachedTranslation;
-      }
+        var cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
+        if (this.translationCache.TryGetValue(
+                cacheKey,
+                out var cachedTranslation))
+        {
+            return cachedTranslation;
+        }
 
-      string fixedInputText = Echoglossian.FixText(text);
+        var fixedInputText = FixText(text);
 
-      string prompt = @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
+        var prompt =
+            @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
 1. Preserve the original tone, humor, personality, and emotional nuances of the dialogue, considering the unique style and atmosphere of Final Fantasy XIV.
 2. Adapt idioms, cultural references, and wordplay to resonate naturally with native {targetLanguage} speakers while maintaining the fantasy RPG context.
@@ -89,99 +97,111 @@ Text to translate: ""{fixedInputText}""
 
 Please provide only the translated text in your response, without any explanations, additional comments, or quotation marks. Your goal is to create a localized version that captures the essence of the original Final Fantasy XIV dialogue while feeling authentic to {targetLanguage} speakers and seamlessly fitting into the game world.";
 
-      for (int retry = 0; retry <= this.maxRetries; retry++)
-      {
-        try
+        for (var retry = 0; retry <= this.maxRetries; retry++)
         {
-          var requestData = new
-          {
-            contents = new[]
-              {
-                            new
+            try
+            {
+                var requestData = new
+                {
+                    contents = new[]
+                    {
+                        new
+                        {
+                            parts = new[]
                             {
-                                parts = new[]
+                                new
                                 {
-                                    new
-                                    {
-                                        text = prompt,
-                                    },
-                                },
-                            },
-              },
-            generationConfig = new
-            {
-              this.temperature,
-            },
-          };
+                                    text = prompt
+                                }
+                            }
+                        }
+                    },
+                    generationConfig = new
+                    {
+                        this.temperature
+                    }
+                };
 
-          var jsonContent = JsonConvert.SerializeObject(requestData);
-          var httpContent = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var httpContent = new StringContent(
+                    jsonContent,
+                    Encoding.UTF8,
+                    "application/json");
 
-          string baseUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{this.model}:generateContent?key={this.apiKey}";
+                var baseUrl =
+                    $"https://generativelanguage.googleapis.com/v1beta/models/{this.model}:generateContent?key={this.apiKey}";
 
-          var response = await this.httpClient.PostAsync(baseUrl, httpContent);
+                var response =
+                    await this.httpClient.PostAsync(baseUrl, httpContent);
 
-          if (!response.IsSuccessStatusCode)
-          {
-            if (retry < this.maxRetries)
-            {
-              var backoff = this.initialBackoff * Math.Pow(2, retry);
-              this.pluginLog.Warning($"Gemini API request failed with status code {response.StatusCode}. Retrying in {backoff.TotalSeconds} seconds...");
-              await Task.Delay(backoff);
-              continue; // Retry
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (retry < this.maxRetries)
+                    {
+                        var backoff = this.initialBackoff * Math.Pow(2, retry);
+                        this.pluginLog.Warning(
+                            $"Gemini API request failed with status code {response.StatusCode}. Retrying in {backoff.TotalSeconds} seconds...");
+                        await Task.Delay(backoff);
+                        continue; // Retry
+                    }
+
+                    this.pluginLog.Error(
+                        $"Gemini API request failed after {this.maxRetries} retries with status code {response.StatusCode}.");
+                    return
+                        $"[{Resources.TranslationError} Gemini API request failed with status code {response.StatusCode}]";
+                }
+
+                var responseString = await response.Content.ReadAsStringAsync();
+                var responseObject = JObject.Parse(responseString);
+
+                var translatedText =
+                    responseObject["candidates"]?[0]?["content"]?["parts"]?[0]?
+                        ["text"]?.ToString().Trim();
+
+                if (!string.IsNullOrEmpty(translatedText))
+                {
+                    translatedText = FixText(translatedText.Trim('"'));
+                    this.translationCache[cacheKey] = translatedText;
+                    return translatedText;
+                }
+
+                this.pluginLog.Error(
+                    "Gemini API returned an empty translated text.");
+                return
+                    $"[{Resources.TranslationError} Gemini API returned an empty translated text.]";
             }
-            else
+            catch (HttpRequestException httpEx)
             {
-              this.pluginLog.Error($"Gemini API request failed after {this.maxRetries} retries with status code {response.StatusCode}.");
-              return $"[{Resources.TranslationError} Gemini API request failed with status code {response.StatusCode}]";
+                if (retry < this.maxRetries)
+                {
+                    var backoff = this.initialBackoff * Math.Pow(2, retry);
+                    this.pluginLog.Warning(
+                        $"HTTP Error: {httpEx.Message}. Retrying in {backoff.TotalSeconds} seconds...");
+                    await Task.Delay(backoff);
+                }
+                else
+                {
+                    this.pluginLog.Error(
+                        $"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
+                    return
+                        $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
+                }
             }
-          }
-
-          var responseString = await response.Content.ReadAsStringAsync();
-          var responseObject = JObject.Parse(responseString);
-
-          var translatedText = responseObject["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString().Trim();
-
-          if (!string.IsNullOrEmpty(translatedText))
-          {
-            translatedText = Echoglossian.FixText(translatedText.Trim('"'));
-            this.translationCache[cacheKey] = translatedText;
-            return translatedText;
-          }
-          else
-          {
-            this.pluginLog.Error($"Gemini API returned an empty translated text.");
-            return $"[{Resources.TranslationError} Gemini API returned an empty translated text.]";
-          }
+            catch (JsonException jsonEx)
+            {
+                this.pluginLog.Error(
+                    $"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
+                return
+                    $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
+            }
+            catch (Exception ex)
+            {
+                this.pluginLog.Error(
+                    $"{Resources.TranslationError} {ex.Message}");
+                return $"[{Resources.TranslationError} {ex.Message}]";
+            }
         }
-        catch (HttpRequestException httpEx)
-        {
-          if (retry < this.maxRetries)
-          {
-            var backoff = this.initialBackoff * Math.Pow(2, retry);
-            this.pluginLog.Warning($"HTTP Error: {httpEx.Message}. Retrying in {backoff.TotalSeconds} seconds...");
-            await Task.Delay(backoff);
-            continue;
-          }
-          else
-          {
-            this.pluginLog.Error($"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
-            return $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
-          }
-        }
-        catch (JsonException jsonEx)
-        {
-          this.pluginLog.Error($"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
-          return $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
-        }
-        catch (Exception ex)
-        {
-          this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
-          return $"[{Resources.TranslationError} {ex.Message}]";
-        }
-      }
 
-      return string.Empty;
+        return string.Empty;
     }
-  }
 }

@@ -6,28 +6,41 @@
 using Echoglossian.PluginUI.Components;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
+
 public static class YandexCloudEngineUI
 {
-  public static bool Draw(Config config, PromptTemplateManager promptManager)
-  {
-    bool changed = false;
-
-    ImGui.TextWrapped(Resources.SettingsForYandexCloudText);
-
-    bool isFolderIdInvalid;
-    changed |= FieldValidationHelper.ValidatedInputText(Resources.YandexCloudFolderId, ref config.YandexFolderId, 200, out isFolderIdInvalid);
-
-    bool isApiKeyInvalid;
-    changed |= FieldValidationHelper.ValidatedInputText(Resources.YandexCloudApiKey, ref config.YandexPaidApiKey, 300, out isApiKeyInvalid);
-
-    PromptEditorUI.Draw(promptManager, PromptType.YandexCloud, PromptTemplateManager.DefaultPrompt, TransEngines.YandexCloud.ToString());
-
-    if (changed)
+    public static bool Draw(Config config, PromptTemplateManager promptManager)
     {
-      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-      SaveConfig(config);
-    }
+        var changed = false;
 
-    return changed;
-  }
+        ImGui.TextWrapped(Resources.SettingsForYandexCloudText);
+
+        bool isFolderIdInvalid;
+        changed |= FieldValidationHelper.ValidatedInputText(
+            Resources.YandexCloudFolderId,
+            ref config.YandexFolderId,
+            200,
+            out isFolderIdInvalid);
+
+        bool isApiKeyInvalid;
+        changed |= FieldValidationHelper.ValidatedInputText(
+            Resources.YandexCloudApiKey,
+            ref config.YandexPaidApiKey,
+            300,
+            out isApiKeyInvalid);
+
+        PromptEditorUI.Draw(
+            promptManager,
+            Echoglossian.PromptType.YandexCloud,
+            PromptTemplateManager.DefaultPrompt,
+            Echoglossian.TransEngines.YandexCloud.ToString());
+
+        if (changed)
+        {
+            FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+            Echoglossian.SaveConfig(config);
+        }
+
+        return changed;
+    }
 }

@@ -3,34 +3,32 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Lumina.Excel;
-
 using Lumina.Excel.Sheets;
 
-namespace Echoglossian
+namespace Echoglossian;
+
+public partial class Echoglossian
 {
-  public partial class Echoglossian
-  {
     public HashSet<string> UiElementsLabels = new();
 
     /// <summary>
-    /// Parses the UI elements from the Addon sheet in the game data.
+    ///     Parses the UI elements from the Addon sheet in the game data.
     /// </summary>
     public void ParseUi()
     {
-      ExcelSheet<Addon> uiStuffz = DManager.GetExcelSheet<Addon>(ClientStateInterface.ClientLanguage);
+        var uiStuffz =
+            DManager.GetExcelSheet<Addon>(ClientStateInterface.ClientLanguage);
 
-      var addonList = uiStuffz?.ToList();
+        var addonList = uiStuffz?.ToList();
 
-      PluginLog.Debug($"Addon list: {uiStuffz?.Count.ToString()}");
-      if (uiStuffz != null)
-      {
-        foreach (var a in uiStuffz)
+        PluginLog.Debug($"Addon list: {uiStuffz?.Count.ToString()}");
+        if (uiStuffz != null)
         {
-          this.UiElementsLabels.Add(a.Text.ToString());
-          PluginLog.Debug($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+            foreach (var a in uiStuffz)
+            {
+                this.UiElementsLabels.Add(a.Text.ToString());
+                PluginLog.Debug($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+            }
         }
-      }
     }
-  }
 }

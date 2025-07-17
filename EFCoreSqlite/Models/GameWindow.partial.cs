@@ -11,6 +11,14 @@ namespace Echoglossian.EFCoreSqlite.Models;
 /// </summary>
 public partial class GameWindow : IGenericEntity
 {
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="GameWindow" /> class for use
+    ///     with the <see cref="GenericAddonHandler" />.
+    /// </summary>
+    public GameWindow()
+    {
+    }
+
     /// <inheritdoc />
     public string GetOriginalText()
     {

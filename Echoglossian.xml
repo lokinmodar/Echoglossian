@@ -4,150 +4,32 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
-        <member name="F:Echoglossian.Config.DefaultPluginCulture">
-            <summary>The default culture to use for plugin translations (e.g., "en", "ja").</summary>
+        <member name="F:Echoglossian.Config.AiTranslatorPrompt">
+            <summary>Generic prompt used by all AI translators when applicable.</summary>
         </member>
-        <member name="F:Echoglossian.Config.PluginCultureInt">
-            <summary>Selected plugin culture index, for internal mapping.</summary>
+        <member name="F:Echoglossian.Config.AmazonPrompt">
+            <summary>Prompt passed to Amazon Translate (if used).</summary>
         </member>
-        <member name="F:Echoglossian.Config.Translate">
-            <summary>Enables translation processing globally.</summary>
+        <member name="F:Echoglossian.Config.AwsAccessKey">
+            <summary>AWS access key for Translate usage.</summary>
         </member>
-        <member name="F:Echoglossian.Config.UnsupportedLanguage">
-            <summary>Indicates whether the selected language is unsupported.</summary>
+        <member name="F:Echoglossian.Config.AwsRegion">
+            <summary>AWS region for Translate API.</summary>
         </member>
-        <member name="F:Echoglossian.Config.OverlayOnlyLanguage">
-            <summary>Disables translation but still displays overlays (e.g., when language is visual only).</summary>
+        <member name="F:Echoglossian.Config.AwsSecretKey">
+            <summary>AWS secret key for Translate usage.</summary>
         </member>
-        <member name="F:Echoglossian.Config.PluginAssetsDownloaded">
-            <summary>Whether plugin assets have been successfully downloaded.</summary>
+        <member name="F:Echoglossian.Config.AwsTranslateModel">
+            <summary>Model name for Amazon Translate.</summary>
         </member>
-        <member name="F:Echoglossian.Config.Lang">
-            <summary>Game language as internal integer (e.g., 28 for English).</summary>
-        </member>
-        <member name="F:Echoglossian.Config.FontSize">
-            <summary>Font size used in overlays.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.ShowInCutscenes">
-            <summary>Show overlays and translations during cutscenes.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateBattleTalk">
-            <summary>Translate BattleTalk messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateTalk">
-            <summary>Translate Talk window messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateTalkSubtitle">
-            <summary>Translate Talk Subtitle messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateToast">
-            <summary>Translate toast popup messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateNpcNames">
-            <summary>Translate NPC names in Talk window.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateErrorToast">
-            <summary>Translate error toasts.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateQuestToast">
-            <summary>Translate quest-related toasts.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateAreaToast">
-            <summary>Translate area name toasts.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateClassChangeToast">
-            <summary>Translate class/job change toasts.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateWideTextToast">
-            <summary>Translate wide-format toast messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateYesNoScreen">
-            <summary>Translate Yes/No selection dialogs.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateCutSceneSelectString">
-            <summary>Translate cutscene-based SelectString dialog options.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateSelectString">
-            <summary>Translate regular SelectString dialogs.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateSelectOk">
-            <summary>Translate confirmation dialog messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateToDoList">
-            <summary>Translate To-Do List entries.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateScenarioTree">
-            <summary>Translate entries in the scenario tree (progress graph).</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateTooltips">
-            <summary>Translate UI tooltips.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateJournal">
-            <summary>Translate entries in the quest journal.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateCharacterWindow">
-            <summary>
-            Translate character window text.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseImGuiForTalk">
-            <summary>Use ImGui to render Talk overlay instead of modifying game UI.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseImGuiForBattleTalk">
-            <summary>Use ImGui for BattleTalk overlay.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseImGuiForToasts">
-            <summary>Use ImGui for toast messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseImGuiForTalkSubtitle">
-            <summary>Use ImGui for Talk Subtitle overlays.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.SwapTextsUsingImGui">
-            <summary>Render translations via ImGui rather than replacing game text directly.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.ChosenTransEngine">
-            <summary>Selected translation engine ID (index-based).</summary>
-        </member>
-        <member name="F:Echoglossian.Config.TranslateAlreadyTranslatedTexts">
-            <summary>Allow re-translating content even if it was previously translated and cached.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.ImGuiWindowPosCorrection">
-            <summary>Position correction for ImGui overlay windows.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.ImGuiTalkWindowWidthMult">
-            <summary>Width multiplier for Talk ImGui overlay window.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.CopyTranslationToClipboard">
-            <summary>Copy translated text to clipboard automatically.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.RemoveDiacriticsWhenUsingReplacementQuest">
-            <summary>Remove diacritics when translating quest-related text.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.RemoveDiacriticsWhenUsingReplacementTalkBTalk">
-            <summary>Remove diacritics when translating Talk/BattleTalk messages.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.DeeplTranslatorApiKey">
-            <summary>API key for DeepL translator.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.DeeplTranslatorUsingApiKey">
-            <summary>Enable use of DeepL API key authentication.</summary>
+        <member name="F:Echoglossian.Config.BattleTalkFontScale">
+            <summary>Scaling factor for BattleTalk font.</summary>
         </member>
         <member name="F:Echoglossian.Config.ChatGptApiKey">
             <summary>API key for OpenAI's ChatGPT service.</summary>
         </member>
         <member name="F:Echoglossian.Config.ChatGPTBaseUrl">
             <summary>Base URL for ChatGPT API.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.OpenAILlmModel">
-            <summary>OpenAI LLM model for ChatGPT use.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseLiveOpenAIModelList">
-            <summary>
-            Use live model list from OpenAI instead of static list.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Config.ChatGptTemperature">
-            <summary>Temperature setting for ChatGPT responses.</summary>
         </member>
         <member name="F:Echoglossian.Config.ChatGptEngine">
             <summary>Engine identifier for OpenAI API.</summary>
@@ -158,190 +40,99 @@
         <member name="F:Echoglossian.Config.ChatGptPrompt">
             <summary>Prompt template used for ChatGPT translations.</summary>
         </member>
-        <member name="F:Echoglossian.Config.AiTranslatorPrompt">
-            <summary>Generic prompt used by all AI translators when applicable.</summary>
+        <member name="F:Echoglossian.Config.ChatGptTemperature">
+            <summary>Temperature setting for ChatGPT responses.</summary>
         </member>
-        <member name="F:Echoglossian.Config.TalkFontScale">
-            <summary>Scaling factor for Talk font.</summary>
+        <member name="F:Echoglossian.Config.ChosenTransEngine">
+            <summary>Selected translation engine ID (index-based).</summary>
         </member>
-        <member name="F:Echoglossian.Config.BattleTalkFontScale">
-            <summary>Scaling factor for BattleTalk font.</summary>
+        <member name="F:Echoglossian.Config.CopyTranslationToClipboard">
+            <summary>Copy translated text to clipboard automatically.</summary>
         </member>
-        <member name="F:Echoglossian.Config.ToastFontScale">
-            <summary>Font scale used for Toast overlay.</summary>
+        <member name="F:Echoglossian.Config.DeeplTranslatorApiKey">
+            <summary>API key for DeepL translator.</summary>
         </member>
-        <member name="F:Echoglossian.Config.TalkSubtitleFontScale">
-            <summary>Font scale used for Talk Subtitle overlay.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.GoogleTranslateVersion">
-            <summary>Selected version of Google Translate API (1 or 2).</summary>
-        </member>
-        <member name="F:Echoglossian.Config.PluginVersion">
-            <summary>Current plugin version.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.YandexFreeApiKey">
-            <summary>Free Yandex API key for translation.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UsePaidYandexApi">
-            <summary>Use paid Yandex Cloud API instead of free version.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseYandexV2ForFreeApi">
-            <summary>Use Yandex Cloud V2 API format for free API usage.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.YandexFolderId">
-            <summary>Folder ID for Yandex Cloud translation.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.YandexPaidApiKey">
-            <summary>Paid API key for Yandex Cloud translation service.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.YandexCharactersTranslated">
-            <summary>Total characters translated using Yandex (for stats/tracking).</summary>
-        </member>
-        <member name="F:Echoglossian.Config.YandexCloudPrompt">
-            <summary>Prompt for Yandex Cloud translator (used in experimental flows).</summary>
+        <member name="F:Echoglossian.Config.DeeplTranslatorUsingApiKey">
+            <summary>Enable use of DeepL API key authentication.</summary>
         </member>
         <member name="F:Echoglossian.Config.DeepSeekBaseUrl">
             <summary>Base URL for DeepSeek API usage.</summary>
         </member>
-        <member name="F:Echoglossian.Config.DeepSeekTranslatorApiKey">
-            <summary>API key for DeepSeek translation engine.</summary>
-        </member>
         <member name="F:Echoglossian.Config.DeepSeekModel">
             <summary>Model used with DeepSeek translator API.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseLiveDeepSeekModelList">
-            <summary>Temperature setting for DeepSeek responses.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.DeepSeekTemperature">
-            <summary>Temperature used for DeepSeek responses.</summary>
         </member>
         <member name="F:Echoglossian.Config.DeepSeekPrompt">
             <summary>Prompt passed to DeepSeek for contextual translation.</summary>
         </member>
-        <member name="F:Echoglossian.Config.AwsRegion">
-            <summary>AWS region for Translate API.</summary>
+        <member name="F:Echoglossian.Config.DeepSeekTemperature">
+            <summary>Temperature used for DeepSeek responses.</summary>
         </member>
-        <member name="F:Echoglossian.Config.AwsAccessKey">
-            <summary>AWS access key for Translate usage.</summary>
+        <member name="F:Echoglossian.Config.DeepSeekTranslatorApiKey">
+            <summary>API key for DeepSeek translation engine.</summary>
         </member>
-        <member name="F:Echoglossian.Config.AwsSecretKey">
-            <summary>AWS secret key for Translate usage.</summary>
+        <member name="F:Echoglossian.Config.DefaultPluginCulture">
+            <summary>The default culture to use for plugin translations (e.g., "en", "ja").</summary>
         </member>
-        <member name="F:Echoglossian.Config.AwsTranslateModel">
-            <summary>Model name for Amazon Translate.</summary>
+        <member name="F:Echoglossian.Config.FontChangeTime">
+            <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
         </member>
-        <member name="F:Echoglossian.Config.AmazonPrompt">
-            <summary>Prompt passed to Amazon Translate (if used).</summary>
+        <member name="F:Echoglossian.Config.FontSize">
+            <summary>Font size used in overlays.</summary>
         </member>
-        <member name="F:Echoglossian.Config.GeminiTranslatorApiKey">
-            <summary>API key for Gemini translator.</summary>
+        <member name="F:Echoglossian.Config.ForceShowTitle">
+            <summary>Always show overlay title bar, even if name translation is off.</summary>
         </member>
         <member name="F:Echoglossian.Config.GeminiModel">
             <summary>Gemini model ID used for translations.</summary>
         </member>
         <member name="F:Echoglossian.Config.GeminiModelId">
             <summary>
-            Model identifier for Gemini translations.
+                Model identifier for Gemini translations.
             </summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseLiveGeminiModelList">
-            <summary>
-            Use live Gemini model list instead of static defaults.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Config.GeminiTemperature">
-            <summary>Temperature value used in Gemini translations.</summary>
         </member>
         <member name="F:Echoglossian.Config.GeminiPrompt">
             <summary>Prompt passed to Gemini for translation context.</summary>
         </member>
-        <member name="F:Echoglossian.Config.MicrosoftTranslatorApiKey">
-            <summary>API key for Microsoft Translator service.</summary>
+        <member name="F:Echoglossian.Config.GeminiTemperature">
+            <summary>Temperature value used in Gemini translations.</summary>
         </member>
-        <member name="F:Echoglossian.Config.MicrosoftTranslatorRegion">
-            <summary>Region code for Microsoft Translator API.</summary>
+        <member name="F:Echoglossian.Config.GeminiTranslatorApiKey">
+            <summary>API key for Gemini translator.</summary>
         </member>
-        <member name="F:Echoglossian.Config.MicrosoftTranslatorEndpoint">
-            <summary>Endpoint URL for Microsoft Translator API.</summary>
+        <member name="F:Echoglossian.Config.GoogleTranslateVersion">
+            <summary>Selected version of Google Translate API (1 or 2).</summary>
         </member>
-        <member name="F:Echoglossian.Config.MicrosoftTranslatorModel">
-            <summary>Translation model used for Microsoft Translator API.</summary>
+        <member name="F:Echoglossian.Config.ImGuiTalkWindowWidthMult">
+            <summary>Width multiplier for Talk ImGui overlay window.</summary>
         </member>
-        <member name="F:Echoglossian.Config.MicrosoftTranslatorPrompt">
-            <summary>Prompt passed to Microsoft Translator (if supported).</summary>
+        <member name="F:Echoglossian.Config.ImGuiWindowPosCorrection">
+            <summary>Position correction for ImGui overlay windows.</summary>
         </member>
-        <member name="F:Echoglossian.Config.OpenRouterModel">
-            <summary>Model identifier for OpenRouter translator.</summary>
+        <member name="F:Echoglossian.Config.Lang">
+            <summary>Game language as internal integer (e.g., 28 for English).</summary>
         </member>
-        <member name="F:Echoglossian.Config.OpenRouterTemperature">
-            <summary>Temperature value for OpenRouter translation generation.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.OpenRouterApiKey">
-            <summary>API key for OpenRouter.ai service.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.OpenRouterBaseUrl">
-            <summary>Base URL for OpenRouter API calls.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.OpenRouterPrompt">
-            <summary>Prompt passed to OpenRouter translator.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseLiveOpenRouterModelList">
+        <member name="F:Echoglossian.Config.LibreTranslateApiKey">
             <summary>
-            Use live model list from OpenRouter instead of static defaults.
+                API key for LibreTranslate service.
             </summary>
         </member>
         <member name="F:Echoglossian.Config.LibreTranslateInstanceType">
             <summary>
-            Type of LibreTranslate instance to use for translations.
+                Type of LibreTranslate instance to use for translations.
             </summary>
         </member>
         <member name="F:Echoglossian.Config.LibreTranslateUrl">
             <summary>LibreTranslate URL.</summary>
         </member>
-        <member name="F:Echoglossian.Config.LibreTranslateApiKey">
+        <member name="F:Echoglossian.Config.LmStudioApiKey">
             <summary>
-            API key for LibreTranslate service.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Config.OllamaUrl">
-            <summary>Ollama URL.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.OllamaModel">
-            <summary>Ollama model to use for translations.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.OllamaTemperature">
-            <summary>Ollama temperature setting for translations.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.OllamaPrompt">
-            <summary>Prompt used for Ollama translations.</summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseLiveOllamaModelList">
-            <summary>
-            Use live model list from Ollama instead of static defaults.
+                API key for LM Studio API access.
             </summary>
         </member>
         <member name="F:Echoglossian.Config.LmStudioBaseUrl">
             <summary>
-            Base URL for LM Studio API (local or remote instance).
+                Base URL for LM Studio API (local or remote instance).
             </summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseLmStudioAuth">
-            <summary>
-            API key for LM Studio authentication (if required).
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Config.LmStudioApiKey">
-            <summary>
-            API key for LM Studio API access.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Config.UseLiveLmStudioModelList">
-            <summary>
-            Selected LM Studio model for translations.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Config.ForceShowTitle">
-            <summary>Always show overlay title bar, even if name translation is off.</summary>
         </member>
         <member name="F:Echoglossian.Config.LmStudioModel">
             <summary>Selected LM Studio model for translations.</summary>
@@ -352,34 +143,291 @@
         <member name="F:Echoglossian.Config.LmStudioTemperature">
             <summary>Temperature setting for LM Studio translations.</summary>
         </member>
-        <member name="F:Echoglossian.Config.FontChangeTime">
-             <summary>Timestamp of the last font change (for internal overlay reset timing).</summary>
-            
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorApiKey">
+            <summary>API key for Microsoft Translator service.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorEndpoint">
+            <summary>Endpoint URL for Microsoft Translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorModel">
+            <summary>Translation model used for Microsoft Translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorPrompt">
+            <summary>Prompt passed to Microsoft Translator (if supported).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MicrosoftTranslatorRegion">
+            <summary>Region code for Microsoft Translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OllamaModel">
+            <summary>Ollama model to use for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OllamaPrompt">
+            <summary>Prompt used for Ollama translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OllamaTemperature">
+            <summary>Ollama temperature setting for translations.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OllamaUrl">
+            <summary>Ollama URL.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenAILlmModel">
+            <summary>OpenAI LLM model for ChatGPT use.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterApiKey">
+            <summary>API key for OpenRouter.ai service.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterBaseUrl">
+            <summary>Base URL for OpenRouter API calls.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterModel">
+            <summary>Model identifier for OpenRouter translator.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterPrompt">
+            <summary>Prompt passed to OpenRouter translator.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OpenRouterTemperature">
+            <summary>Temperature value for OpenRouter translation generation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayOnlyLanguage">
+            <summary>
+                Disables translation but still displays overlays (e.g., when language
+                is visual only).
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.PluginAssetsDownloaded">
+            <summary>Whether plugin assets have been successfully downloaded.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.PluginCultureInt">
+            <summary>Selected plugin culture index, for internal mapping.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.PluginVersion">
+            <summary>Current plugin version.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.RemoveDiacriticsWhenUsingReplacementQuest">
+            <summary>Remove diacritics when translating quest-related text.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.RemoveDiacriticsWhenUsingReplacementTalkBTalk">
+            <summary>Remove diacritics when translating Talk/BattleTalk messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ShowInCutscenes">
+            <summary>Show overlays and translations during cutscenes.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.SwapTextsUsingImGui">
+            <summary>
+                Render translations via ImGui rather than replacing game text
+                directly.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.TalkFontScale">
+            <summary>Scaling factor for Talk font.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TalkSubtitleFontScale">
+            <summary>Font scale used for Talk Subtitle overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ToastFontScale">
+            <summary>Font scale used for Toast overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.Translate">
+            <summary>Enables translation processing globally.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateAlreadyTranslatedTexts">
+            <summary>
+                Allow re-translating content even if it was previously translated and
+                cached.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateAreaToast">
+            <summary>Translate area name toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateBattleTalk">
+            <summary>Translate BattleTalk messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateCharacterWindow">
+            <summary> Translate character window text.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateClassChangeToast">
+            <summary>Translate class/job change toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateCutSceneSelectString">
+            <summary>Translate cutscene-based SelectString dialog options.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateErrorToast">
+            <summary>Translate error toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateJournal">
+            <summary>Translate entries in the quest journal.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateNpcNames">
+            <summary>Translate NPC names in Talk window.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateQuestToast">
+            <summary>Translate quest-related toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateScenarioTree">
+            <summary>Translate entries in the scenario tree (progress graph).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateSelectOk">
+            <summary>Translate confirmation dialog messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateSelectString">
+            <summary>Translate regular SelectString dialogs.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateTalk">
+            <summary>Translate Talk window messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateTalkSubtitle">
+            <summary>Translate Talk Subtitle messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateToast">
+            <summary>Translate toast popup messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateToDoList">
+            <summary>Translate To-Do List entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateTooltips">
+            <summary>Translate UI tooltips.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateWideTextToast">
+            <summary>Translate wide-format toast messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateYesNoScreen">
+            <summary>Translate Yes/No selection dialogs.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UnsupportedLanguage">
+            <summary>Indicates whether the selected language is unsupported.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForBattleTalk">
+            <summary>Use ImGui for BattleTalk overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForTalk">
+            <summary>Use ImGui to render Talk overlay instead of modifying game UI.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForTalkSubtitle">
+            <summary>Use ImGui for Talk Subtitle overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForToasts">
+            <summary>Use ImGui for toast messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveDeepSeekModelList">
+            <summary>Temperature setting for DeepSeek responses.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveGeminiModelList">
+            <summary>
+                Use live Gemini model list instead of static defaults.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveLmStudioModelList">
+            <summary>
+                Selected LM Studio model for translations.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveOllamaModelList">
+            <summary>
+                Use live model list from Ollama instead of static defaults.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveOpenAIModelList">
+            <summary>
+                Use live model list from OpenAI instead of static list.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveOpenRouterModelList">
+            <summary>
+                Use live model list from OpenRouter instead of static defaults.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLmStudioAuth">
+            <summary>
+                API key for LM Studio authentication (if required).
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UsePaidYandexApi">
+            <summary>Use paid Yandex Cloud API instead of free version.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseYandexV2ForFreeApi">
+            <summary>Use Yandex Cloud V2 API format for free API usage.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexCharactersTranslated">
+            <summary>Total characters translated using Yandex (for stats/tracking).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexCloudPrompt">
+            <summary>Prompt for Yandex Cloud translator (used in experimental flows).</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexFolderId">
+            <summary>Folder ID for Yandex Cloud translation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexFreeApiKey">
+            <summary>Free Yandex API key for translation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.YandexPaidApiKey">
+            <summary>Paid API key for Yandex Cloud translation service.</summary>
         </member>
         <member name="P:Echoglossian.Config.Version">
             <summary>Plugin configuration version number (used during migration).</summary>
         </member>
         <member name="T:Echoglossian.Echoglossian">
             <summary>
-            Represents the Echoglossian plugin, which provides translation services and UI enhancements for Dalamud-based applications. This class integrates various plugin services and manages translation operations for different UI components.
+                Represents the Echoglossian plugin, which provides translation services and
+                UI enhancements for Dalamud-based applications. This class integrates
+                various plugin services and manages translation operations for different UI
+                components.
             </summary>
-            <remarks>The Echoglossian class is responsible for initializing and managing the plugin's configuration, handling commands, and registering UI overlays and translation handlers. It utilizes several Dalamud services to interact with the game client and perform translations. Ensure that all required services are properly initialized before using this class.</remarks>
+            <remarks>
+                The Echoglossian class is responsible for initializing and managing
+                the plugin's configuration, handling commands, and registering UI overlays
+                and translation handlers. It uses several Dalamud services to interact
+                with the game client and perform translations. Ensure that all required
+                services are properly initialized before using this class.
+            </remarks>
+            <summary>
+                General utility methods for the Echoglossian plugin.
+            </summary>
+            <summary>
+                A utility class for handling character sets used in translations.
+            </summary>
+            <summary>
+                A class that contains a dictionary of language information.
+            </summary>
+            <summary>
+                Manages the registration and configuration of translation overlays.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateOrUseDb">
             <summary>
-             
+                Creates or uses the database, applying any pending migrations.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindAndReturnTalkMessage(Echoglossian.EFCoreSqlite.Models.TalkMessage)">
             <summary>
-            Finds and returns a TalkMessage from the database.
+                Finds and returns a TalkMessage from the database.
             </summary>
             <param name="talkMessage">TalkMessage to be found on the Database.</param>
-            <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage"/>.</returns>
+            <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnBattleTalkMessage(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage)">
+            <summary>
+                Finds and returns a BattleTalkMessage from the database.
+            </summary>
+            <param name="battleTalkMessage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Finds and returns a QuestPlate from the database.
+            </summary>
+            <param name="questPlate"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindQuestPlateByName(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+              Finds a QuestPlate by its name and translation language.
+            </summary>
+            <param name="questPlate"></param>
+            <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindEntity``1(System.Func{``0,System.Boolean})">
             <summary>
-            Finds an entity in the database matching the given filter.
+                Finds an entity in the database matching the given filter.
             </summary>
             <typeparam name="T">Type of entity.</typeparam>
             <param name="predicate">Predicate to match.</param>
@@ -387,48 +435,98 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertEntity``1(``0)">
             <summary>
-            Inserts an entity into the database.
+                Inserts an entity into the database.
             </summary>
             <typeparam name="T">Entity type.</typeparam>
             <param name="entity">Entity to insert.</param>
         </member>
-        <member name="F:Echoglossian.Echoglossian.registeredAddonHandlers">
+        <member name="M:Echoglossian.Echoglossian.FormatTalkMessage(System.String,System.String)">
             <summary>
-            List of registered addon handlers for the plugin.
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> for the database.
             </summary>
+            <param name="sender">Message sender name.</param>
+            <param name="text">Message text.</param>
+            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatBattleTalkMessage(System.String,System.String)">
+            <summary>
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> for the database.
+            </summary>
+            <param name="sender">Message sender name.</param>
+            <param name="text">Message text.</param>
+            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatGameWindow(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />.
+            </summary>
+            <param name="windowAddonName"></param>
+            <param name="originalWindowStrings"></param>
+            <param name="originalWindowStringsLang"></param>
+            <param name="translatedWindowStrings"></param>
+            <param name="translationLang"></param>
+            <param name="translationEngine"></param>
+            <returns>Returns a formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />.</returns>
         </member>
         <member name="F:Echoglossian.Echoglossian.TranslationService">
             <summary>
-            Provides access to the translation service for converting text between different languages.
+                Provides access to the translation service for converting text between
+                different languages.
             </summary>
-            <remarks>This static field holds an instance of the <see cref="F:Echoglossian.Echoglossian.TranslationService"/> class, which can be used to perform language translations. Ensure that the service is properly initialized before use.</remarks>
+            <remarks>
+                This static field holds an instance of the
+                <see cref="F:Echoglossian.Echoglossian.TranslationService" /> class, which can be used to perform
+                language translations. Ensure that the service is properly initialized
+                before use.
+            </remarks>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.registeredAddonHandlers">
+            <summary>
+                List of registered addon handlers for the plugin.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian" /> class.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.Echoglossian.Dispose(System.Boolean)">
+            <summary>
+                Disposes of the resources used by the Echoglossian plugin.
+            </summary>
+            <param name="disposing"></param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.BuildUi">
             <summary>
-            Builds the UI for the plugin.
+                Builds the UI for the plugin.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.PromptType">
+            <summary>
+                Enum for the different prompt types.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.TransEngines">
+            <summary>
+                Enum for the different translation engines.
             </summary>
         </member>
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
-            Regex used to help filtering out numeric-like strings.
+                Regex used to help filtering out numeric-like strings.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
             <summary>
-            Lists all available culture information and writes it to a file.
+                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
             <summary>
-            Moves the given path up by the specified number of levels.
+                Moves the given path up by the specified number of levels.
             </summary>
             <param name="path">Path.</param>
             <param name="noOfLevels"># of levels to move up.</param>
@@ -436,109 +534,100 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.ResetSettings(Echoglossian.Config,System.Action)">
             <summary>
-            Fully resets the plugin configuration to its default values,
-            including all fields and properties. Prompts are explicitly assigned
-            from <see cref="!:Echoglossian.PromptTemplateManager.DefaultPrompt" />. Metadata like
-            <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
+                Fully resets the plugin configuration to its default values,
+                including all fields and properties. Prompts are explicitly assigned
+                from <see cref="F:Echoglossian.PluginUI.Helpers.PromptTemplateManager.DefaultPrompt" />.
+                Metadata like
+                <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
             </summary>
             <param name="config">The config instance to reset.</param>
             <param name="saveCallback">A callback that saves the config.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.FixConfig">
             <summary>
-            Fixes the configuration file if it is missing or has an incorrect version.
+                Fixes the configuration file if it is missing or has an incorrect version.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.SaveConfig(Echoglossian.Config)">
             <summary>
-            Saves the current configuration to the plugin config file.
-            </summary>
-        </member>
-        <member name="T:Echoglossian.Echoglossian.TransEngines">
-            <summary>
-            Enum for the different translation engines.
-            </summary>
-        </member>
-        <member name="T:Echoglossian.Echoglossian.PromptType">
-            <summary>
-            Enum for the different prompt types.
+                Saves the current configuration to the plugin config file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.DrawText(System.String,System.Drawing.Font,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Size})">
             <summary>
-            Creates an image containing the given text.
-            NOTE: the image should be disposed after use.
+                Creates an image containing the given text.
+                NOTE: the image should be disposed after use.
             </summary>
             <param name="text">Text to draw.</param>
             <param name="fontOptional">Font to use, defaults to Control.DefaultFont.</param>
             <param name="textColorOptional">Text color, defaults to Black.</param>
             <param name="backColorOptional">Background color, defaults to white.</param>
-            <param name="minSizeOptional">Minimum image size, defaults the size required to display the text.</param>
+            <param name="minSizeOptional">
+                Minimum image size, defaults the size required to
+                display the text.
+            </param>
             <returns>The image containing the text, which should be disposed after use.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TranslationImageConverter(System.Drawing.Image)">
             <summary>
-            Converts Image to byte array.
+                Converts Image to byte array.
             </summary>
             <param name="image">Image to be converted.</param>
             <returns>Byte array to be used elsewhere.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.IsValidTimeFormat(System.String)">
             <summary>
-            Checks if the given time string is in a valid format (e.g., "123:45").
+                Checks if the given time string is in a valid format (e.g., "123:45").
             </summary>
             <param name="time">Time in string format.</param>
             <returns>Returns true if the input is valide time information.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CleanString(System.String)">
             <summary>
-            Cleans a string by removing line breaks, carriage returns, and double spaces.
+                Cleans a string by removing line breaks, carriage returns, and double
+                spaces.
             </summary>
             <param name="input">The string to be cleaned.</param>
             <returns>Cleaned string.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.RemoveDiacritics(System.String,System.Collections.Generic.HashSet{System.Char})">
             <summary>
-            Removes diacritics from a string based on a set of supported characters.
+                Removes diacritics from a string based on a set of supported characters.
             </summary>
             <param name="text">Text to be cleaned of diacritics.</param>
-            <param name="supportedChars">List of chars to be parsed into their plain Latin chars.</param>
+            <param name="supportedChars">
+                List of chars to be parsed into their plain Latin
+                chars.
+            </param>
             <returns>Cleand text.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.GetGameVersion">
             <summary>
-            Gets the game version from the framework.
+                Gets the game version from the framework.
             </summary>
             <returns>Game version as a string.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ParseStringToDictionary(System.String)">
             <summary>
-            Parses a string into a dictionary.
+                Parses a string into a dictionary.
             </summary>
-            <param name="input">String in this format: "key1|value1|key2|value2|key3|value3|..."'.</param>
+            <param name="input">
+                String in this format:
+                "key1|value1|key2|value2|key3|value3|..."'.
+            </param>
             <returns>The string converted into a Dictionary.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.IsInInstance">
             <summary>
-            Checks if the player is in an instance.
+                Checks if the player is in an instance.
             </summary>
             <returns>The information of which instance the player is in.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.DisableTranslationAccordingToState">
             <summary>
-            Checks if the translation should be disabled based on the current state.
+                Checks if the translation should be disabled based on the current state.
             </summary>
             <returns>The player state true if the player is in PVP.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LanguageInfo.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.List{System.Int32})">
-            <summary>
-              Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian.LanguageInfo" /> class.
-            </summary>
-            <param name="code">Iso LanguageInfo Code.</param>
-            <param name="languageName">LanguageInfo name.</param>
-            <param name="fontName">Necessary font name.</param>
-            <param name="exclusiveCharsToAdd">List of all the needed chars to be added.</param>
-            <param name="supportedEngines">Supported translation engines.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.UpdateTalkOverlay(System.String,System.String,System.String)">
             <summary>
@@ -590,12 +679,12 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
-            Parses the UI elements from the Addon sheet in the game data.
+                Parses the UI elements from the Addon sheet in the game data.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.EchoglossianConfigUi">
             <summary>
-            Draws the Echoglossian configuration UI.
+                Draws the Echoglossian configuration UI.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
@@ -616,7 +705,8 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.RegisterOverlays">
             <summary>
-            Registers the overlays with their respective configurations using current plugin config values.
+                Registers the overlays with their respective configurations using current
+                plugin config values.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.StartOverlayTracking(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Func{System.Boolean},System.Func{System.Boolean})">
@@ -635,6 +725,31 @@
             <param name="overlay">Overlay to be drawn.</param>
             <param name="config">Overlay configurations.</param>
             <param name="customTitle">Custom overlay title.</param>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext">
+            <summary>
+                Represents the database context for Echoglossian translations.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Echoglossian.EFCoreSqlite.EchoglossianDbContext})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" />
+                class.
+            </summary>
+            <param name="options">Configuration options.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(System.String)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" />
+                class.
+            </summary>
+            <param name="configDir">Plugin config directory.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
+            <summary>
+                Configures the database context options.
+            </summary>
+            <param name="optionsBuilder"></param>
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Migrations.EchoglossianDBupd">
             <inheritdoc />
@@ -723,12 +838,24 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNullabilityToDBEntitiesColumns.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
+            <summary>
+                Represents a translation entity for action tooltips in the database.
+            </summary>
+            <summary>
+                Partial implementation of <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> to support generic
+                translation access via <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> class.
             </summary>
             <param name="originalActionTooltip">The original action tooltip text.</param>
-            <param name="originalActionTooltipLang">The language of the original action tooltip.</param>
+            <param name="originalActionTooltipLang">
+                The language of the original action
+                tooltip.
+            </param>
             <param name="translatedActionTooltip">The translated action tooltip text.</param>
             <param name="translationLang">The language of the translated action tooltip.</param>
             <param name="translationEngine">The translation engine used.</param>
@@ -736,13 +863,61 @@
             <param name="createdDate">The date the tooltip was created.</param>
             <param name="updatedDate">The date the tooltip was last updated.</param>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage">
+            <summary>
+                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> to be handled via
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity" />.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> class.
             </summary>
             <param name="senderName">The name of the sender.</param>
             <param name="originalBattleTalkMessage">The original battle talk message.</param>
-            <param name="originalBattleTalkMessageLang">The language of the original battle talk message.</param>
+            <param name="originalBattleTalkMessageLang">
+                The language of the original battle
+                talk message.
+            </param>
             <param name="originalSenderNameLang">The language of the original sender name.</param>
             <param name="translatedSenderName">The translated sender name.</param>
             <param name="translatedBattleTalkMessage">The translated battle talk message.</param>
@@ -751,18 +926,79 @@
             <param name="createdDate">The date the message was created.</param>
             <param name="updatedDate">The date the message was last updated.</param>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslatedSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslatedSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.GameWindow">
             <summary>
-            Provides <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity"/> implementation for the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> entity.
+                Represents a game window translation entity in the database.
+            </summary>
+            <summary>
+                Provides <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" /> implementation for the
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> entity.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> class.
             </summary>
             <param name="windowAddonName">The name of the window addon.</param>
             <param name="originalWindowStrings">The original window strings.</param>
-            <param name="originalWindowStringsLang">The language of the original window strings.</param>
+            <param name="originalWindowStringsLang">
+                The language of the original window
+                strings.
+            </param>
             <param name="translatedWindowStrings">The translated window strings.</param>
             <param name="translationLang">The language of the translation.</param>
             <param name="translationEngine">The translation engine used.</param>
@@ -770,7 +1006,28 @@
             <param name="createdDate">The date the record was created.</param>
             <param name="updatedDate">The date the record was last updated.</param>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.GameWindow.WindowAddonName">
+            <summary>
+                Gets or sets the name of the window addon or unique key that identifies
+                this entity context.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> class for use
+                with the <see cref="!:GenericAddonHandler" />.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetOriginalLang(System.String)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslatedText">
@@ -782,62 +1039,166 @@
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslationLang">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslationEngine">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetGameVersion">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetTranslationEngine(System.Int32)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetEntityKey">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity">
             <summary>
-            Represents a common contract for translation entities in the database.
+                Defines a contract for generic translatable entities stored in the
+                database.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetOriginalText">
             <summary>
-            Gets the original text (untranslated) used as the DB lookup key.
+                Gets the original (untranslated) string(s).
             </summary>
+            <returns>The original string to be translated.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetOriginalText(System.String)">
+            <summary>
+                Sets the original (untranslated) string(s).
+            </summary>
+            <param name="original">The original text string.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetOriginalLang">
+            <summary>
+                Gets the language code of the original text (e.g., "en", "ja").
+            </summary>
+            <returns>Returns originalLang for the text.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetOriginalLang(System.String)">
+            <summary>
+                Sets the language code of the original text.
+            </summary>
+            <param name="lang">Language of the original text</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetTranslatedText">
             <summary>
-            Gets the translated text stored in the DB.
+                Gets the translated string(s).
             </summary>
+            <returns>The translated string.</returns>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetTranslatedText(System.String)">
             <summary>
-            Sets the translated text to the entity.
+                Sets the translated string to persist in the database.
             </summary>
-            <param name="translated">The translated text to set.</param>
+            <param name="translated">The translated string.</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetTranslationLang">
             <summary>
-            Gets the translation language of the stored entry.
+                Gets the language code of the translation (e.g., "en", "ja").
             </summary>
+            <returns>The target language code.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetTranslationLang(System.String)">
+            <summary>
+                Sets the language code of the translation.
+            </summary>
+            <param name="lang">The language code (e.g., "en").</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetTranslationEngine">
             <summary>
-            Gets the engine ID used for translation.
+                Gets the engine ID used for the translation.
             </summary>
+            <returns>The translation engine identifier.</returns>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetGameVersion">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetTranslationEngine(System.Int32)">
             <summary>
-            Gets the current game version tied to this entry.
+                Sets the engine ID used for the translation.
             </summary>
+            <param name="engine">The translation engine ID.</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetEntityKey">
             <summary>
-            Gets the addon name or unique key that identifies this entity context.
+                Gets a key to identify this entity uniquely (e.g., addon name, toast type,
+                quest name).
+            </summary>
+            <returns>The entity's identifying key.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetEntityKey(System.String)">
+            <summary>
+                Sets a key to identify this entity uniquely.
+            </summary>
+            <param name="key">The identifying key (e.g., addon name).</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.GetGameVersion">
+            <summary>
+                Gets the game version (if applicable). May return null for entities where
+                the version is irrelevant.
+            </summary>
+            <returns>The game version string or null.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IGenericEntity.SetGameVersion(System.String)">
+            <summary>
+                Sets the game version associated with this entity.
+            </summary>
+            <param name="version">The game version string.</param>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity">
+            <summary>
+                Extends <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" /> to support entities with two original
+                and translated text fields.
+                Useful for structures like TalkMessage or BattleTalkMessage which include
+                both a sender and message.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity.GetOriginalSecondaryText">
+            <summary>
+                Gets the secondary original text (e.g., original message text).
+            </summary>
+            <returns>The secondary original text value.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity.SetOriginalSecondaryText(System.String)">
+            <summary>
+                Sets the original value of the secondary text field.
+            </summary>
+            <param name="secondaryText">The original secondary text value.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity.GetTranslatedSecondaryText">
+            <summary>
+                Gets the secondary translated text (e.g., translated message text).
+            </summary>
+            <returns>The secondary translated text value.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity.SetTranslatedSecondaryText(System.String)">
+            <summary>
+                Sets the translated value of the secondary text field.
+            </summary>
+            <param name="translated">The translated secondary text value.</param>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip">
+            <summary>
+                Partial implementation of <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> to support generic
+                translation access via <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> class.
             </summary>
             <param name="originalItemTooltip">The original item tooltip text.</param>
-            <param name="originalItemTooltipLang">The language of the original item tooltip.</param>
+            <param name="originalItemTooltipLang">
+                The language of the original item
+                tooltip.
+            </param>
             <param name="translatedItemTooltip">The translated item tooltip text.</param>
             <param name="translationLang">The language of the translated item tooltip.</param>
             <param name="translationEngine">The translation engine used.</param>
@@ -845,35 +1206,79 @@
             <param name="createdDate">The date the item tooltip was created.</param>
             <param name="updatedDate">The date the item tooltip was last updated.</param>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetEntityKey">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate">
             <summary>
-            Represents a quest plate in the database.
+                Represents a quest plate in the database.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" /> class.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.Objectives">
             <summary>
-            Lazily loads Objectives from text if needed.
+                Gets lazily loads Objectives from text if needed.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.Summaries">
             <summary>
-            Lazily loads Summaries from text if needed.
+                Gets lazily loads Summaries from text if needed.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.UpdateFieldsAsText(System.Boolean)">
             <summary>
-            Updates the ObjectivesAsText and SummariesAsText fields based on their dictionaries.
+                Updates the ObjectivesAsText and SummariesAsText fields based on their
+                dictionaries.
             </summary>
+            <param name="prettyPrint">Should it be pretty printed?.</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.UpdateFieldsFromText">
             <summary>
-            Forces loading the Objectives and Summaries from the stored text fields.
+                Forces loading the Objectives and Summaries from the stored text fields.
             </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.ToString">
+            <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateExtensions.Clone(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Boolean)">
             <summary>
@@ -885,11 +1290,14 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.LocationName.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.LocationName"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.LocationName" /> class.
             </summary>
             <param name="id">The identifier of the location name.</param>
             <param name="originalLocationName">The original name of the location.</param>
-            <param name="originalLocationNameLang">The language of the original location name.</param>
+            <param name="originalLocationNameLang">
+                The language of the original location
+                name.
+            </param>
             <param name="translatedLocationName">The translated name of the location.</param>
             <param name="translationLang">The language of the translated location name.</param>
             <param name="translationEngine">The translation engine used.</param>
@@ -898,7 +1306,7 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.NpcNames.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.NpcNames"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.NpcNames" /> class.
             </summary>
             <param name="id">The unique identifier for the NPC.</param>
             <param name="originalNpcName">The original name of the NPC.</param>
@@ -909,26 +1317,89 @@
             <param name="createdDate">The date the NPC name was created.</param>
             <param name="updatedDate">The date the NPC name was last updated.</param>
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.SelectString">
+            <summary>
+                Represents a select string in the database.
+            </summary>
+            <summary>
+                Partial implementation of <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> to support generic
+                translation access via <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> class.
             </summary>
             <param name="originalSelectString">The original select string.</param>
-            <param name="originalSelectStringLang">The language of the original select string.</param>
+            <param name="originalSelectStringLang">
+                The language of the original select
+                string.
+            </param>
             <param name="translatedSelectString">The translated select string.</param>
             <param name="translationLang">The language of the translated select string.</param>
             <param name="translationEngine">The translation engine used.</param>
             <param name="createdDate">The date the record was created.</param>
             <param name="updatedDate">The date the record was last updated.</param>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.TalkMessage">
+            <summary>
+                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> to be handled via
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity" />.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> class.
             </summary>
             <param name="senderName">The name of the sender.</param>
             <param name="originalTalkMessage">The original talk message.</param>
-            <param name="originalTalkMessageLang">The language of the original talk message.</param>
-            <param name="originalSenderNameLang">The language of the original sender's name.</param>
+            <param name="originalTalkMessageLang">
+                The language of the original talk
+                message.
+            </param>
+            <param name="originalSenderNameLang">
+                The language of the original sender's
+                name.
+            </param>
             <param name="translatedSenderName">The translated sender's name.</param>
             <param name="translatedTalkMessage">The translated talk message.</param>
             <param name="translationLang">The language of the translation.</param>
@@ -936,21 +1407,138 @@
             <param name="createdDate">The date the message was created.</param>
             <param name="updatedDate">The date the message was last updated.</param>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetOriginalSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetOriginalSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslatedSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslatedSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage">
+            <summary>
+                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage" /> to be handled via
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage" /> class.
             </summary>
             <param name="originalTalkSubtitleMessage">The original talk subtitle message.</param>
-            <param name="originalTalkSubtitleMessageLang">The language of the original talk subtitle message.</param>
-            <param name="translatedTalkSubtitleMessage">The translated talk subtitle message.</param>
-            <param name="translationLang">The language of the translated talk subtitle message.</param>
+            <param name="originalTalkSubtitleMessageLang">
+                The language of the original talk
+                subtitle message.
+            </param>
+            <param name="translatedTalkSubtitleMessage">
+                The translated talk subtitle
+                message.
+            </param>
+            <param name="translationLang">
+                The language of the translated talk subtitle
+                message.
+            </param>
             <param name="translationEngine">The translation engine used.</param>
             <param name="createdDate">The date the message was created.</param>
             <param name="updatedDate">The date the message was last updated.</param>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.ToastMessage">
+            <summary>
+                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> to be handled via
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> class.
             </summary>
             <param name="toastType">Type of the toast message.</param>
             <param name="originalToastMessage">The original toast message.</param>
@@ -960,6 +1548,48 @@
             <param name="translationEngine">The translation engine used.</param>
             <param name="createdDate">The date the toast message was created.</param>
             <param name="updatedDate">The date the toast message was last updated.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetGameVersion(System.String)">
+            <inheritdoc />
         </member>
         <member name="T:Echoglossian.ImageGeneration.CachedTextureEntry">
             <summary>
@@ -1075,169 +1705,204 @@
         </member>
         <member name="T:Echoglossian.LanguagesHandling.LanguageEngineSupport">
             <summary>
-            Class to manage language engine support.
+                Class to manage language engine support.
             </summary>
         </member>
         <member name="F:Echoglossian.LanguagesHandling.LanguageEngineSupport.EngineMap">
             <summary>
-            Mapping of language codes to supported engines.
+                Mapping of language codes to supported engines.
             </summary>
         </member>
-        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.ApplySupportTo(System.Collections.Generic.Dictionary{System.Int32,Echoglossian.Echoglossian.LanguageInfo})">
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.ApplySupportTo(System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
             <summary>
-            Applies the supported engines to the given dictionary of language information.
+                Applies the supported engines to the given dictionary of language
+                information.
             </summary>
             <param name="dictionary">The dictionary containing language information.</param>
         </member>
+        <member name="T:Echoglossian.LanguagesHandling.LanguageInfo">
+            <summary>
+                Represents information about a language.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageInfo.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.List{System.Int32})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.LanguagesHandling.LanguageInfo" /> class.
+            </summary>
+            <param name="code">Iso LanguageInfo Code.</param>
+            <param name="languageName">LanguageInfo name.</param>
+            <param name="fontName">Necessary font name.</param>
+            <param name="exclusiveCharsToAdd">List of all the needed chars to be added.</param>
+            <param name="supportedEngines">Supported translation engines.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler">
             <summary>
-            Handles translation for the "CharacterClass" addon using AtkValues and StringArrayData.
-            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+                Handles translation for the "CharacterClass" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler"/> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler">
             <summary>
-            Handles translation for the "CharacterClass" addon using AtkValues and StringArrayData.
-            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+                Handles translation for the "CharacterClass" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler"/> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler">
             <summary>
-            Handles translation for the "CharacterClass" addon using AtkValues and StringArrayData.
-            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+                Handles translation for the "CharacterClass" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler"/> class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler">
             <summary>
-            Handles translation for the "Character" addon using AtkValues and StringArrayData.
-            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+                Handles translation for the "Character" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler" />
+                class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler">
             <summary>
-            Handles translation for the "Hud" addon using AtkValues and StringArrayData.
-            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+                Handles translation for the "Hud" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler">
             <summary>
-            Handles translation for the "Hud" addon using AtkValues and StringArrayData.
-            Lifecycle-safe: extracts and applies values within valid memory scope per frame.
+                Handles translation for the "Hud" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate">
             <summary>
-            Represents a delegate for handling local addon events.
+                Represents a delegate for handling local addon events.
             </summary>
             <param name="evt">The addon event being handled.</param>
             <param name="args">The arguments associated with the addon event.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler">
+        <member name="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1">
             <summary>
-            Represents a generic handler for addon translation.
+                Represents a generic handler for addon translation.
+            </summary>
+            <typeparam name="TGenericEntity">
+                The database entity type implementing IGenericEntity.
+            </typeparam>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.NumericLikePattern">
+            <summary>
+                A regular expression pattern for identifying numeric-like strings.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.TranslationService">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.AddonName">
             <summary>
-            Gets the translation service used for translating addon content.
+                Gets the name of the addon being handled.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.Config">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.Config">
             <summary>
-            Gets the configuration settings for the addon handler.
+                Gets the configuration settings for the addon handler.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.AddonName">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.eventHandlers">
             <summary>
-            Gets the name of the addon being handled.
+                Stores event handlers for addon events.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.UseAtkValues">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.StringArrayDataType">
             <summary>
-            Gets a value indicating whether ATK values are used for translation.
+                Gets the type of string array data, if applicable.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.UseStringArray">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.TranslationService">
             <summary>
-            Gets a value indicating whether string arrays are used for translation.
+                Gets the translation service used for translating addon content.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.StringArrayDataType">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.UseAtkValues">
             <summary>
-            Gets the type of string array data, if applicable.
+                Gets a value indicating whether ATK values are used for translation.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.FilteredAtkValues">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.UseStringArray">
             <summary>
-            Stores filtered ATK values for translation.
+                Gets a value indicating whether string arrays are used for translation.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.FilteredStringArrayData">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.FilteredAtkValues">
             <summary>
-            Stores filtered string array data for translation.
+                Stores filtered ATK values for translation.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.OriginalStringArrayData">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.FilteredStringArrayData">
             <summary>
-            Stores the original string array values to restore after translation.
-            Uses byte arrays to preserve exact original data.
+                Stores filtered string array data for translation.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.NumericLikePattern">
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OriginalStringArrayData">
             <summary>
-            A regular expression pattern for identifying numeric-like strings.
+                Stores the original string array values to restore after translation.
+                Uses byte arrays to preserve exact original data.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler.eventHandlers">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType})">
             <summary>
-            Stores event handlers for addon events.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType})">
-            <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler"/> class.
+                Initializes a new instance of the <see cref="!:GenericAddonHandler" /> class.
             </summary>
             <param name="addonName">The name of the addon.</param>
             <param name="config">The configuration settings.</param>
@@ -1246,70 +1911,135 @@
             <param name="useStringArray">Indicates whether string arrays are used.</param>
             <param name="stringArrayDataType">The type of string array data, if applicable.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.GetEventHandlers">
             <summary>
-            Registers a handler for a specific addon event.
+                Gets the registered event handlers for addon events.
+            </summary>
+            <returns>A dictionary of addon events and their corresponding delegates.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a handler for a specific addon event.
             </summary>
             <param name="evt">The addon event to handle.</param>
             <param name="handler">The delegate to handle the event.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.GetEventHandlers">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
-            Gets the registered event handlers for addon events.
+                Extracts and filters ATK values from the addon.
             </summary>
-            <returns>A dictionary of addon events and their corresponding delegates.</returns>
+            <param name="addon">Pointer to the target native Game UI addon.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ExtractAndTranslate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractStringArrayData(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
             <summary>
-            Extracts and translates addon content based on the specified event and arguments.
+                Extracts and filters string array data from the ATK stage.
+            </summary>
+            <param name="atkStage"></param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.TryLoadTranslationFromDatabase">
+            <summary>
+                Attempts to load a cached translation from the database for this addon.
+            </summary>
+            <returns>True if translation was found and applied; otherwise, false.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SerializeOriginalData">
+            <summary>
+                Serializes the original extracted content (ATK and string array data) to a
+                combined string.
+                Used to compare against DB entries to avoid unnecessary translation.
+            </summary>
+            <returns>A single string representing all original content used as DB key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ParseTranslatedData(System.String)">
+            <summary>
+                Parses JSON-formatted translated data retrieved from the DB and repopulates
+                FilteredAtkValues and FilteredStringArrayData.
+            </summary>
+            <param name="translatedJson">
+                The JSON string retrieved from the entity's
+                translated field.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SerializeTranslationResult">
+            <summary>
+                Serializes a combined translation result into JSON.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.TryFindEntityInDb">
+            <summary>
+                Attempts to find a translated entity in the database based on the original
+                serialized content.
+            </summary>
+            <returns>
+                The matching <see cref="!:TGenericEntity" /> from the database, or null
+                if not found.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Extracts and translates addon content based on the specified event and
+                arguments.
+                Performs DB lookup before calling external translation.
+            </summary>
+            <param name="evt">The type of addon event.</param>
+            <param name="args">The arguments associated with the addon event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslated(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Applies translated content to the addon based on the specified event and
+                arguments.
+                Loads translated data from DB if available.
             </summary>
             <param name="type">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ApplyTranslated(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslatedAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
-            Applies translated content to the addon based on the specified event and arguments.
-            </summary>
-            <param name="type">The type of addon event.</param>
-            <param name="args">The arguments associated with the addon event.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ApplyTranslatedAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-            Applies translated ATK values to the addon, updating string values as needed.
+                Applies translated ATK values to the addon, updating string values as
+                needed.
             </summary>
             <param name="addon">The ATK unit base addon to apply translations to.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.ApplyTranslatedStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslatedStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
             <summary>
-            Applies translated strings from the string array data to the addon.
+                Applies translated strings from the string array data to the addon.
             </summary>
             <param name="atkStage">The ATK stage instance containing the string array data.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler.RestoreOriginalStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.RestoreOriginalStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
             <summary>
-            Restores the original string array data to the addon, if available.
+                Restores the original string array data to the addon, if available.
             </summary>
             <param name="atkStage">The ATK stage instance containing the string array data.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.CombinedTranslationData">
+            <summary>
+                Structure used to deserialize combined translation data from the DB.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Handlers.IAddonTranslationHandler">
             <summary>
-            Interface for a reusable addon handler that maps AddonEvents to their delegates.
+                Interface for a reusable addon handler that maps AddonEvents to their
+                delegates.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.IAddonTranslationHandler.GetEventHandlers">
             <summary>
-            Returns a mapping of event types to their combined delegate(s).
+                Returns a mapping of event types to their combined delegate(s).
             </summary>
-            <returns>A dictionary mapping <see cref="T:Dalamud.Game.Addon.Lifecycle.AddonEvent"/> to their corresponding <see cref="T:Dalamud.Plugin.Services.IAddonLifecycle.AddonEventDelegate"/>.</returns>
+            <returns>
+                A dictionary mapping <see cref="T:Dalamud.Game.Addon.Lifecycle.AddonEvent" /> to their corresponding
+                <see cref="T:Dalamud.Plugin.Services.IAddonLifecycle.AddonEventDelegate" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar">
             <summary>
-            Utility for registering and unregistering addon translation handlers.
+                Utility for registering and unregistering addon translation handlers.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.Register(System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler,Dalamud.Plugin.Services.IAddonLifecycle)">
             <summary>
-            Registers an addon translation handler with the specified addon lifecycle.
+                Registers an addon translation handler with the specified addon lifecycle.
             </summary>
             <param name="addonName">The name of the addon to register the handler for.</param>
             <param name="handler">The handler responsible for addon translation.</param>
@@ -1317,14 +2047,19 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.RegisterMany(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}},Dalamud.Plugin.Services.IAddonLifecycle)">
             <summary>
-            Registers multiple addon translation handlers with the specified addon lifecycle.
+                Registers multiple addon translation handlers with the specified addon
+                lifecycle.
             </summary>
-            <param name="handlers">A collection of addon names and their corresponding handlers.</param>
+            <param name="handlers">
+                A collection of addon names and their corresponding
+                handlers.
+            </param>
             <param name="addonLifecycle">The lifecycle manager for the addons.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.Unregister(System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler,Dalamud.Plugin.Services.IAddonLifecycle)">
             <summary>
-            Unregisters an addon translation handler from the specified addon lifecycle.
+                Unregisters an addon translation handler from the specified addon
+                lifecycle.
             </summary>
             <param name="addonName">The name of the addon to unregister the handler for.</param>
             <param name="handler">The handler responsible for addon translation.</param>
@@ -1332,71 +2067,88 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.UnregisterMany(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}},Dalamud.Plugin.Services.IAddonLifecycle)">
             <summary>
-            Unregisters multiple addon translation handlers from the specified addon lifecycle.
+                Unregisters multiple addon translation handlers from the specified addon
+                lifecycle.
             </summary>
-            <param name="handlers">A collection of addon names and their corresponding handlers.</param>
+            <param name="handlers">
+                A collection of addon names and their corresponding
+                handlers.
+            </param>
             <param name="addonLifecycle">The lifecycle manager for the addons.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>
-            Provides a wrapper for managing a UTF-8 encoded text buffer using unmanaged memory.
+                Provides a wrapper for managing a UTF-8 encoded text buffer using unmanaged
+                memory.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper.GetBuffer">
             <summary>
-            Gets the buffer containing the UTF-8 encoded string.
+                Gets the buffer containing the UTF-8 encoded string.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper.SetBuffer(System.String)">
             <summary>
-            Sets the buffer to the UTF-8 representation of the given string.
-            The buffer is reallocated if it doesn't already exist or is too small.
+                Sets the buffer to the UTF-8 representation of the given string.
+                The buffer is reallocated if it doesn't already exist or is too small.
             </summary>
             <param name="text">The string to be encoded and stored in the buffer.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper.FreeBuffer">
             <summary>
-            Frees the previously allocated buffer.
+                Frees the previously allocated buffer.
             </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
             <summary>
-            Provides helper methods for rendering a language dropdown in the UI.
+                Provides helper methods for rendering a language dropdown in the UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.Initialize(System.Collections.Generic.Dictionary{System.Int32,Echoglossian.Echoglossian.LanguageInfo})">
+        <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.Initialize(System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
             <summary>
-            Builds or reuses the sorted language list based on the provided dictionary.
+                Builds or reuses the sorted language list based on the provided dictionary.
             </summary>
             <param name="languagesDictionary">
-            A dictionary where the key is the original index of the language, and the value is a <see cref="T:Echoglossian.Echoglossian.LanguageInfo"/> object containing details about the language.
+                A dictionary where the key is the original index of the language, and the
+                value is a <see cref="T:Echoglossian.LanguagesHandling.LanguageInfo" /> object containing details about the
+                language.
             </param>
         </member>
         <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.GetDisplayNames">
             <summary>
-            Returns the language display names for UI rendering.
+                Returns the language display names for UI rendering.
             </summary>
             <returns>An array of strings representing the display names of the languages.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.MapOriginalToSorted(System.Int32)">
             <summary>
-            Returns the sorted index for a given original language index.
+                Returns the sorted index for a given original language index.
             </summary>
-            <param name="originalIndex">The original index of the language in the unsorted list.</param>
+            <param name="originalIndex">
+                The original index of the language in the unsorted
+                list.
+            </param>
             <returns>The index of the language in the sorted list, or 0 if not found.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.MapSortedToOriginal(System.Int32)">
             <summary>
-            Returns the original index for a selected sorted dropdown index.
+                Returns the original index for a selected sorted dropdown index.
             </summary>
-            <param name="sortedIndex">The index of the language in the sorted dropdown list.</param>
+            <param name="sortedIndex">
+                The index of the language in the sorted dropdown
+                list.
+            </param>
             <returns>The original index corresponding to the sorted dropdown index.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Components.LanguageDropdownHelper.DrawLanguageDropdown(System.Int32@,System.String)">
             <summary>
-            Draws the language dropdown using ImGui, returning true if the value changed.
+                Draws the language dropdown using ImGui, returning true if the value
+                changed.
             </summary>
-            <param name="selectedOriginalIndex">The original index of the selected language. This value will be updated if the selection changes.</param>
+            <param name="selectedOriginalIndex">
+                The original index of the selected
+                language. This value will be updated if the selection changes.
+            </param>
             <param name="label">The label to display next to the dropdown in the UI.</param>
             <returns>True if the selected language index changed; otherwise, false.</returns>
         </member>
@@ -1417,16 +2169,22 @@
         </member>
         <member name="T:Echoglossian.PluginUI.Components.PromptEditorUI">
             <summary>
-            Provides UI functionality for editing prompts.
+                Provides UI functionality for editing prompts.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Components.PromptEditorUI.Draw(Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.PromptType,System.String,System.String)">
             <summary>
-            Draws the editable prompt box for a specific engine.
+                Draws the editable prompt box for a specific engine.
             </summary>
-            <param name="templateManager">The manager responsible for handling prompt templates.</param>
+            <param name="templateManager">
+                The manager responsible for handling prompt
+                templates.
+            </param>
             <param name="type">The type of the prompt being edited.</param>
-            <param name="defaultPrompt">The default prompt text to use if no custom prompt is set.</param>
+            <param name="defaultPrompt">
+                The default prompt text to use if no custom prompt
+                is set.
+            </param>
             <param name="label">The label used to identify the prompt editor instance.</param>
         </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.DeepLEngineUI">
@@ -1453,12 +2211,12 @@
         </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI">
             <summary>
-            UI for configuring LM Studio translator engine.
+                UI for configuring LM Studio translator engine.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
             <summary>
-            Draws the LM Studio engine configuration panel.
+                Draws the LM Studio engine configuration panel.
             </summary>
             <param name="config">Current plugin configuration.</param>
             <param name="promptManager">Prompt manager instance.</param>
@@ -1471,19 +2229,19 @@
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorStateManager">
             <summary>
-            Manages UI editing state for each translation prompt engine tab.
+                Manages UI editing state for each translation prompt engine tab.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Helpers.PromptEditorStateManager.Get(System.String)">
             <summary>
-            Gets the editor state for a given tab label.
+                Gets the editor state for a given tab label.
             </summary>
             <param name="label">Label identifying the translation engine or tab.</param>
             <returns>A mutable reference to the editor state.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorState">
             <summary>
-            Stores the editor UI state for a single prompt editing session.
+                Stores the editor UI state for a single prompt editing session.
             </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptTemplateManager">
@@ -1498,20 +2256,24 @@
         </member>
         <member name="M:Echoglossian.PluginUI.Helpers.ResetConfigButtonHelper.Draw(Echoglossian.Config,System.Action,System.String)">
             <summary>
-            Draws a button that resets the plugin config to default values, with a confirmation popup.
+                Draws a button that resets the plugin config to default values, with a
+                confirmation popup.
             </summary>
             <param name="config">The plugin config instance to reset.</param>
             <param name="saveCallback">Callback to persist the config after reset.</param>
-            <param name="buttonLabel">Optional label for the button (defaults to "Reset Settings to Default").</param>
+            <param name="buttonLabel">
+                Optional label for the button (defaults to "Reset
+                Settings to Default").
+            </param>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.UIWarningHelpers">
             <summary>
-            Utility methods for drawing UI warnings.
+                Utility methods for drawing UI warnings.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Helpers.UIWarningHelpers.ShowFieldRequiredWarningIfEmpty(System.String)">
             <summary>
-            Shows a styled warning text to indicate a required field.
+                Shows a styled warning text to indicate a required field.
             </summary>
             <param name="fieldName">The name of the required field.</param>
         </member>
@@ -1530,79 +2292,99 @@
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.GeneralTab">
             <summary>
-            Provides methods to render the "Whats, Whens and Hows" general configuration tab.
+                Provides methods to render the "Whats, Whens and Hows" general
+                configuration tab.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.GeneralTab.Draw(Echoglossian.Config)">
             <summary>
-            Renders the general configuration tab and handles user interactions.
+                Renders the general configuration tab and handles user interactions.
             </summary>
-            <param name="config">The configuration object to be modified based on user input.</param>
+            <param name="config">
+                The configuration object to be modified based on user
+                input.
+            </param>
             <returns>True if any configuration value was changed; otherwise, false.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.JournalTab">
             <summary>
-            Renders the settings tab for journal, quest, and tooltip translation.
+                Renders the settings tab for journal, quest, and tooltip translation.
             </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.MiscTab">
             <summary>
-            Renders the miscellaneous settings tab in the plugin configuration UI.
+                Renders the miscellaneous settings tab in the plugin configuration UI.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.MiscTab.Draw(Echoglossian.Config)">
             <summary>
-            Draws the miscellaneous settings UI.
+                Draws the miscellaneous settings UI.
             </summary>
             <param name="config">The plugin configuration.</param>
             <returns>True if any value has changed, otherwise false.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.OtherUIElementsSettingsTab">
             <summary>
-            Renders additional settings for select strings, confirmations, and UI elements.
+                Renders additional settings for select strings, confirmations, and UI
+                elements.
             </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.OverlayTab">
             <summary>
-            Renders the configuration settings related to overlay-based translations using vertical tabs.
+                Renders the configuration settings related to overlay-based translations
+                using vertical tabs.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.Draw(Echoglossian.Config)">
             <summary>
-            Draws the full Overlay tab with vertical sub-tabs.
+                Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
             <summary>
-            Draw settings for overlays that have width, height, position, color, and font scale.
+                Draw settings for overlays that have width, height, position, color, and
+                font scale.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
             <summary>
-            Draw settings for overlays that do not have a height adjustment (e.g., Toast).
+                Draw settings for overlays that do not have a height adjustment (e.g.,
+                Toast).
             </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TranslationEnginesTab">
             <summary>
-            Renders the Translation Engines tab, supporting engine selection and per-engine configuration.
+                Renders the Translation Engines tab, supporting engine selection and
+                per-engine configuration.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.Int32,Echoglossian.Echoglossian.LanguageInfo},System.Action)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},System.Action)">
             <summary>
-            Draws the translation engine settings UI, allowing users to select and configure translation engines.
+                Draws the translation engine settings UI, allowing users to select and
+                configure translation engines.
             </summary>
             <param name="config">The configuration object containing translation settings.</param>
-            <param name="languageIndex">The index of the selected language in the language list.</param>
+            <param name="languageIndex">
+                The index of the selected language in the language
+                list.
+            </param>
             <param name="languageList">The list of available languages.</param>
             <param name="availableEngines">The list of available translation engines.</param>
-            <param name="langDict">Dictionary mapping language indices to their information, including supported engines.</param>
-            <param name="rebuildTranslationService">The action to rebuild the translation service when settings change.</param>
+            <param name="langDict">
+                Dictionary mapping language indices to their
+                information, including supported engines.
+            </param>
+            <param name="rebuildTranslationService">
+                The action to rebuild the translation
+                service when settings change.
+            </param>
             <returns>True if any settings were changed; otherwise, false.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TroubleshootingTab">
             <summary>
-            Renders the troubleshooting tab for plugin assets management and resetting settings.
-            Fully self-contained using static Echoglossian methods.
+                Renders the troubleshooting tab for plugin assets management and resetting
+                settings.
+                Fully self-contained using static Echoglossian methods.
             </summary>
         </member>
         <member name="T:Echoglossian.Helpers.FieldValidationHelper">
@@ -2530,7 +3312,8 @@
         </member>
         <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.Translate(System.String,System.String,System.String)">
             <summary>
-            Synchronously translates the given text from source language to target language using AWS Translate.
+                Synchronously translates the given text from source language to target
+                language using AWS Translate.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
@@ -2539,7 +3322,8 @@
         </member>
         <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Asynchronously translates the given text from source language to target language using AWS Translate.
+                Asynchronously translates the given text from source language to target
+                language using AWS Translate.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
@@ -2548,7 +3332,7 @@
         </member>
         <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.ChatGPTTranslator"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.ChatGPTTranslator" /> class.
             </summary>
             <param name="pluginLog"></param>
             <param name="baseUrl"></param>
@@ -2558,7 +3342,8 @@
         </member>
         <member name="M:Echoglossian.Translators.ChatGPTTranslator.Translate(System.String,System.String,System.String)">
             <summary>
-            Translates the specified text from the source language to the target language.
+                Translates the specified text from the source language to the target
+                language.
             </summary>
             <param name="text">The text to translate.</param>
             <param name="sourceLanguage">The source language of the text.</param>
@@ -2567,21 +3352,27 @@
         </member>
         <member name="M:Echoglossian.Translators.ChatGPTTranslator.TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Translates the specified text from the source language to the target language asynchronously.
+                Translates the specified text from the source language to the target
+                language asynchronously.
             </summary>
             <param name="text">The text to translate.</param>
             <param name="sourceLanguage">The source language of the text.</param>
             <param name="targetLanguage">The target language for the translation.</param>
-            <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
+            <returns>
+                A task that represents the asynchronous translation operation. The
+                task result contains the translated text.
+            </returns>
         </member>
         <member name="T:Echoglossian.Translators.DeepLTranslator">
             <summary>
-            Provides translation services using the DeepL API or Free API based on the configuration.
+                Provides translation services using the DeepL API or Free API based on the
+                configuration.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.Echoglossian#Translators#ITranslator#TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Asynchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
+                Asynchronously translates the given text from source language to target
+                language using the DeepL API or Free API based on the configuration.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
@@ -2590,7 +3381,8 @@
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.Echoglossian#Translators#ITranslator#Translate(System.String,System.String,System.String)">
             <summary>
-            Synchronously translates the given text from source language to target language using the DeepL API or Free API based on the configuration.
+                Synchronously translates the given text from source language to target
+                language using the DeepL API or Free API based on the configuration.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
@@ -2599,7 +3391,8 @@
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.Translate(System.String,System.String,System.String)">
             <summary>
-            Synchronously translates the given text from source language to target language using the DeepL API.
+                Synchronously translates the given text from source language to target
+                language using the DeepL API.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
@@ -2608,98 +3401,104 @@
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Asynchronously translates the given text from source language to target language using the DeepL API.
+                Asynchronously translates the given text from source language to target
+                language using the DeepL API.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
             <param name="targetLanguage"></param>
             <returns></returns>
-            <exception cref="T:System.InvalidOperationException"></exception>
+            <exception cref="T:System.InvalidOperationException">Invalid Operation Exception.</exception>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.GetICount(System.String)">
             <summary>
-            Counts the number of 'i' characters in the translated text.
+                Counts the number of 'i' characters in the translated text.
             </summary>
             <param name="translateText"></param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.GetTimestamp(System.Int32)">
             <summary>
-            Generates a timestamp based on the current time and the count of 'i' characters in the text.
+                Generates a timestamp based on the current time and the count of 'i'
+                characters in the text.
             </summary>
             <param name="iCount"></param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.FreeTranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Translates a string using the Free DeepL API.
+                Translates a string using the Free DeepL API.
             </summary>
             <param name="text">The text to translate.</param>
             <param name="sourceLanguage">The source language of the text.</param>
             <param name="targetLanguage">The target language for the translation.</param>
-            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> representing the result of the asynchronous operation.</returns>
+            <returns>
+                A <see cref="T:System.Threading.Tasks.Task`1" /> representing the result of the
+                asynchronous operation.
+            </returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.FormatSourceLanguage(System.String)">
             <summary>
-            Formats the source language for the DeepL API.
+                Formats the source language for the DeepL API.
             </summary>
             <param name="source"></param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.FormatTargetLanguage(System.String)">
             <summary>
-            Formats the target language for the DeepL API.
+                Formats the target language for the DeepL API.
             </summary>
             <param name="source"></param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.FormatFreeTargetLanguage(System.String)">
             <summary>
-            Formats the target language for the Free DeepL API.
+                Formats the target language for the Free DeepL API.
             </summary>
             <param name="source"></param>
             <returns></returns>
         </member>
         <member name="T:Echoglossian.Translators.DeepLResponse">
             <summary>
-            Represents the response from the DeepL translation service.
+                Represents the response from the DeepL translation service.
             </summary>
         </member>
         <member name="T:Echoglossian.Translators.DeepLResult">
             <summary>
-            Represents the result of a DeepL translation operation.
+                Represents the result of a DeepL translation operation.
             </summary>
         </member>
         <member name="T:Echoglossian.Translators.DeepLTextResult">
             <summary>
-            Represents a text result from the DeepL translation service.
+                Represents a text result from the DeepL translation service.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.DeepSeekTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.DeepSeekTranslator"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.DeepSeekTranslator" /> class.
             </summary>
             <param name="pluginLog">The plugin log instance for logging purposes.</param>
             <param name="config">The configuration settings for the DeepSeekTranslator.</param>
         </member>
         <member name="T:Echoglossian.Translators.GoogleTranslator">
             <summary>
-            Provides translation services using Google Translate APIs.
+                Provides translation services using Google Translate APIs.
             </summary>
         </member>
         <member name="F:Echoglossian.Translators.GoogleTranslator.HttpClient">
             <summary>
-            Shared static HTTP client instance for sending requests.
+                Shared static HTTP client instance for sending requests.
             </summary>
         </member>
         <member name="F:Echoglossian.Translators.GoogleTranslator.translateEndpoints">
             <summary>
-            Defines the available Google Translate endpoints and required headers/query parameters.
+                Defines the available Google Translate endpoints and required headers/query
+                parameters.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.GoogleTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.GoogleTranslator"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.GoogleTranslator" /> class.
             </summary>
             <param name="pluginLog">Logger for plugin debugging and warnings.</param>
             <param name="config">Plugin configuration options.</param>
@@ -2712,19 +3511,21 @@
         </member>
         <member name="T:Echoglossian.Translators.GTranslateTranslator">
             <summary>
-            Provides translation services using GTranslate.
+                Provides translation services using GTranslate.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.GTranslateTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.GTranslateTranslator"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.GTranslateTranslator" />
+                class.
             </summary>
             <param name="pluginLog">The plugin log.</param>
             <param name="config">The configuration settings.</param>
         </member>
         <member name="M:Echoglossian.Translators.GTranslateTranslator.Translate(System.String,System.String,System.String)">
             <summary>
-            Translates the given text from the source language to the target language synchronously.
+                Translates the given text from the source language to the target language
+                synchronously.
             </summary>
             <param name="text">The text to translate.</param>
             <param name="sourceLanguage">The language of the input text.</param>
@@ -2733,12 +3534,16 @@
         </member>
         <member name="M:Echoglossian.Translators.GTranslateTranslator.TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Translates the given text from the source language to the target language asynchronously.
+                Translates the given text from the source language to the target language
+                asynchronously.
             </summary>
             <param name="text">The text to translate.</param>
             <param name="sourceLanguage">The language of the input text.</param>
             <param name="targetLanguage">The language to translate the text into.</param>
-            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation, with a translated string as the result.</returns>
+            <returns>
+                A <see cref="T:System.Threading.Tasks.Task" /> representing the asynchronous operation, with a
+                translated string as the result.
+            </returns>
         </member>
         <member name="T:Echoglossian.Translators.ITranslator">
             <summary>
@@ -2763,53 +3568,54 @@
             <param name="targetLanguage">The language to translate the text into.</param>
             <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.LibreTranslateTranslator.DetermineEndpoint(Echoglossian.Config)">
-            <summary>
-            Determines the endpoint URL for LibreTranslate based on the configuration.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
         <member name="M:Echoglossian.Translators.LibreTranslateTranslator.TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Asynchronously translates the specified text from the source language to the target language using LibreTranslate.
+                Asynchronously translates the specified text from the source language to
+                the target language using LibreTranslate.
             </summary>
             <param name="text"></param>
             <param name="sourceLanguage"></param>
             <param name="targetLanguage"></param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.Translators.LibreTranslateTranslator.DetermineEndpoint(Echoglossian.Config)">
+            <summary>
+                Determines the endpoint URL for LibreTranslate based on the configuration.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
         <member name="T:Echoglossian.Translators.LmStudioTranslator">
             <summary>
-            Translator implementation for LM Studio, using OpenAI-compatible local API.
+                Translator implementation for LM Studio, using OpenAI-compatible local API.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.LmStudioTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.LmStudioTranslator"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.LmStudioTranslator" /> class.
             </summary>
             <param name="pluginLog">Plugin log for diagnostic output.</param>
             <param name="config">User configuration containing model and credentials.</param>
         </member>
         <member name="M:Echoglossian.Translators.LmStudioTranslator.Translate(System.String,System.String,System.String)">
-            <inheritdoc/>
+            <inheritdoc />
         </member>
         <member name="M:Echoglossian.Translators.LmStudioTranslator.TranslateAsync(System.String,System.String,System.String)">
-            <inheritdoc/>
+            <inheritdoc />
         </member>
         <member name="T:Echoglossian.Translators.LmStudio.LmStudioModelManager">
             <summary>
-            Manages dynamic model fetching for LM Studio.
+                Manages dynamic model fetching for LM Studio.
             </summary>
         </member>
         <member name="P:Echoglossian.Translators.LmStudio.LmStudioModelManager.CurrentModelList">
             <summary>
-            Gets the current list of LM Studio models.
+                Gets the current list of LM Studio models.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.LmStudio.LmStudioModelManager.RefreshAsync(System.String,System.String)">
             <summary>
-            Refreshes the LM Studio model list from the live API.
+                Refreshes the LM Studio model list from the live API.
             </summary>
             <param name="baseUrl">Base API URL.</param>
             <param name="apiKey">Optional API key.</param>
@@ -2817,30 +3623,34 @@
         </member>
         <member name="T:Echoglossian.Translators.LmStudio.LmStudioTextModelDefaults">
             <summary>
-            Provides default model list for LM Studio usage.
+                Provides default model list for LM Studio usage.
             </summary>
         </member>
         <member name="F:Echoglossian.Translators.LmStudio.LmStudioTextModelDefaults.PredefinedModels">
             <summary>
-            Predefined LM Studio-compatible models for offline use.
+                Predefined LM Studio-compatible models for offline use.
             </summary>
         </member>
         <member name="T:Echoglossian.Translators.TranslationService">
             <summary>
-            Provides translation services using various translation engines.
+                Provides translation services using various translation engines.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.#ctor(Echoglossian.Config,Dalamud.Plugin.Services.IPluginLog,Dalamud.Game.Text.Sanitizer.Sanitizer)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.TranslationService"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.TranslationService" /> class.
             </summary>
             <param name="config">The configuration settings for the translation service.</param>
             <param name="pluginLog">The plugin logger for logging purposes.</param>
-            <param name="sanitizer">The sanitizer used to clean input text before translation.</param>
+            <param name="sanitizer">
+                The sanitizer used to clean input text before
+                translation.
+            </param>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.Translate(System.String,System.String,System.String)">
             <summary>
-            Translates the given text from the source language to the target language synchronously.
+                Translates the given text from the source language to the target language
+                synchronously.
             </summary>
             <param name="text">Text to translate.</param>
             <param name="sourceLanguage">Source text language.</param>
@@ -2849,28 +3659,33 @@
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Translates the given text from the source language to the target language asynchronously.
+                Translates the given text from the source language to the target language
+                asynchronously.
             </summary>
             <param name="text">Text to translate.</param>
             <param name="sourceLanguage">Source text language.</param>
             <param name="targetLanguage">Target translation language.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the translated text as a string.</returns>
+            <returns>
+                A task that represents the asynchronous operation. The task result
+                contains the translated text as a string.
+            </returns>
         </member>
         <member name="T:Echoglossian.Translators.YandexTranslator">
             <summary>
-            Yandex Translator class for translating text using Yandex API.
+                Yandex Translator class for translating text using Yandex API.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.YandexTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.Translators.YandexTranslator"/> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.YandexTranslator" /> class.
             </summary>
             <param name="pluginLog">The plugin log.</param>
             <param name="config">The configuration settings.</param>
         </member>
         <member name="M:Echoglossian.Translators.YandexTranslator.Translate(System.String,System.String,System.String)">
             <summary>
-            Translates the specified text from the source language to the target language.
+                Translates the specified text from the source language to the target
+                language.
             </summary>
             <param name="text">The text to translate.</param>
             <param name="sourceLanguage">The source language code.</param>
@@ -2879,12 +3694,16 @@
         </member>
         <member name="M:Echoglossian.Translators.YandexTranslator.TranslateAsync(System.String,System.String,System.String)">
             <summary>
-            Translates the specified text from the source language to the target language asynchronously.
+                Translates the specified text from the source language to the target
+                language asynchronously.
             </summary>
             <param name="text">The text to translate.</param>
             <param name="sourceLanguage">The source language code.</param>
             <param name="targetLanguage">The target language code.</param>
-            <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
+            <returns>
+                A task that represents the asynchronous translation operation. The
+                task result contains the translated text.
+            </returns>
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTalk(Echoglossian.Config)">
             <summary>

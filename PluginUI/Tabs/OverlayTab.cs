@@ -3,411 +3,489 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System;
-using System.Numerics;
-
-using ImGuiNET;
-
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
-/// Renders the configuration settings related to overlay-based translations using vertical tabs.
+///     Renders the configuration settings related to overlay-based translations
+///     using vertical tabs.
 /// </summary>
 public static class OverlayTab
 {
-  private static int selectedOverlayTab = 0;
+    private static int selectedOverlayTab;
 
-  private static readonly string[] OverlayTabs =
-  {
+    private static readonly string[] OverlayTabs =
+    {
         Resources.TalkTabTitle,
         Resources.BattleTalkTabTitle,
         Resources.ToastTabTitle,
         Resources.SubtitleTabTitle,
         Resources.ConfigTab4Name,
-        Resources.OtherUIElementsTabTitle,
-  };
+        Resources.OtherUIElementsTabTitle
+    };
 
-  /// <summary>
-  /// Draws the full Overlay tab with vertical sub-tabs.
-  /// </summary>
-  public static bool Draw(Config config)
-  {
-    bool changed = false;
-
-    using var scrollingChild = ImRaii.Child("OvverlaysSettings", new Vector2(-1, -100), false, ImGuiWindowFlags.NoBackground);
-
-    if (!scrollingChild)
+    /// <summary>
+    ///     Draws the full Overlay tab with vertical sub-tabs.
+    /// </summary>
+    public static bool Draw(Config config)
     {
-      return false;
+        var changed = false;
+
+        using var scrollingChild = ImRaii.Child(
+            "OvverlaysSettings",
+            new Vector2(-1, -100),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChild)
+        {
+            return false;
+        }
+
+        ImGui.BeginChild("overlay_tab_left", new Vector2(150, 0), true);
+        for (var i = 0; i < OverlayTabs.Length; i++)
+        {
+            if (ImGui.Selectable(OverlayTabs[i], selectedOverlayTab == i))
+            {
+                selectedOverlayTab = i;
+            }
+        }
+
+        ImGui.EndChild();
+
+        ImGui.SameLine();
+
+        ImGui.BeginChild("overlay_tab_right", new Vector2(0, 0), true);
+
+        switch (selectedOverlayTab)
+        {
+            case 0:
+                changed |= DrawTalkOverlay(config);
+                break;
+            case 1:
+                changed |= DrawBattleTalkOverlay(config);
+                break;
+            case 2:
+                changed |= DrawToastOverlay(config);
+                break;
+            case 3:
+                changed |= DrawSubtitleOverlay(config);
+                break;
+            case 4:
+                changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
+                break;
+            case 5:
+                changed |= OtherUIElementsSettingsTab.Draw(config);
+                break;
+        }
+
+        ImGui.EndChild();
+
+        if (changed)
+        {
+            FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+            Echoglossian.SaveConfig(config);
+        }
+
+        return changed;
     }
 
-    ImGui.BeginChild("overlay_tab_left", new Vector2(150, 0), true);
-    for (var i = 0; i < OverlayTabs.Length; i++)
+    private static bool DrawTalkOverlay(Config config)
     {
-      if (ImGui.Selectable(OverlayTabs[i], selectedOverlayTab == i))
-      {
-        selectedOverlayTab = i;
-      }
+        var changed = false;
+
+        using var scrollingChildTalk = ImRaii.Child(
+            "TalkOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildTalk)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateTalkToggleLabel,
+            ref config.TranslateTalk);
+
+        if (!config.TranslateTalk)
+        {
+            return changed;
+        }
+
+        if (config.OverlayOnlyLanguage)
+        {
+            changed |= AssignIfChanged(ref config.UseImGuiForTalk, true);
+            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
+        }
+        else
+        {
+            changed |= ImGui.Checkbox(
+                Resources.OverlayToggleLabel,
+                ref config.UseImGuiForTalk);
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateNpcNamesToggle,
+            ref config.TranslateNpcNames);
+
+        if (config.UseImGuiForTalk)
+        {
+            changed |= DrawOverlaySettings(
+                ref config.TalkFontScale,
+                ref config.ImGuiTalkWindowWidthMult,
+                ref config.ImGuiTalkWindowHeightMult,
+                ref config.ImGuiWindowPosCorrection,
+                ref config.OverlayTalkTextColor,
+                Resources.OverlayFontScaleLabel,
+                ref config.FontChangeTime);
+        }
+
+        if (!config.OverlayOnlyLanguage && config.UseImGuiForTalk)
+        {
+            changed |= ImGui.Checkbox(
+                Resources.SwapTranslationTextToggle,
+                ref config.SwapTextsUsingImGui);
+
+            if (config.SwapTextsUsingImGui && ShouldRemoveDiacritics(config))
+            {
+                changed |= ImGui.Checkbox(
+                    Resources.RemoveDiacriticsToggle,
+                    ref config.RemoveDiacriticsWhenUsingReplacementTalkBTalk);
+            }
+        }
+
+        return changed;
     }
 
-    ImGui.EndChild();
-
-    ImGui.SameLine();
-
-    ImGui.BeginChild("overlay_tab_right", new Vector2(0, 0), true);
-
-    switch (selectedOverlayTab)
+    private static bool DrawBattleTalkOverlay(Config config)
     {
-      case 0:
-        changed |= DrawTalkOverlay(config);
-        break;
-      case 1:
-        changed |= DrawBattleTalkOverlay(config);
-        break;
-      case 2:
-        changed |= DrawToastOverlay(config);
-        break;
-      case 3:
-        changed |= DrawSubtitleOverlay(config);
-        break;
-      case 4:
-        changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
-        break;
-      case 5:
-        changed |= OtherUIElementsSettingsTab.Draw(config);
-        break;
+        var changed = false;
+
+        using var scrollingChildBattleTalk = ImRaii.Child(
+            "BattleTalkOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildBattleTalk)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TransLateBattletalkToggle,
+            ref config.TranslateBattleTalk);
+
+        if (!config.TranslateBattleTalk)
+        {
+            return changed;
+        }
+
+        if (config.OverlayOnlyLanguage)
+        {
+            changed |= AssignIfChanged(ref config.UseImGuiForBattleTalk, true);
+        }
+        else
+        {
+            changed |= ImGui.Checkbox(
+                Resources.OverlayToggleLabel,
+                ref config.UseImGuiForBattleTalk);
+        }
+
+        if (config.UseImGuiForBattleTalk)
+        {
+            changed |= DrawOverlaySettings(
+                ref config.BattleTalkFontScale,
+                ref config.ImGuiBattleTalkWindowWidthMult,
+                ref config.ImGuiBattleTalkWindowHeightMult,
+                ref config.ImGuiBattleTalkWindowPosCorrection,
+                ref config.OverlayBattleTalkTextColor,
+                Resources.OverlayFontScaleLabel,
+                ref config.FontChangeTime);
+        }
+
+        return changed;
     }
 
-    ImGui.EndChild();
-
-    if (changed)
+    private static bool DrawToastOverlay(Config config)
     {
-      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-      SaveConfig(config);
+        var changed = false;
+
+        using var scrollingChildToast = ImRaii.Child(
+            "ToastOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildToast)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateToastToggleText,
+            ref config.TranslateToast);
+
+        if (!config.TranslateToast)
+        {
+            return changed;
+        }
+
+        if (config.OverlayOnlyLanguage)
+        {
+            changed |= AssignIfChanged(ref config.UseImGuiForToasts, true);
+        }
+        else
+        {
+            changed |= ImGui.Checkbox(
+                Resources.UseImGuiForToastsToggle,
+                ref config.UseImGuiForToasts);
+        }
+
+        ImGui.Separator();
+        ImGui.Text(Resources.WhichToastsToTranslate);
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateErrorToastToggleText,
+            ref config.TranslateErrorToast);
+        changed |= ImGui.Checkbox(
+            Resources.TranslateQuestToastToggleText,
+            ref config.TranslateQuestToast);
+        changed |= ImGui.Checkbox(
+            Resources.TranslateAreaToastToggleText,
+            ref config.TranslateAreaToast);
+        changed |= ImGui.Checkbox(
+            Resources.TranslateClassChangeToastToggleText,
+            ref config.TranslateClassChangeToast);
+        changed |= ImGui.Checkbox(
+            Resources.TranslateScreenInfoToastToggleText,
+            ref config.TranslateWideTextToast);
+
+        // TODO: add _TextGimmickHint addon handling
+
+        ImGui.Separator();
+
+        if (config.UseImGuiForToasts)
+        {
+            ImGui.Text(Resources.ImguiAdjustmentsLabel);
+
+            changed |= DrawOverlaySettings(
+                ref config.ToastFontScale,
+                ref config.ImGuiToastWindowWidthMult,
+                ref config.ImGuiToastWindowPosCorrection,
+                ref config.OverlayToastTextColor,
+                Resources.OverlayFontScaleLabel,
+                ref config.FontChangeTime);
+
+            ImGui.SameLine();
+            ImGui.Text(Resources.HoverTooltipIndicator);
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip(
+                    Resources.ToastOverlayWidthMultiplierOrientations);
+            }
+        }
+
+        return changed;
     }
 
-    return changed;
-  }
-
-  private static bool DrawTalkOverlay(Config config)
-  {
-    bool changed = false;
-
-    using var scrollingChildTalk = ImRaii.Child("TalkOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
-
-    if (!scrollingChildTalk)
+    private static bool DrawSubtitleOverlay(Config config)
     {
-      return false;
+        var changed = false;
+
+        using var scrollingChildSubtitle = ImRaii.Child(
+            "SubtitleOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildSubtitle)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateTalkSubtitleToggleLabel,
+            ref config.TranslateTalkSubtitle);
+
+        if (!config.TranslateTalkSubtitle)
+        {
+            return changed;
+        }
+
+        if (config.OverlayOnlyLanguage)
+        {
+            changed |= AssignIfChanged(
+                ref config.UseImGuiForTalkSubtitle,
+                true);
+        }
+        else
+        {
+            changed |= ImGui.Checkbox(
+                Resources.OverlayToggleLabel,
+                ref config.UseImGuiForTalkSubtitle);
+        }
+
+        if (config.UseImGuiForTalkSubtitle)
+        {
+            changed |= DrawOverlaySettings(
+                ref config.TalkSubtitleFontScale,
+                ref config.ImGuiTalkSubtitleWindowWidthMult,
+                ref config.ImGuiTalkSubtitleWindowHeightMult,
+                ref config.ImGuiTalkSubtitleWindowPosCorrection,
+                ref config.OverlayTalkSubtitleTextColor,
+                Resources.OverlayFontScaleLabel,
+                ref config.FontChangeTime);
+        }
+
+        return changed;
     }
 
-    changed |= ImGui.Checkbox(Resources.TranslateTalkToggleLabel, ref config.TranslateTalk);
-
-    if (!config.TranslateTalk)
+    /// <summary>
+    ///     Draw settings for overlays that have width, height, position, color, and
+    ///     font scale.
+    /// </summary>
+    private static bool DrawOverlaySettings(
+        ref float fontScale,
+        ref float widthMult,
+        ref float heightMult,
+        ref Vector2 positionCorrection,
+        ref Vector3 textColor,
+        string fontScaleLabel,
+        ref long fontChangeTime)
     {
-      return changed;
+        var changed = false;
+
+        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
+        {
+            changed = true;
+            fontChangeTime = DateTime.Now.Ticks;
+        }
+
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
+        }
+
+        ImGui.Text(Resources.FontColorSelectLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            Resources.OverlayColorSelectName,
+            ref textColor,
+            ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
+
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
+        }
+
+        changed |= ImGui.DragFloat(
+            Resources.OverlayWidthScrollLabel,
+            ref widthMult,
+            0.001f,
+            0.01f,
+            3f);
+        changed |= ImGui.DragFloat(
+            Resources.OverlayHeightScrollLabel,
+            ref heightMult,
+            0.001f,
+            0.01f,
+            3f);
+
+        changed |= ImGui.DragFloat2(
+            Resources.OverlayPositionAdjustmentLabel,
+            ref positionCorrection);
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
+        }
+
+        return changed;
     }
 
-    if (config.OverlayOnlyLanguage)
+    /// <summary>
+    ///     Draw settings for overlays that do not have a height adjustment (e.g.,
+    ///     Toast).
+    /// </summary>
+    private static bool DrawOverlaySettings(
+        ref float fontScale,
+        ref float widthMult,
+        ref Vector2 positionCorrection,
+        ref Vector3 textColor,
+        string fontScaleLabel,
+        ref long fontChangeTime)
     {
-      changed |= AssignIfChanged(ref config.UseImGuiForTalk, true);
-      changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
-    }
-    else
-    {
-      changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForTalk);
-    }
+        var changed = false;
 
-    changed |= ImGui.Checkbox(Resources.TranslateNpcNamesToggle, ref config.TranslateNpcNames);
+        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
+        {
+            changed = true;
+            fontChangeTime = DateTime.Now.Ticks;
+        }
 
-    if (config.UseImGuiForTalk)
-    {
-      changed |= DrawOverlaySettings(
-          ref config.TalkFontScale,
-          ref config.ImGuiTalkWindowWidthMult,
-          ref config.ImGuiTalkWindowHeightMult,
-          ref config.ImGuiWindowPosCorrection,
-          ref config.OverlayTalkTextColor,
-          Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime);
-    }
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
+        }
 
-    if (!config.OverlayOnlyLanguage && config.UseImGuiForTalk)
-    {
-      changed |= ImGui.Checkbox(Resources.SwapTranslationTextToggle, ref config.SwapTextsUsingImGui);
+        ImGui.Text(Resources.FontColorSelectLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            Resources.OverlayColorSelectName,
+            ref textColor,
+            ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
 
-      if (config.SwapTextsUsingImGui && ShouldRemoveDiacritics(config))
-      {
-        changed |= ImGui.Checkbox(Resources.RemoveDiacriticsToggle, ref config.RemoveDiacriticsWhenUsingReplacementTalkBTalk);
-      }
-    }
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
+        }
 
-    return changed;
-  }
+        changed |= ImGui.DragFloat(
+            Resources.OverlayWidthScrollLabel,
+            ref widthMult,
+            0.001f,
+            0.01f,
+            3f);
+        changed |= ImGui.DragFloat2(
+            Resources.OverlayPositionAdjustmentLabel,
+            ref positionCorrection);
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
+        }
 
-  private static bool DrawBattleTalkOverlay(Config config)
-  {
-    bool changed = false;
-
-    using var scrollingChildBattleTalk = ImRaii.Child("BattleTalkOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
-
-    if (!scrollingChildBattleTalk)
-    {
-      return false;
-    }
-
-    changed |= ImGui.Checkbox(Resources.TransLateBattletalkToggle, ref config.TranslateBattleTalk);
-
-    if (!config.TranslateBattleTalk)
-    {
-      return changed;
-    }
-
-    if (config.OverlayOnlyLanguage)
-    {
-      changed |= AssignIfChanged(ref config.UseImGuiForBattleTalk, true);
-    }
-    else
-    {
-      changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForBattleTalk);
+        return changed;
     }
 
-    if (config.UseImGuiForBattleTalk)
+    private static bool AssignIfChanged<T>(ref T field, T value)
+        where T : notnull
     {
-      changed |= DrawOverlaySettings(
-          ref config.BattleTalkFontScale,
-          ref config.ImGuiBattleTalkWindowWidthMult,
-          ref config.ImGuiBattleTalkWindowHeightMult,
-          ref config.ImGuiBattleTalkWindowPosCorrection,
-          ref config.OverlayBattleTalkTextColor,
-          Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime);
+        if (!field.Equals(value))
+        {
+            field = value;
+            return true;
+        }
+
+        return false;
     }
 
-    return changed;
-  }
-
-  private static bool DrawToastOverlay(Config config)
-  {
-    bool changed = false;
-
-    using var scrollingChildToast = ImRaii.Child("ToastOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
-
-    if (!scrollingChildToast)
+    private static bool ShouldRemoveDiacritics(Config config)
     {
-      return false;
+        var lang = config.Lang;
+        return lang is 24 or 25 or 44 or 60 or 61 or 80 or 83 or 87 or 91 or 104
+            or 105 or 109 or 110;
     }
-
-    changed |= ImGui.Checkbox(Resources.TranslateToastToggleText, ref config.TranslateToast);
-
-    if (!config.TranslateToast)
-    {
-      return changed;
-    }
-
-    if (config.OverlayOnlyLanguage)
-    {
-      changed |= AssignIfChanged(ref config.UseImGuiForToasts, true);
-    }
-    else
-    {
-      changed |= ImGui.Checkbox(Resources.UseImGuiForToastsToggle, ref config.UseImGuiForToasts);
-    }
-
-    ImGui.Separator();
-    ImGui.Text(Resources.WhichToastsToTranslate);
-
-    changed |= ImGui.Checkbox(Resources.TranslateErrorToastToggleText, ref config.TranslateErrorToast);
-    changed |= ImGui.Checkbox(Resources.TranslateQuestToastToggleText, ref config.TranslateQuestToast);
-    changed |= ImGui.Checkbox(Resources.TranslateAreaToastToggleText, ref config.TranslateAreaToast);
-    changed |= ImGui.Checkbox(Resources.TranslateClassChangeToastToggleText, ref config.TranslateClassChangeToast);
-    changed |= ImGui.Checkbox(Resources.TranslateScreenInfoToastToggleText, ref config.TranslateWideTextToast);
-    // TODO: add _TextGimmickHint addon handling
-
-    ImGui.Separator();
-
-    if (config.UseImGuiForToasts)
-    {
-      ImGui.Text(Resources.ImguiAdjustmentsLabel);
-
-      changed |= DrawOverlaySettings(
-          ref config.ToastFontScale,
-          ref config.ImGuiToastWindowWidthMult,
-          ref config.ImGuiToastWindowPosCorrection,
-          ref config.OverlayToastTextColor,
-          Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime);
-
-      ImGui.SameLine();
-      ImGui.Text(Resources.HoverTooltipIndicator);
-      if (ImGui.IsItemHovered())
-      {
-        ImGui.SetTooltip(Resources.ToastOverlayWidthMultiplierOrientations);
-      }
-    }
-
-    return changed;
-  }
-
-  private static bool DrawSubtitleOverlay(Config config)
-  {
-    bool changed = false;
-
-    using var scrollingChildSubtitle = ImRaii.Child("SubtitleOverlaySettings", new Vector2(-1, -1), false, ImGuiWindowFlags.NoBackground);
-
-    if (!scrollingChildSubtitle)
-    {
-      return false;
-    }
-
-    changed |= ImGui.Checkbox(Resources.TranslateTalkSubtitleToggleLabel, ref config.TranslateTalkSubtitle);
-
-    if (!config.TranslateTalkSubtitle)
-    {
-      return changed;
-    }
-
-    if (config.OverlayOnlyLanguage)
-    {
-      changed |= AssignIfChanged(ref config.UseImGuiForTalkSubtitle, true);
-    }
-    else
-    {
-      changed |= ImGui.Checkbox(Resources.OverlayToggleLabel, ref config.UseImGuiForTalkSubtitle);
-    }
-
-    if (config.UseImGuiForTalkSubtitle)
-    {
-      changed |= DrawOverlaySettings(
-          ref config.TalkSubtitleFontScale,
-          ref config.ImGuiTalkSubtitleWindowWidthMult,
-          ref config.ImGuiTalkSubtitleWindowHeightMult,
-          ref config.ImGuiTalkSubtitleWindowPosCorrection,
-          ref config.OverlayTalkSubtitleTextColor,
-          Resources.OverlayFontScaleLabel,
-          ref config.FontChangeTime);
-    }
-
-    return changed;
-  }
-
-  /// <summary>
-  /// Draw settings for overlays that have width, height, position, color, and font scale.
-  /// </summary>
-  private static bool DrawOverlaySettings(
-      ref float fontScale,
-      ref float widthMult,
-      ref float heightMult,
-      ref Vector2 positionCorrection,
-      ref Vector3 textColor,
-      string fontScaleLabel,
-      ref long fontChangeTime)
-  {
-    bool changed = false;
-
-    if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
-    {
-      changed = true;
-      fontChangeTime = DateTime.Now.Ticks;
-    }
-
-    ImGui.SameLine();
-    ImGui.Text(Resources.HoverTooltipIndicator);
-    if (ImGui.IsItemHovered())
-    {
-      ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
-    }
-
-    ImGui.Text(Resources.FontColorSelectLabel);
-    ImGui.SameLine();
-    changed |= ImGui.ColorEdit3(Resources.OverlayColorSelectName, ref textColor,
-        ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
-
-    ImGui.SameLine();
-    ImGui.Text(Resources.HoverTooltipIndicator);
-    if (ImGui.IsItemHovered())
-    {
-      ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
-    }
-
-    changed |= ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref widthMult, 0.001f, 0.01f, 3f);
-    changed |= ImGui.DragFloat(Resources.OverlayHeightScrollLabel, ref heightMult, 0.001f, 0.01f, 3f);
-
-    changed |= ImGui.DragFloat2(Resources.OverlayPositionAdjustmentLabel, ref positionCorrection);
-    ImGui.SameLine();
-    ImGui.Text(Resources.HoverTooltipIndicator);
-    if (ImGui.IsItemHovered())
-    {
-      ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
-    }
-
-    return changed;
-  }
-
-  /// <summary>
-  /// Draw settings for overlays that do not have a height adjustment (e.g., Toast).
-  /// </summary>
-  private static bool DrawOverlaySettings(
-      ref float fontScale,
-      ref float widthMult,
-      ref Vector2 positionCorrection,
-      ref Vector3 textColor,
-      string fontScaleLabel,
-      ref long fontChangeTime)
-  {
-    bool changed = false;
-
-    if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
-    {
-      changed = true;
-      fontChangeTime = DateTime.Now.Ticks;
-    }
-
-    ImGui.SameLine();
-    ImGui.Text(Resources.HoverTooltipIndicator);
-    if (ImGui.IsItemHovered())
-    {
-      ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
-    }
-
-    ImGui.Text(Resources.FontColorSelectLabel);
-    ImGui.SameLine();
-    changed |= ImGui.ColorEdit3(Resources.OverlayColorSelectName, ref textColor,
-        ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
-
-    ImGui.SameLine();
-    ImGui.Text(Resources.HoverTooltipIndicator);
-    if (ImGui.IsItemHovered())
-    {
-      ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
-    }
-
-    changed |= ImGui.DragFloat(Resources.OverlayWidthScrollLabel, ref widthMult, 0.001f, 0.01f, 3f);
-    changed |= ImGui.DragFloat2(Resources.OverlayPositionAdjustmentLabel, ref positionCorrection);
-    ImGui.SameLine();
-    ImGui.Text(Resources.HoverTooltipIndicator);
-    if (ImGui.IsItemHovered())
-    {
-      ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
-    }
-
-    return changed;
-  }
-
-  private static bool AssignIfChanged<T>(ref T field, T value)
-    where T : notnull
-  {
-    if (!field.Equals(value))
-    {
-      field = value;
-      return true;
-    }
-
-    return false;
-  }
-
-  private static bool ShouldRemoveDiacritics(Config config)
-  {
-    int lang = config.Lang;
-    return lang is 24 or 25 or 44 or 60 or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
-  }
 }

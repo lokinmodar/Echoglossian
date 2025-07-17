@@ -3,32 +3,28 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.Properties;
-
-using ImGuiNET;
-
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
-/// Renders the miscellaneous settings tab in the plugin configuration UI.
+///     Renders the miscellaneous settings tab in the plugin configuration UI.
 /// </summary>
 public static class MiscTab
 {
-  /// <summary>
-  /// Draws the miscellaneous settings UI.
-  /// </summary>
-  /// <param name="config">The plugin configuration.</param>
-  /// <returns>True if any value has changed, otherwise false.</returns>
-  public static bool Draw(Config config)
-  {
-    bool changed = false;
-
-    if (changed)
+    /// <summary>
+    ///     Draws the miscellaneous settings UI.
+    /// </summary>
+    /// <param name="config">The plugin configuration.</param>
+    /// <returns>True if any value has changed, otherwise false.</returns>
+    public static bool Draw(Config config)
     {
-      FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-      SaveConfig(config);
-    }
+        var changed = false;
 
-    return changed;
-  }
+        if (changed)
+        {
+            FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+            Echoglossian.SaveConfig(config);
+        }
+
+        return changed;
+    }
 }

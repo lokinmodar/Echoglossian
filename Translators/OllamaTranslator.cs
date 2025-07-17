@@ -9,75 +9,86 @@ namespace Echoglossian.Translators;
 
 public class OllamaTranslator : ITranslator
 {
-  private readonly HttpClient httpClient;
-  private readonly IPluginLog pluginLog;
-  private readonly Dictionary<string, string> translationCache = new();
+    private readonly string endpoint;
+    private readonly HttpClient httpClient;
+    private readonly string model;
+    private readonly IPluginLog pluginLog;
+    private readonly float temperature;
+    private readonly Dictionary<string, string> translationCache = new();
 
-  private readonly string endpoint;
-  private readonly string model;
-  private readonly float temperature;
-
-  public OllamaTranslator(IPluginLog pluginLog, Config config)
-  {
-    this.pluginLog = pluginLog;
-    this.endpoint = config.OllamaUrl?.TrimEnd('/') ?? "http://localhost:11434";
-    this.model = config.OllamaModel ?? "llama3";
-    this.temperature = config.OllamaTemperature;
-
-    this.httpClient = new HttpClient
+    public OllamaTranslator(IPluginLog pluginLog, Config config)
     {
-      BaseAddress = new Uri(this.endpoint),
-    };
-    this.httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-  }
+        this.pluginLog = pluginLog;
+        this.endpoint =
+            config.OllamaUrl?.TrimEnd('/') ?? "http://localhost:11434";
+        this.model = config.OllamaModel ?? "llama3";
+        this.temperature = config.OllamaTemperature;
 
-  public string Translate(string text, string sourceLanguage, string targetLanguage)
-  {
-    return this.TranslateAsync(text, sourceLanguage, targetLanguage).GetAwaiter().GetResult() ?? string.Empty;
-  }
-
-  public async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
-  {
-    string cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
-    if (this.translationCache.TryGetValue(cacheKey, out var cached))
-    {
-      return cached;
+        this.httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(this.endpoint)
+        };
+        this.httpClient.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
-    string fixedText = Echoglossian.FixText(text);
-    string prompt = $"Translate the following Final Fantasy XIV dialogue from {sourceLanguage} to {targetLanguage}. Keep it localized and immersive:\n\n\"{fixedText}\"";
-
-    var request = new
+    public string Translate(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      model = this.model,
-      prompt = prompt,
-      temperature = this.temperature,
-      stream = false,
-    };
-
-    try
-    {
-      var response = await this.httpClient.PostAsJsonAsync("/api/generate", request);
-      response.EnsureSuccessStatusCode();
-
-      var json = await response.Content.ReadAsStringAsync();
-      var parsed = JObject.Parse(json);
-      string? output = parsed["response"]?.ToString()?.Trim();
-
-      if (!string.IsNullOrWhiteSpace(output))
-      {
-        string cleaned = Echoglossian.FixText(output.Trim('"'));
-        this.translationCache[cacheKey] = cleaned;
-        return cleaned;
-      }
-
-      this.pluginLog.Warning("OllamaTranslator: No output returned.");
-      return $"[{Resources.TranslationError} No translation received from Ollama]";
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage)
+            .GetAwaiter().GetResult() ?? string.Empty;
     }
-    catch (Exception ex)
+
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      this.pluginLog.Error($"OllamaTranslator failed: {ex.Message}");
-      return $"[{Resources.TranslationError} Ollama error: {ex.Message}]";
+        var cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
+        if (this.translationCache.TryGetValue(cacheKey, out var cached))
+        {
+            return cached;
+        }
+
+        var fixedText = FixText(text);
+        var prompt =
+            $"Translate the following Final Fantasy XIV dialogue from {sourceLanguage} to {targetLanguage}. Keep it localized and immersive:\n\n\"{fixedText}\"";
+
+        var request = new
+        {
+            this.model,
+            prompt,
+            this.temperature,
+            stream = false
+        };
+
+        try
+        {
+            var response =
+                await this.httpClient.PostAsJsonAsync("/api/generate", request);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var parsed = JObject.Parse(json);
+            var output = parsed["response"]?.ToString()?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(output))
+            {
+                var cleaned = FixText(output.Trim('"'));
+                this.translationCache[cacheKey] = cleaned;
+                return cleaned;
+            }
+
+            this.pluginLog.Warning("OllamaTranslator: No output returned.");
+            return
+                $"[{Resources.TranslationError} No translation received from Ollama]";
+        }
+        catch (Exception ex)
+        {
+            this.pluginLog.Error($"OllamaTranslator failed: {ex.Message}");
+            return $"[{Resources.TranslationError} Ollama error: {ex.Message}]";
+        }
     }
-  }
 }

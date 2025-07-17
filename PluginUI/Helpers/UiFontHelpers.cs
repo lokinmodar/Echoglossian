@@ -3,63 +3,64 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Runtime.InteropServices;
-
-using ImGuiNET;
-
 namespace Echoglossian;
 
 public partial class Echoglossian
 {
-  public ImFontPtr ConfigUiFont;
-  public static readonly string FontFileName = "NotoSans-Medium.ttf";
-  public bool FontLoaded;
-  public bool FontLoadFailed;
-  public GCHandle? GlyphRangeConfigText;
+    public static readonly string FontFileName = "NotoSans-Medium.ttf";
 
-  public GCHandle? GlyphRangeMainText;
+    public static string SpecialFontFileName = string.Empty;
+    public ImFontPtr ConfigUiFont;
+    public bool FontLoaded;
+    public bool FontLoadFailed;
+    public GCHandle? GlyphRangeConfigText;
 
-  public bool LanguageComboFontLoaded;
-  public bool LanguageComboFontLoadFailed;
+    public GCHandle? GlyphRangeMainText;
 
-  public static string SpecialFontFileName = string.Empty;
-  public ImFontPtr UiFont;
+    public bool LanguageComboFontLoaded;
+    public bool LanguageComboFontLoadFailed;
+    public ImFontPtr UiFont;
 
-  private static void AdjustLanguageForFontBuild()
-  {
+    private static void AdjustLanguageForFontBuild()
+    {
 #if DEBUG
-    PluginLog.Debug("Inside AdjustLanguageForFontBuild method");
+        PluginLog.Debug("Inside AdjustLanguageForFontBuild method");
 #endif
 
-    var lang = SelectedLanguage;
-    SpecialFontFileName = lang.FontName;
-    ScriptCharList = lang.ExclusiveCharsToAdd;
+        var lang = SelectedLanguage;
+        SpecialFontFileName = lang.FontName;
+        ScriptCharList = lang.ExclusiveCharsToAdd;
 
-    PluginLog.Debug("Lang:\n " + lang + "\nSpecialFontFileName:\n " + SpecialFontFileName + "\nScriptCharList:\n " + ScriptCharList);
-  }
-
-  public static void MountFontPaths()
-  {
-    AdjustLanguageForFontBuild();
-
-    SpecialFontFilePath = $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{SpecialFontFileName}";
-    FontFilePath =
-       $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{FontFileName}";
-    SymbolsFontFilePath =
-          $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
-    DummyFontFilePath =
-          $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
-    LangComboFontFilePath =
-          $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
-    PluginLog.Debug("Fonts paths:\n " + SpecialFontFilePath + "\n " + FontFilePath + "\n " + SymbolsFontFilePath + "\n " + DummyFontFilePath);
-  }
-
-  private unsafe void AddCharsFromIntPtr(List<ushort> chars, ushort* ptr)
-  {
-    while (*ptr != 0)
-    {
-      chars.Add(*ptr);
-      ptr++;
+        PluginLog.Debug(
+            "Lang:\n " + lang + "\nSpecialFontFileName:\n " +
+            SpecialFontFileName + "\nScriptCharList:\n " + ScriptCharList);
     }
-  }
+
+    public static void MountFontPaths()
+    {
+        AdjustLanguageForFontBuild();
+
+        SpecialFontFilePath =
+            $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{SpecialFontFileName}";
+        FontFilePath =
+            $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{FontFileName}";
+        SymbolsFontFilePath =
+            $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
+        DummyFontFilePath =
+            $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+        LangComboFontFilePath =
+            $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
+        PluginLog.Debug(
+            "Fonts paths:\n " + SpecialFontFilePath + "\n " + FontFilePath +
+            "\n " + SymbolsFontFilePath + "\n " + DummyFontFilePath);
+    }
+
+    private unsafe void AddCharsFromIntPtr(List<ushort> chars, ushort* ptr)
+    {
+        while (*ptr != 0)
+        {
+            chars.Add(*ptr);
+            ptr++;
+        }
+    }
 }

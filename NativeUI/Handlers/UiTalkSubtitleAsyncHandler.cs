@@ -3,268 +3,305 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-using Dalamud.Memory;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
-using Echoglossian.EFCoreSqlite.Models;
-using Echoglossian.Properties;
+namespace Echoglossian;
 
-using FFXIVClientStructs.FFXIV.Component.GUI;
-
-using Humanizer;
-
-namespace Echoglossian
+public partial class Echoglossian
 {
-  public partial class Echoglossian
-  {
     private readonly int delayBetweenVisibilityCheckForOverlay = 100;
 
-    private unsafe void TranslateTalkSubtitle(string textToTranslate)
+    private void TranslateTalkSubtitle(string textToTranslate)
     {
-      PluginLog.Debug("Translating Talk Subtitle: " + textToTranslate);
-      Task.Run(() =>
-      {
+        PluginLog.Debug("Translating Talk Subtitle: " + textToTranslate);
+        Task.Run(() =>
+        {
+            try
+            {
+                var talkSubtitleMessage =
+                    this.FormatTalkSubtitleMessage(textToTranslate);
+                var foundTalkSubtitleMessage =
+                    this.FindAndReturnTalkSubtitleMessage(talkSubtitleMessage);
+                var translatedSubtitle = string.Empty;
+
+                if (foundTalkSubtitleMessage != null)
+                {
+                    translatedSubtitle = foundTalkSubtitleMessage
+                        .TranslatedTalkSubtitleMessage;
+                }
+                else
+                {
+                    var textTranslation = this.Translate(textToTranslate);
+
+                    var translatedTalkSubtitleData = new TalkSubtitleMessage(
+                        textToTranslate,
+                        ClientStateInterface.ClientLanguage.Humanize(),
+                        textTranslation,
+                        LangDict[LanguageInt].Code,
+                        this.configuration.ChosenTransEngine,
+                        DateTime.Now,
+                        DateTime.Now);
+
+                    var result =
+                        InsertTalkSubtitleData(translatedTalkSubtitleData);
+                    PluginLog.Debug("TalkSubtitle Insert Result: " + result);
+                    translatedSubtitle = textTranslation;
+                }
+
+                if (this.configuration.UseImGuiForTalkSubtitle)
+                {
+                    this.TranslateTalkSubtitleUsingImGui(
+                        textToTranslate,
+                        translatedSubtitle);
+                }
+                else
+                {
+                    this.TranslateTalkSubtitleReplacing(translatedSubtitle);
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error("TranslateTalkSubtitle error: " + ex);
+            }
+        });
+    }
+
+    public unsafe void TranslateTalkSubtitleReplacing(
+        string translatedTalkSubtitleText)
+    {
+        PluginLog.Debug("TranslateTalkSubtitleReplacing");
+
+        if (this.configuration.UseImGuiForTalkSubtitle &&
+            !this.configuration.SwapTextsUsingImGui)
+        {
+            return;
+        }
+
         try
         {
-          TalkSubtitleMessage talkSubtitleMessage = this.FormatTalkSubtitleMessage(textToTranslate);
-          TalkSubtitleMessage foundTalkSubtitleMessage = this.FindAndReturnTalkSubtitleMessage(talkSubtitleMessage);
-          string translatedSubtitle = string.Empty;
+            var addon = GameGuiInterface.GetAddonByName("TalkSubtitle");
+            if (addon == IntPtr.Zero)
+            {
+                return;
+            }
 
-          if (foundTalkSubtitleMessage != null)
-          {
-            translatedSubtitle = foundTalkSubtitleMessage.TranslatedTalkSubtitleMessage;
-          }
-          else
-          {
-            string textTranslation = this.Translate(textToTranslate);
+            var talkSubtitleAddon = (AtkUnitBase*)addon;
+            if (talkSubtitleAddon == null || !talkSubtitleAddon->IsVisible)
+            {
+                return;
+            }
 
-            TalkSubtitleMessage translatedTalkSubtitleData = new TalkSubtitleMessage(
-              textToTranslate, ClientStateInterface.ClientLanguage.Humanize(), textTranslation, LangDict[LanguageInt].Code, this.configuration.ChosenTransEngine, DateTime.Now, DateTime.Now);
+            var textNode = talkSubtitleAddon->GetTextNodeById(2);
+            var textNode3 = talkSubtitleAddon->GetTextNodeById(3);
+            var textNode4 = talkSubtitleAddon->GetTextNodeById(4);
+            if (textNode == null || textNode3 == null || textNode4 == null ||
+                textNode->NodeText.IsEmpty || textNode3->NodeText.IsEmpty ||
+                textNode4->NodeText.IsEmpty)
+            {
+                return;
+            }
 
-            string result = InsertTalkSubtitleData(translatedTalkSubtitleData);
-            PluginLog.Debug("TalkSubtitle Insert Result: " + result);
-            translatedSubtitle = textTranslation;
-          }
+            var translTalkSubtitleText = translatedTalkSubtitleText;
 
-          if (this.configuration.UseImGuiForTalkSubtitle)
-          {
-            this.TranslateTalkSubtitleUsingImGui(textToTranslate, translatedSubtitle);
-          }
-          else
-          {
-            this.TranslateTalkSubtitleReplacing(translatedSubtitle);
-          }
+            if (this.configuration
+                .RemoveDiacriticsWhenUsingReplacementTalkBTalk)
+            {
+                translTalkSubtitleText = this.RemoveDiacritics(
+                    translTalkSubtitleText,
+                    this.SpecialCharsSupportedByGameFont);
+            }
+
+            textNode->SetText(translTalkSubtitleText);
+            textNode3->SetText(translTalkSubtitleText);
+            textNode4->SetText(translTalkSubtitleText);
         }
         catch (Exception ex)
         {
-          PluginLog.Error("TranslateTalkSubtitle error: " + ex);
+            PluginLog.Error("TranslateTalkSubtitleReplacing error: " + ex);
         }
-      });
     }
 
-    public unsafe void TranslateTalkSubtitleReplacing(string translatedTalkSubtitleText)
+    private void TranslateTalkSubtitleUsingImGuiAndSwapping(
+        string textToTranslate,
+        string translatedSubtitle)
     {
-      PluginLog.Debug("TranslateTalkSubtitleReplacing");
+        PluginLog.Debug(
+            $"TranslateTalkSubtitleUsingImGuiAndSwapping: {translatedSubtitle}");
 
-      if (this.configuration.UseImGuiForTalkSubtitle && !this.configuration.SwapTextsUsingImGui)
-      {
-        return;
-      }
-
-      try
-      {
-        var addon = GameGuiInterface.GetAddonByName("TalkSubtitle");
-        if (addon == IntPtr.Zero)
+        try
         {
-          return;
-        }
+            this.TranslateTalkSubtitleReplacing(translatedSubtitle);
 
-        var talkSubtitleAddon = (AtkUnitBase*)addon;
-        if (talkSubtitleAddon == null || !talkSubtitleAddon->IsVisible)
+            this.currentTalkSubtitleTranslationId = Environment.TickCount;
+            this.currentTalkSubtitleTranslation =
+                Resources.WaitingForTranslation;
+            var id = this.currentTalkSubtitleTranslationId;
+            this.talkSubtitleTranslationSemaphore.Wait();
+            if (id == this.currentTalkSubtitleTranslationId)
+            {
+                this.currentTalkSubtitleTranslation = textToTranslate;
+            }
+
+            this.talkSubtitleTranslationSemaphore.Release();
+
+            this.TalkSubtitleHandler("TalkSubtitle", 1);
+        }
+        catch (Exception e)
         {
-          return;
+            PluginLog.Debug(
+                "TranslateTalkSubtitleUsingImGuiAndSwapping Exception: " + e);
         }
-
-        var textNode = talkSubtitleAddon->GetTextNodeById(2);
-        var textNode3 = talkSubtitleAddon->GetTextNodeById(3);
-        var textNode4 = talkSubtitleAddon->GetTextNodeById(4);
-        if (textNode == null ||
-          textNode3 == null ||
-          textNode4 == null ||
-          textNode->NodeText.IsEmpty ||
-          textNode3->NodeText.IsEmpty ||
-          textNode4->NodeText.IsEmpty)
-        {
-          return;
-        }
-
-        var translTalkSubtitleText = translatedTalkSubtitleText;
-
-        if (this.configuration.RemoveDiacriticsWhenUsingReplacementTalkBTalk)
-        {
-          translTalkSubtitleText = this.RemoveDiacritics(translTalkSubtitleText, this.SpecialCharsSupportedByGameFont);
-        }
-
-        textNode->SetText(translTalkSubtitleText);
-        textNode3->SetText(translTalkSubtitleText);
-        textNode4->SetText(translTalkSubtitleText);
-      }
-      catch (Exception ex)
-      {
-        PluginLog.Error("TranslateTalkSubtitleReplacing error: " + ex);
-      }
     }
 
-    private unsafe void TranslateTalkSubtitleUsingImGuiAndSwapping(string textToTranslate, string translatedSubtitle)
+    private void TranslateTalkSubtitleUsingImGuiWithoutSwapping(
+        string translatedSubtitle)
     {
-      PluginLog.Debug($"TranslateTalkSubtitleUsingImGuiAndSwapping: {translatedSubtitle}");
+        PluginLog.Debug(
+            $"TranslateTalkSubtitleUsingImGuiWithoutSwapping: {translatedSubtitle}");
 
-      try
-      {
-        this.TranslateTalkSubtitleReplacing(translatedSubtitle);
-
-        this.currentTalkSubtitleTranslationId = Environment.TickCount;
-        this.currentTalkSubtitleTranslation = Resources.WaitingForTranslation;
-        int id = this.currentTalkSubtitleTranslationId;
-        this.talkSubtitleTranslationSemaphore.Wait();
-        if (id == this.currentTalkSubtitleTranslationId)
+        try
         {
-          this.currentTalkSubtitleTranslation = textToTranslate;
+            this.currentTalkSubtitleTranslationId = Environment.TickCount;
+            this.currentTalkSubtitleTranslation =
+                Resources.WaitingForTranslation;
+            var id = this.currentTalkSubtitleTranslationId;
+            var translatedTalkSubtitleMessage = translatedSubtitle;
+            this.talkSubtitleTranslationSemaphore.Wait();
+            if (id == this.currentTalkSubtitleTranslationId)
+            {
+                this.currentTalkSubtitleTranslation =
+                    translatedTalkSubtitleMessage;
+            }
+
+            this.talkSubtitleTranslationSemaphore.Release();
+            this.TalkSubtitleHandler("TalkSubtitle", 1);
+        }
+        catch (Exception e)
+        {
+            PluginLog.Debug(
+                "TranslateTalkSubtitleUsingImGuiWithoutSwapping Exception: " +
+                e);
+        }
+    }
+
+    private void TranslateTalkSubtitleUsingImGui(
+        string textToTranslate,
+        string translatedSubtitle)
+    {
+        PluginLog.Debug(
+            $"TranslateTalkSubtitleUsingImGui: {translatedSubtitle}");
+
+        if (this.configuration.SwapTextsUsingImGui)
+        {
+            this.TranslateTalkSubtitleUsingImGuiAndSwapping(
+                textToTranslate,
+                translatedSubtitle);
+            return;
         }
 
-        this.talkSubtitleTranslationSemaphore.Release();
-
-        this.TalkSubtitleHandler("TalkSubtitle", 1);
-      }
-      catch (Exception e)
-      {
-        PluginLog.Debug("TranslateTalkSubtitleUsingImGuiAndSwapping Exception: " + e);
-      }
+        this.TranslateTalkSubtitleUsingImGuiWithoutSwapping(translatedSubtitle);
     }
 
-    private unsafe void TranslateTalkSubtitleUsingImGuiWithoutSwapping(string translatedSubtitle)
+    private unsafe void UiTalkSubtitleAsyncHandler(
+        AddonEvent type,
+        AddonArgs args)
     {
-      PluginLog.Debug($"TranslateTalkSubtitleUsingImGuiWithoutSwapping: {translatedSubtitle}");
-
-      try
-      {
-        this.currentTalkSubtitleTranslationId = Environment.TickCount;
-        this.currentTalkSubtitleTranslation = Resources.WaitingForTranslation;
-        int id = this.currentTalkSubtitleTranslationId;
-        string translatedTalkSubtitleMessage = translatedSubtitle;
-        this.talkSubtitleTranslationSemaphore.Wait();
-        if (id == this.currentTalkSubtitleTranslationId)
+        if (!this.configuration.TranslateTalkSubtitle)
         {
-          this.currentTalkSubtitleTranslation = translatedTalkSubtitleMessage;
+            return;
         }
 
-        this.talkSubtitleTranslationSemaphore.Release();
-        this.TalkSubtitleHandler("TalkSubtitle", 1);
-      }
-      catch (Exception e)
-      {
-        PluginLog.Debug("TranslateTalkSubtitleUsingImGuiWithoutSwapping Exception: " + e);
-      }
-    }
+        PluginLog.Debug($"UiTalkSubtitleAsyncHandler: {type} {args.AddonName}");
 
-    private unsafe void TranslateTalkSubtitleUsingImGui(string textToTranslate, string translatedSubtitle)
-    {
-      PluginLog.Debug($"TranslateTalkSubtitleUsingImGui: {translatedSubtitle}");
+        switch (args)
+        {
+            case AddonSetupArgs setupArgs:
+                var setupAtkValues = (AtkValue*)setupArgs.AtkValues;
+                if (setupAtkValues == null)
+                {
+                    return;
+                }
 
-      if (this.configuration.SwapTextsUsingImGui)
-      {
-        this.TranslateTalkSubtitleUsingImGuiAndSwapping(textToTranslate, translatedSubtitle);
-        return;
-      }
+                if (setupAtkValues[0].Type != ValueType.String ||
+                    setupAtkValues[0].String == null)
+                {
+                    return;
+                }
 
-      this.TranslateTalkSubtitleUsingImGuiWithoutSwapping(translatedSubtitle);
-    }
+                var textToTranslate = MemoryHelper.ReadSeStringAsString(
+                    out _,
+                    (nint)setupAtkValues[0].String.Value);
+                if (textToTranslate == string.Empty)
+                {
+                    return;
+                }
 
-    private unsafe void UiTalkSubtitleAsyncHandler(AddonEvent type, AddonArgs args)
-    {
-      if (!this.configuration.TranslateTalkSubtitle)
-      {
-        return;
-      }
+                if (!this.configuration.UseImGuiForTalkSubtitle ||
+                    this.configuration.SwapTextsUsingImGui)
+                {
+                    setupAtkValues[0].SetManagedString(string.Empty);
+                }
 
-      PluginLog.Debug($"UiTalkSubtitleAsyncHandler: {type} {args.AddonName}");
+                this.TranslateTalkSubtitle(textToTranslate);
+                return;
+            case AddonRefreshArgs refreshArgs:
+                var refreshAtkValues = (AtkValue*)refreshArgs.AtkValues;
+                if (refreshAtkValues == null)
+                {
+                    return;
+                }
 
-      switch (args)
-      {
-        case AddonSetupArgs setupArgs:
-          var setupAtkValues = (AtkValue*)setupArgs.AtkValues;
-          if (setupAtkValues == null)
-          {
-            return;
-          }
+                if (refreshAtkValues[0].Type != ValueType.String ||
+                    refreshAtkValues[0].String == null)
+                {
+                    return;
+                }
 
-          if (setupAtkValues[0].Type != FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String || setupAtkValues[0].String == null)
-          {
-            return;
-          }
+                var refreshTextToTranslate = MemoryHelper.ReadSeStringAsString(
+                    out _,
+                    (nint)refreshAtkValues[0].String.Value);
+                if (refreshTextToTranslate == string.Empty)
+                {
+                    return;
+                }
 
-          var textToTranslate = MemoryHelper.ReadSeStringAsString(out _, (nint)setupAtkValues[0].String.Value);
-          if (textToTranslate == string.Empty)
-          {
-            return;
-          }
+                if (!this.configuration.UseImGuiForTalkSubtitle ||
+                    this.configuration.SwapTextsUsingImGui)
+                {
+                    refreshAtkValues[0].SetManagedString(string.Empty);
+                }
 
-          if (!this.configuration.UseImGuiForTalkSubtitle || this.configuration.SwapTextsUsingImGui)
-          {
-            setupAtkValues[0].SetManagedString(string.Empty);
-          }
-
-          this.TranslateTalkSubtitle(textToTranslate);
-          return;
-        case AddonRefreshArgs refreshArgs:
-          var refreshAtkValues = (AtkValue*)refreshArgs.AtkValues;
-          if (refreshAtkValues == null)
-          {
-            return;
-          }
-
-          if (refreshAtkValues[0].Type != FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String || refreshAtkValues[0].String == null)
-          {
-            return;
-          }
-
-          var refreshTextToTranslate = MemoryHelper.ReadSeStringAsString(out _, (nint)refreshAtkValues[0].String.Value);
-          if (refreshTextToTranslate == string.Empty)
-          {
-            return;
-          }
-
-          if (!this.configuration.UseImGuiForTalkSubtitle || this.configuration.SwapTextsUsingImGui)
-          {
-            refreshAtkValues[0].SetManagedString(string.Empty);
-          }
-
-          this.TranslateTalkSubtitle(refreshTextToTranslate);
-          return;
-      }
+                this.TranslateTalkSubtitle(refreshTextToTranslate);
+                return;
+        }
     }
 
     private unsafe void TalkSubtitleHandler(string addonName, int index)
     {
-      IntPtr talkSubtitle = GameGuiInterface.GetAddonByName(addonName, index);
-      if (talkSubtitle != IntPtr.Zero)
-      {
-        AtkUnitBase* talkSubtitleMaster = (AtkUnitBase*)talkSubtitle;
-        while (talkSubtitleMaster->IsVisible)
+        var talkSubtitle = GameGuiInterface.GetAddonByName(addonName, index);
+        if (talkSubtitle != IntPtr.Zero)
         {
-          this.talkSubtitleDisplayTranslation = true;
-          this.talkSubtitleTextDimensions.X = talkSubtitleMaster->RootNode->Width * talkSubtitleMaster->Scale;
-          this.talkSubtitleTextDimensions.Y = talkSubtitleMaster->RootNode->Height * talkSubtitleMaster->Scale;
-          this.talkSubtitleTextPosition.X = talkSubtitleMaster->RootNode->X;
-          this.talkSubtitleTextPosition.Y = talkSubtitleMaster->RootNode->Y;
+            var talkSubtitleMaster = (AtkUnitBase*)talkSubtitle;
+            while (talkSubtitleMaster->IsVisible)
+            {
+                this.talkSubtitleDisplayTranslation = true;
+                this.talkSubtitleTextDimensions.X =
+                    talkSubtitleMaster->RootNode->Width *
+                    talkSubtitleMaster->Scale;
+                this.talkSubtitleTextDimensions.Y =
+                    talkSubtitleMaster->RootNode->Height *
+                    talkSubtitleMaster->Scale;
+                this.talkSubtitleTextPosition.X =
+                    talkSubtitleMaster->RootNode->X;
+                this.talkSubtitleTextPosition.Y =
+                    talkSubtitleMaster->RootNode->Y;
 
-          Thread.Sleep(this.delayBetweenVisibilityCheckForOverlay);
+                Thread.Sleep(this.delayBetweenVisibilityCheckForOverlay);
+            }
+
+            this.talkSubtitleDisplayTranslation = false;
         }
 
         this.talkSubtitleDisplayTranslation = false;
-      }
-
-      this.talkSubtitleDisplayTranslation = false;
     }
-  }
 }

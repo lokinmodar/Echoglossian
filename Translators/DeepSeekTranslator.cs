@@ -3,83 +3,93 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Net.Http.Headers;
+namespace Echoglossian.Translators;
 
-using Echoglossian.Properties;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-namespace Echoglossian.Translators
+public class DeepSeekTranslator : ITranslator
 {
-  public class DeepSeekTranslator : ITranslator
-  {
+    private readonly string apiKey;
+    private readonly string baseUrl;
     private readonly HttpClient? httpClient;
-    private readonly IPluginLog pluginLog;
     private readonly string model;
+    private readonly IPluginLog pluginLog;
     private readonly float temperature = 0.1f;
-    private readonly Dictionary<string, string> translationCache = new Dictionary<string, string>();
-    private string baseUrl;
-    private string apiKey;
+    private readonly Dictionary<string, string> translationCache = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DeepSeekTranslator"/> class.
+    ///     Initializes a new instance of the <see cref="DeepSeekTranslator" /> class.
     /// </summary>
     /// <param name="pluginLog">The plugin log instance for logging purposes.</param>
     /// <param name="config">The configuration settings for the DeepSeekTranslator.</param>
     public DeepSeekTranslator(IPluginLog pluginLog, Config config)
     {
-      this.baseUrl = config.DeepSeekBaseUrl ?? "https://api.deepseek.com/v1";
-      this.apiKey = config.DeepSeekTranslatorApiKey ?? string.Empty;
-      this.model = config.DeepSeekModel ?? "deepseek-chat";
-      this.temperature = config.DeepSeekTemperature;
-      this.pluginLog = pluginLog;
+        this.baseUrl = config.DeepSeekBaseUrl ?? "https://api.deepseek.com/v1";
+        this.apiKey = config.DeepSeekTranslatorApiKey ?? string.Empty;
+        this.model = config.DeepSeekModel ?? "deepseek-chat";
+        this.temperature = config.DeepSeekTemperature;
+        this.pluginLog = pluginLog;
 
-      if (string.IsNullOrWhiteSpace(this.apiKey))
-      {
-        this.pluginLog.Warning(Resources.APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable);
-        this.httpClient = null;
-      }
-      else
-      {
-        try
+        if (string.IsNullOrWhiteSpace(this.apiKey))
         {
-          pluginLog.Debug($"DeepSeekTranslator: {this.baseUrl}, {this.apiKey[..20]}***{this.apiKey[^5..]}, {this.temperature}");
+            this.pluginLog.Warning(
+                Resources
+                    .APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable);
+            this.httpClient = null;
+        }
+        else
+        {
+            try
+            {
+                pluginLog.Debug(
+                    $"DeepSeekTranslator: {this.baseUrl}, {this.apiKey[..20]}***{this.apiKey[^5..]}, {this.temperature}");
 
-          this.httpClient = new HttpClient
-          {
-            BaseAddress = new Uri(this.baseUrl),
-          };
-          this.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", this.apiKey);
-          this.httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                this.httpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(this.baseUrl)
+                };
+                this.httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", this.apiKey);
+                this.httpClient.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json"));
+            }
+            catch (Exception ex)
+            {
+                this.pluginLog.Error(
+                    $"Failed to initialize DeepSeek HTTP client: {ex.Message}");
+                this.httpClient = null;
+            }
         }
-        catch (Exception ex)
-        {
-          this.pluginLog.Error($"Failed to initialize DeepSeek HTTP client: {ex.Message}");
-          this.httpClient = null;
-        }
-      }
     }
 
-    public string Translate(string text, string sourceLanguage, string targetLanguage)
+    public string Translate(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      return this.TranslateAsync(text, sourceLanguage, targetLanguage).GetAwaiter().GetResult() ?? string.Empty;
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage)
+            .GetAwaiter().GetResult() ?? string.Empty;
     }
 
-    public async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      if (this.httpClient == null)
-      {
-        return Resources.DeepSeekTranslationUnavailablePleaseCheckYourAPIKey;
-      }
+        if (this.httpClient == null)
+        {
+            return Resources
+                .DeepSeekTranslationUnavailablePleaseCheckYourAPIKey;
+        }
 
-      string cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
-      if (this.translationCache.TryGetValue(cacheKey, out string? cachedTranslation))
-      {
-        return cachedTranslation;
-      }
+        var cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
+        if (this.translationCache.TryGetValue(
+                cacheKey,
+                out var cachedTranslation))
+        {
+            return cachedTranslation;
+        }
 
-      string prompt = @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
+        var prompt =
+            @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
 1. Preserve the original tone, humor, personality, and emotional nuances of the dialogue, considering the unique style and atmosphere of Final Fantasy XIV.
 2. Adapt idioms, cultural references, and wordplay to resonate naturally with native {targetLanguage} speakers while maintaining the fantasy RPG context.
@@ -96,57 +106,67 @@ Text to translate: ""{text}""
 
 Please provide only the translated text in your response, without any explanations, additional comments, or quotation marks. Your goal is to create a localized version that captures the essence of the original Final Fantasy XIV dialogue while feeling authentic to {targetLanguage} speakers and seamlessly fitting into the game world.";
 
-      try
-      {
-        var requestData = new
+        try
         {
-          this.model,
-          messages = new[]
+            var requestData = new
             {
-                        new
-                        {
-                            role = "user",
-                            content = prompt,
-                        },
-            },
-          this.temperature,
-        };
+                this.model,
+                messages = new[]
+                {
+                    new
+                    {
+                        role = "user",
+                        content = prompt
+                    }
+                },
+                this.temperature
+            };
 
-        var jsonContent = JsonConvert.SerializeObject(requestData);
-        var httpContent = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            var jsonContent = JsonConvert.SerializeObject(requestData);
+            var httpContent = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
 
-        var response = await this.httpClient.PostAsync("chat/completions", httpContent);
-        response.EnsureSuccessStatusCode();
+            var response = await this.httpClient.PostAsync(
+                "chat/completions",
+                httpContent);
+            response.EnsureSuccessStatusCode();
 
-        var responseString = await response.Content.ReadAsStringAsync();
-        var responseObject = JObject.Parse(responseString);
+            var responseString = await response.Content.ReadAsStringAsync();
+            var responseObject = JObject.Parse(responseString);
 
-        var translatedText = responseObject["choices"]?[0]?["message"]?["content"]?.ToString().Trim();
+            var translatedText =
+                responseObject["choices"]?[0]?["message"]?["content"]
+                    ?.ToString().Trim();
 
-        if (!string.IsNullOrEmpty(translatedText))
-        {
-          translatedText = translatedText.Trim('"');
-          this.translationCache[cacheKey] = translatedText;
-          return translatedText;
+            if (!string.IsNullOrEmpty(translatedText))
+            {
+                translatedText = translatedText.Trim('"');
+                this.translationCache[cacheKey] = translatedText;
+                return translatedText;
+            }
         }
-      }
-      catch (HttpRequestException httpEx)
-      {
-        this.pluginLog.Error($"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
-        return $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
-      }
-      catch (JsonException jsonEx)
-      {
-        this.pluginLog.Error($"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
-        return $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
-      }
-      catch (Exception ex)
-      {
-        this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
-        return $"[{Resources.TranslationError} {ex.Message}]";
-      }
+        catch (HttpRequestException httpEx)
+        {
+            this.pluginLog.Error(
+                $"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
+            return
+                $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
+        }
+        catch (JsonException jsonEx)
+        {
+            this.pluginLog.Error(
+                $"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
+            return
+                $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
+        }
+        catch (Exception ex)
+        {
+            this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
+            return $"[{Resources.TranslationError} {ex.Message}]";
+        }
 
-      return string.Empty;
+        return string.Empty;
     }
-  }
 }

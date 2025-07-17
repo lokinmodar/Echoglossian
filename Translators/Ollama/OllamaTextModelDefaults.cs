@@ -9,11 +9,43 @@ namespace Echoglossian.Translators.Ollama;
 
 public static class OllamaTextModelDefaults
 {
-  public static readonly List<OpenAITextModel> PredefinedModels = new()
-  {
-    new("llama3", "🦙 llama3", true, false, false, false, true, "Ollama"),
-    new("mistral", "🦙 mistral", true, false, false, false, false, "Ollama"),
-    new("gemma", "🦙 gemma", true, false, false, false, false, "Ollama"),
-    new("phi3", "🦙 phi3", true, false, false, false, false, "Ollama"),
-  };
+    public static readonly List<OpenAITextModel> PredefinedModels = new()
+    {
+        new OpenAITextModel(
+            "llama3",
+            "🦙 llama3",
+            true,
+            false,
+            false,
+            false,
+            true,
+            "Ollama"),
+        new OpenAITextModel(
+            "mistral",
+            "🦙 mistral",
+            true,
+            false,
+            false,
+            false,
+            false,
+            "Ollama"),
+        new OpenAITextModel(
+            "gemma",
+            "🦙 gemma",
+            true,
+            false,
+            false,
+            false,
+            false,
+            "Ollama"),
+        new OpenAITextModel(
+            "phi3",
+            "🦙 phi3",
+            true,
+            false,
+            false,
+            false,
+            false,
+            "Ollama")
+    };
 }

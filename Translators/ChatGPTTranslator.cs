@@ -4,97 +4,122 @@
 // </copyright>
 
 using System.ClientModel;
-
-using Echoglossian.Properties;
-
 using OpenAI;
 using OpenAI.Chat;
 
-namespace Echoglossian.Translators
+namespace Echoglossian.Translators;
+
+public class ChatGPTTranslator : ITranslator
 {
-  public class ChatGPTTranslator : ITranslator
-  {
     private readonly ChatClient? chatClient;
-    private readonly IPluginLog pluginLog;
     private readonly string model;
-    private float temperature;
-    private Dictionary<string, string> translationCache = new Dictionary<string, string>();
+    private readonly IPluginLog pluginLog;
+    private readonly float temperature;
+    private readonly Dictionary<string, string> translationCache = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChatGPTTranslator"/> class.
+    ///     Initializes a new instance of the <see cref="ChatGPTTranslator" /> class.
     /// </summary>
     /// <param name="pluginLog"></param>
     /// <param name="baseUrl"></param>
     /// <param name="apiKey"></param>
     /// <param name="model"></param>
     /// <param name="temperature"></param>
-    public ChatGPTTranslator(IPluginLog pluginLog, string baseUrl = "https://api.openai.com/v1", string apiKey = "", string model = "gpt-4o-mini", float temperature = 0.1f)
+    public ChatGPTTranslator(
+        IPluginLog pluginLog,
+        string baseUrl = "https://api.openai.com/v1",
+        string apiKey = "",
+        string model = "gpt-4o-mini",
+        float temperature = 0.1f)
     {
-      this.pluginLog = pluginLog;
-      this.model = model;
-      this.temperature = temperature;
+        this.pluginLog = pluginLog;
+        this.model = model;
+        this.temperature = temperature;
 
-      if (string.IsNullOrWhiteSpace(apiKey))
-      {
-        this.pluginLog.Warning(Resources.APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable);
-        this.chatClient = null;
-      }
-      else
-      {
-        try
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
-          pluginLog.Debug($"ChatGPTTranslator: {baseUrl}, {apiKey[..20]}***{apiKey[^5..]}, {temperature}");
-
-          var clientOptions = new OpenAIClientOptions
-          {
-            Endpoint = new Uri(baseUrl),
-          };
-
-          pluginLog.Debug($"ChatGPTTranslator: {string.Join(", ", clientOptions.GetType().GetProperties().Select(p => $"{p.Name}={p.GetValue(clientOptions)}"))}");
-
-          this.chatClient = new ChatClient(model, new ApiKeyCredential(apiKey), clientOptions);
+            this.pluginLog.Warning(
+                Resources
+                    .APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable);
+            this.chatClient = null;
         }
-        catch (Exception ex)
+        else
         {
-          this.pluginLog.Error($"Failed to initialize GPT ChatClient: {ex.Message}");
-          this.chatClient = null;
+            try
+            {
+                pluginLog.Debug(
+                    $"ChatGPTTranslator: {baseUrl}, {apiKey[..20]}***{apiKey[^5..]}, {temperature}");
+
+                var clientOptions = new OpenAIClientOptions
+                {
+                    Endpoint = new Uri(baseUrl)
+                };
+
+                pluginLog.Debug(
+                    $"ChatGPTTranslator: {string.Join(", ", clientOptions.GetType().GetProperties().Select(p => $"{p.Name}={p.GetValue(clientOptions)}"))}");
+
+                this.chatClient = new ChatClient(
+                    model,
+                    new ApiKeyCredential(apiKey),
+                    clientOptions);
+            }
+            catch (Exception ex)
+            {
+                this.pluginLog.Error(
+                    $"Failed to initialize GPT ChatClient: {ex.Message}");
+                this.chatClient = null;
+            }
         }
-      }
     }
 
     /// <summary>
-    /// Translates the specified text from the source language to the target language.
+    ///     Translates the specified text from the source language to the target
+    ///     language.
     /// </summary>
     /// <param name="text">The text to translate.</param>
     /// <param name="sourceLanguage">The source language of the text.</param>
     /// <param name="targetLanguage">The target language for the translation.</param>
     /// <returns>The translated text.</returns>
-    public string Translate(string text, string sourceLanguage, string targetLanguage)
+    public string Translate(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      return this.TranslateAsync(text, sourceLanguage, targetLanguage).GetAwaiter().GetResult() ?? string.Empty;
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage)
+            .GetAwaiter().GetResult() ?? string.Empty;
     }
 
     /// <summary>
-    /// Translates the specified text from the source language to the target language asynchronously.
+    ///     Translates the specified text from the source language to the target
+    ///     language asynchronously.
     /// </summary>
     /// <param name="text">The text to translate.</param>
     /// <param name="sourceLanguage">The source language of the text.</param>
     /// <param name="targetLanguage">The target language for the translation.</param>
-    /// <returns>A task that represents the asynchronous translation operation. The task result contains the translated text.</returns>
-    public async Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+    /// <returns>
+    ///     A task that represents the asynchronous translation operation. The
+    ///     task result contains the translated text.
+    /// </returns>
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
     {
-      if (this.chatClient == null)
-      {
-        return Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
-      }
+        if (this.chatClient == null)
+        {
+            return Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+        }
 
-      string cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
-      if (this.translationCache.TryGetValue(cacheKey, out string? cachedTranslation))
-      {
-        return cachedTranslation;
-      }
+        var cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
+        if (this.translationCache.TryGetValue(
+                cacheKey,
+                out var cachedTranslation))
+        {
+            return cachedTranslation;
+        }
 
-      string prompt = @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
+        var prompt =
+            @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
                                 1. Preserve the original tone, humor, personality, and emotional nuances of the dialogue, considering the unique style and atmosphere of Final Fantasy XIV.
                                 2. Adapt idioms, cultural references, and wordplay to resonate naturally with native {targetLanguage} speakers while maintaining the fantasy RPG context.
@@ -111,36 +136,38 @@ namespace Echoglossian.Translators
 
                                 Please provide only the translated text in your response, without any explanations, additional comments, or quotation marks. Your goal is to create a localized version that captures the essence of the original Final Fantasy XIV dialogue while feeling authentic to {targetLanguage} speakers and seamlessly fitting into the game world.";
 
-      try
-      {
-        var chatCompletionOptions = new ChatCompletionOptions
+        try
         {
-          Temperature = this.temperature,
-        };
+            var chatCompletionOptions = new ChatCompletionOptions
+            {
+                Temperature = this.temperature
+            };
 
-        var messages = new List<ChatMessage>
-        {
-          ChatMessage.CreateUserMessage(prompt),
-        };
+            var messages = new List<ChatMessage>
+            {
+                ChatMessage.CreateUserMessage(prompt)
+            };
 
-        ChatCompletion completion = await this.chatClient.CompleteChatAsync(messages, chatCompletionOptions);
-        string translatedText = completion.Content[0].Text.Trim();
+            ChatCompletion completion =
+                await this.chatClient.CompleteChatAsync(
+                    messages,
+                    chatCompletionOptions);
+            var translatedText = completion.Content[0].Text.Trim();
 
-        translatedText = translatedText.Trim('"');
+            translatedText = translatedText.Trim('"');
 
-        if (!string.IsNullOrEmpty(translatedText))
-        {
-          this.translationCache[cacheKey] = translatedText;
-          return translatedText;
+            if (!string.IsNullOrEmpty(translatedText))
+            {
+                this.translationCache[cacheKey] = translatedText;
+                return translatedText;
+            }
         }
-      }
-      catch (Exception ex)
-      {
-        this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
-        return $"[{Resources.TranslationError} {ex.Message}]";
-      }
+        catch (Exception ex)
+        {
+            this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
+            return $"[{Resources.TranslationError} {ex.Message}]";
+        }
 
-      return string.Empty;
+        return string.Empty;
     }
-  }
 }

@@ -3,12 +3,12 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Microsoft.EntityFrameworkCore.Migrations;
-
 #nullable disable
 
 namespace Echoglossian.EFCoreSqlite.Migrations
 {
+  using Microsoft.EntityFrameworkCore.Migrations;
+
   public partial class RemoveMaxLengthFromColumns2 : Migration
   {
     protected override void Up(MigrationBuilder migrationBuilder)

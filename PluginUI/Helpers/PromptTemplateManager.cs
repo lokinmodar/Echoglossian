@@ -57,55 +57,55 @@ Please provide only the translated text in your response, without any explanatio
       .Replace("{targetLanguage}", targetLang);
   }
 
-  public string? GetPrompt(PromptType type)
+  public string? GetPrompt(Echoglossian.PromptType type)
   {
     return type switch
     {
-      PromptType.DeepSeek => this.config.DeepSeekPrompt,
-      PromptType.Gemini => this.config.GeminiPrompt,
-      PromptType.OpenRouter => this.config.OpenRouterPrompt,
-      PromptType.Microsoft => this.config.MicrosoftTranslatorPrompt,
-      PromptType.Amazon => this.config.AmazonPrompt,
-      PromptType.ChatGPT => this.config.ChatGptPrompt,
-      PromptType.YandexCloud => this.config.YandexCloudPrompt,
-      PromptType.Ollama => this.config.OllamaPrompt,
+      Echoglossian.PromptType.DeepSeek => this.config.DeepSeekPrompt,
+      Echoglossian.PromptType.Gemini => this.config.GeminiPrompt,
+      Echoglossian.PromptType.OpenRouter => this.config.OpenRouterPrompt,
+      Echoglossian.PromptType.Microsoft => this.config.MicrosoftTranslatorPrompt,
+      Echoglossian.PromptType.Amazon => this.config.AmazonPrompt,
+      Echoglossian.PromptType.ChatGPT => this.config.ChatGptPrompt,
+      Echoglossian.PromptType.YandexCloud => this.config.YandexCloudPrompt,
+      Echoglossian.PromptType.Ollama => this.config.OllamaPrompt,
       _ => null,
     };
   }
 
-  public string GetPromptOrDefault(PromptType type)
+  public string GetPromptOrDefault(Echoglossian.PromptType type)
   {
     var prompt = this.GetPrompt(type);
     return string.IsNullOrWhiteSpace(prompt) ? DefaultPrompt : prompt;
   }
 
-  public void SetPrompt(PromptType type, string prompt)
+  public void SetPrompt(Echoglossian.PromptType type, string prompt)
   {
     switch (type)
     {
-      case PromptType.DeepSeek: this.config.DeepSeekPrompt = prompt; break;
-      case PromptType.Gemini: this.config.GeminiPrompt = prompt; break;
-      case PromptType.OpenRouter: this.config.OpenRouterPrompt = prompt; break;
-      case PromptType.Microsoft: this.config.MicrosoftTranslatorPrompt = prompt; break;
-      case PromptType.Amazon: this.config.AmazonPrompt = prompt; break;
-      case PromptType.ChatGPT: this.config.ChatGptPrompt = prompt; break;
-      case PromptType.YandexCloud: this.config.YandexCloudPrompt = prompt; break;
-      case PromptType.Ollama: this.config.OllamaPrompt = prompt; break;
+      case Echoglossian.PromptType.DeepSeek: this.config.DeepSeekPrompt = prompt; break;
+      case Echoglossian.PromptType.Gemini: this.config.GeminiPrompt = prompt; break;
+      case Echoglossian.PromptType.OpenRouter: this.config.OpenRouterPrompt = prompt; break;
+      case Echoglossian.PromptType.Microsoft: this.config.MicrosoftTranslatorPrompt = prompt; break;
+      case Echoglossian.PromptType.Amazon: this.config.AmazonPrompt = prompt; break;
+      case Echoglossian.PromptType.ChatGPT: this.config.ChatGptPrompt = prompt; break;
+      case Echoglossian.PromptType.YandexCloud: this.config.YandexCloudPrompt = prompt; break;
+      case Echoglossian.PromptType.Ollama: this.config.OllamaPrompt = prompt; break;
     }
   }
 
-  public PromptType? GetPromptTypeForEngine(int engineIndex)
+  public Echoglossian.PromptType? GetPromptTypeForEngine(int engineIndex)
   {
     return engineIndex switch
     {
-      2 => PromptType.ChatGPT,
-      3 => PromptType.DeepSeek,
-      4 => PromptType.Gemini,
-      5 => PromptType.OpenRouter,
-      6 => PromptType.Microsoft,
-      7 => PromptType.Amazon,
-      8 => PromptType.YandexCloud,
-      9 => PromptType.Ollama,
+      2 => Echoglossian.PromptType.ChatGPT,
+      3 => Echoglossian.PromptType.DeepSeek,
+      4 => Echoglossian.PromptType.Gemini,
+      5 => Echoglossian.PromptType.OpenRouter,
+      6 => Echoglossian.PromptType.Microsoft,
+      7 => Echoglossian.PromptType.Amazon,
+      8 => Echoglossian.PromptType.YandexCloud,
+      9 => Echoglossian.PromptType.Ollama,
       _ => null,
     };
   }

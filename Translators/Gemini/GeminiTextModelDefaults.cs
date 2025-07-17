@@ -9,10 +9,34 @@ namespace Echoglossian.Translators.Gemini;
 
 public static class GeminiTextModelDefaults
 {
-  public static readonly List<OpenAITextModel> PredefinedModels = new()
+    public static readonly List<OpenAITextModel> PredefinedModels = new()
     {
-        new("gemini-pro", "🔷 Gemini Pro", true, false, true, false, true, "Gemini"),
-        new("gemini-1.5-pro", "🟢 Gemini 1.5 Pro", true, false, true, false, false, "Gemini"),
-        new("gemini-1.5-flash", "⚡ Gemini 1.5 Flash", true, false, true, true, false, "Gemini"),
+        new OpenAITextModel(
+            "gemini-pro",
+            "🔷 Gemini Pro",
+            true,
+            false,
+            true,
+            false,
+            true,
+            "Gemini"),
+        new OpenAITextModel(
+            "gemini-1.5-pro",
+            "🟢 Gemini 1.5 Pro",
+            true,
+            false,
+            true,
+            false,
+            false,
+            "Gemini"),
+        new OpenAITextModel(
+            "gemini-1.5-flash",
+            "⚡ Gemini 1.5 Flash",
+            true,
+            false,
+            true,
+            true,
+            false,
+            "Gemini")
     };
 }
