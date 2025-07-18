@@ -44,7 +44,7 @@ public class DeepSeekTranslator : ITranslator
 
                 this.httpClient = new HttpClient
                 {
-                    BaseAddress = new Uri(this.baseUrl)
+                    BaseAddress = new Uri(this.baseUrl),
                 };
                 this.httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", this.apiKey);
@@ -117,9 +117,9 @@ Please provide only the translated text in your response, without any explanatio
                     {
                         role = "user",
                         content = prompt
-                    }
+                    },
                 },
-                this.temperature
+                this.temperature,
             };
 
             var jsonContent = JsonConvert.SerializeObject(requestData);

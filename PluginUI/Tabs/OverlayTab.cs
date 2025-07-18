@@ -20,7 +20,7 @@ public static class OverlayTab
         Resources.ToastTabTitle,
         Resources.SubtitleTabTitle,
         Resources.ConfigTab4Name,
-        Resources.OtherUIElementsTabTitle
+        Resources.OtherUIElementsTabTitle,
     };
 
     /// <summary>

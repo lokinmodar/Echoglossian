@@ -78,7 +78,7 @@ public static class GeminiModelManager
                     "gemini-pro" => "🔷 Gemini Pro",
                     "gemini-1.5-pro" => "🟢 Gemini 1.5 Pro",
                     "gemini-1.5-flash" => "⚡ Gemini 1.5 Flash",
-                    _ => $"🧩 {id}"
+                    _ => $"🧩 {id}",
                 };
 
                 var isMini = id.Contains("flash");

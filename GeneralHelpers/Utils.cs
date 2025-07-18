@@ -24,7 +24,7 @@ public partial class Echoglossian
         YandexCloud,
         LibreTranslate,
         Ollama,
-        LmStudio
+        LmStudio,
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public partial class Echoglossian
 
         All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft |
               ChatGPT | Gemini | DeepSeek | Ollama | LibreTranslate |
-              YandexPublic | OpenRouter | LmStudio
+              YandexPublic | OpenRouter | LmStudio,
     }
 
     /// <summary>
@@ -175,7 +175,7 @@ public partial class Echoglossian
             Content = Resources.SettingsReset,
             Title = Resources.Name,
             Icon = FontAwesomeIcon.Cog.ToNotificationIcon(),
-            Type = NotificationType.Info
+            Type = NotificationType.Info,
         };
 
         NotificationManager.AddNotification(settingsResetNotification);

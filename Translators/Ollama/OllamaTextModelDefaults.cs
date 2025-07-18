@@ -46,6 +46,6 @@ public static class OllamaTextModelDefaults
             false,
             false,
             false,
-            "Ollama")
+            "Ollama"),
     };
 }

@@ -25,6 +25,6 @@ public static class LmStudioTextModelDefaults
             false,
             false,
             true,
-            "LmStudio")
+            "LmStudio"),
     };
 }

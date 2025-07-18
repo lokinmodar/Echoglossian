@@ -28,6 +28,6 @@ public static class DeepSeekTextModelDefaults
             false,
             false,
             false,
-            "DeepSeek")
+            "DeepSeek"),
     };
 }

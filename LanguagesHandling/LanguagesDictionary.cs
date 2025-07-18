@@ -917,6 +917,6 @@ public partial class Echoglossian
             "ייִדיש; Yiddish",
             "NotoSansHebrew-Medium.ttf",
             "אבגדהוזחטיךכלםמןנסעףפץצקרשת",
-            new List<int> { 0, 8 })
+            new List<int> { 0, 8 }),
     };
 }

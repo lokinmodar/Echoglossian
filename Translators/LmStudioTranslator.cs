@@ -87,7 +87,7 @@ public class LmStudioTranslator : ITranslator
             messages = new[]
             {
                 new { role = "user", content = fullPrompt }
-            }
+            },
         };
 
         try

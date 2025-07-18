@@ -24,7 +24,7 @@ public static class ChatGPTEngineUI
                 {
                     FileName =
                         "https://platform.openai.com/settings/profile?tab=api-keys",
-                    UseShellExecute = true
+                    UseShellExecute = true,
                 });
         }
 
@@ -67,7 +67,7 @@ public static class ChatGPTEngineUI
             ["gpt-4"] = "🧠 More capable but slower and costly",
             ["gpt-4-turbo"] = "🟢 Faster and cheaper GPT-4 variant",
             ["gpt-4o"] = "👁 Multimodal and real-time model",
-            ["gpt-4o-mini"] = "⚡ GPT-4o Mini — fast and compact"
+            ["gpt-4o-mini"] = "⚡ GPT-4o Mini — fast and compact",
         };
 
         var models = config.UseLiveOpenAIModelList

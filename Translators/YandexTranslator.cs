@@ -133,7 +133,7 @@ public class YandexTranslator : ITranslator
             folderId,
             texts = new[] { text },
             sourceLanguageCode = from,
-            targetLanguageCode = to
+            targetLanguageCode = to,
         };
 
         var content = new StringContent(

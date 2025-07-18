@@ -114,12 +114,12 @@ Please provide only the translated text in your response, without any explanatio
                                     text = prompt
                                 }
                             }
-                        }
+                        },
                     },
                     generationConfig = new
                     {
                         this.temperature
-                    }
+                    },
                 };
 
                 var jsonContent = JsonConvert.SerializeObject(requestData);

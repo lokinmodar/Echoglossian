@@ -74,7 +74,7 @@ public static class DeepSeekModelManager
                 {
                     "deepseek-chat" => "💬 DeepSeek Chat",
                     "deepseek-reasoner" => "🧠 DeepSeek Reasoner",
-                    _ => $"🧩 {id}"
+                    _ => $"🧩 {id}",
                 };
 
                 var isMini = id.Contains("mini");

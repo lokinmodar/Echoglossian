@@ -52,7 +52,7 @@ public class ChatGPTTranslator : ITranslator
 
                 var clientOptions = new OpenAIClientOptions
                 {
-                    Endpoint = new Uri(baseUrl)
+                    Endpoint = new Uri(baseUrl),
                 };
 
                 pluginLog.Debug(
@@ -140,12 +140,12 @@ public class ChatGPTTranslator : ITranslator
         {
             var chatCompletionOptions = new ChatCompletionOptions
             {
-                Temperature = this.temperature
+                Temperature = this.temperature,
             };
 
             var messages = new List<ChatMessage>
             {
-                ChatMessage.CreateUserMessage(prompt)
+                ChatMessage.CreateUserMessage(prompt),
             };
 
             ChatCompletion completion =

@@ -55,6 +55,6 @@ public static class OpenRouterTextModelDefaults
             true,
             false,
             false,
-            "OpenRouter")
+            "OpenRouter"),
     };
 }

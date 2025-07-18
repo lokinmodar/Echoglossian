@@ -34,7 +34,7 @@ public class GoogleTranslator : ITranslator
                         {
                             "User-Agent",
                             "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.108 Mobile Safari/537.36"
-                        }
+                        },
                     }, new Dictionary<string, string>())
             },
             {
@@ -49,7 +49,7 @@ public class GoogleTranslator : ITranslator
                         {
                             "X-Goog-API-Key",
                             "AIzaSyATBXajvzQLTDHEQbcpq0Ihe0vWDHmO520"
-                        }
+                        },
                     }, new Dictionary<string, string>())
             },
             {
@@ -66,7 +66,7 @@ public class GoogleTranslator : ITranslator
                         { "strategy", "2" },
                         { "key", "AIzaSyA6EEtrDCfBkHV8uU2lgGY-N383ZgAOo7Y" }
                     })
-            }
+            },
         };
 
     /// <summary>
@@ -98,7 +98,7 @@ public class GoogleTranslator : ITranslator
                     targetLanguage),
                 2 => this.TranslateUsingV2(text, sourceLanguage, targetLanguage)
                     .GetAwaiter().GetResult() ?? string.Empty,
-                _ => this.TranslateUsingV0(text, sourceLanguage, targetLanguage)
+                _ => this.TranslateUsingV0(text, sourceLanguage, targetLanguage),
             };
         }
         catch (Exception e)
@@ -132,7 +132,7 @@ public class GoogleTranslator : ITranslator
                 _ => await this.TranslateUsingV0Async(
                     text,
                     sourceLanguage,
-                    targetLanguage)
+                    targetLanguage),
             };
         }
         catch (Exception e)

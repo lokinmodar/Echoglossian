@@ -37,6 +37,6 @@ public static class GeminiTextModelDefaults
             true,
             true,
             false,
-            "Gemini")
+            "Gemini"),
     };
 }

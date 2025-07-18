@@ -64,7 +64,7 @@ public class UINewFontHandler : IDisposable
                     this.sfc = new SafeFontConfig
                     {
                         SizePx = (float)this.configuration?.FontSize,
-                        GlyphRanges = rangeBuilder.Build()
+                        GlyphRanges = rangeBuilder.Build(),
                     };
                     this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(
                         LangComboFontFilePath,
@@ -111,7 +111,7 @@ public class UINewFontHandler : IDisposable
                     this.sfc = new SafeFontConfig
                     {
                         SizePx = (float)this.configuration?.FontSize,
-                        GlyphRanges = rangeBuilder.Build()
+                        GlyphRanges = rangeBuilder.Build(),
                     };
                     this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(
                         DummyFontFilePath,

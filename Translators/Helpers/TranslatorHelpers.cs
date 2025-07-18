@@ -14,7 +14,7 @@ public partial class Echoglossian
         { "he", "iw" },
         { "nb", "no" },
         { "fil", "tl" },
-        { "jv", "jw" }
+        { "jv", "jw" },
     };
 
     public static string NormalizeLanguageCode(string code)

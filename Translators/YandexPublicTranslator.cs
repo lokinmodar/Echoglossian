@@ -92,7 +92,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         var data = new Dictionary<string, string>
         {
             { "text", text },
-            { "lang", langPair }
+            { "lang", langPair },
         };
 
         this.pluginLog.Debug(
@@ -104,7 +104,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
 
         using var request = new HttpRequestMessage(HttpMethod.Post, requestURL)
         {
-            Content = new FormUrlEncodedContent(data)
+            Content = new FormUrlEncodedContent(data),
         };
 
         request.Headers.UserAgent.ParseAdd(DefaultUserAgent);
@@ -144,7 +144,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
             "pt-PT" => "pt",
             "pt" => "pt-BR",
             "zh-CN" => "zh",
-            _ => lang
+            _ => lang,
         };
     }
 
@@ -153,7 +153,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         return lang switch
         {
             "pt" => "pt-PT",
-            _ => lang
+            _ => lang,
         };
     }
 

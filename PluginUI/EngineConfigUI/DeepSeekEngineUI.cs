@@ -52,7 +52,7 @@ public static class DeepSeekEngineUI
         var tooltips = new Dictionary<string, string>
         {
             ["deepseek-chat"] = "💬 Optimized for general chat and speed",
-            ["deepseek-reasoner"] = "🧠 Reasoning and problem-solving tasks"
+            ["deepseek-reasoner"] = "🧠 Reasoning and problem-solving tasks",
         };
 
         var models = config.UseLiveDeepSeekModelList

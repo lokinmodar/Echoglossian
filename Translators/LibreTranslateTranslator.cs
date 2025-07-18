@@ -52,7 +52,7 @@ public class LibreTranslateTranslator : ITranslator
                 { "q", fixedText },
                 { "source", sourceLanguage }, // supports "auto"
                 { "target", targetLanguage },
-                { "format", "text" }
+                { "format", "text" },
             };
 
             if (!string.IsNullOrWhiteSpace(this.apiKey))
@@ -113,7 +113,7 @@ public class LibreTranslateTranslator : ITranslator
                 "https://libretranslate.de/translate",
             LibreTranslateInstanceType.Custom => config.LibreTranslateUrl
                 ?.TrimEnd('/') + "/translate",
-            _ => "https://libretranslate.de/translate"
+            _ => "https://libretranslate.de/translate",
         };
     }
 

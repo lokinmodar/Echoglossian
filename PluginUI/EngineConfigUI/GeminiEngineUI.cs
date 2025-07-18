@@ -47,7 +47,7 @@ public static class GeminiEngineUI
         {
             ["gemini-pro"] = "🔷 Legacy Gemini Pro model (default)",
             ["gemini-1.5-pro"] = "🟢 Large context window and high accuracy",
-            ["gemini-1.5-flash"] = "⚡ Fastest and cheapest Gemini model"
+            ["gemini-1.5-flash"] = "⚡ Fastest and cheapest Gemini model",
         };
 
         // Use either GeminiModelManager.CurrentModels if live, or static:

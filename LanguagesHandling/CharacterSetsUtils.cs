@@ -49,7 +49,7 @@ public partial class Echoglossian
         '\uE0D9', '\uE0DA', '\uE0DB', '\uE0DC', '\uE0DD', '\uE0DE', '\uE0DF',
         '\uE0E0', '\uE0E1', '\uE0E2', '\uE0E3', '\uE0E4', '\uE0E5', '\uE0E6',
         '\uE0E7', '\uE0E8', '\uE0E9', '\uE0EA', '\uE0EB', '\uE0EC', '\uE0ED',
-        '\uE0EE', '\uE0EF'
+        '\uE0EE', '\uE0EF',
     };
 
     public static readonly char[] PuaChars =
@@ -71,7 +71,7 @@ public partial class Echoglossian
         '', '', '', '', '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-        '', ''
+        '', '',
     };
 
     public static readonly string LangComboItems =
@@ -102,7 +102,7 @@ public partial class Echoglossian
         { 'Đ', "D" }, { 'đ', "d" },
 
         // Hungarian
-        { 'Ő', "O" }, { 'ő', "o" }, { 'Ű', "U" }, { 'ű', "u" }
+        { 'Ő', "O" }, { 'ő', "o" }, { 'Ű', "U" }, { 'ű', "u" },
     };
 
     public readonly HashSet<char> SpecialCharsSupportedByGameFont = new()
@@ -134,6 +134,6 @@ public partial class Echoglossian
         'Ó', 'Ú', 'á', 'é', 'í', 'ó', 'ú', 'ý', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ý',
         'ã', 'õ', 'Ã', 'Õ',
         'ă', 'î', 'â', 'Î', 'Â', 'å', 'ä', 'ö', 'Å', 'Ä', 'Ö', 'ć', 'š', 'Š',
-        'õ', 'Õ', 'ø', 'Ø'
+        'õ', 'Õ', 'ø', 'Ø',
     };
 }

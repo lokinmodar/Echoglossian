@@ -37,7 +37,7 @@ public class OpenRouterTranslator : ITranslator
 
         this.httpClient = new HttpClient
         {
-            BaseAddress = new Uri(this.openRouterUrl)
+            BaseAddress = new Uri(this.openRouterUrl),
         };
 
         this.httpClient.DefaultRequestHeaders.Add(
@@ -83,9 +83,9 @@ public class OpenRouterTranslator : ITranslator
             this.model,
             messages = new[]
             {
-                new { role = "user", content = this.prompt }
+                new { role = "user", content = this.prompt },
             },
-            this.temperature
+            this.temperature,
         };
 
         try

@@ -173,7 +173,7 @@ public static class LanguageEngineSupport
         ["tk"] = new List<int> { 0, 8 },
         ["tzm"] = new List<int> { 8 },
         ["ug"] = new List<int> { 0, 8 },
-        ["yi"] = new List<int> { 0, 8 }
+        ["yi"] = new List<int> { 0, 8 },
     };
 
     /// <summary>

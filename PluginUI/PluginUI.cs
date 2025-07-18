@@ -27,7 +27,7 @@ public partial class Echoglossian
         "Gemini",
         "YandexPublic",
         "OpenRouter",
-        "LmStudio"
+        "LmStudio",
     };
 
     private List<string> languageList;

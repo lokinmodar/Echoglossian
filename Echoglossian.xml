@@ -439,6 +439,7 @@
             </summary>
             <typeparam name="T">Entity type.</typeparam>
             <param name="entity">Entity to insert.</param>
+            <returns>Result message.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatTalkMessage(System.String,System.String)">
             <summary>
@@ -1978,17 +1979,22 @@
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Extracts and translates addon content based on the specified event and
-                arguments.
-                Performs DB lookup before calling external translation.
+                arguments. Performs DB lookup before calling external translation.
             </summary>
             <param name="evt">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslateAsync(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Extracts and translates addon content asynchronously. Performs DB lookup before translation.
+                Uses GenericAddonHandlerHelper for chunked translation and DB save.
+            </summary>
+            <param name="args">The addon arguments.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslated(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Applies translated content to the addon based on the specified event and
-                arguments.
-                Loads translated data from DB if available.
+                arguments. Loads translated data from DB if available.
             </summary>
             <param name="type">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
@@ -2098,6 +2104,23 @@
             <summary>
                 Frees the previously allocated buffer.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper">
+            <summary>
+                Helper for performing async translation logic outside unsafe context.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.PerformTranslationAndSaveAsync``1(System.String,System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Type)">
+            <summary>
+                Performs translation and DB save in a safe context.
+            </summary>
+            <typeparam name="T">Generic entity type.</typeparam>
+            <param name="addonName">Addon name.</param>
+            <param name="atkValues">ATK values dictionary.</param>
+            <param name="stringArray">StringArrayData dictionary.</param>
+            <param name="config">Plugin config.</param>
+            <param name="service">Translation service.</param>
+            <param name="entityType">Entity type used for DB ops.</param>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
             <summary>
@@ -3441,22 +3464,22 @@
             <summary>
                 Formats the source language for the DeepL API.
             </summary>
-            <param name="source"></param>
-            <returns></returns>
+            <param name="source">Source language.</param>
+            <returns>Returns the formatted source language.</returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.FormatTargetLanguage(System.String)">
             <summary>
                 Formats the target language for the DeepL API.
             </summary>
-            <param name="source"></param>
-            <returns></returns>
+            <param name="source">Target language.</param>
+            <returns>Returns the formatted target language.</returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.FormatFreeTargetLanguage(System.String)">
             <summary>
                 Formats the target language for the Free DeepL API.
             </summary>
-            <param name="source"></param>
-            <returns></returns>
+            <param name="source">Target language.</param>
+            <returns>Returns the formatted target language.</returns>
         </member>
         <member name="T:Echoglossian.Translators.DeepLResponse">
             <summary>

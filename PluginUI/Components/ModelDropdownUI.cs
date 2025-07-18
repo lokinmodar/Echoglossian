@@ -98,7 +98,7 @@ public static class ModelDropdownUI
                 var id when id.StartsWith("deepseek-chat") => "Chat",
                 var id when id.StartsWith("deepseek-reasoner") => "Reasoner",
                 var id when id.StartsWith("o1-") => "O1",
-                _ => "Other"
+                _ => "Other",
             };
 
             return $"{model.EngineName} / {tier}";
@@ -112,7 +112,7 @@ public static class ModelDropdownUI
                 "gemini" => new Vector4(0.85f, 0.6f, 1f, 1f),
                 "deepseek" => new Vector4(0.6f, 1f, 0.6f, 1f),
                 "ollama" => new Vector4(1f, 1f, 0.6f, 1f),
-                _ => new Vector4(1f, 1f, 1f, 1f)
+                _ => new Vector4(1f, 1f, 1f, 1f),
             };
         }
 

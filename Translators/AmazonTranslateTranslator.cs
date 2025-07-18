@@ -48,7 +48,7 @@ public class AmazonTranslateTranslator : ITranslator
                 credentials,
                 new AmazonTranslateConfig
                 {
-                    RegionEndpoint = region
+                    RegionEndpoint = region,
                 });
         }
         catch (Exception ex)
@@ -103,7 +103,7 @@ public class AmazonTranslateTranslator : ITranslator
             {
                 Text = fixedText,
                 SourceLanguageCode = sourceLanguage,
-                TargetLanguageCode = targetLanguage
+                TargetLanguageCode = targetLanguage,
             };
 
             var response =
