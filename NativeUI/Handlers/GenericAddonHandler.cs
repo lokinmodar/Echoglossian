@@ -475,8 +475,9 @@ public abstract unsafe class
   ///     Extracts and translates addon content asynchronously. Performs DB lookup before translation.
   ///     Uses GenericAddonHandlerHelper for chunked translation and DB save.
   /// </summary>
+  /// <param name="evt"> The type of addon event.</param>
   /// <param name="args">The addon arguments.</param>
-  protected void ExtractAndTranslateAsync(AddonArgs args)
+  protected void ExtractAndTranslateAsync(AddonEvent evt, AddonArgs args)
   {
     if (args.AddonName != this.AddonName)
     {

@@ -52,7 +52,10 @@ public static class GenericAddonHandlerHelper
         }
 
         if (builder.Length > 0)
-          builder.Append("|");
+        {
+          builder.Append('|');
+        }
+
         builder.Append(pair);
       }
 
@@ -66,15 +69,19 @@ public static class GenericAddonHandlerHelper
 
       foreach (var (key, val) in translatedMap)
       {
-        if (key.StartsWith("a") && int.TryParse(key[1..], out var a))
+        if (key.StartsWith('a') && int.TryParse(key[1..], out var a))
+        {
           updatedAtk[a] = val;
-        else if (key.StartsWith("s") && int.TryParse(key[1..], out var s))
+        }
+        else if (key.StartsWith('s') && int.TryParse(key[1..], out var s))
+        {
           updatedArray[s] = val;
+        }
       }
 
       var payload = new { atkValues = updatedAtk, stringArrayData = updatedArray };
       var translatedJson = JsonConvert.SerializeObject(payload);
-      var originalJson = string.Join("|", allPairs);
+      var originalJson = string.Join('|', allPairs);
 
       var entity = new T();
       entity.SetTranslatedText(translatedJson);
@@ -90,7 +97,9 @@ public static class GenericAddonHandlerHelper
       entity.SetEntityKey(addonName);
 
       if (entity.GetGameVersion() is null && entity is not IMultiTextEntity)
+      {
         entity.SetGameVersion(GetGameVersion());
+      }
 
       await InsertEntity(entity);
 
@@ -111,7 +120,9 @@ public static class GenericAddonHandlerHelper
   {
     var translated = await service.TranslateAsync(chunk, sourceLang, targetLang);
     if (string.IsNullOrWhiteSpace(translated))
+    {
       return;
+    }
 
     var parts = translated.Split('|');
     for (int i = 0; i < parts.Length - 1; i += 2)

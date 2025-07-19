@@ -1984,11 +1984,12 @@
             <param name="evt">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslateAsync(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslateAsync(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Extracts and translates addon content asynchronously. Performs DB lookup before translation.
                 Uses GenericAddonHandlerHelper for chunked translation and DB save.
             </summary>
+            <param name="evt"> The type of addon event.</param>
             <param name="args">The addon arguments.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslated(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">

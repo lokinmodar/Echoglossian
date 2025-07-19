@@ -21,7 +21,8 @@ public class CharacterWindowHandler : GenericAddonHandler<GameWindow>
   /// <param name="translationService">The service used for translating text.</param>
   public CharacterWindowHandler(
       Config config,
-      TranslationService translationService) : base(
+      TranslationService translationService)
+    : base(
       "Character",
       config,
       translationService,
@@ -30,7 +31,7 @@ public class CharacterWindowHandler : GenericAddonHandler<GameWindow>
       StringArrayType.Character)
   {
     this.RegisterHandler(AddonEvent.PreSetup, this.ApplyTranslated);
-    this.RegisterHandler(AddonEvent.PreRefresh, this.ExtractAndTranslate);
+    this.RegisterHandler(AddonEvent.PreRefresh, this.ExtractAndTranslateAsync);
     this.RegisterHandler(
         AddonEvent.PreRequestedUpdate,
         this.ApplyTranslated);
