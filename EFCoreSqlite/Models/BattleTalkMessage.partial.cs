@@ -11,111 +11,117 @@ namespace Echoglossian.EFCoreSqlite.Models;
 /// </summary>
 public partial class BattleTalkMessage : IMultiTextEntity
 {
-    /// <inheritdoc />
-    public string GetOriginalText()
-    {
-        return this.SenderName;
-    }
+  /// <summary>
+  ///  Initializes a new instance of the <see cref="BattleTalkMessage"/> class.
+  ///  </summary>
+  public BattleTalkMessage() { }
 
-    /// <inheritdoc />
-    public void SetOriginalText(string original)
-    {
-        this.SenderName = original;
-    }
 
-    /// <inheritdoc />
-    public string GetOriginalLang()
-    {
-        return this.OriginalBattleTalkMessageLang;
-    }
+  /// <inheritdoc />
+  public string GetOriginalText()
+  {
+    return this.SenderName;
+  }
 
-    /// <inheritdoc />
-    public void SetOriginalLang(string lang)
-    {
-        this.OriginalBattleTalkMessageLang = lang;
-    }
+  /// <inheritdoc />
+  public void SetOriginalText(string original)
+  {
+    this.SenderName = original;
+  }
 
-    /// <inheritdoc />
-    public string GetOriginalSecondaryText()
-    {
-        return this.OriginalBattleTalkMessage;
-    }
+  /// <inheritdoc />
+  public string GetOriginalLang()
+  {
+    return this.OriginalBattleTalkMessageLang;
+  }
 
-    /// <inheritdoc />
-    public void SetOriginalSecondaryText(string originalSecondary)
-    {
-        this.OriginalBattleTalkMessage = originalSecondary;
-    }
+  /// <inheritdoc />
+  public void SetOriginalLang(string lang)
+  {
+    this.OriginalBattleTalkMessageLang = lang;
+  }
 
-    /// <inheritdoc />
-    public string? GetTranslatedText()
-    {
-        return this.TranslatedSenderName;
-    }
+  /// <inheritdoc />
+  public string GetOriginalSecondaryText()
+  {
+    return this.OriginalBattleTalkMessage;
+  }
 
-    /// <inheritdoc />
-    public void SetTranslatedText(string translated)
-    {
-        this.TranslatedSenderName = translated;
-    }
+  /// <inheritdoc />
+  public void SetOriginalSecondaryText(string originalSecondary)
+  {
+    this.OriginalBattleTalkMessage = originalSecondary;
+  }
 
-    /// <inheritdoc />
-    public string? GetTranslatedSecondaryText()
-    {
-        return this.TranslatedBattleTalkMessage;
-    }
+  /// <inheritdoc />
+  public string? GetTranslatedText()
+  {
+    return this.TranslatedSenderName;
+  }
 
-    /// <inheritdoc />
-    public void SetTranslatedSecondaryText(string translatedSecondary)
-    {
-        this.TranslatedBattleTalkMessage = translatedSecondary;
-    }
+  /// <inheritdoc />
+  public void SetTranslatedText(string translated)
+  {
+    this.TranslatedSenderName = translated;
+  }
 
-    /// <inheritdoc />
-    public string? GetTranslationLang()
-    {
-        return this.TranslationLang;
-    }
+  /// <inheritdoc />
+  public string? GetTranslatedSecondaryText()
+  {
+    return this.TranslatedBattleTalkMessage;
+  }
 
-    /// <inheritdoc />
-    public void SetTranslationLang(string lang)
-    {
-        this.TranslationLang = lang;
-    }
+  /// <inheritdoc />
+  public void SetTranslatedSecondaryText(string translatedSecondary)
+  {
+    this.TranslatedBattleTalkMessage = translatedSecondary;
+  }
 
-    /// <inheritdoc />
-    public int? GetTranslationEngine()
-    {
-        return this.TranslationEngine;
-    }
+  /// <inheritdoc />
+  public string? GetTranslationLang()
+  {
+    return this.TranslationLang;
+  }
 
-    /// <inheritdoc />
-    public void SetTranslationEngine(int engine)
-    {
-        this.TranslationEngine = engine;
-    }
+  /// <inheritdoc />
+  public void SetTranslationLang(string lang)
+  {
+    this.TranslationLang = lang;
+  }
 
-    /// <inheritdoc />
-    public string GetEntityKey()
-    {
-        return this.SenderName;
-    }
+  /// <inheritdoc />
+  public int? GetTranslationEngine()
+  {
+    return this.TranslationEngine;
+  }
 
-    /// <inheritdoc />
-    public void SetEntityKey(string key)
-    {
-        this.SenderName = key;
-    }
+  /// <inheritdoc />
+  public void SetTranslationEngine(int engine)
+  {
+    this.TranslationEngine = engine;
+  }
 
-    /// <inheritdoc />
-    public string? GetGameVersion()
-    {
-        return null;
-    }
+  /// <inheritdoc />
+  public string GetEntityKey()
+  {
+    return this.SenderName;
+  }
 
-    /// <inheritdoc />
-    public void SetGameVersion(string version)
-    {
-        /* Ignored — BattleTalkMessage does not use game version */
-    }
+  /// <inheritdoc />
+  public void SetEntityKey(string key)
+  {
+    this.SenderName = key;
+  }
+
+  /// <inheritdoc />
+  public string? GetGameVersion()
+  {
+    return null;
+  }
+
+  /// <inheritdoc />
+  public void SetGameVersion(string version)
+  {
+    /* Ignored — BattleTalkMessage does not use game version */
+  }
 }

@@ -37,9 +37,9 @@
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets" Label="MultilingualAppToolkit" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\v$(MultilingualAppToolkitVersion)\Microsoft.Multilingual.ResxResources.targets')"/>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets" Label="MultilingualAppToolkit" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\v$(MultilingualAppToolkitVersion)\Microsoft.Multilingual.ResxResources.targets')" />
   <Target Name="MATPrerequisite" BeforeTargets="PrepareForBuild" Condition="!Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets')" Label="MultilingualAppToolkit">
-    <Warning Text="$(MSBuildProjectFile) is Multilingual build enabled, but the Multilingual App Toolkit is unavailable during the build. If building with Visual Studio, please check to ensure that toolkit is properly installed."/>
+    <Warning Text="$(MSBuildProjectFile) is Multilingual build enabled, but the Multilingual App Toolkit is unavailable during the build. If building with Visual Studio, please check to ensure that toolkit is properly installed." />
   </Target>
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -48,82 +48,82 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <AdditionalFiles Include=".\stylecop.json"/>
-    <AdditionalFiles Include="stylecop.json"/>
+    <AdditionalFiles Include=".\stylecop.json" />
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Font\NotoSans-Medium-Custom2.otf"/>
-    <None Remove="Font\NotoSans-Medium.ttf"/>
-    <None Remove="Font\NotoSans-Regular.ttf"/>
-    <None Remove="Font\NotoSans-SemiBold.ttf"/>
-    <None Remove="Font\NotoSansArabic-Medium.ttf"/>
-    <None Remove="Font\NotoSansArmenian-Medium.ttf"/>
-    <None Remove="Font\NotoSansBengali-Medium.ttf"/>
-    <None Remove="Font\NotoSansCJKhk-Regular.otf"/>
-    <None Remove="Font\NotoSansCJKjp-Regular.otf"/>
-    <None Remove="Font\NotoSansCJKkr-Regular.otf"/>
-    <None Remove="Font\NotoSansCJKsc-Regular.otf"/>
-    <None Remove="Font\NotoSansCJKtc-Regular.otf"/>
-    <None Remove="Font\NotoSansDevanagari-Medium.ttf"/>
-    <None Remove="Font\NotoSansGeorgian-Medium.ttf"/>
-    <None Remove="Font\NotoSansGlagolitic-Regular.ttf"/>
-    <None Remove="Font\NotoSansGujarati-Medium.ttf"/>
-    <None Remove="Font\NotoSansGurmukhi-Medium.ttf"/>
-    <None Remove="Font\NotoSansHebrew-Medium.ttf"/>
-    <None Remove="Font\NotoSansJavanese-Regular.ttf"/>
-    <None Remove="Font\NotoSansKannada-Medium.ttf"/>
-    <None Remove="Font\NotoSansKhmer-Medium.ttf"/>
-    <None Remove="Font\NotoSansLao-Medium.ttf"/>
-    <None Remove="Font\NotoSansMalayalam-Medium.ttf"/>
-    <None Remove="Font\NotoSansMongolian-Regular.ttf"/>
-    <None Remove="Font\NotoSansMyanmar-Medium.ttf"/>
-    <None Remove="Font\NotoSansOriya-Regular.ttf"/>
-    <None Remove="Font\NotoSansSinhala-Medium.ttf"/>
-    <None Remove="Font\NotoSansTagalog-Regular.ttf"/>
-    <None Remove="Font\NotoSansTamil-Medium.ttf"/>
-    <None Remove="Font\NotoSansTelugu-Medium.ttf"/>
-    <None Remove="Font\NotoSansThai-Medium.ttf"/>
-    <None Remove="Font\NotoSansJP-VF-3.ttf"/>
-    <None Remove="Font\NotoSansJP-VF-4.ttf"/>
-    <None Remove="Font\NotoSansJP-VF-5.ttf"/>
-    <None Remove="Font\NotoSansJP-VF-6.ttf"/>
-    <None Remove="Font\NotoSansJP-VF-7.ttf"/>
-    <None Remove="Font\symbols.ttf"/>
-    <None Remove="images\icon.png"/>
-    <None Remove="images\logo.png"/>
-    <None Remove="minfilia.ico"/>
-    <None Remove="MultilingualResources\Echoglossian.ca.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.cs.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.da.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.de.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.el.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.es.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.eu.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.fi.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.fil.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.fr.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.ga.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.gl.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.gu.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.hi.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.hu.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.it.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.ja.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.ko.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.ms.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.pa-Guru.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.pl.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.pt-BR.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.pt.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.ru.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.sd-Deva.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.ta.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.vi.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.zh-Hans.xlf"/>
-    <None Remove="MultilingualResources\Echoglossian.zh-Hant.xlf"/>
-    <None Remove="PluginUI - Copy___"/>
-    <None Remove="Resources\pix.png"/>
-    <None Remove="stylecop.json"/>
+    <None Remove="Font\NotoSans-Medium-Custom2.otf" />
+    <None Remove="Font\NotoSans-Medium.ttf" />
+    <None Remove="Font\NotoSans-Regular.ttf" />
+    <None Remove="Font\NotoSans-SemiBold.ttf" />
+    <None Remove="Font\NotoSansArabic-Medium.ttf" />
+    <None Remove="Font\NotoSansArmenian-Medium.ttf" />
+    <None Remove="Font\NotoSansBengali-Medium.ttf" />
+    <None Remove="Font\NotoSansCJKhk-Regular.otf" />
+    <None Remove="Font\NotoSansCJKjp-Regular.otf" />
+    <None Remove="Font\NotoSansCJKkr-Regular.otf" />
+    <None Remove="Font\NotoSansCJKsc-Regular.otf" />
+    <None Remove="Font\NotoSansCJKtc-Regular.otf" />
+    <None Remove="Font\NotoSansDevanagari-Medium.ttf" />
+    <None Remove="Font\NotoSansGeorgian-Medium.ttf" />
+    <None Remove="Font\NotoSansGlagolitic-Regular.ttf" />
+    <None Remove="Font\NotoSansGujarati-Medium.ttf" />
+    <None Remove="Font\NotoSansGurmukhi-Medium.ttf" />
+    <None Remove="Font\NotoSansHebrew-Medium.ttf" />
+    <None Remove="Font\NotoSansJavanese-Regular.ttf" />
+    <None Remove="Font\NotoSansKannada-Medium.ttf" />
+    <None Remove="Font\NotoSansKhmer-Medium.ttf" />
+    <None Remove="Font\NotoSansLao-Medium.ttf" />
+    <None Remove="Font\NotoSansMalayalam-Medium.ttf" />
+    <None Remove="Font\NotoSansMongolian-Regular.ttf" />
+    <None Remove="Font\NotoSansMyanmar-Medium.ttf" />
+    <None Remove="Font\NotoSansOriya-Regular.ttf" />
+    <None Remove="Font\NotoSansSinhala-Medium.ttf" />
+    <None Remove="Font\NotoSansTagalog-Regular.ttf" />
+    <None Remove="Font\NotoSansTamil-Medium.ttf" />
+    <None Remove="Font\NotoSansTelugu-Medium.ttf" />
+    <None Remove="Font\NotoSansThai-Medium.ttf" />
+    <None Remove="Font\NotoSansJP-VF-3.ttf" />
+    <None Remove="Font\NotoSansJP-VF-4.ttf" />
+    <None Remove="Font\NotoSansJP-VF-5.ttf" />
+    <None Remove="Font\NotoSansJP-VF-6.ttf" />
+    <None Remove="Font\NotoSansJP-VF-7.ttf" />
+    <None Remove="Font\symbols.ttf" />
+    <None Remove="images\icon.png" />
+    <None Remove="images\logo.png" />
+    <None Remove="minfilia.ico" />
+    <None Remove="MultilingualResources\Echoglossian.ca.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.cs.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.da.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.de.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.el.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.es.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.eu.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.fi.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.fil.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.fr.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ga.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.gl.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.gu.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.hi.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.hu.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.it.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ja.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ko.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ms.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.pa-Guru.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.pl.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.pt-BR.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.pt.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ru.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.sd-Deva.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.ta.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.vi.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.zh-Hans.xlf" />
+    <None Remove="MultilingualResources\Echoglossian.zh-Hant.xlf" />
+    <None Remove="PluginUI - Copy___" />
+    <None Remove="Resources\pix.png" />
+    <None Remove="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Medium-Custom2.otf">
@@ -239,28 +239,28 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Dalamud.NET.Sdk" Version="12.0.2"/>
-    <PackageReference Include="AWSSDK.Translate" Version="4.0.0.13"/>
+    <PackageReference Include="Dalamud.NET.Sdk" Version="12.0.2" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.0.13" />
 
-    <PackageReference Include="DeepL.net" Version="1.15.0"/>
-    <PackageReference Include="GTranslate" Version="2.3.1"/>
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.1"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7"/>
+    <PackageReference Include="DeepL.net" Version="1.15.0" />
+    <PackageReference Include="GTranslate" Version="2.3.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
-    <PackageReference Include="OpenAI" Version="2.2.0"/>
-    <PackageReference Include="RestSharp" Version="112.1.0"/>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="OpenAI" Version="2.2.0" />
+    <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="System.Drawing.Common" Version="9.0.7"/>
-    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0"/>
-    <PackageReference Include="System.Private.Uri" Version="4.3.2"/>
+    <PackageReference Include="System.Drawing.Common" Version="9.0.7" />
+    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">
@@ -271,19 +271,19 @@
     <EmbeddedResource Include="images\logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\pix.png"/>
-    <EmbeddedResource Include="Resources\minfilia.ico"/>
+    <EmbeddedResource Include="Resources\pix.png" />
+    <EmbeddedResource Include="Resources\minfilia.ico" />
 
-    <XliffResource Include="MultilingualResources\Echoglossian.da.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.de.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.el.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.es.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.eu.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.fr.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.it.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.pt-BR.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.pt.xlf"/>
-    <XliffResource Include="MultilingualResources\Echoglossian.ru.xlf"/>
+    <XliffResource Include="MultilingualResources\Echoglossian.da.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.de.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.el.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.es.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.eu.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.fr.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.it.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.pt-BR.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.pt.xlf" />
+    <XliffResource Include="MultilingualResources\Echoglossian.ru.xlf" />
   </ItemGroup>
   <ItemGroup>
 
@@ -311,10 +311,10 @@
 
   </ItemGroup>
   <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}"/>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DBmanagerUI\"/>
+    <Folder Include="DBmanagerUI\" />
   </ItemGroup>
 
 </Project>

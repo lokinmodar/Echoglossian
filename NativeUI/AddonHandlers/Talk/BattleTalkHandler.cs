@@ -1,4 +1,4 @@
-﻿// <copyright file="CharacterWindowHandler.cs" company="lokinmodar">
+﻿// <copyright file="BattleTalkHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -11,23 +11,23 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character
   ///     Lifecycle-safe: extracts and applies values within valid memory scope per
   ///     frame.
   /// </summary>
-  public class CharacterWindowHandler : GenericAddonHandler<GameWindow>
+  public class BattleTalkHandler : GenericAddonHandler<BattleTalkMessage>
   {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacterWindowHandler" />
+    ///     Initializes a new instance of the <see cref="BattleTalkHandler" />
     ///     class.
     /// </summary>
     /// <param name="config">The configuration settings for the plugin.</param>
     /// <param name="translationService">The service used for translating text.</param>
-    public CharacterWindowHandler(
+    public BattleTalkHandler(
         Config config,
         TranslationService translationService) : base(
-        "Character",
+        "_BattleTalk",
         config,
         translationService,
-        true,
-        true,
-        StringArrayType.Character)
+       useAtkValues: false,
+       useStringArray: true,
+       stringArrayDataType: StringArrayType.BattleTalk)
     {
       this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
       this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);

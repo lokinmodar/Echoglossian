@@ -364,18 +364,18 @@ public partial class Echoglossian : IDalamudPlugin
 
     if (this.configuration.TranslateTalk)
     {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRefresh,
-          "Talk",
-          this.UiTalkAsyncHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreDraw,
-          "Talk",
-          this.UiTalkAsyncHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreReceiveEvent,
-          "Talk",
-          this.UiTalkAsyncHandler);
+      /*      AddonLifecycle.UnregisterListener(
+                AddonEvent.PreRefresh,
+                "Talk",
+                this.UiTalkAsyncHandler);
+            AddonLifecycle.UnregisterListener(
+                AddonEvent.PreDraw,
+                "Talk",
+                this.UiTalkAsyncHandler);
+            AddonLifecycle.UnregisterListener(
+                AddonEvent.PreReceiveEvent,
+                "Talk",
+                this.UiTalkAsyncHandler);*/
     }
 
     if (this.configuration.TranslateBattleTalk)
@@ -578,6 +578,22 @@ public partial class Echoglossian : IDalamudPlugin
                     Handler: new CharacterProfileSubWindowHandler(
                         this.configuration,
                         TranslationService)),
+                (AddonName: "CharacterStatus",
+                    Handler: new CharacterStatusSubWindowHandler(
+                        this.configuration,
+                        TranslationService)),
+                this.configuration.TranslateTalk
+                    ? (AddonName: "Talk",
+                        Handler: new TalkHandler(
+                            this.configuration,
+                            TranslationService))
+                    : default,
+                this.configuration.TranslateBattleTalk
+                    ? (AddonName: "_BattleTalk",
+                        Handler: new BattleTalkHandler(
+                            this.configuration,
+                            TranslationService))
+                    : default,
         };
 
     AddonHandlerRegistrar.RegisterMany(
@@ -586,7 +602,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     if (this.configuration.TranslateTalk)
     {
-      PluginLog.Debug(
+      /*PluginLog.Debug(
           "Registering Talk addon listeners for translation.");
 
       AddonLifecycle.RegisterListener(
@@ -600,7 +616,7 @@ public partial class Echoglossian : IDalamudPlugin
       AddonLifecycle.RegisterListener(
           AddonEvent.PreReceiveEvent,
           "Talk",
-          this.UiTalkAsyncHandler);
+          this.UiTalkAsyncHandler);*/
     }
 
     if (this.configuration.TranslateBattleTalk)
@@ -608,18 +624,18 @@ public partial class Echoglossian : IDalamudPlugin
       PluginLog.Debug(
           "Registering _BattleTalk addon listeners for translation.");
 
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRefresh,
-          "_BattleTalk",
-          this.UiBattleTalkAsyncHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreDraw,
-          "_BattleTalk",
-          this.UiBattleTalkAsyncHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreReceiveEvent,
-          "_BattleTalk",
-          this.UiBattleTalkAsyncHandler);
+      /*      AddonLifecycle.RegisterListener(
+                AddonEvent.PreRefresh,
+                "_BattleTalk",
+                this.UiBattleTalkAsyncHandler);
+            AddonLifecycle.RegisterListener(
+                AddonEvent.PreDraw,
+                "_BattleTalk",
+                this.UiBattleTalkAsyncHandler);
+            AddonLifecycle.RegisterListener(
+                AddonEvent.PreReceiveEvent,
+                "_BattleTalk",
+                this.UiBattleTalkAsyncHandler);*/
     }
 
     if (this.configuration.TranslateTalkSubtitle)
