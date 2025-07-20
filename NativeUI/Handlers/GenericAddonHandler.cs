@@ -1200,6 +1200,7 @@ public abstract unsafe class
 
             /* PluginLog.Debug(
                  $"[{this.AddonName}] Restored original data to index {index} ({originalBytes.Length} bytes)");*/
+
           }
           catch (Exception ex)
           {
