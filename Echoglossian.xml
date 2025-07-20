@@ -365,6 +365,11 @@
         <member name="P:Echoglossian.Config.Version">
             <summary>Plugin configuration version number (used during migration).</summary>
         </member>
+        <member name="P:Echoglossian.Config.EnableAsyncTranslation">
+            <summary>
+            Gets or sets a value indicating whether translation should run asynchronously.
+            </summary>
+        </member>
         <member name="T:Echoglossian.Echoglossian">
             <summary>
                 Represents the Echoglossian plugin, which provides translation services and
@@ -1903,11 +1908,6 @@
                 The database entity type implementing IGenericEntity.
             </typeparam>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.NumericLikePattern">
-            <summary>
-                A regular expression pattern for identifying numeric-like strings.
-            </summary>
-        </member>
         <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.AddonName">
             <summary>
                 Gets the name of the addon being handled.
@@ -1981,49 +1981,6 @@
             </summary>
             <returns>A dictionary of addon events and their corresponding delegates.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.LoadFromDatabaseIfNeeded">
-            <summary>
-                Loads translated content from the database into FilteredAtkValues and FilteredStringArrayData.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnPreSetup(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Applies ATK translations before the UI is set up.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnPreRefresh(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Applies ATK translations on refresh (e.g., tab switch).
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnPreRequestedUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Applies StringArray translations immediately before update.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslatedAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-                Applies filtered translations to ATK values.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SerializeOriginalData">
-            <summary>
-                Converts original ATK and string array values into a single string for DB matching.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.BeginAsyncTranslation">
-            <summary>
-                Translates values and inserts them into DB using chunked async helper.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslateIfNeeded(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Extracts addon data, checks for DB translation, and triggers async translation if needed.
-                Should be invoked on a safe lifecycle event like PreRefresh.
-            </summary>
-            <param name="evt">The addon event triggering this logic.</param>
-            <param name="args">The associated addon arguments.</param>
-        </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
             <summary>
                 Registers a handler for a specific addon event.
@@ -2031,95 +1988,34 @@
             <param name="evt">The addon event to handle.</param>
             <param name="handler">The delegate to handle the event.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnPreSetup(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Extracts and filters ATK values from the addon.
+                Handles translation and application of values during PreSetup lifecycle.
             </summary>
-            <param name="addon">Pointer to the target native Game UI addon.</param>
+            <param name="type">AddonEvent type.</param>
+            <param name="args">AddonArgs containing setup context.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractStringArrayData(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnPreRefresh(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Extracts and filters string array data from the ATK stage.
+                Handles translation and application of values during PreRefresh lifecycle.
             </summary>
-            <param name="atkStage"></param>
+            <param name="type">AddonEvent type.</param>
+            <param name="args">AddonArgs containing refresh context.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.TryLoadTranslationFromDatabase">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnPreRequestedUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Attempts to load a cached translation from the database for this addon.
+                Handles translation and application of string array values during PreRequestedUpdate lifecycle.
             </summary>
-            <returns>True if translation was found and applied; otherwise, false.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ParseTranslatedData(System.String)">
-            <summary>
-                Parses JSON-formatted translated data retrieved from the DB and repopulates
-                FilteredAtkValues and FilteredStringArrayData.
-            </summary>
-            <param name="translatedJson">
-                The JSON string retrieved from the entity's
-                translated field.
-            </param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SerializeTranslationResult">
-            <summary>
-                Serializes a combined translation result into JSON.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.TryFindEntityInDb">
-            <summary>
-                Attempts to find a translated entity in the database based on the original
-                serialized content.
-            </summary>
-            <returns>
-                The matching <see cref="!:TGenericEntity" /> from the database, or null
-                if not found.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ContentIsAlreadyTranslated">
-            <summary>
-                Checks whether the currently extracted data is already translated.
-            </summary>
-            <returns>True if both ATK and StringArray values are already translated; otherwise, false.</returns>
+            <param name="type">AddonEvent type.</param>
+            <param name="args">AddonArgs containing update context.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Extracts and translates addon content based on the specified event and
-                arguments. Performs DB lookup before calling external translation.
+                arguments. Performs DB lookup before calling external translation. Runs asynchronously if configured.
             </summary>
             <param name="evt">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslateAsync(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Extracts and translates addon content asynchronously. Performs DB lookup before translation.
-                Uses GenericAddonHandlerHelper for chunked translation and DB save.
-            </summary>
-            <param name="evt"> The type of addon event.</param>
-            <param name="args">The addon arguments.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslated(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Applies translated content to the addon based on the specified event and
-                arguments. Loads translated data from DB if available.
-            </summary>
-            <param name="type">The type of addon event.</param>
-            <param name="args">The arguments associated with the addon event.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ApplyTranslatedStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
-            <summary>
-                Applies translated strings from the string array data to the addon.
-            </summary>
-            <param name="atkStage">The ATK stage instance containing the string array data.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.RestoreOriginalStringArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
-            <summary>
-                Restores the original string array data to the addon, if available.
-            </summary>
-            <param name="atkStage">The ATK stage instance containing the string array data.</param>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.CombinedTranslationData">
-            <summary>
-                Structure used to deserialize combined translation data from the DB.
-            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Handlers.IAddonTranslationHandler">
             <summary>

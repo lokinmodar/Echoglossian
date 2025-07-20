@@ -13,27 +13,25 @@ namespace Echoglossian.NativeUI.AddonHandlers.Hud;
 /// </summary>
 public class HudWindowHandler : GenericAddonHandler<GameWindow>
 {
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="HudWindowHandler" /> class.
-    /// </summary>
-    /// <param name="config">The configuration settings for the plugin.</param>
-    /// <param name="translationService">The service used for translating text.</param>
-    public HudWindowHandler(
-        Config config,
-        TranslationService translationService) : base(
-        "Hud",
-        config,
-        translationService,
-        true,
-        true,
-        StringArrayType.Hud)
-    {
-        this.RegisterHandler(AddonEvent.PreSetup, this.ExtractAndTranslate);
-        this.RegisterHandler(AddonEvent.PreRefresh, this.ApplyTranslated);
-        this.RegisterHandler(
-            AddonEvent.PreRequestedUpdate,
-            this.ApplyTranslated);
-
-        // this.RegisterHandler(AddonEvent.PostRequestedUpdate, this.ApplyTranslated);
-    }
+  /// <summary>
+  ///     Initializes a new instance of the <see cref="HudWindowHandler" /> class.
+  /// </summary>
+  /// <param name="config">The configuration settings for the plugin.</param>
+  /// <param name="translationService">The service used for translating text.</param>
+  public HudWindowHandler(
+      Config config,
+      TranslationService translationService) : base(
+      "Hud",
+      config,
+      translationService,
+      true,
+      true,
+      StringArrayType.Hud)
+  {
+    this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
+    this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);
+    this.RegisterHandler(
+        AddonEvent.PreRequestedUpdate,
+        this.OnPreRequestedUpdate);
+  }
 }
