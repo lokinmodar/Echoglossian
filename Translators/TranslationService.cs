@@ -176,6 +176,14 @@ public class TranslationService
     return finalDialogueText;
   }
 
+  /// <summary>
+  /// Determines whether the specified text should be translated and returns a sanitized version of the text.
+  /// </summary>
+  /// <param name="text">The text to be checked and potentially sanitized for translation.</param>
+  /// <returns>A tuple containing the sanitized text and a boolean indicating whether the text should be translated. The
+  /// sanitized text is an empty string if the input text is null or empty, or if the sanitized result is equivalent to
+  /// specific non-translatable patterns. The boolean is <see langword="true"/> if the text should be translated;
+  /// otherwise, <see langword="false"/>.</returns>
   private (string SanitizedText, bool ShouldTranslate) CheckTextToTranslate(
       string text)
   {

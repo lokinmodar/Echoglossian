@@ -6,7 +6,7 @@
 namespace Echoglossian.NativeUI.AddonHandlers.Character
 {
   /// <summary>
-  ///     Handles translation for the "Character" addon using AtkValues and
+  ///     Handles translation for the "_BattleTalk" addon using AtkValues and
   ///     StringArrayData.
   ///     Lifecycle-safe: extracts and applies values within valid memory scope per
   ///     frame.
@@ -21,13 +21,14 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character
     /// <param name="translationService">The service used for translating text.</param>
     public BattleTalkHandler(
         Config config,
-        TranslationService translationService) : base(
+        TranslationService translationService)
+      : base(
         "_BattleTalk",
         config,
         translationService,
-       useAtkValues: false,
-       useStringArray: true,
-       stringArrayDataType: StringArrayType.BattleTalk)
+        useAtkValues: false,
+        useStringArray: true,
+        stringArrayDataType: StringArrayType.BattleTalk)
     {
       this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
       this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);

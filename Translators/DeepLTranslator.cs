@@ -263,7 +263,7 @@ public class DeepLTranslator : ITranslator
                             text,
                             request_alternatives = 3
                         },
-                    },
+              },
           timestamp,
         },
         id,

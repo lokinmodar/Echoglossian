@@ -18,7 +18,8 @@ public class EchoglossianDbContext : DbContext
     /// </summary>
     /// <param name="options">Configuration options.</param>
     public EchoglossianDbContext(
-        DbContextOptions<EchoglossianDbContext> options) : base(options)
+        DbContextOptions<EchoglossianDbContext> options)
+      : base(options)
     {
     }
 

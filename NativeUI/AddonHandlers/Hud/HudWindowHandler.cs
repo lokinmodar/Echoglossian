@@ -20,7 +20,8 @@ public class HudWindowHandler : GenericAddonHandler<GameWindow>
   /// <param name="translationService">The service used for translating text.</param>
   public HudWindowHandler(
       Config config,
-      TranslationService translationService) : base(
+      TranslationService translationService)
+    : base(
       "Hud",
       config,
       translationService,

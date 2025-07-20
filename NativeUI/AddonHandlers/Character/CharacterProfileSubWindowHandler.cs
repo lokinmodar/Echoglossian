@@ -21,7 +21,8 @@ public class CharacterProfileSubWindowHandler : GenericAddonHandler<GameWindow>
   /// <param name="translationService">The service used for translating text.</param>
   public CharacterProfileSubWindowHandler(
       Config config,
-      TranslationService translationService) : base(
+      TranslationService translationService)
+    : base(
       "CharacterProfile",
       config,
       translationService,

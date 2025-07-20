@@ -320,7 +320,7 @@ public partial class Echoglossian : IDalamudPlugin
   /// <summary>
   ///     Disposes of the resources used by the Echoglossian plugin.
   /// </summary>
-  /// <param name="disposing"></param>
+  /// <param name="disposing">Indicates whether the method was called from managed code.</param>
   protected virtual void Dispose(bool disposing)
   {
     ToastGuiInterface.Toast -= this.OnToast;
@@ -380,18 +380,18 @@ public partial class Echoglossian : IDalamudPlugin
 
     if (this.configuration.TranslateBattleTalk)
     {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRefresh,
-          "_BattleTalk",
-          this.UiBattleTalkAsyncHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreDraw,
-          "_BattleTalk",
-          this.UiBattleTalkAsyncHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreReceiveEvent,
-          "_BattleTalk",
-          this.UiBattleTalkAsyncHandler);
+      /*      AddonLifecycle.UnregisterListener(
+                AddonEvent.PreRefresh,
+                "_BattleTalk",
+                this.UiBattleTalkAsyncHandler);
+            AddonLifecycle.UnregisterListener(
+                AddonEvent.PreDraw,
+                "_BattleTalk",
+                this.UiBattleTalkAsyncHandler);
+            AddonLifecycle.UnregisterListener(
+                AddonEvent.PreReceiveEvent,
+                "_BattleTalk",
+                this.UiBattleTalkAsyncHandler);*/
     }
 
     if (this.configuration.TranslateTalkSubtitle)
@@ -537,11 +537,19 @@ public partial class Echoglossian : IDalamudPlugin
     }
   }
 
+  /// <summary>
+  /// Sets the configuration flag to true when the config window is opened.
+  /// </summary>
   private void ConfigWindow()
   {
     this.config = true;
   }
 
+  /// <summary>
+  /// Sets the configuration flag to true when the command is executed.
+  /// </summary>
+  /// <param name="command">The command that triggered the execution.</param>
+  /// <param name="arguments">Arguments associated with the command.</param>
   private void Command(string command, string arguments)
   {
     this.config = true;

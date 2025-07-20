@@ -21,7 +21,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character
     /// <param name="translationService">The service used for translating text.</param>
     public CharacterWindowHandler(
         Config config,
-        TranslationService translationService) : base(
+        TranslationService translationService)
+      : base(
         "Character",
         config,
         translationService,

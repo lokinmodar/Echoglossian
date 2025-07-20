@@ -123,6 +123,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <returns>A dictionary of addon events and their corresponding delegates.</returns>
   public Dictionary<AddonEvent, AddonEventDelegate> GetEventHandlers()
   {
+    PluginLog.Debug($"[{this.AddonName}] Getting event handlers...");
     return this.eventHandlers.ToDictionary(
         kvp => kvp.Key,
         kvp => new AddonEventDelegate((evt, args) =>
@@ -141,6 +142,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <param name="handler">The delegate to handle the event.</param>
   public void RegisterHandler(AddonEvent evt, LocalAddonHandlerDelegate handler)
   {
+    PluginLog.Debug($"[{this.AddonName}] Registering handler for event: {evt}");
     if (!this.eventHandlers.TryGetValue(evt, out var list))
     {
       list = new List<LocalAddonHandlerDelegate>();
@@ -157,8 +159,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <param name="args">AddonArgs containing setup context.</param>
   protected void OnPreSetup(AddonEvent type, AddonArgs args)
   {
+    PluginLog.Debug($"[{this.AddonName}] Handling PreSetup for {type}...");
     if (args is not AddonSetupArgs setupArgs || args.AddonName != this.AddonName)
     {
+      PluginLog.Debug($"[{this.AddonName}] Skipping PreSetup for {type} - args mismatch.");
       return;
     }
 
@@ -173,8 +177,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <param name="args">AddonArgs containing refresh context.</param>
   protected void OnPreRefresh(AddonEvent type, AddonArgs args)
   {
+    PluginLog.Debug($"[{this.AddonName}] Handling PreRefresh for {type}...");
     if (args is not AddonRefreshArgs refreshArgs || args.AddonName != this.AddonName)
     {
+      PluginLog.Debug($"[{this.AddonName}] Skipping PreRefresh for {type} - args mismatch.");
       return;
     }
 
@@ -189,8 +195,11 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <param name="args">AddonArgs containing update context.</param>
   protected void OnPreRequestedUpdate(AddonEvent type, AddonArgs args)
   {
+    PluginLog.Debug($"[{this.AddonName}] Handling PreRequestedUpdate for {type}...");
+
     if (args is not AddonRequestedUpdateArgs requestedUpdateArgs || args.AddonName != this.AddonName)
     {
+      PluginLog.Debug($"[{this.AddonName}] Skipping PreRequestedUpdate for {type} - args mismatch.");
       return;
     }
 
@@ -198,8 +207,15 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     this.OnArrayDataUpdate(type, args);
   }
 
+  /// <summary>
+  /// Hadles the update of ATK values based on the provided event and arguments.
+  /// </summary>
+  /// <param name="type"></param>
+  /// <param name="args"></param>
+  /// <exception cref="Exception"></exception>
   private unsafe void OnAtkValueUpdate(AddonEvent type, AddonArgs args)
   {
+    PluginLog.Debug($"[{this.AddonName}] Handling ATK value update for {type}...");
     var atkValues = args switch
     {
       AddonRefreshArgs refreshArgs => (AtkValue*)refreshArgs.AtkValues,
@@ -240,6 +256,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
 
   private unsafe void OnArrayDataUpdate(AddonEvent type, AddonArgs args)
   {
+    PluginLog.Debug($"[{this.AddonName}] Handling StringArrayData update for {type}...");
     if (args is AddonRequestedUpdateArgs requestedUpdateArgs)
     {
       var stringArrayData = (StringArrayData**)requestedUpdateArgs.StringArrayData;
@@ -278,8 +295,14 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
   }
 
+  /// <summary>
+  ///  Gets the index of the string array associated with the specified addon.
+  /// </summary>
+  /// <param name="addon">Addon pointer.</param>
+  /// <returns>The index of the string array if found; otherwise -1.</returns>
   private unsafe int GetStringArrayIndexForAddon(AtkUnitBase* addon)
   {
+    PluginLog.Debug($"[{this.AddonName}] Getting StringArrayData index for addon {addon->Name.ToString()}...");
     var arrayHolder = RaptureAtkModule.Instance()->AtkArrayDataHolder;
 
     for (var index = 0; index < arrayHolder.StringArrayCount; ++index)
@@ -290,8 +313,11 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
         continue;
       }
 
+      PluginLog.Debug($"[{this.AddonName}] Checking if addon {addon->Name.ToString()} is subscribed to string array {index}...");
+
       if (stringArray->SubscribedAddons.Contains((byte)addon->Id))
       {
+        PluginLog.Debug($"[{this.AddonName}] Addon {addon->Name.ToString()} is subscribed to string array {index}.");
         return index;
       }
     }
@@ -307,8 +333,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <param name="args">The arguments associated with the addon event.</param>
   protected void ExtractAndTranslate(AddonEvent evt, AddonArgs args)
   {
+    PluginLog.Debug($"[{this.AddonName}] Extracting and translating content for {evt}...");
     if (args.AddonName != this.AddonName)
     {
+      PluginLog.Debug($"[{this.AddonName}] Skipping extraction for {evt} - addon name mismatch.");
       return;
     }
 
@@ -429,9 +457,13 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     PluginLog.Debug($"[{this.AddonName}] Synchronous translation saved to DB.");
   }
 
-
+  /// <summary>
+  ///  Serializes the original data from ATK values and string array data
+  /// </summary>
+  /// <returns>Returns the serialized data string.</returns>
   private string SerializeOriginalData()
   {
+    PluginLog.Debug($"[{this.AddonName}] Serializing original data...");
     var sb = new StringBuilder();
     foreach (var (index, val) in this.FilteredAtkValues)
       sb.Append($"a{index}|{val}|");
@@ -442,8 +474,13 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     return sb.ToString().TrimEnd('|');
   }
 
+  /// <summary>
+  /// Serializes the translation result into a JSON string
+  /// </summary>
+  /// <returns>Returns the serialized translation result.</returns>
   private string SerializeTranslationResult()
   {
+    PluginLog.Debug($"[{this.AddonName}] Serializing translation result to JSON...");
     var combined = new
     {
       atkValues = this.FilteredAtkValues,
@@ -453,12 +490,20 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     return JsonConvert.SerializeObject(combined);
   }
 
-  private bool TryLoadTranslationFromDatabase()
+  /// <summary>
+  /// Attempts to load a translation from the database for the current addon.
+  /// </summary>
+  /// <remarks>This method tries to find the relevant entity in the database and retrieve its translated text.
+  /// If the entity is not found or the translated text is empty or whitespace, the method returns <see
+  /// langword="false"/>.</remarks>
+  /// <returns><see langword="true"/> if the translation is successfully loaded and parsed; otherwise, <see langword="false"/>.</returns>
+  private bool TryLoadTranslationFromDatabase() // TODO: revalidate the generic entity logic because data is not being properly saved in the Database and retrieval is not working as expected
   {
     PluginLog.Debug($"[{this.AddonName}] Attempting to load translation from DB...");
     var entity = this.TryFindEntityInDb();
     if (entity is null)
     {
+      PluginLog.Debug($"[{this.AddonName}] No matching entity found in DB.");
       return false;
     }
 
@@ -472,10 +517,16 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     return true;
   }
 
+  /// <summary>
+  /// Parses the translated JSON data and populates the filtered dictionaries.
+  /// </summary>
+  /// <param name="translatedJson">Translated JSON data</param>
   private void ParseTranslatedData(string? translatedJson)
   {
+    PluginLog.Debug($"[{this.AddonName}] Parsing translated data from JSON...");
     if (string.IsNullOrWhiteSpace(translatedJson))
     {
+      PluginLog.Debug($"[{this.AddonName}] No translated data found in JSON.");
       return;
     }
 
@@ -487,14 +538,14 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
         return;
       }
 
-      if (parsed.atkValues != null)
+      if (parsed.AtkValues != null)
       {
-        this.FilteredAtkValues = parsed.atkValues;
+        this.FilteredAtkValues = parsed.AtkValues;
       }
 
-      if (parsed.stringArrayData != null)
+      if (parsed.StringArrayData != null)
       {
-        this.FilteredStringArrayData = parsed.stringArrayData;
+        this.FilteredStringArrayData = parsed.StringArrayData;
       }
     }
     catch
@@ -503,8 +554,18 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
   }
 
-  private TGenericEntity? TryFindEntityInDb()
+  /// <summary>
+  ///  Attempts to find an entity in the database that matches the current object's original data,  addon name,
+  /// translation language, and game version.
+  /// </summary>
+  /// <remarks>This method serializes the original data of the current object and uses it along with the  addon
+  /// name, translation language, and game version to search for a matching entity in the  database. The search
+  /// considers entities with a null game version as matching any version.</remarks>
+  /// <returns>The entity of type <typeparamref name="TGenericEntity"/> if a matching entity is found;  otherwise, <see
+  /// langword="null"/>.</returns>
+  private TGenericEntity? TryFindEntityInDb() // TODO: revalidate the generic entity logic because data is not being properly saved in the Database and retrieval is not working as expected
   {
+    PluginLog.Debug($"[{this.AddonName}] Attempting to find entity in DB...");
     var original = this.SerializeOriginalData();
     var lang = LangDict[LanguageInt].Code;
     var version = GetGameVersion();
@@ -516,11 +577,17 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
         (e.GetGameVersion() == null || e.GetGameVersion() == version));
   }
 
+  /// <summary>
+  /// Helps determine if the content is already translated by checking the database.
+  /// </summary>
+  /// <returns>The boolean indicating whether the content is translated.</returns>
   private bool ContentIsAlreadyTranslated()
   {
+    PluginLog.Debug($"[{this.AddonName}] Checking if content is already translated...");
     var entity = this.TryFindEntityInDb();
     if (entity is null || string.IsNullOrWhiteSpace(entity.GetTranslatedText()))
     {
+      PluginLog.Debug($"[{this.AddonName}] No matching entity found or translated text is empty.");
       return false;
     }
 
@@ -529,11 +596,12 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       var parsed = JsonConvert.DeserializeObject<CombinedTranslationData>(entity.GetTranslatedText());
       if (parsed is null)
       {
+        PluginLog.Debug($"[{this.AddonName}] Parsed translation data is null.");
         return false;
       }
 
-      var atkTranslated = parsed.atkValues ?? new();
-      var strTranslated = parsed.stringArrayData ?? new();
+      var atkTranslated = parsed.AtkValues ?? new();
+      var strTranslated = parsed.StringArrayData ?? new();
 
       bool atkMatch = this.FilteredAtkValues.All(kvp =>
           atkTranslated.TryGetValue(kvp.Key, out var val) && val == kvp.Value);
@@ -552,12 +620,18 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
   }
 
+  /// <summary>
+  /// Extracts ATK values from the addon and populates the filtered and original dictionaries.
+  /// </summary>
+  /// <param name="addon">The addon's ATK unit base structure.</param>
   private unsafe void ExtractAtkValues(AtkUnitBase* addon)
   {
+    PluginLog.Debug($"[{this.AddonName}] Extracting ATK values...");
     var atkValues = addon->AtkValues;
     var count = addon->AtkValuesCount;
     if (atkValues == null || count <= 0)
     {
+      PluginLog.Debug($"[{this.AddonName}] No ATK values found or count is zero.");
       return;
     }
 
@@ -578,11 +652,22 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
   }
 
+  /// <summary>
+  /// Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
+  /// </summary>
+  /// <param name="atkStage">The ATK stage containing the string array data.</param>
   private unsafe void ExtractStringArrayData(AtkStage* atkStage)
   {
+    PluginLog.Debug($"[{this.AddonName}] Extracting StringArrayData of type {this.StringArrayDataType.Value}...");
     var data = atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
     var array = data->StringArray;
     var size = data->Size;
+
+    if (array == null || size <= 0)
+    {
+      PluginLog.Debug($"[{this.AddonName}] No StringArrayData found or size is zero.");
+      return;
+    }
 
     for (var i = 0; i < size; i++)
     {
@@ -598,9 +683,22 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
   }
 
+  /// <summary>
+  /// Represents a collection of translation data, combining attack values and string array data.
+  /// </summary>
+  /// <remarks>This class holds two dictionaries that map integer keys to string values, allowing for the
+  /// storage and retrieval of translation-related data. The dictionaries can be null, indicating the absence of
+  /// data.</remarks>
   private class CombinedTranslationData
   {
-    public Dictionary<int, string>? atkValues { get; set; }
-    public Dictionary<int, string>? stringArrayData { get; set; }
+    /// <summary>
+    /// Dictionary mapping ATK value indices to their translated strings.
+    /// </summary>
+    public Dictionary<int, string>? AtkValues { get; set; }
+
+    /// <summary>
+    /// Dictionary mapping string array indices to their translated strings.
+    /// </summary>
+    public Dictionary<int, string>? StringArrayData { get; set; }
   }
 }

@@ -236,8 +236,7 @@ public class Config : IPluginConfiguration
   public Vector3 OverlayBattleTalkTextColor = new(1f, 1f, 1f);
 
   /// <summary>
-  ///     Disables translation but still displays overlays (e.g., when language
-  ///     is visual only).
+  ///    Controls whether the translations should only be displayed as overlays because of missing native game font support for the selected language.
   /// </summary>
   [DefaultValue(false)] public bool OverlayOnlyLanguage = false;
 
