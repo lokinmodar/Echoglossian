@@ -261,7 +261,7 @@ public class DeepLTranslator : ITranslator
                         new
                         {
                             text,
-                            request_alternatives = 3
+                            request_alternatives = 3,
                         },
               },
           timestamp,

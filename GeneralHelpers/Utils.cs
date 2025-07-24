@@ -67,7 +67,7 @@ public partial class Echoglossian
   public void ListCultureInfos()
   {
     using StreamWriter logStream = new(
-        this.configDir + "CultureInfos.txt",
+        ConfigDirectory + "CultureInfos.txt",
         true);
 
     var cus = CultureInfo.GetCultures(CultureTypes.AllCultures);

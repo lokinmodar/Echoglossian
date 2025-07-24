@@ -86,7 +86,7 @@ public class LmStudioTranslator : ITranslator
             this.temperature,
             messages = new[]
             {
-                new { role = "user", content = fullPrompt }
+                new { role = "user", content = fullPrompt },
             },
         };
 

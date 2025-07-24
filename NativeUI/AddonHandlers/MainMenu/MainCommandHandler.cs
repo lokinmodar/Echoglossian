@@ -6,29 +6,28 @@
 namespace Echoglossian.NativeUI.AddonHandlers.Character
 {
   /// <summary>
-  ///     Handles translation for the "Character" addon using AtkValues and
+  ///     Handles translation for the "MainCommand" addon using AtkValues and
   ///     StringArrayData.
   ///     Lifecycle-safe: extracts and applies values within valid memory scope per
   ///     frame.
   /// </summary>
-  public class CharacterWindowHandler : GenericAddonHandler<GameWindow>
+  public class MainCommandHandler : GenericAddonHandler<GameWindow>
   {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacterWindowHandler" />
+    ///     Initializes a new instance of the <see cref="MainCommandHandler" />
     ///     class.
     /// </summary>
     /// <param name="config">The configuration settings for the plugin.</param>
     /// <param name="translationService">The service used for translating text.</param>
-    public CharacterWindowHandler(
+    public MainCommandHandler(
         Config config,
         TranslationService translationService)
       : base(
-        addonName: "Character",
-        config: config,
-        translationService: translationService,
-        useAtkValues: true,
-        useStringArray: true,
-        stringArrayDataType: StringArrayType.Character)
+        "_MainCommand",
+        config,
+        translationService,
+        true,
+        false)
     {
       this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
       this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);

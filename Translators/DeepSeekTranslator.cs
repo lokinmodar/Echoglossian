@@ -116,7 +116,7 @@ Please provide only the translated text in your response, without any explanatio
                     new
                     {
                         role = "user",
-                        content = prompt
+                        content = prompt,
                     },
                 },
                 this.temperature,

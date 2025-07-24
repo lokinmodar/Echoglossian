@@ -4,6 +4,46 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
+        <member name="T:Echoglossian.Cache.GameWindowCacheManager">
+            <summary>
+                Manages an in-memory cache of <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> records to reduce redundant DB access.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Cache.GameWindowCacheManager.Cache">
+            <summary>
+                In-memory cache for GameWindow entries, grouped by addon name.
+                Each key maps to a list of all entries for that addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.Preload(System.String)">
+            <summary>
+                Loads all GameWindow records from the database into memory.
+            </summary>
+            <param name="configDir">The plugin's configuration directory path.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.Update(Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>
+                Adds a GameWindow entry to the cache if it is not already present.
+                Ensures no duplicates by keying on addon name + lang + engine + version + original data.
+            </summary>
+            <param name="newRecord">The new <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> record to add.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.Clear">
+            <summary>
+                Clears all cached GameWindow entries.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.TryFindMatch(System.String,System.String,System.Int32,System.String,System.String)">
+            <summary>
+                Attempts to find a matching GameWindow entry in the in-memory cache.
+            </summary>
+            <param name="addonName">The addon name to match.</param>
+            <param name="lang">The translation language code to match.</param>
+            <param name="engine">The translation engine ID to match.</param>
+            <param name="version">The game version string to match (nullable allowed).</param>
+            <param name="originalJson">The serialized original content to match.</param>
+            <returns>A matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> if found; otherwise, <see langword="null"/>.</returns>
+        </member>
         <member name="F:Echoglossian.Config.AiTranslatorPrompt">
             <summary>Generic prompt used by all AI translators when applicable.</summary>
         </member>
@@ -190,8 +230,7 @@
         </member>
         <member name="F:Echoglossian.Config.OverlayOnlyLanguage">
             <summary>
-                Disables translation but still displays overlays (e.g., when language
-                is visual only).
+               Controls whether the translations should only be displayed as overlays because of missing native game font support for the selected language.
             </summary>
         </member>
         <member name="F:Echoglossian.Config.PluginAssetsDownloaded">
@@ -372,6 +411,9 @@
         </member>
         <member name="T:Echoglossian.Echoglossian">
             <summary>
+             Defines operations for managing and retrieving translation data
+            </summary>
+            <summary>
                 Represents the Echoglossian plugin, which provides translation services and
                 UI enhancements for Dalamud-based applications. This class integrates
                 various plugin services and manages translation operations for different UI
@@ -432,6 +474,15 @@
             </summary>
             <param name="questPlate"></param>
             <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>
+            Inserts or updates a GameWindow record in the database, ensuring uniqueness
+            per AddonName + Lang + Engine + Version + OriginalWindowStrings.
+            Updates the in-memory cache accordingly.
+            </summary>
+            <param name="gameWindow">The GameWindow entity to insert or update.</param>
+            <returns>Status message indicating result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindEntity``1(System.Func{``0,System.Boolean})">
             <summary>
@@ -1860,6 +1911,54 @@
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.AddonContextMenuTitleHandler">
+            <summary>
+                Handles translation for the "AddonContextMenuTitle" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.AddonContextMenuTitleHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.AddonContextMenuTitleHandler" />
+                class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.MainCommandHandler">
+            <summary>
+                Handles translation for the "MainCommand" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.MainCommandHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.MainCommandHandler" />
+                class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.OperationGuideHandler">
+            <summary>
+                Handles translation for the "OperationGuide" addon using AtkValues and
+                StringArrayData.
+                Lifecycle-safe: extracts and applies values within valid memory scope per
+                frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.OperationGuideHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.OperationGuideHandler" />
+                class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.BattleTalkHandler">
             <summary>
                 Handles translation for the "_BattleTalk" addon using AtkValues and
@@ -1993,6 +2092,16 @@
                 Stores original ATK values extracted from the addon for change detection.
             </summary>
         </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SnapshotOriginalAtkValues">
+            <summary>
+             Stores a snapshot of the original ATK values
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SnapshotOriginalStringArrayData">
+            <summary>
+             Stores a snapshot of the original string array data
+            </summary>
+        </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1" /> class.
@@ -2038,6 +2147,21 @@
             <param name="type">AddonEvent type.</param>
             <param name="args">AddonArgs containing update context.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnAtkValueUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Handles the update of ATK values based on the translated results.
+            Uses snapshot values to detect whether translation needs to be applied.
+            </summary>
+            <param name="type">AddonEvent type.</param>
+            <param name="args">AddonArgs containing update context.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnArrayDataUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Applies translated StringArrayData values to the game, using the original snapshot for validation.
+            </summary>
+            <param name="type">The AddonEvent that triggered the update.</param>
+            <param name="args">The addon arguments containing the array pointer.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.GetStringArrayIndexForAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
              Gets the index of the string array associated with the specified addon.
@@ -2048,10 +2172,29 @@
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Extracts and translates addon content based on the specified event and
-                arguments. Performs DB lookup before calling external translation. Runs asynchronously if configured.
+                arguments. Performs DB lookup before calling external translation.
+                Saves translated content into the database. Honors async/sync mode from config.
             </summary>
             <param name="evt">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+            Extracts ATK values from the addon and populates the filtered and original dictionaries.
+            </summary>
+            <param name="addon">The addon's ATK unit base structure.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractStringArrayData(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
+            <summary>
+            Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
+            </summary>
+            <param name="atkStage">The ATK stage containing the string array data.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SnapshotOriginalValues">
+            <summary>
+                Captures the current extracted ATK and StringArrayData values as immutable snapshots
+                to preserve their original (pre-translation) state for DB and cache comparison.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SerializeOriginalData">
             <summary>
@@ -2061,9 +2204,9 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SerializeTranslationResult">
             <summary>
-            Serializes the translation result into a JSON string
+            Serializes the translation isMatch into a JSON string
             </summary>
-            <returns>Returns the serialized translation result.</returns>
+            <returns>Returns the serialized translation isMatch.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.TryLoadTranslationFromDatabase">
             <summary>
@@ -2082,32 +2225,20 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.TryFindEntityInDb">
             <summary>
-             Attempts to find an entity in the database that matches the current object's original data,  addon name,
-            translation language, and game version.
+                Attempts to find an entity in the database that matches the preserved snapshot of original data,
+                addon name, translation language, and game version. Uses in-memory GameWindow cache when applicable.
             </summary>
-            <remarks>This method serializes the original data of the current object and uses it along with the  addon
-            name, translation language, and game version to search for a matching entity in the  database. The search
-            considers entities with a null game version as matching any version.</remarks>
-            <returns>The entity of type <typeparamref name="TGenericEntity"/> if a matching entity is found;  otherwise, <see
-            langword="null"/>.</returns>
+            <returns>
+                The entity of type <typeparamref name="TGenericEntity"/> if a matching entity is found;
+                otherwise, <see langword="null" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ContentIsAlreadyTranslated">
             <summary>
-            Helps determine if the content is already translated by checking the database.
+                Determines if the currently extracted values match the preserved original snapshot.
+                This avoids re-translating or re-applying if the values are already translated.
             </summary>
-            <returns>The boolean indicating whether the content is translated.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAtkValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-            Extracts ATK values from the addon and populates the filtered and original dictionaries.
-            </summary>
-            <param name="addon">The addon's ATK unit base structure.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractStringArrayData(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
-            <summary>
-            Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
-            </summary>
-            <param name="atkStage">The ATK stage containing the string array data.</param>
+            <returns><see langword="true"/> if the content was already translated; otherwise, <see langword="false"/>.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.CombinedTranslationData">
             <summary>
@@ -2214,17 +2345,19 @@
                 Helper for performing async translation logic outside unsafe context.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.PerformTranslationAndSaveAsync``1(System.String,System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Type)">
+        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.PerformTranslationAndSaveAsync``1(System.String,System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-                Performs translation and DB save in a safe context.
+            Performs async translation and saves result to DB. Supports both generic and multi-text entities.
             </summary>
-            <typeparam name="T">Generic entity type.</typeparam>
-            <param name="addonName">Addon name.</param>
-            <param name="atkValues">ATK values dictionary.</param>
-            <param name="stringArray">StringArrayData dictionary.</param>
-            <param name="config">Plugin config.</param>
-            <param name="service">Translation service.</param>
-            <param name="entityType">Entity type used for DB ops.</param>
+            <typeparam name="T">Entity type implementing IGenericEntity or IMultiTextEntity.</typeparam>
+            <param name="addonName">The name of the addon.</param>
+            <param name="atkValues">The filtered AtkValues to translate.</param>
+            <param name="stringArray">The filtered StringArrayData to translate.</param>
+            <param name="originalAtkSnapshot">The original snapshot of AtkValues before translation.</param>
+            <param name="originalArraySnapshot">The original snapshot of StringArrayData before translation.</param>
+            <param name="config">The plugin configuration.</param>
+            <param name="service">The translation service instance.</param>
+            <returns> </returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
             <summary>

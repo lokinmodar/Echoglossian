@@ -44,6 +44,7 @@ global using Dalamud.Plugin.Services;
 global using Dalamud.Utility;
 
 global using static Echoglossian.Echoglossian;
+
 global using Echoglossian.EFCoreSqlite;
 global using Echoglossian.EFCoreSqlite.Models;
 global using Echoglossian.EFCoreSqlite.Models.Journal;

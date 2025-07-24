@@ -60,11 +60,11 @@ public class GoogleTranslator : ITranslator
                         {
                             "x-referer",
                             "chrome-extension://mgijmajocgfcbeboacabfgobmjgjcoja"
-                        }
+                        },
                     }, new Dictionary<string, string>
                     {
                         { "strategy", "2" },
-                        { "key", "AIzaSyA6EEtrDCfBkHV8uU2lgGY-N383ZgAOo7Y" }
+                        { "key", "AIzaSyA6EEtrDCfBkHV8uU2lgGY-N383ZgAOo7Y" },
                     })
             },
         };

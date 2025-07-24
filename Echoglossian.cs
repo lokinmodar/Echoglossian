@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
 /// <summary>
@@ -42,12 +44,12 @@ public partial class Echoglossian : IDalamudPlugin
   ///     before use.
   /// </remarks>
   public static TranslationService TranslationService;
+  public static string ConfigDirectory;
 
   private readonly SemaphoreSlim areaToastTranslationSemaphore;
   private readonly SemaphoreSlim battleTalkTranslationSemaphore;
   private readonly IDalamudTextureWrap choiceImage;
   private readonly SemaphoreSlim classChangeToastTranslationSemaphore;
-  private readonly string configDir;
 
   private readonly Config configuration;
 
@@ -88,8 +90,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.configuration = PluginInterface.GetPluginConfig() as Config ??
                          new Config();
 
-    this.configDir = PluginInterface.GetPluginConfigDirectory() +
-                     Path.DirectorySeparatorChar;
+    ConfigDirectory = PluginInterface.GetPluginConfigDirectory() +
+                      Path.DirectorySeparatorChar;
 
     CommandManager.AddHandler(
         SlashCommand,
@@ -197,6 +199,8 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.LoadAllErrorToasts();
     this.LoadAllOtherToasts();
+
+    GameWindowCacheManager.Preload(ConfigDirectory);
 
     FrameworkInterface.Update += this.Tick;
 
@@ -309,6 +313,8 @@ public partial class Echoglossian : IDalamudPlugin
   public List<ToastMessage> QuestToastsCache { get; set; }
 
   public List<ToastMessage> OtherToastsCache { get; set; }
+
+
 
   /// <inheritdoc />
   public void Dispose()
@@ -562,8 +568,20 @@ public partial class Echoglossian : IDalamudPlugin
     this.registeredAddonHandlers =
         new List<(string AddonName, IAddonTranslationHandler Handler)>
         {
+               /* (AddonName: "_MainCommand",
+                    Handler: new MainCommandHandler(
+                        this.configuration,
+                        TranslationService)),
+                (AddonName: "AddonContextMenuTitle",
+                    Handler: new AddonContextMenuTitleHandler(
+                        this.configuration,
+                        TranslationService)),*/
                 (AddonName: "Character",
                     Handler: new CharacterWindowHandler(
+                        this.configuration,
+                        TranslationService)),
+               /* (AddonName: "OperationGuide",
+                    Handler: new OperationGuideHandler(
                         this.configuration,
                         TranslationService)),
                 (AddonName: "Hud",
@@ -589,7 +607,7 @@ public partial class Echoglossian : IDalamudPlugin
                 (AddonName: "CharacterStatus",
                     Handler: new CharacterStatusSubWindowHandler(
                         this.configuration,
-                        TranslationService)),
+                        TranslationService)),*/
                 this.configuration.TranslateTalk
                     ? (AddonName: "Talk",
                         Handler: new TalkHandler(

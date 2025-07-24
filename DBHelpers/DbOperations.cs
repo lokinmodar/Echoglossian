@@ -3,8 +3,13 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
+/// <summary>
+///  Defines operations for managing and retrieving translation data
+/// </summary>
 public partial class Echoglossian
 {
   public static TalkMessage? FoundTalkMessage { get; set; }
@@ -22,12 +27,12 @@ public partial class Echoglossian
   /// </summary>
   public async void CreateOrUseDb()
   {
-    using (var context = new EchoglossianDbContext(this.configDir))
+    using (var context = new EchoglossianDbContext(ConfigDirectory))
     {
-      PluginLog.Debug($"Config dir path: {this.configDir}");
+      PluginLog.Debug($"Config dir path: {ConfigDirectory}");
       try
       {
-        PluginLog.Debug($"Config dir path: {this.configDir}");
+        PluginLog.Debug($"Config dir path: {ConfigDirectory}");
 
         var pendingMigrations =
             await context.Database.GetPendingMigrationsAsync();
@@ -328,7 +333,7 @@ public partial class Echoglossian
   /// <returns></returns>
   public QuestPlate? FindQuestPlate(QuestPlate questPlate)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
       var existingQuestPlate = context.QuestPlate.Where(t =>
@@ -366,7 +371,7 @@ public partial class Echoglossian
   /// <returns></returns>
   public QuestPlate? FindQuestPlateByName(QuestPlate questPlate)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
       var existingQuestPlate = context.QuestPlate.Where(t =>
@@ -399,7 +404,7 @@ public partial class Echoglossian
   public TalkSubtitleMessage? FindAndReturnTalkSubtitleMessage(
       TalkSubtitleMessage talkSubtitleMessage)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
       var existingTalkSubtitleMessage =
@@ -511,7 +516,7 @@ public partial class Echoglossian
         Path.DirectorySeparatorChar);
 #if DEBUG
 
-    // using StreamWriter logStream = new($"{this.configDir}DbInsertTalkOperationsLog.txt", append: true);
+    // using StreamWriter logStream = new($"{ConfigDirectory}DbInsertTalkOperationsLog.txt", append: true);
     PluginLog.Debug($"TalkMessage to be saved in DB: {talkMessage}");
 #endif
 
@@ -549,7 +554,7 @@ public partial class Echoglossian
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
     /*#if DEBUG
-          using StreamWriter logStream = new($"{this.configDir}DbInsertBattleTalkOperationsLog.txt", append: true);
+          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertBattleTalkOperationsLog.txt", append: true);
     #endif*/
 
     var pluginConfig = PluginInterface.GetPluginConfig() as Config;
@@ -585,7 +590,7 @@ public partial class Echoglossian
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
     /*#if DEBUG
-     *            using StreamWriter logStream = new($"{this.configDir}DbInsertTalkSubtitleOperationsLog.txt", append: true);
+     *            using StreamWriter logStream = new($"{ConfigDirectory}DbInsertTalkSubtitleOperationsLog.txt", append: true);
      *                 #endif*/
 
     var pluginConfig = PluginInterface.GetPluginConfig() as Config;
@@ -617,9 +622,9 @@ public partial class Echoglossian
 
   public string InsertErrorToastMessageData(ToastMessage toastMessage)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     /*#if DEBUG
-          using StreamWriter logStream = new($"{this.configDir}DbInsertToastOperationsLog.txt", append: true);
+          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertToastOperationsLog.txt", append: true);
     #endif*/
     try
     {
@@ -668,9 +673,9 @@ public partial class Echoglossian
 
   public string InsertOtherToastMessageData(ToastMessage toastMessage)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     /*#if DEBUG
-          using StreamWriter logStream = new($"{this.configDir}DbInsertToastOperationsLog.txt", append: true);
+          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertToastOperationsLog.txt", append: true);
     #endif*/
     try
     {
@@ -719,9 +724,9 @@ public partial class Echoglossian
 
   public string InsertQuestPlate(QuestPlate questPlate)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     /*#if DEBUG
-          using StreamWriter logStream = new($"{this.configDir}DbInsertQuestPlateOperationsLog.txt", append: true);
+          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertQuestPlateOperationsLog.txt", append: true);
     #endif*/
     try
     {
@@ -749,9 +754,9 @@ public partial class Echoglossian
 
   public string UpdateQuestPlate(QuestPlate questPlate)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     /*#if DEBUG
-          using StreamWriter logStream = new($"{this.configDir}DbUpdateQuestPlateOperationsLog.txt", append: true);
+          using StreamWriter logStream = new($"{ConfigDirectory}DbUpdateQuestPlateOperationsLog.txt", append: true);
     #endif*/
     try
     {
@@ -777,48 +782,84 @@ public partial class Echoglossian
     }
   }
 
-  public string InsertGameWindow(GameWindow gameWindow)
+  /// <summary>
+  /// Inserts or updates a GameWindow record in the database, ensuring uniqueness
+  /// per AddonName + Lang + Engine + Version + OriginalWindowStrings.
+  /// Updates the in-memory cache accordingly.
+  /// </summary>
+  /// <param name="gameWindow">The GameWindow entity to insert or update.</param>
+  /// <returns>Status message indicating result.</returns>
+  public static string InsertGameWindow(GameWindow gameWindow)
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
-      context.GameWindow.Attach(gameWindow);
+      if (gameWindow is null || string.IsNullOrWhiteSpace(gameWindow.WindowAddonName))
+      {
+        PluginLog.Warning("InsertGameWindow received null or invalid entity.");
+        return "Invalid data.";
+      }
 
-      context.SaveChangesAsync();
+      // Check if identical already exists
+      var exists = context.GameWindow.FirstOrDefault(g =>
+          g.WindowAddonName == gameWindow.WindowAddonName &&
+          g.TranslationLang == gameWindow.TranslationLang &&
+          g.TranslationEngine == gameWindow.TranslationEngine &&
+          g.GameVersion == gameWindow.GameVersion &&
+          g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
 
-      return "Data inserted to GameWindow table.";
+      if (exists != null)
+      {
+        PluginLog.Debug("InsertGameWindow: Identical GameWindow already exists.");
+        return "Identical record already exists.";
+      }
+
+      // See if there's one for same combo but different original text — update it
+      var variant = context.GameWindow.FirstOrDefault(g =>
+          g.WindowAddonName == gameWindow.WindowAddonName &&
+          g.TranslationLang == gameWindow.TranslationLang &&
+          g.TranslationEngine == gameWindow.TranslationEngine &&
+          g.GameVersion == gameWindow.GameVersion);
+
+      if (variant != null)
+      {
+        PluginLog.Debug("InsertGameWindow: Updating variant record.");
+        variant.OriginalWindowStrings = gameWindow.OriginalWindowStrings;
+        variant.OriginalWindowStringsLang = gameWindow.OriginalWindowStringsLang;
+        variant.TranslatedWindowStrings = gameWindow.TranslatedWindowStrings;
+        variant.UpdatedDate = DateTime.UtcNow;
+
+        context.GameWindow.Update(variant);
+        context.SaveChanges();
+
+        GameWindowCacheManager.Update(variant);
+        return "Record updated.";
+      }
+
+      // Otherwise, insert new
+      gameWindow.CreatedDate = DateTime.UtcNow;
+      gameWindow.UpdatedDate = DateTime.UtcNow;
+
+      context.GameWindow.Add(gameWindow);
+      context.SaveChanges();
+
+      GameWindowCacheManager.Update(gameWindow);
+      return "New record inserted.";
     }
-    catch (Exception e)
+    catch (Exception ex)
     {
-      return $"ErrorSavingData: {e}";
-    }
-  }
-
-  public string UpdateGameWindow(GameWindow gameWindow)
-  {
-    using var context = new EchoglossianDbContext(this.configDir);
-
-    try
-    {
-      context.GameWindow.Update(gameWindow);
-
-      context.SaveChangesAsync();
-
-      return "Data updated on GameWindow table.";
-    }
-    catch (Exception e)
-    {
-      return $"ErrorSavingData: {e}";
+      PluginLog.Error($"InsertGameWindow exception: {ex}");
+      return $"Error inserting GameWindow: {ex.Message}";
     }
   }
 
   public void LoadAllErrorToasts()
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     this.ErrorToastsCache = new List<ToastMessage>();
     /*#if DEBUG
-          using StreamWriter logStream = new($"{this.configDir}DbErrorToastListQueryOperationsLog.txt", append: true);
+          using StreamWriter logStream = new($"{ConfigDirectory}DbErrorToastListQueryOperationsLog.txt", append: true);
     #endif*/
     try
     {
@@ -839,16 +880,16 @@ public partial class Echoglossian
       /*#if DEBUG
               logStream.WriteLineAsync($"Query operation error: {e}");
       #endif*/
-      PluginLog.Debug("Could not find any Error Toasts in Database");
+      PluginLog.Debug("Could not find any Error Toasts in Database", e.Message);
     }
   }
 
   public void LoadAllOtherToasts()
   {
-    using var context = new EchoglossianDbContext(this.configDir);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
     this.OtherToastsCache = new List<ToastMessage>();
     /*#if DEBUG
-          using StreamWriter logStream = new($"{this.configDir}DbOtherToastListQueryOperationsLog.txt", append: true);
+          using StreamWriter logStream = new($"{ConfigDirectory}DbOtherToastListQueryOperationsLog.txt", append: true);
     #endif*/
     try
     {
@@ -869,7 +910,7 @@ public partial class Echoglossian
       /*#if DEBUG
               logStream.WriteLineAsync($"Query operation error: {e}");
       #endif*/
-      PluginLog.Debug("Could not find any Other Toasts in Database");
+      PluginLog.Debug("Could not find any Other Toasts in Database", e.Message);
     }
   }
 
@@ -900,6 +941,8 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
+    PluginLog.Debug(
+        $"FindEntity<{typeof(T).Name}> called with predicate: {predicate}");
     try
     {
       return context.Set<T>().AsEnumerable().FirstOrDefault(predicate);
@@ -919,11 +962,19 @@ public partial class Echoglossian
   /// <param name="entity">Entity to insert.</param>
   /// <returns>Result message.</returns>
   public static async Task<string> InsertEntity<T>(T entity)
-        where T : class
+     where T : class
   {
+    if (entity is GameWindow gameWindow)
+    {
+      return InsertGameWindow(gameWindow) ?? "Plugin not available";
+    }
+
     using var context = new EchoglossianDbContext(
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
+
+    PluginLog.Debug($"InsertEntity<{typeof(T).Name}> called with entity: {entity}");
+
     try
     {
       context.Set<T>().Add(entity);
@@ -932,8 +983,7 @@ public partial class Echoglossian
     }
     catch (Exception ex)
     {
-      PluginLog.Error(
-          $"InsertEntity<{typeof(T).Name}> failed: {ex.Message}");
+      PluginLog.Error($"InsertEntity<{typeof(T).Name}> failed: {ex.Message}");
       return $"Insert failed: {ex.Message}";
     }
   }
