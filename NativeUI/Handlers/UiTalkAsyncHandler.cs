@@ -80,6 +80,7 @@ namespace Echoglossian
               textTranslation,
               LangDict[LanguageInt].Code,
               this.configuration.ChosenTransEngine,
+              rtlLangTranslationImageData: null,
               DateTime.Now,
               DateTime.Now);
 
@@ -225,6 +226,7 @@ namespace Echoglossian
               textTranslation,
               LangDict[LanguageInt].Code,
               this.configuration.ChosenTransEngine,
+              rtlLangTranslationImageData: null,
               DateTime.Now,
               DateTime.Now);
 
@@ -284,6 +286,7 @@ namespace Echoglossian
               textTranslation,
               LangDict[LanguageInt].Code,
               this.configuration.ChosenTransEngine,
+              rtlLangTranslationImageData: null,
               DateTime.Now,
               DateTime.Now);
 

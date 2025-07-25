@@ -3,6 +3,7 @@ using System;
 using Echoglossian.EFCoreSqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Echoglossian.EFCoreSqlite.Migrations
 {
     [DbContext(typeof(EchoglossianDbContext))]
-    partial class EchoglossianDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250724183538_AddNewEntity24052025")]
+    partial class AddNewEntity24052025
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
@@ -390,8 +393,8 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<string>("TranslatedStringsWithPayloads")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("TranslationEngine")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("TranslationEngine")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TranslationLang")
                         .HasColumnType("TEXT");

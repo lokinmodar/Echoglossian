@@ -3,6 +3,7 @@ using System;
 using Echoglossian.EFCoreSqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Echoglossian.EFCoreSqlite.Migrations
 {
     [DbContext(typeof(EchoglossianDbContext))]
-    partial class EchoglossianDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250724183250_AddNewEntityAndFields24052025")]
+    partial class AddNewEntityAndFields24052025
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
@@ -350,61 +353,6 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("selectstrings", (string)null);
-                });
-
-            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.StringArrayDatas", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FormattedRawData")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GameVersion")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OriginalLang")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OriginalStrings")
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte[]>("RawData")
-                        .HasColumnType("BLOB");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("BLOB");
-
-                    b.Property<int>("Size")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TranslatedStrings")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TranslatedStringsWithPayloads")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("TranslationEngine")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TranslationLang")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("stringarraydatas");
                 });
 
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TalkMessage", b =>

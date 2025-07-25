@@ -1,11 +1,7 @@
-﻿// <copyright file="StringArrayData.cs" company="lokinmodar">
+﻿// <copyright file="StringArrayDatas.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
-
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Echoglossian.EFCoreSqlite.Models;
 
@@ -13,8 +9,42 @@ namespace Echoglossian.EFCoreSqlite.Models;
 /// Represents a record of a translated string array, including raw data and translation metadata.
 /// </summary>
 [Table("stringarraydatas")]
-public class StringArrayData
+public partial class StringArrayDatas
 {
+
+  /// <summary>
+  ///  Initializes a new instance of the <see cref="StringArrayDatas"/> class with specified parameters.
+  /// </summary>
+  /// <param name="type">The type of addon or structure this array belongs to.</param>
+  /// <param name="size">The size of the array.</param>
+  /// <param name="rawData">The raw binary data of the string array.</param>
+  /// <param name="formattedRawData">The raw data formatted with payloads.</param>
+  /// <param name="originalLang">The Lang of the original content.</param>
+  /// <param name="originalStrings">The original string array in serialized JSON format.</param>
+  /// <param name="translationLang">The Lang used for the translated content.</param>
+  /// <param name="translatedStrings">The translated string array in serialized JSON format.</param>
+  /// <param name="translatedStringsWithPayloads">The translated strings with associated payloads.</param>
+  /// <param name="translationEngine">The translation engine used to generate the translations.</param>
+  /// <param name="gameVersion">The game version this data was captured from.</param>
+  /// <param name="createdAt">The creation timestamp.</param>
+  /// <param name="updatedAt">The last updated timestamp.</param>
+  public StringArrayDatas(string? type, int size, byte[]? rawData, string? formattedRawData, string? originalLang, string? originalStrings, string? translationLang, string? translatedStrings, string? translatedStringsWithPayloads, int? translationEngine, string? gameVersion, DateTime createdAt, DateTime updatedAt)
+  {
+    this.Type = type;
+    this.Size = size;
+    this.RawData = rawData;
+    this.FormattedRawData = formattedRawData;
+    this.OriginalLang = originalLang;
+    this.OriginalStrings = originalStrings;
+    this.TranslationLang = translationLang;
+    this.TranslatedStrings = translatedStrings;
+    this.TranslatedStringsWithPayloads = translatedStringsWithPayloads;
+    this.TranslationEngine = translationEngine;
+    this.GameVersion = gameVersion;
+    this.CreatedAt = createdAt;
+    this.UpdatedAt = updatedAt;
+  }
+
   /// <summary>
   /// Gets or sets the array index as primary key.
   /// </summary>
@@ -37,9 +67,14 @@ public class StringArrayData
   public byte[]? RawData { get; set; }
 
   /// <summary>
-  /// Gets or sets the language of the original content.
+  /// Gets or sets the raw data formatted with payloads.
   /// </summary>
-  public string? OriginalLanguage { get; set; }
+  public string? FormattedRawData { get; set; }
+
+  /// <summary>
+  /// Gets or sets the Lang of the original content.
+  /// </summary>
+  public string? OriginalLang { get; set; }
 
   /// <summary>
   /// Gets or sets the original string array in serialized JSON format.
@@ -47,9 +82,9 @@ public class StringArrayData
   public string? OriginalStrings { get; set; }
 
   /// <summary>
-  /// Gets or sets the language used for the translated content.
+  /// Gets or sets the Lang used for the translated content.
   /// </summary>
-  public string? TranslationLanguage { get; set; }
+  public string? TranslationLang { get; set; }
 
   /// <summary>
   /// Gets or sets the translated string array in serialized JSON format.
@@ -57,9 +92,14 @@ public class StringArrayData
   public string? TranslatedStrings { get; set; }
 
   /// <summary>
+  /// Gets or sets the translated strings with associated payloads.
+  /// </summary>
+  public string? TranslatedStringsWithPayloads { get; set; }
+
+  /// <summary>
   /// Gets or sets the translation engine used to generate the translations.
   /// </summary>
-  public string? TranslationEngine { get; set; }
+  public int? TranslationEngine { get; set; }
 
   /// <summary>
   /// Gets or sets the game version this data was captured from.
@@ -81,4 +121,19 @@ public class StringArrayData
   /// </summary>
   [Timestamp]
   public byte[]? RowVersion { get; set; }
+
+  public override bool Equals(object? obj)
+  {
+    return base.Equals(obj);
+  }
+
+  public override int GetHashCode()
+  {
+    return base.GetHashCode();
+  }
+
+  public override string? ToString()
+  {
+    return $"Id: {this.Id}, Type: {this.Type}, Size: {this.Size}, OriginalLang: {this.OriginalLang}, TranslationLang: {this.TranslationLang}, OriginalStrings: {this.OriginalStrings}, TranslatedStrings: {this.TranslatedStrings}, TranslationEngine: {this.TranslationEngine}, GameVersion: {this.GameVersion}, CreatedAt: {this.CreatedAt}, UpdatedAt: {this.UpdatedAt}";
+  }
 }

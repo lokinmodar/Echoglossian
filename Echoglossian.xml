@@ -924,6 +924,42 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNullabilityToDBEntitiesColumns.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddNewEntityAndFields24052025">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNewEntityAndFields24052025.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNewEntityAndFields24052025.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNewEntityAndFields24052025.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddNewEntity24052025">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNewEntity24052025.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNewEntity24052025.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNewEntity24052025.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.fixNewEntity24052025">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.fixNewEntity24052025.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.fixNewEntity24052025.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.fixNewEntity24052025.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
                 Represents a translation entity for action tooltips in the database.
@@ -994,21 +1030,19 @@
                 <see cref="T:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity" />.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Byte[],System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> class.
             </summary>
             <param name="senderName">The name of the sender.</param>
             <param name="originalBattleTalkMessage">The original battle talk message.</param>
-            <param name="originalBattleTalkMessageLang">
-                The language of the original battle
-                talk message.
-            </param>
+            <param name="originalBattleTalkMessageLang">The language of the original battle talk message.</param>
             <param name="originalSenderNameLang">The language of the original sender name.</param>
             <param name="translatedSenderName">The translated sender name.</param>
             <param name="translatedBattleTalkMessage">The translated battle talk message.</param>
             <param name="translationLang">The language of the translation.</param>
             <param name="translationEngine">The translation engine used.</param>
+            <param name="rtlLangTranslationImageData">The RTL language translation image data.</param>
             <param name="createdDate">The date the message was created.</param>
             <param name="updatedDate">The date the message was last updated.</param>
         </member>
@@ -1151,6 +1185,59 @@
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetGameVersion(System.String)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.IComplexEntity">
+            <summary>
+            Enhances the IMultiTextEntity interface to include additional properties and methods
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.GetType">
+            <summary>
+            Gets the type of the StringArrayData.
+            </summary>
+            <returns>Returns the type of the StringArrayData.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.SetType(System.String)">
+            <summary>
+            Sets the type of the StringArrayData.
+            </summary>
+            <param name="type">The type to set.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.GetRawData">
+            <summary>
+            Gets the raw data of the StringArrayData.
+            </summary>
+            <returns>Returns the raw data of the StringArrayData.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.SetRawData(System.Byte[])">
+            <summary>
+            Sets the raw data of the StringArrayData.
+            </summary>
+            <param name="rawData">The raw data to set.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.GetFormattedRawData">
+            <summary>
+            Gets the formatted raw data of the StringArrayData.
+            </summary>
+            <returns>Returns the formatted raw data of the StringArrayData.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.SetFormattedRawData(System.String)">
+            <summary>
+            Sets the formatted raw data of the StringArrayData.
+            </summary>
+            <param name="formattedRawData">The formatted raw data to set.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.GetTranslatedStringsWithPayloads">
+            <summary>
+            Gets the translated strings with payloads of the StringArrayData.
+            </summary>
+            <returns>Returns the translated strings with payloads of the StringArrayData.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.SetTranslatedStringsWithPayloads(System.String)">
+            <summary>
+            Sets the translated strings with payloads of the StringArrayData.
+            </summary>
+            <param name="translatedStringsWithPayloads">The translated strings with payloads to set.</param>
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity">
             <summary>
                 Defines a contract for generic translatable entities stored in the
@@ -1274,6 +1361,18 @@
                 Sets the translated value of the secondary text field.
             </summary>
             <param name="translated">The translated secondary text value.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity.GetRTLLangTranslationImageData">
+            <summary>
+             Gets the RTL language translation image data.
+            </summary>
+            <returns>The byte array containing the RTL language translation image data.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity.SetRTLLangTranslationImageData(System.Byte[])">
+            <summary>
+                Sets the RTL language translation image data.
+            </summary>
+            <param name="imageData">The byte array containing the image data.</param>
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip">
             <summary>
@@ -1471,13 +1570,236 @@
         <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetEntityKey">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas">
+            <summary>
+            Represents a record of a translated string array, including raw data and translation metadata.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.#ctor(System.String,System.Int32,System.Byte[],System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.DateTime,System.DateTime)">
+            <summary>
+             Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas"/> class with specified parameters.
+            </summary>
+            <param name="type">The type of addon or structure this array belongs to.</param>
+            <param name="size">The size of the array.</param>
+            <param name="rawData">The raw binary data of the string array.</param>
+            <param name="formattedRawData">The raw data formatted with payloads.</param>
+            <param name="originalLang">The Lang of the original content.</param>
+            <param name="originalStrings">The original string array in serialized JSON format.</param>
+            <param name="translationLang">The Lang used for the translated content.</param>
+            <param name="translatedStrings">The translated string array in serialized JSON format.</param>
+            <param name="translatedStringsWithPayloads">The translated strings with associated payloads.</param>
+            <param name="translationEngine">The translation engine used to generate the translations.</param>
+            <param name="gameVersion">The game version this data was captured from.</param>
+            <param name="createdAt">The creation timestamp.</param>
+            <param name="updatedAt">The last updated timestamp.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.Id">
+            <summary>
+            Gets or sets the array index as primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.Type">
+            <summary>
+            Gets or sets the type of addon or structure this array belongs to.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.Size">
+            <summary>
+            Gets or sets the size of the array.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.RawData">
+            <summary>
+            Gets or sets the raw binary data of the string array.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.FormattedRawData">
+            <summary>
+            Gets or sets the raw data formatted with payloads.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.OriginalLang">
+            <summary>
+            Gets or sets the Lang of the original content.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.OriginalStrings">
+            <summary>
+            Gets or sets the original string array in serialized JSON format.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.TranslationLang">
+            <summary>
+            Gets or sets the Lang used for the translated content.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.TranslatedStrings">
+            <summary>
+            Gets or sets the translated string array in serialized JSON format.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.TranslatedStringsWithPayloads">
+            <summary>
+            Gets or sets the translated strings with associated payloads.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.TranslationEngine">
+            <summary>
+            Gets or sets the translation engine used to generate the translations.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GameVersion">
+            <summary>
+            Gets or sets the game version this data was captured from.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.CreatedAt">
+            <summary>
+            Gets or sets the creation timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.UpdatedAt">
+            <summary>
+            Gets or sets the last updated timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.RowVersion">
+            <summary>
+            Gets or sets the row version for concurrency handling.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas"/> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetType">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetSize">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetSize(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetRawData">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetRawData(System.Byte[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetFormattedRawData">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetFormattedRawData(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslatedStringsWithPayloads">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslatedStringsWithPayloads(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetOriginalStrings">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetOriginalStrings(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslatedStrings">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslatedStrings(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetCreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetCreatedAt(System.DateTime)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetUpdatedAt">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetUpdatedAt(System.DateTime)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetRTLLangTranslationImageData">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetRTLLangTranslationImageData(System.Byte[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetOriginalSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetOriginalSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslatedSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslatedSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetOriginalLangCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetOriginalLangCode(System.String)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.TalkMessage">
             <summary>
                 Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> to be handled via
                 <see cref="T:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity" />.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Byte[],System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> class.
             </summary>
@@ -1495,6 +1817,7 @@
             <param name="translatedTalkMessage">The translated talk message.</param>
             <param name="translationLang">The language of the translation.</param>
             <param name="translationEngine">The translation engine used.</param>
+            <param name="rtlLangTranslationImageData">The RTL language translation image data.</param>
             <param name="createdDate">The date the message was created.</param>
             <param name="updatedDate">The date the message was last updated.</param>
         </member>

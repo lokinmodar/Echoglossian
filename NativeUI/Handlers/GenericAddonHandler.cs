@@ -69,7 +69,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <summary>
   ///     Gets a value indicating whether string arrays are used for translation.
   /// </summary>
-  protected readonly bool UseStringArray;
+/*  protected readonly bool UseStringArray;*/
 
   /// <summary>
   ///     Stores filtered ATK values for translation.
@@ -79,13 +79,13 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <summary>
   ///     Stores filtered string array data for translation.
   /// </summary>
-  protected Dictionary<int, string> FilteredStringArrayData = new();
+/*  protected Dictionary<int, string> FilteredStringArrayData = new();*/
 
   /// <summary>
   ///     Stores the original string array values to restore after translation.
   ///     Uses byte arrays to preserve exact original data.
   /// </summary>
-  protected Dictionary<int, byte[]> OriginalStringArrayData = new();
+/*  protected Dictionary<int, byte[]> OriginalStringArrayData = new();*/
 
   /// <summary>
   ///     Stores original ATK values extracted from the addon for change detection.
@@ -99,7 +99,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <summary>
   ///  Stores a snapshot of the original string array data
   /// </summary>
-  private Dictionary<int, string> SnapshotOriginalStringArrayData = new();
+/*  private Dictionary<int, string> SnapshotOriginalStringArrayData = new();*/
 
 
 
@@ -652,14 +652,14 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     {
       this.SnapshotOriginalAtkValues = new(this.OriginalAtkValues);
 
-      this.SnapshotOriginalStringArrayData = this.OriginalStringArrayData
-          .ToDictionary(
-              kvp => kvp.Key,
-              kvp =>
-              {
-                var span = kvp.Value;
-                return new ReadOnlySeStringSpan(span).ExtractText();
-              });
+      /*      this.SnapshotOriginalStringArrayData = this.OriginalStringArrayData
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp =>
+                    {
+                      var span = kvp.Value;
+                      return new ReadOnlySeStringSpan(span).ExtractText();
+                    });*/
 
       PluginLog.Debug($"[{this.AddonName}] Snapshots of original ATK and StringArrayData captured.");
     }
@@ -681,8 +681,8 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     foreach (var (index, val) in this.FilteredAtkValues)
       sb.Append($"a{index}|{val}|");
 
-    foreach (var (index, val) in this.FilteredStringArrayData)
-      sb.Append($"s{index}|{val}|");
+    /*    foreach (var (index, val) in this.FilteredStringArrayData)
+          sb.Append($"s{index}|{val}|");*/
 
     return sb.ToString().TrimEnd('|');
   }
@@ -697,7 +697,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     var combined = new
     {
       atkValues = this.FilteredAtkValues,
-      stringArrayData = this.FilteredStringArrayData,
+      /*      stringArrayData = this.FilteredStringArrayData,*/
     };
 
     return JsonConvert.SerializeObject(combined);

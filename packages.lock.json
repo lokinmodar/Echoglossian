@@ -4,11 +4,11 @@
     "net9.0-windows7.0": {
       "AWSSDK.Translate": {
         "type": "Direct",
-        "requested": "[4.0.0.13, )",
-        "resolved": "4.0.0.13",
-        "contentHash": "gaIff1GBCSC/OGlB3QAjeQ7NsOXIPLHITLfvG3kg8M2AwgZhv8xHN19P/dU9XWL0qi9ReIsu7Zti/Gr94tc2NQ==",
+        "requested": "[4.0.0.15, )",
+        "resolved": "4.0.0.15",
+        "contentHash": "ITxRLxwyI3JjMMOL6yqcFatO4Sw4QpbeWqnOcjUuWTiSYzxVDhfaw3O0aTc8R/5KF08LusUi4blC+umOK5gs4A==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.0.15, 5.0.0)"
+          "AWSSDK.Core": "[4.0.0.17, 5.0.0)"
         }
       },
       "Dalamud.NET.Sdk": {
@@ -47,9 +47,9 @@
       },
       "HtmlAgilityPack": {
         "type": "Direct",
-        "requested": "[1.12.1, )",
-        "resolved": "1.12.1",
-        "contentHash": "SP6/2Y26CXtxjXn0Wwsom9Ek35SNWKHEu/IWhNEFejBSSVWWXPRSlpqpBSYWv1SQhYFnwMO01xVbEdK3iRR4hg=="
+        "requested": "[1.12.2, )",
+        "resolved": "1.12.2",
+        "contentHash": "btF/9sB65h0V9ipZxVfEQ9fxDwXSFRwhi4Z1qFBgnXONqWVKZE3LxS0JEMW73G3gvrFI7/IAqLA1y/15HDa3fw=="
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Direct",
@@ -149,8 +149,8 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "4.0.0.15",
-        "contentHash": "nt0pgf20/wt8NEH/Kw97CS9mlIivg3lROW1E2piFJZPmwZIDVKVEGSvCztGWedMByQYMVpxGbVmn7oC0p1vmkw=="
+        "resolved": "4.0.0.17",
+        "contentHash": "6jUEYOfvhRVfS3vh6mx+tGI+cxMbdvmktDFARjquRkF9WSY3Pa86UceEUAEa7youGNR+yz6Nn18+wzS/GFu77A=="
       },
       "Humanizer.Core": {
         "type": "Transitive",

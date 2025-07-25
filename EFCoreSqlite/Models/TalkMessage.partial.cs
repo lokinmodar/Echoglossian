@@ -124,4 +124,14 @@ public partial class TalkMessage : IMultiTextEntity
   {
     /* Ignored — TalkMessage does not use game version */
   }
+
+  public byte[]? GetRTLLangTranslationImageData()
+  {
+    return this.RTLLangTranslationImageData;
+  }
+
+  public void SetRTLLangTranslationImageData(byte[]? imageData)
+  {
+    this.RTLLangTranslationImageData = imageData;
+  }
 }

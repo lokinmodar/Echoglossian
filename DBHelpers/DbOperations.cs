@@ -22,6 +22,8 @@ public partial class Echoglossian
 
   public static GameWindow? FoundGameWindow { get; set; }
 
+  public static StringArrayDatas? FoundStringArrayDatas { get; set; }
+
   /// <summary>
   ///     Creates or uses the database, applying any pending migrations.
   /// </summary>
@@ -102,46 +104,11 @@ public partial class Echoglossian
     }
   }
 
-  /*    public static bool FindTalkMessage(TalkMessage talkMessage)
-      {
-        using EchoglossianDbContext context = new EchoglossianDbContext(PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar);
-
-        PluginLog.Debug($"TalkMessage to be found in DB: {talkMessage}");
-
-        var pluginConfig = PluginInterface.GetPluginConfig() as Config;
-
-        try
-        {
-          IQueryable<TalkMessage> existingTalkMessage =
-            context.TalkMessage.Where(t =>
-              t.SenderName == talkMessage.SenderName &&
-              t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
-              t.TranslationLang == talkMessage.TranslationLang);
-          if (pluginConfig?.TranslateAlreadyTranslatedTexts == true)
-          {
-            existingTalkMessage = existingTalkMessage.Where(t => t.TranslationEngine == talkMessage.TranslationEngine);
-          }
-
-          TalkMessage? localFoundTalkMessage = existingTalkMessage?.FirstOrDefault();
-          if (existingTalkMessage?.FirstOrDefault() == null ||
-              localFoundTalkMessage?.OriginalTalkMessage != talkMessage.OriginalTalkMessage)
-          {
-            FoundTalkMessage = talkMessage;
-            return false;
-          }
-
-          FoundTalkMessage = localFoundTalkMessage;
-
-          PluginLog.Debug($"FoundTalkMessage in DB: {FoundTalkMessage}");
-
-          return true;
-        }
-        catch (Exception e)
-        {
-          return false;
-        }
-      }*/
-
+  /// <summary>
+  /// Finds and returns a ToastMessage from the database.
+  /// </summary>
+  /// <param name="toastMessage">Formatted ToastMessage to be found in the database</param>
+  /// <returns></returns>
   public bool FindToastMessage(ToastMessage toastMessage)
   {
     try
@@ -191,6 +158,11 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  /// Finds and returns an ErrorToastMessage from the database.
+  /// </summary>
+  /// <param name="toastMessage">Formatted ErrorToastMessage to be found in the database</param>
+  /// <returns></returns>
   public bool FindErrorToastMessage(ToastMessage toastMessage)
   {
     try
@@ -241,7 +213,7 @@ public partial class Echoglossian
   /// <summary>
   ///     Finds and returns a BattleTalkMessage from the database.
   /// </summary>
-  /// <param name="battleTalkMessage"></param>
+  /// <param name="battleTalkMessage">Formatted BattleTalkMessage to be found in the database</param>
   /// <returns></returns>
   public BattleTalkMessage? FindAndReturnBattleTalkMessage(
       BattleTalkMessage battleTalkMessage)
@@ -286,50 +258,10 @@ public partial class Echoglossian
     }
   }
 
-  /*    public static bool FindBattleTalkMessage(BattleTalkMessage battleTalkMessage)
-      {
-        using EchoglossianDbContext context = new EchoglossianDbContext(PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar);
-
-        PluginLog.Debug($"BattleTalkMessage to be found in DB: {battleTalkMessage}");
-
-        var pluginConfig = PluginInterface.GetPluginConfig() as Config;
-
-        try
-        {
-          IQueryable<BattleTalkMessage> existingBattleTalkMessage =
-            context.BattleTalkMessage.Where(t =>
-              t.SenderName == battleTalkMessage.SenderName &&
-              t.OriginalBattleTalkMessage == battleTalkMessage.OriginalBattleTalkMessage &&
-              t.TranslationLang == battleTalkMessage.TranslationLang);
-
-          if (pluginConfig?.TranslateAlreadyTranslatedTexts == true)
-          {
-            existingBattleTalkMessage = existingBattleTalkMessage.Where(t => t.TranslationEngine == battleTalkMessage.TranslationEngine);
-          }
-
-          BattleTalkMessage? localFoundBattleTalkMessage = existingBattleTalkMessage.FirstOrDefault();
-          if (existingBattleTalkMessage.FirstOrDefault() == null ||
-              localFoundBattleTalkMessage?.OriginalBattleTalkMessage != battleTalkMessage.OriginalBattleTalkMessage)
-          {
-            FoundBattleTalkMessage = battleTalkMessage;
-            return false;
-          }
-
-          FoundBattleTalkMessage = localFoundBattleTalkMessage;
-
-          PluginLog.Debug($"FoundBattleTalkMessage in DB: {FoundBattleTalkMessage}");
-          return true;
-        }
-        catch (Exception e)
-        {
-          return false;
-        }
-      }*/
-
   /// <summary>
   ///     Finds and returns a QuestPlate from the database.
   /// </summary>
-  /// <param name="questPlate"></param>
+  /// <param name="questPlate">Formatted QuestPlate to be found in the database</param>
   /// <returns></returns>
   public QuestPlate? FindQuestPlate(QuestPlate questPlate)
   {
@@ -367,7 +299,7 @@ public partial class Echoglossian
   /// <summary>
   ///   Finds a QuestPlate by its name and translation language.
   /// </summary>
-  /// <param name="questPlate"></param>
+  /// <param name="questPlate">Formatted QuestPlate to be found in the database</param>
   /// <returns></returns>
   public QuestPlate? FindQuestPlateByName(QuestPlate questPlate)
   {
@@ -401,6 +333,11 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  /// Finds and returns a TalkSubtitleMessage from the database.
+  /// </summary>
+  /// <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be found in the database</param>
+  /// <returns></returns>
   public TalkSubtitleMessage? FindAndReturnTalkSubtitleMessage(
       TalkSubtitleMessage talkSubtitleMessage)
   {
@@ -439,45 +376,11 @@ public partial class Echoglossian
     }
   }
 
-  /*    public static bool FindTalkSubtitleMessage(TalkSubtitleMessage talkSubtitleMessage)
-      {
-        using EchoglossianDbContext context = new EchoglossianDbContext(PluginInterface.GetPluginConfigDirectory() + Path.DirectorySeparatorChar);
-
-        PluginLog.Debug($"TalkSubtitleMessage to be found in DB: {talkSubtitleMessage}");
-
-        var pluginConfig = PluginInterface.GetPluginConfig() as Config;
-
-        try
-        {
-          IQueryable<TalkSubtitleMessage> existingTalkSubtitleMessage =
-            context.TalkSubtitleMessage.Where(t =>
-                                t.OriginalTalkSubtitleMessage == talkSubtitleMessage.OriginalTalkSubtitleMessage &&
-                                                           t.TranslationLang == talkSubtitleMessage.TranslationLang);
-
-          if (pluginConfig?.TranslateAlreadyTranslatedTexts == true)
-          {
-            existingTalkSubtitleMessage = existingTalkSubtitleMessage.Where(t => t.TranslationEngine == talkSubtitleMessage.TranslationEngine);
-          }
-
-          TalkSubtitleMessage? localFoundTalkSubtitleMessage = existingTalkSubtitleMessage.FirstOrDefault();
-          if (existingTalkSubtitleMessage.FirstOrDefault() == null ||
-                                localFoundTalkSubtitleMessage?.OriginalTalkSubtitleMessage != talkSubtitleMessage.OriginalTalkSubtitleMessage)
-          {
-            FoundTalkSubtitleMessage = talkSubtitleMessage;
-            return false;
-          }
-
-          FoundTalkSubtitleMessage = localFoundTalkSubtitleMessage;
-
-          PluginLog.Debug($"FoundTalkSubtitleMessage in DB: {FoundTalkMessage}");
-          return true;
-        }
-        catch (Exception e)
-        {
-          return false;
-        }
-      }*/
-
+  /// <summary>
+  /// Finds and returns a GameWindow from the database.
+  /// </summary>
+  /// <param name="gameWindow">Formatted GameWindow to be found in the database</param>
+  /// <returns></returns>
   public static GameWindow? FindAndReturnGameWindow(GameWindow gameWindow)
   {
     using var context = new EchoglossianDbContext(
@@ -509,16 +412,18 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  /// Inserts a TalkMessage record into the database.
+  /// </summary>
+  /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
+  /// <returns></returns>
   public static async Task<string> InsertTalkData(TalkMessage talkMessage)
   {
     using var context = new EchoglossianDbContext(
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
-#if DEBUG
 
-    // using StreamWriter logStream = new($"{ConfigDirectory}DbInsertTalkOperationsLog.txt", append: true);
     PluginLog.Debug($"TalkMessage to be saved in DB: {talkMessage}");
-#endif
 
     var pluginConfig = PluginInterface.GetPluginConfig() as Config;
 
@@ -547,15 +452,17 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  /// Inserts a BattleTalkMessage record into the database.
+  /// </summary>
+  /// <param name="battleTalkMessage">Formatted BattleTalkMessage to be inserted into the database</param>
+  /// <returns></returns>
   public static string InsertBattleTalkData(
       BattleTalkMessage battleTalkMessage)
   {
     using var context = new EchoglossianDbContext(
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
-    /*#if DEBUG
-          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertBattleTalkOperationsLog.txt", append: true);
-    #endif*/
 
     var pluginConfig = PluginInterface.GetPluginConfig() as Config;
 
@@ -583,15 +490,17 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  /// Inserts a TalkSubtitleMessage record into the database.
+  /// </summary>
+  /// <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be inserted into the database</param>
+  /// <returns></returns>
   public static string InsertTalkSubtitleData(
       TalkSubtitleMessage talkSubtitleMessage)
   {
     using var context = new EchoglossianDbContext(
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
-    /*#if DEBUG
-     *            using StreamWriter logStream = new($"{ConfigDirectory}DbInsertTalkSubtitleOperationsLog.txt", append: true);
-     *                 #endif*/
 
     var pluginConfig = PluginInterface.GetPluginConfig() as Config;
 
@@ -620,26 +529,25 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  ///  Inserts a ToastMessage record into the database.
+  /// </summary>
+  /// <param name="toastMessage">Formatted ToastMessage to be inserted into the database</param>
+  /// <returns></returns>
   public string InsertErrorToastMessageData(ToastMessage toastMessage)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
-    /*#if DEBUG
-          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertToastOperationsLog.txt", append: true);
-    #endif*/
+
     try
     {
       bool isInThere;
       if (this.ErrorToastsCache != null &&
           this.ErrorToastsCache.Count > 0)
       {
-#if DEBUG
+
         PluginLog.Debug(
             $"Total ErrorToasts in cache: {this.ErrorToastsCache.Count}");
-        /* foreach (ToastMessage t in this.ErrorToastsCache)
-         {
-           PluginLog.Debug($"{this.ErrorToastsCache.GetEnumerator().Current} :{t}");
-         }*/
-#endif
+
         isInThere = this.ErrorToastsCache.Exists(t =>
             toastMessage.ToastType == t.ToastType &&
             toastMessage.TranslationLang == t.TranslationLang &&
@@ -671,26 +579,25 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  ///  Inserts a ToastMessage record into the database.
+  /// </summary>
+  /// <param name="toastMessage">Formatted ToastMessage to be inserted into the database</param>
+  /// <returns></returns>
   public string InsertOtherToastMessageData(ToastMessage toastMessage)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
-    /*#if DEBUG
-          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertToastOperationsLog.txt", append: true);
-    #endif*/
+
     try
     {
       bool isInThere;
       if (this.OtherToastsCache != null &&
           this.OtherToastsCache.Count > 0)
       {
-#if DEBUG
+
         PluginLog.Debug(
             $"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
-        /* foreach (ToastMessage t in this.OtherToastsCache)
-         {
-           PluginLog.Debug($"{this.OtherToastsCache.GetEnumerator().Current} :{t}");
-         }*/
-#endif
+
         isInThere = this.OtherToastsCache.Exists(t =>
             toastMessage.ToastType == t.ToastType &&
             toastMessage.TranslationLang == t.TranslationLang &&
@@ -722,28 +629,27 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  /// Inserts a QuestPlate record into the database.
+  /// </summary>
+  /// <param name="questPlate">Formatted QuestPlate to be inserted into the database</param>
+  /// <returns></returns>
   public string InsertQuestPlate(QuestPlate questPlate)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
-    /*#if DEBUG
-          using StreamWriter logStream = new($"{ConfigDirectory}DbInsertQuestPlateOperationsLog.txt", append: true);
-    #endif*/
+
     try
     {
       questPlate.UpdateFieldsAsText();
       context.QuestPlate.Attach(questPlate);
-      /*#if DEBUG
-              logStream.WriteLineAsync($"Inside Context: {context.QuestPlate.Local}");
-      #endif*/
+
       if (this.configuration.CopyTranslationToClipboard)
       {
         ImGui.SetClipboardText(questPlate.ToString());
       }
 
       context.SaveChangesAsync();
-      /*#if DEBUG
-              logStream.WriteLineAsync($"After 'SaveChanges': {context.QuestPlate.Local}");
-      #endif*/
+
       return "Data inserted to QuestPlate table.";
     }
     catch (Exception e)
@@ -752,28 +658,27 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  ///  Updates an existing QuestPlate record in the database.
+  /// </summary>
+  /// <param name="questPlate">QuestPlate to be updated</param>
+  /// <returns></returns>
   public string UpdateQuestPlate(QuestPlate questPlate)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
-    /*#if DEBUG
-          using StreamWriter logStream = new($"{ConfigDirectory}DbUpdateQuestPlateOperationsLog.txt", append: true);
-    #endif*/
+
     try
     {
       questPlate.UpdateFieldsAsText();
       context.QuestPlate.Update(questPlate);
-      /*#if DEBUG
-              logStream.WriteLineAsync($"Inside Context: {context.QuestPlate.Local}");
-      #endif*/
+
       if (this.configuration.CopyTranslationToClipboard)
       {
         ImGui.SetClipboardText(questPlate.ToString());
       }
 
       context.SaveChangesAsync();
-      /*#if DEBUG
-              logStream.WriteLineAsync($"After 'SaveChanges': {context.QuestPlate.Local}");
-      #endif*/
+
       return "Data updated on QuestPlate table.";
     }
     catch (Exception e)
@@ -854,13 +759,14 @@ public partial class Echoglossian
     }
   }
 
+  /// <summary>
+  /// Loads all error toast messages from the database.
+  /// </summary>
   public void LoadAllErrorToasts()
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
     this.ErrorToastsCache = new List<ToastMessage>();
-    /*#if DEBUG
-          using StreamWriter logStream = new($"{ConfigDirectory}DbErrorToastListQueryOperationsLog.txt", append: true);
-    #endif*/
+
     try
     {
       var existingToastMessages =
@@ -870,27 +776,21 @@ public partial class Echoglossian
       {
         this.ErrorToastsCache.Add(t);
       }
-
-      /*#if DEBUG
-              logStream.WriteLineAsync($"After Toast Messages table query: {this.ErrorToastsCache.ToArray()}");
-      #endif*/
     }
     catch (Exception e)
     {
-      /*#if DEBUG
-              logStream.WriteLineAsync($"Query operation error: {e}");
-      #endif*/
       PluginLog.Debug("Could not find any Error Toasts in Database", e.Message);
     }
   }
 
+  /// <summary>
+  /// Loads all other toast messages from the database.
+  /// </summary>
   public void LoadAllOtherToasts()
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
     this.OtherToastsCache = new List<ToastMessage>();
-    /*#if DEBUG
-          using StreamWriter logStream = new($"{ConfigDirectory}DbOtherToastListQueryOperationsLog.txt", append: true);
-    #endif*/
+
     try
     {
       var existingToastMessages =
@@ -900,20 +800,18 @@ public partial class Echoglossian
       {
         this.OtherToastsCache.Add(t);
       }
-
-      /*#if DEBUG
-              logStream.WriteLineAsync($"After Toast Messages table query: {this.OtherToastsCache.ToArray()}");
-      #endif*/
     }
     catch (Exception e)
     {
-      /*#if DEBUG
-              logStream.WriteLineAsync($"Query operation error: {e}");
-      #endif*/
       PluginLog.Debug("Could not find any Other Toasts in Database", e.Message);
     }
   }
 
+  /// <summary>
+  /// Checks if the text should be saved to the database.
+  /// </summary>
+  /// <param name="text"></param>
+  /// <returns></returns>
   public static bool ShouldSaveToDB(string text)
   {
     if (text.Contains("[Translation Error: HTTP 400") ||
@@ -985,6 +883,54 @@ public partial class Echoglossian
     {
       PluginLog.Error($"InsertEntity<{typeof(T).Name}> failed: {ex.Message}");
       return $"Insert failed: {ex.Message}";
+    }
+  }
+
+  /// <summary>
+  /// Inserts or updates StringArrayDatas in the database.
+  /// </summary>
+  /// <param name="stringArrayData">Formatted StringArrayData to be inserted or updated in the database.</param>
+  /// <returns></returns>
+  public static async Task<string> InsertOrUpdateStringArrayData(
+      StringArrayDatas stringArrayData)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    PluginLog.Debug($"StringArrayData to be saved in DB: {stringArrayData}");
+    try
+    {
+      if (!ShouldSaveToDB(stringArrayData.TranslatedStrings))
+      {
+        return "No data to save.";
+      }
+
+      context.StringArrayDatas.Update(stringArrayData);
+      await context.SaveChangesAsync();
+      return "Data inserted/updated in StringArrayDatas table.";
+    }
+    catch (Exception e)
+    {
+      PluginLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  /// Finds and returns StringArrayDatas from the database.
+  /// </summary>
+  /// <param name="predicate">Predicate to match StringArrayDatas.</param>
+  /// <returns>List of matching StringArrayDatas.</returns>
+  public static List<StringArrayDatas> FindStringArrayDatas(Func<StringArrayDatas, bool> predicate)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    PluginLog.Debug($"FindStringArrayDatas called with predicate: {predicate}");
+    try
+    {
+      return context.StringArrayDatas.AsEnumerable().Where(predicate).ToList();
+    }
+    catch (Exception ex)
+    {
+      PluginLog.Error($"FindStringArrayDatas failed: {ex.Message}");
+      return new List<StringArrayDatas>();
     }
   }
 }
