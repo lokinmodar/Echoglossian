@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.EFCoreSqlite.Models;
 
 namespace Echoglossian;
 
@@ -931,6 +932,50 @@ public partial class Echoglossian
     {
       PluginLog.Error($"FindStringArrayDatas failed: {ex.Message}");
       return new List<StringArrayDatas>();
+    }
+  }
+
+  /// <summary>
+  /// Finds and return a StringArrayDatas from the database
+  /// </summary>
+  /// <param name="dataToSearch">The StringArrayDatas to search for.</param>
+  /// <returns>The found StringArrayDatas, or an empty array if not found.</returns>
+  public static StringArrayDatas? FindAndReturnStringArrayData(StringArrayDatas dataToSearch)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    PluginLog.Debug($"[FindAndReturnStringArrayData] Finding StringArrayData...");
+
+    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+
+    try
+    {
+      var existingStringArrayData = context.StringArrayDatas.Where(sad =>
+          sad.Type == dataToSearch.Type &&
+          sad.RawData == dataToSearch.RawData &&
+          sad.TranslationLang == dataToSearch.TranslationLang);
+
+      if (pluginConfig?.TranslateAlreadyTranslatedTexts == true)
+      {
+        existingStringArrayData = existingStringArrayData.Where(t =>
+            t.TranslationEngine == dataToSearch.TranslationEngine);
+      }
+
+      var localFoundStringArrayData = existingStringArrayData?.FirstOrDefault();
+      if (existingStringArrayData?.FirstOrDefault() == null ||
+          localFoundStringArrayData?.RawData !=
+          dataToSearch.RawData)
+      {
+        return null;
+      }
+
+      PluginLog.Debug(
+          $"[FindAndReturnStringArrayData] Found StringArrayData: {localFoundStringArrayData}");
+      return localFoundStringArrayData;
+    }
+    catch (Exception e)
+    {
+      return null;
     }
   }
 }

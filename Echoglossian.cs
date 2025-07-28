@@ -200,6 +200,10 @@ public partial class Echoglossian : IDalamudPlugin
     this.LoadAllErrorToasts();
     this.LoadAllOtherToasts();
 
+    var arraysToBlock = new List<string> { "ChatLog", "CharaSelect", "PartyList", "NamePlate", "ActionBar", "Inventory", "CharacterItems", "Trade", "PartyMemberList", "LinkShell", "BlackList", "FriendList", "Letter", "SocialList", "EnemyList", "CastBar", "Journal", "RecipeNote", "FlyText", "InventoryRetainer", "MiniTalk", "CommonCurrencies", "ItemSearch", "ArmouryBoard", "FreeCompanyMember", "HousingBlackListSetting", "LegacyItemStorage", "FreeCompanyApplication", "GearSetList", "FreeCompanyRights", "CabinetStore", "CabinetWithdraw", "FreeCompanyActivity", "FreeCompanyExchange", "FreeCompanyStatus", "AreaMap2", "ContentsFinderConfirm", "FreeCompanyChest", "Buddy", "FreeCompanyAction", "FishingNote", "FishGuide", "GearSetView", "HousingSignBoard", "Housing", "AllianceList", "LookingForGroup", "HousingTravellersNote", "DTR", "RetainerCharacter", "AdventureNoteBook", "HousingChocoboList", "TripleTriad", "LimitBreak", "RaceChocobo", "Currency", "BeginnerChannelMentorList", "BeginnerChannelBeginnerList", "PvPDuelRequest", "JobHud", "PvPTeam", "PvPTeamMember", "PvPTeamResult", "PvPTeamActivity", "ContentMemberList", "CrossWorldLinkShell", "LovmNamePlate", "LovmActionDetail", "LovmResult", "Lovm", "PvPProfile", "Orchestrion", "OrchestrionPlayListSelect", "RetainerTask", "YKWNote", "DeepDungeonNaviMap", "DeepDungeonStatus", "GcArmyExpedition", "GcArmyTraining", "GcArmyCapture", "PvPMKS", "PvPSpectatorList", "LFGRecruiterNameSearch", "Snipe", "Performance", "ContentsReplayPlayer", "SatisfactionSupplyChangeMiragePrism", "SatisfactionSupplyMiragePrism", "Alarm", "Merchant", "MerchantEquipSelect", "EurekaLogosShardList", "RhythmAction", "WorldTranslate", "PVPSimulationHeader2", "PVPSimulationDisplay", "Emj", "WeeklyPuzzle", "MYCInfo", "TeleportTown", "MJIHousingGoods" };
+
+    this.StringArrayDataHandler = new StringArrayDataHandler(arraysToBlock, this.configuration, TranslationService);
+
     GameWindowCacheManager.Preload(ConfigDirectory);
 
     FrameworkInterface.Update += this.Tick;
@@ -227,10 +231,14 @@ public partial class Echoglossian : IDalamudPlugin
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
 
-    /* if (ClientStateInterface.IsLoggedIn)
-     {
-       this.ParseUi();
-     }*/
+
+    // ClientStateInterface.Login += this.StringArrayDataHandler.LoadAndTranslateStringArrayDatas;
+    this.StringArrayDataHandler.LoadAndTranslateStringArrayDatas();
+    /*if (ClientStateInterface.IsLoggedIn)
+    {
+      // this.ParseUi();
+      this.StringArrayDataHandler.LoadAndTranslateStringArrayDatas();
+    }*/
 
     // Disabling BattleTalk translation by default if the language is not supported by the game font while we fix the overlays
     this.configuration.TranslateBattleTalk =
@@ -314,6 +322,8 @@ public partial class Echoglossian : IDalamudPlugin
 
   public List<ToastMessage> OtherToastsCache { get; set; }
 
+  public StringArrayDataHandler StringArrayDataHandler { get; set; }
+
 
 
   /// <inheritdoc />
@@ -360,6 +370,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.toastOverlay.Dispose();
     this.errorToastOverlay.Dispose();
     this.chatBubbleOverlay.Dispose();
+
+    // ClientStateInterface.Login -= this.StringArrayDataHandler.LoadAndTranslateStringArrayDatas;
 
     if (disposing && this.registeredAddonHandlers != null)
     {

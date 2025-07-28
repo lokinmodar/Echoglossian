@@ -454,25 +454,102 @@
             <param name="talkMessage">TalkMessage to be found on the Database.</param>
             <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" />.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindToastMessage(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
+            <summary>
+            Finds and returns a ToastMessage from the database.
+            </summary>
+            <param name="toastMessage">Formatted ToastMessage to be found in the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindErrorToastMessage(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
+            <summary>
+            Finds and returns an ErrorToastMessage from the database.
+            </summary>
+            <param name="toastMessage">Formatted ErrorToastMessage to be found in the database</param>
+            <returns></returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FindAndReturnBattleTalkMessage(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage)">
             <summary>
                 Finds and returns a BattleTalkMessage from the database.
             </summary>
-            <param name="battleTalkMessage"></param>
+            <param name="battleTalkMessage">Formatted BattleTalkMessage to be found in the database</param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
                 Finds and returns a QuestPlate from the database.
             </summary>
-            <param name="questPlate"></param>
+            <param name="questPlate">Formatted QuestPlate to be found in the database</param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindQuestPlateByName(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
               Finds a QuestPlate by its name and translation language.
             </summary>
-            <param name="questPlate"></param>
+            <param name="questPlate">Formatted QuestPlate to be found in the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnTalkSubtitleMessage(Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage)">
+            <summary>
+            Finds and returns a TalkSubtitleMessage from the database.
+            </summary>
+            <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be found in the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>
+            Finds and returns a GameWindow from the database.
+            </summary>
+            <param name="gameWindow">Formatted GameWindow to be found in the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage)">
+            <summary>
+            Inserts a TalkMessage record into the database.
+            </summary>
+            <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertBattleTalkData(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage)">
+            <summary>
+            Inserts a BattleTalkMessage record into the database.
+            </summary>
+            <param name="battleTalkMessage">Formatted BattleTalkMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertTalkSubtitleData(Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage)">
+            <summary>
+            Inserts a TalkSubtitleMessage record into the database.
+            </summary>
+            <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
+            <summary>
+             Inserts a ToastMessage record into the database.
+            </summary>
+            <param name="toastMessage">Formatted ToastMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertOtherToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
+            <summary>
+             Inserts a ToastMessage record into the database.
+            </summary>
+            <param name="toastMessage">Formatted ToastMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+            Inserts a QuestPlate record into the database.
+            </summary>
+            <param name="questPlate">Formatted QuestPlate to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+             Updates an existing QuestPlate record in the database.
+            </summary>
+            <param name="questPlate">QuestPlate to be updated</param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
@@ -483,6 +560,23 @@
             </summary>
             <param name="gameWindow">The GameWindow entity to insert or update.</param>
             <returns>Status message indicating result.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LoadAllErrorToasts">
+            <summary>
+            Loads all error toast messages from the database.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LoadAllOtherToasts">
+            <summary>
+            Loads all other toast messages from the database.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldSaveToDB(System.String)">
+            <summary>
+            Checks if the text should be saved to the database.
+            </summary>
+            <param name="text"></param>
+            <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindEntity``1(System.Func{``0,System.Boolean})">
             <summary>
@@ -499,6 +593,20 @@
             <typeparam name="T">Entity type.</typeparam>
             <param name="entity">Entity to insert.</param>
             <returns>Result message.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertOrUpdateStringArrayData(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+            Inserts or updates StringArrayDatas in the database.
+            </summary>
+            <param name="stringArrayData">Formatted StringArrayData to be inserted or updated in the database.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindStringArrayDatas(System.Func{Echoglossian.EFCoreSqlite.Models.StringArrayDatas,System.Boolean})">
+            <summary>
+            Finds and returns StringArrayDatas from the database.
+            </summary>
+            <param name="predicate">Predicate to match StringArrayDatas.</param>
+            <returns>List of matching StringArrayDatas.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatTalkMessage(System.String,System.String)">
             <summary>
@@ -527,6 +635,13 @@
             <param name="translationLang"></param>
             <param name="translationEngine"></param>
             <returns>Returns a formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatStringArrayDatas(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+            Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" />. for database storage.
+            </summary>
+            <param name="data">The <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> instance to format.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> for database storage.</returns>
         </member>
         <member name="F:Echoglossian.Echoglossian.TranslationService">
             <summary>
@@ -830,6 +945,11 @@
                 class.
             </summary>
             <param name="configDir">Plugin config directory.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.StringArrayDatas">
+            <summary>
+             
+            </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
             <summary>
@@ -2399,17 +2519,6 @@
                 Stores filtered ATK values for translation.
             </summary>
         </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.FilteredStringArrayData">
-            <summary>
-                Stores filtered string array data for translation.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OriginalStringArrayData">
-            <summary>
-                Stores the original string array values to restore after translation.
-                Uses byte arrays to preserve exact original data.
-            </summary>
-        </member>
         <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OriginalAtkValues">
             <summary>
                 Stores original ATK values extracted from the addon for change detection.
@@ -2417,12 +2526,7 @@
         </member>
         <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SnapshotOriginalAtkValues">
             <summary>
-             Stores a snapshot of the original ATK values
-            </summary>
-        </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SnapshotOriginalStringArrayData">
-            <summary>
-             Stores a snapshot of the original string array data
+             Stores a snapshot of the original ATK values.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType})">
@@ -2507,12 +2611,6 @@
             </summary>
             <param name="addon">The addon's ATK unit base structure.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractStringArrayData(FFXIVClientStructs.FFXIV.Component.GUI.AtkStage*)">
-            <summary>
-            Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
-            </summary>
-            <param name="atkStage">The ATK stage containing the string array data.</param>
-        </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SnapshotOriginalValues">
             <summary>
                 Captures the current extracted ATK and StringArrayData values as immutable snapshots
@@ -2563,7 +2661,7 @@
             </summary>
             <returns><see langword="true"/> if the content was already translated; otherwise, <see langword="false"/>.</returns>
         </member>
-        <member name="T:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.CombinedTranslationData">
+        <member name="T:Echoglossian.NativeUI.Handlers.CombinedTranslationData">
             <summary>
             Represents a collection of translation data, combining attack values and string array data.
             </summary>
@@ -2571,12 +2669,12 @@
             storage and retrieval of translation-related data. The dictionaries can be null, indicating the absence of
             data.</remarks>
         </member>
-        <member name="P:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.CombinedTranslationData.AtkValues">
+        <member name="P:Echoglossian.NativeUI.Handlers.CombinedTranslationData.AtkValues">
             <summary>
             Dictionary mapping ATK value indices to their translated strings.
             </summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.CombinedTranslationData.StringArrayData">
+        <member name="P:Echoglossian.NativeUI.Handlers.CombinedTranslationData.StringArrayData">
             <summary>
             Dictionary mapping string array indices to their translated strings.
             </summary>
@@ -2595,6 +2693,97 @@
                 A dictionary mapping <see cref="T:Dalamud.Game.Addon.Lifecycle.AddonEvent" /> to their corresponding
                 <see cref="T:Dalamud.Plugin.Services.IAddonLifecycle.AddonEventDelegate" />.
             </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Handlers.StringArrayDataHandler">
+            <summary>
+             Class to handle StringArrayData for the game.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.Config">
+            <summary>
+                Gets the configuration settings for the addon handler.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.TranslationService">
+            <summary>
+            Translation service used for translating string array data.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.OriginalStringArrayDataBank">
+            <summary>
+            Stores the original string array data extracted from the game.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.FilteredStringArrayDataBank">
+            <summary>
+                Stores filtered string array data for translation, as a list of dictionaries.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.UseStringArray">
+            <summary>
+                Gets a value indicating whether string arrays are used for translation.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.arraysToBlock">
+            <summary>
+             List of Arrays to avoid extraction and translations,
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.#ctor(System.Collections.Generic.List{System.String},Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Handlers.StringArrayDataHandler"/> class.
+            </summary>
+            <param name="arraysToBlock">The arrays to block.</param>
+            <param name="config">The configuration settings.</param>
+            <param name="translationService">The translation service.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.LoadAndTranslateStringArrayDatas">
+            <summary>
+            Loads and translates StringArrayDatas from the ATK Stage.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.IsTranslated(System.Collections.Generic.List{System.ValueTuple{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType,System.String}})">
+            <summary>
+            Checks if the given StringArrayData has already been translated by comparing it with fresh translation results.
+            </summary>
+            <param name="data">A list of (StringArrayType, string) pairs representing the original stringified entries.</param>
+            <returns>A tuple: whether it's already translated, and the newly translated result.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.PrepareStringArrayDataBankForTranslation">
+            <summary>
+            Extracts each StringArrayData from the bank and returns a list of tuples,
+            where each tuple contains the StringArrayType and a string in the format "s0|value0|s1|value1|..." for translation.
+            </summary>
+            <returns>A list of (StringArrayType, prepared string) tuples.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.TranslateStringArrayDatas(System.Collections.Generic.List{System.String})">
+            <summary>
+            Async translate each prepared StringArrayData.
+            </summary>
+            <param name="preparedData">The prepared StringArrayData to translate.</param>
+            <returns>A list of translated StringArrayData.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.ContentIsAlreadyTranslated">
+            <summary>
+                Determines if the currently extracted values match the preserved original snapshot.
+                This avoids re-translating or re-applying if the values are already translated.
+            </summary>
+            <returns><see langword="true"/> if the content was already translated; otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Handlers.StringArrayDataEntry">
+            <summary>
+            Represents a string array data block, paired with its associated type.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Handlers.StringArrayDataEntry.Type">
+            <summary>
+            The type of the StringArrayData (from the game).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Handlers.StringArrayDataEntry.Entries">
+            <summary>
+            The map of index to string bytes extracted from the array.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar">
             <summary>
