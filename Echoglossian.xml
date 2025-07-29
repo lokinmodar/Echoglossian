@@ -608,6 +608,13 @@
             <param name="predicate">Predicate to match StringArrayDatas.</param>
             <returns>List of matching StringArrayDatas.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnStringArrayData(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+            Finds and return a StringArrayDatas from the database
+            </summary>
+            <param name="dataToSearch">The StringArrayDatas to search for.</param>
+            <returns>The found StringArrayDatas, or an empty array if not found.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FormatTalkMessage(System.String,System.String)">
             <summary>
                 Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> for the database.
@@ -636,11 +643,21 @@
             <param name="translationEngine"></param>
             <returns>Returns a formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.FormatStringArrayDatas(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+        <member name="M:Echoglossian.Echoglossian.FormatStringArrayDatas(System.String,System.Int32,System.Byte[],System.String,System.String,System.String,System.String,System.String,System.String,System.Int32,System.String)">
             <summary>
             Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" />. for database storage.
             </summary>
-            <param name="data">The <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> instance to format.</param>
+            <param name="type"> The type of the string array (e.g., "AtkValue", "StringArray").</param>
+            <param name="size"> The size of the string array.</param>
+            <param name="rawData"> The raw data byte array.</param>
+            <param name="formattedRawData"> The formatted raw data string.</param>
+            <param name="originalLang"> The original language code.</param>
+            <param name="originalStrings"> The original strings.</param>
+            <param name="translationLang"> The translation language code.</param>
+            <param name="translatedStrings"> The translated strings.</param>
+            <param name="translatedStringsWithPayloads"> The translated strings with payloads.</param>
+            <param name="translationEngine"> The translation engine ID.</param>
+            <param name="gameVersion"> The game version.</param>
             <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> for database storage.</returns>
         </member>
         <member name="F:Echoglossian.Echoglossian.TranslationService">
@@ -824,6 +841,23 @@
                 Checks if the translation should be disabled based on the current state.
             </summary>
             <returns>The player state true if the player is in PVP.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SerializeDictionary(System.Collections.Generic.Dictionary{System.Int32,System.Byte[]})">
+            <summary>
+            Serializes a dictionary of int to byte[] into a single reversible byte array.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DeserializeDictionary(System.Byte[])">
+            <summary>
+            Deserializes a byte array back into a dictionary of int to byte[].
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseStringArraySerializedText(System.String)">
+            <summary>
+            Parses a string in the format "s0|value0|s1|value1|..." into a dictionary of index to value.
+            </summary>
+            <param name="input">The input string.</param>
+            <returns>A dictionary mapping int indices to their respective string values.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.UpdateTalkOverlay(System.String,System.String,System.String)">
             <summary>
@@ -2719,6 +2753,16 @@
                 Stores filtered string array data for translation, as a list of dictionaries.
             </summary>
         </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.PreparedStringArrayDataBank">
+            <summary>
+            List of prepared original string array data, paired with their types.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.TranslatedPreparedStringArrayDataBank">
+            <summary>
+            List of translated string array data, paired with their types.
+            </summary>
+        </member>
         <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.UseStringArray">
             <summary>
                 Gets a value indicating whether string arrays are used for translation.
@@ -2742,7 +2786,7 @@
             Loads and translates StringArrayDatas from the ATK Stage.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.IsTranslated(System.Collections.Generic.List{System.ValueTuple{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType,System.String}})">
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.TranslateData(System.Collections.Generic.List{System.ValueTuple{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType,System.String}})">
             <summary>
             Checks if the given StringArrayData has already been translated by comparing it with fresh translation results.
             </summary>
@@ -2763,12 +2807,26 @@
             <param name="preparedData">The prepared StringArrayData to translate.</param>
             <returns>A list of translated StringArrayData.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.ContentIsAlreadyTranslated">
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.IsContentAlreadyTranslated(FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType,System.String)">
             <summary>
                 Determines if the currently extracted values match the preserved original snapshot.
                 This avoids re-translating or re-applying if the values are already translated.
             </summary>
             <returns><see langword="true"/> if the content was already translated; otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.FindStringArrayData(FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType)">
+            <summary>
+            Checks the database for the required StringArrayData and returns the translated values.
+            </summary>
+            <param name="stringArrayType">The StringArrayType to search for.</param>
+            <returns>The found StringArrayDatas, or an empty array if not found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.SaveStringArrayData(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+            Saves the StringArrayData to the database.
+            </summary>
+            <param name="data">The StringArrayData to save.</param>
+            <returns><see langword="true"/> if the save was successful; otherwise, <see langword="false"/>.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Handlers.StringArrayDataEntry">
             <summary>
@@ -3422,6 +3480,11 @@
               Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.DataInsertedUpdatedInStringArrayDatasTable">
+            <summary>
+              Looks up a localized string similar to Data inserted/updated in StringArrayDatas table..
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.DeepLTransAPIKey">
             <summary>
               Looks up a localized string similar to Use API Key (recommended).
@@ -3485,6 +3548,11 @@
         <member name="P:Echoglossian.Properties.Resources.Endpoint">
             <summary>
               Looks up a localized string similar to Endpoint.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ErrorSavingData">
+            <summary>
+              Looks up a localized string similar to ErrorSavingData: {e}.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.FetchLiveModels">

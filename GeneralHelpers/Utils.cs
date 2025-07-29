@@ -527,4 +527,87 @@ public partial class Echoglossian
 
     return state;
   }
+
+  /// <summary>
+  /// Serializes a dictionary of int to byte[] into a single reversible byte array.
+  /// </summary>
+  public static byte[] SerializeDictionary(Dictionary<int, byte[]> data)
+  {
+    using var ms = new MemoryStream();
+    using var writer = new BinaryWriter(ms);
+
+    writer.Write(data.Count);
+
+    foreach (var (key, value) in data)
+    {
+      writer.Write(key);
+      writer.Write(value.Length);
+      writer.Write(value);
+    }
+
+    return ms.ToArray();
+  }
+
+  /// <summary>
+  /// Deserializes a byte array back into a dictionary of int to byte[].
+  /// </summary>
+  public static Dictionary<int, byte[]> DeserializeDictionary(byte[] rawData)
+  {
+    var result = new Dictionary<int, byte[]>();
+
+    using var ms = new MemoryStream(rawData);
+    using var reader = new BinaryReader(ms);
+
+    var count = reader.ReadInt32();
+
+    for (int i = 0; i < count; i++)
+    {
+      var key = reader.ReadInt32();
+      var length = reader.ReadInt32();
+      var value = reader.ReadBytes(length);
+
+      result[key] = value;
+    }
+
+    return result;
+  }
+
+  /// <summary>
+  /// Parses a string in the format "s0|value0|s1|value1|..." into a dictionary of index to value.
+  /// </summary>
+  /// <param name="input">The input string.</param>
+  /// <returns>A dictionary mapping int indices to their respective string values.</returns>
+  public static Dictionary<int, string> ParseStringArraySerializedText(string input)
+  {
+    var result = new Dictionary<int, string>();
+
+    if (string.IsNullOrWhiteSpace(input))
+      return result;
+
+    var parts = input.Split('|');
+
+    if (parts.Length % 2 != 0)
+    {
+      PluginLog.Warning($"[ParseStringArraySerializedText] Malformed input string. Odd number of segments: {input}");
+      return result;
+    }
+
+    for (int i = 0; i < parts.Length; i += 2)
+    {
+      var keyPart = parts[i];
+      var valuePart = parts[i + 1];
+
+      if (!keyPart.StartsWith("s") || !int.TryParse(keyPart[1..], out int index))
+      {
+        PluginLog.Warning($"[ParseStringArraySerializedText] Invalid key '{keyPart}' at position {i}");
+        continue;
+      }
+
+      result[index] = valuePart;
+    }
+
+    return result;
+  }
+
+
 }

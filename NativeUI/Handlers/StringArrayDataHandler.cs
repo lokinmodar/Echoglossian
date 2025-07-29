@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using FFXIVClientStructs.FFXIV.Client.UI;
-
 using Lumina.Text.ReadOnly;
 
 namespace Echoglossian.NativeUI.Handlers
@@ -24,7 +22,6 @@ namespace Echoglossian.NativeUI.Handlers
     /// </summary>
     protected readonly TranslationService TranslationService;
 
-
     /// <summary>
     /// Stores the original string array data extracted from the game.
     /// </summary>
@@ -35,6 +32,15 @@ namespace Echoglossian.NativeUI.Handlers
     /// </summary>
     private readonly List<FilteredStringArrayDataEntry> FilteredStringArrayDataBank = new();
 
+    /// <summary>
+    /// List of prepared original string array data, paired with their types.
+    /// </summary>
+    private readonly List<(StringArrayType Type, string PreparedString)> PreparedStringArrayDataBank = new();
+
+    /// <summary>
+    /// List of translated string array data, paired with their types.
+    /// </summary>
+    private readonly List<(StringArrayType Type, string TranslatedPreparedString)> TranslatedPreparedStringArrayDataBank = new();
 
     /// <summary>
     ///     Gets a value indicating whether string arrays are used for translation.
@@ -58,7 +64,7 @@ namespace Echoglossian.NativeUI.Handlers
       this.Config = config;
       this.TranslationService = translationService;
 
-      PluginLog.Debug($"[*****] Initializing StringArrayDataHandler with blocked arrays: {string.Join(", ", this.arraysToBlock)}");
+      PluginLog.Debug($"[StringArrayDataHandler ctor] Initializing StringArrayDataHandler with blocked arrays: {string.Join(", ", this.arraysToBlock)}");
     }
 
     // TODO: bring here the logics related to StringArrayData handling from GenericAddonHandler and GenericAddonHandlerHelper
@@ -109,6 +115,7 @@ namespace Echoglossian.NativeUI.Handlers
             var type = stringArrayDataTypesAvailable[i];
             var stringArrayData = atkStage->GetStringArrayData(type);
             var stringArray = stringArrayData->StringArray;
+
             var arraySize = stringArrayData->Size;
 
             if (stringArray == null || arraySize <= 0)
@@ -131,7 +138,7 @@ namespace Echoglossian.NativeUI.Handlers
                   !text.All(char.IsPunctuation) &&
                   !NumericLikePattern.IsMatch(text))
               {
-                PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Extracted {type}[{j}] = '{text}'");
+                /*PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Extracted {type}[{j}] = '{text}'");*/
                 originalDict[j] = span.Data.ToArray();
                 filteredDict[j] = text;
               }
@@ -151,6 +158,47 @@ namespace Echoglossian.NativeUI.Handlers
                 Entries = filteredDict,
               });
             }
+
+            // Call the DB to check if the data is already translated and load the translated data from the database if available.
+            var existingDbData = this.FindStringArrayData(type);
+
+            if (existingDbData != null)
+            {
+              PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Found existing StringArrayData in DB for type {type}.");
+              var translatedStrings = existingDbData.TranslatedStrings;
+
+              if (!string.IsNullOrEmpty(translatedStrings))
+              {
+                PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Using existing translation for {type}: {translatedStrings}");
+
+                // If the content is already translated, skip translation and apply values to the game.
+                if (this.IsContentAlreadyTranslated(type, translatedStrings))
+                {
+                  PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Content for {type} is already translated, skipping translation.");
+                  continue;
+                }
+
+                // apply translations to the game
+                PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Applying existing translation for {type} to the game.");
+
+                // Split the translated strings into individual entries
+                var translationsDictionary = ParseStringArraySerializedText(existingDbData?.TranslatedStrings);
+
+                for (var index = 0; index < translationsDictionary?.Count; index++)
+                {
+                  var translatedValue = translationsDictionary[index];
+                  if (translatedValue is null)
+                  {
+                    PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] No translated value found for {type}[{index}], skipping.");
+                    continue;
+                  }
+
+                  // Apply the translated value to the game
+                  PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Applying translated value for {type}[{index}]: {translatedValue}");
+                  stringArrayData->SetValue(index, translatedValue, suppressUpdates: true);
+                }
+              }
+            }
           }
           catch (Exception ex)
           {
@@ -158,7 +206,7 @@ namespace Echoglossian.NativeUI.Handlers
           }
         }
 
-
+        // if the content is not already translated, prepare it for translation
         PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Extracted {this.OriginalStringArrayDataBank.Count} StringArrayDatas.");
         if (this.OriginalStringArrayDataBank.Count == 0)
         {
@@ -166,16 +214,12 @@ namespace Echoglossian.NativeUI.Handlers
           return;
         }
 
-        PluginLog.Debug(
-          $"[LoadAndTranslateStringArrayDatas] Extracted StringArrayDatas: " +
-          string.Join("; ", this.OriginalStringArrayDataBank.Select(entry =>
-            $"[{entry.Type}] " +
-            string.Join(", ", entry.Entries.Select(kvp =>
-              $"{kvp.Key}: {new ReadOnlySeStringSpan(kvp.Value).ExtractText()}"))))
-        );
-
-
         var preparedData = this.PrepareStringArrayDataBankForTranslation();
+
+        PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Prepared {preparedData.Count} StringArrayDatas for translation.");
+
+        this.PreparedStringArrayDataBank.AddRange(preparedData);
+
         if (preparedData.Count == 0)
         {
           PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] No prepared StringArrayDatas to translate.");
@@ -184,9 +228,44 @@ namespace Echoglossian.NativeUI.Handlers
 
         PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Prepared {preparedData.Count} StringArrayDatas for translation.");
 
-        var isAlreadyTranslated = this.IsTranslated(preparedData);
+        var translations = this.TranslateData(preparedData);
 
-        PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Is already translated? {isAlreadyTranslated.Item1}");
+        PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Is already translated? {translations.IsTranslationFinished}");
+
+        for (var index = 0; index < translations.Item2.Count; index++)
+        {
+          var (type, translatedString) = translations.Item2[index];
+          var translationsDictionary = ParseStringArraySerializedText(translatedString);
+          if (translationsDictionary == null || translationsDictionary.Count == 0)
+          {
+            PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] No translations found for {type}, skipping.");
+            continue;
+          }
+          // read the current stringarraydata from the game
+
+          var currentStringArrayData = atkStage->GetStringArrayData(type);
+
+          PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Processing translation for {type}: {translatedString}");
+
+          foreach (var (idx, value) in translationsDictionary)
+          {
+            PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Applying translated value for {type}[{idx}]: {value}");
+            // apply the translated value to the game
+            currentStringArrayData->SetValue(idx, value, suppressUpdates: true);
+          }
+
+          // Save or update the translated StringArrayData in the database
+          if (!this.SaveOrUpdateSingleStringArrayData(type, translatedString))
+          {
+            PluginLog.Error($"[LoadAndTranslateStringArrayDatas] Failed to save or update StringArrayData of type {type}.");
+          }
+          else
+          {
+            PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Successfully saved or updated StringArrayData of type {type}.");
+          }
+        }
+
+
       }
       catch (Exception ex)
       {
@@ -195,12 +274,95 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
+    private bool SaveOrUpdateStringArrayDatas(List<(StringArrayType Type, string TranslatedString)> translatedData)
+    {
+      try
+      {
+        PluginLog.Debug($"[SaveOrUpdateStringArrayDatas] Saving or updating StringArrayDatas...");
+        foreach (var (type, translatedString) in translatedData)
+        {
+          var currentOriginalData = this.OriginalStringArrayDataBank
+            .FirstOrDefault(entry => entry.Type == type);
+
+          PluginLog.Debug($"[SaveOrUpdateStringArrayDatas] Processing StringArrayData of type {type} with translated string: {translatedString}");
+
+          var reconstructedDictionary = new Dictionary<int, string>(currentOriginalData?.Entries
+            .ToDictionary(kvp => kvp.Key, kvp => new ReadOnlySeStringSpan(kvp.Value).ExtractText()) ?? new Dictionary<int, string>());
+
+          var formattedData = FormatStringArrayDatas(
+          type: type.ToString(),
+          size: reconstructedDictionary.Count,
+          rawData: SerializeDictionary(this.OriginalStringArrayDataBank
+        .FirstOrDefault(entry => entry.Type == currentOriginalData.Type).Entries),
+          formattedRawData: null,
+          originalLang: ClientStateInterface.ClientLanguage.Humanize(),
+          originalStrings: this.PreparedStringArrayDataBank
+            .Where(d => d.Type == type)
+            .Select(d => d.PreparedString)
+            .FirstOrDefault() ?? string.Empty,
+          translationLang: LangDict[this.Config.Lang].Code,
+          translatedStrings: translatedString,
+          translatedStringsWithPayloads: null,
+          translationEngine: this.Config.ChosenTransEngine,
+          gameVersion: GetGameVersion());
+          this.SaveStringArrayData(formattedData);
+        }
+      }
+      catch (Exception ex)
+      {
+        PluginLog.Error($"[SaveOrUpdateStringArrayDatas] Error saving or updating StringArrayData: {ex}");
+        return false;
+      }
+      PluginLog.Debug($"[SaveOrUpdateStringArrayDatas] Successfully saved or updated StringArrayData.");
+      return true;
+    }
+
+    private bool SaveOrUpdateSingleStringArrayData(
+      StringArrayType type,
+      string translatedString)
+    {
+      PluginLog.Debug($"[SaveOrUpdateSingleStringArrayData] Saving or updating StringArrayData of type {type}...");
+      try
+      {
+        var currentOriginalData = this.OriginalStringArrayDataBank
+          .FirstOrDefault(entry => entry.Type == type);
+        if (currentOriginalData == null)
+        {
+          PluginLog.Error($"[SaveOrUpdateSingleStringArrayData] No original data found for type {type}.");
+          return false;
+        }
+        var reconstructedDictionary = new Dictionary<int, string>(currentOriginalData.Entries
+          .ToDictionary(kvp => kvp.Key, kvp => new ReadOnlySeStringSpan(kvp.Value).ExtractText()));
+        var formattedData = FormatStringArrayDatas(
+          type: type.ToString(),
+          size: reconstructedDictionary.Count,
+          rawData: SerializeDictionary(currentOriginalData.Entries),
+          formattedRawData: null,
+          originalLang: ClientStateInterface.ClientLanguage.Humanize(),
+          originalStrings: this.PreparedStringArrayDataBank
+            .Where(d => d.Type == type)
+            .Select(d => d.PreparedString)
+            .FirstOrDefault() ?? string.Empty,
+          translationLang: LangDict[this.Config.Lang].Code,
+          translatedStrings: translatedString,
+          translatedStringsWithPayloads: null,
+          translationEngine: this.Config.ChosenTransEngine,
+          gameVersion: GetGameVersion());
+        return this.SaveStringArrayData(formattedData);
+      }
+      catch (Exception ex)
+      {
+        PluginLog.Error($"[SaveOrUpdateSingleStringArrayData] Error saving or updating StringArrayData of type {type}: {ex}");
+        return false;
+      }
+    }
+
     /// <summary>
     /// Checks if the given StringArrayData has already been translated by comparing it with fresh translation results.
     /// </summary>
     /// <param name="data">A list of (StringArrayType, string) pairs representing the original stringified entries.</param>
     /// <returns>A tuple: whether it's already translated, and the newly translated result.</returns>
-    private (bool IsTranslated, List<(StringArrayType Type, string TranslatedString)>) IsTranslated(
+    private (bool IsTranslationFinished, List<(StringArrayType Type, string TranslatedString)>) TranslateData(
       List<(StringArrayType Type, string StringsToTranslate)> data)
     {
       // Kick off the async translation task
@@ -210,7 +372,7 @@ namespace Echoglossian.NativeUI.Handlers
 
       if (translatedStrings == null || translatedStrings.Count != data.Count)
       {
-        PluginLog.Warning("[IsTranslated] Translation returned null or count mismatch.");
+        PluginLog.Warning("[TranslateData] Translation returned null or count mismatch.");
         return (false, []);
       }
 
@@ -225,7 +387,6 @@ namespace Echoglossian.NativeUI.Handlers
 
       return (isIdentical, result);
     }
-
 
     /// <summary>
     /// Extracts each StringArrayData from the bank and returns a list of tuples,
@@ -279,7 +440,6 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
-
     /// <summary>
     /// Async translate each prepared StringArrayData.
     /// </summary>
@@ -321,56 +481,37 @@ namespace Echoglossian.NativeUI.Handlers
       }
     }
 
-
     /// <summary>
     ///     Determines if the currently extracted values match the preserved original snapshot.
     ///     This avoids re-translating or re-applying if the values are already translated.
     /// </summary>
     /// <returns><see langword="true"/> if the content was already translated; otherwise, <see langword="false"/>.</returns>
-    private bool ContentIsAlreadyTranslated()
+    private bool IsContentAlreadyTranslated(StringArrayType type, string stringArrayDataContent)
     {
       try
       {
-        PluginLog.Debug($"[*****] Checking if content is already translated (snapshot mode)...");
+        PluginLog.Debug($"[IsContentAlreadyTranslated] Checking if content is already translated (using OriginalStringArrayDataBank)...");
 
-        /* bool atkMatch = this.SnapshotOriginalAtkValues.All(kvp =>
-             this.FilteredAtkValues.TryGetValue(kvp.Key, out var val) && val == kvp.Value);*/
+        var originalContent = this.OriginalStringArrayDataBank.FirstOrDefault(entry => entry.Type == type)?.Entries
+          .Select(kvp => $"s{kvp.Key}:{new ReadOnlySeStringSpan(kvp.Value).ExtractText()}")
+          .Aggregate((current, next) => $"{current}|{next}").TrimEnd('|');
 
-        /* bool strMatch = this.SnapshotOriginalStringArrayData.All(kvp =>
-             this.FilteredStringArrayData.TryGetValue(kvp.Key, out var val) && val == kvp.Value);
+        PluginLog.Debug($"[IsContentAlreadyTranslated] Comparing original content with provided stringArrayDataContent...");
 
-         bool isMatch = *//*atkMatch &&*//* strMatch;
-
-         PluginLog.Debug($"[*****] Snapshot retranslation check: Array = {strMatch}, Result = {isMatch}");*/
-
-        /*if (!atkMatch)
+        PluginLog.Debug($"[IsContentAlreadyTranslated] Original content: {originalContent}");
+        if (string.IsNullOrEmpty(originalContent))
         {
-          foreach (var kvp in this.SnapshotOriginalAtkValues)
-          {
-            if (!this.FilteredAtkValues.TryGetValue(kvp.Key, out var val) || val != kvp.Value)
-            {
-              PluginLog.Debug($"[ATK mismatch] Index {kvp.Key}: expected '{kvp.Value}', found '{val}'");
-            }
-          }
-        }*/
-
-        /*if (!strMatch)
-        {
-          foreach (var kvp in this.SnapshotOriginalStringArrayData)
-          {
-            if (!this.FilteredStringArrayData.TryGetValue(kvp.Key, out var val) || val != kvp.Value)
-            {
-              PluginLog.Debug($"[STR mismatch] Index {kvp.Key}: expected '{kvp.Value}', found '{val}'");
-            }
-          }
+          PluginLog.Debug($"[IsContentAlreadyTranslated] No original content found for type {type}.");
+          return false;
         }
 
-        return isMatch;*/
-        return true;
+        PluginLog.Debug($"[IsContentAlreadyTranslated] Provided content: {stringArrayDataContent}");
+
+        return originalContent == stringArrayDataContent;
       }
       catch (Exception ex)
       {
-        PluginLog.Error($"[*****] Error in ContentIsAlreadyTranslated (snapshot mode): {ex}");
+        PluginLog.Error($"[IsContentAlreadyTranslated] Error in IsContentAlreadyTranslated (snapshot mode): {ex}");
         return false;
       }
     }
@@ -378,101 +519,81 @@ namespace Echoglossian.NativeUI.Handlers
     /// <summary>
     /// Checks the database for the required StringArrayData and returns the translated values.
     /// </summary>
-    /// <param name="dataToSearch">The StringArrayDatas to search for.</param>
+    /// <param name="stringArrayType">The StringArrayType to search for.</param>
     /// <returns>The found StringArrayDatas, or an empty array if not found.</returns>
     protected StringArrayDatas FindStringArrayData(StringArrayType stringArrayType)
     {
       PluginLog.Debug($"[FindStringArrayData] Finding StringArrayData...");
 
+      try
+      {
+        var type = stringArrayType.ToString();
 
-      Echoglossian.FormatStringArrayDatas(
-        type: stringArrayType.ToString,
-        size: this.OriginalStringArrayDataBank.FirstOrDefault(entry => entry.Type == stringArrayType)?.Entries.Count ?? 0,
-        rawData: this.OriginalStringArrayDataBank.FirstOrDefault(entry => entry.Type == stringArrayType)?.Entries.Select(kvp => kvp.Value).ToList() ?? new List<byte[]>(),
-        formattedRawData: null,
-        originalLang: ClientStateInterface.ClientLanguage.Humanize(),
-        originalStrings: string.Join("|", this.OriginalStringArrayDataBank.FirstOrDefault(entry => entry.Type == stringArrayType)?.Entries.Select(kvp => $"{kvp.Key}:{new ReadOnlySeStringSpan(kvp.Value).ExtractText()}") ?? []),
-        translationLang: LangDict[this.Config.Lang].Code,
-        translatedStrings: null,
-        translatedStringsWithPayloads: null,
-        translationEngine: this.Config.ChosenTransEngine,
-        gameVersion: GetGameVersion());
+        PluginLog.Debug($"[FindStringArrayData] Searching for StringArrayData of type: {type}");
 
+        var rawData = this.OriginalStringArrayDataBank
+          .FirstOrDefault(entry => entry.Type.ToString() == stringArrayType.ToString())?.Entries;
 
+        if (rawData == null)
+        {
+          PluginLog.Debug($"[FindStringArrayData] No data found for StringArrayType: {stringArrayType}");
+          return null;
+        }
 
+        var formattedData = FormatStringArrayDatas(
+           type: type,
+           size: rawData?.Count ?? 0,
+           rawData: SerializeDictionary(rawData),
+           formattedRawData: null,
+           originalLang: ClientStateInterface.ClientLanguage.Humanize(),
+           originalStrings: string.Join("|", rawData.Select(kvp => $"{kvp.Key}:{new ReadOnlySeStringSpan(kvp.Value).ExtractText()}") ?? []),
+           translationLang: LangDict[this.Config.Lang].Code,
+           translatedStrings: null,
+           translatedStringsWithPayloads: null,
+           translationEngine: this.Config.ChosenTransEngine,
+           gameVersion: GetGameVersion());
 
+        var foundData = FindAndReturnStringArrayData(formattedData);
 
+        if (foundData == null)
+        {
+          PluginLog.Debug($"[FindStringArrayData] No StringArrayData found for type: {type}");
+          return null;
+        }
 
+        PluginLog.Debug($"[FindStringArrayData] Found StringArrayData for type: {type}, ID: {foundData.Id}");
 
-
-        );
-
-
-
+        return foundData;
+      }
+      catch (Exception ex)
+      {
+        PluginLog.Error($"[FindStringArrayData] Error finding StringArrayData: {ex}");
+        return null;
+      }
     }
 
-
-    /*/// <summary>
-    /// Applies translated StringArrayData values to the game, using the original snapshot for validation.
+    /// <summary>
+    /// Saves the StringArrayData to the database.
     /// </summary>
-    /// <param name="type">The AddonEvent that triggered the update.</param>
-    /// <param name="args">The addon arguments containing the array pointer.</param>
-    private unsafe void OnArrayDataUpdate(AddonEvent type, AddonArgs args)
+    /// <param name="data">The StringArrayData to save.</param>
+    /// <returns><see langword="true"/> if the save was successful; otherwise, <see langword="false"/>.</returns>
+    protected bool SaveStringArrayData(StringArrayDatas stringArrayDatas)
     {
-      PluginLog.Debug($"[*****] Handling StringArrayData update for {type}...");
+      PluginLog.Debug($"[SaveStringArrayData] Saving StringArrayData...");
 
-      if (!this.UseStringArray || this.StringArrayDataType is null)
+      try
       {
-        PluginLog.Debug($"[*****] Skipping array update — not configured.");
-        return;
-      }
+        var isInserted = InsertOrUpdateStringArrayData(stringArrayDatas).GetAwaiter().GetResult();
 
-      if (args is not AddonRequestedUpdateArgs requestedUpdateArgs)
+        PluginLog.Debug($"[SaveStringArrayData] Successfully saved StringArrayData.");
+        return isInserted == Resources.DataInsertedUpdatedInStringArrayDatasTable ? true : false;
+      }
+      catch (Exception ex)
       {
-        PluginLog.Debug($"[*****] Skipping array update — invalid args.");
-        return;
+        PluginLog.Error($"[SaveStringArrayData] Error saving StringArrayData: {ex}");
+        return false;
       }
-
-      var stringArrayData = (StringArrayData**)requestedUpdateArgs.StringArrayData;
-      var arrayIndex = this.GetStringArrayIndexForAddon((AtkUnitBase*)args.Addon);
-
-      if (arrayIndex is -1)
-      {
-        PluginLog.Debug($"[*****] No matching string array index found.");
-        return;
-      }
-
-      var addonArrayData = stringArrayData[arrayIndex];
-
-      for (var index = 0; index < addonArrayData->Size; ++index)
-      {
-        ref var currentValue = ref addonArrayData->StringArray[index];
-        if (currentValue is null)
-        {
-          continue;
-        }
-
-        if (!this.FilteredStringArrayData.TryGetValue(index, out var translated))
-        {
-          continue;
-        }
-
-        if (this.SnapshotOriginalStringArrayData.TryGetValue(index, out var originalBytes))
-        {
-          var snapshot = originalBytes; // fixed this from var snapshot = new ReadOnlySeStringSpan(originalBytes).ExtractText();
-          if (snapshot == translated)
-          {
-            PluginLog.Debug($"[*****] Snapshot value {snapshot}, translated value {translated}, current value {new ReadOnlySeStringSpan(currentValue).ExtractText()}");
-            PluginLog.Debug($"[*****] Skipping STR[{index}] — already matches snapshot.");
-            continue;
-          }
-        }
-
-        PluginLog.Debug($"[*****] Applying translated array string at index {index}: {translated}");
-        addonArrayData->SetValue(index, translated, suppressUpdates: true);
-      }
-    }*/
-
+    }
   }
 
   /// <summary>

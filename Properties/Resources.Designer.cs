@@ -459,6 +459,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data inserted/updated in StringArrayDatas table..
+        /// </summary>
+        public static string DataInsertedUpdatedInStringArrayDatasTable {
+            get {
+                return ResourceManager.GetString("DataInsertedUpdatedInStringArrayDatasTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use API Key (recommended).
         /// </summary>
         public static string DeepLTransAPIKey {
@@ -572,6 +581,15 @@ namespace Echoglossian.Properties {
         public static string Endpoint {
             get {
                 return ResourceManager.GetString("Endpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ErrorSavingData: {e}.
+        /// </summary>
+        public static string ErrorSavingData {
+            get {
+                return ResourceManager.GetString("ErrorSavingData", resourceCulture);
             }
         }
         

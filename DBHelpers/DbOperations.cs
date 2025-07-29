@@ -906,12 +906,12 @@ public partial class Echoglossian
 
       context.StringArrayDatas.Update(stringArrayData);
       await context.SaveChangesAsync();
-      return "Data inserted/updated in StringArrayDatas table.";
+      return Resources.DataInsertedUpdatedInStringArrayDatasTable;
     }
     catch (Exception e)
     {
       PluginLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
-      return $"ErrorSavingData: {e}";
+      return Resources.ErrorSavingData;
     }
   }
 

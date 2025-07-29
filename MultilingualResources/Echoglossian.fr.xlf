@@ -721,6 +721,14 @@
           <source>Use Authentication</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Utiliser l’authentification</target>
         </trans-unit>
+        <trans-unit id="DataInsertedUpdatedInStringArrayDatasTable" translate="yes" xml:space="preserve">
+          <source>Data inserted/updated in StringArrayDatas table.</source>
+          <target state="new">Data inserted/updated in StringArrayDatas table.</target>
+        </trans-unit>
+        <trans-unit id="ErrorSavingData" translate="yes" xml:space="preserve">
+          <source>ErrorSavingData: {e}</source>
+          <target state="new">ErrorSavingData: {e}</target>
+        </trans-unit>
       </group>
     </body>
   </file>

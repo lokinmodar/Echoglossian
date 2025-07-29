@@ -136,7 +136,7 @@ public partial class Echoglossian
   /// <param name="translationEngine"> The translation engine ID.</param>
   /// <param name="gameVersion"> The game version.</param>
   /// <returns>A formatted <see cref="StringArrayDatas" /> for database storage.</returns>
-  public StringArrayDatas FormatStringArrayDatas(string type, int size, byte[] rawData, string formattedRawData, string originalLang, string originalStrings, string translationLang, string translatedStrings, string translatedStringsWithPayloads, int translationEngine, string gameVersion)
+  public static StringArrayDatas FormatStringArrayDatas(string type, int size, byte[] rawData, string formattedRawData, string originalLang, string originalStrings, string translationLang, string translatedStrings, string translatedStringsWithPayloads, int translationEngine, string gameVersion)
   {
     return new StringArrayDatas(
         type,

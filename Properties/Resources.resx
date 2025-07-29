@@ -649,4 +649,10 @@
   <data name="UseAuthentication" xml:space="preserve">
     <value>Use Authentication</value>
   </data>
+  <data name="DataInsertedUpdatedInStringArrayDatasTable" xml:space="preserve">
+    <value>Data inserted/updated in StringArrayDatas table.</value>
+  </data>
+  <data name="ErrorSavingData" xml:space="preserve">
+    <value>ErrorSavingData: {e}</value>
+  </data>
 </root>
