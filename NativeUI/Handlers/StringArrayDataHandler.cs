@@ -25,27 +25,22 @@ namespace Echoglossian.NativeUI.Handlers
     /// <summary>
     /// Stores the original string array data extracted from the game.
     /// </summary>
-    private readonly List<StringArrayDataEntry> OriginalStringArrayDataBank = new();
+    private readonly List<StringArrayDataEntry> OriginalStringArrayDataBank = [];
 
     /// <summary>
     ///     Stores filtered string array data for translation, as a list of dictionaries.
     /// </summary>
-    private readonly List<FilteredStringArrayDataEntry> FilteredStringArrayDataBank = new();
+    private readonly List<FilteredStringArrayDataEntry> FilteredStringArrayDataBank = [];
 
     /// <summary>
     /// List of prepared original string array data, paired with their types.
     /// </summary>
-    private readonly List<(StringArrayType Type, string PreparedString)> PreparedStringArrayDataBank = new();
+    private readonly List<(StringArrayType Type, string PreparedString)> PreparedStringArrayDataBank = [];
 
     /// <summary>
     /// List of translated string array data, paired with their types.
     /// </summary>
-    private readonly List<(StringArrayType Type, string TranslatedPreparedString)> TranslatedPreparedStringArrayDataBank = new();
-
-    /// <summary>
-    ///     Gets a value indicating whether string arrays are used for translation.
-    /// </summary>
-    protected readonly bool UseStringArray; // kept for now, may remove later
+    private readonly List<(StringArrayType Type, string TranslatedPreparedString)> TranslatedPreparedStringArrayDataBank = [];
 
     /// <summary>
     ///  List of Arrays to avoid extraction and translations,
@@ -60,7 +55,7 @@ namespace Echoglossian.NativeUI.Handlers
     /// <param name="translationService">The translation service.</param>
     public StringArrayDataHandler(List<string> arraysToBlock, Config config, TranslationService translationService)
     {
-      this.arraysToBlock = arraysToBlock ?? new List<string>();
+      this.arraysToBlock = arraysToBlock ?? [];
       this.Config = config;
       this.TranslationService = translationService;
 
@@ -264,8 +259,6 @@ namespace Echoglossian.NativeUI.Handlers
             PluginLog.Debug($"[LoadAndTranslateStringArrayDatas] Successfully saved or updated StringArrayData of type {type}.");
           }
         }
-
-
       }
       catch (Exception ex)
       {
@@ -287,7 +280,7 @@ namespace Echoglossian.NativeUI.Handlers
           PluginLog.Debug($"[SaveOrUpdateStringArrayDatas] Processing StringArrayData of type {type} with translated string: {translatedString}");
 
           var reconstructedDictionary = new Dictionary<int, string>(currentOriginalData?.Entries
-            .ToDictionary(kvp => kvp.Key, kvp => new ReadOnlySeStringSpan(kvp.Value).ExtractText()) ?? new Dictionary<int, string>());
+            .ToDictionary(kvp => kvp.Key, kvp => new ReadOnlySeStringSpan(kvp.Value).ExtractText()) ?? []);
 
           var formattedData = FormatStringArrayDatas(
           type: type.ToString(),
@@ -313,6 +306,7 @@ namespace Echoglossian.NativeUI.Handlers
         PluginLog.Error($"[SaveOrUpdateStringArrayDatas] Error saving or updating StringArrayData: {ex}");
         return false;
       }
+
       PluginLog.Debug($"[SaveOrUpdateStringArrayDatas] Successfully saved or updated StringArrayData.");
       return true;
     }
@@ -415,7 +409,9 @@ namespace Echoglossian.NativeUI.Handlers
           foreach (var (index, bytes) in entry.Entries)
           {
             if (bytes is null || bytes.Length == 0)
+            {
               continue;
+            }
 
             var extracted = new ReadOnlySeStringSpan(bytes).ExtractText();
             sb.Append($"s{index}|{extracted}|");
@@ -452,7 +448,7 @@ namespace Echoglossian.NativeUI.Handlers
       var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
       var targetLang = LangDict[this.Config.Lang].Code;
 
-      List<string> translatedResults = new List<string>();
+      List<string> translatedResults = [];
 
       try
       {
@@ -609,12 +605,12 @@ namespace Echoglossian.NativeUI.Handlers
     /// <summary>
     /// The map of index to string bytes extracted from the array.
     /// </summary>
-    public Dictionary<int, byte[]> Entries { get; set; } = new();
+    public Dictionary<int, byte[]> Entries { get; set; } = [];
   }
 
   public class FilteredStringArrayDataEntry
   {
     public StringArrayType Type { get; set; }
-    public Dictionary<int, string> Entries { get; set; } = new();
+    public Dictionary<int, string> Entries { get; set; } = [];
   }
 }

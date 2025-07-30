@@ -79,13 +79,13 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// <summary>
   ///     Stores filtered string array data for translation.
   /// </summary>
-/*  protected Dictionary<int, string> FilteredStringArrayData = new();*/
+  protected Dictionary<int, string> FilteredStringArrayData = new();
 
   /// <summary>
   ///     Stores the original string array values to restore after translation.
   ///     Uses byte arrays to preserve exact original data.
   /// </summary>
-/*  protected Dictionary<int, byte[]> OriginalStringArrayData = new();*/
+  protected Dictionary<int, byte[]> OriginalStringArrayData = new();
 
   /// <summary>
   ///     Stores original ATK values extracted from the addon for change detection.
@@ -96,10 +96,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   ///  Stores a snapshot of the original ATK values.
   /// </summary>
   private Dictionary<int, string> SnapshotOriginalAtkValues = new();
-  /*  /// <summary>
-   ///  Stores a snapshot of the original string array data
-   /// </summary>
-  private Dictionary<int, string> SnapshotOriginalStringArrayData = new();*/
+  /// <summary>
+  ///  Stores a snapshot of the original string array data
+  /// </summary>
+  private Dictionary<int, string> SnapshotOriginalStringArrayData = new();
 
 
 
@@ -285,11 +285,11 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   {
     PluginLog.Debug($"[{this.AddonName}] Handling StringArrayData update for {type}...");
 
-    /* if (!this.UseStringArray || this.StringArrayDataType is null)
+    if (!this.UseStringArray || this.StringArrayDataType is null)
     {
       PluginLog.Debug($"[{this.AddonName}] Skipping array update — not configured.");
       return;
-    }*/
+    }
 
     if (args is not AddonRequestedUpdateArgs requestedUpdateArgs)
     {
@@ -297,7 +297,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       return;
     }
 
-    /*var stringArrayData = (StringArrayData**)requestedUpdateArgs.StringArrayData;
+    var stringArrayData = (StringArrayData**)requestedUpdateArgs.StringArrayData;
     var arrayIndex = this.GetStringArrayIndexForAddon((AtkUnitBase*)args.Addon);
 
     if (arrayIndex is -1)
@@ -316,10 +316,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
         continue;
       }
 
-*//*      if (!this.FilteredStringArrayData.TryGetValue(index, out var translated))
+      if (!this.FilteredStringArrayData.TryGetValue(index, out var translated))
       {
         continue;
-      }*//*
+      }
 
       if (this.SnapshotOriginalStringArrayData.TryGetValue(index, out var originalBytes))
       {
@@ -333,8 +333,8 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       }
 
       PluginLog.Debug($"[{this.AddonName}] Applying translated array string at index {index}: {translated}");
-      addonArrayData->SetValue(index, translated *//*, suppressUpdates: true *//*);
-    }*/
+      addonArrayData->SetValue(index, translated, suppressUpdates: true);
+    }
   }
 
   /// <summary>
@@ -392,26 +392,26 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
 
     this.FilteredAtkValues.Clear();
-    // this.FilteredStringArrayData.Clear();
+    this.FilteredStringArrayData.Clear();
     this.OriginalAtkValues.Clear();
-    // this.OriginalStringArrayData.Clear();
+    this.OriginalStringArrayData.Clear();
 
     if (this.UseAtkValues)
     {
       this.ExtractAtkValues(addon);
     }
 
-    /*    if (this.UseStringArray && this.StringArrayDataType.HasValue)
-        {
-          this.ExtractStringArrayData(atkStage);
-        }*/
+    if (this.UseStringArray && this.StringArrayDataType.HasValue)
+    {
+      this.ExtractStringArrayData(atkStage);
+    }
 
     // ✅ Capture true original values before applying anything
     this.SnapshotOriginalAtkValues = new(this.OriginalAtkValues);
-    /* this.SnapshotOriginalStringArrayData = this.OriginalStringArrayData
-         .ToDictionary(kvp => kvp.Key, kvp => new ReadOnlySeStringSpan(kvp.Value).ExtractText());*/
+    this.SnapshotOriginalStringArrayData = this.OriginalStringArrayData
+        .ToDictionary(kvp => kvp.Key, kvp => new ReadOnlySeStringSpan(kvp.Value).ExtractText());
 
-    if (this.FilteredAtkValues.Count == 0 /*&& this.FilteredStringArrayData.Count == 0*/)
+    if (this.FilteredAtkValues.Count == 0 && this.FilteredStringArrayData.Count == 0)
     {
       PluginLog.Debug($"[{this.AddonName}] Nothing to extract; skipping translation.");
       return;
@@ -435,13 +435,13 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
         }
       }
 
-      /*foreach (var kvp in this.SnapshotOriginalStringArrayData)
+      foreach (var kvp in this.SnapshotOriginalStringArrayData)
       {
         if (!this.FilteredStringArrayData.TryGetValue(kvp.Key, out var cur) || cur != kvp.Value)
         {
           PluginLog.Debug($"[STR mismatch] Index {kvp.Key}: expected '{kvp.Value}', found '{cur}'");
         }
-      }*/
+      }
 
       return;
     }
@@ -451,10 +451,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       PluginLog.Debug($"[{this.AddonName}] Launching async translation...");
       Task.Run(() => GenericAddonHandlerHelper.PerformTranslationAndSaveAsync<TGenericEntity>(
           this.AddonName,
-          this.FilteredAtkValues, null,
-          //this.FilteredStringArrayData,
-          this.SnapshotOriginalAtkValues, null,
-          // this.SnapshotOriginalStringArrayData,
+          this.FilteredAtkValues,
+          this.FilteredStringArrayData,
+          this.SnapshotOriginalAtkValues,
+           this.SnapshotOriginalStringArrayData,
           this.Config,
           this.TranslationService
       ));
@@ -472,10 +472,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       inputParts.Add($"a{kvp.Key}|{kvp.Value}");
     }
 
-    /*foreach (var kvp in this.FilteredStringArrayData)
+    foreach (var kvp in this.FilteredStringArrayData)
     {
       inputParts.Add($"s{kvp.Key}|{kvp.Value}");
-    }*/
+    }
 
     var input = string.Join("|", inputParts);
     var translated = this.TranslationService.Translate(input, sourceLang, targetLang);
@@ -495,10 +495,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       {
         this.FilteredAtkValues[atkIndex] = value;
       }
-      /*else if (key.StartsWith("s") && int.TryParse(key[1..], out var strIndex))
+      else if (key.StartsWith("s") && int.TryParse(key[1..], out var strIndex))
       {
         this.FilteredStringArrayData[strIndex] = value;
-      }*/
+      }
     }
 
     var entity = new TGenericEntity();
@@ -531,14 +531,14 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       var payload = new
       {
         atkValues = this.FilteredAtkValues.Count > 0 ? this.FilteredAtkValues : null,
-        stringArrayData = "" /*this.FilteredStringArrayData.Count > 0 ? this.FilteredStringArrayData :null,*/
+        stringArrayData = this.FilteredStringArrayData.Count > 0 ? this.FilteredStringArrayData : null,
       };
 
       // ✅ Use snapshot values to preserve the actual original state
       var originalPayload = new
       {
         atkValues = this.SnapshotOriginalAtkValues.Count > 0 ? this.SnapshotOriginalAtkValues : null,
-        stringArrayData = "" /*this.SnapshotOriginalStringArrayData.Count > 0 ? this.SnapshotOriginalStringArrayData : null,*/
+        stringArrayData = this.SnapshotOriginalStringArrayData.Count > 0 ? this.SnapshotOriginalStringArrayData : null,
       };
 
       var translatedJson = JsonConvert.SerializeObject(payload);
@@ -558,7 +558,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       entity.SetGameVersion(GetGameVersion());
     }
 
-    if (this.FilteredAtkValues.Count == 0 /*&& this.FilteredStringArrayData.Count == 0*/)
+    if (this.FilteredAtkValues.Count == 0 && this.FilteredStringArrayData.Count == 0)
     {
       PluginLog.Debug($"[{this.AddonName}] No translated values; skipping DB insert.");
       return;
@@ -611,36 +611,36 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
   }
 
-  /*  /// <summary>
-    /// Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
-    /// </summary>
-    /// <param name="atkStage">The ATK stage containing the string array data.</param>
-    private unsafe void ExtractStringArrayData(AtkStage* atkStage)
+  /// <summary>
+  /// Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
+  /// </summary>
+  /// <param name="atkStage">The ATK stage containing the string array data.</param>
+  private unsafe void ExtractStringArrayData(AtkStage* atkStage)
+  {
+    PluginLog.Debug($"[{this.AddonName}] Extracting StringArrayData of type {this.StringArrayDataType.Value}...");
+    var data = atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
+    var array = data->StringArray;
+    var size = data->Size;
+
+    if (array == null || size <= 0)
     {
-      PluginLog.Debug($"[{this.AddonName}] Extracting StringArrayData of type {this.StringArrayDataType.Value}...");
-      var data = atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
-      var array = data->StringArray;
-      var size = data->Size;
+      PluginLog.Debug($"[{this.AddonName}] No StringArrayData found or size is zero.");
+      return;
+    }
 
-      if (array == null || size <= 0)
+    for (var i = 0; i < size; i++)
+    {
+      var span = new ReadOnlySeStringSpan(array[i]);
+      var text = span.ExtractText();
+      if (!string.IsNullOrWhiteSpace(text) &&
+          !text.All(char.IsPunctuation) &&
+          !NumericLikePattern.IsMatch(text))
       {
-        PluginLog.Debug($"[{this.AddonName}] No StringArrayData found or size is zero.");
-        return;
+        this.OriginalStringArrayData[i] = span.Data.ToArray();
+        this.FilteredStringArrayData[i] = text;
       }
-
-      for (var i = 0; i < size; i++)
-      {
-        var span = new ReadOnlySeStringSpan(array[i]);
-        var text = span.ExtractText();
-        if (!string.IsNullOrWhiteSpace(text) &&
-            !text.All(char.IsPunctuation) &&
-            !NumericLikePattern.IsMatch(text))
-        {
-          this.OriginalStringArrayData[i] = span.Data.ToArray();
-          this.FilteredStringArrayData[i] = text;
-        }
-      }
-    }*/
+    }
+  }
 
   /// <summary>
   ///     Captures the current extracted ATK and StringArrayData values as immutable snapshots
@@ -652,14 +652,14 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     {
       this.SnapshotOriginalAtkValues = new(this.OriginalAtkValues);
 
-      /*      this.SnapshotOriginalStringArrayData = this.OriginalStringArrayData
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp =>
-                    {
-                      var span = kvp.Value;
-                      return new ReadOnlySeStringSpan(span).ExtractText();
-                    });*/
+      this.SnapshotOriginalStringArrayData = this.OriginalStringArrayData
+          .ToDictionary(
+              kvp => kvp.Key,
+              kvp =>
+              {
+                var span = kvp.Value;
+                return new ReadOnlySeStringSpan(span).ExtractText();
+              });
 
       PluginLog.Debug($"[{this.AddonName}] Snapshots of original ATK and StringArrayData captured.");
     }
@@ -681,8 +681,8 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     foreach (var (index, val) in this.FilteredAtkValues)
       sb.Append($"a{index}|{val}|");
 
-    /*    foreach (var (index, val) in this.FilteredStringArrayData)
-          sb.Append($"s{index}|{val}|");*/
+    foreach (var (index, val) in this.FilteredStringArrayData)
+      sb.Append($"s{index}|{val}|");
 
     return sb.ToString().TrimEnd('|');
   }
@@ -697,7 +697,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     var combined = new
     {
       atkValues = this.FilteredAtkValues,
-      /*      stringArrayData = this.FilteredStringArrayData,*/
+      stringArrayData = this.FilteredStringArrayData,
     };
 
     return JsonConvert.SerializeObject(combined);
@@ -756,10 +756,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
         this.FilteredAtkValues = parsed.AtkValues;
       }
 
-      /* if (parsed.StringArrayData != null)
-       {
-         this.FilteredStringArrayData = parsed.StringArrayData;
-       }*/
+      if (parsed.StringArrayData != null)
+      {
+        this.FilteredStringArrayData = parsed.StringArrayData;
+      }
     }
     catch
     {
@@ -784,7 +784,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       var originalJson = JsonConvert.SerializeObject(new
       {
         atkValues = this.SnapshotOriginalAtkValues.Count > 0 ? this.SnapshotOriginalAtkValues : null,
-        stringArrayData = "", /*this.SnapshotOriginalStringArrayData.Count > 0 ? this.SnapshotOriginalStringArrayData : null,*/
+        stringArrayData = this.SnapshotOriginalStringArrayData.Count > 0 ? this.SnapshotOriginalStringArrayData : null,
       });
 
       var lang = LangDict[LanguageInt].Code;
@@ -844,10 +844,10 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       bool atkMatch = this.SnapshotOriginalAtkValues.All(kvp =>
           this.FilteredAtkValues.TryGetValue(kvp.Key, out var val) && val == kvp.Value);
 
-      /* bool strMatch = this.SnapshotOriginalStringArrayData.All(kvp =>
-           this.FilteredStringArrayData.TryGetValue(kvp.Key, out var val) && val == kvp.Value);*/
+      bool strMatch = this.SnapshotOriginalStringArrayData.All(kvp =>
+          this.FilteredStringArrayData.TryGetValue(kvp.Key, out var val) && val == kvp.Value);
 
-      bool isMatch = atkMatch /*&& strMatch*/;
+      bool isMatch = atkMatch && strMatch;
 
       PluginLog.Debug($"[{this.AddonName}] Snapshot retranslation check: ATK = {atkMatch}, Result = {isMatch}");
 
@@ -862,7 +862,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
         }
       }
 
-      /*if (!strMatch)
+      if (!strMatch)
       {
         foreach (var kvp in this.SnapshotOriginalStringArrayData)
         {
@@ -871,7 +871,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
             PluginLog.Debug($"[STR mismatch] Index {kvp.Key}: expected '{kvp.Value}', found '{val}'");
           }
         }
-      }*/
+      }
 
       return isMatch;
     }
