@@ -22,15 +22,44 @@ namespace Echoglossian;
 /// </remarks>
 public partial class Echoglossian : IDalamudPlugin
 {
+  /// <summary>
+  /// The command used to invoke the plugin.
+  /// </summary>
   private const string SlashCommand = "/eglo";
+
+  /// <summary>
+  /// The language ID to translate to.
+  /// </summary>
   public static int LanguageInt = 28;
+
+  /// <summary>
+  /// The font size for the plugin's UI elements.
+  /// </summary>
   private static int fontSize = 24;
+
+  /// <summary>
+  /// The chosen translation engine.
+  /// </summary>
   public static int ChosenTransEngine;
+
+  /// <summary>
+  /// The name of the chosen translation engine.
+  /// </summary>
   private static string transEngineName;
+
+  /// <summary>
+  /// Holds the languages dictionary for the plugin.
+  /// </summary>
   public static Dictionary<int, LanguageInfo> LangDict;
 
+  /// <summary>
+  /// Holds the main text for glyph range configuration.
+  /// </summary>
   public static UINewFontHandler UINewFontHandler;
 
+  /// <summary>
+  /// Holds the sanitizer instance for cleaning up text input.
+  /// </summary>
   public static Sanitizer Sanitizer;
 
   /// <summary>
@@ -44,7 +73,16 @@ public partial class Echoglossian : IDalamudPlugin
   ///     before use.
   /// </remarks>
   public static TranslationService TranslationService;
+
+  /// <summary>
+  /// The directory where the plugin's configuration files are stored.
+  /// </summary>
   public static string ConfigDirectory;
+
+  /// <summary>
+  /// Holds the list of StringArrayData names to block translation for
+  /// </summary>
+  public static List<string> ArraysToBlock;
 
   private readonly SemaphoreSlim areaToastTranslationSemaphore;
   private readonly SemaphoreSlim battleTalkTranslationSemaphore;
@@ -72,8 +110,15 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
 
   private AtkTextNodeBufferWrapper atkTextNodeBufferWrapper;
+
+  /// <summary>
+  /// Tggle the configuration UI visibility.
+  /// </summary>
   private bool config;
 
+  /// <summary>
+  /// The language code to translate to.
+  /// </summary>
   public string LangToTranslateTo = string.Empty;
 
   /// <summary>
@@ -120,14 +165,14 @@ public partial class Echoglossian : IDalamudPlugin
         new CultureInfo(this.configuration.DefaultPluginCulture);
     AssetsManager.AssetsPath =
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
-    AssetsManager.AssetFiles = new List<string>
-        {
+    AssetsManager.AssetFiles =
+        [
             "NotoSansCJKhk-Regular.otf",
             "NotoSansCJKjp-Regular.otf",
             "NotoSansCJKkr-Regular.otf",
             "NotoSansCJKsc-Regular.otf",
             "NotoSansCJKtc-Regular.otf",
-        };
+        ];
 
     ComplementaryFont3FilePath =
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-3.ttf";
@@ -200,9 +245,9 @@ public partial class Echoglossian : IDalamudPlugin
     this.LoadAllErrorToasts();
     this.LoadAllOtherToasts();
 
-    var arraysToBlock = new List<string> { "ChatLog", "CharaSelect", "PartyList", "NamePlate", "ActionBar", "Inventory", "CharacterItems", "Trade", "PartyMemberList", "LinkShell", "BlackList", "FriendList", "Letter", "SocialList", "EnemyList", "CastBar", "Journal", "RecipeNote", "FlyText", "InventoryRetainer", "MiniTalk", "CommonCurrencies", "ItemSearch", "ArmouryBoard", "FreeCompanyMember", "HousingBlackListSetting", "LegacyItemStorage", "FreeCompanyApplication", "GearSetList", "FreeCompanyRights", "CabinetStore", "CabinetWithdraw", "FreeCompanyActivity", "FreeCompanyExchange", "FreeCompanyStatus", "AreaMap2", "ContentsFinderConfirm", "FreeCompanyChest", "Buddy", "FreeCompanyAction", "FishingNote", "FishGuide", "GearSetView", "HousingSignBoard", "Housing", "AllianceList", "LookingForGroup", "HousingTravellersNote", "DTR", "RetainerCharacter", "AdventureNoteBook", "HousingChocoboList", "TripleTriad", "LimitBreak", "RaceChocobo", "Currency", "BeginnerChannelMentorList", "BeginnerChannelBeginnerList", "PvPDuelRequest", "JobHud", "PvPTeam", "PvPTeamMember", "PvPTeamResult", "PvPTeamActivity", "ContentMemberList", "CrossWorldLinkShell", "LovmNamePlate", "LovmActionDetail", "LovmResult", "Lovm", "PvPProfile", "Orchestrion", "OrchestrionPlayListSelect", "RetainerTask", "YKWNote", "DeepDungeonNaviMap", "DeepDungeonStatus", "GcArmyExpedition", "GcArmyTraining", "GcArmyCapture", "PvPMKS", "PvPSpectatorList", "LFGRecruiterNameSearch", "Snipe", "Performance", "ContentsReplayPlayer", "SatisfactionSupplyChangeMiragePrism", "SatisfactionSupplyMiragePrism", "Alarm", "Merchant", "MerchantEquipSelect", "EurekaLogosShardList", "RhythmAction", "WorldTranslate", "PVPSimulationHeader2", "PVPSimulationDisplay", "Emj", "WeeklyPuzzle", "MYCInfo", "TeleportTown", "MJIHousingGoods" };
+    ArraysToBlock = ["ChatLog", "CharaSelect", "PartyList", "NamePlate", "ActionBar", "Inventory", "CharacterItems", "Trade", "PartyMemberList", "LinkShell", "BlackList", "FriendList", "Letter", "SocialList", "EnemyList", "CastBar", "Journal", "RecipeNote", "FlyText", "InventoryRetainer", "MiniTalk", "CommonCurrencies", "ItemSearch", "ArmouryBoard", "FreeCompanyMember", "HousingBlackListSetting", "LegacyItemStorage", "FreeCompanyApplication", "GearSetList", "FreeCompanyRights", "CabinetStore", "CabinetWithdraw", "FreeCompanyActivity", "FreeCompanyExchange", "FreeCompanyStatus", "AreaMap2", "ContentsFinderConfirm", "FreeCompanyChest", "Buddy", "FreeCompanyAction", "FishingNote", "FishGuide", "GearSetView", "HousingSignBoard", "Housing", "AllianceList", "LookingForGroup", "HousingTravellersNote", "DTR", "RetainerCharacter", "AdventureNoteBook", "HousingChocoboList", "TripleTriad", "LimitBreak", "RaceChocobo", "Currency", "BeginnerChannelMentorList", "BeginnerChannelBeginnerList", "PvPDuelRequest", "JobHud", "PvPTeam", "PvPTeamMember", "PvPTeamResult", "PvPTeamActivity", "ContentMemberList", "CrossWorldLinkShell", "LovmNamePlate", "LovmActionDetail", "LovmResult", "Lovm", "PvPProfile", "Orchestrion", "OrchestrionPlayListSelect", "RetainerTask", "YKWNote", "DeepDungeonNaviMap", "DeepDungeonStatus", "GcArmyExpedition", "GcArmyTraining", "GcArmyCapture", "PvPMKS", "PvPSpectatorList", "LFGRecruiterNameSearch", "Snipe", "Performance", "ContentsReplayPlayer", "SatisfactionSupplyChangeMiragePrism", "SatisfactionSupplyMiragePrism", "Alarm", "Merchant", "MerchantEquipSelect", "EurekaLogosShardList", "RhythmAction", "WorldTranslate", "PVPSimulationHeader2", "PVPSimulationDisplay", "Emj", "WeeklyPuzzle", "MYCInfo", "TeleportTown", "MJIHousingGoods"];
 
-    this.StringArrayDataHandler = new StringArrayDataHandler(arraysToBlock, this.configuration, TranslationService);
+    this.StringArrayDataHandler = new StringArrayDataHandler(ArraysToBlock, this.configuration, TranslationService);
 
     GameWindowCacheManager.Preload(ConfigDirectory);
 
@@ -323,7 +368,6 @@ public partial class Echoglossian : IDalamudPlugin
   public List<ToastMessage> OtherToastsCache { get; set; }
 
   public StringArrayDataHandler StringArrayDataHandler { get; set; }
-
 
 
   /// <inheritdoc />
@@ -477,6 +521,9 @@ public partial class Echoglossian : IDalamudPlugin
     CommandManager.RemoveHandler(SlashCommand);
   }
 
+  /// <summary>
+  /// Updates the plugin's state on each tick.
+  /// </summary>
   private void Tick(IFramework tFramework)
   {
     if (!this.configuration.Translate)
@@ -573,13 +620,15 @@ public partial class Echoglossian : IDalamudPlugin
     this.config = true;
   }
 
+  /// <summary>
+  /// Handles the registration of addon handlers.
+  /// </summary>
   private void EgloAddonHandler()
   {
     PluginLog.Debug("EgloAddonHandler called.");
 
     this.registeredAddonHandlers =
-        new List<(string AddonName, IAddonTranslationHandler Handler)>
-        {
+        [
                /* (AddonName: "_MainCommand",
                     Handler: new MainCommandHandler(
                         this.configuration,
@@ -632,7 +681,7 @@ public partial class Echoglossian : IDalamudPlugin
                             this.configuration,
                             TranslationService))
                     : default,
-        };
+        ];
 
     AddonHandlerRegistrar.RegisterMany(
         this.registeredAddonHandlers,

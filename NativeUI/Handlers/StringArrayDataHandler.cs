@@ -517,7 +517,7 @@ namespace Echoglossian.NativeUI.Handlers
     /// </summary>
     /// <param name="stringArrayType">The StringArrayType to search for.</param>
     /// <returns>The found StringArrayDatas, or an empty array if not found.</returns>
-    protected StringArrayDatas FindStringArrayData(StringArrayType stringArrayType)
+    public StringArrayDatas FindStringArrayData(StringArrayType stringArrayType)
     {
       PluginLog.Debug($"[FindStringArrayData] Finding StringArrayData...");
 

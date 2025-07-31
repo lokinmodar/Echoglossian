@@ -37,6 +37,11 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       RegexOptions.Compiled);
 
   /// <summary>
+  /// Handles loading of translated StringArrayData from the DB.
+  /// </summary>
+  private readonly StringArrayDataHandler stringArrayDataHandler;
+
+  /// <summary>
   ///     Gets the name of the addon being handled.
   /// </summary>
   protected readonly string AddonName;
@@ -126,6 +131,11 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     this.UseAtkValues = useAtkValues;
     this.UseStringArray = useStringArray;
     this.StringArrayDataType = useStringArray ? stringArrayDataType : null;
+    this.stringArrayDataHandler = new StringArrayDataHandler(
+      arraysToBlock: ArraysToBlock ?? new(),
+      config: this.Config,
+      translationService: this.TranslationService);
+
   }
 
   /// <summary>
@@ -277,7 +287,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   }
 
   /// <summary>
-  /// Applies translated StringArrayData values to the game, using the original snapshot for validation.
+  /// Applies translated StringArrayData values loaded from the database.
   /// </summary>
   /// <param name="type">The AddonEvent that triggered the update.</param>
   /// <param name="args">The addon arguments containing the array pointer.</param>
@@ -285,7 +295,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   {
     PluginLog.Debug($"[{this.AddonName}] Handling StringArrayData update for {type}...");
 
-    if (!this.UseStringArray || this.StringArrayDataType is null)
+    if (!this.UseStringArray || this.StringArrayDataType is not { } arrayType)
     {
       PluginLog.Debug($"[{this.AddonName}] Skipping array update — not configured.");
       return;
@@ -308,34 +318,27 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
 
     var addonArrayData = stringArrayData[arrayIndex];
 
-    for (var index = 0; index < addonArrayData->Size; ++index)
+    var dbData = this.stringArrayDataHandler.FindStringArrayData(arrayType);
+    if (dbData?.TranslatedStrings is not { Length: > 0 })
     {
-      ref var currentValue = ref addonArrayData->StringArray[index];
-      if (currentValue is null)
-      {
-        continue;
-      }
+      PluginLog.Debug($"[{this.AddonName}] No DB string array data found for type {arrayType}.");
+      return;
+    }
 
-      if (!this.FilteredStringArrayData.TryGetValue(index, out var translated))
-      {
-        continue;
-      }
+    var parsed = ParseStringArraySerializedText(dbData.TranslatedStrings);
+    if (parsed.Count == 0)
+    {
+      PluginLog.Debug($"[{this.AddonName}] Parsed DB data is empty for type {arrayType}.");
+      return;
+    }
 
-      if (this.SnapshotOriginalStringArrayData.TryGetValue(index, out var originalBytes))
-      {
-        var snapshot = originalBytes; // fixed this from var snapshot = new ReadOnlySeStringSpan(originalBytes).ExtractText();
-        if (snapshot == translated)
-        {
-          PluginLog.Debug($"[{this.AddonName}] Snapshot value {snapshot}, translated value {translated}, current value {new ReadOnlySeStringSpan(currentValue).ExtractText()}");
-          PluginLog.Debug($"[{this.AddonName}] Skipping STR[{index}] — already matches snapshot.");
-          continue;
-        }
-      }
-
-      PluginLog.Debug($"[{this.AddonName}] Applying translated array string at index {index}: {translated}");
-      addonArrayData->SetValue(index, translated, suppressUpdates: true);
+    foreach (var (index, value) in parsed)
+    {
+      PluginLog.Debug($"[{this.AddonName}] Applying DB-translated string at index {index}: {value}");
+      addonArrayData->SetValue(index, value, suppressUpdates: true);
     }
   }
+
 
   /// <summary>
   ///  Gets the index of the string array associated with the specified addon.
@@ -401,10 +404,9 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
       this.ExtractAtkValues(addon);
     }
 
-    if (this.UseStringArray && this.StringArrayDataType.HasValue)
-    {
-      this.ExtractStringArrayData(atkStage);
-    }
+    // Skip string array extraction here – it is now handled by StringArrayDataHandler externally
+    PluginLog.Debug($"[{this.AddonName}] Skipping StringArrayData extraction — delegated to StringArrayDataHandler.");
+
 
     // ✅ Capture true original values before applying anything
     this.SnapshotOriginalAtkValues = new(this.OriginalAtkValues);
@@ -611,36 +613,36 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
   }
 
-  /// <summary>
-  /// Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
-  /// </summary>
-  /// <param name="atkStage">The ATK stage containing the string array data.</param>
-  private unsafe void ExtractStringArrayData(AtkStage* atkStage)
-  {
-    PluginLog.Debug($"[{this.AddonName}] Extracting StringArrayData of type {this.StringArrayDataType.Value}...");
-    var data = atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
-    var array = data->StringArray;
-    var size = data->Size;
+  /* /// <summary>
+   /// Extracts string array data from the ATK stage and populates the filtered and original dictionaries.
+   /// </summary>
+   /// <param name="atkStage">The ATK stage containing the string array data.</param>
+   private unsafe void ExtractStringArrayData(AtkStage* atkStage)
+   {
+     PluginLog.Debug($"[{this.AddonName}] Extracting StringArrayData of type {this.StringArrayDataType.Value}...");
+     var data = atkStage->GetStringArrayData(this.StringArrayDataType!.Value);
+     var array = data->StringArray;
+     var size = data->Size;
 
-    if (array == null || size <= 0)
-    {
-      PluginLog.Debug($"[{this.AddonName}] No StringArrayData found or size is zero.");
-      return;
-    }
+     if (array == null || size <= 0)
+     {
+       PluginLog.Debug($"[{this.AddonName}] No StringArrayData found or size is zero.");
+       return;
+     }
 
-    for (var i = 0; i < size; i++)
-    {
-      var span = new ReadOnlySeStringSpan(array[i]);
-      var text = span.ExtractText();
-      if (!string.IsNullOrWhiteSpace(text) &&
-          !text.All(char.IsPunctuation) &&
-          !NumericLikePattern.IsMatch(text))
-      {
-        this.OriginalStringArrayData[i] = span.Data.ToArray();
-        this.FilteredStringArrayData[i] = text;
-      }
-    }
-  }
+     for (var i = 0; i < size; i++)
+     {
+       var span = new ReadOnlySeStringSpan(array[i]);
+       var text = span.ExtractText();
+       if (!string.IsNullOrWhiteSpace(text) &&
+           !text.All(char.IsPunctuation) &&
+           !NumericLikePattern.IsMatch(text))
+       {
+         this.OriginalStringArrayData[i] = span.Data.ToArray();
+         this.FilteredStringArrayData[i] = text;
+       }
+     }
+   }*/
 
   /// <summary>
   ///     Captures the current extracted ATK and StringArrayData values as immutable snapshots
