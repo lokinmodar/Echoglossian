@@ -2,6 +2,12 @@
   "version": 1,
   "dependencies": {
     "net9.0-windows7.0": {
+      "AutoCtor": {
+        "type": "Direct",
+        "requested": "[2.8.1, )",
+        "resolved": "2.8.1",
+        "contentHash": "epoDM9wschkMTc7JgHi2yQq9f+UdeoGAvf4zKSkIkygoqCb6dY7PyoHx1vUZbKH9U9x2Q0R+VkyGqi49pNlJ2g=="
+      },
       "AWSSDK.Translate": {
         "type": "Direct",
         "requested": "[4.0.0.15, )",
@@ -50,6 +56,15 @@
         "requested": "[1.12.2, )",
         "resolved": "1.12.2",
         "contentHash": "btF/9sB65h0V9ipZxVfEQ9fxDwXSFRwhi4Z1qFBgnXONqWVKZE3LxS0JEMW73G3gvrFI7/IAqLA1y/15HDa3fw=="
+      },
+      "Injectio": {
+        "type": "Direct",
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "vobNqxNLUSri8ESae2FSzPuuwJGsQ1s1IAhCE/Orxq+uyvoW91dS+GP4EX5hRRFuu2QXIaSgVzrMb0AgFjfIQg==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection": "9.0.4"
+        }
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Direct",

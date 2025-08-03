@@ -615,6 +615,14 @@
             <param name="dataToSearch">The StringArrayDatas to search for.</param>
             <returns>The found StringArrayDatas, or an empty array if not found.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindStringArrayDatasByTypeAndLang(System.String,System.String)">
+            <summary>
+            Finds and returns StringArrayDatas by type and translation language.
+            </summary>
+            <param name="type">The type of the StringArrayDatas.</param>
+            <param name="translationLang">The translation language of the StringArrayDatas.</param>
+            <returns>A list of matching StringArrayDatas.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FormatTalkMessage(System.String,System.String)">
             <summary>
                 Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> for the database.
@@ -660,6 +668,46 @@
             <param name="gameVersion"> The game version.</param>
             <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> for database storage.</returns>
         </member>
+        <member name="F:Echoglossian.Echoglossian.SlashCommand">
+            <summary>
+            The command used to invoke the plugin.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.LanguageInt">
+            <summary>
+            The language ID to translate to.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.fontSize">
+            <summary>
+            The font size for the plugin's UI elements.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.ChosenTransEngine">
+            <summary>
+            The chosen translation engine.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.transEngineName">
+            <summary>
+            The name of the chosen translation engine.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.LangDict">
+            <summary>
+            Holds the languages dictionary for the plugin.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.UINewFontHandler">
+            <summary>
+            Holds the main text for glyph range configuration.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.Sanitizer">
+            <summary>
+            Holds the sanitizer instance for cleaning up text input.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.TranslationService">
             <summary>
                 Provides access to the translation service for converting text between
@@ -671,6 +719,26 @@
                 language translations. Ensure that the service is properly initialized
                 before use.
             </remarks>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.ConfigDirectory">
+            <summary>
+            The directory where the plugin's configuration files are stored.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.ArraysToBlock">
+            <summary>
+            Holds the list of StringArrayData names to block translation for
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.config">
+            <summary>
+            Tggle the configuration UI visibility.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.LangToTranslateTo">
+            <summary>
+            The language code to translate to.
+            </summary>
         </member>
         <member name="F:Echoglossian.Echoglossian.registeredAddonHandlers">
             <summary>
@@ -691,6 +759,11 @@
             </summary>
             <param name="disposing">Indicates whether the method was called from managed code.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.Tick(Dalamud.Plugin.Services.IFramework)">
+            <summary>
+            Updates the plugin's state on each tick.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.BuildUi">
             <summary>
                 Builds the UI for the plugin.
@@ -707,6 +780,11 @@
             </summary>
             <param name="command">The command that triggered the execution.</param>
             <param name="arguments">Arguments associated with the command.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
+            <summary>
+            Handles the registration of addon handlers.
+            </summary>
         </member>
         <member name="T:Echoglossian.Echoglossian.PromptType">
             <summary>
@@ -2513,6 +2591,11 @@
                 The database entity type implementing IGenericEntity.
             </typeparam>
         </member>
+        <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.stringArrayDataHandler">
+            <summary>
+            Handles loading of translated StringArrayData from the DB.
+            </summary>
+        </member>
         <member name="F:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.AddonName">
             <summary>
                 Gets the name of the addon being handled.
@@ -2618,7 +2701,7 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.OnArrayDataUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-            Applies translated StringArrayData values to the game, using the original snapshot for validation.
+            Applies translated StringArrayData values loaded from the database.
             </summary>
             <param name="type">The AddonEvent that triggered the update.</param>
             <param name="args">The addon arguments containing the array pointer.</param>
@@ -2632,9 +2715,9 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ExtractAndTranslate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Extracts and translates addon content based on the specified event and
-                arguments. Performs DB lookup before calling external translation.
-                Saves translated content into the database. Honors async/sync mode from config.
+            Extracts and translates addon content based on the specified event and
+            arguments. Performs DB lookup before calling external translation.
+            Saves translated content into the database. Honors async/sync mode from config.
             </summary>
             <param name="evt">The type of addon event.</param>
             <param name="args">The arguments associated with the addon event.</param>
@@ -2647,13 +2730,13 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SnapshotOriginalValues">
             <summary>
-                Captures the current extracted ATK and StringArrayData values as immutable snapshots
-                to preserve their original (pre-translation) state for DB and cache comparison.
+            Captures the current extracted ATK values as immutable snapshots
+            to preserve their original (pre-translation) state for DB and cache comparison.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.SerializeOriginalData">
             <summary>
-             Serializes the original data from ATK values and string array data
+            Serializes the original ATK values for cache/DB matching.
             </summary>
             <returns>Returns the serialized data string.</returns>
         </member>
@@ -2674,7 +2757,7 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ParseTranslatedData(System.String)">
             <summary>
-            Parses the translated JSON data and populates the filtered dictionaries.
+            Parses the translated JSON data and populates the filtered ATK dictionary.
             </summary>
             <param name="translatedJson">Translated JSON data</param>
         </member>
@@ -2690,8 +2773,8 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.ContentIsAlreadyTranslated">
             <summary>
-                Determines if the currently extracted values match the preserved original snapshot.
-                This avoids re-translating or re-applying if the values are already translated.
+            Determines if the currently extracted ATK values match the preserved original snapshot.
+            Avoids re-translating or re-applying if the values are already translated.
             </summary>
             <returns><see langword="true"/> if the content was already translated; otherwise, <see langword="false"/>.</returns>
         </member>
@@ -2761,11 +2844,6 @@
         <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.TranslatedPreparedStringArrayDataBank">
             <summary>
             List of translated string array data, paired with their types.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.UseStringArray">
-            <summary>
-                Gets a value indicating whether string arrays are used for translation.
             </summary>
         </member>
         <member name="F:Echoglossian.NativeUI.Handlers.StringArrayDataHandler.arraysToBlock">
@@ -4620,6 +4698,19 @@
             <param name="fontStyle"></param>
             <param name="maxWidth"></param>
             <returns></returns>
+        </member>
+        <member name="T:Microsoft.Extensions.DependencyInjection.DiscoveredServicesExtensions">
+            <summary>
+            Extension methods for discovered service registrations
+            </summary>
+        </member>
+        <member name="M:Microsoft.Extensions.DependencyInjection.DiscoveredServicesExtensions.AddEchoglossian(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String[])">
+            <summary>
+            Adds discovered services from Echoglossian to the specified service collection
+            </summary>
+            <param name="serviceCollection">The service collection.</param>
+            <param name="tags">The service registration tags to include.</param>
+            <returns>The service collection</returns>
         </member>
     </members>
 </doc>

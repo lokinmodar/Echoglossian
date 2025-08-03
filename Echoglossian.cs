@@ -23,9 +23,11 @@ namespace Echoglossian;
 public partial class Echoglossian : IDalamudPlugin
 {
   /// <summary>
-  /// The command used to invoke the plugin.
+  /// The command used to invoke the plugin config UI.
   /// </summary>
   private const string SlashCommand = "/eglo";
+
+  private const string DBManagerWindowCommand = "/eglodmanager";
 
   /// <summary>
   /// The language ID to translate to.
@@ -56,6 +58,11 @@ public partial class Echoglossian : IDalamudPlugin
   /// Holds the main text for glyph range configuration.
   /// </summary>
   public static UINewFontHandler UINewFontHandler;
+
+  /// <summary>
+  /// Holds the database editor window instance.
+  /// </summary>
+  private DbEditorWindow? dbEditorWindow;
 
   /// <summary>
   /// Holds the sanitizer instance for cleaning up text input.
@@ -144,6 +151,11 @@ public partial class Echoglossian : IDalamudPlugin
         {
           HelpMessage = Resources.HelpMessage,
         });
+
+    CommandManager.AddHandler(DBManagerWindowCommand, new CommandInfo(this.OnEglodDbEditorCommand)
+    {
+      HelpMessage = Resources.OpensTheEchoglossianDBEditor
+    });
 
     Sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
@@ -245,7 +257,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.LoadAllErrorToasts();
     this.LoadAllOtherToasts();
 
-    ArraysToBlock = ["ChatLog", "CharaSelect", "PartyList", "NamePlate", "ActionBar", "Inventory", "CharacterItems", "Trade", "PartyMemberList", "LinkShell", "BlackList", "FriendList", "Letter", "SocialList", "EnemyList", "CastBar", "Journal", "RecipeNote", "FlyText", "InventoryRetainer", "MiniTalk", "CommonCurrencies", "ItemSearch", "ArmouryBoard", "FreeCompanyMember", "HousingBlackListSetting", "LegacyItemStorage", "FreeCompanyApplication", "GearSetList", "FreeCompanyRights", "CabinetStore", "CabinetWithdraw", "FreeCompanyActivity", "FreeCompanyExchange", "FreeCompanyStatus", "AreaMap2", "ContentsFinderConfirm", "FreeCompanyChest", "Buddy", "FreeCompanyAction", "FishingNote", "FishGuide", "GearSetView", "HousingSignBoard", "Housing", "AllianceList", "LookingForGroup", "HousingTravellersNote", "DTR", "RetainerCharacter", "AdventureNoteBook", "HousingChocoboList", "TripleTriad", "LimitBreak", "RaceChocobo", "Currency", "BeginnerChannelMentorList", "BeginnerChannelBeginnerList", "PvPDuelRequest", "JobHud", "PvPTeam", "PvPTeamMember", "PvPTeamResult", "PvPTeamActivity", "ContentMemberList", "CrossWorldLinkShell", "LovmNamePlate", "LovmActionDetail", "LovmResult", "Lovm", "PvPProfile", "Orchestrion", "OrchestrionPlayListSelect", "RetainerTask", "YKWNote", "DeepDungeonNaviMap", "DeepDungeonStatus", "GcArmyExpedition", "GcArmyTraining", "GcArmyCapture", "PvPMKS", "PvPSpectatorList", "LFGRecruiterNameSearch", "Snipe", "Performance", "ContentsReplayPlayer", "SatisfactionSupplyChangeMiragePrism", "SatisfactionSupplyMiragePrism", "Alarm", "Merchant", "MerchantEquipSelect", "EurekaLogosShardList", "RhythmAction", "WorldTranslate", "PVPSimulationHeader2", "PVPSimulationDisplay", "Emj", "WeeklyPuzzle", "MYCInfo", "TeleportTown", "MJIHousingGoods"];
+    ArraysToBlock = ["ChatLog", "CharaSelect", "PartyList", "NamePlate", "ActionBar", "Inventory", "CharacterItems", "Trade", "PartyMemberList", "LinkShell", "BlackList", "FriendList", "Letter", "SocialList", "EnemyList", "CastBar", "Journal", "RecipeNote", "FlyText", "InventoryRetainer", "MiniTalk", "CommonCurrencies", "ItemSearch", "ArmouryBoard", "FreeCompanyMember", "HousingBlackListSetting", "LegacyItemStorage", "FreeCompanyApplication", "GearSetList", "FreeCompanyRights", "CabinetStore", "CabinetWithdraw", "FreeCompanyActivity", "FreeCompanyExchange", "FreeCompanyStatus", "ContentsFinderConfirm", "FreeCompanyChest", "Buddy", "FreeCompanyAction", "FishingNote", "FishGuide", "GearSetView", "HousingSignBoard", "Housing", "AllianceList", "LookingForGroup", "HousingTravellersNote", "DTR", "RetainerCharacter", "AdventureNoteBook", "HousingChocoboList", "TripleTriad", "LimitBreak", "RaceChocobo", "Currency", "BeginnerChannelMentorList", "BeginnerChannelBeginnerList", "PvPDuelRequest", "JobHud", "PvPTeam", "PvPTeamMember", "PvPTeamResult", "PvPTeamActivity", "ContentMemberList", "CrossWorldLinkShell", "LovmNamePlate", "LovmActionDetail", "LovmResult", "Lovm", "PvPProfile", "Orchestrion", "OrchestrionPlayListSelect", "RetainerTask", "YKWNote", "DeepDungeonNaviMap", "DeepDungeonStatus", "GcArmyExpedition", "GcArmyTraining", "GcArmyCapture", "PvPMKS", "PvPSpectatorList", "LFGRecruiterNameSearch", "Snipe", "Performance", "ContentsReplayPlayer", "SatisfactionSupplyChangeMiragePrism", "SatisfactionSupplyMiragePrism", "Alarm", "Merchant", "MerchantEquipSelect", "EurekaLogosShardList", "RhythmAction", "WorldTranslate", "PVPSimulationHeader2", "PVPSimulationDisplay", "Emj", "WeeklyPuzzle", "MYCInfo", "TeleportTown", "MJIHousingGoods"];
 
     this.StringArrayDataHandler = new StringArrayDataHandler(ArraysToBlock, this.configuration, TranslationService);
 
@@ -273,6 +285,10 @@ public partial class Echoglossian : IDalamudPlugin
     this.EgloAddonHandler();
 
     this.RegisterOverlays();
+
+    this.dbEditorWindow = new DbEditorWindow(new EchoglossianDbContext(ConfigDirectory));
+    // Subscribe to draw it:
+    PluginInterface.UiBuilder.Draw += this.DrawDbEditorWindow;
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
 
@@ -401,6 +417,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.questToastTranslationSemaphore?.Dispose();
 
     PluginInterface.UiBuilder.Draw -= this.BuildUi;
+    PluginInterface.UiBuilder.Draw -= this.DrawDbEditorWindow;
 
     this.pixImage?.Dispose();
     this.choiceImage?.Dispose();
@@ -519,6 +536,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.GlyphRangeConfigText = null;
 
     CommandManager.RemoveHandler(SlashCommand);
+    CommandManager.RemoveHandler(DBManagerWindowCommand);
   }
 
   /// <summary>
@@ -599,6 +617,27 @@ public partial class Echoglossian : IDalamudPlugin
       this.DrawTranslationWindow(
           overlayRegistration.Overlay,
           overlayRegistration.Config);
+    }
+  }
+
+  /// <summary>
+  /// Draws the database editor window.
+  /// </summary>
+  private void DrawDbEditorWindow()
+  {
+    this.dbEditorWindow?.Draw();
+  }
+
+  /// <summary>
+  /// Open the Echoglossian DB Editor window when the command is executed.
+  /// </summary>
+  /// <param name="command">Command name.</param>
+  /// <param name="args">Command arguments.</param>
+  private void OnEglodDbEditorCommand(string command, string args)
+  {
+    if (this.dbEditorWindow != null)
+    {
+      this.dbEditorWindow.IsOpen = true;
     }
   }
 

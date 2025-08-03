@@ -830,6 +830,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Opens the Echoglossian DB Editor..
+        /// </summary>
+        public static string OpensTheEchoglossianDBEditor {
+            get {
+                return ResourceManager.GetString("OpensTheEchoglossianDBEditor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Other UI elements.
         /// </summary>
         public static string OtherUIElementsTabTitle {

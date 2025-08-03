@@ -25,6 +25,8 @@ global using System.Text.RegularExpressions;
 global using System.Threading;
 global using System.Web;
 
+global using AutoCtor;
+
 global using Dalamud.Game;
 global using Dalamud.Game.Addon.Lifecycle;
 global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -64,6 +66,10 @@ global using Echoglossian.UIOverlays.TranslationOverlay;
 
 global using FFXIVClientStructs.FFXIV.Client.Game.Event;
 global using FFXIVClientStructs.FFXIV.Component.GUI;
+global using FFXIVClientStructs.FFXIV.Client.UI;
+global using FFXIVClientStructs.Interop;
+
+global using Injectio.Attributes;
 
 global using HtmlAgilityPack;
 

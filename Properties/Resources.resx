@@ -655,4 +655,7 @@
   <data name="ErrorSavingData" xml:space="preserve">
     <value>ErrorSavingData: {e}</value>
   </data>
+  <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
+    <value>Opens the Echoglossian DB Editor.</value>
+  </data>
 </root>

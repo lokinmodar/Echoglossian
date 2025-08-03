@@ -978,4 +978,27 @@ public partial class Echoglossian
       return null;
     }
   }
+
+  /// <summary>
+  /// Finds and returns StringArrayDatas by type and translation language.
+  /// </summary>
+  /// <param name="type">The type of the StringArrayDatas.</param>
+  /// <param name="translationLang">The translation language of the StringArrayDatas.</param>
+  /// <returns>A list of matching StringArrayDatas.</returns>
+  public static List<StringArrayDatas> FindStringArrayDatasByTypeAndLang(string type, string translationLang)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    PluginLog.Debug($"FindStringArrayDatasByTypeAndLang called with type: {type}, lang: {translationLang}");
+    try
+    {
+      return context.StringArrayDatas
+          .Where(sad => sad.Type == type && sad.TranslationLang == translationLang)
+          .ToList();
+    }
+    catch (Exception ex)
+    {
+      PluginLog.Error($"FindStringArrayDatasByTypeAndLang failed: {ex.Message}");
+      return new List<StringArrayDatas>();
+    }
+  }
 }
