@@ -126,7 +126,7 @@ namespace Echoglossian.NativeUI.Handlers
 
             for (var j = 0; j < arraySize; j++)
             {
-              var span = new ReadOnlySeStringSpan(stringArray[j]);
+              var span = stringArray[j].AsReadOnlySeStringSpan();
               var text = span.ExtractText();
 
               if (!string.IsNullOrWhiteSpace(text) &&

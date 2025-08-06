@@ -7,29 +7,29 @@ namespace Echoglossian;
 
 public partial class Echoglossian
 {
-    private unsafe void BattleTalkHandler(string addonName, int index)
+  private unsafe void BattleTalkHandler(string addonName, int index)
+  {
+    var battleTalk = GameGuiInterface.GetAddonByName(addonName, index);
+    if (battleTalk != IntPtr.Zero)
     {
-        var battleTalk = GameGuiInterface.GetAddonByName(addonName, index);
-        if (battleTalk != IntPtr.Zero)
-        {
-            var battleTalkMaster = (AtkUnitBase*)battleTalk;
-            while (battleTalkMaster->IsVisible)
-            {
-                this.battleTalkDisplayTranslation = true;
-                this.battleTalkTextDimensions.X =
-                    battleTalkMaster->RootNode->Width * battleTalkMaster->Scale;
-                this.battleTalkTextDimensions.Y =
-                    battleTalkMaster->RootNode->Height *
-                    battleTalkMaster->Scale;
-                this.battleTalkTextPosition.X = battleTalkMaster->RootNode->X;
-                this.battleTalkTextPosition.Y = battleTalkMaster->RootNode->Y;
+      var battleTalkMaster = (AtkUnitBase*)battleTalk.Address;
+      while (battleTalkMaster->IsVisible)
+      {
+        this.battleTalkDisplayTranslation = true;
+        this.battleTalkTextDimensions.X =
+            battleTalkMaster->RootNode->Width * battleTalkMaster->Scale;
+        this.battleTalkTextDimensions.Y =
+            battleTalkMaster->RootNode->Height *
+            battleTalkMaster->Scale;
+        this.battleTalkTextPosition.X = battleTalkMaster->RootNode->X;
+        this.battleTalkTextPosition.Y = battleTalkMaster->RootNode->Y;
 
-                Thread.Sleep(this.delayBetweenVisibilityCheckForOverlay);
-            }
+        Thread.Sleep(this.delayBetweenVisibilityCheckForOverlay);
+      }
 
-            this.battleTalkDisplayTranslation = false;
-        }
-
-        this.battleTalkDisplayTranslation = false;
+      this.battleTalkDisplayTranslation = false;
     }
+
+    this.battleTalkDisplayTranslation = false;
+  }
 }

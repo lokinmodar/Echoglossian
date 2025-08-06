@@ -23,8 +23,8 @@ public partial class Echoglossian
       for (var i = 0; i < 5; i++)
       {
         var addon = GameGuiInterface.GetAddonByName("_BattleTalk");
-        var battleTalkAddon = (AtkUnitBase*)addon;
-        if (battleTalkAddon == null || !battleTalkAddon->IsVisible)
+        var battleTalkAddon = (AtkUnitBase*)addon.Address;
+        if (addon == null || !addon.IsVisible)
         {
           Thread.Sleep(this.delayBetweenTriesToTranslateBattleTalk);
           continue;
@@ -118,7 +118,7 @@ public partial class Echoglossian
     try
     {
       var addon = GameGuiInterface.GetAddonByName("_BattleTalk");
-      var battleTalkAddon = (AtkUnitBase*)addon;
+      var battleTalkAddon = (AtkUnitBase*)addon.Address;
       if (battleTalkAddon == null || !battleTalkAddon->IsVisible)
       {
         return;
@@ -213,7 +213,7 @@ public partial class Echoglossian
     try
     {
       var addon = GameGuiInterface.GetAddonByName("_BattleTalk");
-      var battleTalkAddon = (AtkUnitBase*)addon;
+      var battleTalkAddon = (AtkUnitBase*)addon.Address;
       if (battleTalkAddon == null || !battleTalkAddon->IsVisible)
       {
         return;
@@ -385,7 +385,7 @@ public partial class Echoglossian
     try
     {
       var addon = GameGuiInterface.GetAddonByName("_BattleTalk");
-      var battleTalkAddon = (AtkUnitBase*)addon;
+      var battleTalkAddon = (AtkUnitBase*)addon.Address;
       if (battleTalkAddon == null || !battleTalkAddon->IsVisible)
       {
         return;

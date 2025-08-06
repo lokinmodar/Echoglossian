@@ -28,6 +28,7 @@ public static class FieldValidationHelper
   /// <summary>
   /// Draws a validated input text field. Highlights red and shows warning only after first interaction.
   /// </summary>
+  /// <returns>True if the input value changed.</returns>
   public static bool ValidatedInputText(string label, ref string value, int maxLength, out bool isInvalid)
   {
     if (!FieldTouched.ContainsKey(label))
@@ -35,7 +36,7 @@ public static class FieldValidationHelper
       FieldTouched[label] = false;
     }
 
-    bool changed = ImGui.InputText(label, ref value, (uint)maxLength);
+    bool changed = ImGui.InputText(label, ref value, maxLength);
 
     if (ImGui.IsItemActive() || changed)
     {

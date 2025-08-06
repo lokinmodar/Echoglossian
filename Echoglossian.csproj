@@ -1,4 +1,4 @@
-﻿<Project Sdk="Dalamud.NET.SDK/12.0.2">
+﻿<Project Sdk="Dalamud.NET.SDK/13.0.0">
   <PropertyGroup Label="MultilingualAppToolkit">
     <MultilingualAppToolkitVersion>4.0</MultilingualAppToolkitVersion>
     <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
@@ -241,26 +241,26 @@
   <ItemGroup>
     <PackageReference Include="AutoCtor" Version="2.8.1" />
     <PackageReference Include="Dalamud.NET.Sdk" Version="12.0.2" />
-    <PackageReference Include="AWSSDK.Translate" Version="4.0.0.15" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.0.16" />
 
     <PackageReference Include="DeepL.net" Version="1.15.0" />
     <PackageReference Include="GTranslate" Version="2.3.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
     <PackageReference Include="Injectio" Version="5.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="OpenAI" Version="2.2.0" />
+    <PackageReference Include="OpenAI" Version="2.3.0" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="System.Drawing.Common" Version="9.0.7" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.8" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Private.Uri" Version="4.3.2" />
   </ItemGroup>
@@ -319,5 +319,13 @@
     <Folder Include="DBmanagerUI\" />
     <Folder Include="NativeUI\AddonHandlers\ActionMenu\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Remove="ImGui.NET" />
+    <Reference Include="Dalamud.Bindings.ImGui" Private="false" />
+    <Reference Include="Dalamud.Bindings.ImPlot" Private="false" />
+    <Reference Include="Dalamud.Bindings.ImGuizmo" Private="false" />
+  </ItemGroup>
+
 
 </Project>

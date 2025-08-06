@@ -670,7 +670,7 @@
         </member>
         <member name="F:Echoglossian.Echoglossian.SlashCommand">
             <summary>
-            The command used to invoke the plugin.
+            The command used to invoke the plugin config UI.
             </summary>
         </member>
         <member name="F:Echoglossian.Echoglossian.LanguageInt">
@@ -701,6 +701,11 @@
         <member name="F:Echoglossian.Echoglossian.UINewFontHandler">
             <summary>
             Holds the main text for glyph range configuration.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.dbEditorWindow">
+            <summary>
+            Holds the database editor window instance.
             </summary>
         </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
@@ -768,6 +773,18 @@
             <summary>
                 Builds the UI for the plugin.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawDbEditorWindow">
+            <summary>
+            Draws the database editor window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEglodDbEditorCommand(System.String,System.String)">
+            <summary>
+            Open the Echoglossian DB Editor window when the command is executed.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.ConfigWindow">
             <summary>
@@ -2706,7 +2723,7 @@
             <param name="type">The AddonEvent that triggered the update.</param>
             <param name="args">The addon arguments containing the array pointer.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.GetStringArrayIndexForAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.NativeUI.Handlers.GenericAddonHandler`1.GetStringArrayIndexForAddon(Dalamud.Game.NativeWrapper.AtkUnitBasePtr)">
             <summary>
              Gets the index of the string array associated with the specified addon.
             </summary>
@@ -3066,7 +3083,7 @@
             Includes Save, Donation, Project Links, and Pix QR popup.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,System.IntPtr)">
+        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,Dalamud.Bindings.ImGui.ImTextureID)">
             <summary>
             Draws the footer section with buttons and Pix QR popup.
             </summary>
@@ -3094,6 +3111,37 @@
                 is set.
             </param>
             <param name="label">The label used to identify the prompt editor instance.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.DbEditorWindow">
+            <summary>
+            ImGui window for browsing and editing the Echoglossian EFCore SQLite database.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.DbEditorWindow.IsOpen">
+            <summary>
+            Controls whether the window is open and visible.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.DbEditorWindow.#ctor(Echoglossian.EFCoreSqlite.EchoglossianDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.PluginUI.DbEditorWindow"/> class.
+            </summary>
+            <param name="dbContext">The EFCore DB context.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.DbEditorWindow.Draw">
+            <summary>
+            Draws the DB editor ImGui window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.DbEditorWindow.InitializeTableNames">
+            <summary>
+            Loads the list of table/entity names from the DbContext model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.DbEditorWindow.LoadRows">
+            <summary>
+            Loads records for the currently selected table and page.
+            </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.DeepLEngineUI">
             <summary>
@@ -3190,7 +3238,7 @@
             Displays the "About Echoglossian" tab content with logo and disclaimer.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.AboutTab.Draw(Echoglossian.Config,System.IntPtr)">
+        <member name="M:Echoglossian.PluginUI.Tabs.AboutTab.Draw(Echoglossian.Config,Dalamud.Bindings.ImGui.ImTextureID)">
             <summary>
             Draws the About tab.
             </summary>
@@ -3763,6 +3811,11 @@
               Looks up a localized string similar to No settings required for this engine.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.OpensTheEchoglossianDBEditor">
+            <summary>
+              Looks up a localized string similar to Opens the Echoglossian DB Editor..
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.OtherUIElementsTabTitle">
             <summary>
               Looks up a localized string similar to Other UI elements.
@@ -4227,6 +4280,45 @@
             <summary>
               Looks up a localized string similar to Yes, reset.
             </summary>
+        </member>
+        <member name="T:Echoglossian.Services.AddonObserver.CallbackDelegate">
+            <summary>
+             Delegate for addon open/close events.
+            </summary>
+            <param name="addonName">Name of the addon.</param>
+        </member>
+        <member name="E:Echoglossian.Services.AddonObserver.AddonOpen">
+            <summary>
+            Delegate for addon open events.
+            </summary>
+        </member>
+        <member name="E:Echoglossian.Services.AddonObserver.AddonClose">
+            <summary>
+            Delegate for addon close events.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Services.AddonObserver.Initialize">
+            <summary>
+            Initializes the AddonObserver service and subscribes to framework updates.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Services.AddonObserver.Dispose">
+            <summary>
+             Disposes the AddonObserver service and unsubscribes from framework updates.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Services.AddonObserver.IsAddonVisible(System.String)">
+            <summary>
+            Checks if an addon is currently visible.
+            </summary>
+            <param name="name">Name of the addon.</param>
+            <returns>True if the addon is visible, otherwise false.</returns>
+        </member>
+        <member name="M:Echoglossian.Services.AddonObserver.OnFrameworkUpdate(Dalamud.Plugin.Services.IFramework)">
+            <summary>
+            Event handler for framework updates.
+            </summary>
+            <param name="framework">The framework instance.</param>
         </member>
         <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.Translate(System.String,System.String,System.String)">
             <summary>

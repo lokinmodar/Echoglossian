@@ -729,6 +729,10 @@
           <source>ErrorSavingData: {e}</source>
           <target state="new">ErrorSavingData: {e}</target>
         </trans-unit>
+        <trans-unit id="OpensTheEchoglossianDBEditor" translate="yes" xml:space="preserve">
+          <source>Opens the Echoglossian DB Editor.</source>
+          <target state="new">Opens the Echoglossian DB Editor.</target>
+        </trans-unit>
       </group>
     </body>
   </file>

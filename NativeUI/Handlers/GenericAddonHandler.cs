@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+
+
 using Echoglossian.Cache;
 
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -291,7 +293,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
   /// </summary>
   /// <param name="type">The AddonEvent that triggered the update.</param>
   /// <param name="args">The addon arguments containing the array pointer.</param>
-  private unsafe void OnArrayDataUpdate(AddonEvent type, AddonArgs args)
+  private void OnArrayDataUpdate(AddonEvent type, AddonArgs args)
   {
     PluginLog.Debug($"[{this.AddonName}] Handling StringArrayData update for {type}...");
 
@@ -308,7 +310,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
 
     var stringArrayData = (StringArrayData**)requestedUpdateArgs.StringArrayData;
-    var arrayIndex = this.GetStringArrayIndexForAddon((AtkUnitBase*)args.Addon);
+    var arrayIndex = this.GetStringArrayIndexForAddon(args.Addon);
 
     if (arrayIndex is -1)
     {
@@ -357,15 +359,14 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     PluginLog.Debug($"[{this.AddonName}] StringArrayData update completed for {arrayType}.");
   }
 
-
   /// <summary>
   ///  Gets the index of the string array associated with the specified addon.
   /// </summary>
   /// <param name="addon">Addon pointer.</param>
   /// <returns>The index of the string array if found; otherwise -1.</returns>
-  private unsafe int GetStringArrayIndexForAddon(AtkUnitBase* addon)
+  private int GetStringArrayIndexForAddon(AtkUnitBasePtr addon)
   {
-    PluginLog.Debug($"[{this.AddonName}] Getting StringArrayData index for addon {addon->NameString}...");
+    PluginLog.Debug($"[{this.AddonName}] Getting StringArrayData index for addon {addon.Name}...");
     var arrayHolder = RaptureAtkModule.Instance()->AtkArrayDataHolder;
 
     for (var index = 0; index < arrayHolder.StringArrayCount; ++index)
@@ -378,9 +379,9 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
 
       // PluginLog.Debug($"[{this.AddonName}] Checking if addon {addon->Name.ToString()} is subscribed to string array {index}...");
 
-      if (stringArray->SubscribedAddons.Contains((byte)addon->Id))
+      if (stringArray->SubscribedAddons.Contains((byte)addon.Id))
       {
-        PluginLog.Debug($"[{this.AddonName}] Addon {addon->NameString} is subscribed to string array {index}.");
+        PluginLog.Debug($"[{this.AddonName}] Addon {addon.Name} is subscribed to string array {index}.");
         return index;
       }
     }

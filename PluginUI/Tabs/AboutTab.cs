@@ -15,7 +15,7 @@ public static class AboutTab
   /// <param name="config">The plugin config object.</param>
   /// <param name="logoHandle">The ImGui handle for the logo image.</param>
   /// <returns>True if any changes were made (always false here).</returns>
-  public static bool Draw(Config config, nint logoHandle)
+  public static bool Draw(Config config, ImTextureID logoHandle)
   {
     bool changed = false;
     if (ImGui.BeginTable("columns", 2))

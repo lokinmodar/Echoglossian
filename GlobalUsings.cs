@@ -32,6 +32,7 @@ global using Dalamud.Game.Addon.Lifecycle;
 global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 global using Dalamud.Game.Command;
 global using Dalamud.Game.Gui.Toast;
+global using Dalamud.Game.NativeWrapper;
 global using Dalamud.Game.Text.Sanitizer;
 global using Dalamud.Game.Text.SeStringHandling;
 global using Dalamud.Interface;
@@ -75,7 +76,7 @@ global using HtmlAgilityPack;
 
 global using Humanizer;
 
-global using ImGuiNET;
+global using Dalamud.Bindings.ImGui;
 
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Design;

@@ -18,7 +18,7 @@ public static class PluginConfigWindowFooter
   /// <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
   /// <param name="saveCallback">Callback function to invoke when saving.</param>
   /// <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
-  public static void DrawFooter(ref bool config, ref bool saveConfigValue, Action saveCallback, nint pixImageHandle)
+  public static void DrawFooter(ref bool config, ref bool saveConfigValue, Action saveCallback, ImTextureID pixImageHandle)
   {
     var windowSize = ImGui.GetWindowContentRegionMax();
 

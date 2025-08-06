@@ -112,7 +112,7 @@ namespace Echoglossian
         // TODO: adapt the structure to use AtkValues instead of nodes for better performance
 
         var addon = GameGuiInterface.GetAddonByName("Talk");
-        var talkAddon = (AtkUnitBase*)addon;
+        var talkAddon = (AtkUnitBase*)addon.Address;
         if (talkAddon == null || !talkAddon->IsVisible)
         {
           return;

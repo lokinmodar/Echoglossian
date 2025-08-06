@@ -27,7 +27,7 @@ public partial class Echoglossian : IDalamudPlugin
   /// </summary>
   private const string SlashCommand = "/eglo";
 
-  private const string DBManagerWindowCommand = "/eglodmanager";
+  private const string DBManagerWindowCommand = "/eglodbmanager";
 
   /// <summary>
   /// The language ID to translate to.
