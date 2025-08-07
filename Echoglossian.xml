@@ -514,6 +514,16 @@
               Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.CryptoQRCodeInstructionsText">
+            <summary>
+              Looks up a localized string similar to Scan the QR code to donate any amount.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.CryptoQrWindowLabel">
+            <summary>
+              Looks up a localized string similar to Crypto wallet QR Code.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.CurrentPluginAssetsStatus">
             <summary>
               Looks up a localized string similar to Are the plugin assets downloaded?.
@@ -620,6 +630,11 @@
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.logo">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.metamask">
             <summary>
               Looks up a localized resource of type System.Byte[].
             </summary>
@@ -774,6 +789,11 @@
               Looks up a localized string similar to Save and Close Config Window.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.SendCryptoButton">
+            <summary>
+              Looks up a localized string similar to Donate with Crypto currencies.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.SendPixButton">
             <summary>
               Looks up a localized string similar to Send me a PIX donation!.
@@ -792,6 +812,11 @@
         <member name="P:Echoglossian.Properties.Resources.SettingsForGTransText">
             <summary>
               Looks up a localized string similar to Settings for Google Translate:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForYandexPublicTransText">
+            <summary>
+              Looks up a localized string similar to Settings for Yandex Public Translator:.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsReset">
@@ -929,7 +954,7 @@
               Looks up a localized string similar to Select which kind of in-game message toasts to translate.
             </summary>
         </member>
-        <member name="M:Echoglossian.SimpleWindow.#ctor(System.String,ImGuiNET.ImGuiWindowFlags,System.Boolean,System.String,System.Boolean,System.Int32,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,ImGuiNET.ImFontPtr,System.Boolean,System.Threading.SemaphoreSlim)">
+        <member name="M:Echoglossian.SimpleWindow.#ctor(System.String,Dalamud.Bindings.ImGui.ImGuiWindowFlags,System.Boolean,System.String,System.Boolean,System.Int32,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,Dalamud.Bindings.ImGui.ImFontPtr,System.Boolean,System.Threading.SemaphoreSlim)">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.SimpleWindow"/> class.
             </summary>

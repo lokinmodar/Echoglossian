@@ -11,7 +11,7 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using Echoglossian.Properties;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace Echoglossian
 {

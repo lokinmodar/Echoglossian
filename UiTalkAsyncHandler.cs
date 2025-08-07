@@ -10,9 +10,12 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Memory;
 using Dalamud.Utility;
+
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
+
 using FFXIVClientStructs.FFXIV.Component.GUI;
+
 using Humanizer;
 
 namespace Echoglossian
@@ -81,7 +84,7 @@ namespace Echoglossian
       try
       {
         var addon = GameGuiInterface.GetAddonByName("Talk");
-        var talkAddon = (AtkUnitBase*)addon;
+        var talkAddon = (AtkUnitBase*)addon.Address;
         if (talkAddon == null || !talkAddon->IsVisible)
         {
           return;
@@ -106,7 +109,7 @@ namespace Echoglossian
         }
 
         var parentNode = talkAddon->GetNodeById(10);
-        textNode->TextFlags = (byte)(TextFlags)((byte)TextFlags.WordWrap | (byte)TextFlags.MultiLine | (byte)TextFlags.AutoAdjustNodeSize);
+        textNode->TextFlags = (TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize);
         var charCount = this.translatedText.Length;
         textNode->FontSize = (byte)(charCount >= 350 ? 11 : (charCount >= 256 ? 12 : 14));
         textNode->SetWidth(parentNode->GetWidth());
@@ -377,7 +380,7 @@ namespace Echoglossian
         case AddonEvent.PreReceiveEvent:
           // to be sure we don't show the same text twice
           var addon = GameGuiInterface.GetAddonByName("Talk");
-          var talkAddon = (AtkUnitBase*)addon;
+          var talkAddon = (AtkUnitBase*)addon.Address;
           if (talkAddon == null || !talkAddon->IsVisible)
           { return; }
 

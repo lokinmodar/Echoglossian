@@ -449,6 +449,26 @@
           <source>Translation Error:</source>
           <target state="translated" state-qualifier="mt-suggestion">Error de traducción:</target>
         </trans-unit>
+        <trans-unit id="CryptoQRCodeInstructionsText" translate="yes" xml:space="preserve">
+          <source>Scan the QR code to donate any amount</source>
+          <target state="new">Scan the QR code to donate any amount</target>
+        </trans-unit>
+        <trans-unit id="CryptoQrWindowLabel" translate="yes" xml:space="preserve">
+          <source>Crypto wallet QR Code</source>
+          <target state="new">Crypto wallet QR Code</target>
+        </trans-unit>
+        <trans-unit id="SendCryptoButton" translate="yes" xml:space="preserve">
+          <source>Donate with Crypto currencies</source>
+          <target state="new">Donate with Crypto currencies</target>
+        </trans-unit>
+        <trans-unit id="metamask" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
+          <source>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="SettingsForYandexPublicTransText" translate="yes" xml:space="preserve">
+          <source>Settings for Yandex Public Translator:</source>
+          <target state="new">Settings for Yandex Public Translator:</target>
+        </trans-unit>
       </group>
     </body>
   </file>

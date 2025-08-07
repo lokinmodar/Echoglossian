@@ -6,11 +6,12 @@
 using System;
 using System.Numerics;
 
+using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility;
 using Dalamud.Utility;
+
 using Echoglossian.Properties;
-using ImGuiNET;
-using ImGuiScene;
 
 namespace Echoglossian
 {
@@ -19,11 +20,11 @@ namespace Echoglossian
     private bool talkDisplayTranslation;
 
     private string currentNameTranslation = string.Empty;
-    private TextureWrap currentNameTranslationTexture;
+    private IDalamudTextureWrap currentNameTranslationTexture;
     private volatile int currentNameTranslationId;
 
     private string currentTalkTranslation = string.Empty;
-    private TextureWrap currentTalkTranslationTexture;
+    private IDalamudTextureWrap currentTalkTranslationTexture;
     private volatile int currentTalkTranslationId;
 
     private Vector2 talkTextDimensions = Vector2.Zero;

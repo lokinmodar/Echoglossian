@@ -15,8 +15,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Dalamud.Interface.ImGuiNotification;
+
 using Echoglossian.Properties;
+
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
+
 using Newtonsoft.Json;
 
 namespace Echoglossian
@@ -141,7 +144,8 @@ namespace Echoglossian
       Amazon = 6, // Amazon Translate
       Azure = 7, // Microsoft Azure Translate
       GoogleCloud = 8, // Google Cloud Translate
-      All = Google | Deepl | Bing | Yandex | GTranslate | Amazon | Azure | ChatGPT | GoogleCloud,
+      YandexPublic = 9, // Yandex Public Translator
+      All = Google | Deepl | Bing | Yandex | GTranslate | Amazon | Azure | ChatGPT | GoogleCloud | YandexPublic,
     }
 
     /// <summary>

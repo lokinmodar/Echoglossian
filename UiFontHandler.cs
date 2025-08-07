@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace Echoglossian;
 

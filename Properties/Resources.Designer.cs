@@ -305,6 +305,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scan the QR code to donate any amount.
+        /// </summary>
+        public static string CryptoQRCodeInstructionsText {
+            get {
+                return ResourceManager.GetString("CryptoQRCodeInstructionsText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crypto wallet QR Code.
+        /// </summary>
+        public static string CryptoQrWindowLabel {
+            get {
+                return ResourceManager.GetString("CryptoQrWindowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are the plugin assets downloaded?.
         /// </summary>
         public static string CurrentPluginAssetsStatus {
@@ -500,6 +518,16 @@ namespace Echoglossian.Properties {
         public static byte[] logo {
             get {
                 object obj = ResourceManager.GetObject("logo", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        public static byte[] metamask {
+            get {
+                object obj = ResourceManager.GetObject("metamask", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -778,6 +806,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Donate with Crypto currencies.
+        /// </summary>
+        public static string SendCryptoButton {
+            get {
+                return ResourceManager.GetString("SendCryptoButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Send me a PIX donation!.
         /// </summary>
         public static string SendPixButton {
@@ -810,6 +847,15 @@ namespace Echoglossian.Properties {
         public static string SettingsForGTransText {
             get {
                 return ResourceManager.GetString("SettingsForGTransText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings for Yandex Public Translator:.
+        /// </summary>
+        public static string SettingsForYandexPublicTransText {
+            get {
+                return ResourceManager.GetString("SettingsForYandexPublicTransText", resourceCulture);
             }
         }
         

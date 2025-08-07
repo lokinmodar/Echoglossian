@@ -1,4 +1,4 @@
-﻿<Project Sdk="Dalamud.NET.SDK/12.0.2">
+﻿<Project Sdk="Dalamud.NET.SDK/13.0.0">
   <PropertyGroup Label="MultilingualAppToolkit">
     <MultilingualAppToolkitVersion>4.0</MultilingualAppToolkitVersion>
     <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
@@ -13,7 +13,7 @@
     <Authors>lokinmodar</Authors>
     <NeutralLanguage>en</NeutralLanguage>
     <VersionMajor>3</VersionMajor>
-    <VersionMinor>21</VersionMinor>
+    <VersionMinor>22</VersionMinor>
     <VersionPatch Condition="'$(VersionPatch)' == ''">$([System.DateTime]::UtcNow.ToString("yyMM"))</VersionPatch>
     <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
@@ -238,6 +238,7 @@
     <Content Include="images\icon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\metamask.png" />
     <Content Include="Wiki82.profile.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -317,6 +318,12 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Remove="ImGui.NET" />
+    <Reference Include="Dalamud.Bindings.ImGui" Private="false" />
+    <Reference Include="Dalamud.Bindings.ImPlot" Private="false" />
+    <Reference Include="Dalamud.Bindings.ImGuizmo" Private="false" />
   </ItemGroup>
 
 </Project>

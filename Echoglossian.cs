@@ -17,6 +17,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Properties;
 
@@ -124,6 +125,7 @@ namespace Echoglossian
     private readonly IDalamudTextureWrap cutsceneChoiceImage;
     private readonly IDalamudTextureWrap talkImage;
     private readonly IDalamudTextureWrap logo;
+    private readonly IDalamudTextureWrap cryptoImage;
 
     private readonly CultureInfo cultureInfo;
 
@@ -213,6 +215,7 @@ namespace Echoglossian
 
       // this.ListCultureInfos();
       this.pixImage = TextureProvider.CreateFromImageAsync(Resources.pix).Result;
+      this.cryptoImage = TextureProvider.CreateFromImageAsync(Resources.metamask).Result;
       this.choiceImage = TextureProvider.CreateFromImageAsync(Resources.choice).Result;
       this.cutsceneChoiceImage = TextureProvider.CreateFromImageAsync(Resources.cutscenechoice).Result;
       this.talkImage = TextureProvider.CreateFromImageAsync(Resources.prttws).Result;
@@ -321,6 +324,7 @@ namespace Echoglossian
       this.uiTalkSubtitleHandler?.Dispose();
 
       this.pixImage?.Dispose();
+      this.cryptoImage?.Dispose();
       this.choiceImage?.Dispose();
       this.cutsceneChoiceImage?.Dispose();
       this.talkImage?.Dispose();

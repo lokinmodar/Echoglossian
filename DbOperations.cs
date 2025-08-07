@@ -11,7 +11,7 @@ using System.Linq;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Microsoft.EntityFrameworkCore;
 
 namespace Echoglossian

@@ -17,7 +17,7 @@ using Dalamud.Memory;
 using Echoglossian.EFCoreSqlite.Models;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Humanizer;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 using static Echoglossian.Echoglossian;
 
@@ -237,13 +237,13 @@ namespace Echoglossian
       switch (this.addonName)
       {
         case "Talk":
-          this.addonNodesFlags.Add(3, (TextFlags)((byte)TextFlags.WordWrap | (byte)TextFlags.MultiLine));
+          this.addonNodesFlags.Add(3, (TextFlags.WordWrap | TextFlags.MultiLine));
           break;
         case "_BattleTalk":
-          this.addonNodesFlags.Add(6, (TextFlags)((byte)TextFlags.WordWrap | (byte)TextFlags.MultiLine));
+          this.addonNodesFlags.Add(6, (TextFlags.WordWrap | TextFlags.MultiLine));
           break;
         case "TalkSubtitle":
-          this.addonNodesFlags.Add(3, (TextFlags)((byte)TextFlags.WordWrap | (byte)TextFlags.MultiLine));
+          this.addonNodesFlags.Add(3, (TextFlags.WordWrap | TextFlags.MultiLine));
           break;
         default:
           break;
@@ -257,7 +257,7 @@ namespace Echoglossian
       try
       {
         var addon = GameGuiInterface.GetAddonByName(this.addonName, 1);
-        foundAddon = (AtkUnitBase*)addon;
+        foundAddon = (AtkUnitBase*)addon.Address;
         if (foundAddon == null)
         {
           PluginLog.Debug($"Addon {this.addonName} not found in ExploreAddon.");
@@ -588,7 +588,7 @@ namespace Echoglossian
         var addon = GameGuiInterface.GetAddonByName(this.addonName, 1);
 
         PluginLog.Debug($"Addon {this.addonName} found in SetTranslationToAddon.");
-        foundAddon = (AtkUnitBase*)addon;
+        foundAddon = (AtkUnitBase*)addon.Address;
 
         if (foundAddon == null)
         {
@@ -771,7 +771,7 @@ namespace Echoglossian
             // messageNodeAsTextNode->TextFlags = (byte)this.addonNodesFlags[this.addonCharacteristicsInfo.MessageNodeId];
             var parentNode = foundAddon->GetNodeById(1);
             var nineGridNode = foundAddon->GetNodeById(7);
-            messageNodeAsTextNode->TextFlags = (byte)(TextFlags)((byte)TextFlags.WordWrap | (byte)TextFlags.MultiLine | (byte)TextFlags.AutoAdjustNodeSize);
+            messageNodeAsTextNode->TextFlags = (TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize);
             messageNodeAsTextNode->SetWidth((ushort)(parentNode->GetWidth() + 18));
             nineGridNode->SetWidth((ushort)(parentNode->GetWidth() + 36));
             messageNodeAsTextNode->SetText(translatedMessage);
@@ -808,7 +808,7 @@ namespace Echoglossian
         var addon = GameGuiInterface.GetAddonByName(this.addonName, 1);
 
         PluginLog.Debug($"Addon {this.addonName} found in SetTranslationToAddon.");
-        foundAddon = (AtkUnitBase*)addon;
+        foundAddon = (AtkUnitBase*)addon.Address;
 
         if (foundAddon == null)
         {

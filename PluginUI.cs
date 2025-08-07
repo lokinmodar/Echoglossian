@@ -10,7 +10,7 @@ using System.Linq;
 using System.Numerics;
 
 using Echoglossian.Properties;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace Echoglossian;
 public partial class Echoglossian
@@ -23,6 +23,13 @@ public partial class Echoglossian
     "Google Translate",
     "DeepL",
     "ChatGPT",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "YandexPublic",
   };
 
   private void EchoglossianConfigUi()
@@ -660,6 +667,12 @@ public partial class Echoglossian
             }
 
             break;
+          case 9:
+            ImGui.TextWrapped(Resources.SettingsForYandexPublicTransText);
+            ImGui.Spacing();
+            ImGui.TextWrapped(Resources.TranslationEngineSettingsNotRequired);
+            break;
+
         }
 
         ImGui.EndGroup();
@@ -726,7 +739,7 @@ public partial class Echoglossian
           ImGui.TableNextColumn();
           var posLogo = new Vector2(ImGui.GetWindowContentRegionMax().X - 300, ImGui.GetWindowContentRegionMin().Y + 150);
           ImGui.SetCursorPos(posLogo);
-          ImGui.Image(this.logo.ImGuiHandle, new Vector2(300, 300));
+          ImGui.Image(this.logo.Handle, new Vector2(300, 300));
           ImGui.EndTable();
         }
 
@@ -787,8 +800,37 @@ public partial class Echoglossian
 
     ImGui.PopStyleColor(3);
     ImGui.SameLine();
-    ImGui.PushID(4);
+    ImGui.SameLine();
+    ImGui.PushID(3);
     ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 7.0f, 0.6f, 0.6f));
+    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
+    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
+    if (ImGui.Button(Resources.SendCryptoButton))
+    {
+      saveConfig = true;
+      ImGui.OpenPopup(Resources.CryptoQrWindowLabel);
+    }
+
+    // Always center this window when appearing
+    var centerbtn = ImGui.GetMainViewport().GetCenter();
+    ImGui.SetNextWindowPos(centerbtn, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+    if (ImGui.BeginPopupModal(Resources.CryptoQrWindowLabel))
+    {
+      ImGui.Text(Resources.CryptoQRCodeInstructionsText);
+      ImGui.Image(this.cryptoImage.Handle, new Vector2(512, 512));
+      if (ImGui.Button(Resources.CloseButtonLabel))
+      {
+        ImGui.CloseCurrentPopup();
+      }
+
+      ImGui.EndPopup();
+      ImGui.SetItemDefaultFocus();
+    }
+
+    ImGui.PopStyleColor(3);
+    ImGui.PopID();
+    ImGui.PushID(4);
+    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 2.0f, 4.6f, 3.6f));
     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
     ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
     if (ImGui.Button(Resources.SendPixButton))
@@ -803,7 +845,7 @@ public partial class Echoglossian
     if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
     {
       ImGui.Text(Resources.QRCodeInstructionsText);
-      ImGui.Image(this.pixImage.ImGuiHandle, new Vector2(512, 512));
+      ImGui.Image(this.pixImage.Handle, new Vector2(512, 512));
       if (ImGui.Button(Resources.CloseButtonLabel))
       {
         ImGui.CloseCurrentPopup();
