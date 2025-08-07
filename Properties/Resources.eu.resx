@@ -345,7 +345,19 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Itzulpen-akatsa:</value>
   </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Eskaneatu QR kodea edozein diru-kopuru emateko</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Kartera kriptografikoko QR kodea</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Eman kriptomonedekin</value>
+  </data>
   <data name="metamask" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SettingsForYandexPublicTransText" xml:space="preserve">
+    <value>Yandex Public Translator-en konfigurazioa:</value>
   </data>
 </root>

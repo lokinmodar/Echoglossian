@@ -317,7 +317,19 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Oversættelsesfejl:</value>
   </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Scan QR-koden for at donere et hvilket som helst beløb</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Krypto tegnebog QR-kode</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Doner med kryptovalutaer</value>
+  </data>
   <data name="metamask" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SettingsForYandexPublicTransText" xml:space="preserve">
+    <value>Indstillinger for Yandex Public Translator:</value>
   </data>
 </root>

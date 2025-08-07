@@ -345,7 +345,19 @@
   <data name="TranslationError" xml:space="preserve">
     <value>Errore di traduzione:</value>
   </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Scansiona il codice QR per donare qualsiasi importo</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Codice QR del portafoglio crittografico</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Dona con le criptovalute</value>
+  </data>
   <data name="metamask" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SettingsForYandexPublicTransText" xml:space="preserve">
+    <value>Impostazioni per Yandex Public Translator:</value>
   </data>
 </root>
