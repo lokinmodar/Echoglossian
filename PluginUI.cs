@@ -800,11 +800,12 @@ public partial class Echoglossian
 
     ImGui.PopStyleColor(3);
     ImGui.SameLine();
-    ImGui.SameLine();
+
     ImGui.PushID(3);
-    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 7.0f, 0.6f, 0.6f));
-    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
-    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
+    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.5f, 0.95f, 0.5f, 0.90f)); // light green
+    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.60f, 1.0f, 0.60f, 0.95f)); // brighter on hover
+    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.45f, 0.87f, 0.45f, 1.00f)); // slightly deeper for active
+
     if (ImGui.Button(Resources.SendCryptoButton))
     {
       saveConfig = true;
@@ -829,10 +830,13 @@ public partial class Echoglossian
 
     ImGui.PopStyleColor(3);
     ImGui.PopID();
+
+    ImGui.SameLine();
     ImGui.PushID(4);
-    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 2.0f, 4.6f, 3.6f));
-    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
-    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
+    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.12f, 0.18f, 0.32f, 1.0f)); // dark blue
+    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.18f, 0.26f, 0.45f, 1.0f)); // lighter blue on hover
+    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.10f, 0.23f, 0.42f, 1.0f)); // accent/active blue
+
     if (ImGui.Button(Resources.SendPixButton))
     {
       saveConfig = true;
