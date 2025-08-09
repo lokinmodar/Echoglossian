@@ -7,7 +7,7 @@ using System.Net.Http.Json;
 
 using Dalamud.Plugin.Services;
 
-namespace Echoglossian.Translators;
+namespace Echoglossian;
 
 public class YandexPublicTranslator : ITranslator, IDisposable
 {

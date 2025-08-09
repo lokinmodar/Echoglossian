@@ -47,6 +47,9 @@ namespace Echoglossian
           break;
         case TransEngines.GoogleCloud:
           break;
+        case TransEngines.YandexPublic:
+          this.translator = new YandexPublicTranslator(pluginLog, config);
+          break;
         case TransEngines.All:
           break;
         // ... add cases for other translation engines
