@@ -3083,7 +3083,7 @@
             Includes Save, Donation, Project Links, and Pix QR popup.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,Dalamud.Bindings.ImGui.ImTextureID)">
+        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID)">
             <summary>
             Draws the footer section with buttons and Pix QR popup.
             </summary>
@@ -3357,6 +3357,7 @@
             <summary>
             Draws a validated input text field. Highlights red and shows warning only after first interaction.
             </summary>
+            <returns>True if the input value changed.</returns>
         </member>
         <member name="M:Echoglossian.Helpers.FieldValidationHelper.MarkFieldAsTouched(System.String)">
             <summary>
@@ -3589,6 +3590,21 @@
         <member name="P:Echoglossian.Properties.Resources.CopyTranslationToClipboardLabel">
             <summary>
               Looks up a localized string similar to Copy translation to clipboard.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.crypto">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.CryptoQRCodeInstructionsText">
+            <summary>
+              Looks up a localized string similar to Scan the QR Code to send cryptocurrency. Any amount is appreciated :).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.CryptoQrWindowLabel">
+            <summary>
+              Looks up a localized string similar to Crypto Wallet.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.CurrentPluginAssetsStatus">
@@ -3994,6 +4010,11 @@
         <member name="P:Echoglossian.Properties.Resources.SaveCloseButtonLabel">
             <summary>
               Looks up a localized string similar to Save and Close Config Window.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SendCryptoButton">
+            <summary>
+              Looks up a localized string similar to Send crypto.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SendPixButton">

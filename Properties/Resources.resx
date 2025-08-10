@@ -658,4 +658,16 @@
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Opens the Echoglossian DB Editor.</value>
   </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Scan the QR Code to send cryptocurrency. Any amount is appreciated :)</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Crypto Wallet</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Send crypto</value>
+  </data>
+  <data name="crypto" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

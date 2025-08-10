@@ -717,15 +717,31 @@
         </trans-unit>
         <trans-unit id="DataInsertedUpdatedInStringArrayDatasTable" translate="yes" xml:space="preserve">
           <source>Data inserted/updated in StringArrayDatas table.</source>
-          <target state="new">Data inserted/updated in StringArrayDatas table.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Dados inseridos/atualizados na tabela StringArrayDatas.</target>
         </trans-unit>
         <trans-unit id="ErrorSavingData" translate="yes" xml:space="preserve">
           <source>ErrorSavingData: {e}</source>
-          <target state="new">ErrorSavingData: {e}</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">ErrorSavingData: {e}</target>
         </trans-unit>
         <trans-unit id="OpensTheEchoglossianDBEditor" translate="yes" xml:space="preserve">
           <source>Opens the Echoglossian DB Editor.</source>
-          <target state="new">Opens the Echoglossian DB Editor.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Abre o Editor de banco de dados ecoglossiano.</target>
+        </trans-unit>
+        <trans-unit id="CryptoQRCodeInstructionsText" translate="yes" xml:space="preserve">
+          <source>Scan the QR Code to send cryptocurrency. Any amount is appreciated :)</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Digitalize o QR Code para enviar criptomoeda. Qualquer valor é apreciado :)</target>
+        </trans-unit>
+        <trans-unit id="CryptoQrWindowLabel" translate="yes" xml:space="preserve">
+          <source>Crypto Wallet</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Carteira de criptomoedas</target>
+        </trans-unit>
+        <trans-unit id="SendCryptoButton" translate="yes" xml:space="preserve">
+          <source>Send crypto</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Enviar criptografia</target>
+        </trans-unit>
+        <trans-unit id="crypto" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
+          <source>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
+          <target state="needs-review-translation">..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
         </trans-unit>
       </group>
     </body>

@@ -151,10 +151,7 @@ public partial class Echoglossian
 
       var parentNode = battleTalkAddon->GetNodeById(1);
       var nineGridNode = battleTalkAddon->GetNodeById(7);
-      textNode->TextFlags = (byte)(TextFlags)((byte)TextFlags.WordWrap |
-                                              (byte)TextFlags.MultiLine |
-                                              (byte)TextFlags
-                                                  .AutoAdjustNodeSize);
+      textNode->TextFlags = TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize;
       textNode->FontSize = 14;
       var timerNode = battleTalkAddon->GetNodeById(2);
       textNode->SetWidth(640);
@@ -286,10 +283,7 @@ public partial class Echoglossian
 
       var parentNode = battleTalkAddon->GetNodeById(1);
       var nineGridNode = battleTalkAddon->GetNodeById(7);
-      textNode->TextFlags = (byte)(TextFlags)((byte)TextFlags.WordWrap |
-                                              (byte)TextFlags.MultiLine |
-                                              (byte)TextFlags
-                                                  .AutoAdjustNodeSize);
+      textNode->TextFlags = TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize;
       textNode->FontSize = 14;
       var timerNode = battleTalkAddon->GetNodeById(2);
       textNode->SetWidth(640);

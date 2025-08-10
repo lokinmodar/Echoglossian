@@ -214,7 +214,8 @@ public partial class Echoglossian
         ref this.config,
         ref this.SaveConfigValue,
         () => SaveConfig(this.configuration),
-        this.pixImage.Handle);
+        this.pixImage.Handle,
+        this.cryptoImage.Handle);
 
     ImGui.End();
 

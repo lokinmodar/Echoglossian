@@ -105,6 +105,7 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly SemaphoreSlim nameTranslationSemaphore;
 
   private readonly IDalamudTextureWrap pixImage;
+  private readonly IDalamudTextureWrap cryptoImage;
 
   private readonly bool pluginAssetsState;
   private readonly SemaphoreSlim questToastTranslationSemaphore;
@@ -220,6 +221,8 @@ public partial class Echoglossian : IDalamudPlugin
     // this.ListCultureInfos();
     this.pixImage =
         TextureProvider.CreateFromImageAsync(Resources.pix).Result;
+    this.cryptoImage =
+        TextureProvider.CreateFromImageAsync(Resources.crypto).Result;
     this.choiceImage = TextureProvider
         .CreateFromImageAsync(Resources.choice).Result;
     this.cutsceneChoiceImage = TextureProvider

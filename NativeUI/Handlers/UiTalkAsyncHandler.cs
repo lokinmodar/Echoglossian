@@ -156,7 +156,7 @@ namespace Echoglossian
           translatedText = this.RemoveDiacritics(translatedText, this.SpecialCharsSupportedByGameFont);
         }
 
-        textNode->TextFlags = (byte)(TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize);
+        textNode->TextFlags = TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize;
         textNode->FontSize = (byte)(translatedText.Length >= 350 ? 11 : (translatedText.Length >= 256 ? 12 : 14));
         textNode->SetWidth(parentNode->GetWidth());
         textNode->SetText(translatedText);

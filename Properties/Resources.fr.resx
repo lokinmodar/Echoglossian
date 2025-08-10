@@ -543,4 +543,25 @@
   <data name="UseAuthentication" xml:space="preserve">
     <value>Utiliser l’authentification</value>
   </data>
+  <data name="DataInsertedUpdatedInStringArrayDatasTable" xml:space="preserve">
+    <value>Données insérées/mises à jour dans la table StringArrayDatas.</value>
+  </data>
+  <data name="ErrorSavingData" xml:space="preserve">
+    <value>ErreurSauvegardeDonnées : {e}</value>
+  </data>
+  <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
+    <value>Ouvre l’éditeur de base de données Echoglossian.</value>
+  </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Scannez le code QR pour envoyer de la crypto-monnaie. Tout montant est apprécié :)</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Portefeuille de crypto-monnaies</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Envoyer des cryptos</value>
+  </data>
+  <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

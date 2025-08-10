@@ -18,7 +18,7 @@ public static class PluginConfigWindowFooter
   /// <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
   /// <param name="saveCallback">Callback function to invoke when saving.</param>
   /// <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
-  public static void DrawFooter(ref bool config, ref bool saveConfigValue, Action saveCallback, ImTextureID pixImageHandle)
+  public static void DrawFooter(ref bool config, ref bool saveConfigValue, Action saveCallback, ImTextureID pixImageHandle, ImTextureID cryptoImageHandle)
   {
     var windowSize = ImGui.GetWindowContentRegionMax();
 
@@ -77,24 +77,54 @@ public static class PluginConfigWindowFooter
     }
 
     ImGui.PopStyleColor(3);
+    ImGui.SameLine();
+
+    // Send crypto button
+    ImGui.PushID(3);
+    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.5f, 0.95f, 0.5f, 0.90f)); // light green
+    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.60f, 1.0f, 0.60f, 0.95f)); // brighter on hover
+    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.45f, 0.87f, 0.45f, 1.00f)); // slightly deeper for active
+
+    if (ImGui.Button(Resources.SendCryptoButton))
+    {
+      saveConfigValue = true;
+      ImGui.OpenPopup(Resources.CryptoQrWindowLabel);
+    }
+
+    // Always center this window when appearing
+    var centerbtn = ImGui.GetMainViewport().GetCenter();
+    ImGui.SetNextWindowPos(centerbtn, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+
+    if (ImGui.BeginPopupModal(Resources.CryptoQrWindowLabel))
+    {
+      ImGui.Text(Resources.CryptoQRCodeInstructionsText);
+      ImGui.Image(cryptoImageHandle, new Vector2(450, 512));
+
+      if (ImGui.Button(Resources.CloseButtonLabel))
+      {
+        ImGui.CloseCurrentPopup();
+      }
+
+      ImGui.EndPopup();
+      ImGui.SetItemDefaultFocus();
+    }
+
+    ImGui.PopStyleColor(3);
+    ImGui.PopID();
+
+    ImGui.SameLine();
 
     // Pix Button
-    ImGui.SameLine();
     ImGui.PushID(4);
-    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(4, 7.0f, 0.6f, 0.6f));
-    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(4, 7.0f, 0.7f, 0.7f));
-    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(4, 7.0f, 0.8f, 0.8f));
+    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.12f, 0.18f, 0.32f, 1.0f)); // dark blue
+    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.18f, 0.26f, 0.45f, 1.0f)); // lighter blue on hover
+    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.10f, 0.23f, 0.42f, 1.0f)); // accent/active blue
 
     if (ImGui.Button(Resources.SendPixButton))
     {
       saveConfigValue = true;
       ImGui.OpenPopup(Resources.PixQrWindowLabel);
     }
-
-    ImGui.PopStyleColor(3);
-    ImGui.PopID();
-
-    ImGui.EndGroup();
 
     // Pix QR Popup
     var center = ImGui.GetMainViewport().GetCenter();
@@ -113,5 +143,10 @@ public static class PluginConfigWindowFooter
       ImGui.EndPopup();
       ImGui.SetItemDefaultFocus();
     }
+
+    ImGui.PopStyleColor(3);
+    ImGui.PopID();
+
+    ImGui.EndGroup();
   }
 }

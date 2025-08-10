@@ -486,4 +486,22 @@
   <data name="UseAuthentication" xml:space="preserve">
     <value>Usar autenticação</value>
   </data>
+  <data name="DataInsertedUpdatedInStringArrayDatasTable" xml:space="preserve">
+    <value>Dados inseridos/atualizados na tabela StringArrayDatas.</value>
+  </data>
+  <data name="ErrorSavingData" xml:space="preserve">
+    <value>ErrorSavingData: {e}</value>
+  </data>
+  <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
+    <value>Abre o Editor de banco de dados ecoglossiano.</value>
+  </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Digitalize o QR Code para enviar criptomoeda. Qualquer valor é apreciado :)</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Carteira de criptomoedas</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Enviar criptografia</value>
+  </data>
 </root>

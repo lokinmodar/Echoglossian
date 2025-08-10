@@ -431,6 +431,34 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        public static byte[] crypto {
+            get {
+                object obj = ResourceManager.GetObject("crypto", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan the QR Code to send cryptocurrency. Any amount is appreciated :).
+        /// </summary>
+        public static string CryptoQRCodeInstructionsText {
+            get {
+                return ResourceManager.GetString("CryptoQRCodeInstructionsText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crypto Wallet.
+        /// </summary>
+        public static string CryptoQrWindowLabel {
+            get {
+                return ResourceManager.GetString("CryptoQrWindowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are the plugin assets downloaded?.
         /// </summary>
         public static string CurrentPluginAssetsStatus {
@@ -1161,6 +1189,15 @@ namespace Echoglossian.Properties {
         public static string SaveCloseButtonLabel {
             get {
                 return ResourceManager.GetString("SaveCloseButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send crypto.
+        /// </summary>
+        public static string SendCryptoButton {
+            get {
+                return ResourceManager.GetString("SendCryptoButton", resourceCulture);
             }
         }
         
