@@ -1056,6 +1056,191 @@
             <param name="config">Overlay configurations.</param>
             <param name="customTitle">Custom overlay title.</param>
         </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
+            <summary>
+            Tabular view with multi-select and double-click to open editor.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.DbTableView.#ctor(System.Func{System.Collections.Generic.IReadOnlyList{Microsoft.EntityFrameworkCore.Metadata.IProperty}},System.Func{System.Collections.Generic.IList{System.Object}},System.Func{System.Collections.Generic.HashSet{System.Int32}},System.Action{System.Object})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.DbTableView"/> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.DbTableView.Draw">
+            <summary>
+            Draws the table.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.DbToolbar">
+            <summary>
+            Toolbar with paging, export, and delete controls.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.DbToolbar.#ctor(System.Action,System.Action,System.Action,System.Action{System.Int32},System.Action,System.Action,System.Action)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.DbToolbar"/> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.DbToolbar.Draw(System.String,System.Int32,System.Int32)">
+            <summary>
+            Draws the toolbar.
+            </summary>
+            <param name="title">Table title.</param>
+            <param name="page">Current page.</param>
+            <param name="pageSize">Current page size.</param>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.EditModal">
+            <summary>
+            Modal dialog for editing a single entity instance.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.EditModal.#ctor(System.Func{System.Collections.Generic.IReadOnlyList{Microsoft.EntityFrameworkCore.Metadata.IProperty}},System.Func{System.Collections.Generic.HashSet{System.String}},System.Action{System.Object},System.Action{System.Object})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.EditModal"/> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.EditModal.Open(System.Object)">
+            <summary>
+            Opens the modal for an entity.
+            </summary>
+            <param name="entity">Entity instance.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.EditModal.Close">
+            <summary>
+            Closes the modal.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.EditModal.Draw">
+            <summary>
+            Draw the modal if open.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.DbEditorWindow">
+            <summary>
+            Main DB editor window orchestrating components.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.DBManagerUI.DbEditorWindow.IsOpen">
+            <summary>
+            Controls whether the window is open and visible.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.#ctor(Echoglossian.EFCoreSqlite.EchoglossianDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.DbEditorWindow"/> class.
+            </summary>
+            <param name="dbContext">EF Core DbContext.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Draw">
+            <summary>
+            Draws the window and its components.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.InitializeTableNames">
+            <summary>
+            Initializes the entity (table) name list.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.LoadRows">
+            <summary>
+            Loads current page rows and entity metadata.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.OpenEditor(System.Object)">
+            <summary>
+            Opens the edit modal for a given entity.
+            </summary>
+            <param name="entity">Entity instance.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.OnSaveEdit(System.Object)">
+            <summary>
+            Save handler for the edit modal.
+            </summary>
+            <param name="updatedEntity">Entity with updated values already set by the modal.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.OnDeleteEdit(System.Object)">
+            <summary>
+            Delete handler for the edit modal.
+            </summary>
+            <param name="entity">Entity to delete.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.BatchDeleteSelected">
+            <summary>
+            Deletes selected items in the current page.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.ExportCsv(System.Boolean)">
+            <summary>
+            Exports CSV (selected or page) to clipboard.
+            </summary>
+            <param name="selectedOnly">True for selected, false for page.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.DrawMenuBar">
+            <summary>
+            Draws menu bar (Help).
+            </summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Services.CsvExporter">
+            <summary>
+            Builds CSV text from rows and known properties.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Services.CsvExporter.BuildCsv(System.Collections.Generic.IList{System.Object},System.Collections.Generic.IReadOnlyList{Microsoft.EntityFrameworkCore.Metadata.IProperty})">
+            <summary>
+            Builds CSV string for the given rows and properties.
+            </summary>
+            <param name="rows">Row objects.</param>
+            <param name="props">Properties to include.</param>
+            <returns>CSV text.</returns>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Services.DbMetadataCache">
+            <summary>
+            Caches scalar properties and PK names for the currently selected entity type.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Services.DbMetadataCache.CurrentScalarProps">
+            <summary>
+            Gets the cached scalar properties.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Services.DbMetadataCache.CurrentPkNames">
+            <summary>
+            Gets the cached primary key property names.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Services.DbMetadataCache.Clear">
+            <summary>
+            Clears the cache.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Services.DbMetadataCache.Cache(Microsoft.EntityFrameworkCore.Metadata.IEntityType)">
+            <summary>
+            Cache metadata for the given entity type.
+            </summary>
+            <param name="entityType">EF runtime entity type.</param>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Services.DbSetAccessor">
+            <summary>
+            Provides reflection-based access to DbContext.Set&lt;TEntity&gt;().
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Services.DbSetAccessor.GetDbSet(Microsoft.EntityFrameworkCore.DbContext,System.Type)">
+            <summary>
+            Returns a non-generic DbSet via reflection for the given entity CLR type.
+            </summary>
+            <param name="db">DbContext instance.</param>
+            <param name="entityClrType">Entity CLR type.</param>
+            <returns>DbSet instance as object.</returns>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Services.PropertyEditorRegistry">
+            <summary>Draws editors for property values by type.</summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Services.PropertyEditorRegistry.Draw(System.Reflection.PropertyInfo,System.Object@)">
+            <summary>Draws an editor for the given property; returns true if value changed.</summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Services.IPropertyEditor">
+            <summary>Editor contract.</summary>
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext">
             <summary>
                 Represents the database context for Echoglossian translations.
@@ -3111,37 +3296,6 @@
                 is set.
             </param>
             <param name="label">The label used to identify the prompt editor instance.</param>
-        </member>
-        <member name="T:Echoglossian.PluginUI.DbEditorWindow">
-            <summary>
-            ImGui window for browsing and editing the Echoglossian EFCore SQLite database.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.PluginUI.DbEditorWindow.IsOpen">
-            <summary>
-            Controls whether the window is open and visible.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.PluginUI.DbEditorWindow.#ctor(Echoglossian.EFCoreSqlite.EchoglossianDbContext)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.PluginUI.DbEditorWindow"/> class.
-            </summary>
-            <param name="dbContext">The EFCore DB context.</param>
-        </member>
-        <member name="M:Echoglossian.PluginUI.DbEditorWindow.Draw">
-            <summary>
-            Draws the DB editor ImGui window.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.PluginUI.DbEditorWindow.InitializeTableNames">
-            <summary>
-            Loads the list of table/entity names from the DbContext model.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.PluginUI.DbEditorWindow.LoadRows">
-            <summary>
-            Loads records for the currently selected table and page.
-            </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.DeepLEngineUI">
             <summary>

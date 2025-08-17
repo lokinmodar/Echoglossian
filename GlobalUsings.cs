@@ -27,6 +27,7 @@ global using System.Web;
 
 global using AutoCtor;
 
+global using Dalamud.Bindings.ImGui;
 global using Dalamud.Game;
 global using Dalamud.Game.Addon.Lifecycle;
 global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -48,6 +49,9 @@ global using Dalamud.Utility;
 
 global using static Echoglossian.Echoglossian;
 
+global using Echoglossian.DBManagerUI;
+global using Echoglossian.DBManagerUI.Components;
+global using Echoglossian.DBManagerUI.Services;
 global using Echoglossian.EFCoreSqlite;
 global using Echoglossian.EFCoreSqlite.Models;
 global using Echoglossian.EFCoreSqlite.Models.Journal;
@@ -76,10 +80,9 @@ global using HtmlAgilityPack;
 
 global using Humanizer;
 
-global using Dalamud.Bindings.ImGui;
-
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Design;
+global using Microsoft.EntityFrameworkCore.Metadata;
 
 global using Newtonsoft.Json;
 global using Newtonsoft.Json.Linq;
