@@ -1123,6 +1123,17 @@
             Draw the modal if open.
             </summary>
         </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.EditModal.ApplyEdits(System.Object)">
+            <summary>
+            Applies edited values (skips PK/date/Original* fields).
+            </summary>
+            <param name="target">Entity instance to update.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.EditModal.DrawEditorForValue(System.Type,System.String,System.Object)">
+            <summary>
+            Draws editors for supported types. Strings are multiline with wrapping.
+            </summary>
+        </member>
         <member name="T:Echoglossian.DBManagerUI.DbEditorWindow">
             <summary>
             Main DB editor window orchestrating components.

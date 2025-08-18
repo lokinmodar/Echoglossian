@@ -89,19 +89,20 @@ namespace Echoglossian.DBManagerUI.Components
         return;
       }
 
-      // Open the popup at a stable point in the frame (prevents timing issues inside tables/children).
       if (this.pendingOpen)
       {
         this.pendingOpen = false;
         ImGui.OpenPopup(PopupLabel);
       }
 
-      // Always center this window when appearing
+      // sensible size + allow resizing
       var center = ImGui.GetMainViewport().GetCenter();
       ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+      ImGui.SetNextWindowSize(new Vector2(720, 520), ImGuiCond.Appearing);
+      ImGui.SetNextWindowSizeConstraints(new Vector2(420, 320), new Vector2(6000, 4000));
 
       bool open = true;
-      if (ImGui.BeginPopupModal(PopupLabel, ref open, ImGuiWindowFlags.AlwaysAutoResize))
+      if (ImGui.BeginPopupModal(PopupLabel, ref open, ImGuiWindowFlags.None))
       {
         var props = this.getScalarProps();
         var pkNames = this.getPkNames();
@@ -121,21 +122,34 @@ namespace Echoglossian.DBManagerUI.Components
               pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?) ||
               pi.PropertyType == typeof(DateTimeOffset) || pi.PropertyType == typeof(DateTimeOffset?);
 
-            bool editable = !isPk && !isDate && pi.CanWrite;
+            // new: "Original*" fields are read-only text
+            bool isOriginal = name.StartsWith("Original", StringComparison.OrdinalIgnoreCase);
+
+            bool editable = !isPk && !isDate && !isOriginal && pi.CanWrite;
 
             ImGui.PushID(name);
             ImGui.TextUnformatted(name);
-            ImGui.SameLine(220);
+            ImGui.SameLine(240);
 
             object? current = this.edited.TryGetValue(name, out var v) ? v : null;
 
             if (!editable)
             {
-              ImGui.TextDisabled(this.RenderCellValue(current));
+              // read-only, wrapped text (handles Original*, PKs, dates, or non-writable)
+              if (current is string sro)
+              {
+                ImGui.PushTextWrapPos();
+                ImGui.TextWrapped(sro);
+                ImGui.PopTextWrapPos();
+              }
+              else
+              {
+                ImGui.TextDisabled(this.RenderCellValue(current));
+              }
             }
             else
             {
-              // minimal inline editors (string/int/float/double/bool/enum); extend as needed
+              // editable
               this.DrawEditorForValue(pi.PropertyType, name, current);
             }
 
@@ -181,6 +195,10 @@ namespace Echoglossian.DBManagerUI.Components
       }
     }
 
+    /// <summary>
+    /// Applies edited values (skips PK/date/Original* fields).
+    /// </summary>
+    /// <param name="target">Entity instance to update.</param>
     private void ApplyEdits(object target)
     {
       var props = this.getScalarProps();
@@ -201,8 +219,9 @@ namespace Echoglossian.DBManagerUI.Components
         bool isDate =
           pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?) ||
           pi.PropertyType == typeof(DateTimeOffset) || pi.PropertyType == typeof(DateTimeOffset?);
+        bool isOriginal = prop.Name.StartsWith("Original", StringComparison.OrdinalIgnoreCase);
 
-        if (isPk || isDate)
+        if (isPk || isDate || isOriginal)
         {
           continue;
         }
@@ -220,18 +239,25 @@ namespace Echoglossian.DBManagerUI.Components
           }
           catch
           {
-            // Ignore conversion/set errors; keep existing value.
+            // ignore conversion/set errors; keep existing value
           }
         }
       }
     }
 
+    /// <summary>
+    /// Draws editors for supported types. Strings are multiline with wrapping.
+    /// </summary>
     private void DrawEditorForValue(Type type, string propName, object? current)
     {
       if (type == typeof(string))
       {
         string s = current as string ?? string.Empty;
-        if (ImGui.InputText("##txt", ref s, 4096))
+
+        // multiline text input with wrapping and flexible width
+        var height = ImGui.GetTextLineHeight() * 6.0f; // ~6 lines tall
+        var size = new Vector2(-1, height);            // full width of column
+        if (ImGui.InputTextMultiline("##txt", ref s, 65536, size, ImGuiInputTextFlags.None))
         {
           this.edited[propName] = s;
         }
@@ -322,10 +348,15 @@ namespace Echoglossian.DBManagerUI.Components
         return;
       }
 
-      string f = current?.ToString() ?? string.Empty;
-      if (ImGui.InputText("##txt", ref f, 2048))
+      // fallback: simple text round-trip
       {
-        this.edited[propName] = f;
+        string f = current?.ToString() ?? string.Empty;
+        var height = ImGui.GetTextLineHeight() * 4.0f;
+        var size = new Vector2(-1, height);
+        if (ImGui.InputTextMultiline("##txt", ref f, 8192, size, ImGuiInputTextFlags.None))
+        {
+          this.edited[propName] = f;
+        }
       }
     }
 
