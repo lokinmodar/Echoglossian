@@ -2,11 +2,10 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the CC BY-NC-ND 4.0 International Public License.
 // </copyright>
-
 namespace Echoglossian.DBManagerUI.Components
 {
   /// <summary>
-  /// Tabular view with multi-select and double-click to open editor.
+  /// Tabular view with multi-select and reliable double-click to open editor.
   /// </summary>
   public class DbTableView
   {
@@ -18,6 +17,10 @@ namespace Echoglossian.DBManagerUI.Components
     /// <summary>
     /// Initializes a new instance of the <see cref="DbTableView"/> class.
     /// </summary>
+    /// <param name="getScalarProps">Accessor for current scalar properties.</param>
+    /// <param name="getRows">Accessor for current page rows.</param>
+    /// <param name="getSelection">Accessor for current selection hash set.</param>
+    /// <param name="onRowDoubleClick">Callback when a row is double-clicked.</param>
     public DbTableView(
       Func<IReadOnlyList<IProperty>?> getScalarProps,
       Func<IList<object>?> getRows,
@@ -31,7 +34,7 @@ namespace Echoglossian.DBManagerUI.Components
     }
 
     /// <summary>
-    /// Draws the table.
+    /// Draws the table and handles selection and double-click.
     /// </summary>
     public void Draw()
     {
@@ -40,19 +43,19 @@ namespace Echoglossian.DBManagerUI.Components
 
       if (rows == null)
       {
-        ImGui.Text("No records loaded.");
+        ImGui.Text(Resources.NoRecordsLoaded);
         return;
       }
 
       if (rows.Count == 0)
       {
-        ImGui.Text("No records found in this table.");
+        ImGui.Text(Resources.NoRecordsFoundInThisTable);
         return;
       }
 
       if (props == null || props.Count == 0)
       {
-        ImGui.Text("No scalar properties to display.");
+        ImGui.Text(Resources.NoScalarPropertiesToDisplay);
         return;
       }
 
@@ -79,6 +82,7 @@ namespace Echoglossian.DBManagerUI.Components
 
           ImGui.TableNextRow();
 
+          // Selection checkbox column
           ImGui.TableSetColumnIndex(0);
           bool isSelected = selection.Contains(i);
           if (ImGui.Checkbox($"##chk{i}", ref isSelected))
@@ -93,6 +97,7 @@ namespace Echoglossian.DBManagerUI.Components
             }
           }
 
+          // Data columns
           for (int c = 0; c < props.Count; c++)
           {
             var prop = props[c];
@@ -102,8 +107,12 @@ namespace Echoglossian.DBManagerUI.Components
             string text = this.RenderCellValue(val);
 
             ImGui.PushID(i * 10000 + c);
-            bool clicked = ImGui.Selectable(text, false, ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick);
-            if (clicked && ImGui.IsMouseDoubleClicked(0))
+
+            // Draw the selectable cell
+            ImGui.Selectable(text, false, ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick);
+
+            // Reliable double-click detection on the just-drawn item
+            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
             {
               this.onRowDoubleClick(row);
             }

@@ -564,4 +564,79 @@
   <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Δεν είναι δυνατή η φόρτωση οντότητας για επεξεργασία.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Διαγράφω</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Δεν έχουν φορτωθεί εγγραφές.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Δεν βρέθηκαν εγγραφές σε αυτόν τον πίνακα.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Δεν υπάρχουν ανυσματικές ιδιότητες για εμφάνιση.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Φορτώσετε εκ νέου</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Προηγούμενο</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Σελίδα</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Επόμενος</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Μέγεθος σελίδας:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Εξαγωγή επιλεγμένου CSV</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Εξαγωγή σελίδας CSV</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Διαγραφή επιλεγμένων</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Echoglossian DB Editor</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Επιλέξτε έναν πίνακα για να προβάλετε τις εγγραφές του.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Τραπέζι</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Η εγγραφή αποθηκεύτηκε!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Η εγγραφή διαγράφηκε</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Διαγραμμένες εγγραφές {toDelete.Count}</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Αντιγραφή {σειρές. Count} εγγραφές στο πρόχειρο</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Βοήθεια</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Συμβουλή: Κάντε διπλό κλικ σε μια γραμμή για επεξεργασία.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV Εξαγωγή αντιγράφων στο πρόχειρο</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Φορτωμένες εγγραφές {this.currentRows.Count}</value>
+  </data>
 </root>

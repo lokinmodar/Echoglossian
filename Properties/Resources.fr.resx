@@ -564,4 +564,79 @@
   <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Impossible de charger l’entité pour la modifier.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Aucun enregistrement n’est chargé.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Aucun document n’a été trouvé dans ce tableau.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Pas de propriétés scalaires à afficher.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Recharger</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Prev</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Prochain</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Taille de la page :</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Exporter le fichier CSV sélectionné</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Exporter le CSV de la page</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Supprimer la sélection</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Éditeur de base de données Echoglossian</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Sélectionnez une table pour afficher ses enregistrements.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Enregistrement sauvegardé !</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Enregistrement supprimé</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Enregistrements {toDelete.Count} supprimés</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Copié {lignes. Compter} les enregistrements dans le presse-papiers</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Aide</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Astuce : Double-cliquez sur une ligne à modifier.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV : Exporter des copies dans le presse-papiers</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Enregistrements {this.currentRows.Count} chargés</value>
+  </data>
 </root>

@@ -61,6 +61,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to |.
+        /// </summary>
+        public static string _ {
+            get {
+                return ResourceManager.GetString("_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to AI Translator Prompt Customization.
         /// </summary>
         public static string AITranslatorPromptCustomization {
@@ -413,6 +422,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copied {0} records to clipboard.
+        /// </summary>
+        public static string CopiedNRecordsToClipboard {
+            get {
+                return ResourceManager.GetString("CopiedNRecordsToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy Preview.
         /// </summary>
         public static string CopyPreview {
@@ -455,6 +473,15 @@ namespace Echoglossian.Properties {
         public static string CryptoQrWindowLabel {
             get {
                 return ResourceManager.GetString("CryptoQrWindowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CSV Export copies to clipboard.
+        /// </summary>
+        public static string CSVExportCopiesToClipboard {
+            get {
+                return ResourceManager.GetString("CSVExportCopiesToClipboard", resourceCulture);
             }
         }
         
@@ -532,6 +559,33 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Delete {
+            get {
+                return ResourceManager.GetString("Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleted {0} Records.
+        /// </summary>
+        public static string DeletedNRecords {
+            get {
+                return ResourceManager.GetString("DeletedNRecords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Selected.
+        /// </summary>
+        public static string DeleteSelected {
+            get {
+                return ResourceManager.GetString("DeleteSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
         /// </summary>
         public static string DisclaimerText1 {
@@ -577,6 +631,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Echoglossian DB Editor.
+        /// </summary>
+        public static string EchoglossianDBEditor {
+            get {
+                return ResourceManager.GetString("EchoglossianDBEditor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attention!.
         /// </summary>
         public static string EchoglossianPathModal {
@@ -613,11 +676,29 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ErrorSavingData: {e}.
+        ///   Looks up a localized string similar to ErrorSavingData: {0}.
         /// </summary>
         public static string ErrorSavingData {
             get {
                 return ResourceManager.GetString("ErrorSavingData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export Page CSV.
+        /// </summary>
+        public static string ExportPageCSV {
+            get {
+                return ResourceManager.GetString("ExportPageCSV", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export Selected CSV.
+        /// </summary>
+        public static string ExportSelectedCSV {
+            get {
+                return ResourceManager.GetString("ExportSelectedCSV", resourceCulture);
             }
         }
         
@@ -663,6 +744,15 @@ namespace Echoglossian.Properties {
         public static string GeminiTranslationUnavailablePleaseCheckYourAPIKey {
             get {
                 return ResourceManager.GetString("GeminiTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        public static string Help {
+            get {
+                return ResourceManager.GetString("Help", resourceCulture);
             }
         }
         
@@ -766,6 +856,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loaded {0} records.
+        /// </summary>
+        public static string LoadedNRecords {
+            get {
+                return ResourceManager.GetString("LoadedNRecords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         public static byte[] logo {
@@ -845,6 +944,42 @@ namespace Echoglossian.Properties {
         public static string NEListText {
             get {
                 return ResourceManager.GetString("NEListText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Next.
+        /// </summary>
+        public static string Next {
+            get {
+                return ResourceManager.GetString("Next", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No records found in this table..
+        /// </summary>
+        public static string NoRecordsFoundInThisTable {
+            get {
+                return ResourceManager.GetString("NoRecordsFoundInThisTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No records loaded..
+        /// </summary>
+        public static string NoRecordsLoaded {
+            get {
+                return ResourceManager.GetString("NoRecordsLoaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No scalar properties to display..
+        /// </summary>
+        public static string NoScalarPropertiesToDisplay {
+            get {
+                return ResourceManager.GetString("NoScalarPropertiesToDisplay", resourceCulture);
             }
         }
         
@@ -984,6 +1119,24 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Page.
+        /// </summary>
+        public static string Page {
+            get {
+                return ResourceManager.GetString("Page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Page size:.
+        /// </summary>
+        public static string PageSize {
+            get {
+                return ResourceManager.GetString("PageSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder).
         /// </summary>
         public static string PathInputInstructions {
@@ -1075,6 +1228,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prev.
+        /// </summary>
+        public static string Prev {
+            get {
+                return ResourceManager.GetString("Prev", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Preview.
         /// </summary>
         public static string Preview {
@@ -1112,11 +1274,38 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Record Deleted.
+        /// </summary>
+        public static string RecordDeleted {
+            get {
+                return ResourceManager.GetString("RecordDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Record Saved!.
+        /// </summary>
+        public static string RecordSaved {
+            get {
+                return ResourceManager.GetString("RecordSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Region.
         /// </summary>
         public static string Region {
             get {
                 return ResourceManager.GetString("Region", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reload.
+        /// </summary>
+        public static string Reload {
+            get {
+                return ResourceManager.GetString("Reload", resourceCulture);
             }
         }
         
@@ -1189,6 +1378,15 @@ namespace Echoglossian.Properties {
         public static string SaveCloseButtonLabel {
             get {
                 return ResourceManager.GetString("SaveCloseButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a table to view its records..
+        /// </summary>
+        public static string SelectATableToViewItsRecords {
+            get {
+                return ResourceManager.GetString("SelectATableToViewItsRecords", resourceCulture);
             }
         }
         
@@ -1373,6 +1571,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Table.
+        /// </summary>
+        public static string Table {
+            get {
+                return ResourceManager.GetString("Table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Talk.
         /// </summary>
         public static string TalkTabTitle {
@@ -1387,6 +1594,15 @@ namespace Echoglossian.Properties {
         public static string Temperature {
             get {
                 return ResourceManager.GetString("Temperature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tip: Double-click a row to edit..
+        /// </summary>
+        public static string TipDoubleClickARowToEdit {
+            get {
+                return ResourceManager.GetString("TipDoubleClickARowToEdit", resourceCulture);
             }
         }
         
@@ -1639,6 +1855,15 @@ namespace Echoglossian.Properties {
         public static string TranslationsEnabled {
             get {
                 return ResourceManager.GetString("TranslationsEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load entity for editing..
+        /// </summary>
+        public static string UnableToLoadEntityForEditing {
+            get {
+                return ResourceManager.GetString("UnableToLoadEntityForEditing", resourceCulture);
             }
         }
         

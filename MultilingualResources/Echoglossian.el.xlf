@@ -720,8 +720,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Δεδομένα που εισάγονται/ενημερώνονται στον πίνακα StringArrayDatas.</target>
         </trans-unit>
         <trans-unit id="ErrorSavingData" translate="yes" xml:space="preserve">
-          <source>ErrorSavingData: {e}</source>
+          <source>ErrorSavingData: {0}</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">ErrorSavingData: {e}</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OpensTheEchoglossianDBEditor" translate="yes" xml:space="preserve">
           <source>Opens the Echoglossian DB Editor.</source>
@@ -742,6 +743,109 @@
         <trans-unit id="crypto" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
           <source>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="UnableToLoadEntityForEditing" translate="yes" xml:space="preserve">
+          <source>Unable to load entity for editing.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Δεν είναι δυνατή η φόρτωση οντότητας για επεξεργασία.</target>
+        </trans-unit>
+        <trans-unit id="Delete" translate="yes" xml:space="preserve">
+          <source>Delete</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Διαγράφω</target>
+        </trans-unit>
+        <trans-unit id="NoRecordsLoaded" translate="yes" xml:space="preserve">
+          <source>No records loaded.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Δεν έχουν φορτωθεί εγγραφές.</target>
+        </trans-unit>
+        <trans-unit id="NoRecordsFoundInThisTable" translate="yes" xml:space="preserve">
+          <source>No records found in this table.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Δεν βρέθηκαν εγγραφές σε αυτόν τον πίνακα.</target>
+        </trans-unit>
+        <trans-unit id="NoScalarPropertiesToDisplay" translate="yes" xml:space="preserve">
+          <source>No scalar properties to display.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Δεν υπάρχουν ανυσματικές ιδιότητες για εμφάνιση.</target>
+        </trans-unit>
+        <trans-unit id="Reload" translate="yes" xml:space="preserve">
+          <source>Reload</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Φορτώσετε εκ νέου</target>
+        </trans-unit>
+        <trans-unit id="Prev" translate="yes" xml:space="preserve">
+          <source>Prev</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Προηγούμενο</target>
+        </trans-unit>
+        <trans-unit id="Page" translate="yes" xml:space="preserve">
+          <source>Page</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Σελίδα</target>
+        </trans-unit>
+        <trans-unit id="Next" translate="yes" xml:space="preserve">
+          <source>Next</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Επόμενος</target>
+        </trans-unit>
+        <trans-unit id="_" translate="yes" xml:space="preserve">
+          <source>|</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">|</target>
+        </trans-unit>
+        <trans-unit id="PageSize" translate="yes" xml:space="preserve">
+          <source>Page size:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Μέγεθος σελίδας:</target>
+        </trans-unit>
+        <trans-unit id="ExportSelectedCSV" translate="yes" xml:space="preserve">
+          <source>Export Selected CSV</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Εξαγωγή επιλεγμένου CSV</target>
+        </trans-unit>
+        <trans-unit id="ExportPageCSV" translate="yes" xml:space="preserve">
+          <source>Export Page CSV</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Εξαγωγή σελίδας CSV</target>
+        </trans-unit>
+        <trans-unit id="DeleteSelected" translate="yes" xml:space="preserve">
+          <source>Delete Selected</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Διαγραφή επιλεγμένων</target>
+        </trans-unit>
+        <trans-unit id="EchoglossianDBEditor" translate="yes" xml:space="preserve">
+          <source>Echoglossian DB Editor</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian DB Editor</target>
+        </trans-unit>
+        <trans-unit id="SelectATableToViewItsRecords" translate="yes" xml:space="preserve">
+          <source>Select a table to view its records.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Επιλέξτε έναν πίνακα για να προβάλετε τις εγγραφές του.</target>
+        </trans-unit>
+        <trans-unit id="Table" translate="yes" xml:space="preserve">
+          <source>Table</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Τραπέζι</target>
+        </trans-unit>
+        <trans-unit id="RecordSaved" translate="yes" xml:space="preserve">
+          <source>Record Saved!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Η εγγραφή αποθηκεύτηκε!</target>
+        </trans-unit>
+        <trans-unit id="RecordDeleted" translate="yes" xml:space="preserve">
+          <source>Record Deleted</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Η εγγραφή διαγράφηκε</target>
+        </trans-unit>
+        <trans-unit id="DeletedNRecords" translate="yes" xml:space="preserve">
+          <source>Deleted {0} Records</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Διαγραμμένες εγγραφές {toDelete.Count}</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+        </trans-unit>
+        <trans-unit id="CopiedNRecordsToClipboard" translate="yes" xml:space="preserve">
+          <source>Copied {0} records to clipboard</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Αντιγραφή {σειρές. Count} εγγραφές στο πρόχειρο</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+        </trans-unit>
+        <trans-unit id="Help" translate="yes" xml:space="preserve">
+          <source>Help</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Βοήθεια</target>
+        </trans-unit>
+        <trans-unit id="TipDoubleClickARowToEdit" translate="yes" xml:space="preserve">
+          <source>Tip: Double-click a row to edit.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Συμβουλή: Κάντε διπλό κλικ σε μια γραμμή για επεξεργασία.</target>
+        </trans-unit>
+        <trans-unit id="CSVExportCopiesToClipboard" translate="yes" xml:space="preserve">
+          <source>CSV Export copies to clipboard</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">CSV Εξαγωγή αντιγράφων στο πρόχειρο</target>
+        </trans-unit>
+        <trans-unit id="LoadedNRecords" translate="yes" xml:space="preserve">
+          <source>Loaded {0} records</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Φορτωμένες εγγραφές {this.currentRows.Count}</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
       </group>
     </body>

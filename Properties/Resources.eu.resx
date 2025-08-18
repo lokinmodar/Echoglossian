@@ -564,4 +564,79 @@
   <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Ezin da erakundea kargatu editatzeko.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Ezabatu</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Ez da miaketarik egin.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Ez zen miaketarik aurkitu taula honetan.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Ez erakusteko propietate eskalarrik.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Kargatu</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Prev</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Orrialdea</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Hurrengo</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Orriaren tamaina:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Hautatutako CSV Esportatu</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Orria entzun Orria entzun CSV esportatzea</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Hautatutako ezabatzea</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Ekoglosiar datu-basearen editorea</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Erregistroak ikusteko taula bat hautatu.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Mahaia</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Gordetako erregistroa!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Erregistro ezabatua</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Ezabatutako erregistroak {toDelete.Count}</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Kopiatu {errenkadak. Erregistroak kontatzea</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Laguntza</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Kontseilua: Egin klik bikoitza ilara batean, editatzeko.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV kopiak esportatu</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>{this.currentRows.Count} erregistroak kargatuta</value>
+  </data>
 </root>

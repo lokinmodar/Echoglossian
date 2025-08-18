@@ -1,5 +1,7 @@
-﻿// © lokinmodar — CC BY-NC-ND 4.0
-// File: DbSetAccessor.cs
+﻿// <copyright file="DbSetAccessor.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
 
 namespace Echoglossian.DBManagerUI.Services
 {

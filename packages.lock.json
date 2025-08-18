@@ -10,18 +10,12 @@
       },
       "AWSSDK.Translate": {
         "type": "Direct",
-        "requested": "[4.0.0.16, )",
-        "resolved": "4.0.0.16",
-        "contentHash": "5ASwruxRxrnk9CcpbiXwongg5e5jdveULpyKFf3QQfS1OZSLRpJAlOjIlYJE9E8fFSrOvb4uWU1+66gkV5ZepA==",
+        "requested": "[4.0.0.19, )",
+        "resolved": "4.0.0.19",
+        "contentHash": "6UXlJ1gxig1NOlGp6hxPOAA1nTvWBRdjLBo7K+zXgpWQTbYwmNh6IDohimnh0bpWHIiEEBLC4Mi4ZmxbIKa1ow==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.0.20, 5.0.0)"
+          "AWSSDK.Core": "[4.0.0.23, 5.0.0)"
         }
-      },
-      "Dalamud.NET.Sdk": {
-        "type": "Direct",
-        "requested": "[12.0.2, )",
-        "resolved": "12.0.2",
-        "contentHash": "mk3PGjucPPljrZNZvB3x4P8Pshw8mbEFnlJFAm1iViPq/9o8BPkyd+mr84ZYnu0PliWKN5cBxKKDtRH3sBSKpg=="
       },
       "DalamudPackager": {
         "type": "Direct",
@@ -164,8 +158,8 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "4.0.0.20",
-        "contentHash": "aqL1FHNjOyS8nVPn+YeQlboynoYSHM5tcLlM2clu3WaiTTkldOk8vYgJ3sMdT8ZUEtCEMXx8Z9Hf5RQDZH0TQA=="
+        "resolved": "4.0.0.23",
+        "contentHash": "Cu34rzkmkMoRnGBTO4e/vFIleBUljnDEU+n009LreGAPwxFosrEgO34VVxXJLJFuqOa1d2Rj20GGe35xJ8uyjA=="
       },
       "Humanizer.Core": {
         "type": "Transitive",

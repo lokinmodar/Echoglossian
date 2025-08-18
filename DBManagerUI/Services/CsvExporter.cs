@@ -1,5 +1,7 @@
-﻿// © lokinmodar — CC BY-NC-ND 4.0
-// File: CsvExporter.cs
+﻿// <copyright file="CsvExporter.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
 
 namespace Echoglossian.DBManagerUI.Services
 {
@@ -60,7 +62,11 @@ namespace Echoglossian.DBManagerUI.Services
 
     private object? SafeGetValue(object obj, PropertyInfo pi)
     {
-      try { return pi.GetValue(obj); } catch { return null; }
+      try
+      {
+        return pi.GetValue(obj);
+      }
+      catch { return null; }
     }
 
     private string RenderCellValue(object? val)

@@ -564,4 +564,79 @@
   <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Não é possível carregar a entidade para edição.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Excluir</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Nenhum registro carregado.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Nenhum registro encontrado nesta tabela.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Nenhuma propriedade escalar a ser exibida.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Recarregar</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Prev</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Página</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Próximo</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Tamanho da página:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Exportar CSV selecionado</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Exportar CSV da página</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Excluir selecionados</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Editor de banco de dados ecoglossiano</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Selecione uma tabela para exibir seus registros.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Mesa</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Registro salvo!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Registro excluído</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Registros {toDelete.Count} excluídos</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Copiado {linhas. Contar} registros para a área de transferência</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Ajuda</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Dica: Clique duas vezes em uma linha para editar.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV Exportar cópias para a área de transferência</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Registros {this.currentRows.Count} carregados</value>
+  </data>
 </root>

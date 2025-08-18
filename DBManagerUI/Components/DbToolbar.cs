@@ -50,34 +50,34 @@ namespace Echoglossian.DBManagerUI.Components
       ImGui.TextUnformatted(title);
 
       ImGui.SameLine();
-      if (ImGui.Button("Reload"))
+      if (ImGui.Button(Resources.Reload))
       {
         this.onReload();
       }
 
       ImGui.SameLine();
-      ImGui.Text("|");
+      ImGui.Text(Resources._);
 
       ImGui.SameLine();
-      if (ImGui.Button("Prev") && page > 0)
+      if (ImGui.Button(Resources.Prev) && page > 0)
       {
         this.onPrev();
       }
 
       ImGui.SameLine();
-      ImGui.Text($"Page {page + 1}");
+      ImGui.Text($"{Resources.Page} {page + 1}");
 
       ImGui.SameLine();
-      if (ImGui.Button("Next"))
+      if (ImGui.Button(Resources.Next))
       {
         this.onNext();
       }
 
       ImGui.SameLine();
-      ImGui.Text("|");
+      ImGui.Text(Resources._);
 
       ImGui.SameLine();
-      ImGui.Text("Page size:");
+      ImGui.Text(Resources.PageSize);
       ImGui.SameLine();
 
       int localSize = pageSize;
@@ -95,19 +95,19 @@ namespace Echoglossian.DBManagerUI.Components
       float buttonWidth = 140f;
 
       ImGui.SameLine(right - (buttonWidth * 3.0f) - 12.0f);
-      if (ImGui.Button("Export Selected CSV"))
+      if (ImGui.Button(Resources.ExportSelectedCSV))
       {
         this.onExportSelected();
       }
 
       ImGui.SameLine();
-      if (ImGui.Button("Export Page CSV"))
+      if (ImGui.Button(Resources.ExportPageCSV))
       {
         this.onExportPage();
       }
 
       ImGui.SameLine();
-      if (ImGui.Button("Delete Selected"))
+      if (ImGui.Button(Resources.DeleteSelected))
       {
         this.onDeleteSelected();
       }

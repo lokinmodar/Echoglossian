@@ -16,13 +16,21 @@ namespace Echoglossian.DBManagerUI.Components
     private readonly Action<object> onDelete;
 
     private bool isOpen = false;
+    private bool pendingOpen = false; // defer OpenPopup to Draw()
     private object? entity;
     private Type? entityType;
     private readonly Dictionary<string, object?> edited = new();
 
+    // Stable popup label: visible title before ###, unique ID after.
+    private const string PopupLabel = "Edit Record###EglodbEditModal";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="EditModal"/> class.
     /// </summary>
+    /// <param name="getScalarProps">Accessor for scalar properties.</param>
+    /// <param name="getPkNames">Accessor for PK names.</param>
+    /// <param name="onSave">Callback on save.</param>
+    /// <param name="onDelete">Callback on delete.</param>
     public EditModal(
       Func<IReadOnlyList<IProperty>?> getScalarProps,
       Func<HashSet<string>?> getPkNames,
@@ -56,11 +64,11 @@ namespace Echoglossian.DBManagerUI.Components
       }
 
       this.isOpen = true;
-      ImGui.OpenPopup("Edit Record");
+      this.pendingOpen = true; // do ImGui.OpenPopup in Draw()
     }
 
     /// <summary>
-    /// Closes the modal.
+    /// Closes the modal and clears state.
     /// </summary>
     public void Close()
     {
@@ -68,6 +76,7 @@ namespace Echoglossian.DBManagerUI.Components
       this.entity = null;
       this.entityType = null;
       this.edited.Clear();
+      this.pendingOpen = false;
     }
 
     /// <summary>
@@ -80,15 +89,26 @@ namespace Echoglossian.DBManagerUI.Components
         return;
       }
 
+      // Open the popup at a stable point in the frame (prevents timing issues inside tables/children).
+      if (this.pendingOpen)
+      {
+        this.pendingOpen = false;
+        ImGui.OpenPopup(PopupLabel);
+      }
+
+      // Always center this window when appearing
+      var center = ImGui.GetMainViewport().GetCenter();
+      ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+
       bool open = true;
-      if (ImGui.BeginPopupModal("Edit Record", ref open, ImGuiWindowFlags.AlwaysAutoResize))
+      if (ImGui.BeginPopupModal(PopupLabel, ref open, ImGuiWindowFlags.AlwaysAutoResize))
       {
         var props = this.getScalarProps();
         var pkNames = this.getPkNames();
 
         if (this.entity == null || this.entityType == null || props == null)
         {
-          ImGui.TextColored(new Vector4(1, 0.4f, 0.4f, 1), "Unable to load entity for editing.");
+          ImGui.TextColored(new Vector4(1f, 0.4f, 0.4f, 1f), Resources.UnableToLoadEntityForEditing);
         }
         else
         {
@@ -97,8 +117,9 @@ namespace Echoglossian.DBManagerUI.Components
             string name = prop.Name;
             var pi = prop.PropertyInfo!;
             bool isPk = pkNames != null && pkNames.Contains(name);
-            bool isDate = pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?)
-                          || pi.PropertyType == typeof(DateTimeOffset) || pi.PropertyType == typeof(DateTimeOffset?);
+            bool isDate =
+              pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?) ||
+              pi.PropertyType == typeof(DateTimeOffset) || pi.PropertyType == typeof(DateTimeOffset?);
 
             bool editable = !isPk && !isDate && pi.CanWrite;
 
@@ -114,6 +135,7 @@ namespace Echoglossian.DBManagerUI.Components
             }
             else
             {
+              // minimal inline editors (string/int/float/double/bool/enum); extend as needed
               this.DrawEditorForValue(pi.PropertyType, name, current);
             }
 
@@ -123,7 +145,7 @@ namespace Echoglossian.DBManagerUI.Components
 
         ImGui.Separator();
 
-        if (ImGui.Button("Save"))
+        if (ImGui.Button(Resources.Save))
         {
           if (this.entity != null)
           {
@@ -134,7 +156,7 @@ namespace Echoglossian.DBManagerUI.Components
 
         ImGui.SameLine();
 
-        if (ImGui.Button("Delete"))
+        if (ImGui.Button(Resources.Delete))
         {
           if (this.entity != null)
           {
@@ -144,7 +166,7 @@ namespace Echoglossian.DBManagerUI.Components
 
         ImGui.SameLine();
 
-        if (ImGui.Button("Cancel"))
+        if (ImGui.Button(Resources.Cancel))
         {
           ImGui.CloseCurrentPopup();
           this.Close();
@@ -176,8 +198,9 @@ namespace Echoglossian.DBManagerUI.Components
         }
 
         bool isPk = this.getPkNames()?.Contains(prop.Name) ?? false;
-        bool isDate = pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?)
-                      || pi.PropertyType == typeof(DateTimeOffset) || pi.PropertyType == typeof(DateTimeOffset?);
+        bool isDate =
+          pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?) ||
+          pi.PropertyType == typeof(DateTimeOffset) || pi.PropertyType == typeof(DateTimeOffset?);
 
         if (isPk || isDate)
         {
@@ -270,7 +293,7 @@ namespace Echoglossian.DBManagerUI.Components
 
       if (type == typeof(bool) || type == typeof(bool?))
       {
-        bool v = current is bool bv && bv;
+        bool v = current is bool b && b;
         if (ImGui.Checkbox("##bool", ref v))
         {
           this.edited[propName] = v;
@@ -279,18 +302,20 @@ namespace Echoglossian.DBManagerUI.Components
         return;
       }
 
-      if (type.IsEnum)
+      if ((Nullable.GetUnderlyingType(type) ?? type).IsEnum)
       {
         string s = current?.ToString() ?? string.Empty;
         if (ImGui.InputText("##enum", ref s, 256))
         {
           try
           {
-            object parsed = Enum.Parse(type, s, ignoreCase: true);
+            var t = Nullable.GetUnderlyingType(type) ?? type;
+            object parsed = Enum.Parse(t, s, ignoreCase: true);
             this.edited[propName] = parsed;
           }
           catch
           {
+            // ignore parse failure
           }
         }
 
@@ -306,14 +331,7 @@ namespace Echoglossian.DBManagerUI.Components
 
     private object? SafeGetValue(object obj, PropertyInfo pi)
     {
-      try
-      {
-        return pi.GetValue(obj);
-      }
-      catch
-      {
-        return null;
-      }
+      try { return pi.GetValue(obj); } catch { return null; }
     }
 
     private object? ChangeTypeFromObject(object value, Type targetType)

@@ -240,8 +240,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoCtor" Version="2.8.1" />
-    <PackageReference Include="Dalamud.NET.Sdk" Version="12.0.2" />
-    <PackageReference Include="AWSSDK.Translate" Version="4.0.0.16" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.0.19" />
 
     <PackageReference Include="DeepL.net" Version="1.15.0" />
     <PackageReference Include="GTranslate" Version="2.3.1" />

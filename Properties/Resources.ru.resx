@@ -564,4 +564,79 @@
   <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Не удается загрузить сущность для редактирования.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Записи не загружены.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>В этой таблице не найдено никаких записей.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Нет скалярных свойств для отображения.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Перезаряжать</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Предыдущая</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Страница</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Следующий</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Размер страницы:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Экспорт выбранного файла CSV</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Страница экспорта в формате CSV</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Удалить выбранное</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Редактор БД Echoglossian</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Выберите таблицу, чтобы просмотреть ее записи.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Стол</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Запись сохранена!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Запись удалена</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Удаленные записи {toDelete.Count}</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Скопировано {строки. Подсчитать} записей в буфер обмена</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Справка</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Совет: Дважды щелкните строку, которую нужно отредактировать.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV Экспорт копий в буфер обмена</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Загружены записи {this.currentRows.Count}</value>
+  </data>
 </root>

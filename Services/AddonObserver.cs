@@ -1,4 +1,9 @@
-﻿/// <summary>
+﻿// <copyright file="AddonObserver.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+/// <summary>
 /// Observes the visibility state of UI addons and triggers events when they are opened or closed.
 /// Used under permission. Original code from <see href="https://github.com/Haselnussbomber/HaselCommon/blob/main/HaselCommon/Services/AddonObserver.cs" />
 /// </summary>

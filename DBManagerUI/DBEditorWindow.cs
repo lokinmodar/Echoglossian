@@ -2,7 +2,6 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
-
 namespace Echoglossian.DBManagerUI
 {
   /// <summary>
@@ -45,9 +44,22 @@ namespace Echoglossian.DBManagerUI
 
       this.toolbar = new DbToolbar(
         onReload: this.LoadRows,
-        onPrev: () => { this.page = Math.Max(0, this.page - 1); this.LoadRows(); },
-        onNext: () => { this.page += 1; this.LoadRows(); },
-        onPageSizeChange: (sz) => { this.pageSize = Math.Max(1, sz); this.page = 0; this.LoadRows(); },
+        onPrev: () =>
+        {
+          this.page = Math.Max(0, this.page - 1);
+          this.LoadRows();
+        },
+        onNext: () =>
+        {
+          this.page += 1;
+          this.LoadRows();
+        },
+        onPageSizeChange: (sz) =>
+        {
+          this.pageSize = Math.Max(1, sz);
+          this.page = 0;
+          this.LoadRows();
+        },
         onExportSelected: () => this.ExportCsv(selectedOnly: true),
         onExportPage: () => this.ExportCsv(selectedOnly: false),
         onDeleteSelected: this.BatchDeleteSelected);
@@ -79,7 +91,7 @@ namespace Echoglossian.DBManagerUI
 
       ImGui.SetNextWindowSize(new Vector2(1100, 700), ImGuiCond.FirstUseEver);
 
-      if (!ImGui.Begin("Echoglossian DB Editor", ref this.IsOpen, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar))
+      if (!ImGui.Begin(Resources.EchoglossianDBEditor, ref this.IsOpen, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar))
       {
         ImGui.End();
         return;
@@ -114,11 +126,11 @@ namespace Echoglossian.DBManagerUI
       ImGui.BeginChild("##DbTableContent", new Vector2(-1, -1), true);
       if (this.selectedTable == null)
       {
-        ImGui.Text("Select a table to view its records.");
+        ImGui.Text(Resources.SelectATableToViewItsRecords);
       }
       else
       {
-        this.toolbar.Draw(title: $"Table: {this.selectedTable}", page: this.page, pageSize: this.pageSize);
+        this.toolbar.Draw(title: $"{Resources.Table}: {this.selectedTable}", page: this.page, pageSize: this.pageSize);
 
         ImGui.Separator();
 
@@ -189,7 +201,17 @@ namespace Echoglossian.DBManagerUI
           .Take(this.pageSize)
           .ToList();
 
-        PluginLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
+
+        if (this.currentRows.Count == 0)
+        {
+          PluginLog.Debug($"[DbEditorWindow] No records found in {this.selectedTable}.");
+          NotificationManager.AddNotification(new Notification { Content = Resources.NoRecordsFoundInThisTable, Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
+        }
+        else
+        {
+          PluginLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
+          NotificationManager.AddNotification(new Notification { Content = string.Format(Resources.LoadedNRecords, this.currentRows.Count), Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
+        }
       }
       catch (Exception ex)
       {
@@ -204,6 +226,7 @@ namespace Echoglossian.DBManagerUI
     /// <param name="entity">Entity instance.</param>
     private void OpenEditor(object entity)
     {
+      PluginLog.Debug($"[DbEditorWindow] Opening editor for type={entity.GetType().Name}");
       this.editModal.Open(entity);
     }
 
@@ -218,6 +241,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.Update(updatedEntity);
         this.dbContext.SaveChanges();
         PluginLog.Debug("[DbEditorWindow] Record saved.");
+        NotificationManager.AddNotification(new Notification { Content = Resources.RecordSaved, Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
         this.editModal.Close();
         this.LoadRows();
       }
@@ -238,6 +262,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.Remove(entity);
         this.dbContext.SaveChanges();
         PluginLog.Debug("[DbEditorWindow] Record deleted.");
+        NotificationManager.AddNotification(new Notification { Content = Resources.RecordDeleted, Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
         this.editModal.Close();
         this.LoadRows();
       }
@@ -273,6 +298,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.SaveChanges();
 
         PluginLog.Debug($"[DbEditorWindow] Deleted {toDelete.Count} record(s).");
+        NotificationManager.AddNotification(new Notification { Content = string.Format(Resources.DeletedNRecords, toDelete.Count), Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
         this.selectedRowIndices.Clear();
         this.LoadRows();
       }
@@ -307,6 +333,7 @@ namespace Echoglossian.DBManagerUI
         string csv = this.csvExporter.BuildCsv(rows, this.metadata.CurrentScalarProps);
         ImGui.SetClipboardText(csv);
         PluginLog.Debug($"[DbEditorWindow] CSV copied to clipboard ({rows.Count} row(s)).");
+        NotificationManager.AddNotification(new Notification { Content = string.Format(Resources.CopiedNRecordsToClipboard, rows.Count), Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Clipboard) });
       }
       catch (Exception ex)
       {
@@ -321,10 +348,10 @@ namespace Echoglossian.DBManagerUI
     {
       if (ImGui.BeginMenuBar())
       {
-        if (ImGui.BeginMenu("Help"))
+        if (ImGui.BeginMenu(Resources.Help))
         {
-          ImGui.MenuItem("Tip: Double-click a row to edit.");
-          ImGui.MenuItem("CSV export copies to clipboard.");
+          ImGui.MenuItem(Resources.TipDoubleClickARowToEdit);
+          ImGui.MenuItem(Resources.CSVExportCopiesToClipboard);
           ImGui.EndMenu();
         }
 

@@ -536,4 +536,79 @@
   <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Objektet kan ikke indlæses til redigering.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Slette</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Ingen optegnelser indlæst.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Der blev ikke fundet nogen optegnelser i denne tabel.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Ingen skalaregenskaber at vise.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Genindlæse</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Forrige</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Side</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Næste</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Side størrelse:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Eksporter valgt CSV</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Eksporter CSV-fil for side</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Slet valgte</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Echoglossian DB-redaktør</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Vælg en tabel for at få vist dens poster.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Bord</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Rekord gemt!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Post slettet</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Slettede {toDelete.Count}-poster</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Kopieret {rækker. Count} poster til Udklipsholder</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Hjælp</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Tip: Dobbeltklik på en række for at redigere.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV Eksporter kopier til Udklipsholder</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Indlæste {this.currentRows.Count}-poster</value>
+  </data>
 </root>

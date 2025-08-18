@@ -653,7 +653,7 @@
     <value>Data inserted/updated in StringArrayDatas table.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>ErrorSavingData: {e}</value>
+    <value>ErrorSavingData: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Opens the Echoglossian DB Editor.</value>
@@ -669,5 +669,80 @@
   </data>
   <data name="crypto" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Unable to load entity for editing.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>No records loaded.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>No records found in this table.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>No scalar properties to display.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Reload</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Prev</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Page size:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Export Selected CSV</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Export Page CSV</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Delete Selected</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Echoglossian DB Editor</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Select a table to view its records.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Record Saved!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Record Deleted</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Deleted {0} Records</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Copied {0} records to clipboard</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Tip: Double-click a row to edit.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV Export copies to clipboard</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Loaded {0} records</value>
   </data>
 </root>

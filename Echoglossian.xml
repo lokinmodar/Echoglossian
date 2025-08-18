@@ -1058,17 +1058,21 @@
         </member>
         <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
             <summary>
-            Tabular view with multi-select and double-click to open editor.
+            Tabular view with multi-select and reliable double-click to open editor.
             </summary>
         </member>
         <member name="M:Echoglossian.DBManagerUI.Components.DbTableView.#ctor(System.Func{System.Collections.Generic.IReadOnlyList{Microsoft.EntityFrameworkCore.Metadata.IProperty}},System.Func{System.Collections.Generic.IList{System.Object}},System.Func{System.Collections.Generic.HashSet{System.Int32}},System.Action{System.Object})">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.DbTableView"/> class.
             </summary>
+            <param name="getScalarProps">Accessor for current scalar properties.</param>
+            <param name="getRows">Accessor for current page rows.</param>
+            <param name="getSelection">Accessor for current selection hash set.</param>
+            <param name="onRowDoubleClick">Callback when a row is double-clicked.</param>
         </member>
         <member name="M:Echoglossian.DBManagerUI.Components.DbTableView.Draw">
             <summary>
-            Draws the table.
+            Draws the table and handles selection and double-click.
             </summary>
         </member>
         <member name="T:Echoglossian.DBManagerUI.Components.DbToolbar">
@@ -1098,6 +1102,10 @@
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.EditModal"/> class.
             </summary>
+            <param name="getScalarProps">Accessor for scalar properties.</param>
+            <param name="getPkNames">Accessor for PK names.</param>
+            <param name="onSave">Callback on save.</param>
+            <param name="onDelete">Callback on delete.</param>
         </member>
         <member name="M:Echoglossian.DBManagerUI.Components.EditModal.Open(System.Object)">
             <summary>
@@ -1107,7 +1115,7 @@
         </member>
         <member name="M:Echoglossian.DBManagerUI.Components.EditModal.Close">
             <summary>
-            Closes the modal.
+            Closes the modal and clears state.
             </summary>
         </member>
         <member name="M:Echoglossian.DBManagerUI.Components.EditModal.Draw">
@@ -3541,6 +3549,11 @@
               resource lookups using this strongly typed resource class.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources._">
+            <summary>
+              Looks up a localized string similar to |.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.AITranslatorPromptCustomization">
             <summary>
               Looks up a localized string similar to AI Translator Prompt Customization.
@@ -3736,6 +3749,11 @@
               Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.CopiedNRecordsToClipboard">
+            <summary>
+              Looks up a localized string similar to Copied {0} records to clipboard.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.CopyPreview">
             <summary>
               Looks up a localized string similar to Copy Preview.
@@ -3759,6 +3777,11 @@
         <member name="P:Echoglossian.Properties.Resources.CryptoQrWindowLabel">
             <summary>
               Looks up a localized string similar to Crypto Wallet.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.CSVExportCopiesToClipboard">
+            <summary>
+              Looks up a localized string similar to CSV Export copies to clipboard.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.CurrentPluginAssetsStatus">
@@ -3801,6 +3824,21 @@
               Looks up a localized string similar to [DeepSeek translation unavailable. Please check your API key.].
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.Delete">
+            <summary>
+              Looks up a localized string similar to Delete.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DeletedNRecords">
+            <summary>
+              Looks up a localized string similar to Deleted {0} Records.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DeleteSelected">
+            <summary>
+              Looks up a localized string similar to Delete Selected.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.DisclaimerText1">
             <summary>
               Looks up a localized string similar to This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
@@ -3826,6 +3864,11 @@
               Looks up a localized string similar to Force re-download plugin assets.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.EchoglossianDBEditor">
+            <summary>
+              Looks up a localized string similar to Echoglossian DB Editor.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.EchoglossianPathModal">
             <summary>
               Looks up a localized string similar to Attention!.
@@ -3848,7 +3891,17 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.ErrorSavingData">
             <summary>
-              Looks up a localized string similar to ErrorSavingData: {e}.
+              Looks up a localized string similar to ErrorSavingData: {0}.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ExportPageCSV">
+            <summary>
+              Looks up a localized string similar to Export Page CSV.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ExportSelectedCSV">
+            <summary>
+              Looks up a localized string similar to Export Selected CSV.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.FetchLiveModels">
@@ -3874,6 +3927,11 @@
         <member name="P:Echoglossian.Properties.Resources.GeminiTranslationUnavailablePleaseCheckYourAPIKey">
             <summary>
               Looks up a localized string similar to [Gemini translation unavailable. Please check your API key.].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Help">
+            <summary>
+              Looks up a localized string similar to Help.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.HelpMessage">
@@ -3931,6 +3989,11 @@
               Looks up a localized string similar to LLM Model.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.LoadedNRecords">
+            <summary>
+              Looks up a localized string similar to Loaded {0} records.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.logo">
             <summary>
               Looks up a localized resource of type System.Byte[].
@@ -3974,6 +4037,26 @@
         <member name="P:Echoglossian.Properties.Resources.NEListText">
             <summary>
               Looks up a localized string similar to The non-exhaustive list of issues and TODOs is available in the link below:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Next">
+            <summary>
+              Looks up a localized string similar to Next.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.NoRecordsFoundInThisTable">
+            <summary>
+              Looks up a localized string similar to No records found in this table..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.NoRecordsLoaded">
+            <summary>
+              Looks up a localized string similar to No records loaded..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.NoScalarPropertiesToDisplay">
+            <summary>
+              Looks up a localized string similar to No scalar properties to display..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.NoSettingsForEngine">
@@ -4051,6 +4134,16 @@
               Looks up a localized string similar to Translation Overlay Width multiplier.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.Page">
+            <summary>
+              Looks up a localized string similar to Page.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PageSize">
+            <summary>
+              Looks up a localized string similar to Page size:.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.PathInputInstructions">
             <summary>
               Looks up a localized string similar to Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder).
@@ -4101,6 +4194,11 @@
               Looks up a localized string similar to Config Window LanguageInfo:.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.Prev">
+            <summary>
+              Looks up a localized string similar to Prev.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.Preview">
             <summary>
               Looks up a localized string similar to Preview.
@@ -4121,9 +4219,24 @@
               Looks up a localized string similar to Scan the QR code to send me a PIX - only valid in Brazil.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.RecordDeleted">
+            <summary>
+              Looks up a localized string similar to Record Deleted.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.RecordSaved">
+            <summary>
+              Looks up a localized string similar to Record Saved!.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.Region">
             <summary>
               Looks up a localized string similar to Region.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.Reload">
+            <summary>
+              Looks up a localized string similar to Reload.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.RemoveDiacriticsToggle">
@@ -4164,6 +4277,11 @@
         <member name="P:Echoglossian.Properties.Resources.SaveCloseButtonLabel">
             <summary>
               Looks up a localized string similar to Save and Close Config Window.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SelectATableToViewItsRecords">
+            <summary>
+              Looks up a localized string similar to Select a table to view its records..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SendCryptoButton">
@@ -4266,6 +4384,11 @@
               Looks up a localized string similar to Show Original dialogue text in Overlay and Translated in the Game UI dialogue box.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.Table">
+            <summary>
+              Looks up a localized string similar to Table.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.TalkTabTitle">
             <summary>
               Looks up a localized string similar to Talk.
@@ -4274,6 +4397,11 @@
         <member name="P:Echoglossian.Properties.Resources.Temperature">
             <summary>
               Looks up a localized string similar to Temperature.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TipDoubleClickARowToEdit">
+            <summary>
+              Looks up a localized string similar to Tip: Double-click a row to edit..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayWidthMultiplierOrientations">
@@ -4414,6 +4542,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">
             <summary>
               Looks up a localized string similar to Translations are Enabled!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.UnableToLoadEntityForEditing">
+            <summary>
+              Looks up a localized string similar to Unable to load entity for editing..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.UseAuthentication">

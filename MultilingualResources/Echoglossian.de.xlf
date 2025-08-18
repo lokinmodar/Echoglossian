@@ -727,8 +727,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">In die Tabelle StringArrayDatas eingefügt/aktualisierten Daten.</target>
         </trans-unit>
         <trans-unit id="ErrorSavingData" translate="yes" xml:space="preserve">
-          <source>ErrorSavingData: {e}</source>
+          <source>ErrorSavingData: {0}</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">FehlerSpeicherdaten: {e}</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OpensTheEchoglossianDBEditor" translate="yes" xml:space="preserve">
           <source>Opens the Echoglossian DB Editor.</source>
@@ -749,6 +750,109 @@
         <trans-unit id="crypto" translate="yes" xml:space="preserve" extype="System.Resources.ResXFileRef, System.Windows.Forms">
           <source>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</source>
           <target state="needs-review-translation">..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</target>
+        </trans-unit>
+        <trans-unit id="UnableToLoadEntityForEditing" translate="yes" xml:space="preserve">
+          <source>Unable to load entity for editing.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Die Entität kann nicht zur Bearbeitung geladen werden.</target>
+        </trans-unit>
+        <trans-unit id="Delete" translate="yes" xml:space="preserve">
+          <source>Delete</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Löschen</target>
+        </trans-unit>
+        <trans-unit id="NoRecordsLoaded" translate="yes" xml:space="preserve">
+          <source>No records loaded.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Es wurden keine Datensätze geladen.</target>
+        </trans-unit>
+        <trans-unit id="NoRecordsFoundInThisTable" translate="yes" xml:space="preserve">
+          <source>No records found in this table.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">In dieser Tabelle wurden keine Datensätze gefunden.</target>
+        </trans-unit>
+        <trans-unit id="NoScalarPropertiesToDisplay" translate="yes" xml:space="preserve">
+          <source>No scalar properties to display.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Es können keine skalaren Eigenschaften angezeigt werden.</target>
+        </trans-unit>
+        <trans-unit id="Reload" translate="yes" xml:space="preserve">
+          <source>Reload</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Nachladen</target>
+        </trans-unit>
+        <trans-unit id="Prev" translate="yes" xml:space="preserve">
+          <source>Prev</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Zurück</target>
+        </trans-unit>
+        <trans-unit id="Page" translate="yes" xml:space="preserve">
+          <source>Page</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Seite</target>
+        </trans-unit>
+        <trans-unit id="Next" translate="yes" xml:space="preserve">
+          <source>Next</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Nächster</target>
+        </trans-unit>
+        <trans-unit id="_" translate="yes" xml:space="preserve">
+          <source>|</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">|</target>
+        </trans-unit>
+        <trans-unit id="PageSize" translate="yes" xml:space="preserve">
+          <source>Page size:</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Seitengröße:</target>
+        </trans-unit>
+        <trans-unit id="ExportSelectedCSV" translate="yes" xml:space="preserve">
+          <source>Export Selected CSV</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ausgewählte CSV-Datei exportieren</target>
+        </trans-unit>
+        <trans-unit id="ExportPageCSV" translate="yes" xml:space="preserve">
+          <source>Export Page CSV</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">CSV-Datei für die Seite exportieren</target>
+        </trans-unit>
+        <trans-unit id="DeleteSelected" translate="yes" xml:space="preserve">
+          <source>Delete Selected</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ausgewählte löschen</target>
+        </trans-unit>
+        <trans-unit id="EchoglossianDBEditor" translate="yes" xml:space="preserve">
+          <source>Echoglossian DB Editor</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossianischer DB-Editor</target>
+        </trans-unit>
+        <trans-unit id="SelectATableToViewItsRecords" translate="yes" xml:space="preserve">
+          <source>Select a table to view its records.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Wählen Sie eine Tabelle aus, um die zugehörigen Datensätze anzuzeigen.</target>
+        </trans-unit>
+        <trans-unit id="Table" translate="yes" xml:space="preserve">
+          <source>Table</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tisch</target>
+        </trans-unit>
+        <trans-unit id="RecordSaved" translate="yes" xml:space="preserve">
+          <source>Record Saved!</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Datensatz gespeichert!</target>
+        </trans-unit>
+        <trans-unit id="RecordDeleted" translate="yes" xml:space="preserve">
+          <source>Record Deleted</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Datensatz gelöscht</target>
+        </trans-unit>
+        <trans-unit id="DeletedNRecords" translate="yes" xml:space="preserve">
+          <source>Deleted {0} Records</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Gelöschte {toDelete.Count} Datensätze</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+        </trans-unit>
+        <trans-unit id="CopiedNRecordsToClipboard" translate="yes" xml:space="preserve">
+          <source>Copied {0} records to clipboard</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Kopierte {Zeilen. Count} Datensätze in die Zwischenablage</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
+        </trans-unit>
+        <trans-unit id="Help" translate="yes" xml:space="preserve">
+          <source>Help</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Hilfe</target>
+        </trans-unit>
+        <trans-unit id="TipDoubleClickARowToEdit" translate="yes" xml:space="preserve">
+          <source>Tip: Double-click a row to edit.</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Tipp: Doppelklicken Sie auf eine Zeile, um sie zu bearbeiten.</target>
+        </trans-unit>
+        <trans-unit id="CSVExportCopiesToClipboard" translate="yes" xml:space="preserve">
+          <source>CSV Export copies to clipboard</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">CSV Kopien in die Zwischenablage exportieren</target>
+        </trans-unit>
+        <trans-unit id="LoadedNRecords" translate="yes" xml:space="preserve">
+          <source>Loaded {0} records</source>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Geladene {this.currentRows.Count} Datensätze</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
       </group>
     </body>
