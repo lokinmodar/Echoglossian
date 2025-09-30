@@ -1059,6 +1059,7 @@
         <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
             <summary>
             Tabular view with multi-select and reliable double-click to open editor.
+            Long text cells are wrapped (with optional tooltip for very long content).
             </summary>
         </member>
         <member name="M:Echoglossian.DBManagerUI.Components.DbTableView.#ctor(System.Func{System.Collections.Generic.IReadOnlyList{Microsoft.EntityFrameworkCore.Metadata.IProperty}},System.Func{System.Collections.Generic.IList{System.Object}},System.Func{System.Collections.Generic.HashSet{System.Int32}},System.Action{System.Object})">
@@ -1133,6 +1134,23 @@
             <summary>
             Draws editors for supported types. Strings are multiline with wrapping.
             </summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.Ui.TextInputHelpers">
+            <summary>
+            Helper methods for wrapped, multiline ImGui text inputs.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.Ui.TextInputHelpers.DrawMultilineTextInput(System.String,System.String@,System.Int32,System.Int32,Dalamud.Bindings.ImGui.ImGuiInputTextFlags)">
+            <summary>
+            Draws a wrapped, multiline text box that auto-sizes by content within a min/max line clamp.
+            Inspired by Wordsmith's approach, but simplified &amp; adapted for this project.
+            </summary>
+            <param name="id">ImGui ID (must be unique in scope).</param>
+            <param name="text">Text reference to edit.</param>
+            <param name="minLines">Minimum visible lines.</param>
+            <param name="maxLines">Maximum visible lines (prevents runaway size).</param>
+            <param name="flags">ImGui input flags.</param>
+            <returns>True if value changed.</returns>
         </member>
         <member name="T:Echoglossian.DBManagerUI.DbEditorWindow">
             <summary>
@@ -3185,6 +3203,42 @@
                 handlers.
             </param>
             <param name="addonLifecycle">The lifecycle manager for the addons.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions">
+            <summary>
+            Provides extension methods for registering and removing logging listeners for key lifecycle events of add-ons
+            using an add-on lifecycle manager.
+            </summary>
+            <remarks>These extension methods enable or disable logging for important phases in an add-on's lifecycle,
+            such as setup, refresh, event reception, requested updates, and finalization. They are useful for monitoring and
+            debugging add-on behavior without interfering with other event listeners.</remarks>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.LogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String)">
+            <summary>
+            Registers a logger as a listener for key lifecycle events of the specified addon.
+            </summary>
+            <remarks>This method attaches a logger to several important lifecycle events, enabling logging for
+            setup, refresh, event reception, requested updates, and finalization phases of the addon. This can assist in
+            monitoring and debugging addon behavior throughout its lifecycle.</remarks>
+            <param name="addonLifecycle">The addon lifecycle manager used to register event listeners.</param>
+            <param name="addonName">The name of the addon for which lifecycle event listeners are registered.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.Logger(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Writes a debug log entry for the specified add-on event and its associated arguments.
+            </summary>
+            <param name="type">The event type that triggered the logging operation.</param>
+            <param name="args">The arguments containing details about the add-on, including its name and context.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.UnLogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String)">
+            <summary>
+            Removes logging event listeners for the specified add-on from the provided add-on lifecycle instance.
+            </summary>
+            <remarks>This method unregisters logging listeners for several key lifecycle events, ensuring that log
+            output related to the specified add-on is no longer generated. Use this method when you want to stop logging
+            activity for an add-on without affecting its other event listeners.</remarks>
+            <param name="addonLifecycle">The add-on lifecycle instance from which logging event listeners will be removed. Cannot be null.</param>
+            <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>

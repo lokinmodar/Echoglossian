@@ -680,9 +680,9 @@ public partial class Echoglossian : IDalamudPlugin
                         this.configuration,
                         TranslationService)),*/
                 (AddonName: "Character",
-                    Handler: new CharacterWindowHandler(
-                        this.configuration,
-                        TranslationService)),
+                       Handler: new CharacterWindowHandler(
+                           this.configuration,
+                           TranslationService)),
                /* (AddonName: "OperationGuide",
                     Handler: new OperationGuideHandler(
                         this.configuration,
@@ -829,5 +829,11 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     /*"PreSetup","PostSetup", "PreUpdate", "PostUpdate", "PreDraw", "PostDraw", "PreFinalize", "PreReceiveEvent", "PostReceiveEvent", "PreRequestedUpdate", "PostRequestedUpdate", "PreRefresh", "PostRefresh" */
+
+    // tracking addon lifecycle for debug
+
+    AddonLifecycleExtensions.LogAddon(AddonLifecycle, "Talk");
+    AddonLifecycleExtensions.LogAddon(AddonLifecycle, "_BattleTalk");
+
   }
 }

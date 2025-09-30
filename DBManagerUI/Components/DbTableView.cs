@@ -1,11 +1,13 @@
 ﻿// <copyright file="DbTableView.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
-// Licensed under the CC BY-NC-ND 4.0 International Public License.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
+
 namespace Echoglossian.DBManagerUI.Components
 {
   /// <summary>
   /// Tabular view with multi-select and reliable double-click to open editor.
+  /// Long text cells are wrapped (with optional tooltip for very long content).
   /// </summary>
   public class DbTableView
   {
@@ -43,19 +45,19 @@ namespace Echoglossian.DBManagerUI.Components
 
       if (rows == null)
       {
-        ImGui.Text(Resources.NoRecordsLoaded);
+        ImGui.Text("No records loaded.");
         return;
       }
 
       if (rows.Count == 0)
       {
-        ImGui.Text(Resources.NoRecordsFoundInThisTable);
+        ImGui.Text("No records found in this table.");
         return;
       }
 
       if (props == null || props.Count == 0)
       {
-        ImGui.Text(Resources.NoScalarPropertiesToDisplay);
+        ImGui.Text("No scalar properties to display.");
         return;
       }
 
@@ -69,7 +71,7 @@ namespace Echoglossian.DBManagerUI.Components
 
         foreach (var prop in props)
         {
-          ImGui.TableSetupColumn(prop.Name, ImGuiTableColumnFlags.None, 120f);
+          ImGui.TableSetupColumn(prop.Name, ImGuiTableColumnFlags.None, 150f);
         }
 
         ImGui.TableHeadersRow();
@@ -106,12 +108,27 @@ namespace Echoglossian.DBManagerUI.Components
             object? val = this.SafeGetValue(row, prop.PropertyInfo!);
             string text = this.RenderCellValue(val);
 
-            ImGui.PushID(i * 10000 + c);
+            ImGui.PushID((i * 10000) + c);
 
-            // Draw the selectable cell
-            ImGui.Selectable(text, false, ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick);
+            // compute a wrap width equal to the current column content width
+            float wrapAt = ImGui.GetCursorPosX() + ImGui.GetColumnWidth();
 
-            // Reliable double-click detection on the just-drawn item
+            // draw wrapped text item
+            ImGui.PushTextWrapPos(wrapAt);
+            ImGui.TextUnformatted(text);
+            ImGui.PopTextWrapPos();
+
+            // tooltip for very long strings
+            if (text.Length > 256 && ImGui.IsItemHovered())
+            {
+              ImGui.BeginTooltip();
+              ImGui.PushTextWrapPos(ImGui.GetFontSize() * 60.0f);
+              ImGui.TextUnformatted(text);
+              ImGui.PopTextWrapPos();
+              ImGui.EndTooltip();
+            }
+
+            // reliable double-click detection on this item
             if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
             {
               this.onRowDoubleClick(row);

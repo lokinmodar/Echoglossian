@@ -52,6 +52,7 @@ global using static Echoglossian.Echoglossian;
 global using Echoglossian.DBManagerUI;
 global using Echoglossian.DBManagerUI.Components;
 global using Echoglossian.DBManagerUI.Services;
+global using Echoglossian.DBManagerUI.Components.Ui;
 global using Echoglossian.EFCoreSqlite;
 global using Echoglossian.EFCoreSqlite.Models;
 global using Echoglossian.EFCoreSqlite.Models.Journal;

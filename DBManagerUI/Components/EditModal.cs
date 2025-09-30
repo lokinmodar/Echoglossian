@@ -122,7 +122,7 @@ namespace Echoglossian.DBManagerUI.Components
               pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?) ||
               pi.PropertyType == typeof(DateTimeOffset) || pi.PropertyType == typeof(DateTimeOffset?);
 
-            // new: "Original*" fields are read-only text
+            // "Original*" fields are read-only text
             bool isOriginal = name.StartsWith("Original", StringComparison.OrdinalIgnoreCase);
 
             bool editable = !isPk && !isDate && !isOriginal && pi.CanWrite;
@@ -135,7 +135,7 @@ namespace Echoglossian.DBManagerUI.Components
 
             if (!editable)
             {
-              // read-only, wrapped text (handles Original*, PKs, dates, or non-writable)
+              // read-only, wrapped text (Original*, PKs, dates, or non-writable)
               if (current is string sro)
               {
                 ImGui.PushTextWrapPos();
@@ -254,10 +254,8 @@ namespace Echoglossian.DBManagerUI.Components
       {
         string s = current as string ?? string.Empty;
 
-        // multiline text input with wrapping and flexible width
-        var height = ImGui.GetTextLineHeight() * 6.0f; // ~6 lines tall
-        var size = new Vector2(-1, height);            // full width of column
-        if (ImGui.InputTextMultiline("##txt", ref s, 65536, size, ImGuiInputTextFlags.None))
+        // wrapped multiline editor (auto height within min/max lines)
+        if (TextInputHelpers.DrawMultilineTextInput("##txt", ref s, minLines: 6, maxLines: 24, flags: ImGuiInputTextFlags.None))
         {
           this.edited[propName] = s;
         }
@@ -348,12 +346,10 @@ namespace Echoglossian.DBManagerUI.Components
         return;
       }
 
-      // fallback: simple text round-trip
+      // fallback: simple text round-trip (multiline)
       {
         string f = current?.ToString() ?? string.Empty;
-        var height = ImGui.GetTextLineHeight() * 4.0f;
-        var size = new Vector2(-1, height);
-        if (ImGui.InputTextMultiline("##txt", ref f, 8192, size, ImGuiInputTextFlags.None))
+        if (TextInputHelpers.DrawMultilineTextInput("##txt", ref f, minLines: 4, maxLines: 16))
         {
           this.edited[propName] = f;
         }
