@@ -720,7 +720,7 @@
         </trans-unit>
         <trans-unit id="ErrorSavingData" translate="yes" xml:space="preserve">
           <source>ErrorSavingData: {0}</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">ErrorSavingData: {e}</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">ErrorSavingData: {0}</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OpensTheEchoglossianDBEditor" translate="yes" xml:space="preserve">
@@ -821,12 +821,12 @@
         </trans-unit>
         <trans-unit id="DeletedNRecords" translate="yes" xml:space="preserve">
           <source>Deleted {0} Records</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Registros {toDelete.Count} excluídos</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Registros {0} excluídos</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="CopiedNRecordsToClipboard" translate="yes" xml:space="preserve">
           <source>Copied {0} records to clipboard</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Copiado {linhas. Contar} registros para a área de transferência</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Copiado {0} registros para a área de transferência</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="Help" translate="yes" xml:space="preserve">
@@ -843,7 +843,7 @@
         </trans-unit>
         <trans-unit id="LoadedNRecords" translate="yes" xml:space="preserve">
           <source>Loaded {0} records</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Registros {this.currentRows.Count} carregados</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Registros {0} carregados</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
       </group>

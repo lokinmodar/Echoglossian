@@ -547,7 +547,7 @@
     <value>Δεδομένα που εισάγονται/ενημερώνονται στον πίνακα StringArrayDatas.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>ErrorSavingData: {e}</value>
+    <value>ErrorSavingData: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Ανοίγει το Echoglossian DB Editor.</value>
@@ -622,10 +622,10 @@
     <value>Η εγγραφή διαγράφηκε</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Διαγραμμένες εγγραφές {toDelete.Count}</value>
+    <value>Διαγραμμένες εγγραφές {0}</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
-    <value>Αντιγραφή {σειρές. Count} εγγραφές στο πρόχειρο</value>
+    <value>Αντιγραφή {0} εγγραφές στο πρόχειρο</value>
   </data>
   <data name="Help" xml:space="preserve">
     <value>Βοήθεια</value>
@@ -637,6 +637,6 @@
     <value>CSV Εξαγωγή αντιγράφων στο πρόχειρο</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>Φορτωμένες εγγραφές {this.currentRows.Count}</value>
+    <value>Φορτωμένες εγγραφές {0}</value>
   </data>
 </root>

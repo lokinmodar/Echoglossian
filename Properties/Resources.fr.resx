@@ -547,7 +547,7 @@
     <value>Données insérées/mises à jour dans la table StringArrayDatas.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>ErreurSauvegardeDonnées : {e}</value>
+    <value>ErreurSauvegardeDonnées : {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Ouvre l’éditeur de base de données Echoglossian.</value>
@@ -622,10 +622,10 @@
     <value>Enregistrement supprimé</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Enregistrements {toDelete.Count} supprimés</value>
+    <value>Enregistrements {0} supprimés</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
-    <value>Copié {lignes. Compter} les enregistrements dans le presse-papiers</value>
+    <value>Copié {0} les enregistrements dans le presse-papiers</value>
   </data>
   <data name="Help" xml:space="preserve">
     <value>Aide</value>
@@ -637,6 +637,6 @@
     <value>CSV : Exporter des copies dans le presse-papiers</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>Enregistrements {this.currentRows.Count} chargés</value>
+    <value>Enregistrements {0} chargés</value>
   </data>
 </root>

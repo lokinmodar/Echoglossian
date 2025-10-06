@@ -547,7 +547,7 @@
     <value>Данные вставлены/обновлены в таблицу StringArrayDatas.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>ErrorSavingData: {e}</value>
+    <value>ErrorSavingData: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Открывает редактор базы данных Echoglossian.</value>
@@ -622,10 +622,10 @@
     <value>Запись удалена</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Удаленные записи {toDelete.Count}</value>
+    <value>Удаленные записи {0}</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
-    <value>Скопировано {строки. Подсчитать} записей в буфер обмена</value>
+    <value>Скопировано {0} записей в буфер обмена</value>
   </data>
   <data name="Help" xml:space="preserve">
     <value>Справка</value>
@@ -637,6 +637,6 @@
     <value>CSV Экспорт копий в буфер обмена</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>Загружены записи {this.currentRows.Count}</value>
+    <value>Загружены записи {0}</value>
   </data>
 </root>

@@ -133,7 +133,7 @@ public static class LanguageEngineSupport
         ["ur"] = new List<int> { 0, 2, 3, 4, 5, 6, 8, 10, 11 },
         ["ug"] = new List<int> { 0, 2, 3, 4, 5, 6, 8, 10, 11 },
         ["uz"] = new List<int> { 0, 2, 3, 4, 5, 6, 8, 10, 11 },
-        ["vi"] = new List<int> { 0, 2, 3, 4, 5, 6, 8, 10, 11 },
+        ["vi"] = new List<int> { 0, 1, 2, 3, 4, 5, 6, 8, 10, 11 },
         ["vo"] = new List<int> { 0 },
         ["war"] = new List<int> { 0 },
         ["xh"] = new List<int> { 0, 2, 3, 4, 5, 6, 8, 10, 11 },

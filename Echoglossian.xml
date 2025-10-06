@@ -1217,6 +1217,14 @@
             Draws menu bar (Help).
             </summary>
         </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.SafeFormat(System.String,System.Object[])">
+            <summary>
+            Formats a resource string safely; falls back to raw text on error.
+            </summary>
+            <param name="format">Resource format string.</param>
+            <param name="args">Arguments.</param>
+            <returns>Formatted string, or the original format on error.</returns>
+        </member>
         <member name="T:Echoglossian.DBManagerUI.Services.CsvExporter">
             <summary>
             Builds CSV text from rows and known properties.

@@ -2,6 +2,7 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
+
 namespace Echoglossian.DBManagerUI
 {
   /// <summary>
@@ -89,7 +90,10 @@ namespace Echoglossian.DBManagerUI
         return;
       }
 
-      ImGui.SetNextWindowSize(new Vector2(1100, 700), ImGuiCond.FirstUseEver);
+      // Make first open fill the viewport work area (prevents wasted space).
+      var vp = ImGui.GetMainViewport();
+      ImGui.SetNextWindowPos(vp.WorkPos, ImGuiCond.FirstUseEver);
+      ImGui.SetNextWindowSize(vp.WorkSize, ImGuiCond.FirstUseEver);
 
       if (!ImGui.Begin(Resources.EchoglossianDBEditor, ref this.IsOpen, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar))
       {
@@ -201,16 +205,25 @@ namespace Echoglossian.DBManagerUI
           .Take(this.pageSize)
           .ToList();
 
-
         if (this.currentRows.Count == 0)
         {
           PluginLog.Debug($"[DbEditorWindow] No records found in {this.selectedTable}.");
-          NotificationManager.AddNotification(new Notification { Content = Resources.NoRecordsFoundInThisTable, Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
+          NotificationManager.AddNotification(new Notification
+          {
+            Content = Resources.NoRecordsFoundInThisTable,
+            Title = Resources.Name,
+            Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database),
+          });
         }
         else
         {
           PluginLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
-          NotificationManager.AddNotification(new Notification { Content = string.Format(Resources.LoadedNRecords, this.currentRows.Count), Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
+          NotificationManager.AddNotification(new Notification
+          {
+            Content = this.SafeFormat(Resources.LoadedNRecords, this.currentRows.Count),
+            Title = Resources.Name,
+            Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database),
+          });
         }
       }
       catch (Exception ex)
@@ -241,7 +254,12 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.Update(updatedEntity);
         this.dbContext.SaveChanges();
         PluginLog.Debug("[DbEditorWindow] Record saved.");
-        NotificationManager.AddNotification(new Notification { Content = Resources.RecordSaved, Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
+        NotificationManager.AddNotification(new Notification
+        {
+          Content = Resources.RecordSaved,
+          Title = Resources.Name,
+          Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database),
+        });
         this.editModal.Close();
         this.LoadRows();
       }
@@ -262,7 +280,12 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.Remove(entity);
         this.dbContext.SaveChanges();
         PluginLog.Debug("[DbEditorWindow] Record deleted.");
-        NotificationManager.AddNotification(new Notification { Content = Resources.RecordDeleted, Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
+        NotificationManager.AddNotification(new Notification
+        {
+          Content = Resources.RecordDeleted,
+          Title = Resources.Name,
+          Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database),
+        });
         this.editModal.Close();
         this.LoadRows();
       }
@@ -298,7 +321,12 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.SaveChanges();
 
         PluginLog.Debug($"[DbEditorWindow] Deleted {toDelete.Count} record(s).");
-        NotificationManager.AddNotification(new Notification { Content = string.Format(Resources.DeletedNRecords, toDelete.Count), Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database) });
+        NotificationManager.AddNotification(new Notification
+        {
+          Content = this.SafeFormat(Resources.DeletedNRecords, toDelete.Count),
+          Title = Resources.Name,
+          Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Database),
+        });
         this.selectedRowIndices.Clear();
         this.LoadRows();
       }
@@ -333,7 +361,12 @@ namespace Echoglossian.DBManagerUI
         string csv = this.csvExporter.BuildCsv(rows, this.metadata.CurrentScalarProps);
         ImGui.SetClipboardText(csv);
         PluginLog.Debug($"[DbEditorWindow] CSV copied to clipboard ({rows.Count} row(s)).");
-        NotificationManager.AddNotification(new Notification { Content = string.Format(Resources.CopiedNRecordsToClipboard, rows.Count), Title = Resources.Name, Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Clipboard) });
+        NotificationManager.AddNotification(new Notification
+        {
+          Content = this.SafeFormat(Resources.CopiedNRecordsToClipboard, rows.Count),
+          Title = Resources.Name,
+          Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Clipboard),
+        });
       }
       catch (Exception ex)
       {
@@ -356,6 +389,25 @@ namespace Echoglossian.DBManagerUI
         }
 
         ImGui.EndMenuBar();
+      }
+    }
+
+    /// <summary>
+    /// Formats a resource string safely; falls back to raw text on error.
+    /// </summary>
+    /// <param name="format">Resource format string.</param>
+    /// <param name="args">Arguments.</param>
+    /// <returns>Formatted string, or the original format on error.</returns>
+    private string SafeFormat(string format, params object[] args)
+    {
+      try
+      {
+        return string.Format(CultureInfo.CurrentUICulture, format, args);
+      }
+      catch (FormatException ex)
+      {
+        PluginLog.Error($"[DbEditorWindow] Bad resource format: \"{format}\". {ex}");
+        return format;
       }
     }
   }

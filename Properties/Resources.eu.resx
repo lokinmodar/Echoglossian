@@ -547,7 +547,7 @@
     <value>StringArrayDatas taulan sartutako edo eguneratutako datuak.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>ErrorSavingData: {e}</value>
+    <value>ErrorSavingData: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Echoglossianen datu-baseko editorea ireki du.</value>
@@ -622,7 +622,7 @@
     <value>Erregistro ezabatua</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Ezabatutako erregistroak {toDelete.Count}</value>
+    <value>Ezabatutako erregistroak {0}</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
     <value>Kopiatu {errenkadak. Erregistroak kontatzea</value>
@@ -637,6 +637,6 @@
     <value>CSV kopiak esportatu</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>{this.currentRows.Count} erregistroak kargatuta</value>
+    <value>{0} erregistroak kargatuta</value>
   </data>
 </root>

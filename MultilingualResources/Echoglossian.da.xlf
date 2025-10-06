@@ -722,7 +722,7 @@
         </trans-unit>
         <trans-unit id="ErrorSavingData" translate="yes" xml:space="preserve">
           <source>ErrorSavingData: {0}</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Fejlbesparelse af data: {e}</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Fejlbesparelse af data: {0}</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OpensTheEchoglossianDBEditor" translate="yes" xml:space="preserve">
@@ -823,12 +823,12 @@
         </trans-unit>
         <trans-unit id="DeletedNRecords" translate="yes" xml:space="preserve">
           <source>Deleted {0} Records</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Slettede {toDelete.Count}-poster</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Slettede {0}-poster</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="CopiedNRecordsToClipboard" translate="yes" xml:space="preserve">
           <source>Copied {0} records to clipboard</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Kopieret {rækker. Count} poster til Udklipsholder</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Kopieret {0} poster til Udklipsholder</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="Help" translate="yes" xml:space="preserve">
@@ -845,7 +845,7 @@
         </trans-unit>
         <trans-unit id="LoadedNRecords" translate="yes" xml:space="preserve">
           <source>Loaded {0} records</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Indlæste {this.currentRows.Count}-poster</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Indlæste {0}-poster</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
       </group>

@@ -547,7 +547,7 @@
     <value>In die Tabelle StringArrayDatas eingefügt/aktualisierten Daten.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>FehlerSpeicherdaten: {e}</value>
+    <value>FehlerSpeicherdaten: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Öffnet den Echoglossian DB Editor.</value>
@@ -622,10 +622,10 @@
     <value>Datensatz gelöscht</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Gelöschte {toDelete.Count} Datensätze</value>
+    <value>Gelöschte {0} Datensätze</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
-    <value>Kopierte {Zeilen. Count} Datensätze in die Zwischenablage</value>
+    <value>Kopierte {0} Datensätze in die Zwischenablage</value>
   </data>
   <data name="Help" xml:space="preserve">
     <value>Hilfe</value>
@@ -637,6 +637,6 @@
     <value>CSV Kopien in die Zwischenablage exportieren</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>Geladene {this.currentRows.Count} Datensätze</value>
+    <value>Geladene {0} Datensätze</value>
   </data>
 </root>

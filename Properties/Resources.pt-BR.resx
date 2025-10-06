@@ -490,7 +490,7 @@
     <value>Dados inseridos/atualizados na tabela StringArrayDatas.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>ErrorSavingData: {e}</value>
+    <value>ErrorSavingData: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Abre o Editor de banco de dados ecoglossiano.</value>
@@ -562,10 +562,10 @@
     <value>Registro excluído</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Registros {toDelete.Count} excluídos</value>
+    <value>Registros {0} excluídos</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
-    <value>Copiado {linhas. Contar} registros para a área de transferência</value>
+    <value>Copiado {0} registros para a área de transferência</value>
   </data>
   <data name="Help" xml:space="preserve">
     <value>Ajuda</value>
@@ -577,6 +577,6 @@
     <value>CSV Exportar cópias para a área de transferência</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>Registros {this.currentRows.Count} carregados</value>
+    <value>Registros {0} carregados</value>
   </data>
 </root>

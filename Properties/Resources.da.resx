@@ -519,7 +519,7 @@
     <value>Data indsat/opdateret i StringArrayDatas-tabellen.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
-    <value>Fejlbesparelse af data: {e}</value>
+    <value>Fejlbesparelse af data: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Åbner Echoglossian DB Editor.</value>
@@ -594,10 +594,10 @@
     <value>Post slettet</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Slettede {toDelete.Count}-poster</value>
+    <value>Slettede {0}-poster</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
-    <value>Kopieret {rækker. Count} poster til Udklipsholder</value>
+    <value>Kopieret {0} poster til Udklipsholder</value>
   </data>
   <data name="Help" xml:space="preserve">
     <value>Hjælp</value>
@@ -609,6 +609,6 @@
     <value>CSV Eksporter kopier til Udklipsholder</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>Indlæste {this.currentRows.Count}-poster</value>
+    <value>Indlæste {0}-poster</value>
   </data>
 </root>
