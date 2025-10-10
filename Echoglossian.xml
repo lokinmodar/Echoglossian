@@ -2603,20 +2603,101 @@
         </member>
         <member name="T:Echoglossian.LanguagesHandling.LanguageEngineSupport">
             <summary>
-                Class to manage language engine support.
+            Provides supported engine lists per language code, computed from vendor-verified language sets
+            and your runtime engine ordering. Broad-coverage LLM engines (ChatGPT, DeepSeek, Gemini,
+            OpenRouter, Ollama, LmStudio) are added to all languages.
+            <para>
+            Engine indices (must match your <c>enginesList</c>):
+            <list type="number">
+              <item><description>0 - Google</description></item>
+              <item><description>1 - DeepL</description></item>
+              <item><description>2 - ChatGPT</description></item>
+              <item><description>3 - YandexCloud</description></item>
+              <item><description>4 - GTranslate</description></item>
+              <item><description>5 - DeepSeek</description></item>
+              <item><description>6 - Ollama</description></item>
+              <item><description>7 - LibreTranslate</description></item>
+              <item><description>8 - Microsoft</description></item>
+              <item><description>9 - Amazon</description></item>
+              <item><description>10 - Gemini</description></item>
+              <item><description>11 - YandexPublic</description></item>
+              <item><description>12 - OpenRouter</description></item>
+              <item><description>13 - LmStudio</description></item>
+            </list>
+            </para>
+            <remarks>
+            - Vendor sets reflect their official language pages as of 2025-10-09.
+            - GTranslate follows Google’s language set; we mirror Google for that engine.
+            - LibreTranslate’s list can vary by instance; we use the canonical set exposed in docs.
+            - Region normalization is applied per engine (e.g., <c>pt-PT</c>, <c>pt-BR</c>, <c>zh-CN</c>, <c>zh-TW</c>).
+            - Manual-inclusion hook retains niche codes you already use (e.g., <c>klingon</c>, <c>nqo</c>).
+            </remarks>
             </summary>
         </member>
-        <member name="F:Echoglossian.LanguagesHandling.LanguageEngineSupport.EngineMap">
+        <member name="F:Echoglossian.LanguagesHandling.LanguageEngineSupport.BroadCoverageLlms">
             <summary>
-                Mapping of language codes to supported engines.
+            Engines treated as broadly multilingual (no fixed official "translation language" list).
+            These are always added to every language.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.LanguagesHandling.LanguageEngineSupport.ManualInclusionsPerEngine">
+            <summary>
+            Manual niche inclusions that you previously supported even if vendors don't formally list them.
+            Key: engine index; Value: set of language codes (case-insensitive).
+            </summary>
+        </member>
+        <member name="F:Echoglossian.LanguagesHandling.LanguageEngineSupport.VendorSets">
+            <summary>
+            Vendor-official sets (case-insensitive) of supported language codes. These are curated here
+            so we can compute per-language engine arrays deterministically and quickly at runtime.
             </summary>
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.ApplySupportTo(System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
             <summary>
-                Applies the supported engines to the given dictionary of language
-                information.
+            Applies supported engine indices to each language in the provided dictionary. This uses
+            vendor sets, per-engine normalization, LLM broad coverage, and manual inclusions.
             </summary>
-            <param name="dictionary">The dictionary containing language information.</param>
+            <param name="dictionary">Map: language ID → language info with a <c>Code</c> property.</param>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.NormalizeCodeForEngine(System.String,System.Int32)">
+            <summary>
+            Produces normalization candidates for a language code per engine. This keeps regional variants
+            consistent with vendor expectations (e.g., DeepL: <c>pt-PT</c>/<c>pt-BR</c>, Chinese variants).
+            </summary>
+            <param name="code">The raw language code from <c>LanguageInfo.Code</c>.</param>
+            <param name="engine">The engine index.</param>
+            <returns>One or more candidate codes to test for support.</returns>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetGoogleCommonCodes">
+            <summary>
+            Common Google/GTranslate codes we explicitly track; uncommon codes are still treated as supported.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetDeepLCodes">
+            <summary>
+            DeepL supported languages (2025 set including Hebrew, Vietnamese, Thai, Indonesian, Chinese).
+            Variants included where relevant (EN-GB/EN-US, PT-BR/PT-PT, ZH, etc.).
+            </summary>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetMicrosoftCodes">
+            <summary>
+            Microsoft Translator (Azure) language codes covering the plugin’s common set.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetAmazonCodes">
+            <summary>
+            Amazon Translate supported codes (mainstream coverage used in your plugin).
+            </summary>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetYandexCloudCodes">
+            <summary>
+            Yandex Cloud Translate language codes (official list).
+            </summary>
+        </member>
+        <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetLibreTranslateCodes">
+            <summary>
+            LibreTranslate canonical codes (can vary per instance; upstream commonly lists these).
+            </summary>
         </member>
         <member name="T:Echoglossian.LanguagesHandling.LanguageInfo">
             <summary>
