@@ -265,12 +265,14 @@ namespace Echoglossian
 
             if (foundTalkMessage == null)
             {
+              string nameTranslation = string.Empty;
+
               if (this.configuration.TranslateNpcNames)
               {
                 this.currentNameTranslationId = Environment.TickCount;
                 this.currentNameTranslation = Resources.WaitingForTranslation;
                 int nameId = this.currentNameTranslationId;
-                string nameTranslation = this.Translate(nameToTranslate);
+                nameTranslation = this.Translate(nameToTranslate);
                 this.nameTranslationSemaphore.Wait();
                 if (nameId == this.currentNameTranslationId)
                 {
@@ -303,8 +305,8 @@ namespace Echoglossian
                   textToTranslate,
                   ClientStateInterface.ClientLanguage.Humanize(),
                   ClientStateInterface.ClientLanguage.Humanize(),
-                  this.configuration.TranslateNpcNames ? this.currentNameTranslation : string.Empty,
-                  this.currentTalkTranslation,
+                  nameTranslation,
+                  translation,
                   langDict[languageInt].Code,
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
