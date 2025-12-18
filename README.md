@@ -31,12 +31,13 @@ Enable the desired translations and configure the various options through the Co
 ## Thanks
 - annaclemens for XivCommon
 - midorikami for AddonLifecycle
-- goaats for FFXIVQuickLauncher
+- goaats and the gang for dalamud and FFXIVQuickLauncher
 - haplo for ChatTranslator plugin
 - Eternita-S for their contribution
 - Bluefissure for their contribution
 - Soreepeong aka Kizer for the fontConfig fix
 - samulopez for all the contributions
+- pbzweihander for all the contributions
 
 
 ## Contributors
@@ -49,5 +50,8 @@ Enable the desired translations and configure the various options through the Co
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J35HJVY) 
 
+Donate crypto: bc1qfg9l4zt02k7wjgfr6t322razhj7le8f9wcfwwe
+
 You can also support the project via [![pix](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pixlogo.png)](https://github.com/lokinmodar/Echoglossian/raw/APIv4/images/pix.png) (only valid in Brazil)
+
 ###### Final Fantasy XIV © 2010-2024 SQUARE ENIX CO., LTD. All Rights Reserved. I am not affiliated with SQUARE ENIX CO., LTD. in any way.
