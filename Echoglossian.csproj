@@ -1,4 +1,4 @@
-﻿<Project Sdk="Dalamud.NET.SDK/14.0.1">
+﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
   <PropertyGroup Label="MultilingualAppToolkit">
     <MultilingualAppToolkitVersion>4.0</MultilingualAppToolkitVersion>
     <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
