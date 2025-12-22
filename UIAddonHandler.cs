@@ -49,9 +49,9 @@ namespace Echoglossian
 
     private AddonReceiveEventArgs addonReceiveEventArgs = null;
     private AddonSetupArgs addonSetupArgs = null;
-    private AddonUpdateArgs addonUpdateArgs = null;
-    private AddonDrawArgs addonDrawArgs = null;
-    private AddonFinalizeArgs addonFinalizeArgs = null;
+    private AddonArgs addonUpdateArgs = null;
+    private AddonArgs addonDrawArgs = null;
+    private AddonArgs addonFinalizeArgs = null;
     private AddonRequestedUpdateArgs addonRequestedUpdateArgs = null;
     private AddonRefreshArgs addonRefreshArgs = null;
 
@@ -96,7 +96,7 @@ namespace Echoglossian
       this.HandleCommonLogic();
     }
 
-    public void EgloAddonHandler(string addonName, AddonUpdateArgs? updateArgs = null)
+    public void EgloAddonHandler(string addonName, AddonArgs? updateArgs = null)
     {
       this.addonName = addonName;
       if (updateArgs != null)
@@ -107,7 +107,7 @@ namespace Echoglossian
       this.HandleCommonLogic();
     }
 
-    public void EgloAddonHandler(string addonName, AddonDrawArgs? drawArgs = null)
+/*    public void EgloAddonHandler(string addonName, AddonArgs? drawArgs = null)
     {
       this.addonName = addonName;
       if (drawArgs != null)
@@ -116,9 +116,9 @@ namespace Echoglossian
       }
 
       this.HandleCommonLogic();
-    }
+    }*/
 
-    public void EgloAddonHandler(string addonName, AddonFinalizeArgs? finalizeArgs = null)
+/*    public void EgloAddonHandler(string addonName, AddonArgs? finalizeArgs = null)
     {
       this.addonName = addonName;
       if (finalizeArgs != null)
@@ -127,7 +127,7 @@ namespace Echoglossian
       }
 
       this.HandleCommonLogic();
-    }
+    }*/
 
     public void EgloAddonHandler(string addonName, AddonRequestedUpdateArgs? requestedUpdateArgs = null)
     {
