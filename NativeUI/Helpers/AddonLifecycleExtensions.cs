@@ -24,19 +24,40 @@ namespace Echoglossian.NativeUI.Helpers
     /// <param name="addonName">The name of the addon for which lifecycle event listeners are registered.</param>
     public static void LogAddon(this IAddonLifecycle addonLifecycle, string addonName)
     {
-      addonLifecycle.RegisterListener(AddonEvent.PreSetup, addonName, Logger);
-      //addonLifecycle.RegisterListener(AddonEvent.PreUpdate, addonName, Logger);
+
+
+       addonLifecycle.RegisterListener(AddonEvent.PreSetup, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreUpdate, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreDraw, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreFinalize, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreRequestedUpdate, addonName, Logger);
       addonLifecycle.RegisterListener(AddonEvent.PreRefresh, addonName, Logger);
       addonLifecycle.RegisterListener(AddonEvent.PreReceiveEvent, addonName, Logger);
-      addonLifecycle.RegisterListener(AddonEvent.PreRequestedUpdate, addonName, Logger);
-      addonLifecycle.RegisterListener(AddonEvent.PreFinalize, addonName, Logger);
-      addonLifecycle.RegisterListener(AddonEvent.PreDraw, addonName, Logger);
-      addonLifecycle.RegisterListener(AddonEvent.PostDraw, addonName, Logger);
-      addonLifecycle.RegisterListener(AddonEvent.PostRefresh, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreOpen, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreClose, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreShow, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreHide, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreMove, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreMouseOver, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreMouseOut, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PreFocus, addonName, Logger);
+
       addonLifecycle.RegisterListener(AddonEvent.PostSetup, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostUpdate, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostDraw, addonName, Logger);
       addonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostRefresh, addonName, Logger);
       addonLifecycle.RegisterListener(AddonEvent.PostReceiveEvent, addonName, Logger);
-      //addonLifecycle.RegisterListener(AddonEvent.PostUpdate, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostOpen, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostClose, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostShow, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostHide, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostMove, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostMouseOver, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostMouseOut, addonName, Logger);
+      addonLifecycle.RegisterListener(AddonEvent.PostFocus, addonName, Logger);
+
+
     }
 
     /// <summary>
@@ -58,18 +79,35 @@ namespace Echoglossian.NativeUI.Helpers
     public static void UnLogAddon(this IAddonLifecycle addonLifecycle, string addonName)
     {
       addonLifecycle.UnregisterListener(AddonEvent.PreSetup, addonName, Logger);
-      // addonLifecycle.UnregisterListener(AddonEvent.PreUpdate, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreUpdate, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreDraw, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreFinalize, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, addonName, Logger);
       addonLifecycle.UnregisterListener(AddonEvent.PreRefresh, addonName, Logger);
       addonLifecycle.UnregisterListener(AddonEvent.PreReceiveEvent, addonName, Logger);
-      addonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, addonName, Logger);
-      addonLifecycle.UnregisterListener(AddonEvent.PreFinalize, addonName, Logger);
-      addonLifecycle.UnregisterListener(AddonEvent.PreDraw, addonName, Logger);
-      addonLifecycle.UnregisterListener(AddonEvent.PostDraw, addonName, Logger);
-      addonLifecycle.UnregisterListener(AddonEvent.PostRefresh, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreOpen, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreClose, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreShow, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreHide, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreMove, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreMouseOver, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreMouseOut, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PreFocus, addonName, Logger);
+
       addonLifecycle.UnregisterListener(AddonEvent.PostSetup, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostUpdate, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostDraw, addonName, Logger);
       addonLifecycle.UnregisterListener(AddonEvent.PostRequestedUpdate, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostRefresh, addonName, Logger);
       addonLifecycle.UnregisterListener(AddonEvent.PostReceiveEvent, addonName, Logger);
-      // addonLifecycle.UnregisterListener(AddonEvent.PostUpdate, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostOpen, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostClose, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostShow, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostHide, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostMove, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostMouseOver, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostMouseOut, addonName, Logger);
+      addonLifecycle.UnregisterListener(AddonEvent.PostFocus, addonName, Logger);
 
     }
   }

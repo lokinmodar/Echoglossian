@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using ImGuiScene;
-
 namespace Echoglossian;
 
 // old logic for overlays

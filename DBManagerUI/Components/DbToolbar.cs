@@ -1,6 +1,6 @@
 ﻿// <copyright file="DbToolbar.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
-// Licensed under the CC BY-NC-ND 4.0 International Public License.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
 namespace Echoglossian.DBManagerUI.Components
