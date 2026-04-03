@@ -1,4 +1,4 @@
-﻿// <copyright file="GameWindowCacheManager.cs" company="lokinmodar">
+// <copyright file="GameWindowCacheManager.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -32,7 +32,7 @@ public static class GameWindowCacheManager
     try
     {
       using var context = new EchoglossianDbContext(configDir);
-      var all = context.GameWindow.ToList();
+      var all = context.GameWindow.AsNoTracking().ToList();
 
       Cache.Clear();
 

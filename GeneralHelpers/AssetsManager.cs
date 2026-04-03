@@ -1,4 +1,4 @@
-﻿// <copyright file="AssetsManager.cs" company="lokinmodar">
+// <copyright file="AssetsManager.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -6,6 +6,7 @@ namespace Echoglossian;
 
 public static class AssetsManager
 {
+  private static readonly object MissingAssetFilesLock = new();
   public static List<string> AssetFiles = new();
 
   public static List<string> MissingAssetFiles = new();
@@ -21,6 +22,11 @@ public static class AssetsManager
 #if DEBUG
     Echoglossian.PluginLog.Debug("Checking Plugin assets!");
 #endif
+
+    lock (MissingAssetFilesLock)
+    {
+      MissingAssetFiles.Clear();
+    }
 
     Echoglossian.NotificationManager.AddNotification(new Notification
     {
@@ -60,9 +66,17 @@ public static class AssetsManager
       return;
     }
 
-    foreach (string f in MissingAssetFiles)
+    foreach (string f in MissingAssetFiles.ToArray())
     {
-      DownloadPluginAssets(MissingAssetFiles.IndexOf(f), f);
+      var assetIndex = AssetFiles.IndexOf(f);
+      if (assetIndex < 0)
+      {
+        Echoglossian.PluginLog.Warning(
+            $"Unknown asset file in missing assets list: {f}");
+        continue;
+      }
+
+      DownloadPluginAssets(assetIndex, f);
     }
 
     Echoglossian.NotificationManager.AddNotification(new Notification
@@ -79,13 +93,21 @@ public static class AssetsManager
     Task.Run(() =>
     {
       DownloadAssets(missingAssetIndex);
-      MissingAssetFiles.Remove(assetFile);
 
-      if (MissingAssetFiles.Count == 0)
+      bool allAssetsDownloaded;
+      lock (MissingAssetFilesLock)
       {
-        PluginAssetsState = true;
-        PluginAssetsDownloaded = true;
+        MissingAssetFiles.Remove(assetFile);
+        allAssetsDownloaded = MissingAssetFiles.Count == 0;
+        if (allAssetsDownloaded)
+        {
+          PluginAssetsState = true;
+          PluginAssetsDownloaded = true;
+        }
+      }
 
+      if (allAssetsDownloaded)
+      {
         Echoglossian.NotificationManager.AddNotification(new Notification
         {
           Content = Resources.AssetsPresentPopupMsg,
@@ -164,19 +186,6 @@ public static class AssetsManager
       Icon = NotificationUtilities.ToNotificationIcon(Dalamud.Interface.FontAwesomeIcon.Vault),
       Type = NotificationType.Success,
     });
-
-    if (MissingAssetFiles.Count == 0)
-    {
-      PluginAssetsState = true;
-      PluginAssetsDownloaded = true;
-
-      Echoglossian.NotificationManager.AddNotification(new Notification
-      {
-        Content = Resources.AssetsPresentPopupMsg,
-        Title = Resources.Name,
-        Icon = NotificationUtilities.ToNotificationIcon(FontAwesomeIcon.Vault),
-        Type = NotificationType.Success,
-      });
-    }
   }
 }
+

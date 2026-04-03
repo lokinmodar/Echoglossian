@@ -1,4 +1,4 @@
-﻿// <copyright file="DbOperations.cs" company="lokinmodar">
+// <copyright file="DbOperations.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -28,42 +28,43 @@ public partial class Echoglossian
   /// <summary>
   ///     Creates or uses the database, applying any pending migrations.
   /// </summary>
-  public async void CreateOrUseDb()
+  public void CreateOrUseDb()
   {
-    using (var context = new EchoglossianDbContext(ConfigDirectory))
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    PluginLog.Debug($"Config dir path: {ConfigDirectory}");
+    try
     {
       PluginLog.Debug($"Config dir path: {ConfigDirectory}");
-      try
+
+      var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+
+      if (pendingMigrations.Count != 0)
       {
-        PluginLog.Debug($"Config dir path: {ConfigDirectory}");
-
-        var pendingMigrations =
-            await context.Database.GetPendingMigrationsAsync();
-
-        if (pendingMigrations.Any())
-        {
-          PluginLog.Debug(
-              $"Pending migrations: {pendingMigrations.Count()}");
-          await context.Database.MigrateAsync();
-        }
-
-        var lastAppliedMigration =
-            (await context.Database.GetAppliedMigrationsAsync()).Last();
-
         PluginLog.Debug(
-            $"Last applied migration: {lastAppliedMigration}");
+            $"Pending migrations: {pendingMigrations.Count}");
+        context.Database.Migrate();
       }
-      catch (Exception e)
+
+      var appliedMigrations = context.Database.GetAppliedMigrations().ToList();
+      if (appliedMigrations.Count != 0)
       {
-        PluginLog.Error($"Error creating or using Db: {e}");
+        PluginLog.Debug(
+            $"Last applied migration: {appliedMigrations[^1]}");
       }
-      finally
+      else
       {
-        PluginLog.Debug("Db created or used successfully");
+        PluginLog.Debug("No applied migrations found.");
       }
     }
+    catch (Exception e)
+    {
+      PluginLog.Error($"Error creating or using Db: {e}");
+    }
+    finally
+    {
+      PluginLog.Debug("Db created or used successfully");
+    }
   }
-
   /// <summary>
   ///     Finds and returns a TalkMessage from the database.
   /// </summary>
@@ -79,7 +80,7 @@ public partial class Echoglossian
 
     try
     {
-      var existingTalkMessage = context.TalkMessage.Where(t =>
+      var existingTalkMessage = context.TalkMessage.AsNoTracking().Where(t =>
           t.SenderName == talkMessage.SenderName &&
           t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
           t.TranslationLang == talkMessage.TranslationLang);
@@ -89,8 +90,8 @@ public partial class Echoglossian
             t.TranslationEngine == talkMessage.TranslationEngine);
       }
 
-      var localFoundTalkMessage = existingTalkMessage?.FirstOrDefault();
-      if (existingTalkMessage?.FirstOrDefault() == null ||
+      var localFoundTalkMessage = existingTalkMessage.FirstOrDefault();
+      if (localFoundTalkMessage == null ||
           localFoundTalkMessage?.OriginalTalkMessage !=
           talkMessage.OriginalTalkMessage)
       {
@@ -227,7 +228,7 @@ public partial class Echoglossian
 
     try
     {
-      var existingBattleTalkMessage = context.BattleTalkMessage.Where(t =>
+      var existingBattleTalkMessage = context.BattleTalkMessage.AsNoTracking().Where(t =>
           t.SenderName == battleTalkMessage.SenderName &&
           t.OriginalBattleTalkMessage ==
           battleTalkMessage.OriginalBattleTalkMessage &&
@@ -241,7 +242,7 @@ public partial class Echoglossian
 
       var localFoundBattleTalkMessage =
           existingBattleTalkMessage.FirstOrDefault();
-      if (existingBattleTalkMessage.FirstOrDefault() == null ||
+      if (localFoundBattleTalkMessage == null ||
           localFoundBattleTalkMessage?.OriginalBattleTalkMessage !=
           battleTalkMessage.OriginalBattleTalkMessage)
       {
@@ -269,7 +270,7 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
-      var existingQuestPlate = context.QuestPlate.Where(t =>
+      var existingQuestPlate = context.QuestPlate.AsNoTracking().Where(t =>
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
           t.TranslationLang == questPlate.TranslationLang);
@@ -307,7 +308,7 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
-      var existingQuestPlate = context.QuestPlate.Where(t =>
+      var existingQuestPlate = context.QuestPlate.AsNoTracking().Where(t =>
           t.QuestName == questPlate.QuestName && t.TranslationLang ==
           questPlate.TranslationLang);
 
@@ -346,7 +347,7 @@ public partial class Echoglossian
     try
     {
       var existingTalkSubtitleMessage =
-          context.TalkSubtitleMessage.Where(t =>
+          context.TalkSubtitleMessage.AsNoTracking().Where(t =>
               t.OriginalTalkSubtitleMessage == talkSubtitleMessage
                   .OriginalTalkSubtitleMessage && t.TranslationLang ==
               talkSubtitleMessage.TranslationLang);
@@ -389,15 +390,14 @@ public partial class Echoglossian
         Path.DirectorySeparatorChar);
     try
     {
-      var existingGameWindow = context.GameWindow.Where(t =>
+      var existingGameWindow = context.GameWindow.AsNoTracking().Where(t =>
           t.WindowAddonName == gameWindow.WindowAddonName &&
           t.TranslationLang == gameWindow.TranslationLang);
-      if (existingGameWindow.FirstOrDefault() == null)
+      var localFoundGameWindow = existingGameWindow.FirstOrDefault();
+      if (localFoundGameWindow == null)
       {
         return null;
       }
-
-      var localFoundGameWindow = existingGameWindow.FirstOrDefault();
       if (localFoundGameWindow?.WindowAddonName !=
           gameWindow.WindowAddonName)
       {
@@ -481,7 +481,7 @@ public partial class Echoglossian
         ImGui.SetClipboardText(battleTalkMessage.ToString());
       }
 
-      context.SaveChangesAsync();
+      context.SaveChanges();
 
       return "Data inserted to BattleTalkMessages table.";
     }
@@ -520,7 +520,7 @@ public partial class Echoglossian
         ImGui.SetClipboardText(talkSubtitleMessage.ToString());
       }
 
-      context.SaveChangesAsync();
+      context.SaveChanges();
 
       return "Data inserted to TalkSubtitleMessages table.";
     }
@@ -568,9 +568,12 @@ public partial class Echoglossian
 
       context.ToastMessage.Attach(toastMessage);
 
-      context.SaveChangesAsync();
+      context.SaveChanges();
 
-      this.LoadAllErrorToasts();
+      if (this.ErrorToastsCache != null)
+      {
+        this.AppendToastToCache(this.ErrorToastsCache, toastMessage);
+      }
 
       return "Data inserted to ToastMessages table.";
     }
@@ -618,9 +621,12 @@ public partial class Echoglossian
 
       context.ToastMessage.Attach(toastMessage);
 
-      context.SaveChangesAsync();
+      context.SaveChanges();
 
-      this.LoadAllOtherToasts();
+      if (this.OtherToastsCache != null)
+      {
+        this.AppendToastToCache(this.OtherToastsCache, toastMessage);
+      }
 
       return "Data inserted to ToastMessages table.";
     }
@@ -649,7 +655,7 @@ public partial class Echoglossian
         ImGui.SetClipboardText(questPlate.ToString());
       }
 
-      context.SaveChangesAsync();
+      context.SaveChanges();
 
       return "Data inserted to QuestPlate table.";
     }
@@ -678,7 +684,7 @@ public partial class Echoglossian
         ImGui.SetClipboardText(questPlate.ToString());
       }
 
-      context.SaveChangesAsync();
+      context.SaveChanges();
 
       return "Data updated on QuestPlate table.";
     }
@@ -766,20 +772,17 @@ public partial class Echoglossian
   public void LoadAllErrorToasts()
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
-    this.ErrorToastsCache = new List<ToastMessage>();
 
     try
     {
-      var existingToastMessages =
-          context.ToastMessage.Where(t => t.ToastType == "Error");
-
-      foreach (var t in existingToastMessages)
-      {
-        this.ErrorToastsCache.Add(t);
-      }
+      this.ErrorToastsCache = context.ToastMessage
+          .AsNoTracking()
+          .Where(t => t.ToastType == "Error")
+          .ToList();
     }
     catch (Exception e)
     {
+      this.ErrorToastsCache = new List<ToastMessage>();
       PluginLog.Debug("Could not find any Error Toasts in Database", e.Message);
     }
   }
@@ -790,22 +793,35 @@ public partial class Echoglossian
   public void LoadAllOtherToasts()
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
-    this.OtherToastsCache = new List<ToastMessage>();
 
     try
     {
-      var existingToastMessages =
-          context.ToastMessage.Where(t => t.ToastType == "NonError");
-
-      foreach (var t in existingToastMessages)
-      {
-        this.OtherToastsCache.Add(t);
-      }
+      this.OtherToastsCache = context.ToastMessage
+          .AsNoTracking()
+          .Where(t => t.ToastType == "NonError")
+          .ToList();
     }
     catch (Exception e)
     {
+      this.OtherToastsCache = new List<ToastMessage>();
       PluginLog.Debug("Could not find any Other Toasts in Database", e.Message);
     }
+  }
+
+  private void AppendToastToCache(
+      List<ToastMessage> cache,
+      ToastMessage toastMessage)
+  {
+    if (cache.Exists(t =>
+            t.ToastType == toastMessage.ToastType &&
+            t.TranslationLang == toastMessage.TranslationLang &&
+            t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
+            t.TranslationEngine == toastMessage.TranslationEngine))
+    {
+      return;
+    }
+
+    cache.Add(toastMessage);
   }
 
   /// <summary>
@@ -844,7 +860,7 @@ public partial class Echoglossian
         $"FindEntity<{typeof(T).Name}> called with predicate: {predicate}");
     try
     {
-      return context.Set<T>().AsEnumerable().FirstOrDefault(predicate);
+      return context.Set<T>().AsNoTracking().AsEnumerable().FirstOrDefault(predicate);
     }
     catch (Exception ex)
     {
@@ -926,7 +942,11 @@ public partial class Echoglossian
     PluginLog.Debug($"FindStringArrayDatas called with predicate: {predicate}");
     try
     {
-      return context.StringArrayDatas.AsEnumerable().Where(predicate).ToList();
+      return context.StringArrayDatas
+          .AsNoTracking()
+          .AsEnumerable()
+          .Where(predicate)
+          .ToList();
     }
     catch (Exception ex)
     {
@@ -950,7 +970,7 @@ public partial class Echoglossian
 
     try
     {
-      var existingStringArrayData = context.StringArrayDatas.Where(sad =>
+      var existingStringArrayData = context.StringArrayDatas.AsNoTracking().Where(sad =>
           sad.Type == dataToSearch.Type &&
           sad.RawData == dataToSearch.RawData &&
           sad.TranslationLang == dataToSearch.TranslationLang);
@@ -961,8 +981,8 @@ public partial class Echoglossian
             t.TranslationEngine == dataToSearch.TranslationEngine);
       }
 
-      var localFoundStringArrayData = existingStringArrayData?.FirstOrDefault();
-      if (existingStringArrayData?.FirstOrDefault() == null ||
+      var localFoundStringArrayData = existingStringArrayData.FirstOrDefault();
+      if (localFoundStringArrayData == null ||
           localFoundStringArrayData?.RawData !=
           dataToSearch.RawData)
       {
@@ -992,6 +1012,7 @@ public partial class Echoglossian
     try
     {
       return context.StringArrayDatas
+          .AsNoTracking()
           .Where(sad => sad.Type == type && sad.TranslationLang == translationLang)
           .ToList();
     }
@@ -1002,3 +1023,4 @@ public partial class Echoglossian
     }
   }
 }
+

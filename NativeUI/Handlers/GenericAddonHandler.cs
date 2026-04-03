@@ -1,4 +1,4 @@
-﻿// <copyright file="GenericAddonHandler.cs" company="lokinmodar">
+// <copyright file="GenericAddonHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -569,7 +569,7 @@ public abstract unsafe class GenericAddonHandler<TGenericEntity> : IAddonTransla
     }
     else
     {
-      InsertEntity(entity);
+      InsertEntity(entity).GetAwaiter().GetResult();
       PluginLog.Debug($"[{this.AddonName}] Translation saved to DB.");
     }
   }
@@ -827,3 +827,4 @@ public class CombinedTranslationData
   /// </summary>
   public Dictionary<int, string>? StringArrayData { get; set; }
 }
+

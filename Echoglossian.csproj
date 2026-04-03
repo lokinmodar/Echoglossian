@@ -1,4 +1,4 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
+﻿<Project Sdk="Dalamud.NET.Sdk/14.0.2">
   <PropertyGroup Label="MultilingualAppToolkit">
     <MultilingualAppToolkitVersion>4.0</MultilingualAppToolkitVersion>
     <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
@@ -239,27 +239,27 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoCtor" Version="2.10.0" />
-    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.12" />
+    <PackageReference Include="AutoCtor" Version="2.12.0" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.22" />
 
-    <PackageReference Include="DeepL.net" Version="1.19.0" />
+    <PackageReference Include="DeepL.net" Version="1.20.0" />
     <PackageReference Include="GTranslate" Version="2.3.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="Injectio" Version="5.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="OpenAI" Version="2.8.0" />
-    <PackageReference Include="RestSharp" Version="113.1.0" />
+    <PackageReference Include="OpenAI" Version="2.9.1" />
+    <PackageReference Include="RestSharp" Version="114.0.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="System.Drawing.Common" Version="10.0.2" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">
@@ -323,5 +323,17 @@
     <Reference Include="Dalamud.Bindings.ImGuizmo" Private="false" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Compile Remove="Echoglossian.Tests\**" />
+    <EmbeddedResource Remove="Echoglossian.Tests\**" />
+    <None Remove="Echoglossian.Tests\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Update="DalamudPackager" Version="14.0.2" />
+    <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
+  </ItemGroup>
 
 </Project>

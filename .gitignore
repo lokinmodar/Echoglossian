@@ -338,3 +338,11 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Private local working material for the Echoglossian refactor
+.tmp/
+.migration-backups/
+.migration-test/
+docs/chatgpt-project-eglo-stuff/
+docs/project-chat-import/
+docs/refactor-timeline-and-flow-analysis.md

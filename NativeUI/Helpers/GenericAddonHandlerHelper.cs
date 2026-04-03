@@ -1,4 +1,4 @@
-﻿// <copyright file="GenericAddonHandlerHelper.cs" company="lokinmodar">
+// <copyright file="GenericAddonHandlerHelper.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -149,7 +149,7 @@ public static class GenericAddonHandlerHelper
           entity.SetGameVersion(GetGameVersion());
         }
 
-        InsertEntity(entity);
+        await InsertEntity(entity);
       }
 
       PluginLog.Debug($"[{addonName}] [Async] Translation saved successfully.");
@@ -184,3 +184,4 @@ public static class GenericAddonHandlerHelper
     }
   }
 }
+

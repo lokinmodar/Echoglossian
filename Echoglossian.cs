@@ -153,7 +153,7 @@ public partial class Echoglossian : IDalamudPlugin
           HelpMessage = Resources.HelpMessage,
         });
 
-    CommandManager.AddHandler(DBManagerWindowCommand, new CommandInfo(this.OnEglodDbEditorCommand)
+    CommandManager.AddHandler(DBManagerWindowCommand, new CommandInfo(this.OnEgloDbEditorCommand)
     {
       HelpMessage = Resources.OpensTheEchoglossianDBEditor
     });
@@ -636,12 +636,9 @@ public partial class Echoglossian : IDalamudPlugin
   /// </summary>
   /// <param name="command">Command name.</param>
   /// <param name="args">Command arguments.</param>
-  private void OnEglodDbEditorCommand(string command, string args)
+  private void OnEgloDbEditorCommand(string command, string args)
   {
-    if (this.dbEditorWindow != null)
-    {
-      this.dbEditorWindow.IsOpen = true;
-    }
+    this.dbEditorWindow?.IsOpen = true;
   }
 
   /// <summary>
