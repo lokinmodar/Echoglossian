@@ -13,6 +13,9 @@ namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 public sealed class TalkHandler : IAddonTranslationHandler
 {
   private const string TalkAddonName = "Talk";
+  private const int NameNodeId = 2;
+  private const int TextNodeId = 3;
+  private const int ParentNodeId = 10;
 
   private readonly Action clearOverlay;
   private readonly Config config;
@@ -27,6 +30,8 @@ public sealed class TalkHandler : IAddonTranslationHandler
   private int activeRequestId;
   private string currentOriginalName = string.Empty;
   private string currentOriginalText = string.Empty;
+  private string currentReplacementName = string.Empty;
+  private string currentReplacementText = string.Empty;
   private string currentTranslatedName = string.Empty;
   private string currentTranslatedText = string.Empty;
   private bool translationInFlight;
@@ -69,7 +74,10 @@ public sealed class TalkHandler : IAddonTranslationHandler
     this.normalizeReplacementText = normalizeReplacementText;
 
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);
-    this.RegisterHandler(AddonEvent.PreDraw, this.OnPreDraw);
+    this.RegisterHandler(AddonEvent.PostUpdate, this.OnApplyNativeTalkText);
+    this.RegisterHandler(AddonEvent.PreDraw, this.OnApplyNativeTalkText);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnResetState);
+    this.RegisterHandler(AddonEvent.PreFinalize, this.OnResetState);
   }
 
   /// <summary>
@@ -132,6 +140,10 @@ public sealed class TalkHandler : IAddonTranslationHandler
     var originalText = this.ReadTalkAtkString(atkValues[0]);
     var originalName = this.ReadTalkAtkString(atkValues[1]);
 
+    this.RemapTranslatedRefreshSourceToOriginal(
+        ref originalName,
+        ref originalText);
+
     if (string.IsNullOrWhiteSpace(originalText))
     {
       return;
@@ -156,6 +168,31 @@ public sealed class TalkHandler : IAddonTranslationHandler
             translatedName,
             translatedText);
       }
+
+      return;
+    }
+
+    if (this.TryLoadStoredTranslation(
+            originalName,
+            originalText,
+            out var storedTranslatedName,
+            out var storedTranslatedText))
+    {
+      this.PublishOverlay(
+          originalName,
+          originalText,
+          storedTranslatedName,
+          storedTranslatedText);
+
+      if (this.ShouldApplyNativeTalkText())
+      {
+        this.ApplyTranslatedRefreshValues(
+            atkValues,
+            storedTranslatedName,
+            storedTranslatedText);
+      }
+
+      return;
     }
 
     if (this.TryQueueTranslation(originalName, originalText, out var requestId))
@@ -169,12 +206,12 @@ public sealed class TalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
-  ///     Applies translated Talk text to the visible addon when replacement mode is
-  ///     enabled and an async translation becomes available after refresh.
+  ///     Applies translated Talk text to the visible addon during lifecycle stages
+  ///     where native node mutations can survive long enough to be rendered.
   /// </summary>
   /// <param name="type">The lifecycle event that triggered the handler.</param>
-  /// <param name="args">The addon arguments associated with the draw.</param>
-  private unsafe void OnPreDraw(AddonEvent type, AddonArgs args)
+  /// <param name="args">The addon arguments associated with the update or draw.</param>
+  private unsafe void OnApplyNativeTalkText(AddonEvent type, AddonArgs args)
   {
     if (args.AddonName != TalkAddonName || !this.ShouldApplyNativeTalkText())
     {
@@ -193,38 +230,42 @@ public sealed class TalkHandler : IAddonTranslationHandler
       return;
     }
 
-    var nameNode = talkAddon->GetTextNodeById(2);
-    var textNode = talkAddon->GetTextNodeById(3);
-    var parentNode = talkAddon->GetNodeById(10);
+    var nameNode = talkAddon->GetTextNodeById(NameNodeId);
+    var textNode = talkAddon->GetTextNodeById(TextNodeId);
+    var parentNode = talkAddon->GetNodeById(ParentNodeId);
 
     if (textNode == null || textNode->NodeText.IsEmpty || parentNode == null)
     {
       return;
     }
 
-    var originalName = nameNode != null && !nameNode->NodeText.IsEmpty
-        ? MemoryHelper.ReadSeStringAsString(
-            out _,
-            (nint)nameNode->NodeText.StringPtr.Value)
-        : string.Empty;
-    var originalText = MemoryHelper.ReadSeStringAsString(
-        out _,
-        (nint)textNode->NodeText.StringPtr.Value);
-
-    if (!this.TryGetCachedTranslation(
-            originalName,
-            originalText,
+    if (!this.TryGetCurrentResolvedTranslation(
             out var translatedName,
-            out var translatedText))
+            out var translatedText,
+            out var replacementName,
+            out var replacementText))
     {
       return;
     }
 
-    if (this.config.TranslateNpcNames &&
-        nameNode != null &&
-        !string.IsNullOrWhiteSpace(translatedName))
+    var visibleName = this.ReadNodeText(nameNode);
+    var visibleText = this.ReadNodeText(textNode);
+
+    if (this.IsNativeTalkAlreadyApplied(
+            visibleName,
+            visibleText,
+            replacementName,
+            replacementText))
     {
-      nameNode->SetText(this.NormalizeForReplacement(translatedName));
+      return;
+    }
+
+    if (this.ShouldTranslateTalkNpcNames() &&
+        nameNode != null &&
+        !string.IsNullOrWhiteSpace(translatedName) &&
+        visibleName != replacementName)
+    {
+      nameNode->SetText(replacementName);
     }
 
     textNode->TextFlags = TextFlags.WordWrap
@@ -234,8 +275,36 @@ public sealed class TalkHandler : IAddonTranslationHandler
         ? 11
         : translatedText.Length >= 256 ? 12 : 14);
     textNode->SetWidth(parentNode->GetWidth());
-    textNode->SetText(this.NormalizeForReplacement(translatedText));
+    textNode->SetText(replacementText);
     textNode->ResizeNodeForCurrentText();
+  }
+
+  /// <summary>
+  ///     Clears the active Talk state when the addon receives a new event or
+  ///     leaves the screen.
+  /// </summary>
+  /// <param name="type">The lifecycle event that triggered the reset.</param>
+  /// <param name="args">The addon arguments associated with the reset.</param>
+  private void OnResetState(AddonEvent type, AddonArgs args)
+  {
+    if (args.AddonName != TalkAddonName)
+    {
+      return;
+    }
+
+    lock (this.stateGate)
+    {
+      this.activeRequestId++;
+      this.currentOriginalName = string.Empty;
+      this.currentOriginalText = string.Empty;
+      this.currentReplacementName = string.Empty;
+      this.currentReplacementText = string.Empty;
+      this.currentTranslatedName = string.Empty;
+      this.currentTranslatedText = string.Empty;
+      this.translationInFlight = false;
+    }
+
+    this.clearOverlay();
   }
 
   /// <summary>
@@ -280,7 +349,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
       atkValues[0].SetManagedString(this.NormalizeForReplacement(translatedText));
     }
 
-    if (this.config.TranslateNpcNames &&
+    if (this.ShouldTranslateTalkNpcNames() &&
         !string.IsNullOrWhiteSpace(translatedName))
     {
       atkValues[1].SetManagedString(this.NormalizeForReplacement(translatedName));
@@ -301,6 +370,119 @@ public sealed class TalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Determines whether Talk sender names should participate in translation,
+  ///     native replacement, and overlay title resolution.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when Talk sender names are enabled for the
+  ///     current config; otherwise, <see langword="false" />.
+  /// </returns>
+  private bool ShouldTranslateTalkNpcNames()
+  {
+    return this.config.TranslateTalkNpcNames;
+  }
+
+  /// <summary>
+  ///     Reads the current string value from a text node.
+  /// </summary>
+  /// <param name="textNode">The text node to inspect.</param>
+  /// <returns>The visible node text, or an empty string when unavailable.</returns>
+  private unsafe string ReadNodeText(AtkTextNode* textNode)
+  {
+    return textNode != null && !textNode->NodeText.IsEmpty
+        ? MemoryHelper.ReadSeStringAsString(
+            out _,
+            (nint)textNode->NodeText.StringPtr.Value)
+        : string.Empty;
+  }
+
+  /// <summary>
+  ///     Determines whether the native Talk addon already shows the translated
+  ///     replacement text for the active line.
+  /// </summary>
+  /// <param name="visibleName">The sender name currently visible in the addon.</param>
+  /// <param name="visibleText">The Talk text currently visible in the addon.</param>
+  /// <param name="replacementName">
+  ///     The pre-normalized sender name that should be written to the native UI.
+  /// </param>
+  /// <param name="replacementText">
+  ///     The pre-normalized Talk text that should be written to the native UI.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when the visible native UI already matches the
+  ///     translated replacement state; otherwise, <see langword="false" />.
+  /// </returns>
+  private bool IsNativeTalkAlreadyApplied(
+      string visibleName,
+      string visibleText,
+      string replacementName,
+      string replacementText)
+  {
+    if (string.IsNullOrWhiteSpace(replacementText))
+    {
+      return false;
+    }
+
+    var textMatches = visibleText == replacementText;
+    var nameMatches = !this.ShouldTranslateTalkNpcNames() ||
+                      string.IsNullOrWhiteSpace(replacementName) ||
+                      visibleName == replacementName;
+
+    return textMatches && nameMatches;
+  }
+
+  /// <summary>
+  ///     Maps Talk refresh values back to the original source line when the addon
+  ///     refresh arrives already carrying the translated text previously written
+  ///     into the native nodes.
+  /// </summary>
+  /// <param name="capturedName">
+  ///     The captured sender name, updated in place when a translated value is
+  ///     recognized.
+  /// </param>
+  /// <param name="capturedText">
+  ///     The captured Talk text, updated in place when a translated value is
+  ///     recognized.
+  /// </param>
+  private void RemapTranslatedRefreshSourceToOriginal(
+      ref string capturedName,
+      ref string capturedText)
+  {
+    lock (this.stateGate)
+    {
+      if (string.IsNullOrWhiteSpace(this.currentOriginalText) ||
+          string.IsNullOrWhiteSpace(this.currentTranslatedText))
+      {
+        return;
+      }
+
+      var normalizedTranslatedText = this.currentReplacementText;
+      var textMatchesTranslatedOutput =
+          capturedText == this.currentTranslatedText ||
+          capturedText == normalizedTranslatedText;
+
+      if (!textMatchesTranslatedOutput)
+      {
+        return;
+      }
+
+      var nameMatchesTranslatedOutput =
+          !this.ShouldTranslateTalkNpcNames() ||
+          string.IsNullOrWhiteSpace(this.currentTranslatedName) ||
+          capturedName == this.currentTranslatedName ||
+          capturedName == this.currentReplacementName;
+
+      if (!nameMatchesTranslatedOutput)
+      {
+        return;
+      }
+
+      capturedName = this.currentOriginalName;
+      capturedText = this.currentOriginalText;
+    }
+  }
+
+  /// <summary>
   ///     Publishes translated Talk content into the shared overlay state.
   /// </summary>
   /// <param name="originalName">The original sender name.</param>
@@ -313,9 +495,12 @@ public sealed class TalkHandler : IAddonTranslationHandler
       string translatedName,
       string translatedText)
   {
+    var resolvedOverlayName = !string.IsNullOrWhiteSpace(translatedName)
+        ? translatedName
+        : originalName;
     var overlayName = this.config.SwapTextsUsingImGui
         ? originalName
-        : this.config.TranslateNpcNames ? translatedName : string.Empty;
+        : resolvedOverlayName;
     var overlayText = this.config.SwapTextsUsingImGui
         ? originalText
         : translatedText;
@@ -323,7 +508,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
     this.updateOverlay(
         overlayName,
         overlayText,
-        this.config.TranslateNpcNames ? originalName : string.Empty);
+        originalName);
   }
 
   /// <summary>
@@ -336,6 +521,53 @@ public sealed class TalkHandler : IAddonTranslationHandler
     return atkValue.String != null
         ? MemoryHelper.ReadSeStringAsString(out _, (nint)atkValue.String.Value)
         : string.Empty;
+  }
+
+  /// <summary>
+  ///     Tries to load an existing Talk translation synchronously from the
+  ///     database so saved lines can still swap immediately during refresh.
+  /// </summary>
+  /// <param name="originalName">The original sender name.</param>
+  /// <param name="originalText">The original Talk text.</param>
+  /// <param name="translatedName">Receives the translated sender name.</param>
+  /// <param name="translatedText">Receives the translated Talk text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when a stored translation exists for the current
+  ///     Talk line; otherwise, <see langword="false" />.
+  /// </returns>
+  private bool TryLoadStoredTranslation(
+      string originalName,
+      string originalText,
+      out string translatedName,
+      out string translatedText)
+  {
+    var foundTalkMessage = this.findTalkMessage(
+        this.BuildLookupMessage(originalName, originalText));
+    if (foundTalkMessage == null)
+    {
+      translatedName = string.Empty;
+      translatedText = string.Empty;
+      return false;
+    }
+
+    translatedName = this.ShouldTranslateTalkNpcNames()
+        ? foundTalkMessage.TranslatedSenderName ?? string.Empty
+        : string.Empty;
+    translatedText = foundTalkMessage.TranslatedTalkMessage ?? string.Empty;
+
+    lock (this.stateGate)
+    {
+      this.activeRequestId++;
+      this.currentOriginalName = originalName;
+      this.currentOriginalText = originalText;
+      this.currentReplacementName = this.NormalizeForReplacement(translatedName);
+      this.currentReplacementText = this.NormalizeForReplacement(translatedText);
+      this.currentTranslatedName = translatedName;
+      this.currentTranslatedText = translatedText;
+      this.translationInFlight = false;
+    }
+
+    return !string.IsNullOrWhiteSpace(translatedText);
   }
 
   /// <summary>
@@ -361,7 +593,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
 
       if (foundTalkMessage != null)
       {
-        translatedName = this.config.TranslateNpcNames
+        translatedName = this.ShouldTranslateTalkNpcNames()
             ? foundTalkMessage.TranslatedSenderName ?? string.Empty
             : string.Empty;
         translatedText = foundTalkMessage.TranslatedTalkMessage ?? string.Empty;
@@ -373,7 +605,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
             ClientStateInterface.ClientLanguage.Humanize(),
             LangDict[LanguageInt].Code);
 
-        translatedName = this.config.TranslateNpcNames && !originalName.IsNullOrEmpty()
+        translatedName = this.ShouldTranslateTalkNpcNames() && !originalName.IsNullOrEmpty()
             ? await this.translationService.TranslateAsync(
                 originalName,
                 ClientStateInterface.ClientLanguage.Humanize(),
@@ -404,6 +636,8 @@ public sealed class TalkHandler : IAddonTranslationHandler
         }
 
         this.translationInFlight = false;
+        this.currentReplacementName = this.NormalizeForReplacement(translatedName);
+        this.currentReplacementText = this.NormalizeForReplacement(translatedText);
         this.currentTranslatedName = translatedName;
         this.currentTranslatedText = translatedText;
       }
@@ -446,6 +680,47 @@ public sealed class TalkHandler : IAddonTranslationHandler
   private bool ShouldApplyNativeTalkText()
   {
     return !this.config.UseImGuiForTalk || this.config.SwapTextsUsingImGui;
+  }
+
+  /// <summary>
+  ///     Returns the active resolved Talk translation currently held by the
+  ///     handler state.
+  /// </summary>
+  /// <param name="translatedName">Receives the translated sender name.</param>
+  /// <param name="translatedText">Receives the translated Talk text.</param>
+  /// <param name="replacementName">
+  ///     Receives the sender name already normalized for native replacement.
+  /// </param>
+  /// <param name="replacementText">
+  ///     Receives the Talk text already normalized for native replacement.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when the handler already has a translated Talk
+  ///     line ready for native replacement; otherwise, <see langword="false" />.
+  /// </returns>
+  private bool TryGetCurrentResolvedTranslation(
+      out string translatedName,
+      out string translatedText,
+      out string replacementName,
+      out string replacementText)
+  {
+    lock (this.stateGate)
+    {
+      if (!string.IsNullOrWhiteSpace(this.currentTranslatedText))
+      {
+        translatedName = this.currentTranslatedName;
+        translatedText = this.currentTranslatedText;
+        replacementName = this.currentReplacementName;
+        replacementText = this.currentReplacementText;
+        return true;
+      }
+    }
+
+    translatedName = string.Empty;
+    translatedText = string.Empty;
+    replacementName = string.Empty;
+    replacementText = string.Empty;
+    return false;
   }
 
   /// <summary>
@@ -519,6 +794,8 @@ public sealed class TalkHandler : IAddonTranslationHandler
 
       this.currentOriginalName = originalName;
       this.currentOriginalText = originalText;
+      this.currentReplacementName = string.Empty;
+      this.currentReplacementText = string.Empty;
       this.currentTranslatedName = string.Empty;
       this.currentTranslatedText = string.Empty;
       this.translationInFlight = true;

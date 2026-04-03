@@ -108,6 +108,15 @@ namespace Echoglossian.NativeUI.Handlers
           try
           {
             var type = stringArrayDataTypesAvailable[i];
+
+            // BattleTalk now has a dedicated addon handler runtime. Keeping the
+            // legacy StringArrayData path active in parallel causes duplicate
+            // capture/translation attempts and inconsistent state.
+            if (type == StringArrayType.BattleTalk)
+            {
+              continue;
+            }
+
             var stringArrayData = atkStage->GetStringArrayData(type);
             var stringArray = stringArrayData->StringArray;
 

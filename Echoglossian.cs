@@ -205,6 +205,8 @@ public partial class Echoglossian : IDalamudPlugin
       this.FixConfig();
     }
 
+    this.MigrateOverlayStyleSettings();
+
     this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
 
     PluginLog.Debug(
@@ -303,11 +305,6 @@ public partial class Echoglossian : IDalamudPlugin
       // this.ParseUi();
       this.StringArrayDataHandler.LoadAndTranslateStringArrayDatas();
     }*/
-
-    // Disabling BattleTalk translation by default if the language is not supported by the game font while we fix the overlays
-    this.configuration.TranslateBattleTalk =
-        this.configuration.OverlayOnlyLanguage ? false : true;
-    this.configuration.UseImGuiForBattleTalk = false;
 
     // Fix wrong chatgpt base url in v3.17
     // TODO: remove it in later versions
@@ -739,7 +736,22 @@ public partial class Echoglossian : IDalamudPlugin
           (AddonName: "_BattleTalk",
               Handler: new BattleTalkHandler(
                   this.configuration,
-                  TranslationService)));
+                  TranslationService,
+                  this.FindAndReturnBattleTalkMessage,
+                  battleTalkMessage => Task.FromResult(
+                      InsertBattleTalkData(battleTalkMessage)),
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.battleTalkOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(
+                      this.battleTalkOverlay,
+                      clearText: true),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
     }
 
     AddonHandlerRegistrar.RegisterMany(
@@ -896,7 +908,7 @@ public partial class Echoglossian : IDalamudPlugin
     AddonLifecycleExtensions.LogAddon(
         AddonLifecycle,
         "_BattleTalk",
-        lifecycleLogEventsWithoutUpdates);
+        lifecycleLogEventsWithoutUpdatesAndDraws);
 
   }
 }

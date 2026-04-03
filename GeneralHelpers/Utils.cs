@@ -164,7 +164,7 @@ public partial class Echoglossian
     config.PluginVersion =
         Assembly.GetExecutingAssembly().GetName().Version?.ToString() ??
         "unknown";
-    config.Version = 5;
+    config.Version = 7;
 
     // Persist config
     saveCallback?.Invoke();
@@ -206,6 +206,36 @@ public partial class Echoglossian
     ResetSettings(this.configuration, () => SaveConfig(this.configuration));
 
     PluginInterface.GetPluginConfig();
+  }
+
+  /// <summary>
+  ///     Migrates legacy shared overlay style settings and NPC-name settings into
+  ///     the per-overlay/per-addon settings introduced for newer configs.
+  /// </summary>
+  public void MigrateOverlayStyleSettings()
+  {
+    if (this.configuration.Version >= 7)
+    {
+      return;
+    }
+
+    if (this.configuration.Version < 6)
+    {
+      this.configuration.TalkForceShowTitle = this.configuration.ForceShowTitle;
+      this.configuration.BattleTalkForceShowTitle =
+          this.configuration.ForceShowTitle;
+      this.configuration.ToastForceShowTitle = this.configuration.ForceShowTitle;
+      this.configuration.TalkSubtitleForceShowTitle =
+          this.configuration.ForceShowTitle;
+    }
+
+    this.configuration.TranslateTalkNpcNames =
+        this.configuration.TranslateNpcNames;
+    this.configuration.TranslateBattleTalkNpcNames =
+        this.configuration.TranslateNpcNames;
+    this.configuration.Version = 7;
+
+    SaveConfig(this.configuration);
   }
 
   /// <summary>
@@ -409,11 +439,11 @@ public partial class Echoglossian
   /// <returns>Cleand text.</returns>
   public string RemoveDiacritics(string text, HashSet<char> supportedChars)
   {
-    PluginLog.Debug(
-        $"Removing diacritics from text: {text}, supportedChars count: {supportedChars.Count}");
+    // PluginLog.Debug(
+    //     $"Removing diacritics from text: {text}, supportedChars count: {supportedChars.Count}");
     if (string.IsNullOrEmpty(text))
     {
-      PluginLog.Debug("Text is null or empty, returning as is.");
+      // PluginLog.Debug("Text is null or empty, returning as is.");
       return text;
     }
 

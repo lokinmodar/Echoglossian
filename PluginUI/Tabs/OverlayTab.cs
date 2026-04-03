@@ -78,6 +78,12 @@ public static class OverlayTab
                 break;
         }
 
+        if (ShouldRemoveDiacritics(config))
+        {
+            ImGui.Separator();
+            changed |= DrawGlobalReplacementDiacriticsSetting(config);
+        }
+
         ImGui.EndChild();
 
         if (changed)
@@ -127,18 +133,17 @@ public static class OverlayTab
 
         changed |= ImGui.Checkbox(
             Resources.TranslateNpcNamesToggle,
-            ref config.TranslateNpcNames);
+            ref config.TranslateTalkNpcNames);
 
         if (config.UseImGuiForTalk)
         {
             changed |= DrawOverlaySettings(
                 ref config.TalkFontScale,
                 ref config.ImGuiTalkWindowWidthMult,
-                ref config.ImGuiTalkWindowHeightMult,
                 ref config.ImGuiWindowPosCorrection,
                 ref config.OverlayTalkTextColor,
                 Resources.OverlayFontScaleLabel,
-                ref config.ForceShowTitle,
+                ref config.TalkForceShowTitle,
                 ref config.FontChangeTime);
         }
 
@@ -147,13 +152,6 @@ public static class OverlayTab
             changed |= ImGui.Checkbox(
                 Resources.SwapTranslationTextToggle,
                 ref config.SwapTextsUsingImGui);
-
-            if (config.SwapTextsUsingImGui && ShouldRemoveDiacritics(config))
-            {
-                changed |= ImGui.Checkbox(
-                    Resources.RemoveDiacriticsToggle,
-                    ref config.RemoveDiacriticsWhenUsingReplacementTalkBTalk);
-            }
         }
 
         return changed;
@@ -186,6 +184,7 @@ public static class OverlayTab
         if (config.OverlayOnlyLanguage)
         {
             changed |= AssignIfChanged(ref config.UseImGuiForBattleTalk, true);
+            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
         }
         else
         {
@@ -194,17 +193,27 @@ public static class OverlayTab
                 ref config.UseImGuiForBattleTalk);
         }
 
+        changed |= ImGui.Checkbox(
+            Resources.TranslateNpcNamesToggle,
+            ref config.TranslateBattleTalkNpcNames);
+
         if (config.UseImGuiForBattleTalk)
         {
             changed |= DrawOverlaySettings(
                 ref config.BattleTalkFontScale,
                 ref config.ImGuiBattleTalkWindowWidthMult,
-                ref config.ImGuiBattleTalkWindowHeightMult,
                 ref config.ImGuiBattleTalkWindowPosCorrection,
                 ref config.OverlayBattleTalkTextColor,
                 Resources.OverlayFontScaleLabel,
-                ref config.ForceShowTitle,
+                ref config.BattleTalkForceShowTitle,
                 ref config.FontChangeTime);
+        }
+
+        if (!config.OverlayOnlyLanguage && config.UseImGuiForBattleTalk)
+        {
+            changed |= ImGui.Checkbox(
+                Resources.SwapTranslationTextToggle,
+                ref config.SwapTextsUsingImGui);
         }
 
         return changed;
@@ -278,7 +287,7 @@ public static class OverlayTab
                 ref config.ImGuiToastWindowPosCorrection,
                 ref config.OverlayToastTextColor,
                 Resources.OverlayFontScaleLabel,
-                ref config.ForceShowTitle,
+                ref config.ToastForceShowTitle,
                 ref config.FontChangeTime);
 
             ImGui.SameLine();
@@ -335,11 +344,10 @@ public static class OverlayTab
             changed |= DrawOverlaySettings(
                 ref config.TalkSubtitleFontScale,
                 ref config.ImGuiTalkSubtitleWindowWidthMult,
-                ref config.ImGuiTalkSubtitleWindowHeightMult,
                 ref config.ImGuiTalkSubtitleWindowPosCorrection,
                 ref config.OverlayTalkSubtitleTextColor,
                 Resources.OverlayFontScaleLabel,
-                ref config.ForceShowTitle,
+                ref config.TalkSubtitleForceShowTitle,
                 ref config.FontChangeTime);
         }
 
@@ -347,81 +355,8 @@ public static class OverlayTab
     }
 
     /// <summary>
-    ///     Draw settings for overlays that have width, height, position, color,
-    ///     font scale, and shared title-bar behavior.
-    /// </summary>
-    private static bool DrawOverlaySettings(
-        ref float fontScale,
-        ref float widthMult,
-        ref float heightMult,
-        ref Vector2 positionCorrection,
-        ref Vector3 textColor,
-        string fontScaleLabel,
-        ref bool forceShowTitle,
-        ref long fontChangeTime)
-    {
-        var changed = false;
-
-        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
-        {
-            changed = true;
-            fontChangeTime = DateTime.Now.Ticks;
-        }
-
-        ImGui.SameLine();
-        ImGui.Text(Resources.HoverTooltipIndicator);
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
-        }
-
-        ImGui.Text(Resources.FontColorSelectLabel);
-        ImGui.SameLine();
-        changed |= ImGui.ColorEdit3(
-            Resources.OverlayColorSelectName,
-            ref textColor,
-            ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
-
-        ImGui.SameLine();
-        ImGui.Text(Resources.HoverTooltipIndicator);
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
-        }
-
-        changed |= ImGui.DragFloat(
-            Resources.OverlayWidthScrollLabel,
-            ref widthMult,
-            0.001f,
-            0.01f,
-            3f);
-        changed |= ImGui.DragFloat(
-            Resources.OverlayHeightScrollLabel,
-            ref heightMult,
-            0.001f,
-            0.01f,
-            3f);
-
-        changed |= ImGui.DragFloat2(
-            Resources.OverlayPositionAdjustmentLabel,
-            ref positionCorrection);
-        ImGui.SameLine();
-        ImGui.Text(Resources.HoverTooltipIndicator);
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
-        }
-
-        changed |= ImGui.Checkbox(
-            Resources.OverlayForceShowTitleToggleLabel,
-            ref forceShowTitle);
-
-        return changed;
-    }
-
-    /// <summary>
     ///     Draw settings for overlays that do not have a height adjustment (e.g.,
-    ///     Toast) but still share title-bar behavior.
+    ///     Toast) but still expose per-overlay title-bar behavior.
     /// </summary>
     private static bool DrawOverlaySettings(
         ref float fontScale,
@@ -494,6 +429,23 @@ public static class OverlayTab
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Draws the global diacritics-removal toggle used by native replacement
+    ///     flows across Talk, BattleTalk, Toasts, subtitles, and other handlers
+    ///     that must fit within the game font limitations.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the toggle value changed; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    private static bool DrawGlobalReplacementDiacriticsSetting(Config config)
+    {
+        return ImGui.Checkbox(
+            Resources.RemoveDiacriticsToggle,
+            ref config.RemoveDiacriticsWhenUsingReplacementTalkBTalk);
     }
 
     private static bool ShouldRemoveDiacritics(Config config)

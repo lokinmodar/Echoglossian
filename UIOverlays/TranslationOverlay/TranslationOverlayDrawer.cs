@@ -23,16 +23,8 @@ namespace Echoglossian
       bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
 
       overlay.NameSemaphore.Wait();
-
-      if (!string.IsNullOrWhiteSpace(originalName))
-      {
-        overlay.OriginalName = originalName;
-      }
-
-      if (!string.IsNullOrWhiteSpace(translatedName))
-      {
-        overlay.CurrentName = translatedName;
-      }
+      overlay.OriginalName = originalName ?? string.Empty;
+      overlay.CurrentName = translatedName ?? string.Empty;
 
       overlay.NameSemaphore.Release();
 
@@ -124,9 +116,10 @@ namespace Echoglossian
         return;
       }
 
-      if (string.IsNullOrWhiteSpace(customTitle))
+      var resolvedTitle = customTitle;
+      if (string.IsNullOrWhiteSpace(resolvedTitle))
       {
-        customTitle = !string.IsNullOrWhiteSpace(overlay.CurrentName)
+        resolvedTitle = !string.IsNullOrWhiteSpace(overlay.CurrentName)
             ? overlay.CurrentName
             : overlay.OriginalName;
       }
@@ -137,12 +130,44 @@ namespace Echoglossian
           overlay.Position.X + (overlay.Dimensions.X / 2) - (overlay.ImGuiSize.X / 2),
           overlay.Position.Y - overlay.ImGuiSize.Y - 20) + config.PosCorrection);
 
-      float width = Math.Min(
-          overlay.Dimensions.X * config.WidthMultiplier,
-          ImGui.CalcTextSize(overlay.CurrentText).X + (ImGui.GetStyle().WindowPadding.X * 2));
-      float height = overlay.Dimensions.Y * config.HeightMultiplier;
+      var viewportWidth = ImGui.GetMainViewport().Size.X;
+      var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2;
+      var baseWidth = overlay.Dimensions.X * config.WidthMultiplier;
+      var textWidth = ImGui.CalcTextSize(overlay.CurrentText).X + horizontalPadding;
+      var defaultMaxWidth = Math.Max(320f, viewportWidth - 80f);
+      var minWidth = config.MinWidthViewportFraction > 0.0f
+          ? viewportWidth * config.MinWidthViewportFraction
+          : 0.0f;
+      var maxWidth = config.MaxWidthViewportFraction > 0.0f
+          ? Math.Min(
+              viewportWidth * config.MaxWidthViewportFraction,
+              defaultMaxWidth)
+          : defaultMaxWidth;
+      var desiredWidth = baseWidth;
+      if (config.ExpandWidthToFitText)
+      {
+        var autoExpandedWidth = Math.Min(
+            textWidth,
+            baseWidth * config.MaxAutoExpandedWidthMultiplier);
+        desiredWidth = Math.Max(baseWidth, autoExpandedWidth);
+      }
+      float width = Math.Clamp(desiredWidth, minWidth, maxWidth);
+      var viewportHeight = ImGui.GetMainViewport().Size.Y;
+      var maxHeight = Math.Max(180f, viewportHeight - 80f);
 
-      ImGui.SetNextWindowSizeConstraints(new Vector2(width, 0), new Vector2(width * 4, height));
+      if (config.UseFixedWindowSize)
+      {
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(width, 0),
+            new Vector2(width, maxHeight));
+      }
+      else
+      {
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(width, 0),
+            new Vector2(width * 4, maxHeight));
+      }
+
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1.0f));
 
       if (this.configuration.SwapTextsUsingImGui)
@@ -155,12 +180,13 @@ namespace Echoglossian
       }
 
       ImGuiWindowFlags flags = ImGuiWindowFlags.NoNav
-                              | ImGuiWindowFlags.AlwaysAutoResize
                               | ImGuiWindowFlags.NoFocusOnAppearing
                               | ImGuiWindowFlags.NoMouseInputs
                               | ImGuiWindowFlags.NoScrollbar;
 
-      if (!config.ForceShowTitle)
+      flags |= ImGuiWindowFlags.AlwaysAutoResize;
+
+      if (!config.ForceShowTitle || string.IsNullOrWhiteSpace(resolvedTitle))
       {
         flags |= ImGuiWindowFlags.NoTitleBar;
       }
@@ -170,8 +196,11 @@ namespace Echoglossian
         flags |= ImGuiWindowFlags.NoBackground;
       }
 
-      ImGui.Begin(customTitle ?? config.DefaultTitle, flags);
-      ImGui.SetWindowFontScale(this.configuration.TalkFontScale);
+      var windowLabel = !string.IsNullOrWhiteSpace(resolvedTitle)
+          ? resolvedTitle
+          : $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}";
+      ImGui.Begin(windowLabel, flags);
+      ImGui.SetWindowFontScale(config.FontScale);
 
       overlay.Semaphore.Wait();
       ImGui.TextWrapped(overlay.CurrentText);

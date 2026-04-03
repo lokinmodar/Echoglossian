@@ -91,8 +91,14 @@ public class Config : IPluginConfiguration
   /// <summary>Font size used in overlays.</summary>
   [DefaultValue(24)] public int FontSize = 24;
 
-  /// <summary>Always show overlay title bar, even if name translation is off.</summary>
+  /// <summary>
+  ///     Legacy shared title-bar toggle kept for config migration from older
+  ///     versions that still used a single overlay title-bar setting.
+  /// </summary>
   [DefaultValue(false)] public bool ForceShowTitle = false;
+
+  /// <summary>Always show the BattleTalk overlay title bar.</summary>
+  [DefaultValue(false)] public bool BattleTalkForceShowTitle = false;
 
   /// <summary>Gemini model ID used for translations.</summary>
   [DefaultValue("gemini-pro")] public string? GeminiModel = "gemini-pro";
@@ -278,11 +284,20 @@ public class Config : IPluginConfiguration
   /// <summary>Scaling factor for Talk font.</summary>
   [DefaultValue(1f)] public float TalkFontScale = 1f;
 
+  /// <summary>Always show the Talk overlay title bar.</summary>
+  [DefaultValue(false)] public bool TalkForceShowTitle = false;
+
   /// <summary>Font scale used for Talk Subtitle overlay.</summary>
   [DefaultValue(1f)] public float TalkSubtitleFontScale = 1f;
 
+  /// <summary>Always show the Talk Subtitle overlay title bar.</summary>
+  [DefaultValue(false)] public bool TalkSubtitleForceShowTitle = false;
+
   /// <summary>Font scale used for Toast overlay.</summary>
   [DefaultValue(1f)] public float ToastFontScale = 1f;
+
+  /// <summary>Always show the Toast overlay title bar.</summary>
+  [DefaultValue(false)] public bool ToastForceShowTitle = false;
 
   /// <summary>Enables translation processing globally.</summary>
   [DefaultValue(false)] public bool Translate = false;
@@ -299,6 +314,9 @@ public class Config : IPluginConfiguration
   /// <summary>Translate BattleTalk messages.</summary>
   [DefaultValue(false)] public bool TranslateBattleTalk = false;
 
+  /// <summary>Translate or show sender names for BattleTalk messages.</summary>
+  [DefaultValue(false)] public bool TranslateBattleTalkNpcNames = false;
+
   /// <summary> Translate character window text.</summary>
   [DefaultValue(false)] public bool TranslateCharacterWindow = false;
 
@@ -314,7 +332,10 @@ public class Config : IPluginConfiguration
   /// <summary>Translate entries in the quest journal.</summary>
   [DefaultValue(false)] public bool TranslateJournal = false;
 
-  /// <summary>Translate NPC names in Talk window.</summary>
+  /// <summary>
+  ///     Legacy shared NPC-name translation toggle kept for migration from
+  ///     older configs that did not yet separate Talk and BattleTalk.
+  /// </summary>
   [DefaultValue(false)] public bool TranslateNpcNames = false;
 
   /// <summary>Translate quest-related toasts.</summary>
@@ -331,6 +352,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate Talk window messages.</summary>
   [DefaultValue(false)] public bool TranslateTalk = false;
+
+  /// <summary>Translate or show sender names for Talk messages.</summary>
+  [DefaultValue(false)] public bool TranslateTalkNpcNames = false;
 
   /// <summary>Translate Talk Subtitle messages.</summary>
   [DefaultValue(false)] public bool TranslateTalkSubtitle = false;
@@ -420,8 +444,8 @@ public class Config : IPluginConfiguration
   [DefaultValue("")] public string YandexPaidApiKey = string.Empty;
 
   /// <summary>Plugin configuration version number (used during migration).</summary>
-  [DefaultValue(5)]
-  public int Version { get; set; } = 5;
+  [DefaultValue(7)]
+  public int Version { get; set; } = 7;
 
   /// <summary>
   /// Gets or sets a value indicating whether translation should run asynchronously.

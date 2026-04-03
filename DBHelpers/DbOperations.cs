@@ -232,7 +232,9 @@ public partial class Echoglossian
           t.SenderName == battleTalkMessage.SenderName &&
           t.OriginalBattleTalkMessage ==
           battleTalkMessage.OriginalBattleTalkMessage &&
-          t.TranslationLang == battleTalkMessage.TranslationLang);
+          t.TranslationLang == battleTalkMessage.TranslationLang &&
+          t.TranslatedBattleTalkMessage != null &&
+          t.TranslatedBattleTalkMessage != string.Empty);
 
       if (pluginConfig?.TranslateAlreadyTranslatedTexts == true)
       {
@@ -831,6 +833,11 @@ public partial class Echoglossian
   /// <returns></returns>
   public static bool ShouldSaveToDB(string text)
   {
+    if (string.IsNullOrWhiteSpace(text))
+    {
+      return false;
+    }
+
     if (text.Contains("[Translation Error: HTTP 400") ||
         text.Contains("[Translation Error: HTTP 401") ||
         text.Contains("[Translation Error: HTTP 403") ||
