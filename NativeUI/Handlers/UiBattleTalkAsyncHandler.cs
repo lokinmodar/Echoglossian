@@ -16,6 +16,18 @@ public partial class Echoglossian
   private string translatedName = string.Empty;
   private string translatedText = string.Empty;
 
+  private void UpdateBattleTalkOverlay(
+      string translatedName,
+      string translatedText,
+      string originalName = "")
+  {
+    this.UpdateOverlayContent(
+        this.battleTalkOverlay,
+        translatedName,
+        translatedText,
+        originalName);
+  }
+
   private unsafe void ManageBattleTalk()
   {
     Task.Run(() =>
@@ -88,6 +100,10 @@ public partial class Echoglossian
                   nameTranslation;
           this.lastBattleTalkMessage.TranslatedBattleTalkMessage =
                   textTranslation;
+          this.UpdateBattleTalkOverlay(
+                  this.lastBattleTalkMessage.TranslatedSenderName,
+                  this.lastBattleTalkMessage.TranslatedBattleTalkMessage,
+                  this.lastBattleTalkMessage.SenderName);
           this.translatedBattleTalkTexts.Add(textTranslation);
           InsertBattleTalkData(this.lastBattleTalkMessage);
 
@@ -98,6 +114,10 @@ public partial class Echoglossian
                 foundBattleTalk.TranslatedSenderName;
         this.lastBattleTalkMessage.TranslatedBattleTalkMessage =
                 foundBattleTalk.TranslatedBattleTalkMessage;
+        this.UpdateBattleTalkOverlay(
+                this.lastBattleTalkMessage.TranslatedSenderName,
+                this.lastBattleTalkMessage.TranslatedBattleTalkMessage,
+                this.lastBattleTalkMessage.SenderName);
         this.translatedBattleTalkTexts.Add(
                 foundBattleTalk.TranslatedBattleTalkMessage);
 
@@ -463,17 +483,25 @@ public partial class Echoglossian
 
   private void TranslateBattleTalkUsingImGui()
   {
-    PluginLog.Debug("TranslateBattleTalkUsingImGui: YES!");
+    // PluginLog.Debug("TranslateBattleTalkUsingImGui: YES!");
+    PluginLog.Debug("TranslateBattleTalkUsingImGui");
 
-    if (this.configuration.SwapTextsUsingImGui)
+    if (!this.configuration.TranslateBattleTalk ||
+        !this.configuration.UseImGuiForBattleTalk ||
+        this.lastBattleTalkMessage == null)
     {
-      this.translatedName = string.Empty;
-      this.translatedText = string.Empty;
-      this.TranslateBattleTalkUsingImGuiAndSwapping();
       return;
     }
 
-    this.TranslateBattleTalkUsingImGuiWithoutSwapping();
+    this.UpdateBattleTalkOverlay(
+        this.lastBattleTalkMessage.TranslatedSenderName,
+        this.lastBattleTalkMessage.TranslatedBattleTalkMessage,
+        this.lastBattleTalkMessage.SenderName);
+
+    if (this.configuration.SwapTextsUsingImGui)
+    {
+      this.TranslateBattleTalkReplacing();
+    }
   }
 
   private unsafe void UiBattleTalkAsyncHandler(
@@ -505,6 +533,7 @@ public partial class Echoglossian
       case AddonEvent.PreReceiveEvent:
         // to be sure we don't show the same text twice
         this.lastBattleTalkMessage = null;
+        this.ClearOverlay(this.battleTalkOverlay);
         return;
       case AddonEvent.PreDraw:
         if (this.configuration.UseImGuiForBattleTalk)

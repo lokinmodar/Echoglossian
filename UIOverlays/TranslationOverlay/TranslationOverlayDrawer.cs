@@ -8,46 +8,94 @@ namespace Echoglossian
   public partial class Echoglossian
   {
     /// <summary>
-    /// Starts tracking the overlay for a specific addon.
+    /// Updates an overlay with translated content.
     /// </summary>
-    /// <param name="addonName">Addon name to be tracked.</param>
-    /// <param name="overlay">Overlay to be used.</param>
-    /// <param name="shouldShowOverlay">If the overlay should be shown.</param>
-    /// <param name="shouldStopOverlay">If the overlay should be hidden.</param>
-    private void StartOverlayTracking(
-    string addonName,
-    TranslationOverlay overlay,
-    Func<bool> shouldShowOverlay,
-    Func<bool> shouldStopOverlay = null)
+    /// <param name="overlay">Overlay to update.</param>
+    /// <param name="translatedName">Translated speaker or title.</param>
+    /// <param name="translatedText">Translated content.</param>
+    /// <param name="originalName">Original speaker or title.</param>
+    private void UpdateOverlayContent(
+        TranslationOverlay overlay,
+        string translatedName,
+        string translatedText,
+        string originalName = "")
     {
-      Task.Run(() =>
+      bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
+
+      overlay.NameSemaphore.Wait();
+
+      if (!string.IsNullOrWhiteSpace(originalName))
       {
-        PluginLog.Debug($"StartOverlayTracking: {addonName}");
-        IntPtr addonPtr = GameGuiInterface.GetAddonByName(addonName, 1);
-        if (addonPtr == IntPtr.Zero)
-        {
-          PluginLog.Debug($"StartOverlayTracking: {addonName} not found.");
-          return;
-        }
+        overlay.OriginalName = originalName;
+      }
 
-        unsafe
-        {
-          AtkUnitBase* addon = (AtkUnitBase*)addonPtr;
-          while (addon->IsVisible && (shouldStopOverlay == null || !shouldStopOverlay()))
-          {
-            if (shouldShowOverlay())
-            {
-              overlay.Position = new Vector2(addon->RootNode->X, addon->RootNode->Y);
-              overlay.Dimensions = new Vector2(addon->RootNode->Width * addon->Scale, addon->RootNode->Height * addon->Scale);
-              overlay.Display = true;
-            }
+      if (!string.IsNullOrWhiteSpace(translatedName))
+      {
+        overlay.CurrentName = translatedName;
+      }
 
-            Thread.Sleep(100);
-          }
+      overlay.NameSemaphore.Release();
 
-          overlay.Display = false;
-        }
-      });
+      overlay.Semaphore.Wait();
+      overlay.CurrentText =
+          hasValidText ? translatedText : Resources.WaitingForTranslation;
+      overlay.Display = hasValidText;
+      overlay.Semaphore.Release();
+    }
+
+    /// <summary>
+    /// Clears the overlay visibility and optionally its text.
+    /// </summary>
+    /// <param name="overlay">Overlay to clear.</param>
+    /// <param name="clearText">Whether to clear the translated text.</param>
+    private void ClearOverlay(
+        TranslationOverlay overlay,
+        bool clearText = false)
+    {
+      overlay.Semaphore.Wait();
+      overlay.Display = false;
+
+      if (clearText)
+      {
+        overlay.CurrentText = string.Empty;
+      }
+
+      overlay.Semaphore.Release();
+    }
+
+    /// <summary>
+    /// Synchronizes overlay bounds to the current addon position on the UI thread.
+    /// </summary>
+    /// <param name="addonName">Addon name to query.</param>
+    /// <param name="overlay">Overlay to update.</param>
+    /// <param name="index">Addon index.</param>
+    /// <returns>True when the addon exists and is visible.</returns>
+    private unsafe bool TrySyncOverlayToAddon(
+        string addonName,
+        TranslationOverlay overlay,
+        int index = 1)
+    {
+      // PluginLog.Debug($"StartOverlayTracking: {addonName}");
+      var addonPtr = GameGuiInterface.GetAddonByName(addonName, index);
+      if (addonPtr.Address == IntPtr.Zero)
+      {
+        // PluginLog.Debug($"StartOverlayTracking: {addonName} not found.");
+        this.ClearOverlay(overlay);
+        return false;
+      }
+
+      var addon = (AtkUnitBase*)addonPtr.Address;
+      if (addon == null || !addon->IsVisible || addon->RootNode == null)
+      {
+        this.ClearOverlay(overlay);
+        return false;
+      }
+
+      overlay.Position = new Vector2(addon->RootNode->X, addon->RootNode->Y);
+      overlay.Dimensions = new Vector2(
+          addon->RootNode->Width * addon->Scale,
+          addon->RootNode->Height * addon->Scale);
+      return true;
     }
 
     /// <summary>
@@ -61,7 +109,7 @@ namespace Echoglossian
         TranslationWindowConfig config,
         string? customTitle = null)
     {
-      PluginLog.Debug($"DrawTranslationWindow: {overlay.CurrentName} - {overlay.CurrentText}");
+      // PluginLog.Debug($"DrawTranslationWindow: {overlay.CurrentName} - {overlay.CurrentText}");
       if (!overlay.Display)
       {
         return;
@@ -76,9 +124,14 @@ namespace Echoglossian
         return;
       }
 
-      PluginLog.Debug($"Drawing translation window: {overlay.CurrentName} -  {overlay.CurrentText}");
+      if (string.IsNullOrWhiteSpace(customTitle))
+      {
+        customTitle = !string.IsNullOrWhiteSpace(overlay.CurrentName)
+            ? overlay.CurrentName
+            : overlay.OriginalName;
+      }
 
-      customTitle ??= overlay.CurrentName;
+      // PluginLog.Debug($"Drawing translation window: {overlay.CurrentName} -  {overlay.CurrentText}");
 
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(
           overlay.Position.X + (overlay.Dimensions.X / 2) - (overlay.ImGuiSize.X / 2),

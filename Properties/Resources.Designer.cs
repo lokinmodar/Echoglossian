@@ -1101,6 +1101,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show overlay title bar with speaker name when available.
+        /// </summary>
+        public static string OverlayForceShowTitleToggleLabel {
+            get {
+                return ResourceManager.GetString("OverlayForceShowTitleToggleLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adjust translation overlay width.
         /// </summary>
         public static string OverlayWidthMultiplierOrientations {

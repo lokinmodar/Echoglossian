@@ -33,36 +33,56 @@ public partial class Echoglossian
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.talkOverlay,
-                TranslationWindowConfig.FromConfigForTalk(this.configuration)));
+                () => TranslationWindowConfig.FromConfigForTalk(this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateTalk &&
+                    this.configuration.UseImGuiForTalk,
+                syncBeforeDraw: () =>
+                    this.TrySyncOverlayToAddon("Talk", this.talkOverlay)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.battleTalkOverlay,
-                TranslationWindowConfig.FromConfigForBattleTalk(
-                    this.configuration)));
+                () => TranslationWindowConfig.FromConfigForBattleTalk(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateBattleTalk &&
+                    this.configuration.UseImGuiForBattleTalk,
+                syncBeforeDraw: () =>
+                    this.TrySyncOverlayToAddon("_BattleTalk", this.battleTalkOverlay)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.talkSubtitleOverlay,
-                TranslationWindowConfig.FromConfigTalkSubtitle(
-                    this.configuration)));
+                () => TranslationWindowConfig.FromConfigTalkSubtitle(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateTalkSubtitle &&
+                    this.configuration.UseImGuiForTalkSubtitle,
+                syncBeforeDraw: () =>
+                    this.TrySyncOverlayToAddon("TalkSubtitle", this.talkSubtitleOverlay)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.toastOverlay,
-                TranslationWindowConfig.FromConfigForToast(
-                    this.configuration)));
+                () => TranslationWindowConfig.FromConfigForToast(this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateToast &&
+                    this.configuration.UseImGuiForToasts));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.errorToastOverlay,
-                TranslationWindowConfig.FromConfigForErrorToast(
-                    this.configuration)));
+                () => TranslationWindowConfig.FromConfigForErrorToast(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateErrorToast &&
+                    this.configuration.UseImGuiForToasts));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.chatBubbleOverlay,
-                TranslationWindowConfig.FromConfigForChatBubble(
+                () => TranslationWindowConfig.FromConfigForChatBubble(
                     this.configuration)));
 
         PluginLog.Debug(

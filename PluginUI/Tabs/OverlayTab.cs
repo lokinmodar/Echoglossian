@@ -138,6 +138,7 @@ public static class OverlayTab
                 ref config.ImGuiWindowPosCorrection,
                 ref config.OverlayTalkTextColor,
                 Resources.OverlayFontScaleLabel,
+                ref config.ForceShowTitle,
                 ref config.FontChangeTime);
         }
 
@@ -202,6 +203,7 @@ public static class OverlayTab
                 ref config.ImGuiBattleTalkWindowPosCorrection,
                 ref config.OverlayBattleTalkTextColor,
                 Resources.OverlayFontScaleLabel,
+                ref config.ForceShowTitle,
                 ref config.FontChangeTime);
         }
 
@@ -276,6 +278,7 @@ public static class OverlayTab
                 ref config.ImGuiToastWindowPosCorrection,
                 ref config.OverlayToastTextColor,
                 Resources.OverlayFontScaleLabel,
+                ref config.ForceShowTitle,
                 ref config.FontChangeTime);
 
             ImGui.SameLine();
@@ -336,6 +339,7 @@ public static class OverlayTab
                 ref config.ImGuiTalkSubtitleWindowPosCorrection,
                 ref config.OverlayTalkSubtitleTextColor,
                 Resources.OverlayFontScaleLabel,
+                ref config.ForceShowTitle,
                 ref config.FontChangeTime);
         }
 
@@ -343,8 +347,8 @@ public static class OverlayTab
     }
 
     /// <summary>
-    ///     Draw settings for overlays that have width, height, position, color, and
-    ///     font scale.
+    ///     Draw settings for overlays that have width, height, position, color,
+    ///     font scale, and shared title-bar behavior.
     /// </summary>
     private static bool DrawOverlaySettings(
         ref float fontScale,
@@ -353,6 +357,7 @@ public static class OverlayTab
         ref Vector2 positionCorrection,
         ref Vector3 textColor,
         string fontScaleLabel,
+        ref bool forceShowTitle,
         ref long fontChangeTime)
     {
         var changed = false;
@@ -407,12 +412,16 @@ public static class OverlayTab
             ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
         }
 
+        changed |= ImGui.Checkbox(
+            Resources.OverlayForceShowTitleToggleLabel,
+            ref forceShowTitle);
+
         return changed;
     }
 
     /// <summary>
     ///     Draw settings for overlays that do not have a height adjustment (e.g.,
-    ///     Toast).
+    ///     Toast) but still share title-bar behavior.
     /// </summary>
     private static bool DrawOverlaySettings(
         ref float fontScale,
@@ -420,6 +429,7 @@ public static class OverlayTab
         ref Vector2 positionCorrection,
         ref Vector3 textColor,
         string fontScaleLabel,
+        ref bool forceShowTitle,
         ref long fontChangeTime)
     {
         var changed = false;
@@ -466,6 +476,10 @@ public static class OverlayTab
         {
             ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
         }
+
+        changed |= ImGui.Checkbox(
+            Resources.OverlayForceShowTitleToggleLabel,
+            ref forceShowTitle);
 
         return changed;
     }

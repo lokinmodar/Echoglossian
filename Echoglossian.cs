@@ -446,18 +446,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     if (this.configuration.TranslateTalk)
     {
-      /*      AddonLifecycle.UnregisterListener(
-                AddonEvent.PreRefresh,
-                "Talk",
-                this.UiTalkAsyncHandler);
-            AddonLifecycle.UnregisterListener(
-                AddonEvent.PreDraw,
-                "Talk",
-                this.UiTalkAsyncHandler);
-            AddonLifecycle.UnregisterListener(
-                AddonEvent.PreReceiveEvent,
-                "Talk",
-                this.UiTalkAsyncHandler);*/
+      // Talk now unregisters through the addon-handler registrar.
     }
 
     if (this.configuration.TranslateBattleTalk)
@@ -607,6 +596,18 @@ public partial class Echoglossian : IDalamudPlugin
 
     foreach (var overlayRegistration in this.registeredOverlays)
     {
+      if (overlayRegistration.IsEnabled is not null &&
+          !overlayRegistration.IsEnabled())
+      {
+        continue;
+      }
+
+      if (overlayRegistration.SyncBeforeDraw is not null &&
+          !overlayRegistration.SyncBeforeDraw())
+      {
+        continue;
+      }
+
       overlayRegistration.Overlay.Semaphore.Wait();
       var shouldDisplay = overlayRegistration.Overlay.Display;
       overlayRegistration.Overlay.Semaphore.Release();
@@ -619,7 +620,8 @@ public partial class Echoglossian : IDalamudPlugin
       // Title is now resolved inside DrawTranslationWindow, so no need to pass customTitle
       this.DrawTranslationWindow(
           overlayRegistration.Overlay,
-          overlayRegistration.Config);
+          overlayRegistration.Config,
+          overlayRegistration.CustomTitleGetter?.Invoke());
     }
   }
 
@@ -668,82 +670,81 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.registeredAddonHandlers =
         [
-               /* (AddonName: "_MainCommand",
-                    Handler: new MainCommandHandler(
-                        this.configuration,
-                        TranslationService)),
-                (AddonName: "AddonContextMenuTitle",
-                    Handler: new AddonContextMenuTitleHandler(
-                        this.configuration,
-                        TranslationService)),*/
-                (AddonName: "Character",
-                       Handler: new CharacterWindowHandler(
-                           this.configuration,
-                           TranslationService)),
-               /* (AddonName: "OperationGuide",
-                    Handler: new OperationGuideHandler(
-                        this.configuration,
-                        TranslationService)),
-                (AddonName: "Hud",
-                    Handler: new HudWindowHandler(
-                        this.configuration,
-                        TranslationService)),
-                (AddonName: "Hud2",
-                    Handler: new Hud2WindowHandler(
-                        this.configuration,
-                        TranslationService)),
-                (AddonName: "CharacterClass",
-                    Handler: new CharacterClassSubWindowHandler(
-                        this.configuration,
-                        TranslationService)),
-                (AddonName: "CharacterRepute",
-                    Handler: new CharacterReputeSubWindowHandler(
-                        this.configuration,
-                        TranslationService)),
-                (AddonName: "CharacterProfile",
-                    Handler: new CharacterProfileSubWindowHandler(
-                        this.configuration,
-                        TranslationService)),
-                (AddonName: "CharacterStatus",
-                    Handler: new CharacterStatusSubWindowHandler(
-                        this.configuration,
-                        TranslationService)),*/
-                this.configuration.TranslateTalk
-                    ? (AddonName: "Talk",
-                        Handler: new TalkHandler(
-                            this.configuration,
-                            TranslationService))
-                    : default,
-                this.configuration.TranslateBattleTalk
-                    ? (AddonName: "_BattleTalk",
-                        Handler: new BattleTalkHandler(
-                            this.configuration,
-                            TranslationService))
-                    : default,
+            /* (AddonName: "_MainCommand",
+                 Handler: new MainCommandHandler(
+                     this.configuration,
+                     TranslationService)),
+             (AddonName: "AddonContextMenuTitle",
+                 Handler: new AddonContextMenuTitleHandler(
+                     this.configuration,
+                     TranslationService)),*/
+            (AddonName: "Character",
+                Handler: new CharacterWindowHandler(
+                    this.configuration,
+                    TranslationService)),
+            /* (AddonName: "OperationGuide",
+                 Handler: new OperationGuideHandler(
+                     this.configuration,
+                     TranslationService)),
+             (AddonName: "Hud",
+                 Handler: new HudWindowHandler(
+                     this.configuration,
+                     TranslationService)),
+             (AddonName: "Hud2",
+                 Handler: new Hud2WindowHandler(
+                     this.configuration,
+                     TranslationService)),
+             (AddonName: "CharacterClass",
+                 Handler: new CharacterClassSubWindowHandler(
+                     this.configuration,
+                     TranslationService)),
+             (AddonName: "CharacterRepute",
+                 Handler: new CharacterReputeSubWindowHandler(
+                     this.configuration,
+                     TranslationService)),
+             (AddonName: "CharacterProfile",
+                 Handler: new CharacterProfileSubWindowHandler(
+                     this.configuration,
+                     TranslationService)),
+             (AddonName: "CharacterStatus",
+                 Handler: new CharacterStatusSubWindowHandler(
+                     this.configuration,
+                     TranslationService)),*/
         ];
+
+    if (this.configuration.TranslateTalk)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "Talk",
+              Handler: new TalkHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnTalkMessage,
+                  InsertTalkData,
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.talkOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(this.talkOverlay, clearText: true),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateBattleTalk)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_BattleTalk",
+              Handler: new BattleTalkHandler(
+                  this.configuration,
+                  TranslationService)));
+    }
 
     AddonHandlerRegistrar.RegisterMany(
         this.registeredAddonHandlers,
         AddonLifecycle);
-
-    if (this.configuration.TranslateTalk)
-    {
-      /*PluginLog.Debug(
-          "Registering Talk addon listeners for translation.");
-
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRefresh,
-          "Talk",
-          this.UiTalkAsyncHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreDraw,
-          "Talk",
-          this.UiTalkAsyncHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreReceiveEvent,
-          "Talk",
-          this.UiTalkAsyncHandler);*/
-    }
 
     if (this.configuration.TranslateBattleTalk)
     {
@@ -828,9 +829,74 @@ public partial class Echoglossian : IDalamudPlugin
     /*"PreSetup","PostSetup", "PreUpdate", "PostUpdate", "PreDraw", "PostDraw", "PreFinalize", "PreReceiveEvent", "PostReceiveEvent", "PreRequestedUpdate", "PostRequestedUpdate", "PreRefresh", "PostRefresh" */
 
     // tracking addon lifecycle for debug
+    AddonEvent[] lifecycleLogEventsWithoutUpdatesAndDraws =
+    [
+      AddonEvent.PreSetup,
+      AddonEvent.PreFinalize,
+      AddonEvent.PreRequestedUpdate,
+      AddonEvent.PreRefresh,
+      AddonEvent.PreReceiveEvent,
+      AddonEvent.PreOpen,
+      AddonEvent.PreClose,
+      AddonEvent.PreShow,
+      AddonEvent.PreHide,
+      AddonEvent.PreMove,
+      AddonEvent.PreMouseOver,
+      AddonEvent.PreMouseOut,
+      AddonEvent.PreFocus,
+      AddonEvent.PostSetup,
+      AddonEvent.PostRequestedUpdate,
+      AddonEvent.PostRefresh,
+      AddonEvent.PostReceiveEvent,
+      AddonEvent.PostOpen,
+      AddonEvent.PostClose,
+      AddonEvent.PostShow,
+      AddonEvent.PostHide,
+      AddonEvent.PostMove,
+      AddonEvent.PostMouseOver,
+      AddonEvent.PostMouseOut,
+      AddonEvent.PostFocus,
+    ];
 
-    AddonLifecycleExtensions.LogAddon(AddonLifecycle, "Talk");
-    AddonLifecycleExtensions.LogAddon(AddonLifecycle, "_BattleTalk");
+    AddonEvent[] lifecycleLogEventsWithoutUpdates =
+    [
+      AddonEvent.PreSetup,
+      AddonEvent.PreDraw,
+      AddonEvent.PreFinalize,
+      AddonEvent.PreRequestedUpdate,
+      AddonEvent.PreRefresh,
+      AddonEvent.PreReceiveEvent,
+      AddonEvent.PreOpen,
+      AddonEvent.PreClose,
+      AddonEvent.PreShow,
+      AddonEvent.PreHide,
+      AddonEvent.PreMove,
+      AddonEvent.PreMouseOver,
+      AddonEvent.PreMouseOut,
+      AddonEvent.PreFocus,
+      AddonEvent.PostSetup,
+      AddonEvent.PostDraw,
+      AddonEvent.PostRequestedUpdate,
+      AddonEvent.PostRefresh,
+      AddonEvent.PostReceiveEvent,
+      AddonEvent.PostOpen,
+      AddonEvent.PostClose,
+      AddonEvent.PostShow,
+      AddonEvent.PostHide,
+      AddonEvent.PostMove,
+      AddonEvent.PostMouseOver,
+      AddonEvent.PostMouseOut,
+      AddonEvent.PostFocus,
+    ];
+
+    AddonLifecycleExtensions.LogAddon(
+        AddonLifecycle,
+        "Talk",
+        lifecycleLogEventsWithoutUpdatesAndDraws);
+    AddonLifecycleExtensions.LogAddon(
+        AddonLifecycle,
+        "_BattleTalk",
+        lifecycleLogEventsWithoutUpdates);
 
   }
 }

@@ -779,7 +779,7 @@
             Draws the database editor window.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.OnEglodDbEditorCommand(System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.OnEgloDbEditorCommand(System.String,System.String)">
             <summary>
             Open the Echoglossian DB Editor window when the command is executed.
             </summary>
@@ -1039,14 +1039,30 @@
                 plugin config values.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.StartOverlayTracking(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Func{System.Boolean},System.Func{System.Boolean})">
+        <member name="M:Echoglossian.Echoglossian.UpdateOverlayContent(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String,System.String,System.String)">
             <summary>
-            Starts tracking the overlay for a specific addon.
+            Updates an overlay with translated content.
             </summary>
-            <param name="addonName">Addon name to be tracked.</param>
-            <param name="overlay">Overlay to be used.</param>
-            <param name="shouldShowOverlay">If the overlay should be shown.</param>
-            <param name="shouldStopOverlay">If the overlay should be hidden.</param>
+            <param name="overlay">Overlay to update.</param>
+            <param name="translatedName">Translated speaker or title.</param>
+            <param name="translatedText">Translated content.</param>
+            <param name="originalName">Original speaker or title.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ClearOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Boolean)">
+            <summary>
+            Clears the overlay visibility and optionally its text.
+            </summary>
+            <param name="overlay">Overlay to clear.</param>
+            <param name="clearText">Whether to clear the translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TrySyncOverlayToAddon(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Int32)">
+            <summary>
+            Synchronizes overlay bounds to the current addon position on the UI thread.
+            </summary>
+            <param name="addonName">Addon name to query.</param>
+            <param name="overlay">Overlay to update.</param>
+            <param name="index">Addon index.</param>
+            <returns>True when the addon exists and is visible.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.DrawTranslationWindow(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.String)">
             <summary>
@@ -1288,31 +1304,31 @@
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext">
             <summary>
-                Represents the database context for Echoglossian translations.
+                Gets or sets the translated string array records.   Represents the database context for Echoglossian translations.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Echoglossian.EFCoreSqlite.EchoglossianDbContext})">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" />
-                class.
+                Gets or sets the translated string array records.   Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" />
+                Gets or sets the translated string array records.   class.
             </summary>
             <param name="options">Configuration options.</param>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(System.String)">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" />
-                class.
+                Gets or sets the translated string array records.   Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" />
+                Gets or sets the translated string array records.   class.
             </summary>
             <param name="configDir">Plugin config directory.</param>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.StringArrayDatas">
             <summary>
-             
+                Gets or sets the translated string array records.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
             <summary>
-                Configures the database context options.
+                Gets or sets the translated string array records.   Configures the database context options.
             </summary>
             <param name="optionsBuilder"></param>
         </member>
@@ -2858,22 +2874,6 @@
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.TalkHandler">
-            <summary>
-                Handles translation for the "Talk" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.TalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.TalkHandler" />
-                class.
-            </summary>
-            <param name="config">The configuration settings for the plugin.</param>
-            <param name="translationService">The service used for translating text.</param>
-        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler">
             <summary>
                 Handles translation for the "Hud" addon using AtkValues and
@@ -2903,6 +2903,157 @@
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler">
+            <summary>
+                Handles the full Talk addon runtime inside the new addon-handler model.
+                This includes capture, translation lookup, async translation, overlay
+                updates, and optional native text replacement.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TalkMessage,Echoglossian.EFCoreSqlite.Models.TalkMessage},System.Func{Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findTalkMessage">
+                Delegate used to look up previously translated Talk messages.
+            </param>
+            <param name="insertTalkMessageAsync">
+                Delegate used to persist translated Talk messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the Talk overlay state.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the Talk overlay state when the source text changes.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the Talk addon flow.
+            </summary>
+            <returns>
+                A dictionary mapping addon events to combined delegates.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.OnPreRefresh(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Captures Talk source text during refresh, publishes any cached translation,
+                and queues translation work when needed.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the refresh.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.OnPreDraw(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Applies translated Talk text to the visible addon when replacement mode is
+                enabled and an async translation becomes available after refresh.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the draw.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds a lookup entity matching the historical Talk message schema already
+                used in the database.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original Talk message text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> suitable for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ApplyTranslatedRefreshValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String,System.String)">
+            <summary>
+                Applies translated values directly to Talk refresh arguments when a cached
+                translation is already available.
+            </summary>
+            <param name="atkValues">The refresh ATK values.</param>
+            <param name="translatedName">The translated sender name.</param>
+            <param name="translatedText">The translated Talk text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated text for native Talk replacement when the active
+                config requests diacritic stripping.
+            </summary>
+            <param name="text">The translated text to normalize.</param>
+            <returns>The text that should be written back into the native Talk addon.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.PublishOverlay(System.String,System.String,System.String,System.String)">
+            <summary>
+                Publishes translated Talk content into the shared overlay state.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original Talk text.</param>
+            <param name="translatedName">The translated sender name.</param>
+            <param name="translatedText">The translated Talk text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ReadTalkAtkString(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue)">
+            <summary>
+                Reads a string value from a Talk ATK value.
+            </summary>
+            <param name="atkValue">The ATK value to inspect.</param>
+            <returns>The extracted text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ResolveTranslationAsync(System.String,System.String,System.Int32)">
+            <summary>
+                Resolves a Talk translation from cache or external translation and stores
+                the result as the current translation state.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original Talk text.</param>
+            <param name="requestId">The request identifier used to reject stale results.</param>
+            <returns>A task that completes when the translation state has been updated.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ShouldApplyNativeTalkText">
+            <summary>
+                Determines whether native Talk text should be replaced instead of leaving
+                the original addon text untouched.
+            </summary>
+            <returns>
+                <see langword="true" /> when the Talk addon should receive translated
+                native text; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryGetCachedTranslation(System.String,System.String,System.String@,System.String@)">
+            <summary>
+                Returns the active cached translation when it still matches the supplied
+                source Talk content.
+            </summary>
+            <param name="originalName">The source sender name.</param>
+            <param name="originalText">The source Talk text.</param>
+            <param name="translatedName">Receives the translated sender name.</param>
+            <param name="translatedText">Receives the translated Talk text.</param>
+            <returns>
+                <see langword="true" /> when a matching cached translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryQueueTranslation(System.String,System.String,System.Int32@)">
+            <summary>
+                Starts a new translation request when the Talk source changes or when the
+                current source still has no cached translation available.
+            </summary>
+            <param name="originalName">The source sender name.</param>
+            <param name="originalText">The source Talk text.</param>
+            <param name="requestId">
+                Receives the request identifier when a new translation job is queued.
+            </param>
+            <returns>
+                <see langword="true" /> when a new translation task should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate">
             <summary>
@@ -3302,7 +3453,7 @@
             such as setup, refresh, event reception, requested updates, and finalization. They are useful for monitoring and
             debugging add-on behavior without interfering with other event listeners.</remarks>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.LogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.LogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String,System.Collections.Generic.IReadOnlyCollection{Dalamud.Game.Addon.Lifecycle.AddonEvent})">
             <summary>
             Registers a logger as a listener for key lifecycle events of the specified addon.
             </summary>
@@ -3311,6 +3462,7 @@
             monitoring and debugging addon behavior throughout its lifecycle.</remarks>
             <param name="addonLifecycle">The addon lifecycle manager used to register event listeners.</param>
             <param name="addonName">The name of the addon for which lifecycle event listeners are registered.</param>
+            <param name="events">Optional lifecycle event set to log. Defaults to the full event set.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.Logger(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
@@ -3319,7 +3471,7 @@
             <param name="type">The event type that triggered the logging operation.</param>
             <param name="args">The arguments containing details about the add-on, including its name and context.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.UnLogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.UnLogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String,System.Collections.Generic.IReadOnlyCollection{Dalamud.Game.Addon.Lifecycle.AddonEvent})">
             <summary>
             Removes logging event listeners for the specified add-on from the provided add-on lifecycle instance.
             </summary>
@@ -3328,6 +3480,7 @@
             activity for an add-on without affecting its other event listeners.</remarks>
             <param name="addonLifecycle">The add-on lifecycle instance from which logging event listeners will be removed. Cannot be null.</param>
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
+            <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>
@@ -3612,16 +3765,16 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Boolean@,System.Int64@)">
             <summary>
-                Draw settings for overlays that have width, height, position, color, and
-                font scale.
+                Draw settings for overlays that have width, height, position, color,
+                font scale, and shared title-bar behavior.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Boolean@,System.Int64@)">
             <summary>
                 Draw settings for overlays that do not have a height adjustment (e.g.,
-                Toast).
+                Toast) but still share title-bar behavior.
             </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TranslationEnginesTab">
@@ -4276,6 +4429,11 @@
         <member name="P:Echoglossian.Properties.Resources.OverlayToggleLabel">
             <summary>
               Looks up a localized string similar to Display translated text overlay above game UI text box instead of replacing its text with the translation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayForceShowTitleToggleLabel">
+            <summary>
+              Looks up a localized string similar to Show overlay title bar with speaker name when available.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayWidthMultiplierOrientations">

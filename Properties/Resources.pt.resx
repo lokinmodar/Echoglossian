@@ -159,6 +159,9 @@
   <data name="OverlayToggleLabel" xml:space="preserve">
     <value>Exibir sobreposição de texto traduzido acima da caixa de texto da interface do usuário do jogo em vez de substituir seu texto pela tradução</value>
   </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Exibir barra de título da sobreposição com o nome do interlocutor quando disponível</value>
+  </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Ajustar a largura da sobreposição de translação</value>
   </data>

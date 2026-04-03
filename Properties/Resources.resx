@@ -265,6 +265,9 @@
   <data name="OverlayToggleLabel" xml:space="preserve">
     <value>Display translated text overlay above game UI text box instead of replacing its text with the translation</value>
   </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Show overlay title bar with speaker name when available</value>
+  </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
     <value>Adjust translation overlay width</value>
   </data>

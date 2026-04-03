@@ -15,29 +15,13 @@ namespace Echoglossian
     /// <param name="originalName"></param>
     private void UpdateTalkOverlay(string translatedName, string translatedText, string originalName = "")
     {
-      bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
-
-      this.talkOverlay.NameSemaphore.Wait();
-
       PluginLog.Debug(
-        $"UpdateTalkOverlay: {translatedName}: {translatedText} - OriginalName: {originalName} - HasValidText: {hasValidText}");
-
-      if (!string.IsNullOrWhiteSpace(originalName))
-      {
-        this.talkOverlay.OriginalName = originalName;
-      }
-
-      if (!string.IsNullOrWhiteSpace(translatedName))
-      {
-        this.talkOverlay.CurrentName = translatedName;
-      }
-
-      this.talkOverlay.NameSemaphore.Release();
-
-      this.talkOverlay.Semaphore.Wait();
-      this.talkOverlay.CurrentText = hasValidText ? translatedText : Resources.WaitingForTranslation;
-      this.talkOverlay.Display = hasValidText;
-      this.talkOverlay.Semaphore.Release();
+        $"UpdateTalkOverlay: {translatedName}: {translatedText} - OriginalName: {originalName} - HasValidText: {!string.IsNullOrWhiteSpace(translatedText)}");
+      this.UpdateOverlayContent(
+          this.talkOverlay,
+          translatedName,
+          translatedText,
+          originalName);
     }
 
     /// <summary>
@@ -233,11 +217,6 @@ namespace Echoglossian
             InsertTalkData(translatedTalkData);
           }
 
-          this.StartOverlayTracking(
-            "Talk",
-            this.talkOverlay,
-            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.talkOverlay.CurrentText),
-            () => !this.configuration.UseImGuiForTalk || !this.talkOverlay.Display);
         }
         catch (Exception e)
         {
@@ -293,11 +272,6 @@ namespace Echoglossian
             InsertTalkData(translatedTalkData);
           }
 
-          this.StartOverlayTracking(
-            "Talk",
-            this.talkOverlay,
-            () => this.configuration.UseImGuiForTalk && !string.IsNullOrWhiteSpace(this.talkOverlay.CurrentText),
-            () => !this.configuration.UseImGuiForTalk || !this.talkOverlay.Display);
         }
         catch (Exception e)
         {

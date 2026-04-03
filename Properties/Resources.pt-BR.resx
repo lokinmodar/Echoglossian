@@ -38,6 +38,9 @@
   <data name="OverlayToggleLabel" xml:space="preserve">
     <value>Exibir sobreposição com texto traduzido acima da caixa de diálogo da IU do jogo em vez de substituir seu texto pela tradução</value>
   </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Exibir barra de título da sobreposição com o nome do interlocutor quando disponível</value>
+  </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
     <value>Multiplicador de largura da sobreposição de tradução de diálogo</value>
   </data>
