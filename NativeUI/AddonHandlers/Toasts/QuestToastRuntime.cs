@@ -92,12 +92,18 @@ internal sealed class QuestToastRuntime
       return;
     }
 
+    // PluginLog.Debug(
+    //     $"[QuestToast] trigger=IToastGui.QuestToast captured source='{originalText}' " +
+    //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
+    //     $"swap={this.ShouldSwapTexts()}");
     var requestId = this.BeginRequest(originalText);
     var lookupToast = this.BuildLookupMessage(originalText);
     var storedToast = this.findToastMessage(lookupToast);
     if (storedToast != null &&
         !string.IsNullOrWhiteSpace(storedToast.TranslatedToastMessage))
     {
+      // PluginLog.Debug(
+      //     "[QuestToast] trigger=IToastGui.QuestToast cache-hit -> resolved immediately");
       this.ApplyResolvedToast(
           ref message,
           originalText,
@@ -106,7 +112,7 @@ internal sealed class QuestToastRuntime
       return;
     }
 
-    this.clearOverlay();
+    this.PublishOverlay(originalText, string.Empty, "IToastGui.QuestToast");
 
     Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
   }
@@ -127,12 +133,25 @@ internal sealed class QuestToastRuntime
   {
     if (this.ShouldUseOverlay())
     {
-      this.updateOverlay(string.Empty, translatedText, string.Empty);
+      this.PublishOverlay(originalText, translatedText, "IToastGui.QuestToast");
       _ = this.ScheduleOverlayClearAsync(requestId);
+      if (!this.ShouldSwapTexts())
+      {
+        return;
+      }
+    }
+
+    if (!this.ShouldApplyNativeText())
+    {
       return;
     }
 
-    this.clearOverlay();
+    // PluginLog.Debug(
+    //     $"[QuestToast] trigger=IToastGui.QuestToast applying native replacement text='{translatedText}'");
+    if (!this.ShouldUseOverlay())
+    {
+      this.clearOverlay();
+    }
 
     var replacementText = this.config.RemoveDiacriticsWhenUsingReplacementQuest
         ? this.normalizeReplacementText(translatedText)
@@ -160,15 +179,20 @@ internal sealed class QuestToastRuntime
     }
     catch (Exception ex)
     {
-      PluginLog.Debug($"QuestToastRuntime.ResolveTranslationAsync exception {ex}");
+      // PluginLog.Debug(
+      //     $"[QuestToast] trigger=async-resolve exception {ex}");
       return;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
+      // PluginLog.Debug(
+      //     $"[QuestToast] trigger=async-resolve empty translation for source='{originalText}'");
       return;
     }
 
+    // PluginLog.Debug(
+    //     $"[QuestToast] trigger=async-resolve translation ready for source='{originalText}'");
     await this.insertToastMessageAsync(
         new ToastMessage(
             QuestToastType,
@@ -190,7 +214,7 @@ internal sealed class QuestToastRuntime
       return;
     }
 
-    this.updateOverlay(string.Empty, translatedText, string.Empty);
+    this.PublishOverlay(originalText, translatedText, "async-resolve");
     _ = this.ScheduleOverlayClearAsync(requestId);
   }
 
@@ -289,5 +313,89 @@ internal sealed class QuestToastRuntime
            this.config.TranslateQuestToast &&
            (this.config.OverlayOnlyLanguage ||
             this.config.UseImGuiForQuestToast);
+  }
+
+  /// <summary>
+  ///     Determines whether quest toasts should also replace the native game UI
+  ///     while still rendering through the overlay.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when swap mode is active; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool ShouldSwapTexts()
+  {
+    return this.config.TranslateToast &&
+           this.config.TranslateQuestToast &&
+           !this.config.OverlayOnlyLanguage &&
+           this.config.UseImGuiForQuestToast &&
+           this.config.SwapTextsUsingImGui;
+  }
+
+  /// <summary>
+  ///     Determines whether quest toasts should currently apply translated text
+  ///     back into the native game UI.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when native replacement is active; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool ShouldApplyNativeText()
+  {
+    return this.config.TranslateToast &&
+           this.config.TranslateQuestToast &&
+           !this.config.OverlayOnlyLanguage &&
+           (!this.config.UseImGuiForQuestToast || this.ShouldSwapTexts());
+  }
+
+  /// <summary>
+  ///     Selects the overlay text for the current quest toast state.
+  /// </summary>
+  /// <param name="originalText">The original quest toast text.</param>
+  /// <param name="translatedText">The translated quest toast text.</param>
+  /// <returns>The text that should be shown in the overlay.</returns>
+  private string SelectOverlayText(
+      string originalText,
+      string translatedText)
+  {
+    if (this.ShouldSwapTexts() &&
+        !string.IsNullOrWhiteSpace(originalText))
+    {
+      return originalText;
+    }
+
+    return translatedText;
+  }
+
+  /// <summary>
+  ///     Publishes quest-toast content to the configured overlay when overlay
+  ///     mode is enabled.
+  /// </summary>
+  /// <param name="originalText">The original quest toast text.</param>
+  /// <param name="translatedText">The translated quest toast text.</param>
+  /// <param name="trigger">The log trigger label associated with the call.</param>
+  private void PublishOverlay(
+      string originalText,
+      string translatedText,
+      string trigger)
+  {
+    if (!this.ShouldUseOverlay())
+    {
+      // PluginLog.Debug(
+      //     $"[QuestToast] trigger={trigger} overlay disabled -> clear");
+      this.clearOverlay();
+      return;
+    }
+
+    var overlayText = this.SelectOverlayText(originalText, translatedText);
+    if (string.IsNullOrWhiteSpace(overlayText))
+    {
+      // PluginLog.Debug(
+      //     $"[QuestToast] trigger={trigger} overlay text unavailable -> clear");
+      this.clearOverlay();
+      return;
+    }
+
+    this.updateOverlay(string.Empty, overlayText, string.Empty);
   }
 }

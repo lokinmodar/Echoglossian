@@ -878,6 +878,11 @@
             Holds the database editor window instance.
             </summary>
         </member>
+        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
+            <summary>
+            Holds the currently active addon structure probe watch, if any.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -967,6 +972,21 @@
             </summary>
             <param name="command">The command that triggered the execution.</param>
             <param name="arguments">Arguments associated with the command.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log so we can
+            inspect its live node tree, component roots, and likely overlay anchors.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
+            <summary>
+            Parses the addon probe command arguments into an addon name and optional index.
+            </summary>
+            <param name="args">The raw command arguments.</param>
+            <returns>The addon name and index to probe.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
@@ -1326,6 +1346,18 @@
             <param name="overlay">Overlay to update.</param>
             <param name="index">Addon index.</param>
             <returns>True when the addon exists and is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveToastAddon(System.String,System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@,System.Int32@)">
+            <summary>
+            Resolves a toast addon by name, preferring the requested index and falling
+            back to the first loaded matching instance when the requested index is not
+            present.
+            </summary>
+            <param name="addonName">Toast addon name to query.</param>
+            <param name="index">Preferred addon index.</param>
+            <param name="addon">Receives the resolved addon pointer.</param>
+            <param name="resolvedIndex">Receives the resolved addon index.</param>
+            <returns>True when a live addon instance was found.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TrySyncQuestToastOverlayToViewport">
             <summary>
@@ -4113,6 +4145,20 @@
             <param name="type">The lifecycle event that triggered the handler.</param>
             <param name="args">The addon arguments associated with the update or draw.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryCaptureOrQueueToastSource(System.String,System.String)">
+            <summary>
+                Resolves the source toast line against cache, database, or background
+                translation work and publishes the overlay when a translation becomes
+                available.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="originalText">The original toast text to resolve.</param>
+            <param name="trigger">The log trigger label associated with the call.</param>
+            <returns>
+                <see langword="true" /> when the source was handled; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Clears the in-memory toast state when the addon hides or is finalized.
@@ -4196,7 +4242,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@,System.String@)">
             <summary>
                 Returns the active resolved translation currently held by the handler
                 state.
@@ -4234,12 +4280,15 @@
                 The translated toast text normalized for native replacement.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.PublishOverlay(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.PublishOverlay(System.String,System.String,System.String)">
             <summary>
-                Publishes translated toast content to the configured overlay when overlay
-                mode is enabled.
+                Publishes toast content to the configured overlay when overlay mode is
+                enabled. When swap mode is active, the original text is shown in the
+                overlay while the translated text is kept for native replacement.
             </summary>
+            <param name="originalText">The original toast text.</param>
             <param name="translatedText">The translated toast text.</param>
+            <param name="trigger">The log trigger label associated with the call.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ShouldUseOverlay">
             <summary>
@@ -4259,6 +4308,26 @@
                 <see langword="true" /> when native replacement is active; otherwise,
                 <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ShouldSwapTexts">
+            <summary>
+                Determines whether this toast type should currently swap its overlay
+                text with the original native text while still replacing the game UI.
+            </summary>
+            <returns>
+                <see langword="true" /> when the overlay should display the original
+                text and the native addon should receive the translation; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.SelectOverlayText(System.String,System.String)">
+            <summary>
+                Selects the text that should be shown in the overlay for the current
+                toast state.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <returns>The text that should be shown in the overlay.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.NormalizeForReplacement(System.String)">
             <summary>
@@ -4286,6 +4355,17 @@
             </summary>
             <param name="text">The text to normalize.</param>
             <returns>The normalized text suitable for equality checks.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ScheduleDeferredOverlayClear(System.Int32,System.Int32)">
+            <summary>
+                Defers clearing overlay content long enough for ImGui to render the
+                latest toast state while preventing stale clears from removing newer
+                overlay content.
+            </summary>
+            <param name="requestId">The request identifier captured during reset.</param>
+            <param name="publicationVersion">
+                The overlay publication version captured during reset.
+            </param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.AreaToastHandler">
             <summary>
@@ -4494,6 +4574,43 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ShouldSwapTexts">
+            <summary>
+                Determines whether quest toasts should also replace the native game UI
+                while still rendering through the overlay.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ShouldApplyNativeText">
+            <summary>
+                Determines whether quest toasts should currently apply translated text
+                back into the native game UI.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.SelectOverlayText(System.String,System.String)">
+            <summary>
+                Selects the overlay text for the current quest toast state.
+            </summary>
+            <param name="originalText">The original quest toast text.</param>
+            <param name="translatedText">The translated quest toast text.</param>
+            <returns>The text that should be shown in the overlay.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.PublishOverlay(System.String,System.String,System.String)">
+            <summary>
+                Publishes quest-toast content to the configured overlay when overlay
+                mode is enabled.
+            </summary>
+            <param name="originalText">The original quest toast text.</param>
+            <param name="translatedText">The translated quest toast text.</param>
+            <param name="trigger">The log trigger label associated with the call.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler">
             <summary>
                 Handles the "_TextGimmickHint" addon runtime inside the new
@@ -4616,7 +4733,7 @@
                 translation for the same source line; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@,System.String@)">
             <summary>
                 Returns the active resolved translation currently held by the handler
                 state.
@@ -4650,7 +4767,7 @@
                 The translated text normalized for native replacement.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.PublishOverlay(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.PublishOverlay(System.String,System.String,System.String)">
             <summary>
                 Publishes translated gimmick-hint content to the configured overlay when
                 overlay mode is enabled.
@@ -4676,6 +4793,24 @@
                 <see langword="true" /> when the addon should be replaced natively;
                 otherwise, <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ShouldSwapTexts">
+            <summary>
+                Determines whether the TextGimmickHint overlay should show the original
+                text while the native addon receives the translated replacement.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.SelectOverlayText(System.String,System.String)">
+            <summary>
+                Selects the overlay text for the gimmick-hint toast state.
+            </summary>
+            <param name="originalText">The original gimmick-hint text.</param>
+            <param name="translatedText">The translated gimmick-hint text.</param>
+            <returns>The text that should be shown in the overlay.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ShouldHandleTextGimmickHint(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
             <summary>
@@ -4765,6 +4900,53 @@
             </summary>
             <param name="addon">The live addon instance.</param>
             <returns>The first text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveAreaTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the most suitable text node for the area toast addon.
+                The live addon can expose multiple text nodes, so we prefer the first
+                non-empty text node before falling back to the historical first-text
+                match.
+            </summary>
+            <param name="addon">The live "_AreaText" addon instance.</param>
+            <returns>The best matching text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+            <summary>
+                Resolves the first text node found anywhere in the provided node list,
+                including nested component node lists.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <returns>The first text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveVisibleTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+            <summary>
+                Resolves the first visible, non-empty text node found anywhere in the
+                provided node list, including nested component node lists.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <returns>The best visible text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the first text node found under a single node, recursing into
+                child, sibling, and component node lists.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <returns>The first text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveVisibleTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Resolves the best visible text node under a single node, recursing into
+                child, sibling, and component node lists.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <param name="firstTextNode">
+                Receives the first text node encountered, even when empty or hidden.
+            </param>
+            <returns>The first visible, non-empty text node, or <see langword="null" />.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
             <summary>
@@ -5224,6 +5406,258 @@
             <param name="addonLifecycle">The add-on lifecycle instance from which logging event listeners will be removed. Cannot be null.</param>
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
+            <summary>
+            Provides a generic recursive addon probe for live UI inspection.
+            </summary>
+            <remarks>
+            The traversal pattern is intentionally generic and was inspired by the
+            recursive addon walk used in SimpleTweaksPlugin's UIDebug helper and the
+            addon inspection approach used by HaselDebug. The goal here is to keep the
+            probe passive, reusable, and focused on structural logging rather than a
+            dedicated UI panel.
+            </remarks>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.ProbeAddon(Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log.
+            </summary>
+            <param name="gameGui">The game GUI service used to resolve the addon.</param>
+            <param name="pluginLog">The plugin log used to emit the probe output.</param>
+            <param name="addonName">The addon name to inspect.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="maxDepth">Maximum recursion depth for the probe.</param>
+            <param name="maxNodes">Maximum number of visited nodes before aborting.</param>
+            <returns><see langword="true" /> if the addon was found and probed; otherwise <see langword="false" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.ProbeAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.String,System.Int32,System.Int32)">
+            <summary>
+            Dumps a recursive probe for an already-resolved addon pointer.
+            </summary>
+            <param name="addon">The resolved addon pointer to inspect.</param>
+            <param name="pluginLog">The plugin log used to emit the probe output.</param>
+            <param name="addonName">The addon name to inspect.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="trigger">Optional trigger label used in the logs.</param>
+            <param name="maxDepth">Maximum recursion depth for the probe.</param>
+            <param name="maxNodes">Maximum number of visited nodes before aborting.</param>
+            <returns><see langword="true" /> if the addon pointer was valid and probed; otherwise <see langword="false" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.TryResolveAddonPointer(Dalamud.Plugin.Services.IGameGui,System.String,System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+            Attempts to resolve an addon pointer by name and optional index.
+            </summary>
+            <param name="gameGui">The game GUI service used for the initial lookup.</param>
+            <param name="addonName">The addon name to resolve.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="addon">The resolved addon pointer, when found.</param>
+            <returns><see langword="true" /> when the addon was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.StartWatch(Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.Nullable{System.TimeSpan})">
+            <summary>
+            Starts a one-minute addon watch that polls for the addon and captures a
+            complete structural dump as soon as the addon becomes live.
+            </summary>
+            <param name="gameGui">The game GUI service used to resolve the addon.</param>
+            <param name="pluginLog">The plugin log used to emit the probe output.</param>
+            <param name="addonName">The addon name to watch.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay active.</param>
+            <returns>The active watch instance.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.TryGetLatestSnapshot(System.String,System.Int32,Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot@)">
+            <summary>
+            Attempts to retrieve the latest cached snapshot for an addon probe.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="snapshot">The cached snapshot, if any.</param>
+            <returns><see langword="true" /> when a cached snapshot was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.WalkNodeList(Dalamud.Plugin.Services.IPluginLog,Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32,System.String,System.Int32,System.Int32,System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+            Walks a node list and logs each entry recursively.
+            </summary>
+            <param name="pluginLog">The plugin log used for output.</param>
+            <param name="snapshot">The probe snapshot being populated.</param>
+            <param name="nodeList">The node list pointer.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <param name="listName">The logical name of the list.</param>
+            <param name="maxDepth">Maximum recursion depth.</param>
+            <param name="maxNodes">Maximum number of visited nodes.</param>
+            <param name="visitedNodes">The visited-node guard set.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.WalkNode(Dalamud.Plugin.Services.IPluginLog,Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.Int32,System.Int32,System.Int32,System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+            Walks a single node recursively, including sibling chains and component roots.
+            </summary>
+            <param name="pluginLog">The plugin log used for output.</param>
+            <param name="snapshot">The probe snapshot being populated.</param>
+            <param name="node">The current node.</param>
+            <param name="path">The logical path of the current node within the addon.</param>
+            <param name="depth">The current recursion depth.</param>
+            <param name="maxDepth">Maximum recursion depth.</param>
+            <param name="maxNodes">Maximum number of visited nodes.</param>
+            <param name="visitedNodes">The visited-node guard set.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.ReadNodeText(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+            Reads the visible text from a node when the node is text-based.
+            </summary>
+            <param name="node">The node being inspected.</param>
+            <returns>The text value or <see langword="null" /> when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.DescribeNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String)">
+            <summary>
+            Builds a concise textual description of a node for the debug log.
+            </summary>
+            <param name="node">The node being described.</param>
+            <param name="text">Optional text contents for text nodes.</param>
+            <returns>A log-friendly node description.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.NormalizeForLog(System.String,System.Int32)">
+            <summary>
+            Normalizes a string so it is safe and compact for log output.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <param name="maxLength">The maximum length to preserve.</param>
+            <returns>The normalized text or <see langword="null" /> when the input is empty.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.GetSnapshotKey(System.String,System.Int32)">
+            <summary>
+            Generates a stable cache key for a probe snapshot.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="index">The addon instance index.</param>
+            <returns>The cache key.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch">
+            <summary>
+            Represents a live probe watch for an addon name.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch.#ctor(Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.TimeSpan)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch"/> class.
+            </summary>
+            <param name="gameGui">The game GUI service used to resolve the addon.</param>
+            <param name="pluginLog">The plugin log used to emit watch output.</param>
+            <param name="addonName">The addon name being watched.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay active.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch.Tick">
+            <summary>
+            Ticks the watch, polls for the addon, and disposes it when the time budget is exhausted.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch.Dispose">
+            <summary>
+            Disposes the watch and ends the probing session.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch.Stop">
+            <summary>
+            Stops the watch early and ends the probing session.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch.IsDisposed">
+            <summary>
+            Gets a value indicating whether the watch already finished.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch.DisposeInternal(System.String)">
+            <summary>
+            Disposes the watch and logs why the probing session ended.
+            </summary>
+            <param name="reason">The reason logged when the watch ends.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch.TryDumpCurrent(System.String)">
+            <summary>
+            Attempts to dump the currently live addon immediately when the watch starts
+            or when a later tick finds it alive.
+            </summary>
+            <param name="trigger">A label describing why the dump is happening.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot">
+            <summary>
+            Represents the latest known summary for a probed addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.#ctor(System.String,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot"/> class.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="index">The addon index.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.AddonName">
+            <summary>
+            Gets the addon name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.Index">
+            <summary>
+            Gets the addon instance index.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.CapturedAt">
+            <summary>
+            Gets the time the snapshot was captured.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.IsVisible">
+            <summary>
+            Gets or sets whether the addon was visible when probed.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.RootNodeAddress">
+            <summary>
+            Gets or sets the root node address.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.NodeCount">
+            <summary>
+            Gets or sets the number of nodes visited during the probe.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.TextNodeCount">
+            <summary>
+            Gets or sets the number of text nodes encountered during the probe.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.VisibleTextNodeCount">
+            <summary>
+            Gets or sets the number of visible, non-empty text nodes encountered.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.ComponentNodeCount">
+            <summary>
+            Gets or sets the number of component nodes encountered.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.NodeListCount">
+            <summary>
+            Gets or sets the addon node-list count.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.CollisionNodeListCount">
+            <summary>
+            Gets or sets the addon collision-node-list count.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.BestTextAnchorPath">
+            <summary>
+            Gets or sets the path of the first visible text node that looked like a
+            good anchor candidate.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot.BestTextAnchorText">
+            <summary>
+            Gets or sets the text of the first visible text node that looked like a
+            good anchor candidate.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper">
             <summary>

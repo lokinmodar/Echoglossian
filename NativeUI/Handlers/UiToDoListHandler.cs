@@ -82,7 +82,7 @@ public partial class Echoglossian
                 {
                     // skip text if time format
 #if DEBUG
-                    PluginLog.Debug("Skipping time format translation");
+                    // PluginLog.Debug("Skipping time format translation");
 #endif
                     continue;
                 }
@@ -221,8 +221,8 @@ public partial class Echoglossian
                 if (foundQuestPlate != null)
                 {
 #if DEBUG
-                    PluginLog.Debug(
-                        $"Name from database: {quest.Text} -> {foundQuestPlate.TranslatedQuestName}");
+                    // PluginLog.Debug(
+                    //     $"Name from database: {quest.Text} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
 
                     var foundTranslatedQuestName =
@@ -253,7 +253,7 @@ public partial class Echoglossian
 
                         if (IsValidTimeFormat(objective.Text))
                         {
-                            PluginLog.Debug("Skipping time format translation");
+                            // PluginLog.Debug("Skipping time format translation");
                             continue;
                         }
 
@@ -262,8 +262,8 @@ public partial class Echoglossian
                                 out var storedObjectiveText))
                         {
 #if DEBUG
-                            PluginLog.Debug(
-                                $"Objective from database: {objective.Text} {storedObjectiveText}");
+                            // PluginLog.Debug(
+                            //     $"Objective from database: {objective.Text} {storedObjectiveText}");
 #endif
                             translatedStoredObjectives.Add(storedObjectiveText);
 
@@ -291,13 +291,13 @@ public partial class Echoglossian
                             translatedQuestObjective);
                         translatedStoredObjectives.Add(
                             translatedQuestObjective);
-                        PluginLog.Debug(
-                            $"Objective translated: {objective.Text} {translatedQuestObjective}");
+                        // PluginLog.Debug(
+                        //     $"Objective translated: {objective.Text} {translatedQuestObjective}");
                         var resultUpdate =
                             this.UpdateQuestPlate(foundQuestPlate);
 #if DEBUG
-                        PluginLog.Debug(
-                            $"Using QuestPlate Replace - QuestPlate DB Update operation result: {resultUpdate}");
+                        // PluginLog.Debug(
+                        //     $"Using QuestPlate Replace - QuestPlate DB Update operation result: {resultUpdate}");
 #endif
                         if (this.configuration
                             .RemoveDiacriticsWhenUsingReplacementQuest)
@@ -328,8 +328,8 @@ public partial class Echoglossian
 
                 var translatedNameText = this.Translate(quest.Text);
 #if DEBUG
-                PluginLog.Debug(
-                    $"Name translated: {quest.Text} -> {translatedNameText}");
+                    // PluginLog.Debug(
+                    //     $"Name translated: {quest.Text} -> {translatedNameText}");
 #endif
                 QuestPlate translatedQuestPlate = new(
                     quest.Text,
@@ -369,15 +369,15 @@ public partial class Echoglossian
 
                     if (IsValidTimeFormat(objective.Text))
                     {
-                        PluginLog.Debug("Skipping time format translation");
+                        // PluginLog.Debug("Skipping time format translation");
                         continue;
                     }
 
                     var translatedObjectiveText =
                         this.Translate(objective.Text);
 #if DEBUG
-                    PluginLog.Debug(
-                        $"Objective translated: {translatedObjectiveText}");
+                    // PluginLog.Debug(
+                    //     $"Objective translated: {translatedObjectiveText}");
 #endif
                     translatedObjectives.Add(translatedObjectiveText);
                     translatedQuestPlate.Objectives.TryAdd(
@@ -401,8 +401,8 @@ public partial class Echoglossian
 
                 var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-                PluginLog.Debug(
-                    $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+                // PluginLog.Debug(
+                //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
 
                 // because sometimes the quest name translation is the same as the original name but the objectives are not
@@ -424,8 +424,8 @@ public partial class Echoglossian
     private void UiToDoListHandler(AddonEvent type, AddonArgs args)
     {
 #if DEBUG
-        PluginLog.Debug(
-            $"UiToDoListHandler AddonEvent: {type} {args.AddonName}");
+        // PluginLog.Debug(
+        //     $"UiToDoListHandler AddonEvent: {type} {args.AddonName}");
 #endif
 
         if (this.DisableTranslationAccordingToState())

@@ -505,7 +505,7 @@
     <value>Carteira de criptomoedas</value>
   </data>
   <data name="SendCryptoButton" xml:space="preserve">
-    <value>Enviar criptografia</value>
+    <value>Enviar criptomoedas</value>
   </data>
   <data name="UnableToLoadEntityForEditing" xml:space="preserve">
     <value>Não é possível carregar a entidade para edição.</value>

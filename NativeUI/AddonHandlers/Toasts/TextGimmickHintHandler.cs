@@ -146,17 +146,23 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
 
     this.updateOverlayBounds(addon, textNode);
+    // PluginLog.Debug(
+    //     $"[{TextGimmickHintAddonName}] trigger={type} captured source='{originalText}' " +
+    //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
+    //     $"swap={this.ShouldSwapTexts()}");
 
     if (this.TryGetCachedTranslation(
             originalText,
             out var translatedText,
             out _))
     {
+      // PluginLog.Debug(
+      //     $"[{TextGimmickHintAddonName}] trigger={type} cache-hit -> overlay publish");
       this.SetResolvedState(
           originalText,
           translatedText,
           this.NormalizeForReplacement(translatedText));
-      this.PublishOverlay(translatedText);
+      this.PublishOverlay(originalText, translatedText, type.ToString());
       return;
     }
 
@@ -164,17 +170,24 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     var storedToast = this.findTextGimmickHintMessage(lookupToast);
     if (this.IsStoredTranslationUsable(storedToast, originalText))
     {
+      // PluginLog.Debug(
+      //     $"[{TextGimmickHintAddonName}] trigger={type} db-hit -> overlay publish");
       this.SetResolvedState(
           originalText,
           storedToast!.TranslatedText!,
           this.NormalizeForReplacement(storedToast.TranslatedText!));
-      this.PublishOverlay(storedToast.TranslatedText!);
+      this.PublishOverlay(
+          originalText,
+          storedToast.TranslatedText!,
+          type.ToString());
       return;
     }
 
     if (this.TryQueueTranslation(originalText, out var requestId))
     {
-      this.clearOverlay();
+      // PluginLog.Debug(
+      //     $"[{TextGimmickHintAddonName}] trigger={type} cache-miss -> queued translation request #{requestId}");
+      this.PublishOverlay(originalText, string.Empty, type.ToString());
       Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
     }
   }
@@ -194,8 +207,13 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     var textNode = this.resolveToastTextNode(addon);
     this.updateOverlayBounds(addon, textNode);
+    // PluginLog.Debug(
+    //     $"[{TextGimmickHintAddonName}] trigger={type} visible-update " +
+    //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
+    //     $"swap={this.ShouldSwapTexts()}");
 
     if (!this.TryGetCurrentResolvedTranslation(
+            out var resolvedOriginalText,
             out var translatedText,
             out var replacementText))
     {
@@ -204,8 +222,16 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     if (this.ShouldUseOverlay())
     {
-      this.PublishOverlay(translatedText);
-      return;
+      // PluginLog.Debug(
+      //     $"[{TextGimmickHintAddonName}] trigger={type} republishing overlay from resolved state");
+      this.PublishOverlay(
+          resolvedOriginalText,
+          translatedText,
+          type.ToString());
+      if (!this.ShouldSwapTexts())
+      {
+        return;
+      }
     }
 
     if (!this.ShouldApplyNativeText())
@@ -224,6 +250,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       return;
     }
 
+    // PluginLog.Debug(
+    //     $"[{TextGimmickHintAddonName}] trigger={type} applying native replacement");
     textNode->SetText(replacementText);
   }
 
@@ -234,6 +262,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// <param name="args">The addon arguments associated with the reset.</param>
   private void OnResetState(AddonEvent type, AddonArgs args)
   {
+    // PluginLog.Debug($"[{TextGimmickHintAddonName}] trigger={type} resetting toast state");
     lock (this.stateGate)
     {
       this.activeRequestId++;
@@ -268,13 +297,15 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
     catch (Exception ex)
     {
-      PluginLog.Debug(
-          $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
+      // PluginLog.Debug(
+      //     $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
       translatedText = string.Empty;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
+      // PluginLog.Debug(
+      //     $"[{TextGimmickHintAddonName}] trigger=async-resolve empty translation for source='{originalText}'");
       lock (this.stateGate)
       {
         if (requestId == this.activeRequestId &&
@@ -289,6 +320,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
 
     var replacementText = this.NormalizeForReplacement(translatedText);
+    // PluginLog.Debug(
+    //     $"[{TextGimmickHintAddonName}] trigger=async-resolve translation ready for source='{originalText}'");
     var translatedGimmickHint = new TextGimmickHintMessage(
         originalText,
         ClientStateInterface.ClientLanguage.Humanize(),
@@ -313,7 +346,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       this.lastFailedOriginalText = string.Empty;
     }
 
-    this.PublishOverlay(translatedText);
+    this.PublishOverlay(originalText, translatedText, "async-resolve");
   }
 
   /// <summary>
@@ -415,6 +448,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   ///     otherwise, <see langword="false" />.
   /// </returns>
   private bool TryGetCurrentResolvedTranslation(
+      out string originalText,
       out string translatedText,
       out string replacementText)
   {
@@ -422,12 +456,14 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     {
       if (!string.IsNullOrWhiteSpace(this.currentTranslatedText))
       {
+        originalText = this.currentOriginalText;
         translatedText = this.currentTranslatedText;
         replacementText = this.currentReplacementText;
         return true;
       }
     }
 
+    originalText = string.Empty;
     translatedText = string.Empty;
     replacementText = string.Empty;
     return false;
@@ -498,15 +534,31 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   ///     overlay mode is enabled.
   /// </summary>
   /// <param name="translatedText">The translated gimmick-hint text.</param>
-  private void PublishOverlay(string translatedText)
+  private void PublishOverlay(
+      string originalText,
+      string translatedText,
+      string trigger)
   {
     if (!this.ShouldUseOverlay())
     {
+      // PluginLog.Debug(
+      //     $"[{TextGimmickHintAddonName}] trigger={trigger} overlay disabled -> clear");
       this.clearOverlay();
       return;
     }
 
-    this.updateOverlay(string.Empty, translatedText, string.Empty);
+    var overlayText = this.SelectOverlayText(originalText, translatedText);
+    if (string.IsNullOrWhiteSpace(overlayText))
+    {
+      // PluginLog.Debug(
+      //     $"[{TextGimmickHintAddonName}] trigger={trigger} overlay text unavailable -> clear");
+      this.clearOverlay();
+      return;
+    }
+
+    // PluginLog.Debug(
+    //     $"[{TextGimmickHintAddonName}] trigger={trigger} publish overlay text='{overlayText}'");
+    this.updateOverlay(string.Empty, overlayText, string.Empty);
   }
 
   /// <summary>
@@ -534,7 +586,44 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool ShouldApplyNativeText()
   {
     return this.config.TranslateTextGimmickHint &&
-           !this.config.UseImGuiForTextGimmickHint;
+           !this.config.OverlayOnlyLanguage &&
+           (!this.config.UseImGuiForTextGimmickHint ||
+            this.ShouldSwapTexts());
+  }
+
+  /// <summary>
+  ///     Determines whether the TextGimmickHint overlay should show the original
+  ///     text while the native addon receives the translated replacement.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when swap mode is active; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool ShouldSwapTexts()
+  {
+    return this.config.TranslateTextGimmickHint &&
+           !this.config.OverlayOnlyLanguage &&
+           this.config.UseImGuiForTextGimmickHint &&
+           this.config.SwapTextsUsingImGui;
+  }
+
+  /// <summary>
+  ///     Selects the overlay text for the gimmick-hint toast state.
+  /// </summary>
+  /// <param name="originalText">The original gimmick-hint text.</param>
+  /// <param name="translatedText">The translated gimmick-hint text.</param>
+  /// <returns>The text that should be shown in the overlay.</returns>
+  private string SelectOverlayText(
+      string originalText,
+      string translatedText)
+  {
+    if (this.ShouldSwapTexts() &&
+        !string.IsNullOrWhiteSpace(originalText))
+    {
+      return originalText;
+    }
+
+    return translatedText;
   }
 
   /// <summary>

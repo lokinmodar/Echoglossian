@@ -149,29 +149,112 @@ namespace Echoglossian
         ResolveToastTextNodeDelegate resolveToastTextNode,
         int index = 1)
     {
-      var addonPtr = GameGuiInterface.GetAddonByName(addonName, index);
-      if (addonPtr.Address == IntPtr.Zero)
+      var hasPublishedContent = overlay.Display;
+
+      if (!this.TryResolveToastAddon(addonName, index, out var addon, out var resolvedIndex))
       {
-        this.ClearOverlay(overlay);
-        return false;
+        return hasPublishedContent;
       }
 
-      var addon = (AtkUnitBase*)addonPtr.Address;
       if (addon == null || !addon->IsVisible || addon->RootNode == null)
       {
-        this.ClearOverlay(overlay);
-        return false;
+        return hasPublishedContent;
       }
 
       var textNode = resolveToastTextNode(addon);
       if (textNode == null || textNode->NodeText.IsEmpty)
       {
-        this.ClearOverlay(overlay);
-        return false;
+        return hasPublishedContent;
       }
 
       this.UpdateToastOverlayBounds(overlay, addon, textNode);
+      // PluginLog.Debug(
+      //     $"Synced toast overlay '{addonName}' index={resolvedIndex} at ({overlay.Position.X:0.##}, {overlay.Position.Y:0.##}) " +
+      //     $"size ({overlay.Dimensions.X:0.##} x {overlay.Dimensions.Y:0.##})");
       return true;
+    }
+
+    /// <summary>
+    /// Resolves a toast addon by name, preferring the requested index and falling
+    /// back to the first loaded matching instance when the requested index is not
+    /// present.
+    /// </summary>
+    /// <param name="addonName">Toast addon name to query.</param>
+    /// <param name="index">Preferred addon index.</param>
+    /// <param name="addon">Receives the resolved addon pointer.</param>
+    /// <param name="resolvedIndex">Receives the resolved addon index.</param>
+    /// <returns>True when a live addon instance was found.</returns>
+    private unsafe bool TryResolveToastAddon(
+        string addonName,
+        int index,
+        out AtkUnitBase* addon,
+        out int resolvedIndex)
+    {
+      addon = null;
+      resolvedIndex = index;
+
+      var addonPtr = GameGuiInterface.GetAddonByName(addonName, index);
+      if (addonPtr.Address != IntPtr.Zero)
+      {
+        addon = (AtkUnitBase*)addonPtr.Address;
+        resolvedIndex = index;
+        return true;
+      }
+
+      var manager = RaptureAtkUnitManager.Instance();
+      if (manager == null)
+      {
+        return false;
+      }
+
+      var matchIndex = 0;
+      foreach (var unit in manager->AllLoadedUnitsList.Entries)
+      {
+        var unitPtr = unit.Value;
+        if (unitPtr == null || !unitPtr->IsReady)
+        {
+          continue;
+        }
+
+        if (!string.Equals(unitPtr->NameString, addonName, StringComparison.Ordinal))
+        {
+          continue;
+        }
+
+        if (matchIndex++ != index)
+        {
+          continue;
+        }
+
+        addon = unitPtr;
+        resolvedIndex = index;
+        // PluginLog.Debug(
+        //     $"Toast overlay resolved '{addonName}' requestedIndex={index} using fallback loaded unit");
+        return true;
+      }
+
+      matchIndex = 0;
+      foreach (var unit in manager->AllLoadedUnitsList.Entries)
+      {
+        var unitPtr = unit.Value;
+        if (unitPtr == null || !unitPtr->IsReady)
+        {
+          continue;
+        }
+
+        if (!string.Equals(unitPtr->NameString, addonName, StringComparison.Ordinal))
+        {
+          continue;
+        }
+
+        addon = unitPtr;
+        resolvedIndex = matchIndex;
+        // PluginLog.Debug(
+        //     $"Toast overlay resolved '{addonName}' requestedIndex={index} using first available matching unit");
+        return true;
+      }
+
+      return false;
     }
 
     /// <summary>
@@ -202,6 +285,9 @@ namespace Echoglossian
       this.questToastOverlay.Dimensions = new Vector2(
           viewport.Size.X * 0.35f,
           56f);
+      // PluginLog.Debug(
+      //     $"Synced quest toast overlay at ({this.questToastOverlay.Position.X:0.##}, {this.questToastOverlay.Position.Y:0.##}) " +
+      //     $"size ({this.questToastOverlay.Dimensions.X:0.##} x {this.questToastOverlay.Dimensions.Y:0.##})");
       return true;
     }
 
@@ -287,7 +373,7 @@ namespace Echoglossian
       if (config.AutoSizeToTextWithMaxWidth)
       {
         ImGui.SetNextWindowSizeConstraints(
-            Vector2.Zero,
+            new Vector2(width, 0f),
             new Vector2(width, maxHeight));
       }
       else if (config.UseFixedWindowSize)
@@ -349,11 +435,20 @@ namespace Echoglossian
       overlay.ImGuiSize = ImGui.GetWindowSize();
       if (config.DefaultTitle.StartsWith("Screen Info", StringComparison.OrdinalIgnoreCase))
       {
-        PluginLog.Debug(
-            $"Rendered toast overlay '{windowLabel}' at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##})");
+        // PluginLog.Debug(
+        //     $"Rendered toast overlay '{windowLabel}' at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##})");
       }
       ImGui.PopStyleColor(1);
       ImGui.End();
+
+      if (config.DefaultTitle.Contains("toast", StringComparison.OrdinalIgnoreCase) ||
+          config.DefaultTitle.Contains("gimmick hint", StringComparison.OrdinalIgnoreCase))
+      {
+        // PluginLog.Debug(
+        //     $"Rendered overlay '{windowLabel}' at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) " +
+        //     $"size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##}) " +
+        //     $"contentWidth={textWidth:0.##} windowWidth={width:0.##} overlayPos=({overlay.Position.X:0.##}, {overlay.Position.Y:0.##})");
+      }
 
       if (this.configuration.SwapTextsUsingImGui)
       {

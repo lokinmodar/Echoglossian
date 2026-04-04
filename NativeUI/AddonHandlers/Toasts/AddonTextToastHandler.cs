@@ -51,6 +51,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   private string currentReplacementText = string.Empty;
   private string currentTranslatedText = string.Empty;
   private string lastFailedOriginalText = string.Empty;
+  private int overlayPublicationVersion;
   private bool translationInFlight;
 
   /// <summary>
@@ -184,33 +185,11 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
 
     this.updateOverlayBounds(addon, textNode);
-
-    if (this.TryGetCachedTranslation(
-            originalText,
-            out var translatedText,
-            out _))
-    {
-      this.PublishOverlay(translatedText);
-      return;
-    }
-
-    var lookupToast = this.BuildLookupMessage(originalText);
-    var storedToast = this.findToastMessage(lookupToast);
-    if (this.IsStoredTranslationUsable(storedToast, originalText))
-    {
-      this.SetResolvedState(
-          originalText,
-          storedToast!.TranslatedToastMessage!,
-          this.NormalizeForReplacement(storedToast.TranslatedToastMessage!));
-      this.PublishOverlay(storedToast.TranslatedToastMessage!);
-      return;
-    }
-
-    if (this.TryQueueTranslation(originalText, out var requestId))
-    {
-      this.clearOverlay();
-      Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
-    }
+    // PluginLog.Debug(
+    //     $"[{this.addonName}] trigger={type} captured source='{originalText}' " +
+    //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
+    //     $"swap={this.ShouldSwapTexts()}");
+    this.TryCaptureOrQueueToastSource(originalText, type.ToString());
   }
 
   /// <summary>
@@ -228,18 +207,43 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     var textNode = this.resolveToastTextNode(addon);
     this.updateOverlayBounds(addon, textNode);
+    // PluginLog.Debug(
+    //     $"[{this.addonName}] trigger={type} visible-update " +
+    //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
+    //     $"swap={this.ShouldSwapTexts()}");
 
     if (!this.TryGetCurrentResolvedTranslation(
+            out var resolvedOriginalText,
             out var translatedText,
             out var replacementText))
     {
+      if (this.TryReadCurrentSource(textNode, out var visibleOriginalText))
+      {
+        this.updateOverlayBounds(addon, textNode);
+        // PluginLog.Debug(
+        //     $"[{this.addonName}] trigger={type} visible-capture source='{visibleOriginalText}' " +
+        //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
+        //     $"swap={this.ShouldSwapTexts()}");
+        if (this.TryCaptureOrQueueToastSource(
+                visibleOriginalText,
+                $"{type}-visible-fallback"))
+        {
+          return;
+        }
+      }
+
       return;
     }
 
     if (this.ShouldUseOverlay())
     {
-      this.PublishOverlay(translatedText);
-      return;
+      // PluginLog.Debug(
+      //     $"[{this.addonName}] trigger={type} republishing overlay from resolved state");
+      this.PublishOverlay(resolvedOriginalText, translatedText, type.ToString());
+      if (!this.ShouldSwapTexts())
+      {
+        return;
+      }
     }
 
     if (!this.ShouldApplyNativeToastText())
@@ -258,7 +262,65 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       return;
     }
 
+    // PluginLog.Debug(
+    //     $"[{this.addonName}] trigger={type} applying native replacement");
     textNode->SetText(replacementText);
+  }
+
+  /// <summary>
+  ///     Resolves the source toast line against cache, database, or background
+  ///     translation work and publishes the overlay when a translation becomes
+  ///     available.
+  /// </summary>
+  /// <param name="type">The lifecycle event that triggered the handler.</param>
+  /// <param name="originalText">The original toast text to resolve.</param>
+  /// <param name="trigger">The log trigger label associated with the call.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the source was handled; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  protected bool TryCaptureOrQueueToastSource(
+      string originalText,
+      string trigger)
+  {
+    if (this.TryGetCachedTranslation(
+            originalText,
+            out var translatedText,
+            out _))
+    {
+      // PluginLog.Debug(
+      //     $"[{this.addonName}] trigger={trigger} cache-hit -> overlay publish");
+      this.PublishOverlay(originalText, translatedText, trigger);
+      return true;
+    }
+
+    var lookupToast = this.BuildLookupMessage(originalText);
+    var storedToast = this.findToastMessage(lookupToast);
+    if (this.IsStoredTranslationUsable(storedToast, originalText))
+    {
+      this.SetResolvedState(
+          originalText,
+          storedToast!.TranslatedToastMessage!,
+          this.NormalizeForReplacement(storedToast.TranslatedToastMessage!));
+      // PluginLog.Debug(
+      //     $"[{this.addonName}] trigger={trigger} db-hit -> overlay publish");
+      this.PublishOverlay(
+          originalText,
+          storedToast.TranslatedToastMessage!,
+          trigger);
+      return true;
+    }
+
+    if (this.TryQueueTranslation(originalText, out var requestId))
+    {
+      // PluginLog.Debug(
+      //     $"[{this.addonName}] trigger={trigger} cache-miss -> queued translation request #{requestId}");
+      this.PublishOverlay(originalText, string.Empty, trigger);
+      Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
+      return true;
+    }
+
+    return false;
   }
 
   /// <summary>
@@ -268,6 +330,11 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   /// <param name="args">The addon arguments associated with the reset.</param>
   protected void OnResetState(AddonEvent type, AddonArgs args)
   {
+    // PluginLog.Debug($"[{this.addonName}] trigger={type} resetting toast state");
+    var shouldDelayOverlayClear = this.ShouldUseOverlay();
+    var resetRequestId = 0;
+    var publicationVersion = 0;
+
     lock (this.stateGate)
     {
       this.activeRequestId++;
@@ -276,6 +343,14 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       this.currentReplacementText = string.Empty;
       this.translationInFlight = false;
       this.lastFailedOriginalText = string.Empty;
+      resetRequestId = this.activeRequestId;
+      publicationVersion = this.overlayPublicationVersion;
+    }
+
+    if (shouldDelayOverlayClear)
+    {
+      this.ScheduleDeferredOverlayClear(resetRequestId, publicationVersion);
+      return;
     }
 
     this.clearOverlay();
@@ -302,13 +377,15 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
     catch (Exception ex)
     {
-      PluginLog.Debug(
-          $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
+      // PluginLog.Debug(
+      //     $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
       translatedText = string.Empty;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
+      // PluginLog.Debug(
+      //     $"[{this.addonName}] trigger=async-resolve empty translation for source='{originalText}'");
       lock (this.stateGate)
       {
         if (requestId == this.activeRequestId &&
@@ -323,6 +400,8 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
 
     var replacementText = this.NormalizeForReplacement(translatedText);
+    // PluginLog.Debug(
+    //     $"[{this.addonName}] trigger=async-resolve translation ready for source='{originalText}'");
     var translatedToast = new ToastMessage(
         this.toastType,
         originalText,
@@ -349,7 +428,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     if (this.ShouldUseOverlay())
     {
-      this.PublishOverlay(translatedText);
+      this.PublishOverlay(originalText, translatedText, "async-resolve");
     }
   }
 
@@ -526,6 +605,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   ///     line ready for display; otherwise, <see langword="false" />.
   /// </returns>
   protected bool TryGetCurrentResolvedTranslation(
+      out string originalText,
       out string translatedText,
       out string replacementText)
   {
@@ -533,12 +613,14 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     {
       if (!string.IsNullOrWhiteSpace(this.currentTranslatedText))
       {
+        originalText = this.currentOriginalText;
         translatedText = this.currentTranslatedText;
         replacementText = this.currentReplacementText;
         return true;
       }
     }
 
+    originalText = string.Empty;
     translatedText = string.Empty;
     replacementText = string.Empty;
     return false;
@@ -607,19 +689,43 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   }
 
   /// <summary>
-  ///     Publishes translated toast content to the configured overlay when overlay
-  ///     mode is enabled.
+  ///     Publishes toast content to the configured overlay when overlay mode is
+  ///     enabled. When swap mode is active, the original text is shown in the
+  ///     overlay while the translated text is kept for native replacement.
   /// </summary>
+  /// <param name="originalText">The original toast text.</param>
   /// <param name="translatedText">The translated toast text.</param>
-  protected void PublishOverlay(string translatedText)
+  /// <param name="trigger">The log trigger label associated with the call.</param>
+  protected void PublishOverlay(
+      string originalText,
+      string translatedText,
+      string trigger)
   {
     if (!this.ShouldUseOverlay())
     {
+      // PluginLog.Debug(
+      //     $"[{this.addonName}] trigger={trigger} overlay disabled -> clear");
       this.clearOverlay();
       return;
     }
 
-    this.updateOverlay(string.Empty, translatedText, string.Empty);
+    var overlayText = this.SelectOverlayText(originalText, translatedText);
+    if (string.IsNullOrWhiteSpace(overlayText))
+    {
+      // PluginLog.Debug(
+      //     $"[{this.addonName}] trigger={trigger} overlay text unavailable -> clear");
+      this.clearOverlay();
+      return;
+    }
+
+    // PluginLog.Debug(
+    //     $"[{this.addonName}] trigger={trigger} publish overlay text='{overlayText}'");
+    lock (this.stateGate)
+    {
+      this.overlayPublicationVersion++;
+    }
+
+    this.updateOverlay(string.Empty, overlayText, string.Empty);
   }
 
   /// <summary>
@@ -649,8 +755,47 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   {
     return this.config.TranslateToast &&
            this.isTypeEnabled(this.config) &&
-           !(this.config.OverlayOnlyLanguage ||
-             this.useOverlayForType(this.config));
+           !this.config.OverlayOnlyLanguage &&
+           (!this.useOverlayForType(this.config) ||
+            this.ShouldSwapTexts());
+  }
+
+  /// <summary>
+  ///     Determines whether this toast type should currently swap its overlay
+  ///     text with the original native text while still replacing the game UI.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when the overlay should display the original
+  ///     text and the native addon should receive the translation; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  protected bool ShouldSwapTexts()
+  {
+    return this.config.TranslateToast &&
+           this.isTypeEnabled(this.config) &&
+           !this.config.OverlayOnlyLanguage &&
+           this.useOverlayForType(this.config) &&
+           this.config.SwapTextsUsingImGui;
+  }
+
+  /// <summary>
+  ///     Selects the text that should be shown in the overlay for the current
+  ///     toast state.
+  /// </summary>
+  /// <param name="originalText">The original toast text.</param>
+  /// <param name="translatedText">The translated toast text.</param>
+  /// <returns>The text that should be shown in the overlay.</returns>
+  protected string SelectOverlayText(
+      string originalText,
+      string translatedText)
+  {
+    if (this.ShouldSwapTexts() &&
+        !string.IsNullOrWhiteSpace(originalText))
+    {
+      return originalText;
+    }
+
+    return translatedText;
   }
 
   /// <summary>
@@ -694,5 +839,32 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   protected static string NormalizeComparisonText(string? text)
   {
     return Regex.Replace(text ?? string.Empty, @"\s+", " ").Trim();
+  }
+
+  /// <summary>
+  ///     Defers clearing overlay content long enough for ImGui to render the
+  ///     latest toast state while preventing stale clears from removing newer
+  ///     overlay content.
+  /// </summary>
+  /// <param name="requestId">The request identifier captured during reset.</param>
+  /// <param name="publicationVersion">
+  ///     The overlay publication version captured during reset.
+  /// </param>
+  private async void ScheduleDeferredOverlayClear(
+      int requestId,
+      int publicationVersion)
+  {
+    await Task.Delay(200).ConfigureAwait(false);
+
+    lock (this.stateGate)
+    {
+      if (requestId != this.activeRequestId ||
+          publicationVersion != this.overlayPublicationVersion)
+      {
+        return;
+      }
+    }
+
+    this.clearOverlay();
   }
 }

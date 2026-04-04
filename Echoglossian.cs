@@ -29,6 +29,8 @@ public partial class Echoglossian : IDalamudPlugin
 
   private const string DBManagerWindowCommand = "/eglodbmanager";
 
+  private const string AddonProbeCommand = "/egloaddonprobe";
+
   /// <summary>
   /// The language ID to translate to.
   /// </summary>
@@ -63,6 +65,11 @@ public partial class Echoglossian : IDalamudPlugin
   /// Holds the database editor window instance.
   /// </summary>
   private DbEditorWindow? dbEditorWindow;
+
+  /// <summary>
+  /// Holds the currently active addon structure probe watch, if any.
+  /// </summary>
+  private AddonStructureProbe.AddonStructureProbeWatch? addonProbeWatch;
 
   /// <summary>
   /// Holds the sanitizer instance for cleaning up text input.
@@ -158,6 +165,14 @@ public partial class Echoglossian : IDalamudPlugin
     {
       HelpMessage = Resources.OpensTheEchoglossianDBEditor
     });
+
+    CommandManager.AddHandler(
+        AddonProbeCommand,
+        new CommandInfo(this.OnEgloAddonProbeCommand)
+        {
+            HelpMessage =
+              "Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe <addon name> [index] or /egloaddonprobe stop",
+        });
 
     Sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
@@ -414,6 +429,9 @@ public partial class Echoglossian : IDalamudPlugin
   /// <param name="disposing">Indicates whether the method was called from managed code.</param>
   protected virtual void Dispose(bool disposing)
   {
+    this.addonProbeWatch?.Dispose();
+    this.addonProbeWatch = null;
+
     ToastGuiInterface.QuestToast -= this.questToastRuntime.HandleQuestToast;
 
     PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
@@ -527,6 +545,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     CommandManager.RemoveHandler(SlashCommand);
     CommandManager.RemoveHandler(DBManagerWindowCommand);
+    CommandManager.RemoveHandler(AddonProbeCommand);
   }
 
   /// <summary>
@@ -534,6 +553,12 @@ public partial class Echoglossian : IDalamudPlugin
   /// </summary>
   private void Tick(IFramework tFramework)
   {
+    this.addonProbeWatch?.Tick();
+    if (this.addonProbeWatch?.IsDisposed == true)
+    {
+      this.addonProbeWatch = null;
+    }
+
     if (!this.configuration.Translate)
     {
       return;
@@ -650,6 +675,77 @@ public partial class Echoglossian : IDalamudPlugin
   private void Command(string command, string arguments)
   {
     this.config = true;
+  }
+
+  /// <summary>
+  /// Dumps a recursive probe of the requested addon to the log so we can
+  /// inspect its live node tree, component roots, and likely overlay anchors.
+  /// </summary>
+  /// <param name="command">Command name.</param>
+  /// <param name="args">Command arguments.</param>
+  private void OnEgloAddonProbeCommand(string command, string args)
+  {
+    var trimmedArgs = args.Trim();
+    if (trimmedArgs.Equals("stop", StringComparison.OrdinalIgnoreCase) ||
+        trimmedArgs.Equals("cancel", StringComparison.OrdinalIgnoreCase))
+    {
+      if (this.addonProbeWatch == null)
+      {
+        ChatGuiInterface.Print("No active addon probe watch to stop.");
+        return;
+      }
+
+      this.addonProbeWatch.Stop();
+      this.addonProbeWatch = null;
+
+      ChatGuiInterface.Print("Addon probe watch stopped.");
+      return;
+    }
+
+    var (addonName, addonIndex) = this.ParseAddonProbeArguments(args);
+    if (string.IsNullOrWhiteSpace(addonName))
+    {
+      ChatGuiInterface.Print(
+          "Usage: /egloaddonprobe <addon name> [index] or /egloaddonprobe stop");
+      return;
+    }
+
+    this.addonProbeWatch?.Dispose();
+    this.addonProbeWatch = AddonStructureProbe.StartWatch(
+        GameGuiInterface,
+        PluginLog,
+        addonName,
+        addonIndex);
+
+    ChatGuiInterface.Print(
+        $"Addon probe watch started for '{addonName}'[{addonIndex}] for 60 seconds. Check the Dalamud log for event and tree dumps.");
+  }
+
+  /// <summary>
+  /// Parses the addon probe command arguments into an addon name and optional index.
+  /// </summary>
+  /// <param name="args">The raw command arguments.</param>
+  /// <returns>The addon name and index to probe.</returns>
+  private (string AddonName, int Index) ParseAddonProbeArguments(string args)
+  {
+    var trimmedArgs = args.Trim();
+    if (trimmedArgs.Length == 0)
+    {
+      return (string.Empty, 0);
+    }
+
+    var lastSpace = trimmedArgs.LastIndexOf(' ');
+    if (lastSpace > 0 &&
+        int.TryParse(trimmedArgs[(lastSpace + 1)..], out var parsedIndex))
+    {
+      var parsedName = trimmedArgs[..lastSpace].Trim();
+      if (parsedName.Length > 0)
+      {
+        return (parsedName, parsedIndex);
+      }
+    }
+
+    return (trimmedArgs, 0);
   }
 
   /// <summary>
@@ -1088,14 +1184,14 @@ public partial class Echoglossian : IDalamudPlugin
       AddonEvent.PostFocus,
     ];
 
-    AddonLifecycleExtensions.LogAddon(
-        AddonLifecycle,
-        "Talk",
-        lifecycleLogEventsWithoutUpdatesAndDraws);
-      AddonLifecycleExtensions.LogAddon(
-        AddonLifecycle,
-        "_BattleTalk",
-        lifecycleLogEventsWithoutUpdatesAndDraws);
+    // AddonLifecycleExtensions.LogAddon(
+    //     AddonLifecycle,
+    //     "Talk",
+    //     lifecycleLogEventsWithoutUpdatesAndDraws);
+      // AddonLifecycleExtensions.LogAddon(
+      //   AddonLifecycle,
+      //   "_BattleTalk",
+      //   lifecycleLogEventsWithoutUpdatesAndDraws);
 
   }
 }

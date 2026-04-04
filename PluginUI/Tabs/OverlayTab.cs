@@ -393,6 +393,8 @@ public static class OverlayTab
         ImGui.Spacing();
         ImGui.TextWrapped(
             "Each toast type can choose independently between native replacement and overlay rendering.");
+        ImGui.TextWrapped(
+            "When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation.");
 
         if (config.OverlayOnlyLanguage)
         {
@@ -431,12 +433,20 @@ public static class OverlayTab
         if (config.OverlayOnlyLanguage)
         {
             changed |= AssignIfChanged(ref useOverlay, true);
+            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
             ImGui.TextWrapped(
                 "Overlay-only language is active, so this toast type will render through an overlay.");
         }
         else
         {
             changed |= ImGui.Checkbox("Use overlay for this toast type", ref useOverlay);
+        }
+
+        if (!config.OverlayOnlyLanguage && useOverlay)
+        {
+            changed |= ImGui.Checkbox(
+                Resources.SwapTranslationTextToggle,
+                ref config.SwapTextsUsingImGui);
         }
 
         if (!useOverlay)

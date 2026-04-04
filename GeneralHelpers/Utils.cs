@@ -449,7 +449,7 @@ public partial class Echoglossian
   /// <returns>Returns true if the input is valide time information.</returns>
   private static bool IsValidTimeFormat(string time)
   {
-    PluginLog.Debug($"Checking time format: {time}");
+    // PluginLog.Debug($"Checking time format: {time}");
     var pattern = @"(\d{1,3}):(\d{2})";
     var match = Regex.Match(time, pattern);
 
