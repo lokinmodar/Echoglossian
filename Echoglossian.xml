@@ -120,7 +120,13 @@
             <summary>Font size used in overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.ForceShowTitle">
-            <summary>Always show overlay title bar, even if name translation is off.</summary>
+            <summary>
+                Legacy shared title-bar toggle kept for config migration from older
+                versions that still used a single overlay title-bar setting.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.BattleTalkForceShowTitle">
+            <summary>Always show the BattleTalk overlay title bar.</summary>
         </member>
         <member name="F:Echoglossian.Config.GeminiModel">
             <summary>Gemini model ID used for translations.</summary>
@@ -144,6 +150,36 @@
         </member>
         <member name="F:Echoglossian.Config.ImGuiTalkWindowWidthMult">
             <summary>Width multiplier for Talk ImGui overlay window.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiWideTextToastWindowPosCorrection">
+            <summary>Position correction for Screen Info (_WideText) toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiWideTextToastWindowWidthMult">
+            <summary>Width multiplier for Screen Info (_WideText) toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiErrorToastWindowPosCorrection">
+            <summary>Position correction for Error toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiErrorToastWindowWidthMult">
+            <summary>Width multiplier for Error toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiAreaToastWindowPosCorrection">
+            <summary>Position correction for Area toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiAreaToastWindowWidthMult">
+            <summary>Width multiplier for Area toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiClassChangeToastWindowPosCorrection">
+            <summary>Position correction for Class/Job change toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiClassChangeToastWindowWidthMult">
+            <summary>Width multiplier for Class/Job change toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastWindowPosCorrection">
+            <summary>Position correction for Quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastWindowWidthMult">
+            <summary>Width multiplier for Quest toast overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.ImGuiWindowPosCorrection">
             <summary>Position correction for ImGui overlay windows.</summary>
@@ -233,6 +269,36 @@
                Controls whether the translations should only be displayed as overlays because of missing native game font support for the selected language.
             </summary>
         </member>
+        <member name="F:Echoglossian.Config.OverlayWideTextToastTextColor">
+            <summary>Text color used by Screen Info (_WideText) toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayErrorToastTextColor">
+            <summary>Text color used by Error toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayAreaToastTextColor">
+            <summary>Text color used by Area toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayClassChangeToastTextColor">
+            <summary>Text color used by Class/Job change toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayQuestToastTextColor">
+            <summary>Text color used by Quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.WideTextToastBackgroundOpacity">
+            <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ErrorToastBackgroundOpacity">
+            <summary>Background opacity used by Error toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AreaToastBackgroundOpacity">
+            <summary>Background opacity used by Area toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClassChangeToastBackgroundOpacity">
+            <summary>Background opacity used by Class/Job change toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastBackgroundOpacity">
+            <summary>Background opacity used by Quest toast overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.PluginAssetsDownloaded">
             <summary>Whether plugin assets have been successfully downloaded.</summary>
         </member>
@@ -260,11 +326,50 @@
         <member name="F:Echoglossian.Config.TalkFontScale">
             <summary>Scaling factor for Talk font.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TalkForceShowTitle">
+            <summary>Always show the Talk overlay title bar.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TalkSubtitleFontScale">
             <summary>Font scale used for Talk Subtitle overlay.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TalkSubtitleForceShowTitle">
+            <summary>Always show the Talk Subtitle overlay title bar.</summary>
+        </member>
         <member name="F:Echoglossian.Config.ToastFontScale">
             <summary>Font scale used for Toast overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ToastForceShowTitle">
+            <summary>Always show the Toast overlay title bar.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.WideTextToastFontScale">
+            <summary>Font scale used for Screen Info (_WideText) toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.WideTextToastForceShowTitle">
+            <summary>Always show the Screen Info (_WideText) toast overlay title bar.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ErrorToastFontScale">
+            <summary>Font scale used for Error toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ErrorToastForceShowTitle">
+            <summary>Always show the Error toast overlay title bar.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AreaToastFontScale">
+            <summary>Font scale used for Area toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AreaToastForceShowTitle">
+            <summary>Always show the Area toast overlay title bar.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClassChangeToastFontScale">
+            <summary>Font scale used for Class/Job change toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClassChangeToastForceShowTitle">
+            <summary>Always show the Class/Job change toast overlay title bar.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastFontScale">
+            <summary>Font scale used for Quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastForceShowTitle">
+            <summary>Always show the Quest toast overlay title bar.</summary>
         </member>
         <member name="F:Echoglossian.Config.Translate">
             <summary>Enables translation processing globally.</summary>
@@ -280,6 +385,9 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateBattleTalk">
             <summary>Translate BattleTalk messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateBattleTalkNpcNames">
+            <summary>Translate or show sender names for BattleTalk messages.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateCharacterWindow">
             <summary> Translate character window text.</summary>
@@ -297,7 +405,10 @@
             <summary>Translate entries in the quest journal.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateNpcNames">
-            <summary>Translate NPC names in Talk window.</summary>
+            <summary>
+                Legacy shared NPC-name translation toggle kept for migration from
+                older configs that did not yet separate Talk and BattleTalk.
+            </summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateQuestToast">
             <summary>Translate quest-related toasts.</summary>
@@ -313,6 +424,9 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateTalk">
             <summary>Translate Talk window messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateTalkNpcNames">
+            <summary>Translate or show sender names for Talk messages.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateTalkSubtitle">
             <summary>Translate Talk Subtitle messages.</summary>
@@ -346,6 +460,21 @@
         </member>
         <member name="F:Echoglossian.Config.UseImGuiForToasts">
             <summary>Use ImGui for toast messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForWideTextToast">
+            <summary>Use ImGui overlay specifically for Screen Info (_WideText) toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForErrorToast">
+            <summary>Use ImGui overlay specifically for Error toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForAreaToast">
+            <summary>Use ImGui overlay specifically for Area toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForClassChangeToast">
+            <summary>Use ImGui overlay specifically for Class/Job change toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForQuestToast">
+            <summary>Use ImGui overlay specifically for Quest toasts.</summary>
         </member>
         <member name="F:Echoglossian.Config.UseLiveDeepSeekModelList">
             <summary>Temperature setting for DeepSeek responses.</summary>
@@ -460,6 +589,14 @@
             </summary>
             <param name="toastMessage">Formatted ToastMessage to be found in the database</param>
             <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnToastMessage(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
+            <summary>
+            Finds and returns a non-error ToastMessage using the in-memory toast cache when
+            available.
+            </summary>
+            <param name="toastMessage">Formatted ToastMessage to be found in the database.</param>
+            <returns>The matching <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" />, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindErrorToastMessage(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
             <summary>
@@ -798,6 +935,42 @@
             <param name="command">The command that triggered the execution.</param>
             <param name="arguments">Arguments associated with the command.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the shared toast overlay bounds using a live "_WideText" addon
+            instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_WideText" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncErrorToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the error toast overlay bounds using a live "_TextError" addon
+            instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_TextError" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncAreaToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the area toast overlay bounds using a live "_AreaText" addon
+            instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_AreaText" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncClassChangeToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the class/job change toast overlay bounds using a live
+            "_TextClassChange" addon instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_TextClassChange" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
+            <summary>
+            Persists a toast row into the correct historical cache/table according to
+            its toast type.
+            </summary>
+            <param name="toastMessage">The translated toast row to persist.</param>
+            <returns>The persistence result message.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
             <summary>
             Handles the registration of addon handlers.
@@ -845,6 +1018,12 @@
         <member name="M:Echoglossian.Echoglossian.FixConfig">
             <summary>
                 Fixes the configuration file if it is missing or has an incorrect version.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.MigrateOverlayStyleSettings">
+            <summary>
+                Migrates legacy shared overlay style settings and NPC-name settings into
+                the per-overlay/per-addon settings introduced for newer configs.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.SaveConfig(Echoglossian.Config)">
@@ -1002,6 +1181,23 @@
             <param name="type"></param>
             <param name="args"></param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.OnQuestToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.QuestToastOptions@,System.Boolean@)">
+            <summary>
+            Handles quest-toast callbacks using cache-first async translation so new
+            translations do not block the game UI.
+            </summary>
+            <param name="message">The quest toast text payload.</param>
+            <param name="options">The quest toast options provided by Dalamud.</param>
+            <param name="ishandled">Whether another handler already consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.ToastOptions@,System.Boolean@)">
+            <summary>
+            Handles the generic toast callback exposed by <see cref="T:Dalamud.Plugin.Services.IToastGui" />.
+            </summary>
+            <param name="message">The toast text payload.</param>
+            <param name="options">The toast options provided by Dalamud.</param>
+            <param name="ishandled">Whether another handler already consumed the toast.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -1055,6 +1251,23 @@
             <param name="overlay">Overlay to clear.</param>
             <param name="clearText">Whether to clear the translated text.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateOverlayBounds(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+            Updates the overlay bounds using a live addon instance already available in
+            the current lifecycle callback.
+            </summary>
+            <param name="overlay">Overlay whose bounds should be updated.</param>
+            <param name="addon">Visible addon providing the current bounds.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateToastOverlayBounds(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates toast overlay bounds using addon-level coordinates, which are more
+            stable for transient toast addons than the generic root-node anchoring used
+            by Talk/BattleTalk overlays.
+            </summary>
+            <param name="overlay">Overlay whose bounds should be updated.</param>
+            <param name="addon">Visible toast addon providing the current bounds.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TrySyncOverlayToAddon(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Int32)">
             <summary>
             Synchronizes overlay bounds to the current addon position on the UI thread.
@@ -1063,6 +1276,28 @@
             <param name="overlay">Overlay to update.</param>
             <param name="index">Addon index.</param>
             <returns>True when the addon exists and is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TrySyncToastOverlayToAddon(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.NativeUI.AddonHandlers.Toasts.ResolveToastTextNodeDelegate,System.Int32)">
+            <summary>
+            Synchronizes toast overlay bounds to the current addon position on the UI
+            thread using addon-level coordinates instead of root-node local offsets.
+            </summary>
+            <param name="addonName">Toast addon name to query.</param>
+            <param name="overlay">Overlay to update.</param>
+            <param name="index">Addon index.</param>
+            <returns>True when the addon exists and is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TrySyncQuestToastOverlayToViewport">
+            <summary>
+            Synchronizes the quest toast overlay to a stable top-center viewport anchor.
+            Quest toasts do not currently expose a dedicated addon path in the new
+            runtime, so the overlay uses a predictable screen anchor plus per-type
+            position correction.
+            </summary>
+            <returns>
+            <see langword="true" /> when the quest toast overlay currently has visible
+            content; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.DrawTranslationWindow(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.String)">
             <summary>
@@ -2858,22 +3093,6 @@
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.BattleTalkHandler">
-            <summary>
-                Handles translation for the "_BattleTalk" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.BattleTalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.BattleTalkHandler" />
-                class.
-            </summary>
-            <param name="config">The configuration settings for the plugin.</param>
-            <param name="translationService">The service used for translating text.</param>
-        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler">
             <summary>
                 Handles translation for the "Hud" addon using AtkValues and
@@ -2903,6 +3122,341 @@
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler">
+            <summary>
+                Handles the full BattleTalk runtime inside the new addon-handler model.
+                This includes live text capture from the visible addon, translation lookup,
+                async translation, overlay updates, and optional native text replacement.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,Echoglossian.EFCoreSqlite.Models.BattleTalkMessage},System.Func{Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findBattleTalkMessage">
+                Delegate used to look up previously translated BattleTalk messages.
+            </param>
+            <param name="insertBattleTalkMessageAsync">
+                Delegate used to persist translated BattleTalk messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the BattleTalk overlay state.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the BattleTalk overlay state when the source text
+                changes or the addon hides.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the BattleTalk addon flow.
+            </summary>
+            <returns>
+                A dictionary mapping addon events to combined delegates.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.OnCaptureHint(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Tries to capture BattleTalk source text early in the lifecycle so a
+                translation can already be queued before the first draw pass completes.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.OnPreDraw(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Captures BattleTalk source text from the visible addon, publishes overlay
+                content when a translation is ready, and applies native replacement when
+                configured.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the draw.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.OnScheduleResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Schedules a delayed BattleTalk state reset when the addon hides.
+                BattleTalk briefly hides between timer ticks, so clearing immediately can
+                make the overlay disappear before the same line is shown again. The delay
+                intentionally spans the observed timer cadence so transient hides do not
+                look like a logical end of the current line.
+            </summary>
+            <param name="type">The lifecycle event that triggered the delayed reset.</param>
+            <param name="args">The addon arguments associated with the hide event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears the active BattleTalk state immediately when the addon is finalized.
+            </summary>
+            <param name="type">The lifecycle event that triggered the reset.</param>
+            <param name="args">The addon arguments associated with the reset.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.CancelScheduledReset">
+            <summary>
+                Cancels any delayed reset scheduled while BattleTalk was transiently
+                hidden between timer ticks.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ResetStateLocked">
+            <summary>
+                Resets the active in-memory BattleTalk state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds a lookup entity matching the historical BattleTalk message schema
+                already used in the database.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original BattleTalk text.</param>
+            <returns>
+                A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> suitable for DB lookup.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated text for native BattleTalk replacement when the
+                active config requests diacritic stripping.
+            </summary>
+            <param name="text">The translated text to normalize.</param>
+            <returns>
+                The text that should be written back into the native BattleTalk addon.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ShouldTranslateBattleTalkNpcNames">
+            <summary>
+                Determines whether BattleTalk sender names should participate in
+                translation, native replacement, and overlay title resolution.
+            </summary>
+            <returns>
+                <see langword="true" /> when BattleTalk sender names are enabled for the
+                current config; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.PublishOverlay(System.String,System.String,System.String,System.String)">
+            <summary>
+                Publishes translated BattleTalk content into the shared overlay state.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original BattleTalk text.</param>
+            <param name="translatedName">The translated sender name.</param>
+            <param name="translatedText">The translated BattleTalk text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ResolveTranslationAsync(System.String,System.String,System.Int32)">
+            <summary>
+                Resolves a BattleTalk translation from cache or external translation and
+                stores the result as the current translation state.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original BattleTalk text.</param>
+            <param name="requestId">
+                The request identifier used to reject stale results.
+            </param>
+            <returns>A task that completes when the translation state has been updated.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,System.String,System.String)">
+            <summary>
+                Determines whether a BattleTalk row loaded from the database still
+                represents a usable translation for the current source line.
+            </summary>
+            <param name="battleTalkMessage">The stored BattleTalk row to validate.</param>
+            <param name="originalName">The expected original sender name.</param>
+            <param name="originalText">The expected original BattleTalk text.</param>
+            <returns>
+                <see langword="true" /> when the stored row contains a non-empty
+                translation for the same original source line; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ShouldApplyNativeBattleTalkText">
+            <summary>
+                Determines whether native BattleTalk text should be replaced instead of
+                leaving the original addon text untouched.
+            </summary>
+            <returns>
+                <see langword="true" /> when the BattleTalk addon should receive
+                translated native text; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryGetCachedTranslation(System.String,System.String,System.String@,System.String@,System.String@,System.String@)">
+            <summary>
+                Returns the active cached translation when it still matches the supplied
+                source BattleTalk content.
+            </summary>
+            <param name="originalName">The source sender name.</param>
+            <param name="originalText">The source BattleTalk text.</param>
+            <param name="translatedName">Receives the translated sender name.</param>
+            <param name="translatedText">Receives the translated BattleTalk text.</param>
+            <param name="replacementName">
+                Receives the sender name already normalized for native replacement.
+            </param>
+            <param name="replacementText">
+                Receives the BattleTalk text already normalized for native replacement.
+            </param>
+            <returns>
+                <see langword="true" /> when a matching cached translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryQueueTranslation(System.String,System.String,System.Int32@)">
+            <summary>
+                Starts a new translation request when the BattleTalk source changes or
+                when the current source still has no cached translation available.
+            </summary>
+            <param name="originalName">The source sender name.</param>
+            <param name="originalText">The source BattleTalk text.</param>
+            <param name="requestId">
+                Receives the request identifier when a new translation job is queued.
+            </param>
+            <returns>
+                <see langword="true" /> when a new translation task should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryCaptureAndQueueTranslation">
+            <summary>
+                Attempts to capture currently visible BattleTalk text and queue a
+                translation request when the source changed.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ShowPendingSwapOverlayIfNeeded(System.String,System.String)">
+            <summary>
+                Shows the original BattleTalk content in the overlay while a swap-mode
+                translation is still in flight, so first-seen lines do not leave the
+                overlay empty.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original BattleTalk text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryReadCurrentSource(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String@,System.String@)">
+            <summary>
+                Reads the current BattleTalk source text from the live addon while mapping
+                already-replaced node text back to the original source content.
+            </summary>
+            <param name="battleTalkAddon">The visible BattleTalk addon.</param>
+            <param name="originalName">Receives the logical source sender name.</param>
+            <param name="originalText">Receives the logical source BattleTalk text.</param>
+            <returns>
+                <see langword="true" /> when readable BattleTalk text is available;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryMapVisibleSourceToOriginal(System.String,System.String,System.String@,System.String@)">
+            <summary>
+                Tries to map currently visible BattleTalk text back to the original source
+                line when the native UI is already showing translated replacement text.
+            </summary>
+            <param name="visibleName">The sender name currently visible in the addon.</param>
+            <param name="visibleText">The BattleTalk text currently visible in the addon.</param>
+            <param name="originalName">
+                Receives the original sender name when a match is found.
+            </param>
+            <param name="originalText">
+                Receives the original BattleTalk text when a match is found.
+            </param>
+            <returns>
+                <see langword="true" /> when the visible addon text could be mapped back
+                to a known original source line; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryMapVisibleSourceToOriginal(System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,System.String@,System.String@)">
+            <summary>
+                Tries to map visible BattleTalk text back to a specific known original and
+                replacement pair.
+            </summary>
+            <param name="visibleName">The sender name currently visible in the addon.</param>
+            <param name="visibleText">The BattleTalk text currently visible in the addon.</param>
+            <param name="candidateOriginalName">The candidate original sender name.</param>
+            <param name="candidateOriginalText">The candidate original BattleTalk text.</param>
+            <param name="candidateReplacementName">
+                The candidate sender name after native replacement normalization.
+            </param>
+            <param name="candidateReplacementText">
+                The candidate BattleTalk text after native replacement normalization.
+            </param>
+            <param name="allowOriginalTextMatch">
+                Whether the visible text is allowed to match the original source text in
+                addition to the replacement text.
+            </param>
+            <param name="requireNameMatch">
+                Whether the visible sender name must also match the candidate state.
+                Swap-mode BattleTalk can transiently rewrite the speaker node during timer
+                ticks, so text-only matching is allowed as a fallback there.
+            </param>
+            <param name="originalName">
+                Receives the original sender name when a match is found.
+            </param>
+            <param name="originalText">
+                Receives the original BattleTalk text when a match is found.
+            </param>
+            <returns>
+                <see langword="true" /> when the visible text matches the supplied
+                candidate state; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TextMatchesForSourceMapping(System.String,System.String)">
+            <summary>
+                Determines whether the visible BattleTalk node text still matches a
+                candidate source or replacement string after layout-driven wrapping or
+                whitespace adjustments performed by the game UI.
+            </summary>
+            <param name="visibleText">The current text read back from the live addon.</param>
+            <param name="candidateText">
+                The candidate original or replacement text stored by the handler.
+            </param>
+            <returns>
+                <see langword="true" /> when both texts normalize to the same logical
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.NormalizeSourceComparisonText(System.String)">
+            <summary>
+                Normalizes BattleTalk text for source matching by collapsing layout
+                whitespace differences introduced when the game wraps long lines.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>
+                The text collapsed to a single-space representation suitable for
+                logical equality checks.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.IsVisibleReplacementState(System.String,System.String)">
+            <summary>
+                Determines whether the currently visible BattleTalk node text already
+                matches the translated text rendered by native replacement.
+            </summary>
+            <param name="visibleName">The currently visible sender name.</param>
+            <param name="visibleText">The currently visible BattleTalk text.</param>
+            <returns>
+                <see langword="true" /> when the visible nodes already contain the
+                translated output for the active source; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ApplyTranslatedNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.String)">
+            <summary>
+                Applies translated values directly to the visible BattleTalk addon when
+                replacement mode is enabled.
+            </summary>
+            <param name="battleTalkAddon">The visible BattleTalk addon.</param>
+            <param name="translatedName">The translated sender name.</param>
+            <param name="replacementName">
+                The translated sender name already normalized for native replacement.
+            </param>
+            <param name="replacementText">
+                The translated BattleTalk text already normalized for native replacement.
+            </param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler">
             <summary>
@@ -2956,13 +3510,21 @@
             <param name="type">The lifecycle event that triggered the handler.</param>
             <param name="args">The addon arguments associated with the refresh.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.OnPreDraw(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.OnApplyNativeTalkText(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Applies translated Talk text to the visible addon when replacement mode is
-                enabled and an async translation becomes available after refresh.
+                Applies translated Talk text to the visible addon during lifecycle stages
+                where native node mutations can survive long enough to be rendered.
             </summary>
             <param name="type">The lifecycle event that triggered the handler.</param>
-            <param name="args">The addon arguments associated with the draw.</param>
+            <param name="args">The addon arguments associated with the update or draw.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears the active Talk state when the addon receives a new event or
+                leaves the screen.
+            </summary>
+            <param name="type">The lifecycle event that triggered the reset.</param>
+            <param name="args">The addon arguments associated with the reset.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.BuildLookupMessage(System.String,System.String)">
             <summary>
@@ -2990,6 +3552,56 @@
             <param name="text">The translated text to normalize.</param>
             <returns>The text that should be written back into the native Talk addon.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ShouldTranslateTalkNpcNames">
+            <summary>
+                Determines whether Talk sender names should participate in translation,
+                native replacement, and overlay title resolution.
+            </summary>
+            <returns>
+                <see langword="true" /> when Talk sender names are enabled for the
+                current config; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ReadNodeText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the current string value from a text node.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The visible node text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.IsNativeTalkAlreadyApplied(System.String,System.String,System.String,System.String)">
+            <summary>
+                Determines whether the native Talk addon already shows the translated
+                replacement text for the active line.
+            </summary>
+            <param name="visibleName">The sender name currently visible in the addon.</param>
+            <param name="visibleText">The Talk text currently visible in the addon.</param>
+            <param name="replacementName">
+                The pre-normalized sender name that should be written to the native UI.
+            </param>
+            <param name="replacementText">
+                The pre-normalized Talk text that should be written to the native UI.
+            </param>
+            <returns>
+                <see langword="true" /> when the visible native UI already matches the
+                translated replacement state; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.RemapTranslatedRefreshSourceToOriginal(System.String@,System.String@)">
+            <summary>
+                Maps Talk refresh values back to the original source line when the addon
+                refresh arrives already carrying the translated text previously written
+                into the native nodes.
+            </summary>
+            <param name="capturedName">
+                The captured sender name, updated in place when a translated value is
+                recognized.
+            </param>
+            <param name="capturedText">
+                The captured Talk text, updated in place when a translated value is
+                recognized.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.PublishOverlay(System.String,System.String,System.String,System.String)">
             <summary>
                 Publishes translated Talk content into the shared overlay state.
@@ -3005,6 +3617,20 @@
             </summary>
             <param name="atkValue">The ATK value to inspect.</param>
             <returns>The extracted text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryLoadStoredTranslation(System.String,System.String,System.String@,System.String@)">
+            <summary>
+                Tries to load an existing Talk translation synchronously from the
+                database so saved lines can still swap immediately during refresh.
+            </summary>
+            <param name="originalName">The original sender name.</param>
+            <param name="originalText">The original Talk text.</param>
+            <param name="translatedName">Receives the translated sender name.</param>
+            <param name="translatedText">Receives the translated Talk text.</param>
+            <returns>
+                <see langword="true" /> when a stored translation exists for the current
+                Talk line; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ResolveTranslationAsync(System.String,System.String,System.Int32)">
             <summary>
@@ -3024,6 +3650,24 @@
             <returns>
                 <see langword="true" /> when the Talk addon should receive translated
                 native text; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@,System.String@,System.String@)">
+            <summary>
+                Returns the active resolved Talk translation currently held by the
+                handler state.
+            </summary>
+            <param name="translatedName">Receives the translated sender name.</param>
+            <param name="translatedText">Receives the translated Talk text.</param>
+            <param name="replacementName">
+                Receives the sender name already normalized for native replacement.
+            </param>
+            <param name="replacementText">
+                Receives the Talk text already normalized for native replacement.
+            </param>
+            <returns>
+                <see langword="true" /> when the handler already has a translated Talk
+                line ready for native replacement; otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryGetCachedTranslation(System.String,System.String,System.String@,System.String@)">
@@ -3054,6 +3698,535 @@
                 <see langword="true" /> when a new translation task should be queued;
                 otherwise, <see langword="false" />.
             </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate">
+            <summary>
+                Delegate used to update toast overlay bounds from a live addon instance.
+            </summary>
+            <param name="addon">The live addon instance.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ResolveToastTextNodeDelegate">
+            <summary>
+                Delegate used to locate the text node that should be read and optionally
+                replaced inside a toast addon.
+            </summary>
+            <param name="addon">The live addon instance.</param>
+            <returns>The text node to read/replace, or <see langword="null" />.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler">
+            <summary>
+                Shared runtime for toast addons whose content is ultimately represented by
+                a single text node inside an addon managed through <see cref="T:Dalamud.Plugin.Services.IAddonLifecycle" />.
+                Cache hits are used synchronously while network translation is queued in
+                the background to avoid blocking the game UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.#ctor(Echoglossian.Config,System.String,System.String,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,Echoglossian.NativeUI.AddonHandlers.Toasts.ResolveToastTextNodeDelegate,System.Func{System.String,System.String},System.Func{Echoglossian.Config,System.Boolean},System.Func{Echoglossian.Config,System.Boolean})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler" />
+                class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="addonName">The addon name handled by this runtime.</param>
+            <param name="toastType">The toast type persisted in the historical DB.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated toast messages.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated toast messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to a toast overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the toast overlay state.
+            </param>
+            <param name="updateOverlayBounds">
+                Delegate used to update the toast overlay bounds from a live addon.
+            </param>
+            <param name="resolveToastTextNode">
+                Delegate used to locate the text node that holds the toast message.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+            <param name="isTypeEnabled">
+                Delegate used to determine whether the concrete toast type is enabled in
+                the current config.
+            </param>
+            <param name="useOverlayForType">
+                Delegate used to determine whether the concrete toast type should render
+                through its overlay path instead of native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the toast addon flow.
+            </summary>
+            <returns>
+                A dictionary mapping addon events to combined delegates.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.OnPreUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Captures the visible toast source line before the addon finishes its
+                update, publishes any cached translation, and queues background work on
+                cache misses without blocking the game UI.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the update.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.OnUpdateVisibleAddon(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Updates overlay bounds for the visible toast addon and applies translated
+                text to the native addon when replacement mode is enabled.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the update or draw.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears the in-memory toast state when the addon hides or is finalized.
+            </summary>
+            <param name="type">The lifecycle event that triggered the reset.</param>
+            <param name="args">The addon arguments associated with the reset.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ResolveTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves a toast translation without blocking the game UI and persists the
+                result for future cache hits.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="requestId">The request identifier used to reject stale updates.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.BuildLookupMessage(System.String)">
+            <summary>
+                Builds a lookup entity matching the historical toast schema already used
+                by the plugin database.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ShouldHandleToast(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Determines whether the current callback should handle the configured toast
+                addon instance.
+            </summary>
+            <param name="args">The addon arguments associated with the callback.</param>
+            <param name="addon">Receives the visible addon instance.</param>
+            <returns>
+                <see langword="true" /> when the callback is for a visible toast addon;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryReadCurrentSource(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Reads the logical source text from the live toast addon, mapping the
+                visible translated replacement back to the original source line when
+                needed.
+            </summary>
+            <param name="addon">The visible toast addon.</param>
+            <param name="originalText">Receives the logical original toast text.</param>
+            <returns>
+                <see langword="true" /> when readable text is available; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the current string value from a toast text node.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The visible node text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String)">
+            <summary>
+                Determines whether a stored toast row still represents a usable
+                translation for the current source line.
+            </summary>
+            <param name="toastMessage">The stored toast row to validate.</param>
+            <param name="originalText">The expected original toast text.</param>
+            <returns>
+                <see langword="true" /> when the stored row contains a non-empty
+                translation for the same source line; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryGetCachedTranslation(System.String,System.String@,System.String@)">
+            <summary>
+                Returns the active cached translation when it still matches the visible
+                toast source line.
+            </summary>
+            <param name="originalText">The source toast text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">
+                Receives the translated text normalized for native replacement.
+            </param>
+            <returns>
+                <see langword="true" /> when a matching cached translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@)">
+            <summary>
+                Returns the active resolved translation currently held by the handler
+                state.
+            </summary>
+            <param name="translatedText">Receives the translated toast text.</param>
+            <param name="replacementText">
+                Receives the translated toast text normalized for native replacement.
+            </param>
+            <returns>
+                <see langword="true" /> when the handler already has a translated toast
+                line ready for display; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryQueueTranslation(System.String,System.Int32@)">
+            <summary>
+                Starts a new translation request when the visible toast source line
+                changes or when the current line still has no cached translation.
+            </summary>
+            <param name="originalText">The source toast text.</param>
+            <param name="requestId">
+                Receives the request identifier when a new translation job is queued.
+            </param>
+            <returns>
+                <see langword="true" /> when a new translation task should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.SetResolvedState(System.String,System.String,System.String)">
+            <summary>
+                Sets the resolved in-memory state for the current toast line.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="replacementText">
+                The translated toast text normalized for native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.PublishOverlay(System.String)">
+            <summary>
+                Publishes translated toast content to the configured overlay when overlay
+                mode is enabled.
+            </summary>
+            <param name="translatedText">The translated toast text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ShouldUseOverlay">
+            <summary>
+                Determines whether this toast type should currently use the overlay path.
+            </summary>
+            <returns>
+                <see langword="true" /> when the overlay path is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ShouldApplyNativeToastText">
+            <summary>
+                Determines whether this toast type should currently apply translated text
+                back into the native game UI.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated toast text for native replacement when the active
+                config requests diacritic stripping.
+            </summary>
+            <param name="text">The translated text to normalize.</param>
+            <returns>The text that should be written back into the native toast addon.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TextMatches(System.String,System.String)">
+            <summary>
+                Compares toast source or replacement text using a normalized whitespace
+                representation so line wrapping differences do not break source mapping.
+            </summary>
+            <param name="left">The first text to compare.</param>
+            <param name="right">The second text to compare.</param>
+            <returns>
+                <see langword="true" /> when both texts represent the same logical
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.NormalizeComparisonText(System.String)">
+            <summary>
+                Normalizes toast text for logical comparisons by collapsing whitespace.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized text suitable for equality checks.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.AreaToastHandler">
+            <summary>
+                Handles the "_AreaText" toast runtime inside the new addon-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AreaToastHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.AreaToastHandler" />
+                class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated area toast messages.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated area toast messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the area toast overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the area toast overlay state.
+            </param>
+            <param name="updateOverlayBounds">
+                Delegate used to update the area toast overlay bounds from the current
+                live addon instance.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ClassChangeToastHandler">
+            <summary>
+                Handles the "_TextClassChange" toast runtime inside the new addon-handler
+                model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ClassChangeToastHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ClassChangeToastHandler" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated class-change toast
+                messages.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated class-change toast messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the class-change toast
+                overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the class-change toast overlay state.
+            </param>
+            <param name="updateOverlayBounds">
+                Delegate used to update the class-change toast overlay bounds from the
+                current live addon instance.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ErrorToastHandler">
+            <summary>
+                Handles the "_TextError" toast runtime inside the new addon-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ErrorToastHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ErrorToastHandler" />
+                class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated error toast messages.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated error toast messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the error toast overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the error toast overlay state.
+            </param>
+            <param name="updateOverlayBounds">
+                Delegate used to update the error toast overlay bounds from the current
+                live addon instance.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime">
+            <summary>
+                Handles quest toasts through the new toast runtime model while keeping the
+                game UI responsive. Quest toasts are still exposed by Dalamud through
+                <see cref="E:Dalamud.Plugin.Services.IToastGui.QuestToast" />, so this runtime uses cache-first
+                lookup, asynchronous translation on cache misses, and per-request overlay
+                lifetime tracking instead of relying on the legacy toast handler partial.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime" />
+                class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated quest toast rows.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated quest toast rows.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the quest toast overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the quest toast overlay state.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.HandleQuestToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.QuestToastOptions@,System.Boolean@)">
+            <summary>
+                Handles quest-toast callbacks using the new toast runtime. Cache hits
+                apply immediately, while cache misses queue translation work in the
+                background so the callback never blocks the game UI.
+            </summary>
+            <param name="message">The quest toast text payload.</param>
+            <param name="options">The quest toast options provided by Dalamud.</param>
+            <param name="isHandled">Whether another handler already consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ApplyResolvedToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
+            <summary>
+                Applies a resolved quest toast either to the native toast callback or to
+                the overlay path according to the current config.
+            </summary>
+            <param name="message">The live toast payload to mutate when applicable.</param>
+            <param name="originalText">The original quest toast text.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <param name="requestId">The active request identifier.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ResolveTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves a quest toast translation asynchronously and publishes or caches
+                the result when it still belongs to the latest toast request.
+            </summary>
+            <param name="originalText">The original quest toast text.</param>
+            <param name="requestId">The request identifier used to reject stale updates.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ScheduleOverlayClearAsync(System.Int32)">
+            <summary>
+                Delays quest-toast overlay cleanup so the overlay lifetime roughly
+                matches the transient nature of native toast messages without depending
+                on a legacy polling path.
+            </summary>
+            <param name="requestId">
+                The request identifier that owns the current overlay contents.
+            </param>
+            <returns>A task that completes after the overlay has either been cleared or skipped.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.BeginRequest(System.String)">
+            <summary>
+                Starts a new quest-toast request and returns the active request ID.
+            </summary>
+            <param name="originalText">The original quest toast text.</param>
+            <returns>The request identifier associated with the quest toast.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.IsCurrentRequest(System.Int32,System.String)">
+            <summary>
+                Determines whether the request still corresponds to the latest quest
+                toast line processed by this runtime.
+            </summary>
+            <param name="requestId">The request identifier to validate.</param>
+            <param name="originalText">The original quest toast text.</param>
+            <returns>
+                <see langword="true" /> when the request is still current; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.BuildLookupMessage(System.String)">
+            <summary>
+                Builds the historical quest toast lookup entity that matches the toast DB
+                schema already used by the plugin.
+            </summary>
+            <param name="originalText">The original quest toast text.</param>
+            <returns>A lookup <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for quest toast history.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ShouldUseOverlay">
+            <summary>
+                Determines whether quest toasts should currently use their overlay path.
+            </summary>
+            <returns>
+                <see langword="true" /> when quest toasts should render in an overlay;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers">
+            <summary>
+                Shared text-node resolvers for toast addons migrated to the new
+                AddonLifecycle handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveWideTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the "_WideText" node used by the game for screen-info style
+                toast text.
+            </summary>
+            <param name="addon">The live "_WideText" addon instance.</param>
+            <returns>The text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the first text node found in the addon ULD node list.
+                This matches the historical Echoglossian approach for some toast-like
+                addons such as class/job change notifications.
+            </summary>
+            <param name="addon">The live addon instance.</param>
+            <returns>The first text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
+            <summary>
+                Handles the "_WideText" toast runtime inside the new addon-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler" />
+                class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated non-error toast messages.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated non-error toast messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the shared toast overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the shared toast overlay state.
+            </param>
+            <param name="updateOverlayBounds">
+                Delegate used to update the shared toast overlay bounds from the current
+                live addon instance.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
         </member>
         <member name="T:Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate">
             <summary>
@@ -3765,17 +4938,44 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Boolean@,System.Int64@)">
-            <summary>
-                Draw settings for overlays that have width, height, position, color,
-                font scale, and shared title-bar behavior.
-            </summary>
-        </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Boolean@,System.Int64@)">
             <summary>
-                Draw settings for overlays that do not have a height adjustment (e.g.,
-                Toast) but still share title-bar behavior.
+                Draw settings for overlays that do not have a height adjustment.
             </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawToastOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.Single@,System.Int64@)">
+            <summary>
+                Draws the configurable visual settings shared by toast overlays while
+                keeping their style independent per toast type.
+            </summary>
+            <param name="fontScale">The font scale used by the toast overlay.</param>
+            <param name="widthMult">The width multiplier used by the toast overlay.</param>
+            <param name="positionCorrection">
+                The X/Y position correction applied to the toast overlay.
+            </param>
+            <param name="textColor">The text color used by the toast overlay.</param>
+            <param name="backgroundOpacity">
+                The background opacity used by the toast overlay.
+            </param>
+            <param name="fontChangeTime">
+                Timestamp used to invalidate/rebuild runtime font state when needed.
+            </param>
+            <returns>
+                <see langword="true" /> when any toast overlay setting changed;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawGlobalReplacementDiacriticsSetting(Echoglossian.Config)">
+            <summary>
+                Draws the global diacritics-removal toggle used by native replacement
+                flows across Talk, BattleTalk, Toasts, subtitles, and other handlers
+                that must fit within the game font limitations.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the toggle value changed; otherwise,
+                <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TranslationEnginesTab">
             <summary>
@@ -5373,9 +6573,42 @@
             <param name="config"></param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForWideTextToast(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
+            provided <see cref="T:Echoglossian.Config"/> for Screen Info (_WideText) toast
+            translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForErrorToast(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for error toast translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForAreaToast(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
+            provided <see cref="T:Echoglossian.Config"/> for area toast translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForClassChangeToast(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
+            provided <see cref="T:Echoglossian.Config"/> for class/job change toast translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForQuestToast(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
+            provided <see cref="T:Echoglossian.Config"/> for quest toast translations.
             </summary>
             <param name="config"></param>
             <returns></returns>

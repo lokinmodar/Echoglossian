@@ -161,6 +161,61 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Finds and returns a non-error ToastMessage using the in-memory toast cache when
+  /// available.
+  /// </summary>
+  /// <param name="toastMessage">Formatted ToastMessage to be found in the database.</param>
+  /// <returns>The matching <see cref="ToastMessage" />, or <see langword="null" />.</returns>
+  public ToastMessage? FindAndReturnToastMessage(ToastMessage toastMessage)
+  {
+    try
+    {
+      var useErrorCache = string.Equals(
+          toastMessage.ToastType,
+          "Error",
+          StringComparison.OrdinalIgnoreCase);
+      var cache = useErrorCache ? this.ErrorToastsCache : this.OtherToastsCache;
+      if (cache == null || cache.Count == 0)
+      {
+        if (useErrorCache)
+        {
+          this.LoadAllErrorToasts();
+          cache = this.ErrorToastsCache;
+        }
+        else
+        {
+          this.LoadAllOtherToasts();
+          cache = this.OtherToastsCache;
+        }
+
+        if (cache == null || cache.Count == 0)
+        {
+          return null;
+        }
+      }
+
+      var existingToastMessage = cache.Where(t =>
+          t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
+          t.TranslationLang == toastMessage.TranslationLang &&
+          t.ToastType == toastMessage.ToastType &&
+          !string.IsNullOrWhiteSpace(t.TranslatedToastMessage));
+
+      if (this.configuration.TranslateAlreadyTranslatedTexts)
+      {
+        existingToastMessage = existingToastMessage.Where(t =>
+            t.TranslationEngine == toastMessage.TranslationEngine);
+      }
+
+      return existingToastMessage.FirstOrDefault();
+    }
+    catch (Exception e)
+    {
+      PluginLog.Debug($"FindAndReturnToastMessage exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Finds and returns an ErrorToastMessage from the database.
   /// </summary>
   /// <param name="toastMessage">Formatted ErrorToastMessage to be found in the database</param>

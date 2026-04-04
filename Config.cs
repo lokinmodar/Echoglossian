@@ -145,6 +145,41 @@ public class Config : IPluginConfiguration
 
   [DefaultValue(1.5f)] public float ImGuiToastWindowWidthMult = 1.5f;
 
+  /// <summary>Position correction for Screen Info (_WideText) toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiWideTextToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for Screen Info (_WideText) toast overlays.</summary>
+  [DefaultValue(1.5f)] public float ImGuiWideTextToastWindowWidthMult = 1.5f;
+
+  /// <summary>Position correction for Error toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiErrorToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for Error toast overlays.</summary>
+  [DefaultValue(1.5f)] public float ImGuiErrorToastWindowWidthMult = 1.5f;
+
+  /// <summary>Position correction for Area toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiAreaToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for Area toast overlays.</summary>
+  [DefaultValue(1.5f)] public float ImGuiAreaToastWindowWidthMult = 1.5f;
+
+  /// <summary>Position correction for Class/Job change toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiClassChangeToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for Class/Job change toast overlays.</summary>
+  [DefaultValue(1.5f)] public float ImGuiClassChangeToastWindowWidthMult = 1.5f;
+
+  /// <summary>Position correction for Quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiQuestToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for Quest toast overlays.</summary>
+  [DefaultValue(1.5f)] public float ImGuiQuestToastWindowWidthMult = 1.5f;
+
   /// <summary>Position correction for ImGui overlay windows.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiWindowPosCorrection = new(0, 0);
@@ -255,6 +290,41 @@ public class Config : IPluginConfiguration
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 OverlayToastTextColor = new(1f, 1f, 1f);
 
+  /// <summary>Text color used by Screen Info (_WideText) toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayWideTextToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by Error toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayErrorToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by Area toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayAreaToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by Class/Job change toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayClassChangeToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by Quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayQuestToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
+  [DefaultValue(1f)] public float WideTextToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by Error toast overlays.</summary>
+  [DefaultValue(0f)] public float ErrorToastBackgroundOpacity = 0f;
+
+  /// <summary>Background opacity used by Area toast overlays.</summary>
+  [DefaultValue(1f)] public float AreaToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by Class/Job change toast overlays.</summary>
+  [DefaultValue(1f)] public float ClassChangeToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by Quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastBackgroundOpacity = 1f;
+
   /// <summary>Whether plugin assets have been successfully downloaded.</summary>
   [DefaultValue(false)] public bool PluginAssetsDownloaded = false;
 
@@ -298,6 +368,36 @@ public class Config : IPluginConfiguration
 
   /// <summary>Always show the Toast overlay title bar.</summary>
   [DefaultValue(false)] public bool ToastForceShowTitle = false;
+
+  /// <summary>Font scale used for Screen Info (_WideText) toast overlays.</summary>
+  [DefaultValue(1f)] public float WideTextToastFontScale = 1f;
+
+  /// <summary>Always show the Screen Info (_WideText) toast overlay title bar.</summary>
+  [DefaultValue(false)] public bool WideTextToastForceShowTitle = false;
+
+  /// <summary>Font scale used for Error toast overlays.</summary>
+  [DefaultValue(1f)] public float ErrorToastFontScale = 1f;
+
+  /// <summary>Always show the Error toast overlay title bar.</summary>
+  [DefaultValue(false)] public bool ErrorToastForceShowTitle = false;
+
+  /// <summary>Font scale used for Area toast overlays.</summary>
+  [DefaultValue(1f)] public float AreaToastFontScale = 1f;
+
+  /// <summary>Always show the Area toast overlay title bar.</summary>
+  [DefaultValue(false)] public bool AreaToastForceShowTitle = false;
+
+  /// <summary>Font scale used for Class/Job change toast overlays.</summary>
+  [DefaultValue(1f)] public float ClassChangeToastFontScale = 1f;
+
+  /// <summary>Always show the Class/Job change toast overlay title bar.</summary>
+  [DefaultValue(false)] public bool ClassChangeToastForceShowTitle = false;
+
+  /// <summary>Font scale used for Quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastFontScale = 1f;
+
+  /// <summary>Always show the Quest toast overlay title bar.</summary>
+  [DefaultValue(false)] public bool QuestToastForceShowTitle = false;
 
   /// <summary>Enables translation processing globally.</summary>
   [DefaultValue(false)] public bool Translate = false;
@@ -389,6 +489,21 @@ public class Config : IPluginConfiguration
   /// <summary>Use ImGui for toast messages.</summary>
   [DefaultValue(false)] public bool UseImGuiForToasts = false;
 
+  /// <summary>Use ImGui overlay specifically for Screen Info (_WideText) toasts.</summary>
+  [DefaultValue(false)] public bool UseImGuiForWideTextToast = false;
+
+  /// <summary>Use ImGui overlay specifically for Error toasts.</summary>
+  [DefaultValue(false)] public bool UseImGuiForErrorToast = false;
+
+  /// <summary>Use ImGui overlay specifically for Area toasts.</summary>
+  [DefaultValue(false)] public bool UseImGuiForAreaToast = false;
+
+  /// <summary>Use ImGui overlay specifically for Class/Job change toasts.</summary>
+  [DefaultValue(false)] public bool UseImGuiForClassChangeToast = false;
+
+  /// <summary>Use ImGui overlay specifically for Quest toasts.</summary>
+  [DefaultValue(false)] public bool UseImGuiForQuestToast = false;
+
   /// <summary>Temperature setting for DeepSeek responses.</summary>
   [DefaultValue(false)] public bool UseLiveDeepSeekModelList = false;
 
@@ -444,8 +559,8 @@ public class Config : IPluginConfiguration
   [DefaultValue("")] public string YandexPaidApiKey = string.Empty;
 
   /// <summary>Plugin configuration version number (used during migration).</summary>
-  [DefaultValue(7)]
-  public int Version { get; set; } = 7;
+  [DefaultValue(9)]
+  public int Version { get; set; } = 9;
 
   /// <summary>
   /// Gets or sets a value indicating whether translation should run asynchronously.

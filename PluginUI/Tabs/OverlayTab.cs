@@ -12,6 +12,7 @@ namespace Echoglossian.PluginUI.Tabs;
 public static class OverlayTab
 {
     private static int selectedOverlayTab;
+    private static int selectedToastOverlayTab;
 
     private static readonly string[] OverlayTabs =
     {
@@ -21,6 +22,16 @@ public static class OverlayTab
         Resources.SubtitleTabTitle,
         Resources.ConfigTab4Name,
         Resources.OtherUIElementsTabTitle,
+    };
+
+    private static readonly string[] ToastOverlayTabs =
+    {
+        "General",
+        "Screen Info",
+        "Error",
+        "Area",
+        "Class / Job",
+        "Quest",
     };
 
     /// <summary>
@@ -243,26 +254,115 @@ public static class OverlayTab
             return changed;
         }
 
-        if (config.OverlayOnlyLanguage)
-        {
-            changed |= AssignIfChanged(ref config.UseImGuiForToasts, true);
-        }
-        else
-        {
-            changed |= ImGui.Checkbox(
-                Resources.UseImGuiForToastsToggle,
-                ref config.UseImGuiForToasts);
-        }
-
         ImGui.Separator();
-        ImGui.Text(Resources.WhichToastsToTranslate);
 
+        ImGui.BeginChild("toast_overlay_tab_left", new Vector2(170, 0), true);
+        for (var i = 0; i < ToastOverlayTabs.Length; i++)
+        {
+            if (ImGui.Selectable(
+                    ToastOverlayTabs[i],
+                    selectedToastOverlayTab == i))
+            {
+                selectedToastOverlayTab = i;
+            }
+        }
+
+        ImGui.EndChild();
+
+        ImGui.SameLine();
+
+        ImGui.BeginChild("toast_overlay_tab_right", new Vector2(0, 0), true);
+
+        switch (selectedToastOverlayTab)
+        {
+            case 0:
+                changed |= DrawToastGeneralPage(config);
+                break;
+            case 1:
+                changed |= DrawToastTypePage(
+                    config,
+                    "Screen Info (_WideText)",
+                    ref config.TranslateWideTextToast,
+                    ref config.UseImGuiForWideTextToast,
+                    ref config.WideTextToastFontScale,
+                    ref config.ImGuiWideTextToastWindowWidthMult,
+                    ref config.ImGuiWideTextToastWindowPosCorrection,
+                    ref config.OverlayWideTextToastTextColor,
+                    ref config.WideTextToastBackgroundOpacity,
+                    ref config.FontChangeTime);
+                break;
+            case 2:
+                changed |= DrawToastTypePage(
+                    config,
+                    "Error Toast",
+                    ref config.TranslateErrorToast,
+                    ref config.UseImGuiForErrorToast,
+                    ref config.ErrorToastFontScale,
+                    ref config.ImGuiErrorToastWindowWidthMult,
+                    ref config.ImGuiErrorToastWindowPosCorrection,
+                    ref config.OverlayErrorToastTextColor,
+                    ref config.ErrorToastBackgroundOpacity,
+                    ref config.FontChangeTime);
+                break;
+            case 3:
+                changed |= DrawToastTypePage(
+                    config,
+                    "Area Toast",
+                    ref config.TranslateAreaToast,
+                    ref config.UseImGuiForAreaToast,
+                    ref config.AreaToastFontScale,
+                    ref config.ImGuiAreaToastWindowWidthMult,
+                    ref config.ImGuiAreaToastWindowPosCorrection,
+                    ref config.OverlayAreaToastTextColor,
+                    ref config.AreaToastBackgroundOpacity,
+                    ref config.FontChangeTime);
+                break;
+            case 4:
+                changed |= DrawToastTypePage(
+                    config,
+                    "Class / Job Change Toast",
+                    ref config.TranslateClassChangeToast,
+                    ref config.UseImGuiForClassChangeToast,
+                    ref config.ClassChangeToastFontScale,
+                    ref config.ImGuiClassChangeToastWindowWidthMult,
+                    ref config.ImGuiClassChangeToastWindowPosCorrection,
+                    ref config.OverlayClassChangeToastTextColor,
+                    ref config.ClassChangeToastBackgroundOpacity,
+                    ref config.FontChangeTime);
+                break;
+            case 5:
+                changed |= DrawToastTypePage(
+                    config,
+                    "Quest Toast",
+                    ref config.TranslateQuestToast,
+                    ref config.UseImGuiForQuestToast,
+                    ref config.QuestToastFontScale,
+                    ref config.ImGuiQuestToastWindowWidthMult,
+                    ref config.ImGuiQuestToastWindowPosCorrection,
+                    ref config.OverlayQuestToastTextColor,
+                    ref config.QuestToastBackgroundOpacity,
+                    ref config.FontChangeTime);
+                break;
+        }
+
+        ImGui.EndChild();
+
+        return changed;
+    }
+
+    private static bool DrawToastGeneralPage(Config config)
+    {
+        var changed = false;
+
+        ImGui.TextWrapped(Resources.WhichToastsToTranslate);
+        ImGui.Spacing();
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateScreenInfoToastToggleText,
+            ref config.TranslateWideTextToast);
         changed |= ImGui.Checkbox(
             Resources.TranslateErrorToastToggleText,
             ref config.TranslateErrorToast);
-        changed |= ImGui.Checkbox(
-            Resources.TranslateQuestToastToggleText,
-            ref config.TranslateQuestToast);
         changed |= ImGui.Checkbox(
             Resources.TranslateAreaToastToggleText,
             ref config.TranslateAreaToast);
@@ -270,34 +370,73 @@ public static class OverlayTab
             Resources.TranslateClassChangeToastToggleText,
             ref config.TranslateClassChangeToast);
         changed |= ImGui.Checkbox(
-            Resources.TranslateScreenInfoToastToggleText,
-            ref config.TranslateWideTextToast);
+            Resources.TranslateQuestToastToggleText,
+            ref config.TranslateQuestToast);
 
-        // TODO: add _TextGimmickHint addon handling
+        ImGui.Spacing();
+        ImGui.TextWrapped(
+            "Each toast type can choose independently between native replacement and overlay rendering.");
 
+        if (config.OverlayOnlyLanguage)
+        {
+            ImGui.Spacing();
+            ImGui.TextWrapped(
+                "Overlay-only language is active, so all toast types will render through overlays.");
+        }
+
+        return changed;
+    }
+
+    private static bool DrawToastTypePage(
+        Config config,
+        string sectionTitle,
+        ref bool isEnabled,
+        ref bool useOverlay,
+        ref float fontScale,
+        ref float widthMult,
+        ref Vector2 positionCorrection,
+        ref Vector3 textColor,
+        ref float backgroundOpacity,
+        ref long fontChangeTime)
+    {
+        var changed = false;
+
+        ImGui.TextUnformatted(sectionTitle);
         ImGui.Separator();
 
-        if (config.UseImGuiForToasts)
+        changed |= ImGui.Checkbox("Enable this toast type", ref isEnabled);
+
+        if (!isEnabled)
         {
-            ImGui.Text(Resources.ImguiAdjustmentsLabel);
-
-            changed |= DrawOverlaySettings(
-                ref config.ToastFontScale,
-                ref config.ImGuiToastWindowWidthMult,
-                ref config.ImGuiToastWindowPosCorrection,
-                ref config.OverlayToastTextColor,
-                Resources.OverlayFontScaleLabel,
-                ref config.ToastForceShowTitle,
-                ref config.FontChangeTime);
-
-            ImGui.SameLine();
-            ImGui.Text(Resources.HoverTooltipIndicator);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.SetTooltip(
-                    Resources.ToastOverlayWidthMultiplierOrientations);
-            }
+            return changed;
         }
+
+        if (config.OverlayOnlyLanguage)
+        {
+            changed |= AssignIfChanged(ref useOverlay, true);
+            ImGui.TextWrapped(
+                "Overlay-only language is active, so this toast type will render through an overlay.");
+        }
+        else
+        {
+            changed |= ImGui.Checkbox("Use overlay for this toast type", ref useOverlay);
+        }
+
+        if (!useOverlay)
+        {
+            ImGui.Spacing();
+            ImGui.TextWrapped(
+                "Native replacement mode is active for this toast type. Overlay style controls are not used in this mode.");
+            return changed;
+        }
+
+        changed |= DrawToastOverlaySettings(
+            ref fontScale,
+            ref widthMult,
+            ref positionCorrection,
+            ref textColor,
+            ref backgroundOpacity,
+            ref fontChangeTime);
 
         return changed;
     }
@@ -355,8 +494,7 @@ public static class OverlayTab
     }
 
     /// <summary>
-    ///     Draw settings for overlays that do not have a height adjustment (e.g.,
-    ///     Toast) but still expose per-overlay title-bar behavior.
+    ///     Draw settings for overlays that do not have a height adjustment.
     /// </summary>
     private static bool DrawOverlaySettings(
         ref float fontScale,
@@ -415,6 +553,102 @@ public static class OverlayTab
         changed |= ImGui.Checkbox(
             Resources.OverlayForceShowTitleToggleLabel,
             ref forceShowTitle);
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the configurable visual settings shared by toast overlays while
+    ///     keeping their style independent per toast type.
+    /// </summary>
+    /// <param name="fontScale">The font scale used by the toast overlay.</param>
+    /// <param name="widthMult">The width multiplier used by the toast overlay.</param>
+    /// <param name="positionCorrection">
+    ///     The X/Y position correction applied to the toast overlay.
+    /// </param>
+    /// <param name="textColor">The text color used by the toast overlay.</param>
+    /// <param name="backgroundOpacity">
+    ///     The background opacity used by the toast overlay.
+    /// </param>
+    /// <param name="fontChangeTime">
+    ///     Timestamp used to invalidate/rebuild runtime font state when needed.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when any toast overlay setting changed;
+    ///     otherwise, <see langword="false" />.
+    /// </returns>
+    private static bool DrawToastOverlaySettings(
+        ref float fontScale,
+        ref float widthMult,
+        ref Vector2 positionCorrection,
+        ref Vector3 textColor,
+        ref float backgroundOpacity,
+        ref long fontChangeTime)
+    {
+        var changed = false;
+
+        if (ImGui.SliderFloat(
+                Resources.OverlayFontScaleLabel,
+                ref fontScale,
+                -3f,
+                3f,
+                "%.2f"))
+        {
+            changed = true;
+            fontChangeTime = DateTime.Now.Ticks;
+        }
+
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
+        }
+
+        ImGui.Text(Resources.FontColorSelectLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            Resources.OverlayColorSelectName,
+            ref textColor,
+            ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
+
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
+        }
+
+        changed |= ImGui.DragFloat(
+            Resources.OverlayWidthScrollLabel,
+            ref widthMult,
+            0.001f,
+            0.01f,
+            3f);
+        changed |= ImGui.DragFloat2(
+            Resources.OverlayPositionAdjustmentLabel,
+            ref positionCorrection);
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
+        }
+
+        changed |= ImGui.SliderFloat(
+            "Background opacity",
+            ref backgroundOpacity,
+            0f,
+            1f,
+            "%.2f");
+
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(
+                "Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.");
+        }
 
         return changed;
     }

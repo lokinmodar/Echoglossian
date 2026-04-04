@@ -290,50 +290,115 @@ namespace Echoglossian
       }
     }
 
-    private unsafe void OnQuestToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
+    /// <summary>
+    /// Handles quest-toast callbacks using cache-first async translation so new
+    /// translations do not block the game UI.
+    /// </summary>
+    /// <param name="message">The quest toast text payload.</param>
+    /// <param name="options">The quest toast options provided by Dalamud.</param>
+    /// <param name="ishandled">Whether another handler already consumed the toast.</param>
+    private void OnQuestToast(ref SeString message, ref QuestToastOptions options, ref bool ishandled)
     {
       if (this.DisableTranslationAccordingToState())
       {
         return;
       }
 
-      if (!this.configuration.TranslateToast || !this.configuration.TranslateQuestToast || !this.configuration.TranslateWideTextToast)
+      if (!this.configuration.TranslateToast ||
+          !this.configuration.TranslateQuestToast)
       {
         return;
       }
 
       try
       {
-        string messageTextToTranslate = message.TextValue;
+        var messageTextToTranslate = message.TextValue;
+        var questToastToHandle = this.FormatToastMessage(
+            "NonError",
+            messageTextToTranslate);
+        var foundQuestToast = this.FindAndReturnToastMessage(questToastToHandle);
 
-        if (!this.configuration.UseImGuiForToasts && this.configuration.TranslateQuestToast && this.configuration.TranslateWideTextToast)
+        if (foundQuestToast != null &&
+            !string.IsNullOrWhiteSpace(foundQuestToast.TranslatedToastMessage))
         {
-          string messageTranslatedText = this.Translate(messageTextToTranslate);
+          var translatedText = foundQuestToast.TranslatedToastMessage;
 
-          if (this.configuration.RemoveDiacriticsWhenUsingReplacementTalkBTalk)
+          if (!this.configuration.UseImGuiForToasts)
           {
-            messageTranslatedText = this.RemoveDiacritics(messageTranslatedText, this.SpecialCharsSupportedByGameFont);
-          }
-
-          message = messageTranslatedText;
-        }
-        else
-        {
-          this.currentQuestToastTranslationId = Environment.TickCount;
-          this.currentQuestToastTranslation = Resources.WaitingForTranslation;
-          Task.Run(() =>
-          {
-            int messageId = this.currentQuestToastTranslationId;
-            string messageTranslation = this.Translate(messageTextToTranslate);
-            this.questToastTranslationSemaphore.Wait();
-            if (messageId == this.currentQuestToastTranslationId)
+            if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
             {
-              this.currentQuestToastTranslation = messageTranslation;
+              translatedText = this.RemoveDiacritics(
+                  translatedText,
+                  this.SpecialCharsSupportedByGameFont);
             }
 
-            this.questToastTranslationSemaphore.Release();
-          });
+            message = translatedText;
+            return;
+          }
+
+          this.UpdateOverlayContent(
+              this.questToastOverlay,
+              string.Empty,
+              translatedText,
+              string.Empty);
+          return;
         }
+
+        this.currentQuestToastTranslationId = Environment.TickCount;
+        var requestId = this.currentQuestToastTranslationId;
+
+        if (this.configuration.UseImGuiForToasts)
+        {
+          this.ClearOverlay(this.questToastOverlay, clearText: true);
+        }
+
+        Task.Run(async () =>
+        {
+          string translatedText;
+          try
+          {
+            translatedText = await TranslationService.TranslateAsync(
+                messageTextToTranslate,
+                ClientStateInterface.ClientLanguage.Humanize(),
+                LangDict[LanguageInt].Code) ?? string.Empty;
+          }
+          catch (Exception ex)
+          {
+            PluginLog.Debug($"QuestToast translation exception {ex}");
+            return;
+          }
+
+          if (string.IsNullOrWhiteSpace(translatedText))
+          {
+            return;
+          }
+
+          await Task.Run(
+              () => this.InsertToastMessageData(
+                  new ToastMessage(
+                      "NonError",
+                      messageTextToTranslate,
+                      ClientStateInterface.ClientLanguage.Humanize(),
+                      translatedText,
+                      LangDict[LanguageInt].Code,
+                      this.configuration.ChosenTransEngine,
+                      DateTime.Now,
+                      DateTime.Now)));
+
+          if (requestId != this.currentQuestToastTranslationId)
+          {
+            return;
+          }
+
+          if (this.configuration.UseImGuiForToasts)
+          {
+            this.UpdateOverlayContent(
+                this.questToastOverlay,
+                string.Empty,
+                translatedText,
+                string.Empty);
+          }
+        });
       }
       catch (Exception e)
       {
@@ -355,6 +420,16 @@ namespace Echoglossian
       }
 
       if (!this.configuration.TranslateErrorToast)
+      {
+        return;
+      }
+
+      // "_TextError" now has a dedicated AddonLifecycle handler in
+      // NativeUI/AddonHandlers/Toasts/ErrorToastHandler.cs. When that path is
+      // enabled, this legacy callback must not compete by doing synchronous lookup
+      // or network work on the UI thread.
+      if (this.configuration.TranslateToast &&
+          this.configuration.TranslateErrorToast)
       {
         return;
       }
@@ -495,6 +570,12 @@ namespace Echoglossian
       }
     }
 
+    /// <summary>
+    /// Handles the generic toast callback exposed by <see cref="IToastGui" />.
+    /// </summary>
+    /// <param name="message">The toast text payload.</param>
+    /// <param name="options">The toast options provided by Dalamud.</param>
+    /// <param name="ishandled">Whether another handler already consumed the toast.</param>
     private void OnToast(ref SeString message, ref ToastOptions options, ref bool ishandled)
     {
       if (this.DisableTranslationAccordingToState())
@@ -503,6 +584,17 @@ namespace Echoglossian
       }
 
       if (!this.configuration.TranslateToast)
+      {
+        return;
+      }
+
+      // "_WideText" now has a dedicated AddonLifecycle handler in
+      // NativeUI/AddonHandlers/Toasts/WideTextToastHandler.cs. When that path is
+      // enabled, this legacy callback must not compete by doing synchronous lookup
+      // or network work on the UI thread.
+      if (this.configuration.TranslateWideTextToast ||
+          this.configuration.TranslateAreaToast ||
+          this.configuration.TranslateClassChangeToast)
       {
         return;
       }

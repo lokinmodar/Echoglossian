@@ -13,8 +13,11 @@ internal record TranslationWindowConfig(
     Vector4 TextColor,
     Vector2 PosCorrection,
     bool ForceShowTitle = false,
+    float BackgroundOpacity = 1.0f,
     bool NoBackground = false,
     bool UseFixedWindowSize = false,
+    bool CenterOnAddon = false,
+    bool AutoSizeToTextWithMaxWidth = false,
     bool ExpandWidthToFitText = false,
     float MaxAutoExpandedWidthMultiplier = 1.0f,
     float MinWidthViewportFraction = 0.0f,
@@ -84,14 +87,29 @@ internal record TranslationWindowConfig(
   /// <returns></returns>
   public static TranslationWindowConfig FromConfigForToast(Config config)
   {
+    return FromConfigForWideTextToast(config);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for Screen Info (_WideText) toast
+  /// translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForWideTextToast(Config config)
+  {
     return new TranslationWindowConfig(
-        DefaultTitle: "Toast translation",
-        FontScale: config.ToastFontScale,
-        WidthMultiplier: config.ImGuiToastWindowWidthMult,
+        DefaultTitle: "Screen Info toast translation",
+        FontScale: config.WideTextToastFontScale,
+        WidthMultiplier: config.ImGuiWideTextToastWindowWidthMult,
         HeightMultiplier: 2.0f,
-        TextColor: new Vector4(config.OverlayToastTextColor.X, config.OverlayToastTextColor.Y, config.OverlayToastTextColor.Z, 1.0f),
-        PosCorrection: config.ImGuiToastWindowPosCorrection,
-        ForceShowTitle: config.ToastForceShowTitle);
+        TextColor: new Vector4(config.OverlayWideTextToastTextColor.X, config.OverlayWideTextToastTextColor.Y, config.OverlayWideTextToastTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiWideTextToastWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.WideTextToastBackgroundOpacity,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
   }
 
   /// <summary>
@@ -103,13 +121,82 @@ internal record TranslationWindowConfig(
   {
     return new TranslationWindowConfig(
         DefaultTitle: "Error Toast translation",
-        FontScale: config.ToastFontScale,
-        WidthMultiplier: config.ImGuiToastWindowWidthMult,
+        FontScale: config.ErrorToastFontScale,
+        WidthMultiplier: config.ImGuiErrorToastWindowWidthMult,
         HeightMultiplier: 2.0f,
-        TextColor: new Vector4(config.OverlayToastTextColor.X, config.OverlayToastTextColor.Y, config.OverlayToastTextColor.Z, 1.0f),
-        PosCorrection: config.ImGuiToastWindowPosCorrection,
-        ForceShowTitle: config.ToastForceShowTitle,
-        NoBackground: true);
+        TextColor: new Vector4(config.OverlayErrorToastTextColor.X, config.OverlayErrorToastTextColor.Y, config.OverlayErrorToastTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiErrorToastWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.ErrorToastBackgroundOpacity,
+        NoBackground: config.ErrorToastBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for area toast translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForAreaToast(Config config)
+  {
+    return new TranslationWindowConfig(
+        DefaultTitle: "Area toast translation",
+        FontScale: config.AreaToastFontScale,
+        WidthMultiplier: config.ImGuiAreaToastWindowWidthMult,
+        HeightMultiplier: 2.0f,
+        TextColor: new Vector4(config.OverlayAreaToastTextColor.X, config.OverlayAreaToastTextColor.Y, config.OverlayAreaToastTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiAreaToastWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.AreaToastBackgroundOpacity,
+        NoBackground: config.AreaToastBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for class/job change toast translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForClassChangeToast(
+      Config config)
+  {
+    return new TranslationWindowConfig(
+        DefaultTitle: "Class/Job toast translation",
+        FontScale: config.ClassChangeToastFontScale,
+        WidthMultiplier: config.ImGuiClassChangeToastWindowWidthMult,
+        HeightMultiplier: 2.0f,
+        TextColor: new Vector4(config.OverlayClassChangeToastTextColor.X, config.OverlayClassChangeToastTextColor.Y, config.OverlayClassChangeToastTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiClassChangeToastWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.ClassChangeToastBackgroundOpacity,
+        NoBackground: config.ClassChangeToastBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for quest toast translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForQuestToast(Config config)
+  {
+    return new TranslationWindowConfig(
+        DefaultTitle: "Quest toast translation",
+        FontScale: config.QuestToastFontScale,
+        WidthMultiplier: config.ImGuiQuestToastWindowWidthMult,
+        HeightMultiplier: 2.0f,
+        TextColor: new Vector4(config.OverlayQuestToastTextColor.X, config.OverlayQuestToastTextColor.Y, config.OverlayQuestToastTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiQuestToastWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.QuestToastBackgroundOpacity,
+        NoBackground: config.QuestToastBackgroundOpacity <= 0f,
+        AutoSizeToTextWithMaxWidth: true);
   }
 
   /// <summary>

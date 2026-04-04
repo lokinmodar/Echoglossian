@@ -109,6 +109,7 @@ public partial class Echoglossian : IDalamudPlugin
 
   private readonly bool pluginAssetsState;
   private readonly SemaphoreSlim questToastTranslationSemaphore;
+  private readonly QuestToastRuntime questToastRuntime;
   private readonly SemaphoreSlim senderTranslationSemaphore;
   private readonly IDalamudTextureWrap talkImage;
   private readonly SemaphoreSlim talkSubtitleTranslationSemaphore;
@@ -283,9 +284,23 @@ public partial class Echoglossian : IDalamudPlugin
     this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
     this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
 
-    ToastGuiInterface.Toast += this.OnToast;
-    ToastGuiInterface.ErrorToast += this.OnErrorToast;
-    ToastGuiInterface.QuestToast += this.OnQuestToast;
+    this.questToastRuntime = new QuestToastRuntime(
+        this.configuration,
+        TranslationService,
+        this.FindAndReturnToastMessage,
+        toastMessage => Task.Run(() => this.InsertToastMessageData(toastMessage)),
+        (translatedName, translatedText, originalName) =>
+            this.UpdateOverlayContent(
+                this.questToastOverlay,
+                translatedName,
+                translatedText,
+                originalName),
+        () => this.ClearOverlay(this.questToastOverlay, clearText: true),
+        text => this.RemoveDiacritics(
+            text,
+            this.SpecialCharsSupportedByGameFont));
+
+    ToastGuiInterface.QuestToast += this.questToastRuntime.HandleQuestToast;
 
     this.EgloAddonHandler();
 
@@ -399,9 +414,7 @@ public partial class Echoglossian : IDalamudPlugin
   /// <param name="disposing">Indicates whether the method was called from managed code.</param>
   protected virtual void Dispose(bool disposing)
   {
-    ToastGuiInterface.Toast -= this.OnToast;
-    ToastGuiInterface.ErrorToast -= this.OnErrorToast;
-    ToastGuiInterface.QuestToast -= this.OnQuestToast;
+    ToastGuiInterface.QuestToast -= this.questToastRuntime.HandleQuestToast;
 
     PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
@@ -540,24 +553,17 @@ public partial class Echoglossian : IDalamudPlugin
 
     switch (this.configuration.UseImGuiForTalk ||
             this.configuration.UseImGuiForBattleTalk ||
-            this.configuration.UseImGuiForToasts)
+            this.configuration.OverlayOnlyLanguage ||
+            this.configuration.UseImGuiForWideTextToast ||
+            this.configuration.UseImGuiForErrorToast ||
+            this.configuration.UseImGuiForAreaToast ||
+            this.configuration.UseImGuiForClassChangeToast ||
+            this.configuration.UseImGuiForQuestToast)
     {
       case true when !this.FontLoaded || this.FontLoadFailed:
         return;
       case true:
-        {
-          switch (ClientStateInterface.IsLoggedIn)
-          {
-            case true:
-              this.TextErrorToastHandler("_TextError", 1);
-              this.ToastHandler("_WideText", 1);
-              this.ToastHandler("_TextClassChange", 1);
-              this.ToastHandler("_AreaText", 1);
-              break;
-          }
-
-          break;
-        }
+        return;
     }
   }
 
@@ -659,9 +665,73 @@ public partial class Echoglossian : IDalamudPlugin
   }
 
   /// <summary>
+  /// Updates the shared toast overlay bounds using a live "_WideText" addon
+  /// instance received from AddonLifecycle.
+  /// </summary>
+  /// <param name="addon">The live "_WideText" addon.</param>
+  private unsafe void SyncWideTextToastOverlayBounds(
+      AtkUnitBase* addon,
+      AtkTextNode* textNode)
+  {
+    this.UpdateToastOverlayBounds(this.toastOverlay, addon, textNode);
+  }
+
+  /// <summary>
+  /// Updates the error toast overlay bounds using a live "_TextError" addon
+  /// instance received from AddonLifecycle.
+  /// </summary>
+  /// <param name="addon">The live "_TextError" addon.</param>
+  private unsafe void SyncErrorToastOverlayBounds(
+      AtkUnitBase* addon,
+      AtkTextNode* textNode)
+  {
+    this.UpdateToastOverlayBounds(this.errorToastOverlay, addon, textNode);
+  }
+
+  /// <summary>
+  /// Updates the area toast overlay bounds using a live "_AreaText" addon
+  /// instance received from AddonLifecycle.
+  /// </summary>
+  /// <param name="addon">The live "_AreaText" addon.</param>
+  private unsafe void SyncAreaToastOverlayBounds(
+      AtkUnitBase* addon,
+      AtkTextNode* textNode)
+  {
+    this.UpdateToastOverlayBounds(this.areaToastOverlay, addon, textNode);
+  }
+
+  /// <summary>
+  /// Updates the class/job change toast overlay bounds using a live
+  /// "_TextClassChange" addon instance received from AddonLifecycle.
+  /// </summary>
+  /// <param name="addon">The live "_TextClassChange" addon.</param>
+  private unsafe void SyncClassChangeToastOverlayBounds(
+      AtkUnitBase* addon,
+      AtkTextNode* textNode)
+  {
+    this.UpdateToastOverlayBounds(this.classChangeToastOverlay, addon, textNode);
+  }
+
+  /// <summary>
+  /// Persists a toast row into the correct historical cache/table according to
+  /// its toast type.
+  /// </summary>
+  /// <param name="toastMessage">The translated toast row to persist.</param>
+  /// <returns>The persistence result message.</returns>
+  private string InsertToastMessageData(ToastMessage toastMessage)
+  {
+    return string.Equals(
+            toastMessage.ToastType,
+            "Error",
+            StringComparison.OrdinalIgnoreCase)
+        ? this.InsertErrorToastMessageData(toastMessage)
+        : this.InsertOtherToastMessageData(toastMessage);
+  }
+
+  /// <summary>
   /// Handles the registration of addon handlers.
   /// </summary>
-  private void EgloAddonHandler()
+  private unsafe void EgloAddonHandler()
   {
     PluginLog.Debug("EgloAddonHandler called.");
 
@@ -749,6 +819,108 @@ public partial class Echoglossian : IDalamudPlugin
                   () => this.ClearOverlay(
                       this.battleTalkOverlay,
                       clearText: true),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateToast &&
+        this.configuration.TranslateWideTextToast)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_WideText",
+              Handler: new WideTextToastHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnToastMessage,
+                  toastMessage => Task.Run(
+                      () => this.InsertToastMessageData(toastMessage)),
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.toastOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(this.toastOverlay, clearText: true),
+                  this.SyncWideTextToastOverlayBounds,
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateToast &&
+        this.configuration.TranslateErrorToast)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_TextError",
+              Handler: new ErrorToastHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnToastMessage,
+                  toastMessage => Task.Run(
+                      () => this.InsertToastMessageData(toastMessage)),
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.errorToastOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(
+                      this.errorToastOverlay,
+                      clearText: true),
+                  this.SyncErrorToastOverlayBounds,
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateToast &&
+        this.configuration.TranslateAreaToast)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_AreaText",
+              Handler: new AreaToastHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnToastMessage,
+                  toastMessage => Task.Run(
+                      () => this.InsertToastMessageData(toastMessage)),
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.areaToastOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(
+                      this.areaToastOverlay,
+                      clearText: true),
+                  this.SyncAreaToastOverlayBounds,
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateToast &&
+        this.configuration.TranslateClassChangeToast)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_TextClassChange",
+              Handler: new ClassChangeToastHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnToastMessage,
+                  toastMessage => Task.Run(
+                      () => this.InsertToastMessageData(toastMessage)),
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.classChangeToastOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(
+                      this.classChangeToastOverlay,
+                      clearText: true),
+                  this.SyncClassChangeToastOverlayBounds,
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));

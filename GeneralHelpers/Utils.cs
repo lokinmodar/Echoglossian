@@ -164,7 +164,7 @@ public partial class Echoglossian
     config.PluginVersion =
         Assembly.GetExecutingAssembly().GetName().Version?.ToString() ??
         "unknown";
-    config.Version = 7;
+    config.Version = 9;
 
     // Persist config
     saveCallback?.Invoke();
@@ -214,7 +214,7 @@ public partial class Echoglossian
   /// </summary>
   public void MigrateOverlayStyleSettings()
   {
-    if (this.configuration.Version >= 7)
+    if (this.configuration.Version >= 9)
     {
       return;
     }
@@ -233,7 +233,76 @@ public partial class Echoglossian
         this.configuration.TranslateNpcNames;
     this.configuration.TranslateBattleTalkNpcNames =
         this.configuration.TranslateNpcNames;
-    this.configuration.Version = 7;
+
+    this.configuration.WideTextToastFontScale = this.configuration.ToastFontScale;
+    this.configuration.ErrorToastFontScale = this.configuration.ToastFontScale;
+    this.configuration.AreaToastFontScale = this.configuration.ToastFontScale;
+    this.configuration.ClassChangeToastFontScale =
+        this.configuration.ToastFontScale;
+    this.configuration.QuestToastFontScale = this.configuration.ToastFontScale;
+
+    this.configuration.WideTextToastForceShowTitle =
+        this.configuration.ToastForceShowTitle;
+    this.configuration.ErrorToastForceShowTitle =
+        this.configuration.ToastForceShowTitle;
+    this.configuration.AreaToastForceShowTitle =
+        this.configuration.ToastForceShowTitle;
+    this.configuration.ClassChangeToastForceShowTitle =
+        this.configuration.ToastForceShowTitle;
+    this.configuration.QuestToastForceShowTitle =
+        this.configuration.ToastForceShowTitle;
+
+    this.configuration.ImGuiWideTextToastWindowWidthMult =
+        this.configuration.ImGuiToastWindowWidthMult;
+    this.configuration.ImGuiErrorToastWindowWidthMult =
+        this.configuration.ImGuiToastWindowWidthMult;
+    this.configuration.ImGuiAreaToastWindowWidthMult =
+        this.configuration.ImGuiToastWindowWidthMult;
+    this.configuration.ImGuiClassChangeToastWindowWidthMult =
+        this.configuration.ImGuiToastWindowWidthMult;
+    this.configuration.ImGuiQuestToastWindowWidthMult =
+        this.configuration.ImGuiToastWindowWidthMult;
+
+    this.configuration.ImGuiWideTextToastWindowPosCorrection =
+        this.configuration.ImGuiToastWindowPosCorrection;
+    this.configuration.ImGuiErrorToastWindowPosCorrection =
+        this.configuration.ImGuiToastWindowPosCorrection;
+    this.configuration.ImGuiAreaToastWindowPosCorrection =
+        this.configuration.ImGuiToastWindowPosCorrection;
+    this.configuration.ImGuiClassChangeToastWindowPosCorrection =
+        this.configuration.ImGuiToastWindowPosCorrection;
+    this.configuration.ImGuiQuestToastWindowPosCorrection =
+        this.configuration.ImGuiToastWindowPosCorrection;
+
+    this.configuration.OverlayWideTextToastTextColor =
+        this.configuration.OverlayToastTextColor;
+    this.configuration.OverlayErrorToastTextColor =
+        this.configuration.OverlayToastTextColor;
+    this.configuration.OverlayAreaToastTextColor =
+        this.configuration.OverlayToastTextColor;
+    this.configuration.OverlayClassChangeToastTextColor =
+        this.configuration.OverlayToastTextColor;
+    this.configuration.OverlayQuestToastTextColor =
+        this.configuration.OverlayToastTextColor;
+
+    this.configuration.WideTextToastBackgroundOpacity = 1f;
+    this.configuration.ErrorToastBackgroundOpacity = 0f;
+    this.configuration.AreaToastBackgroundOpacity = 1f;
+    this.configuration.ClassChangeToastBackgroundOpacity = 1f;
+    this.configuration.QuestToastBackgroundOpacity = 1f;
+
+    this.configuration.UseImGuiForWideTextToast =
+        this.configuration.UseImGuiForToasts;
+    this.configuration.UseImGuiForErrorToast =
+        this.configuration.UseImGuiForToasts;
+    this.configuration.UseImGuiForAreaToast =
+        this.configuration.UseImGuiForToasts;
+    this.configuration.UseImGuiForClassChangeToast =
+        this.configuration.UseImGuiForToasts;
+    this.configuration.UseImGuiForQuestToast =
+        this.configuration.UseImGuiForToasts;
+
+    this.configuration.Version = 9;
 
     SaveConfig(this.configuration);
   }

@@ -10,9 +10,12 @@ namespace Echoglossian;
 /// </summary>
 public partial class Echoglossian
 {
+    private readonly TranslationOverlay areaToastOverlay = new();
     private readonly TranslationOverlay battleTalkOverlay = new();
+    private readonly TranslationOverlay classChangeToastOverlay = new();
     private readonly TranslationOverlay chatBubbleOverlay = new();
     private readonly TranslationOverlay errorToastOverlay = new();
+    private readonly TranslationOverlay questToastOverlay = new();
 
     // List of registered overlays
     private readonly List<OverlayRegistration> registeredOverlays = new();
@@ -26,7 +29,7 @@ public partial class Echoglossian
     ///     Registers the overlays with their respective configurations using current
     ///     plugin config values.
     /// </summary>
-    private void RegisterOverlays()
+    private unsafe void RegisterOverlays()
     {
         PluginLog.Debug("Registering overlays...");
 
@@ -65,10 +68,17 @@ public partial class Echoglossian
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.toastOverlay,
-                () => TranslationWindowConfig.FromConfigForToast(this.configuration),
+                () => TranslationWindowConfig.FromConfigForWideTextToast(this.configuration),
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
-                    this.configuration.UseImGuiForToasts));
+                    this.configuration.TranslateWideTextToast &&
+                    (this.configuration.OverlayOnlyLanguage ||
+                     this.configuration.UseImGuiForWideTextToast),
+                syncBeforeDraw: () =>
+                    this.TrySyncToastOverlayToAddon(
+                        "_WideText",
+                        this.toastOverlay,
+                        ToastTextNodeResolvers.ResolveWideTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -76,8 +86,59 @@ public partial class Echoglossian
                 () => TranslationWindowConfig.FromConfigForErrorToast(
                     this.configuration),
                 isEnabled: () =>
+                    this.configuration.TranslateToast &&
                     this.configuration.TranslateErrorToast &&
-                    this.configuration.UseImGuiForToasts));
+                    (this.configuration.OverlayOnlyLanguage ||
+                     this.configuration.UseImGuiForErrorToast),
+                syncBeforeDraw: () =>
+                    this.TrySyncToastOverlayToAddon(
+                        "_TextError",
+                        this.errorToastOverlay,
+                        ToastTextNodeResolvers.ResolveFirstTextNode)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.areaToastOverlay,
+                () => TranslationWindowConfig.FromConfigForAreaToast(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateToast &&
+                    this.configuration.TranslateAreaToast &&
+                    (this.configuration.OverlayOnlyLanguage ||
+                     this.configuration.UseImGuiForAreaToast),
+                syncBeforeDraw: () =>
+                    this.TrySyncToastOverlayToAddon(
+                        "_AreaText",
+                        this.areaToastOverlay,
+                        ToastTextNodeResolvers.ResolveFirstTextNode)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.classChangeToastOverlay,
+                () => TranslationWindowConfig.FromConfigForClassChangeToast(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateToast &&
+                    this.configuration.TranslateClassChangeToast &&
+                    (this.configuration.OverlayOnlyLanguage ||
+                     this.configuration.UseImGuiForClassChangeToast),
+                syncBeforeDraw: () =>
+                    this.TrySyncToastOverlayToAddon(
+                        "_TextClassChange",
+                        this.classChangeToastOverlay,
+                        ToastTextNodeResolvers.ResolveFirstTextNode)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.questToastOverlay,
+                () => TranslationWindowConfig.FromConfigForQuestToast(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateToast &&
+                    this.configuration.TranslateQuestToast &&
+                    (this.configuration.OverlayOnlyLanguage ||
+                     this.configuration.UseImGuiForQuestToast),
+                syncBeforeDraw: this.TrySyncQuestToastOverlayToViewport));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
