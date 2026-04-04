@@ -21,6 +21,8 @@ public partial class Echoglossian
 
   public static TalkSubtitleMessage? FoundTalkSubtitleMessage { get; set; }
 
+  public static TextGimmickHintMessage? FoundTextGimmickHintMessage { get; set; }
+
   public static GameWindow? FoundGameWindow { get; set; }
 
   public static StringArrayDatas? FoundStringArrayDatas { get; set; }
@@ -436,6 +438,48 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Finds and returns a TextGimmickHintMessage from the database.
+  /// </summary>
+  /// <param name="textGimmickHintMessage">Formatted TextGimmickHintMessage to be found in the database</param>
+  /// <returns></returns>
+  public TextGimmickHintMessage? FindAndReturnTextGimmickHintMessage(
+      TextGimmickHintMessage textGimmickHintMessage)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    try
+    {
+      var existingTextGimmickHintMessage =
+          context.TextGimmickHintMessage.AsNoTracking().Where(t =>
+              t.OriginalText == textGimmickHintMessage.OriginalText &&
+              t.TranslationLang == textGimmickHintMessage.TranslationLang);
+
+      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
+      {
+        existingTextGimmickHintMessage =
+            existingTextGimmickHintMessage.Where(t =>
+                t.TranslationEngine ==
+                textGimmickHintMessage.TranslationEngine);
+      }
+
+      var localFoundTextGimmickHintMessage =
+          existingTextGimmickHintMessage.FirstOrDefault();
+      if (localFoundTextGimmickHintMessage == null ||
+          localFoundTextGimmickHintMessage.OriginalText !=
+          textGimmickHintMessage.OriginalText)
+      {
+        return null;
+      }
+
+      return localFoundTextGimmickHintMessage;
+    }
+    catch (Exception e)
+    {
+      PluginLog.Debug($"FindAndReturnTextGimmickHintMessage exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Finds and returns a GameWindow from the database.
   /// </summary>
   /// <param name="gameWindow">Formatted GameWindow to be found in the database</param>
@@ -580,6 +624,44 @@ public partial class Echoglossian
       context.SaveChanges();
 
       return "Data inserted to TalkSubtitleMessages table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  /// Inserts a TextGimmickHintMessage record into the database.
+  /// </summary>
+  /// <param name="textGimmickHintMessage">Formatted TextGimmickHintMessage to be inserted into the database</param>
+  /// <returns></returns>
+  public static async Task<string> InsertTextGimmickHintData(
+      TextGimmickHintMessage textGimmickHintMessage)
+  {
+    using var context = new EchoglossianDbContext(
+        PluginInterface.GetPluginConfigDirectory() +
+        Path.DirectorySeparatorChar);
+
+    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+
+    try
+    {
+      if (!ShouldSaveToDB(textGimmickHintMessage.TranslatedText))
+      {
+        return "No data to save.";
+      }
+
+      context.TextGimmickHintMessage.Add(textGimmickHintMessage);
+
+      if (pluginConfig?.CopyTranslationToClipboard == true)
+      {
+        ImGui.SetClipboardText(textGimmickHintMessage.ToString());
+      }
+
+      await context.SaveChangesAsync();
+
+      return "Data inserted to TextGimmickHintMessages table.";
     }
     catch (Exception e)
     {

@@ -31,6 +31,7 @@ public static class OverlayTab
         "Error",
         "Area",
         "Class / Job",
+        "Text Gimmick Hint",
         "Quest",
     };
 
@@ -333,6 +334,19 @@ public static class OverlayTab
             case 5:
                 changed |= DrawToastTypePage(
                     config,
+                    "Text Gimmick Hint",
+                    ref config.TranslateTextGimmickHint,
+                    ref config.UseImGuiForTextGimmickHint,
+                    ref config.TextGimmickHintFontScale,
+                    ref config.ImGuiTextGimmickHintWindowWidthMult,
+                    ref config.ImGuiTextGimmickHintWindowPosCorrection,
+                    ref config.OverlayTextGimmickHintTextColor,
+                    ref config.TextGimmickHintBackgroundOpacity,
+                    ref config.FontChangeTime);
+                break;
+            case 6:
+                changed |= DrawToastTypePage(
+                    config,
                     "Quest Toast",
                     ref config.TranslateQuestToast,
                     ref config.UseImGuiForQuestToast,
@@ -369,6 +383,9 @@ public static class OverlayTab
         changed |= ImGui.Checkbox(
             Resources.TranslateClassChangeToastToggleText,
             ref config.TranslateClassChangeToast);
+        changed |= ImGui.Checkbox(
+            "Translate Text Gimmick Hint",
+            ref config.TranslateTextGimmickHint);
         changed |= ImGui.Checkbox(
             Resources.TranslateQuestToastToggleText,
             ref config.TranslateQuestToast);
@@ -480,14 +497,74 @@ public static class OverlayTab
 
         if (config.UseImGuiForTalkSubtitle)
         {
-            changed |= DrawOverlaySettings(
+            changed |= DrawSubtitleOverlaySettings(
                 ref config.TalkSubtitleFontScale,
                 ref config.ImGuiTalkSubtitleWindowWidthMult,
                 ref config.ImGuiTalkSubtitleWindowPosCorrection,
                 ref config.OverlayTalkSubtitleTextColor,
                 Resources.OverlayFontScaleLabel,
-                ref config.TalkSubtitleForceShowTitle,
                 ref config.FontChangeTime);
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the TalkSubtitle overlay settings without exposing a title bar
+    ///     toggle. TalkSubtitle windows are intentionally titleless so the
+    ///     configuration only controls style and placement.
+    /// </summary>
+    private static bool DrawSubtitleOverlaySettings(
+        ref float fontScale,
+        ref float widthMult,
+        ref Vector2 positionCorrection,
+        ref Vector3 textColor,
+        string fontScaleLabel,
+        ref long fontChangeTime)
+    {
+        var changed = false;
+
+        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
+        {
+            changed = true;
+            fontChangeTime = DateTime.Now.Ticks;
+        }
+
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontSizeOrientations);
+        }
+
+        ImGui.Text(Resources.FontColorSelectLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            Resources.OverlayColorSelectName,
+            ref textColor,
+            ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoLabel);
+
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayFontColorOrientations);
+        }
+
+        changed |= ImGui.DragFloat(
+            Resources.OverlayWidthScrollLabel,
+            ref widthMult,
+            0.001f,
+            0.01f,
+            3f);
+        changed |= ImGui.DragFloat2(
+            Resources.OverlayPositionAdjustmentLabel,
+            ref positionCorrection);
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.OverlayAdjustmentOrientations);
         }
 
         return changed;

@@ -92,6 +92,23 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Formats a <see cref="TextGimmickHintMessage" /> for the database.
+  /// </summary>
+  /// <param name="text">The original text gimmick hint message.</param>
+  /// <returns>Returns <see cref="TextGimmickHintMessage" />.</returns>
+  public TextGimmickHintMessage FormatTextGimmickHintMessage(string text)
+  {
+    return new TextGimmickHintMessage(
+        text,
+        ClientStateInterface.ClientLanguage.Humanize(),
+        string.Empty,
+        this.languagesDictionary[this.configuration.Lang].Code,
+        this.configuration.ChosenTransEngine,
+        DateTime.Now,
+        DateTime.Now);
+  }
+
+  /// <summary>
   ///     Formats a <see cref="GameWindow" />.
   /// </summary>
   /// <param name="windowAddonName"></param>

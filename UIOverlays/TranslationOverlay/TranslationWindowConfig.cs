@@ -77,7 +77,28 @@ internal record TranslationWindowConfig(
         HeightMultiplier: config.ImGuiTalkSubtitleWindowHeightMult,
         TextColor: new Vector4(config.OverlayTalkSubtitleTextColor.X, config.OverlayTalkSubtitleTextColor.Y, config.OverlayTalkSubtitleTextColor.Z, 1.0f),
         PosCorrection: config.ImGuiTalkSubtitleWindowPosCorrection,
-        ForceShowTitle: config.TalkSubtitleForceShowTitle);
+        ForceShowTitle: false);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for text gimmick hint translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForTextGimmickHint(Config config)
+  {
+    return new TranslationWindowConfig(
+        DefaultTitle: "Text Gimmick Hint translation",
+        FontScale: config.TextGimmickHintFontScale,
+        WidthMultiplier: config.ImGuiTextGimmickHintWindowWidthMult,
+        HeightMultiplier: config.ImGuiTextGimmickHintWindowHeightMult,
+        TextColor: new Vector4(config.OverlayTextGimmickHintTextColor.X, config.OverlayTextGimmickHintTextColor.Y, config.OverlayTextGimmickHintTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiTextGimmickHintWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.TextGimmickHintBackgroundOpacity,
+        NoBackground: config.TextGimmickHintBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
   }
 
   /// <summary>

@@ -12,7 +12,7 @@ namespace Echoglossian.Tests;
 public class MigrationCompatibilityTests
 {
     private const string PreviousMigration = "20250724225932_fixNewEntity24052025";
-    private const string LatestLookupMigration = "20260324193000_AddLookupIndexes";
+    private const string LatestLookupMigration = "20260403190000_AddTextGimmickHintMessage";
 
     private static readonly string[] TableNames =
     {
@@ -61,6 +61,8 @@ public class MigrationCompatibilityTests
                 context.Database.Migrate();
             }
 
+            SeedTextGimmickHintData(configDir);
+
             Dictionary<string, long> countsAfter;
             List<string> pendingAfter;
             HashSet<string> indexes;
@@ -85,6 +87,8 @@ public class MigrationCompatibilityTests
             {
                 Assert.True(indexes.Contains(indexName), $"Index {indexName} was not created.");
             }
+
+            Assert.Equal(1, GetCount(configDir, "textgimmickhintmessages"));
         }
         finally
         {
@@ -185,6 +189,23 @@ public class MigrationCompatibilityTests
         context.SaveChanges();
     }
 
+    private static void SeedTextGimmickHintData(string configDir)
+    {
+        using var context = new EchoglossianDbContext(configDir);
+        var now = DateTime.UtcNow;
+
+        context.TextGimmickHintMessage.Add(new TextGimmickHintMessage(
+            originalText: "Press the lever",
+            originalLang: "en",
+            translatedText: "Puxe a alavanca",
+            translationLang: "pt",
+            translationEngine: 1,
+            createdDate: now,
+            updatedDate: now));
+
+        context.SaveChanges();
+    }
+
     private static Dictionary<string, long> GetCounts(EchoglossianDbContext context)
     {
         var connection = context.Database.GetDbConnection();
@@ -224,6 +245,22 @@ public class MigrationCompatibilityTests
 
         connection.Close();
         return existing;
+    }
+
+    private static long GetCount(string configDir, string tableName)
+    {
+        using var context = new EchoglossianDbContext(configDir);
+        var connection = context.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            connection.Open();
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = $"SELECT COUNT(*) FROM [{tableName}]";
+        var result = Convert.ToInt64(command.ExecuteScalar());
+        connection.Close();
+        return result;
     }
 
     private static void TryDeleteDirectory(string path)

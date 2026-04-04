@@ -511,6 +511,46 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("talksubtitlemessages", (string)null);
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("TranslatedText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TranslationLang", "TranslationEngine")
+                        .HasDatabaseName("IX_textgimmickhintmessages_lookup");
+
+                    b.ToTable("textgimmickhintmessages", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ToastMessage", b =>
                 {
                     b.Property<int>("Id")

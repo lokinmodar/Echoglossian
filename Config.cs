@@ -135,6 +135,13 @@ public class Config : IPluginConfiguration
 
   [DefaultValue(1.5f)] public float ImGuiTalkSubtitleWindowWidthMult = 1.5f;
 
+  [DefaultValue(1f)] public float ImGuiTextGimmickHintWindowHeightMult = 1f;
+
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiTextGimmickHintWindowPosCorrection = new(0, 0);
+
+  [DefaultValue(1.5f)] public float ImGuiTextGimmickHintWindowWidthMult = 1.5f;
+
   [DefaultValue(1f)] public float ImGuiTalkWindowHeightMult = 1f;
 
   /// <summary>Width multiplier for Talk ImGui overlay window.</summary>
@@ -288,6 +295,12 @@ public class Config : IPluginConfiguration
   public Vector3 OverlayTalkTextColor = new(1f, 1f, 1f);
 
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayTextGimmickHintTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Background opacity used by Text Gimmick Hint overlays.</summary>
+  [DefaultValue(1f)] public float TextGimmickHintBackgroundOpacity = 1f;
+
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 OverlayToastTextColor = new(1f, 1f, 1f);
 
   /// <summary>Text color used by Screen Info (_WideText) toast overlays.</summary>
@@ -362,6 +375,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Always show the Talk Subtitle overlay title bar.</summary>
   [DefaultValue(false)] public bool TalkSubtitleForceShowTitle = false;
+
+  /// <summary>Font scale used for Text Gimmick Hint overlay.</summary>
+  [DefaultValue(1f)] public float TextGimmickHintFontScale = 1f;
 
   /// <summary>Font scale used for Toast overlay.</summary>
   [DefaultValue(1f)] public float ToastFontScale = 1f;
@@ -459,6 +475,9 @@ public class Config : IPluginConfiguration
   /// <summary>Translate Talk Subtitle messages.</summary>
   [DefaultValue(false)] public bool TranslateTalkSubtitle = false;
 
+  /// <summary>Translate Text Gimmick Hint messages.</summary>
+  [DefaultValue(false)] public bool TranslateTextGimmickHint = false;
+
   /// <summary>Translate toast popup messages.</summary>
   [DefaultValue(false)] public bool TranslateToast = false;
 
@@ -485,6 +504,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Use ImGui for Talk Subtitle overlays.</summary>
   [DefaultValue(false)] public bool UseImGuiForTalkSubtitle = false;
+
+  /// <summary>Use ImGui for Text Gimmick Hint overlays.</summary>
+  [DefaultValue(false)] public bool UseImGuiForTextGimmickHint = false;
 
   /// <summary>Use ImGui for toast messages.</summary>
   [DefaultValue(false)] public bool UseImGuiForToasts = false;

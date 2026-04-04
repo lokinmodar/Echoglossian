@@ -15,6 +15,7 @@ public partial class Echoglossian
     private readonly TranslationOverlay classChangeToastOverlay = new();
     private readonly TranslationOverlay chatBubbleOverlay = new();
     private readonly TranslationOverlay errorToastOverlay = new();
+    private readonly TranslationOverlay textGimmickHintOverlay = new();
     private readonly TranslationOverlay questToastOverlay = new();
 
     // List of registered overlays
@@ -64,6 +65,20 @@ public partial class Echoglossian
                     this.configuration.UseImGuiForTalkSubtitle,
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon("TalkSubtitle", this.talkSubtitleOverlay)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.textGimmickHintOverlay,
+                () => TranslationWindowConfig.FromConfigForTextGimmickHint(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateTextGimmickHint &&
+                    this.configuration.UseImGuiForTextGimmickHint,
+                syncBeforeDraw: () =>
+                    this.TrySyncToastOverlayToAddon(
+                        "_TextGimmickHint",
+                        this.textGimmickHintOverlay,
+                        ToastTextNodeResolvers.ResolveFirstTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(

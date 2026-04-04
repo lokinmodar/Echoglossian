@@ -475,18 +475,6 @@ public partial class Echoglossian : IDalamudPlugin
                 this.UiBattleTalkAsyncHandler);*/
     }
 
-    if (this.configuration.TranslateTalkSubtitle)
-    {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreSetup,
-          "TalkSubtitle",
-          this.UiTalkSubtitleAsyncHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRefresh,
-          "TalkSubtitle",
-          this.UiTalkSubtitleAsyncHandler);
-    }
-
     if (this.configuration.TranslateJournal)
     {
       AddonLifecycle.UnregisterListener(
@@ -713,6 +701,18 @@ public partial class Echoglossian : IDalamudPlugin
   }
 
   /// <summary>
+  /// Updates the text gimmick hint overlay bounds using a live addon instance
+  /// received from AddonLifecycle.
+  /// </summary>
+  /// <param name="addon">The live "_TextGimmickHint" addon.</param>
+  private unsafe void SyncTextGimmickHintToastOverlayBounds(
+      AtkUnitBase* addon,
+      AtkTextNode* textNode)
+  {
+    this.UpdateToastOverlayBounds(this.textGimmickHintOverlay, addon, textNode);
+  }
+
+  /// <summary>
   /// Persists a toast row into the correct historical cache/table according to
   /// its toast type.
   /// </summary>
@@ -824,6 +824,30 @@ public partial class Echoglossian : IDalamudPlugin
                       this.SpecialCharsSupportedByGameFont))));
     }
 
+    if (this.configuration.TranslateTalkSubtitle)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "TalkSubtitle",
+              Handler: new TalkSubtitleHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnTalkSubtitleMessage,
+                  talkSubtitleMessage => Task.Run(
+                      () => InsertTalkSubtitleData(talkSubtitleMessage)),
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.talkSubtitleOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(
+                      this.talkSubtitleOverlay,
+                      clearText: true),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
     if (this.configuration.TranslateToast &&
         this.configuration.TranslateWideTextToast)
     {
@@ -926,43 +950,34 @@ public partial class Echoglossian : IDalamudPlugin
                       this.SpecialCharsSupportedByGameFont))));
     }
 
+    if (this.configuration.TranslateTextGimmickHint)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_TextGimmickHint",
+              Handler: new TextGimmickHintHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnTextGimmickHintMessage,
+                  textGimmickHintMessage => InsertTextGimmickHintData(
+                      textGimmickHintMessage),
+                  (translatedName, translatedText, originalName) =>
+                      this.UpdateOverlayContent(
+                          this.textGimmickHintOverlay,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  () => this.ClearOverlay(
+                      this.textGimmickHintOverlay,
+                      clearText: true),
+                  this.SyncTextGimmickHintToastOverlayBounds,
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
     AddonHandlerRegistrar.RegisterMany(
         this.registeredAddonHandlers,
         AddonLifecycle);
-
-    if (this.configuration.TranslateBattleTalk)
-    {
-      PluginLog.Debug(
-          "Registering _BattleTalk addon listeners for translation.");
-
-      /*      AddonLifecycle.RegisterListener(
-                AddonEvent.PreRefresh,
-                "_BattleTalk",
-                this.UiBattleTalkAsyncHandler);
-            AddonLifecycle.RegisterListener(
-                AddonEvent.PreDraw,
-                "_BattleTalk",
-                this.UiBattleTalkAsyncHandler);
-            AddonLifecycle.RegisterListener(
-                AddonEvent.PreReceiveEvent,
-                "_BattleTalk",
-                this.UiBattleTalkAsyncHandler);*/
-    }
-
-    if (this.configuration.TranslateTalkSubtitle)
-    {
-      PluginLog.Debug(
-          "Registering TalkSubtitle addon listeners for translation.");
-
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreSetup,
-          "TalkSubtitle",
-          this.UiTalkSubtitleAsyncHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRefresh,
-          "TalkSubtitle",
-          this.UiTalkSubtitleAsyncHandler);
-    }
 
     if (this.configuration.TranslateJournal)
     {
@@ -1077,7 +1092,7 @@ public partial class Echoglossian : IDalamudPlugin
         AddonLifecycle,
         "Talk",
         lifecycleLogEventsWithoutUpdatesAndDraws);
-    AddonLifecycleExtensions.LogAddon(
+      AddonLifecycleExtensions.LogAddon(
         AddonLifecycle,
         "_BattleTalk",
         lifecycleLogEventsWithoutUpdatesAndDraws);

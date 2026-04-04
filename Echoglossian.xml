@@ -269,6 +269,9 @@
                Controls whether the translations should only be displayed as overlays because of missing native game font support for the selected language.
             </summary>
         </member>
+        <member name="F:Echoglossian.Config.TextGimmickHintBackgroundOpacity">
+            <summary>Background opacity used by Text Gimmick Hint overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.OverlayWideTextToastTextColor">
             <summary>Text color used by Screen Info (_WideText) toast overlays.</summary>
         </member>
@@ -334,6 +337,9 @@
         </member>
         <member name="F:Echoglossian.Config.TalkSubtitleForceShowTitle">
             <summary>Always show the Talk Subtitle overlay title bar.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TextGimmickHintFontScale">
+            <summary>Font scale used for Text Gimmick Hint overlay.</summary>
         </member>
         <member name="F:Echoglossian.Config.ToastFontScale">
             <summary>Font scale used for Toast overlay.</summary>
@@ -431,6 +437,9 @@
         <member name="F:Echoglossian.Config.TranslateTalkSubtitle">
             <summary>Translate Talk Subtitle messages.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateTextGimmickHint">
+            <summary>Translate Text Gimmick Hint messages.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateToast">
             <summary>Translate toast popup messages.</summary>
         </member>
@@ -457,6 +466,9 @@
         </member>
         <member name="F:Echoglossian.Config.UseImGuiForTalkSubtitle">
             <summary>Use ImGui for Talk Subtitle overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForTextGimmickHint">
+            <summary>Use ImGui for Text Gimmick Hint overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.UseImGuiForToasts">
             <summary>Use ImGui for toast messages.</summary>
@@ -633,6 +645,13 @@
             <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be found in the database</param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnTextGimmickHintMessage(Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage)">
+            <summary>
+            Finds and returns a TextGimmickHintMessage from the database.
+            </summary>
+            <param name="textGimmickHintMessage">Formatted TextGimmickHintMessage to be found in the database</param>
+            <returns></returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FindAndReturnGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
             Finds and returns a GameWindow from the database.
@@ -659,6 +678,13 @@
             Inserts a TalkSubtitleMessage record into the database.
             </summary>
             <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertTextGimmickHintData(Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage)">
+            <summary>
+            Inserts a TextGimmickHintMessage record into the database.
+            </summary>
+            <param name="textGimmickHintMessage">Formatted TextGimmickHintMessage to be inserted into the database</param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
@@ -775,6 +801,13 @@
             <param name="sender">Message sender name.</param>
             <param name="text">Message text.</param>
             <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatTextGimmickHintMessage(System.String)">
+            <summary>
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" /> for the database.
+            </summary>
+            <param name="text">The original text gimmick hint message.</param>
+            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" />.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatGameWindow(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
@@ -962,6 +995,13 @@
             "_TextClassChange" addon instance received from AddonLifecycle.
             </summary>
             <param name="addon">The live "_TextClassChange" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncTextGimmickHintToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the text gimmick hint overlay bounds using a live addon instance
+            received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_TextGimmickHint" addon.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
             <summary>
@@ -1688,6 +1728,12 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.fixNewEntity24052025.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddTextGimmickHintMessage.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddTextGimmickHintMessage.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -2677,6 +2723,71 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage">
+            <summary>
+                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" /> to be handled via
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" /> class.
+            </summary>
+            <param name="originalText">The original text gimmick hint message.</param>
+            <param name="originalLang">The language of the original message.</param>
+            <param name="translatedText">The translated gimmick hint message.</param>
+            <param name="translationLang">The language of the translated message.</param>
+            <param name="translationEngine">The translation engine used.</param>
+            <param name="createdDate">The date the message was created.</param>
+            <param name="updatedDate">The date the message was last updated.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.#ctor">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" /> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage.SetGameVersion(System.String)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ToastMessage">
@@ -3699,6 +3810,216 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler">
+            <summary>
+                Handles the TalkSubtitle addon runtime inside the new addon-handler model.
+                TalkSubtitle is driven from addon lifecycle events rather than the legacy
+                handler so it can reuse the same cache-first, async translation pipeline as
+                Talk and BattleTalk while keeping the subtitle overlay independent.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage,Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage},System.Func{Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findTalkSubtitleMessage">
+                Delegate used to look up previously translated TalkSubtitle messages.
+            </param>
+            <param name="insertTalkSubtitleMessageAsync">
+                Delegate used to persist translated TalkSubtitle messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the TalkSubtitle overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the TalkSubtitle overlay state.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the TalkSubtitle addon flow.
+            </summary>
+            <returns>
+                A dictionary mapping addon events to combined delegates.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.OnCaptureTalkSubtitle(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Captures TalkSubtitle source text early in the lifecycle so a translation
+                can already be queued before the first draw pass completes.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.OnApplyNativeTalkSubtitleText(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Applies translated TalkSubtitle text to the visible addon when the native
+                replacement path is active.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears the in-memory TalkSubtitle state when the addon hides or is finalized.
+            </summary>
+            <param name="type">The lifecycle event that triggered the reset.</param>
+            <param name="args">The addon arguments associated with the reset.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ResolveTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves a TalkSubtitle translation without blocking the game UI and
+                persists the result for future cache hits.
+            </summary>
+            <param name="originalText">The original TalkSubtitle text.</param>
+            <param name="requestId">The request identifier used to reject stale updates.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TryGetCachedTranslation(System.String,System.String@,System.String@)">
+            <summary>
+                Determines whether the current captured source still has a cached
+                translation.
+            </summary>
+            <param name="originalText">The source TalkSubtitle text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when a matching cached translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TryLoadStoredTranslation(System.String,System.String@,System.String@)">
+            <summary>
+                Attempts to load a stored TalkSubtitle translation from the database.
+            </summary>
+            <param name="originalText">The source TalkSubtitle text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when a stored translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@)">
+            <summary>
+                Returns the active resolved translation currently held by the handler
+                state.
+            </summary>
+            <param name="translatedText">Receives the translated TalkSubtitle text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when the handler already has a translated line;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TryQueueTranslation(System.String,System.Int32@)">
+            <summary>
+                Starts a new translation request when the source line changes or when
+                the current line still has no cached translation available.
+            </summary>
+            <param name="originalText">The source TalkSubtitle text.</param>
+            <param name="requestId">Receives the active request identifier.</param>
+            <returns>
+                <see langword="true" /> when a new translation task should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.SetResolvedState(System.String,System.String,System.String)">
+            <summary>
+                Sets the resolved in-memory state for the current TalkSubtitle line.
+            </summary>
+            <param name="originalText">The original TalkSubtitle text.</param>
+            <param name="translatedText">The translated TalkSubtitle text.</param>
+            <param name="replacementText">The translated text normalized for native replacement.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.PublishOverlay(System.String,System.String)">
+            <summary>
+                Publishes translated TalkSubtitle content to the configured overlay when
+                overlay mode is enabled.
+            </summary>
+            <param name="originalText">The original TalkSubtitle text.</param>
+            <param name="translatedText">The translated TalkSubtitle text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ShouldUseOverlay">
+            <summary>
+                Determines whether this TalkSubtitle request should render through the
+                overlay path.
+            </summary>
+            <returns>
+                <see langword="true" /> when the overlay path is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ShouldApplyNativeTalkSubtitleText">
+            <summary>
+                Determines whether the TalkSubtitle addon should receive translated text
+                directly in the game UI.
+            </summary>
+            <returns>
+                <see langword="true" /> when the addon should be replaced natively;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.BuildLookupMessage(System.String)">
+            <summary>
+                Builds a lookup entity matching the historical TalkSubtitle schema
+                already used in the database.
+            </summary>
+            <param name="originalText">The original TalkSubtitle text.</param>
+            <returns>
+                A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage" /> suitable for DB lookup.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated TalkSubtitle text before native replacement when
+                the active config requests diacritic stripping.
+            </summary>
+            <param name="text">The translated TalkSubtitle text to normalize.</param>
+            <returns>The text that should be written back into the native addon.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ReadNodeText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the current string value from a TalkSubtitle text node.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The visible node text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TextMatches(System.String,System.String)">
+            <summary>
+                Compares two rendered text values after normalizing spacing and the
+                optional diacritic removal rules used for native replacement.
+            </summary>
+            <param name="left">The first text value.</param>
+            <param name="right">The second text value.</param>
+            <returns><see langword="true" /> when the texts should be considered equal.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.NormalizeForComparison(System.String)">
+            <summary>
+                Normalizes text for comparison against native node values.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized text value.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ClearOverlayForPendingState(System.String)">
+            <summary>
+                Publishes the original TalkSubtitle line while a translation is still in
+                flight so swap mode does not leave the overlay blank.
+            </summary>
+            <param name="originalText">The original TalkSubtitle text.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate">
             <summary>
                 Delegate used to update toast overlay bounds from a live addon instance.
@@ -4172,6 +4493,255 @@
                 <see langword="true" /> when quest toasts should render in an overlay;
                 otherwise, <see langword="false" />.
             </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler">
+            <summary>
+                Handles the "_TextGimmickHint" addon runtime inside the new
+                addon-handler model.
+                This implementation follows the same AddonLifecycle-first toast pattern
+                used by the other toast runtimes, adapted from the public
+                RaptureAtkModule.ShowTextGimmickHint signature in FFXIVClientStructs and
+                the TextGimmickHint.uld layout referenced by other open-source Dalamud
+                tooling.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage,Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage},System.Func{Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler" />
+                class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findTextGimmickHintMessage">
+                Delegate used to look up previously translated gimmick-hint messages.
+            </param>
+            <param name="insertTextGimmickHintMessageAsync">
+                Delegate used to persist translated gimmick-hint messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the gimmick-hint overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the gimmick-hint overlay state.
+            </param>
+            <param name="updateOverlayBounds">
+                Delegate used to update the gimmick-hint overlay bounds from the current
+                live addon instance.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the gimmick-hint addon flow.
+            </summary>
+            <returns>
+                A dictionary mapping addon events to combined delegates.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.OnPreUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Captures TextGimmickHint source text early in the lifecycle so a
+                translation can already be queued before the first draw pass completes.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.OnUpdateVisibleAddon(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Updates overlay bounds for the visible gimmick-hint addon and applies
+                translated text to the native addon when replacement mode is enabled.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the update or draw.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears the in-memory gimmick-hint state when the addon hides or is finalized.
+            </summary>
+            <param name="type">The lifecycle event that triggered the reset.</param>
+            <param name="args">The addon arguments associated with the reset.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ResolveTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves a gimmick-hint translation without blocking the game UI and
+                persists the result for future cache hits.
+            </summary>
+            <param name="originalText">The original gimmick-hint text.</param>
+            <param name="requestId">The request identifier used to reject stale updates.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryGetCachedTranslation(System.String,System.String@,System.String@)">
+            <summary>
+                Determines whether the current captured source still has a cached
+                translation.
+            </summary>
+            <param name="originalText">The source gimmick-hint text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when a matching cached translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryLoadStoredTranslation(System.String,System.String@,System.String@)">
+            <summary>
+                Attempts to load a stored gimmick-hint translation from the database.
+            </summary>
+            <param name="originalText">The source gimmick-hint text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when a stored translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage,System.String)">
+            <summary>
+                Determines whether a stored gimmick-hint row still represents a usable
+                translation for the current source line.
+            </summary>
+            <param name="textGimmickHintMessage">The stored gimmick-hint row to validate.</param>
+            <param name="originalText">The expected original gimmick-hint text.</param>
+            <returns>
+                <see langword="true" /> when the stored row contains a non-empty
+                translation for the same source line; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@)">
+            <summary>
+                Returns the active resolved translation currently held by the handler
+                state.
+            </summary>
+            <param name="translatedText">Receives the translated gimmick-hint text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when the handler already has a translated line;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryQueueTranslation(System.String,System.Int32@)">
+            <summary>
+                Starts a new translation request when the source line changes or when
+                the current line still has no cached translation available.
+            </summary>
+            <param name="originalText">The source gimmick-hint text.</param>
+            <param name="requestId">Receives the active request identifier.</param>
+            <returns>
+                <see langword="true" /> when a new translation task should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.SetResolvedState(System.String,System.String,System.String)">
+            <summary>
+                Sets the resolved in-memory state for the current gimmick-hint line.
+            </summary>
+            <param name="originalText">The original gimmick-hint text.</param>
+            <param name="translatedText">The translated gimmick-hint text.</param>
+            <param name="replacementText">
+                The translated text normalized for native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.PublishOverlay(System.String)">
+            <summary>
+                Publishes translated gimmick-hint content to the configured overlay when
+                overlay mode is enabled.
+            </summary>
+            <param name="translatedText">The translated gimmick-hint text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ShouldUseOverlay">
+            <summary>
+                Determines whether this gimmick-hint request should render through the
+                overlay path.
+            </summary>
+            <returns>
+                <see langword="true" /> when the overlay path is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ShouldApplyNativeText">
+            <summary>
+                Determines whether the TextGimmickHint addon should receive translated
+                text directly in the game UI.
+            </summary>
+            <returns>
+                <see langword="true" /> when the addon should be replaced natively;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ShouldHandleTextGimmickHint(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Determines whether the current callback should handle the configured
+                TextGimmickHint addon instance.
+            </summary>
+            <param name="args">The addon arguments associated with the callback.</param>
+            <param name="addon">Receives the visible addon instance.</param>
+            <returns>
+                <see langword="true" /> when the callback is for a visible
+                TextGimmickHint addon; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.BuildLookupMessage(System.String)">
+            <summary>
+                Builds a lookup entity matching the historical TextGimmickHint schema
+                already used by the plugin database.
+            </summary>
+            <param name="originalText">The original gimmick-hint text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" /> for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the current string value from a gimmick-hint text node.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The visible node text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryReadCurrentSource(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Reads the logical source text from the live gadget-hint addon, mapping
+                the visible translated replacement back to the original source line when
+                needed.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the logical original text.</param>
+            <returns>
+                <see langword="true" /> when readable text is available; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TextMatches(System.String,System.String)">
+            <summary>
+                Compares text values after normalizing spacing and the optional
+                diacritic removal rules used for native replacement.
+            </summary>
+            <param name="left">The first text value.</param>
+            <param name="right">The second text value.</param>
+            <returns>
+                <see langword="true" /> when the texts should be considered equal.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.NormalizeForComparison(System.String)">
+            <summary>
+                Normalizes text for comparison against native node values.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized text value.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated text before native replacement when the active
+                config requests diacritic stripping.
+            </summary>
+            <param name="text">The translated text to normalize.</param>
+            <returns>The text that should be written back into the native addon.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers">
             <summary>
@@ -4936,6 +5506,13 @@
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.Draw(Echoglossian.Config)">
             <summary>
                 Draws the full Overlay tab with vertical sub-tabs.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawSubtitleOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
+            <summary>
+                Draws the TalkSubtitle overlay settings without exposing a title bar
+                toggle. TalkSubtitle windows are intentionally titleless so the
+                configuration only controls style and placement.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Boolean@,System.Int64@)">
@@ -6562,6 +7139,13 @@
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigTalkSubtitle(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for talk subtitle translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTextGimmickHint(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for text gimmick hint translations.
             </summary>
             <param name="config"></param>
             <returns></returns>
