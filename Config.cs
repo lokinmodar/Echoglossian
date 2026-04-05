@@ -126,66 +126,66 @@ public class Config : IPluginConfiguration
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiBattleTalkWindowPosCorrection = new(0, 0);
 
-  [DefaultValue(1.5f)] public float ImGuiBattleTalkWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiBattleTalkWindowWidthMult = 1.0f;
 
   [DefaultValue(1f)] public float ImGuiTalkSubtitleWindowHeightMult = 1f;
 
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiTalkSubtitleWindowPosCorrection = new(0, 0);
 
-  [DefaultValue(1.5f)] public float ImGuiTalkSubtitleWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiTalkSubtitleWindowWidthMult = 1.0f;
 
   [DefaultValue(1f)] public float ImGuiTextGimmickHintWindowHeightMult = 1f;
 
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiTextGimmickHintWindowPosCorrection = new(0, 0);
 
-  [DefaultValue(1.5f)] public float ImGuiTextGimmickHintWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiTextGimmickHintWindowWidthMult = 1.0f;
 
   [DefaultValue(1f)] public float ImGuiTalkWindowHeightMult = 1f;
 
   /// <summary>Width multiplier for Talk ImGui overlay window.</summary>
-  [DefaultValue(1.5f)] public float ImGuiTalkWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiTalkWindowWidthMult = 1.0f;
 
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiToastWindowPosCorrection = new(0, 0);
 
-  [DefaultValue(1.5f)] public float ImGuiToastWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiToastWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for Screen Info (_WideText) toast overlays.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiWideTextToastWindowPosCorrection = new(0, 0);
 
   /// <summary>Width multiplier for Screen Info (_WideText) toast overlays.</summary>
-  [DefaultValue(1.5f)] public float ImGuiWideTextToastWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiWideTextToastWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for Error toast overlays.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiErrorToastWindowPosCorrection = new(0, 0);
 
   /// <summary>Width multiplier for Error toast overlays.</summary>
-  [DefaultValue(1.5f)] public float ImGuiErrorToastWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiErrorToastWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for Area toast overlays.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiAreaToastWindowPosCorrection = new(0, 0);
 
   /// <summary>Width multiplier for Area toast overlays.</summary>
-  [DefaultValue(1.5f)] public float ImGuiAreaToastWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiAreaToastWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for Class/Job change toast overlays.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiClassChangeToastWindowPosCorrection = new(0, 0);
 
   /// <summary>Width multiplier for Class/Job change toast overlays.</summary>
-  [DefaultValue(1.5f)] public float ImGuiClassChangeToastWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiClassChangeToastWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for Quest toast overlays.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiQuestToastWindowPosCorrection = new(0, 0);
 
   /// <summary>Width multiplier for Quest toast overlays.</summary>
-  [DefaultValue(1.5f)] public float ImGuiQuestToastWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiQuestToastWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for ImGui overlay windows.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
@@ -382,10 +382,28 @@ public class Config : IPluginConfiguration
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiMiniTalkWindowPosCorrection = new(0, 0);
 
-  [DefaultValue(1.5f)] public float ImGuiMiniTalkWindowWidthMult = 1.5f;
+  [DefaultValue(1.0f)] public float ImGuiMiniTalkWindowWidthMult = 1.0f;
 
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 OverlayMiniTalkTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Use ImGui for CutSceneSelectString overlays.</summary>
+  [DefaultValue(false)] public bool UseImGuiForCutSceneSelectString = false;
+
+  /// <summary>Font scale used for CutSceneSelectString overlays.</summary>
+  [DefaultValue(1f)] public float CutSceneSelectStringFontScale = 1f;
+
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiCutSceneSelectStringWindowPosCorrection = new(0, 0);
+
+  [DefaultValue(1.0f)]
+  public float ImGuiCutSceneSelectStringWindowWidthMult = 1.0f;
+
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayCutSceneSelectStringTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Background opacity used for CutSceneSelectString overlays.</summary>
+  [DefaultValue(1f)] public float CutSceneSelectStringBackgroundOpacity = 1f;
 
   /// <summary>Always show the Talk Subtitle overlay title bar.</summary>
   [DefaultValue(false)] public bool TalkSubtitleForceShowTitle = false;

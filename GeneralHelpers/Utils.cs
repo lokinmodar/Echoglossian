@@ -717,5 +717,82 @@ public partial class Echoglossian
     return result;
   }
 
+  /// <summary>
+  ///     Builds one or more translation chunks using stable numeric indices so
+  ///     the translation response can be parsed back into indexed entries.
+  /// </summary>
+  /// <param name="entries">The ordered entries to batch.</param>
+  /// <param name="maxChunkLength">The maximum chunk length before splitting.</param>
+  /// <returns>The serialized translation chunks.</returns>
+  public static List<string> BuildIndexedTranslationChunks(
+      IReadOnlyList<(int Index, string Text)> entries,
+      int maxChunkLength = 4000)
+  {
+    var chunks = new List<string>();
+    if (entries.Count == 0)
+    {
+      return chunks;
+    }
+
+    var builder = new StringBuilder();
+    foreach (var (index, text) in entries)
+    {
+      var pair = $"{index}|{text}";
+      if (builder.Length > 0 &&
+          builder.Length + pair.Length + 1 > maxChunkLength)
+      {
+        chunks.Add(builder.ToString());
+        builder.Clear();
+      }
+
+      if (builder.Length > 0)
+      {
+        builder.Append('|');
+      }
+
+      builder.Append(pair);
+    }
+
+    if (builder.Length > 0)
+    {
+      chunks.Add(builder.ToString());
+    }
+
+    return chunks;
+  }
+
+  /// <summary>
+  ///     Parses translated indexed entries encoded as "index|value|index|value|...".
+  /// </summary>
+  /// <param name="input">The translated payload.</param>
+  /// <returns>A dictionary mapping indices to translated strings.</returns>
+  public static Dictionary<int, string> ParseIndexedTranslationPairs(string input)
+  {
+    var result = new Dictionary<int, string>();
+
+    if (string.IsNullOrWhiteSpace(input))
+    {
+      return result;
+    }
+
+    var parts = input.Split('|');
+    if (parts.Length < 2)
+    {
+      return result;
+    }
+
+    for (var i = 0; i + 1 < parts.Length; i += 2)
+    {
+      if (!int.TryParse(parts[i], out var index))
+      {
+        continue;
+      }
+
+      result[index] = parts[i + 1];
+    }
+
+    return result;
+  }
+
 
 }

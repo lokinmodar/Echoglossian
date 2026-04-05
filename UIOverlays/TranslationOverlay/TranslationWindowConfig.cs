@@ -102,6 +102,27 @@ internal record TranslationWindowConfig(
   }
 
   /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for CutSceneSelectString overlays.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForCutSceneSelectString(Config config)
+  {
+    return new TranslationWindowConfig(
+        DefaultTitle: "CutSceneSelectString translation",
+        FontScale: config.CutSceneSelectStringFontScale,
+        WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
+        HeightMultiplier: 1.5f,
+        TextColor: new Vector4(config.OverlayCutSceneSelectStringTextColor.X, config.OverlayCutSceneSelectStringTextColor.Y, config.OverlayCutSceneSelectStringTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiCutSceneSelectStringWindowPosCorrection,
+        ForceShowTitle: true,
+        BackgroundOpacity: config.CutSceneSelectStringBackgroundOpacity,
+        NoBackground: config.CutSceneSelectStringBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
   /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for text gimmick hint translations.
   /// </summary>
   /// <param name="config"></param>

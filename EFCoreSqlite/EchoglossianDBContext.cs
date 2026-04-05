@@ -81,6 +81,15 @@ public class EchoglossianDbContext : DbContext
     modelBuilder.Entity<ActionTooltip>().ToTable("actiontooltips");
     modelBuilder.Entity<ItemTooltip>().ToTable("itemtooltips");
     modelBuilder.Entity<SelectString>().ToTable("selectstrings");
+    modelBuilder.Entity<SelectString>()
+        .HasIndex(s => new
+        {
+          s.OriginalSelectString,
+          s.OriginalOptionsAsText,
+          s.TranslationLang,
+          s.TranslationEngine
+        })
+        .HasDatabaseName("IX_selectstrings_lookup");
     modelBuilder.Entity<GameWindow>().ToTable("gamewindows");
     modelBuilder.Entity<GameWindow>()
         .HasIndex(g => new

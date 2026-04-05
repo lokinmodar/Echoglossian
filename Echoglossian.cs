@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian;
 
@@ -429,6 +430,8 @@ public partial class Echoglossian : IDalamudPlugin
   /// <param name="disposing">Indicates whether the method was called from managed code.</param>
   protected virtual void Dispose(bool disposing)
   {
+    AddonLifecycle.UnLogAddon("CutSceneSelectString");
+
     this.addonProbeWatch?.Dispose();
     this.addonProbeWatch = null;
 
@@ -462,6 +465,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.toastOverlay.Dispose();
     this.errorToastOverlay.Dispose();
     this.chatBubbleOverlay.Dispose();
+    this.cutSceneSelectStringOverlay.Dispose();
     this.DisposeMiniTalkBubbleOverlays();
 
     // ClientStateInterface.Login -= this.StringArrayDataHandler.LoadAndTranslateStringArrayDatas;
@@ -569,6 +573,7 @@ public partial class Echoglossian : IDalamudPlugin
             this.configuration.UseImGuiForBattleTalk ||
             this.configuration.OverlayOnlyLanguage ||
             this.configuration.UseImGuiForMiniTalk ||
+            this.configuration.UseImGuiForCutSceneSelectString ||
             this.configuration.UseImGuiForWideTextToast ||
             this.configuration.UseImGuiForErrorToast ||
             this.configuration.UseImGuiForAreaToast ||
@@ -973,6 +978,38 @@ public partial class Echoglossian : IDalamudPlugin
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateCutSceneSelectString)
+    {
+      PluginLog.Debug(
+          $"[Echoglossian] Registering CutSceneSelectString handler " +
+          $"overlay={this.configuration.UseImGuiForCutSceneSelectString} " +
+          $"swap={this.configuration.SwapTextsUsingImGui}");
+      this.registeredAddonHandlers.Add(
+          (AddonName: "CutSceneSelectString",
+              Handler: new CutSceneSelectStringHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnCutSceneSelectStringMessage,
+                  selectString => Task.Run(
+                      () => InsertCutSceneSelectStringData(selectString)),
+                  (translatedQuestion, translatedOptions, originalQuestion) =>
+                      this.UpdateOverlayContent(
+                          this.cutSceneSelectStringOverlay,
+                          translatedQuestion,
+                          translatedOptions,
+                          originalQuestion),
+                  () => this.ClearOverlay(
+                      this.cutSceneSelectStringOverlay,
+                      clearText: true),
+                  addon => this.UpdateOverlayBounds(
+                      this.cutSceneSelectStringOverlay,
+                      addon),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+      PluginLog.Debug("[Echoglossian] CutSceneSelectString handler registered");
     }
 
     if (this.configuration.TranslateToast &&

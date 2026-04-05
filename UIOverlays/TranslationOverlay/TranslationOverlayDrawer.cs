@@ -8,7 +8,9 @@ namespace Echoglossian
   public partial class Echoglossian
   {
     private readonly Dictionary<nint, TranslationOverlay> miniTalkBubbleOverlays = new();
+    private readonly Dictionary<TranslationOverlay, int> overlayRenderTraceVersions = new();
     private readonly object miniTalkBubbleOverlaysGate = new();
+    private readonly object overlayRenderTraceGate = new();
 
     /// <summary>
     /// Updates an overlay with translated content.
@@ -28,6 +30,7 @@ namespace Echoglossian
       overlay.NameSemaphore.Wait();
       overlay.OriginalName = originalName ?? string.Empty;
       overlay.CurrentName = translatedName ?? string.Empty;
+      overlay.CurrentNameId++;
 
       overlay.NameSemaphore.Release();
 
@@ -35,6 +38,7 @@ namespace Echoglossian
       overlay.CurrentText =
           hasValidText ? translatedText : Resources.WaitingForTranslation;
       overlay.Display = hasValidText;
+      overlay.CurrentTextId++;
       overlay.Semaphore.Release();
     }
 
@@ -182,6 +186,22 @@ namespace Echoglossian
     }
 
     /// <summary>
+    /// Splits overlay text into individual render lines while preserving empty
+    /// lines as spacing markers.
+    /// </summary>
+    /// <param name="text">The overlay text to split.</param>
+    /// <returns>The individual lines to render.</returns>
+    private static string[] SplitOverlayTextLines(string text)
+    {
+      if (string.IsNullOrEmpty(text))
+      {
+        return [];
+      }
+
+      return text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+    }
+
+    /// <summary>
     /// Updates the overlay bounds for a single MiniTalk bubble instance.
     /// </summary>
     /// <param name="bubbleKey">Stable key for the visible bubble instance.</param>
@@ -242,11 +262,33 @@ namespace Echoglossian
         TranslationOverlay overlay,
         int index = 1)
     {
-      // PluginLog.Debug($"StartOverlayTracking: {addonName}");
       var addonPtr = GameGuiInterface.GetAddonByName(addonName, index);
       if (addonPtr.Address == IntPtr.Zero)
       {
-        // PluginLog.Debug($"StartOverlayTracking: {addonName} not found.");
+        var manager = RaptureAtkUnitManager.Instance();
+        if (manager != null)
+        {
+          foreach (var unit in manager->AllLoadedUnitsList.Entries)
+          {
+            var unitPtr = unit.Value;
+            if (unitPtr == null ||
+                !unitPtr->IsReady ||
+                !string.Equals(
+                    unitPtr->NameString,
+                    addonName,
+                    StringComparison.Ordinal))
+            {
+              continue;
+            }
+
+            addonPtr = (nint)unitPtr;
+            break;
+          }
+        }
+      }
+
+      if (addonPtr.Address == IntPtr.Zero)
+      {
         this.ClearOverlay(overlay);
         return false;
       }
@@ -439,7 +481,8 @@ namespace Echoglossian
       }
 
       overlay.Semaphore.Wait();
-      bool shouldDraw = !string.IsNullOrEmpty(overlay.CurrentText) && overlay.CurrentText != Resources.WaitingForTranslation;
+      var overlayText = overlay.CurrentText;
+      bool shouldDraw = !string.IsNullOrEmpty(overlayText) && overlayText != Resources.WaitingForTranslation;
       overlay.Semaphore.Release();
 
       if (!shouldDraw)
@@ -474,7 +517,10 @@ namespace Echoglossian
       var viewportWidth = ImGui.GetMainViewport().Size.X;
       var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2;
       var baseWidth = overlay.Dimensions.X * config.WidthMultiplier;
-      var textWidth = ImGui.CalcTextSize(overlay.CurrentText).X + horizontalPadding;
+      var overlayTextLines = SplitOverlayTextLines(overlayText);
+      var textWidth = overlayTextLines.Length == 0
+          ? ImGui.CalcTextSize(overlayText).X + horizontalPadding
+          : overlayTextLines.Max(line => ImGui.CalcTextSize(line).X) + horizontalPadding;
       var defaultMaxWidth = Math.Max(320f, viewportWidth - 80f);
       var minWidth = config.MinWidthViewportFraction > 0.0f
           ? viewportWidth * config.MinWidthViewportFraction
@@ -559,10 +605,20 @@ namespace Echoglossian
       var renderedWindowPos = ImGui.GetWindowPos();
 
       overlay.Semaphore.Wait();
-      ImGui.TextWrapped(overlay.CurrentText);
+      foreach (var line in overlayTextLines)
+      {
+        if (string.IsNullOrEmpty(line))
+        {
+          ImGui.Spacing();
+          continue;
+        }
+
+        ImGui.TextWrapped(line);
+      }
       overlay.Semaphore.Release();
 
       overlay.ImGuiSize = ImGui.GetWindowSize();
+      this.TraceOverlayRenderOnce(config, overlay, windowLabel, renderedWindowPos, textWidth, width);
       if (config.DefaultTitle.StartsWith("Screen Info", StringComparison.OrdinalIgnoreCase))
       {
         // PluginLog.Debug(
@@ -588,6 +644,41 @@ namespace Echoglossian
       {
         UINewFontHandler.LanguageFontHandle.Pop();
       }
+    }
+
+    /// <summary>
+    /// Logs CutSceneSelectString overlay renders once per content version.
+    /// </summary>
+    private void TraceOverlayRenderOnce(
+        TranslationWindowConfig config,
+        TranslationOverlay overlay,
+        string windowLabel,
+        Vector2 renderedWindowPos,
+        float textWidth,
+        float windowWidth)
+    {
+      if (!config.DefaultTitle.Contains("CutSceneSelectString", StringComparison.OrdinalIgnoreCase))
+      {
+        return;
+      }
+
+      lock (this.overlayRenderTraceGate)
+      {
+        if (this.overlayRenderTraceVersions.TryGetValue(overlay, out var lastVersion) &&
+            lastVersion == overlay.CurrentTextId)
+        {
+          return;
+        }
+
+        this.overlayRenderTraceVersions[overlay] = overlay.CurrentTextId;
+      }
+
+      PluginLog.Debug(
+          $"[CutSceneSelectStringOverlay] rendered '{windowLabel}' version={overlay.CurrentTextId} " +
+          $"at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) " +
+          $"size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##}) " +
+          $"contentWidth={textWidth:0.##} windowWidth={windowWidth:0.##} " +
+          $"overlayPos=({overlay.Position.X:0.##}, {overlay.Position.Y:0.##})");
     }
   }
 }

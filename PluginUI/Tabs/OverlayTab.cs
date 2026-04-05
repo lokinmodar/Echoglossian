@@ -21,6 +21,7 @@ public static class OverlayTab
         Resources.ToastTabTitle,
         Resources.SubtitleTabTitle,
         "MiniTalk",
+        "CutSceneSelectString",
         Resources.ConfigTab4Name,
         Resources.OtherUIElementsTabTitle,
     };
@@ -87,9 +88,12 @@ public static class OverlayTab
                 changed |= DrawMiniTalkOverlay(config);
                 break;
             case 5:
-                changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
+                changed |= DrawCutSceneSelectStringOverlay(config);
                 break;
             case 6:
+                changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
+                break;
+            case 7:
                 changed |= OtherUIElementsSettingsTab.Draw(config);
                 break;
         }
@@ -580,6 +584,72 @@ public static class OverlayTab
         }
 
         if (!config.OverlayOnlyLanguage && config.UseImGuiForMiniTalk)
+        {
+            changed |= ImGui.Checkbox(
+                Resources.SwapTranslationTextToggle,
+                ref config.SwapTextsUsingImGui);
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the CutSceneSelectString overlay settings. The question becomes
+    ///     the title bar and the options are rendered as a multiline body.
+    /// </summary>
+    private static bool DrawCutSceneSelectStringOverlay(Config config)
+    {
+        var changed = false;
+
+        using var scrollingChildCutSceneSelectString = ImRaii.Child(
+            "CutSceneSelectStringOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildCutSceneSelectString)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateCutSceneSelectStringLabel,
+            ref config.TranslateCutSceneSelectString);
+
+        if (!config.TranslateCutSceneSelectString)
+        {
+            return changed;
+        }
+
+        if (config.OverlayOnlyLanguage)
+        {
+            changed |= AssignIfChanged(
+                ref config.UseImGuiForCutSceneSelectString,
+                true);
+            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
+        }
+        else
+        {
+            changed |= ImGui.Checkbox(
+                Resources.OverlayToggleLabel,
+                ref config.UseImGuiForCutSceneSelectString);
+        }
+
+        if (config.UseImGuiForCutSceneSelectString)
+        {
+            changed |= DrawToastOverlaySettings(
+                ref config.CutSceneSelectStringFontScale,
+                ref config.ImGuiCutSceneSelectStringWindowWidthMult,
+                ref config.ImGuiCutSceneSelectStringWindowPosCorrection,
+                ref config.OverlayCutSceneSelectStringTextColor,
+                ref config.CutSceneSelectStringBackgroundOpacity,
+                ref config.FontChangeTime);
+            ImGui.TextWrapped(
+                "The question is used as the window title and the options are rendered one per line.");
+        }
+
+        if (!config.OverlayOnlyLanguage &&
+            config.UseImGuiForCutSceneSelectString)
         {
             changed |= ImGui.Checkbox(
                 Resources.SwapTranslationTextToggle,

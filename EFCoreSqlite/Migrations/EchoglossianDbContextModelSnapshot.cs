@@ -339,10 +339,16 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<string>("OriginalSelectStringLang")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("OriginalOptionsAsText")
+                        .HasColumnType("TEXT");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
+
+                    b.Property<string>("TranslatedOptionsAsText")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TranslatedSelectString")
                         .HasColumnType("TEXT");
@@ -357,6 +363,9 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OriginalSelectString", "OriginalOptionsAsText", "TranslationLang", "TranslationEngine")
+                        .HasDatabaseName("IX_selectstrings_lookup");
 
                     b.ToTable("selectstrings", (string)null);
                 });

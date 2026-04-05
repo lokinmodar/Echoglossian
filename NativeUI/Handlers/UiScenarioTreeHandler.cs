@@ -32,8 +32,8 @@ public partial class Echoglossian
         if (foundQuestPlate != null)
         {
 #if DEBUG
-            PluginLog.Debug(
-                $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
+            // PluginLog.Debug(
+            //     $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
             var translatedQuestName = foundQuestPlate.TranslatedQuestName;
 
@@ -50,8 +50,8 @@ public partial class Echoglossian
         {
             var translatedNameText = this.Translate(questNameText);
 #if DEBUG
-            PluginLog.Debug(
-                $"Name translated: {questNameText} -> {translatedNameText}");
+            // PluginLog.Debug(
+            //     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
             QuestPlate translatedQuestPlate = new(
                 questNameText,
@@ -67,8 +67,8 @@ public partial class Echoglossian
 
             var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-            PluginLog.Debug(
-                $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+            // PluginLog.Debug(
+            //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
             if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
             {

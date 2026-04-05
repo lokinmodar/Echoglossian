@@ -15,6 +15,7 @@ public partial class Echoglossian
     private readonly TranslationOverlay classChangeToastOverlay = new();
     private readonly TranslationOverlay chatBubbleOverlay = new();
     private readonly TranslationOverlay errorToastOverlay = new();
+    private readonly TranslationOverlay cutSceneSelectStringOverlay = new();
     private readonly TranslationOverlay textGimmickHintOverlay = new();
     private readonly TranslationOverlay questToastOverlay = new();
 
@@ -65,6 +66,19 @@ public partial class Echoglossian
                     this.configuration.UseImGuiForTalkSubtitle,
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon("TalkSubtitle", this.talkSubtitleOverlay)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.cutSceneSelectStringOverlay,
+                () => TranslationWindowConfig.FromConfigForCutSceneSelectString(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateCutSceneSelectString &&
+                    this.configuration.UseImGuiForCutSceneSelectString,
+                syncBeforeDraw: () =>
+                    this.TrySyncOverlayToAddon(
+                        "CutSceneSelectString",
+                        this.cutSceneSelectStringOverlay)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(

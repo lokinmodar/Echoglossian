@@ -109,6 +109,28 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Formats a <see cref="SelectString" /> for cutscene select-string storage.
+  /// </summary>
+  /// <param name="question">The original question/title text.</param>
+  /// <param name="options">The original options rendered by the addon.</param>
+  /// <returns>Returns <see cref="SelectString" />.</returns>
+  public SelectString FormatCutSceneSelectString(
+      string question,
+      List<string> options)
+  {
+    return new SelectString(
+        question,
+        ClientStateInterface.ClientLanguage.Humanize(),
+        JsonConvert.SerializeObject(options),
+        string.Empty,
+        string.Empty,
+        this.languagesDictionary[this.configuration.Lang].Code,
+        this.configuration.ChosenTransEngine,
+        DateTime.Now,
+        DateTime.Now);
+  }
+
+  /// <summary>
   ///     Formats a <see cref="GameWindow" />.
   /// </summary>
   /// <param name="windowAddonName"></param>

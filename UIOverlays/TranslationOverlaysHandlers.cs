@@ -153,7 +153,7 @@ public partial class Echoglossian
 
     var size = Math.Min(
         this.battleTalkTextDimensions.X *
-        this.configuration.ImGuiBattleTalkWindowWidthMult * 1.5f,
+        this.configuration.ImGuiBattleTalkWindowWidthMult,
         ImGui.CalcTextSize(this.currentBattleTalkTranslation).X +
         (ImGui.GetStyle().WindowPadding.X * 3));
     ImGui.SetNextWindowSizeConstraints(

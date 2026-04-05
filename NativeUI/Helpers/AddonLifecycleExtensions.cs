@@ -11,7 +11,8 @@ namespace Echoglossian.NativeUI.Helpers
   /// </summary>
   /// <remarks>These extension methods enable or disable logging for important phases in an add-on's lifecycle,
   /// such as setup, refresh, event reception, requested updates, and finalization. They are useful for monitoring and
-  /// debugging add-on behavior without interfering with other event listeners.</remarks>
+  /// debugging add-on behavior without interfering with other event listeners. When debugging addon behavior, prefer
+  /// this helper together with the addon structure probe instead of adding ad hoc logging inside feature handlers.</remarks>
 public static class AddonLifecycleExtensions
 {
     private static readonly AddonEvent[] DefaultLoggedEvents =

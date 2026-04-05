@@ -341,6 +341,15 @@
         <member name="F:Echoglossian.Config.MiniTalkBackgroundOpacity">
             <summary>Background opacity used for MiniTalk overlays.</summary>
         </member>
+        <member name="F:Echoglossian.Config.UseImGuiForCutSceneSelectString">
+            <summary>Use ImGui for CutSceneSelectString overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.CutSceneSelectStringFontScale">
+            <summary>Font scale used for CutSceneSelectString overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.CutSceneSelectStringBackgroundOpacity">
+            <summary>Background opacity used for CutSceneSelectString overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TalkSubtitleForceShowTitle">
             <summary>Always show the Talk Subtitle overlay title bar.</summary>
         </member>
@@ -671,6 +680,13 @@
             <param name="textGimmickHintMessage">Formatted TextGimmickHintMessage to be found in the database</param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnCutSceneSelectStringMessage(Echoglossian.EFCoreSqlite.Models.SelectString)">
+            <summary>
+            Finds and returns a SelectString from the database.
+            </summary>
+            <param name="selectString">Formatted SelectString to be found in the database.</param>
+            <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FindAndReturnGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
             Finds and returns a GameWindow from the database.
@@ -711,6 +727,13 @@
             Inserts a TextGimmickHintMessage record into the database.
             </summary>
             <param name="textGimmickHintMessage">Formatted TextGimmickHintMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertCutSceneSelectStringData(Echoglossian.EFCoreSqlite.Models.SelectString)">
+            <summary>
+            Inserts a SelectString record into the database.
+            </summary>
+            <param name="selectString">Formatted SelectString to be inserted into the database.</param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
@@ -834,6 +857,14 @@
             </summary>
             <param name="text">The original text gimmick hint message.</param>
             <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatCutSceneSelectString(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> for cutscene select-string storage.
+            </summary>
+            <param name="question">The original question/title text.</param>
+            <param name="options">The original options rendered by the addon.</param>
+            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" />.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatGameWindow(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
@@ -1219,6 +1250,22 @@
             <param name="input">The input string.</param>
             <returns>A dictionary mapping int indices to their respective string values.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.BuildIndexedTranslationChunks(System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Int32,System.String}},System.Int32)">
+            <summary>
+                Builds one or more translation chunks using stable numeric indices so
+                the translation response can be parsed back into indexed entries.
+            </summary>
+            <param name="entries">The ordered entries to batch.</param>
+            <param name="maxChunkLength">The maximum chunk length before splitting.</param>
+            <returns>The serialized translation chunks.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseIndexedTranslationPairs(System.String)">
+            <summary>
+                Parses translated indexed entries encoded as "index|value|index|value|...".
+            </summary>
+            <param name="input">The translated payload.</param>
+            <returns>A dictionary mapping indices to translated strings.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.UpdateTalkOverlay(System.String,System.String,System.String)">
             <summary>
             Handles the translation of the Talk addon messages asynchronously.
@@ -1382,6 +1429,14 @@
             <param name="overlay">Overlay whose bounds should be updated.</param>
             <param name="addon">Visible toast addon providing the current bounds.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.SplitOverlayTextLines(System.String)">
+            <summary>
+            Splits overlay text into individual render lines while preserving empty
+            lines as spacing markers.
+            </summary>
+            <param name="text">The overlay text to split.</param>
+            <returns>The individual lines to render.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.SyncMiniTalkBubbleOverlayBounds(System.IntPtr,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
             Updates the overlay bounds for a single MiniTalk bubble instance.
@@ -1445,6 +1500,11 @@
             <param name="overlay">Overlay to be drawn.</param>
             <param name="config">Overlay configurations.</param>
             <param name="customTitle">Custom overlay title.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TraceOverlayRenderOnce(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String,System.Numerics.Vector2,System.Single,System.Single)">
+            <summary>
+            Logs CutSceneSelectString overlay renders once per content version.
+            </summary>
         </member>
         <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
             <summary>
@@ -1839,6 +1899,12 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddMiniTalkMessage.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSelectStringOptions.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSelectStringOptions.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -2450,27 +2516,49 @@
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.SelectString">
             <summary>
-                Represents a select string in the database.
+                Represents a cutscene select-string dialog in the database.
             </summary>
             <summary>
                 Partial implementation of <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> to support generic
                 translation access via <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> class.
             </summary>
-            <param name="originalSelectString">The original select string.</param>
+            <param name="originalSelectString">The original question/title.</param>
             <param name="originalSelectStringLang">
-                The language of the original select
-                string.
+                The language of the original question/title.
             </param>
-            <param name="translatedSelectString">The translated select string.</param>
-            <param name="translationLang">The language of the translated select string.</param>
+            <param name="originalOptionsAsText">The original option list serialized as JSON.</param>
+            <param name="translatedSelectString">The translated question/title.</param>
+            <param name="translatedOptionsAsText">The translated option list serialized as JSON.</param>
+            <param name="translationLang">The language of the translated dialog.</param>
             <param name="translationEngine">The translation engine used.</param>
             <param name="createdDate">The date the record was created.</param>
             <param name="updatedDate">The date the record was last updated.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectString.OriginalOptions">
+            <summary>
+                Gets or sets the original options as a list of strings.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectString.TranslatedOptions">
+            <summary>
+                Gets or sets the translated options as a list of strings.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.UpdateFieldsAsText(System.Boolean)">
+            <summary>
+                Updates the serialized text fields from the current option lists.
+            </summary>
+            <param name="prettyPrint">Should the JSON be pretty printed?.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.UpdateFieldsFromText">
+            <summary>
+                Forces loading the option lists from the stored text fields.
+            </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetOriginalText">
             <inheritdoc />
@@ -3368,6 +3456,215 @@
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.SyncCutSceneSelectStringOverlayBoundsDelegate">
+            <summary>
+                Synchronizes the overlay bounds for the visible CutSceneSelectString addon.
+            </summary>
+            <param name="addon">The visible addon instance.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler">
+            <summary>
+                Handles the CutSceneSelectString addon runtime inside the new addon-handler model.
+                The first readable text node becomes the question/title and the remaining
+                text nodes become the selectable options.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.DialogState">
+            <summary>
+                In-memory state for the currently visible CutSceneSelectString dialog.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,Echoglossian.EFCoreSqlite.Models.SelectString},System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.SyncCutSceneSelectStringOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler" /> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the CutSceneSelectString addon flow.
+            </summary>
+            <returns>
+                A dictionary mapping addon events to combined delegates.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.OnCaptureDialog(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Captures CutSceneSelectString source text early in the lifecycle so a
+                translation can be queued before the first draw pass completes.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.OnUpdateVisibleAddon(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Updates the visible CutSceneSelectString addon when translated text
+                is available.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears the in-memory CutSceneSelectString state when the addon hides or is finalized.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryReadDialogSource(System.Collections.Generic.IReadOnlyList{System.IntPtr},System.String@,System.Collections.Generic.List{System.String}@)">
+            <summary>
+                Reads the current question/title and option list from the live addon tree.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ResolveTranslationAsync(System.String,System.Collections.Generic.List{System.String},System.Int32)">
+            <summary>
+                Resolves a CutSceneSelectString translation without blocking the game UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Translates the question and all options in a single batched request
+                when possible, falling back to per-item translation if the batch
+                parsing fails.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogIndividuallyAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Falls back to translating each dialog element individually.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.PublishOverlay">
+            <summary>
+                Publishes the currently resolved text to the overlay in the active
+                display mode.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ApplyNativeTranslation(System.Collections.Generic.IReadOnlyList{System.IntPtr},System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Applies the translated question/options back into the visible addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryGetCurrentResolvedTranslation(System.String,System.Collections.Generic.List{System.String},System.String@,System.Collections.Generic.List{System.String}@,System.String@,System.Collections.Generic.List{System.String}@)">
+            <summary>
+                Tries to get the current resolved translation for the currently visible source.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryGetCachedTranslation(System.String,System.Collections.Generic.List{System.String},System.String@,System.Collections.Generic.List{System.String}@,System.String@,System.Collections.Generic.List{System.String}@)">
+            <summary>
+                Tries to use a cached translation already held in memory.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryLoadStoredTranslation(System.String,System.Collections.Generic.List{System.String},System.String@,System.Collections.Generic.List{System.String}@,System.String@,System.Collections.Generic.List{System.String}@)">
+            <summary>
+                Tries to load a translated CutSceneSelectString row from the database.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryQueueTranslation(System.String,System.String,System.Collections.Generic.List{System.String},System.Int32@)">
+            <summary>
+                Queues a translation request if the same source is not already in
+                flight.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.BuildSourceKey(System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Builds a stable source key for the current question and option list so
+                we can suppress duplicate retries for the same visible dialog.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.SetResolvedState(System.String,System.Collections.Generic.List{System.String},System.String,System.Collections.Generic.List{System.String},System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+                Updates the in-memory resolved translation state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.BuildLookupSelectString(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+                Builds a database lookup entity for the currently visible question and options.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateOrFallbackAsync(System.String)">
+            <summary>
+                Translates a piece of text or falls back to the original text when the
+                translation service does not return content.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated text before native replacement when the active config requests diacritic stripping.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TextMatches(System.String,System.String)">
+            <summary>
+                Compares two strings after normalizing them for native replacement.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.NormalizeForComparison(System.String)">
+            <summary>
+                Normalizes text for comparison against native node values.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ShouldUseOverlay">
+            <summary>
+                Returns whether the overlay mode is active for CutSceneSelectString.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ShouldApplyNativeText">
+            <summary>
+                Returns whether the native addon should be updated with translated text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ShouldSwapTexts">
+            <summary>
+                Returns whether overlay and native texts are swapped.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ShouldHandleCutSceneSelectString(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Determines whether the callback is for the visible CutSceneSelectString addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.OptionsMatch(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Compares two ordered option lists.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.Trace(System.String)">
+            <summary>
+                Writes a focused debug message for the CutSceneSelectString flow.
+            </summary>
+            <param name="message">Message to write.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.Preview(System.String)">
+            <summary>
+                Produces a compact preview for log messages.
+            </summary>
+            <param name="text">Text to preview.</param>
+            <returns>A compact log-friendly preview string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.DeserializeOptions(System.String)">
+            <summary>
+                Converts the stored options JSON into a list.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringNodeResolvers">
+            <summary>
+                Shared node walkers for the CutSceneSelectString addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringNodeResolvers.ResolveReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves all readable text nodes in the addon tree, preserving tree order.
+            </summary>
+            <param name="addon">The live CutSceneSelectString addon instance.</param>
+            <returns>The readable text-node addresses in tree order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringNodeResolvers.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the visible text from a text node using the available payload
+                representations.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The readable text, or an empty string when unavailable.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler">
             <summary>
@@ -5916,7 +6213,8 @@
             </summary>
             <remarks>These extension methods enable or disable logging for important phases in an add-on's lifecycle,
             such as setup, refresh, event reception, requested updates, and finalization. They are useful for monitoring and
-            debugging add-on behavior without interfering with other event listeners.</remarks>
+            debugging add-on behavior without interfering with other event listeners. When debugging addon behavior, prefer
+            this helper together with the addon structure probe instead of adding ad hoc logging inside feature handlers.</remarks>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.LogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String,System.Collections.Generic.IReadOnlyCollection{Dalamud.Game.Addon.Lifecycle.AddonEvent})">
             <summary>
@@ -6487,6 +6785,12 @@
                 Draws the MiniTalk overlay settings without exposing a title bar
                 toggle. MiniTalk windows are intentionally titleless so the
                 configuration only controls style and placement.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawCutSceneSelectStringOverlay(Echoglossian.Config)">
+            <summary>
+                Draws the CutSceneSelectString overlay settings. The question becomes
+                the title bar and the options are rendered as a multiline body.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawSubtitleOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
@@ -8127,6 +8431,13 @@
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForMiniTalk(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for MiniTalk translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForCutSceneSelectString(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for CutSceneSelectString overlays.
             </summary>
             <param name="config"></param>
             <returns></returns>

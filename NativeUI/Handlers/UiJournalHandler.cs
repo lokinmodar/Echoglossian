@@ -156,13 +156,13 @@ public partial class Echoglossian
             {
                 var result = this.UpdateQuestPlate(foundQuestPlate);
 #if DEBUG
-                PluginLog.Debug(
-                    $"Using QuestPlate Replace - QuestPlate DB Update operation result: {result}");
+                // PluginLog.Debug(
+                //     $"Using QuestPlate Replace - QuestPlate DB Update operation result: {result}");
 #endif
             }
 #if DEBUG
-            PluginLog.Debug(
-                $"From database - Name: {foundQuestPlate.TranslatedQuestName}, Message: {foundQuestPlate.TranslatedQuestMessage}");
+            // PluginLog.Debug(
+            //     $"From database - Name: {foundQuestPlate.TranslatedQuestName}, Message: {foundQuestPlate.TranslatedQuestMessage}");
 #endif
         }
         else
@@ -207,15 +207,15 @@ public partial class Echoglossian
                 translatedQuestObjective);
             var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-            PluginLog.Debug($"Translated quest name: {translatedQuestName}");
-            PluginLog.Debug(
-                $"Translated quest message: {translatedQuestMessage}");
-            PluginLog.Debug(
-                $"Translated quest objective: {translatedQuestObjective}");
-            PluginLog.Debug(
-                $"Translated quest summary: {translatedQuestSummary}");
-            PluginLog.Debug(
-                $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+            // PluginLog.Debug($"Translated quest name: {translatedQuestName}");
+            // PluginLog.Debug(
+            //     $"Translated quest message: {translatedQuestMessage}");
+            // PluginLog.Debug(
+            //     $"Translated quest objective: {translatedQuestObjective}");
+            // PluginLog.Debug(
+            //     $"Translated quest summary: {translatedQuestSummary}");
+            // PluginLog.Debug(
+            //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
         }
 
@@ -319,10 +319,10 @@ public partial class Echoglossian
             var foundQuestPlate = this.FindQuestPlate(questPlate);
 
 #if DEBUG
-            PluginLog.Debug($"Quest name: {questName}");
-            PluginLog.Debug($"Quest message: {questMessage}");
-            PluginLog.Debug($"Objective text: {objectiveText}");
-            PluginLog.Debug($"Summary text: {summaryText}");
+            // PluginLog.Debug($"Quest name: {questName}");
+            // PluginLog.Debug($"Quest message: {questMessage}");
+            // PluginLog.Debug($"Objective text: {objectiveText}");
+            // PluginLog.Debug($"Summary text: {summaryText}");
 #endif
             this.TranslateQuestOnJournalBox(
                 journalBox,
@@ -375,8 +375,8 @@ public partial class Echoglossian
             var questPlate = this.FormatQuestPlate(questName, questMessage);
             var foundQuestPlate = this.FindQuestPlate(questPlate);
 #if DEBUG
-            PluginLog.Debug($"Quest name: {questName}");
-            PluginLog.Debug($"Quest message: {questMessage}");
+            // PluginLog.Debug($"Quest name: {questName}");
+            // PluginLog.Debug($"Quest message: {questMessage}");
 #endif
 
             string translatedQuestName;
@@ -387,8 +387,8 @@ public partial class Echoglossian
                 translatedQuestName = foundQuestPlate.TranslatedQuestName;
                 translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
 #if DEBUG
-                PluginLog.Debug(
-                    $"From database - Name: {foundQuestPlate.TranslatedQuestName}, Message: {foundQuestPlate.TranslatedQuestMessage}");
+                // PluginLog.Debug(
+                //     $"From database - Name: {foundQuestPlate.TranslatedQuestName}, Message: {foundQuestPlate.TranslatedQuestMessage}");
 #endif
             }
             else
@@ -397,10 +397,10 @@ public partial class Echoglossian
                 translatedQuestMessage = this.Translate(questMessage);
 
 #if DEBUG
-                PluginLog.Debug(
-                    $"Translated quest name: {translatedQuestName}");
-                PluginLog.Debug(
-                    $"Translated quest message: {translatedQuestMessage}");
+                // PluginLog.Debug(
+                //     $"Translated quest name: {translatedQuestName}");
+                // PluginLog.Debug(
+                //     $"Translated quest message: {translatedQuestMessage}");
 #endif
 
                 QuestPlate translatedQuestPlate = new(
@@ -416,8 +416,8 @@ public partial class Echoglossian
                     DateTime.Now);
                 var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-                PluginLog.Debug(
-                    $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+                // PluginLog.Debug(
+                //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
             }
 
@@ -455,9 +455,9 @@ public partial class Echoglossian
             return;
         }
 #if DEBUG
-        PluginLog.Debug(
-            $"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
-        PluginLog.Debug("Translate JournalDetail");
+        // PluginLog.Debug(
+        //     $"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
+        // PluginLog.Debug("Translate JournalDetail");
 #endif
 
         if (!this.TranslateJournalBox(journalDetail))
@@ -482,9 +482,9 @@ public partial class Echoglossian
         }
 
 #if DEBUG
-        PluginLog.Debug(
-            $"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
-        PluginLog.Debug("Translate JournalQuests");
+        // PluginLog.Debug(
+        //     $"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
+        // PluginLog.Debug("Translate JournalQuests");
 #endif
         try
         {
@@ -537,8 +537,8 @@ public partial class Echoglossian
                 if (foundQuestPlate != null)
                 {
 #if DEBUG
-                    PluginLog.Debug(
-                        $"Name from database: {questName->NodeText} -> {foundQuestPlate.TranslatedQuestName}");
+                    // PluginLog.Debug(
+                    //     $"Name from database: {questName->NodeText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
                     var translQuestName = foundQuestPlate.TranslatedQuestName;
                     if (this.configuration
@@ -559,8 +559,8 @@ public partial class Echoglossian
 
                 var translatedNameText = this.Translate(questNameText);
 #if DEBUG
-                PluginLog.Debug(
-                    $"Name translated: {questNameText} -> {translatedNameText}");
+                // PluginLog.Debug(
+                //     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
                 QuestPlate translatedQuestPlate = new(
                     questNameText,
@@ -576,8 +576,8 @@ public partial class Echoglossian
 
                 var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-                PluginLog.Debug(
-                    $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+                // PluginLog.Debug(
+                //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
                 if (this.configuration
                     .RemoveDiacriticsWhenUsingReplacementQuest)
@@ -600,8 +600,8 @@ public partial class Echoglossian
     private void UiJournalDetailHandler(AddonEvent type, AddonArgs args)
     {
 #if DEBUG
-        PluginLog.Debug(
-            $"UiJournalDetailHandler AddonEvent: {type} {args.AddonName}");
+        // PluginLog.Debug(
+        //     $"UiJournalDetailHandler AddonEvent: {type} {args.AddonName}");
 #endif
         this.TranslateJournalDetail();
     }
@@ -609,8 +609,8 @@ public partial class Echoglossian
     private void UiJournalQuestHandler(AddonEvent type, AddonArgs args)
     {
 #if DEBUG
-        PluginLog.Debug(
-            $"UiJournalQuestHandler AddonEvent: {type} {args.AddonName}");
+        // PluginLog.Debug(
+        //     $"UiJournalQuestHandler AddonEvent: {type} {args.AddonName}");
 #endif
         this.TranslateJournalQuests();
     }

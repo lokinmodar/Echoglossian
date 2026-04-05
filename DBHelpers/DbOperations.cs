@@ -25,6 +25,8 @@ public partial class Echoglossian
 
   public static TextGimmickHintMessage? FoundTextGimmickHintMessage { get; set; }
 
+  public static SelectString? FoundSelectStringMessage { get; set; }
+
   public static GameWindow? FoundGameWindow { get; set; }
 
   public static StringArrayDatas? FoundStringArrayDatas { get; set; }
@@ -526,6 +528,50 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Finds and returns a SelectString from the database.
+  /// </summary>
+  /// <param name="selectString">Formatted SelectString to be found in the database.</param>
+  /// <returns>The found <see cref="SelectString" /> or <see langword="null" />.</returns>
+  public SelectString? FindAndReturnCutSceneSelectStringMessage(
+      SelectString selectString)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    try
+    {
+      var existingSelectString =
+          context.SelectString.AsNoTracking().Where(t =>
+              t.OriginalSelectString == selectString.OriginalSelectString &&
+              t.OriginalOptionsAsText == selectString.OriginalOptionsAsText &&
+              t.TranslationLang == selectString.TranslationLang);
+
+      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
+      {
+        existingSelectString = existingSelectString.Where(t =>
+            t.TranslationEngine == selectString.TranslationEngine);
+      }
+
+      var localFoundSelectString =
+          existingSelectString.FirstOrDefault();
+      if (localFoundSelectString == null ||
+          localFoundSelectString.OriginalSelectString !=
+          selectString.OriginalSelectString ||
+          localFoundSelectString.OriginalOptionsAsText !=
+          selectString.OriginalOptionsAsText)
+      {
+        return null;
+      }
+
+      FoundSelectStringMessage = localFoundSelectString;
+      return localFoundSelectString;
+    }
+    catch (Exception e)
+    {
+      PluginLog.Debug($"FindAndReturnCutSceneSelectStringMessage exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Finds and returns a GameWindow from the database.
   /// </summary>
   /// <param name="gameWindow">Formatted GameWindow to be found in the database</param>
@@ -749,6 +795,46 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  /// Inserts a SelectString record into the database.
+  /// </summary>
+  /// <param name="selectString">Formatted SelectString to be inserted into the database.</param>
+  /// <returns></returns>
+  public static async Task<string> InsertCutSceneSelectStringData(
+      SelectString selectString)
+  {
+    using var context = new EchoglossianDbContext(
+        PluginInterface.GetPluginConfigDirectory() +
+        Path.DirectorySeparatorChar);
+
+    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+
+    try
+    {
+      if (!ShouldSaveToDB(selectString.TranslatedSelectString) &&
+          !ShouldSaveToDB(selectString.TranslatedOptionsAsText))
+      {
+        return "No data to save.";
+      }
+
+      context.SelectString.Add(selectString);
+
+      if (pluginConfig?.CopyTranslationToClipboard == true)
+      {
+        ImGui.SetClipboardText(selectString.ToString());
+      }
+
+      await context.SaveChangesAsync();
+
+      return "Data inserted to SelectStrings table.";
+    }
+    catch (Exception e)
+    {
+      PluginLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
       return $"ErrorSavingData: {e}";
     }
   }
