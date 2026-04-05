@@ -7,6 +7,11 @@ namespace Echoglossian;
 
 public partial class Echoglossian
 {
+    private readonly ConcurrentDictionary<
+        nint,
+        (string OriginalText, string TranslatedText)>
+        recommendHoverTranslationCache = new();
+
     private unsafe void UpdateRecommendList()
     {
         var atkStage = AtkStage.Instance();
@@ -65,8 +70,21 @@ public partial class Echoglossian
                 var questNameText = MemoryHelper.ReadSeStringAsString(
                     out _,
                     (nint)questName->NodeText.StringPtr.Value);
+                var questNameNodeKey = (nint)questNameNode;
                 if (this.translatedQuestNames.ContainsKey(questNameText))
                 {
+                    if (this.configuration.TranslateTooltips &&
+                        this.recommendHoverTranslationCache.TryGetValue(
+                            questNameNodeKey,
+                            out var cachedHoverTranslation))
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"RecommendList-{questNameNodeKey:X}",
+                            questName,
+                            cachedHoverTranslation.OriginalText,
+                            cachedHoverTranslation.TranslatedText);
+                    }
+
                     continue;
                 }
 
@@ -93,7 +111,18 @@ public partial class Echoglossian
 
                     // because we are translating names, it's safer to use SetString instead of SetText
                     questName->NodeText.SetString(translatedQuestName);
+                    this.recommendHoverTranslationCache[questNameNodeKey] = (
+                        questNameText,
+                        translatedQuestName);
                     this.translatedQuestNames.TryAdd(translatedQuestName, true);
+                    if (this.configuration.TranslateTooltips)
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"RecommendList-{questNameNodeKey:X}",
+                            questName,
+                            questNameText,
+                            translatedQuestName);
+                    }
                 }
             }
         }
@@ -161,8 +190,21 @@ public partial class Echoglossian
                 var questNameText = MemoryHelper.ReadSeStringAsString(
                     out _,
                     (nint)questName->NodeText.StringPtr.Value);
+                var questNameNodeKey = (nint)questNameNode;
                 if (this.translatedQuestNames.ContainsKey(questNameText))
                 {
+                    if (this.configuration.TranslateTooltips &&
+                        this.recommendHoverTranslationCache.TryGetValue(
+                            questNameNodeKey,
+                            out var cachedHoverTranslation))
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"RecommendList-{questNameNodeKey:X}",
+                            questName,
+                            cachedHoverTranslation.OriginalText,
+                            cachedHoverTranslation.TranslatedText);
+                    }
+
                     continue;
                 }
 
@@ -183,11 +225,14 @@ public partial class Echoglossian
 
                     // because we are translating names, it's safer to use SetString instead of SetText
                     questName->NodeText.SetString(translatedQuestName);
+                    this.recommendHoverTranslationCache[questNameNodeKey] = (
+                        questNameText,
+                        translatedQuestName);
                     this.translatedQuestNames.TryAdd(translatedQuestName, true);
                     if (this.configuration.TranslateTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
-                            $"RecommendList-{(nint)questNameNode:X}",
+                            $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             questNameText,
                             translatedQuestName);
@@ -212,11 +257,14 @@ public partial class Echoglossian
 
                     // because we are translating names, it's safer to use SetString instead of SetText
                     questName->NodeText.SetString(translatedNameText);
+                    this.recommendHoverTranslationCache[questNameNodeKey] = (
+                        questNameText,
+                        translatedNameText);
                     this.translatedQuestNames.TryAdd(translatedNameText, true);
                     if (this.configuration.TranslateTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
-                            $"RecommendList-{(nint)questNameNode:X}",
+                            $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             questNameText,
                             translatedNameText);

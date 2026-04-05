@@ -23,6 +23,10 @@ public static class JournalTab
             changed |= ImGui.Checkbox(
                 "Show journal and quest translations as hover tooltips",
                 ref config.TranslateTooltips);
+
+            changed |= ImGui.Checkbox(
+                "Swap original and translated text in hover tooltips",
+                ref config.SwapTextsUsingImGui);
         }
 
         if (langToRemoveDiacritics)

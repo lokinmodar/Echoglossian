@@ -11,6 +11,12 @@ public partial class Echoglossian
     private readonly ConcurrentDictionary<string, bool> translatedQuestNames =
         new();
 
+    // keeps journal quest hover translations alive across refreshes
+    private readonly ConcurrentDictionary<
+        nint,
+        (string OriginalText, string TranslatedText)>
+        journalHoverTranslationCache = new();
+
     private unsafe List<SummaryQuest> TranslateSummaries(
         AtkComponentBase* journalBox,
         QuestPlate foundQuestPlate,
@@ -721,8 +727,21 @@ public partial class Echoglossian
                 var questNameText = MemoryHelper.ReadSeStringAsString(
                     out _,
                     (nint)questName->NodeText.StringPtr.Value);
+                var questNameNodeKey = (nint)questNameNode;
                 if (this.translatedQuestNames.ContainsKey(questNameText))
                 {
+                    if (this.configuration.TranslateTooltips &&
+                        this.journalHoverTranslationCache.TryGetValue(
+                            questNameNodeKey,
+                            out var cachedHoverTranslation))
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"JournalList-{questNameNodeKey:X}",
+                            questName,
+                            cachedHoverTranslation.OriginalText,
+                            cachedHoverTranslation.TranslatedText);
+                    }
+
                     continue;
                 }
 
@@ -746,10 +765,21 @@ public partial class Echoglossian
                     }
 
                     questName->SetText(translQuestName);
+                    this.journalHoverTranslationCache[questNameNodeKey] = (
+                        questNameText,
+                        translQuestName);
 
                     this.translatedQuestNames.TryAdd(
                         foundQuestPlate.TranslatedQuestName,
                         true);
+                    if (this.configuration.TranslateTooltips)
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"JournalList-{questNameNodeKey:X}",
+                            questName,
+                            questNameText,
+                            translQuestName);
+                    }
                     continue;
                 }
 
@@ -797,11 +827,14 @@ public partial class Echoglossian
                 }
 
                 questName->SetText(translatedNameText);
+                this.journalHoverTranslationCache[questNameNodeKey] = (
+                    questNameText,
+                    translatedNameText);
                 this.translatedQuestNames.TryAdd(translatedNameText, true);
                 if (this.configuration.TranslateTooltips)
                 {
                     this.RegisterTranslatedHoverTooltip(
-                        $"JournalList-{(nint)questName:X}",
+                        $"JournalList-{questNameNodeKey:X}",
                         questName,
                         questNameText,
                         translatedNameText);
