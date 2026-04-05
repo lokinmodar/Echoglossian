@@ -335,6 +335,12 @@
         <member name="F:Echoglossian.Config.TalkSubtitleFontScale">
             <summary>Font scale used for Talk Subtitle overlay.</summary>
         </member>
+        <member name="F:Echoglossian.Config.MiniTalkFontScale">
+            <summary>Font scale used for MiniTalk overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MiniTalkBackgroundOpacity">
+            <summary>Background opacity used for MiniTalk overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TalkSubtitleForceShowTitle">
             <summary>Always show the Talk Subtitle overlay title bar.</summary>
         </member>
@@ -437,6 +443,9 @@
         <member name="F:Echoglossian.Config.TranslateTalkSubtitle">
             <summary>Translate Talk Subtitle messages.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateMiniTalk">
+            <summary>Translate MiniTalk messages.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateTextGimmickHint">
             <summary>Translate Text Gimmick Hint messages.</summary>
         </member>
@@ -466,6 +475,9 @@
         </member>
         <member name="F:Echoglossian.Config.UseImGuiForTalkSubtitle">
             <summary>Use ImGui for Talk Subtitle overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseImGuiForMiniTalk">
+            <summary>Use ImGui for MiniTalk overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.UseImGuiForTextGimmickHint">
             <summary>Use ImGui for Text Gimmick Hint overlays.</summary>
@@ -645,6 +657,13 @@
             <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be found in the database</param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnMiniTalkMessage(Echoglossian.EFCoreSqlite.Models.MiniTalkMessage)">
+            <summary>
+            Finds and returns a MiniTalkMessage from the database.
+            </summary>
+            <param name="miniTalkMessage">Formatted MiniTalkMessage to be found in the database.</param>
+            <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FindAndReturnTextGimmickHintMessage(Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage)">
             <summary>
             Finds and returns a TextGimmickHintMessage from the database.
@@ -678,6 +697,13 @@
             Inserts a TalkSubtitleMessage record into the database.
             </summary>
             <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be inserted into the database</param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertMiniTalkData(Echoglossian.EFCoreSqlite.Models.MiniTalkMessage)">
+            <summary>
+            Inserts a MiniTalkMessage record into the database.
+            </summary>
+            <param name="miniTalkMessage">Formatted MiniTalkMessage to be inserted into the database</param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertTextGimmickHintData(Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage)">
@@ -1304,12 +1330,40 @@
             <param name="translatedText">Translated content.</param>
             <param name="originalName">Original speaker or title.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.GetOrCreateMiniTalkBubbleOverlay(System.IntPtr)">
+            <summary>
+            Gets or creates the overlay object associated with a MiniTalk bubble.
+            </summary>
+            <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+            <returns>The tracked overlay state for the bubble.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ClearOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Boolean)">
             <summary>
             Clears the overlay visibility and optionally its text.
             </summary>
             <param name="overlay">Overlay to clear.</param>
             <param name="clearText">Whether to clear the translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateMiniTalkBubbleOverlayContent(System.IntPtr,System.String,System.String,System.String)">
+            <summary>
+            Updates or creates the overlay content for a single MiniTalk bubble.
+            </summary>
+            <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+            <param name="translatedName">Translated speaker or title.</param>
+            <param name="translatedText">Translated content.</param>
+            <param name="originalName">Original speaker or title.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ClearMiniTalkBubbleOverlay(System.IntPtr,System.Boolean)">
+            <summary>
+            Clears the overlay state for a single MiniTalk bubble.
+            </summary>
+            <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+            <param name="clearText">Whether to clear the translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DisposeMiniTalkBubbleOverlays">
+            <summary>
+            Clears and disposes every MiniTalk bubble overlay currently tracked.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.UpdateOverlayBounds(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
@@ -1327,6 +1381,19 @@
             </summary>
             <param name="overlay">Overlay whose bounds should be updated.</param>
             <param name="addon">Visible toast addon providing the current bounds.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncMiniTalkBubbleOverlayBounds(System.IntPtr,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the overlay bounds for a single MiniTalk bubble instance.
+            </summary>
+            <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+            <param name="addon">Visible addon providing the current bounds.</param>
+            <param name="textNode">The visible MiniTalk text node.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawMiniTalkBubbleOverlays">
+            <summary>
+            Draws every active MiniTalk bubble overlay instance.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.TrySyncOverlayToAddon(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Int32)">
             <summary>
@@ -1766,6 +1833,12 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddTextGimmickHintMessage.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddMiniTalkMessage.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddMiniTalkMessage.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -2301,6 +2374,66 @@
             <param name="translationEngine">The translation engine used.</param>
             <param name="createdDate">The date the location name was created.</param>
             <param name="updatedDate">The date the location name was last updated.</param>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage">
+            <summary>
+                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> to be handled via
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> class.
+            </summary>
+            <param name="originalMiniTalkMessage">The original MiniTalk message.</param>
+            <param name="originalMiniTalkMessageLang">The language of the original MiniTalk message.</param>
+            <param name="translatedMiniTalkMessage">The translated MiniTalk message.</param>
+            <param name="translationLang">The language of the translated MiniTalk message.</param>
+            <param name="translationEngine">The translation engine used.</param>
+            <param name="createdDate">The date the message was created.</param>
+            <param name="updatedDate">The date the message was last updated.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetGameVersion(System.String)">
+            <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.NpcNames.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
@@ -3266,6 +3399,350 @@
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
+            <summary>
+                Resolves the live MiniTalk bubble text-node instances that are currently
+                readable from the addon tree.
+            </summary>
+            <param name="addon">The visible "_MiniTalk" addon instance.</param>
+            <returns>The bubble text-node addresses in tree order.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.SyncMiniTalkBubbleOverlayBoundsDelegate">
+            <summary>
+                Synchronizes the overlay bounds for a single MiniTalk bubble instance.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="addon">The visible "_MiniTalk" addon instance.</param>
+            <param name="textNode">The visible bubble text node.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.UpdateMiniTalkBubbleOverlayDelegate">
+            <summary>
+                Updates the overlay content for a single MiniTalk bubble instance.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="translatedName">Translated speaker/title.</param>
+            <param name="translatedText">Translated content.</param>
+            <param name="originalName">Original speaker/title.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ClearMiniTalkBubbleOverlayDelegate">
+            <summary>
+                Clears the overlay state for a single MiniTalk bubble instance.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="clearText">Whether to clear the translated text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler">
+            <summary>
+                Handles the "MiniTalk" addon runtime inside the new addon-handler model.
+                MiniTalk behaves like a lightweight single-text addon, so it reuses the
+                same cache-first async translation flow used by the other single-text
+                handlers while keeping its overlay titleless.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.BubbleState">
+            <summary>
+                In-memory state for a single MiniTalk bubble instance.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.MiniTalkMessage,Echoglossian.EFCoreSqlite.Models.MiniTalkMessage},System.Func{Echoglossian.EFCoreSqlite.Models.MiniTalkMessage,System.Threading.Tasks.Task{System.String}},Echoglossian.NativeUI.AddonHandlers.SingleText.UpdateMiniTalkBubbleOverlayDelegate,Echoglossian.NativeUI.AddonHandlers.SingleText.ClearMiniTalkBubbleOverlayDelegate,Echoglossian.NativeUI.AddonHandlers.SingleText.SyncMiniTalkBubbleOverlayBoundsDelegate,Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The translation service used by the plugin.</param>
+            <param name="findMiniTalkMessage">
+                Delegate used to look up previously translated MiniTalk messages.
+            </param>
+            <param name="insertMiniTalkMessageAsync">
+                Delegate used to persist translated MiniTalk messages.
+            </param>
+            <param name="updateOverlay">
+                Delegate used to publish translated content to the MiniTalk overlay.
+            </param>
+            <param name="clearOverlay">
+                Delegate used to clear the MiniTalk overlay state.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the MiniTalk addon flow.
+            </summary>
+            <returns>
+                A dictionary mapping addon events to combined delegates.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.GetOrCreateBubbleState(System.IntPtr)">
+            <summary>
+                Gets or creates the state container for a MiniTalk bubble instance.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <returns>The tracked state for the bubble.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryGetBubbleState(System.IntPtr,Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.BubbleState@)">
+            <summary>
+                Tries to get the current state for a MiniTalk bubble instance.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="state">Receives the tracked state for the bubble.</param>
+            <returns>
+                <see langword="true" /> when state exists; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.PruneHiddenMiniTalkBubbles(System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+                Removes stale MiniTalk overlays that no longer correspond to visible
+                bubble nodes in the current frame.
+            </summary>
+            <param name="activeBubbleKeys">The bubble keys seen in this frame.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.OnPreUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Captures MiniTalk source text early in the lifecycle so a translation
+                can already be queued before the first draw pass completes.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.OnUpdateVisibleAddon(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Updates overlay bounds for the visible MiniTalk addon and applies
+                translated text to the native addon when replacement mode is enabled.
+            </summary>
+            <param name="type">The lifecycle event that triggered the handler.</param>
+            <param name="args">The addon arguments associated with the update or draw.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears the in-memory MiniTalk state when the addon hides or is finalized.
+            </summary>
+            <param name="type">The lifecycle event that triggered the reset.</param>
+            <param name="args">The addon arguments associated with the reset.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ResolveTranslationAsync(System.IntPtr,System.String,System.Int32)">
+            <summary>
+                Resolves a MiniTalk translation without blocking the game UI and
+                persists the result for future cache hits.
+            </summary>
+            <param name="originalText">The original MiniTalk text.</param>
+            <param name="requestId">The request identifier used to reject stale updates.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryGetCachedTranslation(System.IntPtr,System.String,System.String@,System.String@)">
+            <summary>
+                Determines whether the current captured source still has a cached
+                translation.
+            </summary>
+            <param name="originalText">The source MiniTalk text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when a matching cached translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryLoadStoredTranslation(System.String,System.String@,System.String@)">
+            <summary>
+                Attempts to load a stored MiniTalk translation from the database.
+            </summary>
+            <param name="originalText">The source MiniTalk text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when a stored translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryGetCurrentResolvedTranslation(System.IntPtr,System.String@,System.String@,System.String@)">
+            <summary>
+                Returns the active resolved translation currently held by the handler
+                state.
+            </summary>
+            <param name="originalText">Receives the active original text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when the handler already has a translated line;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryQueueTranslation(System.IntPtr,System.String,System.Int32@)">
+            <summary>
+                Starts a new translation request when the visible source line changes or
+                when the current line still has no cached translation.
+            </summary>
+            <param name="originalText">The source MiniTalk text.</param>
+            <param name="requestId">Receives the active request identifier.</param>
+            <returns>
+                <see langword="true" /> when a new translation task should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.SetResolvedState(System.IntPtr,System.String,System.String,System.String)">
+            <summary>
+                Sets the resolved in-memory state for the current MiniTalk line.
+            </summary>
+            <param name="originalText">The original MiniTalk text.</param>
+            <param name="translatedText">The translated MiniTalk text.</param>
+            <param name="replacementText">The translated text normalized for native replacement.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.PublishOverlay(System.IntPtr,System.String,System.String,System.String)">
+            <summary>
+                Publishes translated MiniTalk content to the configured overlay when
+                overlay mode is enabled.
+            </summary>
+            <param name="originalText">The original MiniTalk text.</param>
+            <param name="translatedText">The translated MiniTalk text.</param>
+            <param name="trigger">The log trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ShouldUseOverlay">
+            <summary>
+                Determines whether this MiniTalk request should render through the
+                overlay path.
+            </summary>
+            <returns>
+                <see langword="true" /> when the overlay path is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ShouldApplyNativeText">
+            <summary>
+                Determines whether the MiniTalk addon should receive translated text
+                directly in the game UI.
+            </summary>
+            <returns>
+                <see langword="true" /> when the addon should be replaced natively;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ShouldSwapTexts">
+            <summary>
+                Determines whether the overlay should currently show the original text
+                while the native addon receives the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when overlay swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.BuildLookupMessage(System.String)">
+            <summary>
+                Builds a lookup entity matching the MiniTalk database schema.
+            </summary>
+            <param name="originalText">The original MiniTalk text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> suitable for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated MiniTalk text before native replacement when the
+                active config requests diacritic stripping.
+            </summary>
+            <param name="text">The translated MiniTalk text to normalize.</param>
+            <returns>The text that should be written back into the native addon.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the current string value from a MiniTalk text node.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The visible node text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TextMatches(System.String,System.String)">
+            <summary>
+                Compares two rendered text values after normalizing spacing and the
+                optional diacritic removal rules used for native replacement.
+            </summary>
+            <param name="left">The first text value.</param>
+            <param name="right">The second text value.</param>
+            <returns><see langword="true" /> when the texts should be considered equal.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.NormalizeForComparison(System.String)">
+            <summary>
+                Normalizes text for comparison against native node values.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized text value.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ShouldHandleMiniTalk(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Determines whether the current callback should handle the configured
+                MiniTalk addon instance.
+            </summary>
+            <param name="args">The addon arguments associated with the callback.</param>
+            <param name="addon">Receives the visible addon instance.</param>
+            <returns>
+                <see langword="true" /> when the callback is for a visible MiniTalk
+                addon; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.IsMiniTalkBubbleVisible(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Determines whether a MiniTalk bubble text node currently intersects the
+                main viewport.
+            </summary>
+            <param name="textNode">The visible bubble text node.</param>
+            <returns>
+                <see langword="true" /> when the bubble is on screen; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryReadCurrentSource(System.IntPtr,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Reads the logical source text from the live MiniTalk addon, mapping the
+                visible translated replacement back to the original source line when
+                needed.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="textNode">The visible MiniTalk text node.</param>
+            <param name="originalText">Receives the logical original MiniTalk text.</param>
+            <returns>
+                <see langword="true" /> when readable text is available; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryCaptureOrQueueMiniTalkSource(System.IntPtr,System.String,System.String)">
+            <summary>
+                Resolves the source MiniTalk line against cache, database, or background
+                translation work and publishes the overlay when a translation becomes
+                available.
+            </summary>
+            <param name="originalText">The original MiniTalk text to resolve.</param>
+            <param name="trigger">The log trigger label associated with the call.</param>
+            <returns>
+                <see langword="true" /> when the source was handled; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.MiniTalkMessage,System.String)">
+            <summary>
+                Determines whether a stored MiniTalk row still represents a usable
+                translation for the current source line.
+            </summary>
+            <param name="miniTalkMessage">The stored MiniTalk row to validate.</param>
+            <param name="originalText">The expected original MiniTalk text.</param>
+            <returns>
+                <see langword="true" /> when the stored row contains a non-empty
+                translation for the same source line; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.DescribeMiniTalkTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Builds a concise debug string for the current MiniTalk text node so we
+                can understand why a visible line did not become readable.
+            </summary>
+            <param name="textNode">The text node to describe.</param>
+            <returns>A log-friendly node description.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler">
             <summary>
                 Handles the full BattleTalk runtime inside the new addon-handler model.
@@ -4051,6 +4528,139 @@
                 flight so swap mode does not leave the overlay blank.
             </summary>
             <param name="originalText">The original TalkSubtitle text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers">
+            <summary>
+                Shared text-node resolvers for single-text addons migrated to the new
+                AddonLifecycle handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveWideTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the "_WideText" node used by the game for screen-info style
+                text.
+            </summary>
+            <param name="addon">The live "_WideText" addon instance.</param>
+            <returns>The text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the first text node found in the addon ULD node list.
+                This matches the historical Echoglossian approach for some single-text
+                addons such as class/job change notifications.
+            </summary>
+            <param name="addon">The live addon instance.</param>
+            <returns>The first text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveAreaTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the most suitable text node for the AreaText addon.
+                The live addon can expose multiple text nodes, so we prefer the first
+                non-empty text node before falling back to the historical first-text
+                match.
+            </summary>
+            <param name="addon">The live "_AreaText" addon instance.</param>
+            <returns>The best matching text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveMiniTalkTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the best readable text node for the MiniTalk addon.
+                MiniTalk exposes a deeper component tree than the classic single-node
+                add-ons, so we walk the hierarchy until we find the first text node
+                that actually yields readable content.
+            </summary>
+            <param name="addon">The live "_MiniTalk" addon instance.</param>
+            <returns>The best visible text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves every readable MiniTalk bubble text node found in the live
+                addon tree.
+                The returned addresses are stable enough to act as per-bubble keys for
+                overlay state while the addon remains visible.
+            </summary>
+            <param name="addon">The live "_MiniTalk" addon instance.</param>
+            <returns>
+                A list of readable, visible text-node addresses in tree order.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+            <summary>
+                Resolves the first text node found anywhere in the provided node list,
+                including nested component node lists.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <returns>The first text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveVisibleTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+            <summary>
+                Resolves the first visible, non-empty text node found anywhere in the
+                provided node list, including nested component node lists.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <returns>The best visible text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+            <summary>
+                Resolves the first text node in the addon hierarchy whose content can
+                actually be read as non-empty text.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <returns>The first readable text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+                Collects readable, visible text nodes from a node list.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <param name="results">Receives the collected node addresses.</param>
+            <param name="seen">Receives the node addresses already collected.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the first text node found under a single node, recursing into
+                child, sibling, and component node lists.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <returns>The first text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveVisibleTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Resolves the best visible text node under a single node, recursing into
+                child, sibling, and component node lists.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <param name="firstTextNode">
+                Receives the first text node encountered, even when empty or hidden.
+            </param>
+            <returns>The first visible, non-empty text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the first text node in a subtree whose content can actually
+                be read as non-empty text.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <returns>The first readable text node, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+                Collects readable, visible text nodes from a single node subtree.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <param name="results">Receives the collected node addresses.</param>
+            <param name="seen">Receives the node addresses already collected.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.HasReadableText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Determines whether a text node already exposes readable content.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns><see langword="true" /> when the node can be read as text.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate">
             <summary>
@@ -4877,76 +5487,6 @@
             </summary>
             <param name="text">The translated text to normalize.</param>
             <returns>The text that should be written back into the native addon.</returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers">
-            <summary>
-                Shared text-node resolvers for toast addons migrated to the new
-                AddonLifecycle handler model.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveWideTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-                Resolves the "_WideText" node used by the game for screen-info style
-                toast text.
-            </summary>
-            <param name="addon">The live "_WideText" addon instance.</param>
-            <returns>The text node, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-                Resolves the first text node found in the addon ULD node list.
-                This matches the historical Echoglossian approach for some toast-like
-                addons such as class/job change notifications.
-            </summary>
-            <param name="addon">The live addon instance.</param>
-            <returns>The first text node, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveAreaTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-                Resolves the most suitable text node for the area toast addon.
-                The live addon can expose multiple text nodes, so we prefer the first
-                non-empty text node before falling back to the historical first-text
-                match.
-            </summary>
-            <param name="addon">The live "_AreaText" addon instance.</param>
-            <returns>The best matching text node, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
-            <summary>
-                Resolves the first text node found anywhere in the provided node list,
-                including nested component node lists.
-            </summary>
-            <param name="nodeList">The node list to inspect.</param>
-            <param name="nodeCount">The number of nodes in the list.</param>
-            <returns>The first text node, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveVisibleTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
-            <summary>
-                Resolves the first visible, non-empty text node found anywhere in the
-                provided node list, including nested component node lists.
-            </summary>
-            <param name="nodeList">The node list to inspect.</param>
-            <param name="nodeCount">The number of nodes in the list.</param>
-            <returns>The best visible text node, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
-            <summary>
-                Resolves the first text node found under a single node, recursing into
-                child, sibling, and component node lists.
-            </summary>
-            <param name="node">The node to inspect.</param>
-            <returns>The first text node, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTextNodeResolvers.ResolveVisibleTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
-            <summary>
-                Resolves the best visible text node under a single node, recursing into
-                child, sibling, and component node lists.
-            </summary>
-            <param name="node">The node to inspect.</param>
-            <param name="firstTextNode">
-                Receives the first text node encountered, even when empty or hidden.
-            </param>
-            <returns>The first visible, non-empty text node, or <see langword="null" />.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
             <summary>
@@ -5940,6 +6480,13 @@
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.Draw(Echoglossian.Config)">
             <summary>
                 Draws the full Overlay tab with vertical sub-tabs.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawMiniTalkOverlay(Echoglossian.Config)">
+            <summary>
+                Draws the MiniTalk overlay settings without exposing a title bar
+                toggle. MiniTalk windows are intentionally titleless so the
+                configuration only controls style and placement.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawSubtitleOverlaySettings(System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.String,System.Int64@)">
@@ -7573,6 +8120,13 @@
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigTalkSubtitle(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for talk subtitle translations.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForMiniTalk(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for MiniTalk translations.
             </summary>
             <param name="config"></param>
             <returns></returns>

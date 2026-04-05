@@ -43,6 +43,8 @@ public class EchoglossianDbContext : DbContext
 
   public DbSet<TalkSubtitleMessage> TalkSubtitleMessage { get; set; }
 
+  public DbSet<MiniTalkMessage> MiniTalkMessage { get; set; }
+
   public DbSet<TextGimmickHintMessage> TextGimmickHintMessage { get; set; }
 
   public DbSet<ToastMessage> ToastMessage { get; set; }
@@ -98,6 +100,15 @@ public class EchoglossianDbContext : DbContext
           t.TranslationEngine
         })
         .HasDatabaseName("IX_talksubtitlemessages_lookup");
+    modelBuilder.Entity<MiniTalkMessage>()
+        .ToTable("minitalkmessages");
+    modelBuilder.Entity<MiniTalkMessage>()
+        .HasIndex(t => new
+        {
+          t.TranslationLang,
+          t.TranslationEngine
+        })
+        .HasDatabaseName("IX_minitalkmessages_lookup");
     modelBuilder.Entity<TextGimmickHintMessage>()
         .ToTable("textgimmickhintmessages");
     modelBuilder.Entity<TextGimmickHintMessage>()

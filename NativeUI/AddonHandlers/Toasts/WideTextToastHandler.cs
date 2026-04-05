@@ -59,7 +59,7 @@ internal sealed class WideTextToastHandler : AddonTextToastHandler
           updateOverlayBounds,
           // Reference: Glyceri/TalkCopy (TalkHooks/Hooks/WideTextHook.cs)
           // reads "_WideText" from text node 3 during AddonLifecycle.PreUpdate.
-          ToastTextNodeResolvers.ResolveWideTextNode,
+          AddonTextNodeResolvers.ResolveWideTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateWideTextToast,
           cfg => cfg.UseImGuiForWideTextToast)

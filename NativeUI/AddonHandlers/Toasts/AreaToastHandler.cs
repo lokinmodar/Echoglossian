@@ -57,7 +57,7 @@ internal sealed class AreaToastHandler : AddonTextToastHandler
           updateOverlay,
           clearOverlay,
           updateOverlayBounds,
-          ToastTextNodeResolvers.ResolveAreaTextNode,
+          AddonTextNodeResolvers.ResolveAreaTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateAreaToast,
           cfg => cfg.UseImGuiForAreaToast)

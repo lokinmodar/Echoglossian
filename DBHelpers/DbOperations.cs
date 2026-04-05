@@ -21,6 +21,8 @@ public partial class Echoglossian
 
   public static TalkSubtitleMessage? FoundTalkSubtitleMessage { get; set; }
 
+  public static MiniTalkMessage? FoundMiniTalkMessage { get; set; }
+
   public static TextGimmickHintMessage? FoundTextGimmickHintMessage { get; set; }
 
   public static GameWindow? FoundGameWindow { get; set; }
@@ -438,6 +440,50 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Finds and returns a MiniTalkMessage from the database.
+  /// </summary>
+  /// <param name="miniTalkMessage">Formatted MiniTalkMessage to be found in the database.</param>
+  /// <returns>The found <see cref="MiniTalkMessage" /> or <see langword="null" />.</returns>
+  public MiniTalkMessage? FindAndReturnMiniTalkMessage(
+      MiniTalkMessage miniTalkMessage)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    try
+    {
+      var existingMiniTalkMessage =
+          context.MiniTalkMessage.AsNoTracking().Where(t =>
+              t.OriginalMiniTalkMessage == miniTalkMessage
+                  .OriginalMiniTalkMessage && t.TranslationLang ==
+              miniTalkMessage.TranslationLang);
+
+      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
+      {
+        existingMiniTalkMessage =
+            existingMiniTalkMessage.Where(t =>
+                t.TranslationEngine ==
+                miniTalkMessage.TranslationEngine);
+      }
+
+      var localFoundMiniTalkMessage =
+          existingMiniTalkMessage.FirstOrDefault();
+      if (localFoundMiniTalkMessage == null ||
+          localFoundMiniTalkMessage.OriginalMiniTalkMessage !=
+          miniTalkMessage.OriginalMiniTalkMessage)
+      {
+        return null;
+      }
+
+      FoundMiniTalkMessage = localFoundMiniTalkMessage;
+      return localFoundMiniTalkMessage;
+    }
+    catch (Exception e)
+    {
+      PluginLog.Debug($"FindAndReturnMiniTalkMessage exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Finds and returns a TextGimmickHintMessage from the database.
   /// </summary>
   /// <param name="textGimmickHintMessage">Formatted TextGimmickHintMessage to be found in the database</param>
@@ -624,6 +670,44 @@ public partial class Echoglossian
       context.SaveChanges();
 
       return "Data inserted to TalkSubtitleMessages table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  /// Inserts a MiniTalkMessage record into the database.
+  /// </summary>
+  /// <param name="miniTalkMessage">Formatted MiniTalkMessage to be inserted into the database</param>
+  /// <returns></returns>
+  public static async Task<string> InsertMiniTalkData(
+      MiniTalkMessage miniTalkMessage)
+  {
+    using var context = new EchoglossianDbContext(
+        PluginInterface.GetPluginConfigDirectory() +
+        Path.DirectorySeparatorChar);
+
+    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+
+    try
+    {
+      if (!ShouldSaveToDB(miniTalkMessage.TranslatedMiniTalkMessage))
+      {
+        return "No data to save.";
+      }
+
+      context.MiniTalkMessage.Add(miniTalkMessage);
+
+      if (pluginConfig?.CopyTranslationToClipboard == true)
+      {
+        ImGui.SetClipboardText(miniTalkMessage.ToString());
+      }
+
+      await context.SaveChangesAsync();
+
+      return "Data inserted to MiniTalkMessages table.";
     }
     catch (Exception e)
     {

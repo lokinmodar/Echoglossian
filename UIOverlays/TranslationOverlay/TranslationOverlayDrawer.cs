@@ -7,6 +7,9 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
+    private readonly Dictionary<nint, TranslationOverlay> miniTalkBubbleOverlays = new();
+    private readonly object miniTalkBubbleOverlaysGate = new();
+
     /// <summary>
     /// Updates an overlay with translated content.
     /// </summary>
@@ -36,6 +39,26 @@ namespace Echoglossian
     }
 
     /// <summary>
+    /// Gets or creates the overlay object associated with a MiniTalk bubble.
+    /// </summary>
+    /// <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+    /// <returns>The tracked overlay state for the bubble.</returns>
+    private TranslationOverlay GetOrCreateMiniTalkBubbleOverlay(nint bubbleKey)
+    {
+      lock (this.miniTalkBubbleOverlaysGate)
+      {
+        if (this.miniTalkBubbleOverlays.TryGetValue(bubbleKey, out var overlay))
+        {
+          return overlay;
+        }
+
+        overlay = new TranslationOverlay();
+        this.miniTalkBubbleOverlays[bubbleKey] = overlay;
+        return overlay;
+      }
+    }
+
+    /// <summary>
     /// Clears the overlay visibility and optionally its text.
     /// </summary>
     /// <param name="overlay">Overlay to clear.</param>
@@ -53,6 +76,64 @@ namespace Echoglossian
       }
 
       overlay.Semaphore.Release();
+    }
+
+    /// <summary>
+    /// Updates or creates the overlay content for a single MiniTalk bubble.
+    /// </summary>
+    /// <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+    /// <param name="translatedName">Translated speaker or title.</param>
+    /// <param name="translatedText">Translated content.</param>
+    /// <param name="originalName">Original speaker or title.</param>
+    private void UpdateMiniTalkBubbleOverlayContent(
+        nint bubbleKey,
+        string translatedName,
+        string translatedText,
+        string originalName = "")
+    {
+      var overlay = this.GetOrCreateMiniTalkBubbleOverlay(bubbleKey);
+      this.UpdateOverlayContent(overlay, translatedName, translatedText, originalName);
+    }
+
+    /// <summary>
+    /// Clears the overlay state for a single MiniTalk bubble.
+    /// </summary>
+    /// <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+    /// <param name="clearText">Whether to clear the translated text.</param>
+    private void ClearMiniTalkBubbleOverlay(
+        nint bubbleKey,
+        bool clearText = false)
+    {
+      lock (this.miniTalkBubbleOverlaysGate)
+      {
+        if (!this.miniTalkBubbleOverlays.TryGetValue(bubbleKey, out var overlay))
+        {
+          return;
+        }
+
+        this.ClearOverlay(overlay, clearText);
+
+        if (clearText)
+        {
+          this.miniTalkBubbleOverlays.Remove(bubbleKey);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Clears and disposes every MiniTalk bubble overlay currently tracked.
+    /// </summary>
+    private void DisposeMiniTalkBubbleOverlays()
+    {
+      lock (this.miniTalkBubbleOverlaysGate)
+      {
+        foreach (var overlay in this.miniTalkBubbleOverlays.Values)
+        {
+          overlay.Dispose();
+        }
+
+        this.miniTalkBubbleOverlays.Clear();
+      }
     }
 
     /// <summary>
@@ -98,6 +179,55 @@ namespace Echoglossian
       overlay.Dimensions = new Vector2(
           Math.Max(1f, textNode->GetWidth() * addon->Scale * paddingScale),
           Math.Max(1f, textNode->GetHeight() * addon->Scale * paddingScale));
+    }
+
+    /// <summary>
+    /// Updates the overlay bounds for a single MiniTalk bubble instance.
+    /// </summary>
+    /// <param name="bubbleKey">Stable key for the visible bubble instance.</param>
+    /// <param name="addon">Visible addon providing the current bounds.</param>
+    /// <param name="textNode">The visible MiniTalk text node.</param>
+    private unsafe void SyncMiniTalkBubbleOverlayBounds(
+        nint bubbleKey,
+        AtkUnitBase* addon,
+        AtkTextNode* textNode)
+    {
+      if (addon == null || addon->RootNode == null || textNode == null)
+      {
+        return;
+      }
+
+      var overlay = this.GetOrCreateMiniTalkBubbleOverlay(bubbleKey);
+      this.UpdateToastOverlayBounds(overlay, addon, textNode);
+    }
+
+    /// <summary>
+    /// Draws every active MiniTalk bubble overlay instance.
+    /// </summary>
+    private void DrawMiniTalkBubbleOverlays()
+    {
+      if (!this.configuration.TranslateMiniTalk ||
+          !this.configuration.UseImGuiForMiniTalk)
+      {
+        return;
+      }
+
+      List<TranslationOverlay> snapshot;
+      lock (this.miniTalkBubbleOverlaysGate)
+      {
+        snapshot = this.miniTalkBubbleOverlays.Values.ToList();
+      }
+
+      if (snapshot.Count == 0)
+      {
+        return;
+      }
+
+      var config = TranslationWindowConfig.FromConfigForMiniTalk(this.configuration);
+      foreach (var overlay in snapshot)
+      {
+        this.DrawTranslationWindow(overlay, config);
+      }
     }
 
     /// <summary>

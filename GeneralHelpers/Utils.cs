@@ -164,7 +164,7 @@ public partial class Echoglossian
     config.PluginVersion =
         Assembly.GetExecutingAssembly().GetName().Version?.ToString() ??
         "unknown";
-    config.Version = 9;
+    config.Version = 10;
 
     // Persist config
     saveCallback?.Invoke();
@@ -214,7 +214,7 @@ public partial class Echoglossian
   /// </summary>
   public void MigrateOverlayStyleSettings()
   {
-    if (this.configuration.Version >= 9)
+    if (this.configuration.Version >= 10)
     {
       return;
     }
@@ -233,6 +233,15 @@ public partial class Echoglossian
         this.configuration.TranslateNpcNames;
     this.configuration.TranslateBattleTalkNpcNames =
         this.configuration.TranslateNpcNames;
+    this.configuration.MiniTalkFontScale =
+        this.configuration.TalkSubtitleFontScale;
+    this.configuration.MiniTalkBackgroundOpacity = 1f;
+    this.configuration.ImGuiMiniTalkWindowWidthMult =
+        this.configuration.ImGuiTalkSubtitleWindowWidthMult;
+    this.configuration.ImGuiMiniTalkWindowPosCorrection =
+        this.configuration.ImGuiTalkSubtitleWindowPosCorrection;
+    this.configuration.OverlayMiniTalkTextColor =
+        this.configuration.OverlayTalkSubtitleTextColor;
 
     this.configuration.WideTextToastFontScale = this.configuration.ToastFontScale;
     this.configuration.ErrorToastFontScale = this.configuration.ToastFontScale;
@@ -302,7 +311,7 @@ public partial class Echoglossian
     this.configuration.UseImGuiForQuestToast =
         this.configuration.UseImGuiForToasts;
 
-    this.configuration.Version = 9;
+    this.configuration.Version = 10;
 
     SaveConfig(this.configuration);
   }

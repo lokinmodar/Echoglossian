@@ -57,7 +57,7 @@ internal sealed class ErrorToastHandler : AddonTextToastHandler
           updateOverlay,
           clearOverlay,
           updateOverlayBounds,
-          ToastTextNodeResolvers.ResolveFirstTextNode,
+          AddonTextNodeResolvers.ResolveFirstTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateErrorToast,
           cfg => cfg.UseImGuiForErrorToast)

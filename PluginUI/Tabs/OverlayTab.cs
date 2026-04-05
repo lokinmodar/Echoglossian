@@ -20,6 +20,7 @@ public static class OverlayTab
         Resources.BattleTalkTabTitle,
         Resources.ToastTabTitle,
         Resources.SubtitleTabTitle,
+        "MiniTalk",
         Resources.ConfigTab4Name,
         Resources.OtherUIElementsTabTitle,
     };
@@ -83,9 +84,12 @@ public static class OverlayTab
                 changed |= DrawSubtitleOverlay(config);
                 break;
             case 4:
-                changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
+                changed |= DrawMiniTalkOverlay(config);
                 break;
             case 5:
+                changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
+                break;
+            case 6:
                 changed |= OtherUIElementsSettingsTab.Draw(config);
                 break;
         }
@@ -514,6 +518,72 @@ public static class OverlayTab
                 ref config.OverlayTalkSubtitleTextColor,
                 Resources.OverlayFontScaleLabel,
                 ref config.FontChangeTime);
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the MiniTalk overlay settings without exposing a title bar
+    ///     toggle. MiniTalk windows are intentionally titleless so the
+    ///     configuration only controls style and placement.
+    /// </summary>
+    private static bool DrawMiniTalkOverlay(Config config)
+    {
+        var changed = false;
+
+        using var scrollingChildMiniTalk = ImRaii.Child(
+            "MiniTalkOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildMiniTalk)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            "Translate MiniTalk",
+            ref config.TranslateMiniTalk);
+
+        if (!config.TranslateMiniTalk)
+        {
+            return changed;
+        }
+
+        if (config.OverlayOnlyLanguage)
+        {
+            changed |= AssignIfChanged(
+                ref config.UseImGuiForMiniTalk,
+                true);
+            changed |= AssignIfChanged(
+                ref config.SwapTextsUsingImGui,
+                false);
+        }
+        else
+        {
+            changed |= ImGui.Checkbox(
+                Resources.OverlayToggleLabel,
+                ref config.UseImGuiForMiniTalk);
+        }
+
+        if (config.UseImGuiForMiniTalk)
+        {
+            changed |= DrawToastOverlaySettings(
+                ref config.MiniTalkFontScale,
+                ref config.ImGuiMiniTalkWindowWidthMult,
+                ref config.ImGuiMiniTalkWindowPosCorrection,
+                ref config.OverlayMiniTalkTextColor,
+                ref config.MiniTalkBackgroundOpacity,
+                ref config.FontChangeTime);
+        }
+
+        if (!config.OverlayOnlyLanguage && config.UseImGuiForMiniTalk)
+        {
+            changed |= ImGui.Checkbox(
+                Resources.SwapTranslationTextToggle,
+                ref config.SwapTextsUsingImGui);
         }
 
         return changed;

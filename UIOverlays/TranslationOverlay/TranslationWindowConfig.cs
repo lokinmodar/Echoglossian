@@ -81,6 +81,27 @@ internal record TranslationWindowConfig(
   }
 
   /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for MiniTalk translations.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForMiniTalk(Config config)
+  {
+    return new TranslationWindowConfig(
+        DefaultTitle: "MiniTalk translation",
+        FontScale: config.MiniTalkFontScale,
+        WidthMultiplier: config.ImGuiMiniTalkWindowWidthMult,
+        HeightMultiplier: 1.0f,
+        TextColor: new Vector4(config.OverlayMiniTalkTextColor.X, config.OverlayMiniTalkTextColor.Y, config.OverlayMiniTalkTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiMiniTalkWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.MiniTalkBackgroundOpacity,
+        NoBackground: config.MiniTalkBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
   /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for text gimmick hint translations.
   /// </summary>
   /// <param name="config"></param>

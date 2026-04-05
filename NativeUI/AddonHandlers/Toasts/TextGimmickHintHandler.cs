@@ -79,7 +79,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     this.updateOverlay = updateOverlay;
     this.clearOverlay = clearOverlay;
     this.updateOverlayBounds = updateOverlayBounds;
-    this.resolveToastTextNode = ToastTextNodeResolvers.ResolveFirstTextNode;
+    this.resolveToastTextNode = AddonTextNodeResolvers.ResolveFirstTextNode;
     this.normalizeReplacementText = normalizeReplacementText;
 
     this.RegisterHandler(AddonEvent.PreUpdate, this.OnPreUpdate);

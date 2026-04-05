@@ -511,6 +511,46 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("talksubtitlemessages", (string)null);
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.MiniTalkMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalMiniTalkMessage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalMiniTalkMessageLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("TranslatedMiniTalkMessage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TranslationLang", "TranslationEngine")
+                        .HasDatabaseName("IX_minitalkmessages_lookup");
+
+                    b.ToTable("minitalkmessages", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage", b =>
                 {
                     b.Property<int>("Id")

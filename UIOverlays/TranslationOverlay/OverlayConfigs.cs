@@ -78,7 +78,7 @@ public partial class Echoglossian
                     this.TrySyncToastOverlayToAddon(
                         "_TextGimmickHint",
                         this.textGimmickHintOverlay,
-                        ToastTextNodeResolvers.ResolveFirstTextNode)));
+                        AddonTextNodeResolvers.ResolveFirstTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -93,7 +93,7 @@ public partial class Echoglossian
                     this.TrySyncToastOverlayToAddon(
                         "_WideText",
                         this.toastOverlay,
-                        ToastTextNodeResolvers.ResolveWideTextNode)));
+                        AddonTextNodeResolvers.ResolveWideTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -109,7 +109,7 @@ public partial class Echoglossian
                     this.TrySyncToastOverlayToAddon(
                         "_TextError",
                         this.errorToastOverlay,
-                        ToastTextNodeResolvers.ResolveFirstTextNode)));
+                        AddonTextNodeResolvers.ResolveFirstTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -125,7 +125,7 @@ public partial class Echoglossian
                     this.TrySyncToastOverlayToAddon(
                         "_AreaText",
                         this.areaToastOverlay,
-                        ToastTextNodeResolvers.ResolveFirstTextNode)));
+                        AddonTextNodeResolvers.ResolveFirstTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -141,7 +141,7 @@ public partial class Echoglossian
                     this.TrySyncToastOverlayToAddon(
                         "_TextClassChange",
                         this.classChangeToastOverlay,
-                        ToastTextNodeResolvers.ResolveFirstTextNode)));
+                        AddonTextNodeResolvers.ResolveFirstTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(

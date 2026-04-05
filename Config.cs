@@ -373,6 +373,20 @@ public class Config : IPluginConfiguration
   /// <summary>Font scale used for Talk Subtitle overlay.</summary>
   [DefaultValue(1f)] public float TalkSubtitleFontScale = 1f;
 
+  /// <summary>Font scale used for MiniTalk overlay.</summary>
+  [DefaultValue(1f)] public float MiniTalkFontScale = 1f;
+
+  /// <summary>Background opacity used for MiniTalk overlays.</summary>
+  [DefaultValue(1f)] public float MiniTalkBackgroundOpacity = 1f;
+
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiMiniTalkWindowPosCorrection = new(0, 0);
+
+  [DefaultValue(1.5f)] public float ImGuiMiniTalkWindowWidthMult = 1.5f;
+
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayMiniTalkTextColor = new(1f, 1f, 1f);
+
   /// <summary>Always show the Talk Subtitle overlay title bar.</summary>
   [DefaultValue(false)] public bool TalkSubtitleForceShowTitle = false;
 
@@ -475,6 +489,9 @@ public class Config : IPluginConfiguration
   /// <summary>Translate Talk Subtitle messages.</summary>
   [DefaultValue(false)] public bool TranslateTalkSubtitle = false;
 
+  /// <summary>Translate MiniTalk messages.</summary>
+  [DefaultValue(false)] public bool TranslateMiniTalk = false;
+
   /// <summary>Translate Text Gimmick Hint messages.</summary>
   [DefaultValue(false)] public bool TranslateTextGimmickHint = false;
 
@@ -504,6 +521,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Use ImGui for Talk Subtitle overlays.</summary>
   [DefaultValue(false)] public bool UseImGuiForTalkSubtitle = false;
+
+  /// <summary>Use ImGui for MiniTalk overlays.</summary>
+  [DefaultValue(false)] public bool UseImGuiForMiniTalk = false;
 
   /// <summary>Use ImGui for Text Gimmick Hint overlays.</summary>
   [DefaultValue(false)] public bool UseImGuiForTextGimmickHint = false;
@@ -581,8 +601,8 @@ public class Config : IPluginConfiguration
   [DefaultValue("")] public string YandexPaidApiKey = string.Empty;
 
   /// <summary>Plugin configuration version number (used during migration).</summary>
-  [DefaultValue(9)]
-  public int Version { get; set; } = 9;
+  [DefaultValue(10)]
+  public int Version { get; set; } = 10;
 
   /// <summary>
   /// Gets or sets a value indicating whether translation should run asynchronously.

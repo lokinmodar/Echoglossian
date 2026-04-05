@@ -462,6 +462,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.toastOverlay.Dispose();
     this.errorToastOverlay.Dispose();
     this.chatBubbleOverlay.Dispose();
+    this.DisposeMiniTalkBubbleOverlays();
 
     // ClientStateInterface.Login -= this.StringArrayDataHandler.LoadAndTranslateStringArrayDatas;
 
@@ -567,6 +568,7 @@ public partial class Echoglossian : IDalamudPlugin
     switch (this.configuration.UseImGuiForTalk ||
             this.configuration.UseImGuiForBattleTalk ||
             this.configuration.OverlayOnlyLanguage ||
+            this.configuration.UseImGuiForMiniTalk ||
             this.configuration.UseImGuiForWideTextToast ||
             this.configuration.UseImGuiForErrorToast ||
             this.configuration.UseImGuiForAreaToast ||
@@ -639,6 +641,8 @@ public partial class Echoglossian : IDalamudPlugin
           overlayRegistration.Config,
           overlayRegistration.CustomTitleGetter?.Invoke());
     }
+
+    this.DrawMiniTalkBubbleOverlays();
   }
 
   /// <summary>
@@ -939,6 +943,33 @@ public partial class Echoglossian : IDalamudPlugin
                   () => this.ClearOverlay(
                       this.talkSubtitleOverlay,
                       clearText: true),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateMiniTalk)
+    {
+      // PluginLog.Debug("Registering MiniTalk addon listeners for translation.");
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_MiniTalk",
+               Handler: new MiniTalkHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindAndReturnMiniTalkMessage,
+                  miniTalkMessage => Task.Run(
+                      () => InsertMiniTalkData(miniTalkMessage)),
+                  (bubbleKey, translatedName, translatedText, originalName) =>
+                      this.UpdateMiniTalkBubbleOverlayContent(
+                          bubbleKey,
+                          translatedName,
+                          translatedText,
+                          originalName),
+                  (bubbleKey, clearText) => this.ClearMiniTalkBubbleOverlay(
+                      bubbleKey,
+                      clearText),
+                  this.SyncMiniTalkBubbleOverlayBounds,
+                  AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes,
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));

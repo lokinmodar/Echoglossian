@@ -60,7 +60,7 @@ internal sealed class ClassChangeToastHandler : AddonTextToastHandler
           updateOverlay,
           clearOverlay,
           updateOverlayBounds,
-          ToastTextNodeResolvers.ResolveFirstTextNode,
+          AddonTextNodeResolvers.ResolveFirstTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateClassChangeToast,
           cfg => cfg.UseImGuiForClassChangeToast)
