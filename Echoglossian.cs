@@ -482,22 +482,6 @@ public partial class Echoglossian : IDalamudPlugin
       // Talk now unregisters through the addon-handler registrar.
     }
 
-    if (this.configuration.TranslateBattleTalk)
-    {
-      /*      AddonLifecycle.UnregisterListener(
-                AddonEvent.PreRefresh,
-                "_BattleTalk",
-                this.UiBattleTalkAsyncHandler);
-            AddonLifecycle.UnregisterListener(
-                AddonEvent.PreDraw,
-                "_BattleTalk",
-                this.UiBattleTalkAsyncHandler);
-            AddonLifecycle.UnregisterListener(
-                AddonEvent.PreReceiveEvent,
-                "_BattleTalk",
-                this.UiBattleTalkAsyncHandler);*/
-    }
-
     if (this.configuration.TranslateJournal)
     {
       AddonLifecycle.UnregisterListener(
