@@ -197,6 +197,15 @@ public partial class Echoglossian
                 // PluginLog.Debug(
                 //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
+
+                if (this.configuration.TranslateTooltips)
+                {
+                    this.RegisterTranslatedHoverTooltip(
+                        $"RecommendList-{(nint)questNameNode:X}",
+                        questName,
+                        questNameText,
+                        translatedNameText);
+                }
             }
 
             // Then we replace the text in the nodes

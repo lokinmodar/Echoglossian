@@ -19,6 +19,10 @@ public static class JournalTab
             changed |= ImGui.Checkbox(
                 Resources.TranslateJournalToggle,
                 ref config.TranslateJournal);
+
+            changed |= ImGui.Checkbox(
+                "Show journal translations as hover tooltips",
+                ref config.TranslateTooltips);
         }
 
         if (langToRemoveDiacritics)

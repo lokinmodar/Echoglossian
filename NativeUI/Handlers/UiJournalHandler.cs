@@ -205,6 +205,7 @@ public partial class Echoglossian
             translatedQuestPlate.Objectives.Add(
                 objectiveText,
                 translatedQuestObjective);
+
             var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
             // PluginLog.Debug($"Translated quest name: {translatedQuestName}");
@@ -253,6 +254,43 @@ public partial class Echoglossian
         foreach (var summary in summaries)
         {
             summary.Node->SetText(summary.TranslatedText);
+        }
+
+        if (this.configuration.TranslateTooltips)
+        {
+            this.RegisterTranslatedHoverTooltip(
+                $"JournalDetail-QuestName-{(nint)questNameNode:X}",
+                questNameNode,
+                questName,
+                translatedQuestName);
+            this.RegisterTranslatedHoverTooltip(
+                $"JournalDetail-Description-{(nint)descriptionNode:X}",
+                descriptionNode,
+                questMessage,
+                translatedQuestMessage);
+            this.RegisterTranslatedHoverTooltip(
+                $"JournalDetail-Objective-{(nint)objectiveNode:X}",
+                objectiveNode,
+                objectiveText,
+                translatedQuestObjective);
+
+            if (summaryNode != null)
+            {
+                this.RegisterTranslatedHoverTooltip(
+                    $"JournalDetail-Summary-{(nint)summaryNode:X}",
+                    summaryNode,
+                    summaryText,
+                    translatedQuestSummary);
+            }
+
+            foreach (var summary in summaries)
+            {
+                this.RegisterTranslatedHoverTooltip(
+                    $"JournalDetail-SummaryItem-{(nint)summary.Node:X}",
+                    summary.Node,
+                    summary.OriginalText,
+                    summary.TranslatedText);
+            }
         }
     }
 
@@ -433,6 +471,20 @@ public partial class Echoglossian
 
             questNameNode->SetText(translatedQuestName);
             descriptionNode->SetText(translatedQuestMessage);
+
+            if (this.configuration.TranslateTooltips)
+            {
+                this.RegisterTranslatedHoverTooltip(
+                    $"JournalDetail-CompletedQuestName-{(nint)questNameNode:X}",
+                    questNameNode,
+                    questName,
+                    translatedQuestName);
+                this.RegisterTranslatedHoverTooltip(
+                    $"JournalDetail-CompletedQuestMessage-{(nint)descriptionNode:X}",
+                    descriptionNode,
+                    questMessage,
+                    translatedQuestMessage);
+            }
         }
         catch (Exception e)
         {
@@ -559,8 +611,8 @@ public partial class Echoglossian
 
                 var translatedNameText = this.Translate(questNameText);
 #if DEBUG
-                // PluginLog.Debug(
-                //     $"Name translated: {questNameText} -> {translatedNameText}");
+                    // PluginLog.Debug(
+                    //     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
                 QuestPlate translatedQuestPlate = new(
                     questNameText,
@@ -589,6 +641,14 @@ public partial class Echoglossian
 
                 questName->SetText(translatedNameText);
                 this.translatedQuestNames.TryAdd(translatedNameText, true);
+                if (this.configuration.TranslateTooltips)
+                {
+                    this.RegisterTranslatedHoverTooltip(
+                        $"JournalList-{(nint)questName:X}",
+                        questName,
+                        questNameText,
+                        translatedNameText);
+                }
             }
         }
         catch (Exception e)

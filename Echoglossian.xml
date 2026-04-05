@@ -1080,6 +1080,25 @@
             </summary>
             <param name="addon">The live "_TextGimmickHint" addon.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String)">
+            <summary>
+            Registers a hover tooltip for a text node using its current screen bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="textNode">The text node to anchor the tooltip to.</param>
+            <param name="title">Tooltip title.</param>
+            <param name="body">Tooltip body text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String)">
+            <summary>
+            Registers a hover tooltip for a text node using its translated and
+            original text, swapping the visible content when swap mode is active.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="textNode">The text node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.InsertToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
             <summary>
             Persists a toast row into the correct historical cache/table according to
@@ -6473,6 +6492,47 @@
             <param name="config">The plugin configuration.</param>
             <param name="service">The translation service instance.</param>
             <returns> </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.HoverTooltipManager">
+            <summary>
+                Tracks hover rectangles and draws DelvUI-style tooltips on the cursor.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Register(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean)">
+            <summary>
+                Registers or updates a tooltip target.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Remove(System.String)">
+            <summary>
+                Removes tooltip targets by exact key.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Clear">
+            <summary>
+                Clears all registered targets.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Draw">
+            <summary>
+                Draws a tooltip for the first hovered target.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker">
+            <summary>
+                Keeps a shared in-memory translation cache and makes translation requests
+                asynchronous so legacy UI event handlers can stop blocking the game thread.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.TryGetCached(System.String,System.String@)">
+            <summary>
+                Returns a cached translation if we already resolved it.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Queue(System.String,System.Func{System.Threading.Tasks.Task{System.String}})">
+            <summary>
+                Queues a translation request if one is not already in flight for the key.
+            </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
             <summary>

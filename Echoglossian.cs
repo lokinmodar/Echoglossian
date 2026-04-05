@@ -110,6 +110,8 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly IDalamudTextureWrap cutsceneChoiceImage;
   private readonly SemaphoreSlim errorToastTranslationSemaphore;
   private readonly IDalamudTextureWrap logo;
+  private readonly QueuedTranslationBroker queuedTranslationBroker;
+  private readonly HoverTooltipManager hoverTooltipManager;
   private readonly SemaphoreSlim nameTranslationSemaphore;
 
   private readonly IDalamudTextureWrap pixImage;
@@ -273,6 +275,9 @@ public partial class Echoglossian : IDalamudPlugin
         this.configuration,
         PluginLog,
         Sanitizer);
+
+    this.queuedTranslationBroker = new QueuedTranslationBroker();
+    this.hoverTooltipManager = new HoverTooltipManager();
 
     this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 
@@ -632,6 +637,14 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     this.DrawMiniTalkBubbleOverlays();
+    if (this.configuration.TranslateTooltips)
+    {
+      this.hoverTooltipManager.Draw();
+    }
+    else
+    {
+      this.hoverTooltipManager.Clear();
+    }
   }
 
   /// <summary>
@@ -799,6 +812,81 @@ public partial class Echoglossian : IDalamudPlugin
       AtkTextNode* textNode)
   {
     this.UpdateToastOverlayBounds(this.textGimmickHintOverlay, addon, textNode);
+  }
+
+  /// <summary>
+  /// Registers a hover tooltip for a text node using its current screen bounds.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="textNode">The text node to anchor the tooltip to.</param>
+  /// <param name="title">Tooltip title.</param>
+  /// <param name="body">Tooltip body text.</param>
+  private unsafe void RegisterHoverTooltip(
+      string key,
+      AtkTextNode* textNode,
+      string title,
+      string body)
+  {
+    if (!this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    if (textNode == null || !textNode->IsVisible())
+    {
+      return;
+    }
+
+    var left = textNode->ScreenX;
+    var top = textNode->ScreenY;
+    var right = left + Math.Max(1f, textNode->GetWidth());
+    var bottom = top + Math.Max(1f, textNode->GetHeight());
+
+    this.hoverTooltipManager.Register(
+        key,
+        new Vector2(left, top),
+        new Vector2(right, bottom),
+        title,
+        body,
+        true);
+  }
+
+  /// <summary>
+  /// Registers a hover tooltip for a text node using its translated and
+  /// original text, swapping the visible content when swap mode is active.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="textNode">The text node to anchor the tooltip to.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  private unsafe void RegisterTranslatedHoverTooltip(
+      string key,
+      AtkTextNode* textNode,
+      string originalText,
+      string translatedText)
+  {
+    if (!this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    var title = this.configuration.SwapTextsUsingImGui
+        ? translatedText
+        : originalText;
+    if (string.IsNullOrWhiteSpace(title))
+    {
+      title = originalText;
+    }
+
+    var body = this.configuration.SwapTextsUsingImGui
+        ? originalText
+        : translatedText;
+    if (string.IsNullOrWhiteSpace(body))
+    {
+      body = originalText;
+    }
+
+    this.RegisterHoverTooltip(key, textNode, title, body);
   }
 
   /// <summary>
