@@ -1089,6 +1089,15 @@
             <param name="title">Tooltip title.</param>
             <param name="body">Tooltip body text.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String)">
+            <summary>
+            Registers a hover tooltip for a whole addon window using its root node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="addon">The live addon window to anchor the tooltip to.</param>
+            <param name="title">Tooltip title.</param>
+            <param name="body">Tooltip body text.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String)">
             <summary>
             Registers a hover tooltip for a text node using its translated and
@@ -1096,6 +1105,16 @@
             </summary>
             <param name="key">Stable key used to refresh the tooltip target.</param>
             <param name="textNode">The text node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String)">
+            <summary>
+            Registers a hover tooltip for a whole addon window using translated and
+            original text, swapping the visible content when swap mode is active.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="addon">The live addon window to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
         </member>

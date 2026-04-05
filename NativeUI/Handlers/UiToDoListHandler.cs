@@ -9,6 +9,29 @@ public partial class Echoglossian
 {
     private const string EmptyObjective = "???";
 
+    private unsafe void RegisterToDoTooltip(
+        AtkUnitBase* todoList,
+        int indexI,
+        int indexJ,
+        uint nodeId,
+        string originalText,
+        string translatedText)
+    {
+        if (!this.configuration.TranslateTooltips)
+        {
+            return;
+        }
+
+        var textNode = todoList->UldManager.NodeList[indexI]
+            ->GetAsAtkComponentNode()->Component->UldManager.NodeList[indexJ]
+            ->GetAsAtkTextNode();
+        this.RegisterTranslatedHoverTooltip(
+            $"ToDoList-{indexI}-{indexJ}-{nodeId}-{(nint)textNode:X}",
+            textNode,
+            originalText,
+            translatedText);
+    }
+
     private unsafe void TranslateToDoList()
     {
         if (!this.configuration.TranslateJournal)
@@ -239,6 +262,13 @@ public partial class Echoglossian
                             GetAsAtkComponentNode()->Component->UldManager
                         .NodeList[quest.IndexJ]->GetAsAtkTextNode()->SetText(
                         foundTranslatedQuestName);
+                    this.RegisterToDoTooltip(
+                        todoList,
+                        quest.IndexI,
+                        quest.IndexJ,
+                        quest.NodeId,
+                        quest.Text,
+                        foundTranslatedQuestName);
 
                     List<string> translatedStoredObjectives = new();
                     foreach (var objective in objectives)
@@ -281,6 +311,13 @@ public partial class Echoglossian
                                     .NodeList[objective.IndexJ]->
                                 GetAsAtkTextNode()->
                                 SetText(storedObjectiveText);
+                            this.RegisterToDoTooltip(
+                                todoList,
+                                objective.IndexI,
+                                objective.IndexJ,
+                                objective.NodeId,
+                                objective.Text,
+                                storedObjectiveText);
                             continue;
                         }
 
@@ -313,6 +350,13 @@ public partial class Echoglossian
                                 .NodeList[objective.IndexJ]->GetAsAtkTextNode()
                             ->
                             SetText(translatedQuestObjective);
+                        this.RegisterToDoTooltip(
+                            todoList,
+                            objective.IndexI,
+                            objective.IndexJ,
+                            objective.NodeId,
+                            objective.Text,
+                            translatedQuestObjective);
                     }
 
                     // because sometimes the quest name translation is the same as the original name but the objectives are not
@@ -355,6 +399,13 @@ public partial class Echoglossian
                         GetAsAtkComponentNode()->Component->UldManager
                     .NodeList[quest.IndexJ]->GetAsAtkTextNode()->SetText(
                     translatedNameText);
+                this.RegisterToDoTooltip(
+                    todoList,
+                    quest.IndexI,
+                    quest.IndexJ,
+                    quest.NodeId,
+                    quest.Text,
+                    translatedNameText);
 
                 List<string> translatedObjectives = new();
                 foreach (var objective in objectives)
@@ -396,6 +447,13 @@ public partial class Echoglossian
                             GetAsAtkComponentNode()->Component->UldManager
                         .NodeList[objective.IndexJ]->GetAsAtkTextNode()->
                     SetText(
+                        translatedObjectiveText);
+                    this.RegisterToDoTooltip(
+                        todoList,
+                        objective.IndexI,
+                        objective.IndexJ,
+                        objective.NodeId,
+                        objective.Text,
                         translatedObjectiveText);
                 }
 

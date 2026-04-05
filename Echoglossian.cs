@@ -852,6 +852,49 @@ public partial class Echoglossian : IDalamudPlugin
   }
 
   /// <summary>
+  /// Registers a hover tooltip for a whole addon window using its root node.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="addon">The live addon window to anchor the tooltip to.</param>
+  /// <param name="title">Tooltip title.</param>
+  /// <param name="body">Tooltip body text.</param>
+  private unsafe void RegisterHoverTooltip(
+      string key,
+      AtkUnitBase* addon,
+      string title,
+      string body)
+  {
+    if (!this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    if (addon == null || !addon->IsVisible || addon->UldManager.RootNode == null)
+    {
+      return;
+    }
+
+    var rootNode = addon->UldManager.RootNode;
+    if (!rootNode->IsVisible())
+    {
+      return;
+    }
+
+    var left = rootNode->X;
+    var top = rootNode->Y;
+    var right = left + Math.Max(1f, rootNode->Width * addon->Scale);
+    var bottom = top + Math.Max(1f, rootNode->Height * addon->Scale);
+
+    this.hoverTooltipManager.Register(
+        key,
+        new Vector2(left, top),
+        new Vector2(right, bottom),
+        title,
+        body,
+        true);
+  }
+
+  /// <summary>
   /// Registers a hover tooltip for a text node using its translated and
   /// original text, swapping the visible content when swap mode is active.
   /// </summary>
@@ -887,6 +930,44 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     this.RegisterHoverTooltip(key, textNode, title, body);
+  }
+
+  /// <summary>
+  /// Registers a hover tooltip for a whole addon window using translated and
+  /// original text, swapping the visible content when swap mode is active.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="addon">The live addon window to anchor the tooltip to.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  private unsafe void RegisterTranslatedHoverTooltip(
+      string key,
+      AtkUnitBase* addon,
+      string originalText,
+      string translatedText)
+  {
+    if (!this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    var title = this.configuration.SwapTextsUsingImGui
+        ? translatedText
+        : originalText;
+    if (string.IsNullOrWhiteSpace(title))
+    {
+      title = originalText;
+    }
+
+    var body = this.configuration.SwapTextsUsingImGui
+        ? originalText
+        : translatedText;
+    if (string.IsNullOrWhiteSpace(body))
+    {
+      body = originalText;
+    }
+
+    this.RegisterHoverTooltip(key, addon, title, body);
   }
 
   /// <summary>

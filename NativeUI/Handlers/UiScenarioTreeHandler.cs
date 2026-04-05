@@ -45,6 +45,17 @@ public partial class Echoglossian
             }
 
             setupAtkValues[valueIndex].SetManagedString(translatedQuestName);
+
+            if (this.configuration.TranslateTooltips)
+            {
+                var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                    ->GetAddonByName("ScenarioTree");
+                this.RegisterTranslatedHoverTooltip(
+                    $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
+                    addon,
+                    questNameText,
+                    translatedQuestName);
+            }
         }
         else
         {
@@ -78,6 +89,17 @@ public partial class Echoglossian
             }
 
             setupAtkValues[valueIndex].SetManagedString(translatedNameText);
+
+            if (this.configuration.TranslateTooltips)
+            {
+                var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                    ->GetAddonByName("ScenarioTree");
+                this.RegisterTranslatedHoverTooltip(
+                    $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
+                    addon,
+                    questNameText,
+                    translatedNameText);
+            }
         }
     }
 

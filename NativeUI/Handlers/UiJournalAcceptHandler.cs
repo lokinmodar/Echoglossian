@@ -103,6 +103,17 @@ public partial class Echoglossian
 
             setupAtkValues[5].SetManagedString(translatedQuestName);
             setupAtkValues[12].SetManagedString(translatedQuestMessage);
+
+            if (this.configuration.TranslateTooltips)
+            {
+                var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                    ->GetAddonByName("JournalAccept");
+                this.RegisterTranslatedHoverTooltip(
+                    $"JournalAccept-{(nint)addon:X}",
+                    addon,
+                    $"{questName}\n{questMessage}",
+                    $"{translatedQuestName}\n{translatedQuestMessage}");
+            }
         }
         catch (Exception e)
         {

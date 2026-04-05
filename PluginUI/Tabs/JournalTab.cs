@@ -21,7 +21,7 @@ public static class JournalTab
                 ref config.TranslateJournal);
 
             changed |= ImGui.Checkbox(
-                "Show journal translations as hover tooltips",
+                "Show journal and quest translations as hover tooltips",
                 ref config.TranslateTooltips);
         }
 

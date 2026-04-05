@@ -59,6 +59,17 @@ public partial class Echoglossian
 #endif
                 setupAtkValues[142]
                     .SetManagedString(foundQuestPlate.TranslatedQuestName);
+
+                if (this.configuration.TranslateTooltips)
+                {
+                    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                        ->GetAddonByName("AreaMap");
+                    this.RegisterTranslatedHoverTooltip(
+                        $"AreaMap-{(nint)addon:X}-142",
+                        addon,
+                        questNameText,
+                        foundQuestPlate.TranslatedQuestName);
+                }
             }
             else
             {
@@ -85,6 +96,17 @@ public partial class Echoglossian
                     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
                 setupAtkValues[142].SetManagedString(translatedNameText);
+
+                if (this.configuration.TranslateTooltips)
+                {
+                    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                        ->GetAddonByName("AreaMap");
+                    this.RegisterTranslatedHoverTooltip(
+                        $"AreaMap-{(nint)addon:X}-142",
+                        addon,
+                        questNameText,
+                        translatedNameText);
+                }
             }
         }
         catch (Exception e)

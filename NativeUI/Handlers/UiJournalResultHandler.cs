@@ -61,6 +61,17 @@ public partial class Echoglossian
 
                 setupAtkValues[1]
                     .SetManagedString(foundQuestPlate.TranslatedQuestName);
+
+                if (this.configuration.TranslateTooltips)
+                {
+                    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                        ->GetAddonByName("JournalResult");
+                    this.RegisterTranslatedHoverTooltip(
+                        $"JournalResult-{(nint)addon:X}",
+                        addon,
+                        questNameText,
+                        foundQuestPlate.TranslatedQuestName);
+                }
             }
             else
             {
@@ -96,6 +107,17 @@ public partial class Echoglossian
                 }
 
                 setupAtkValues[1].SetManagedString(translatedNameText);
+
+                if (this.configuration.TranslateTooltips)
+                {
+                    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                        ->GetAddonByName("JournalResult");
+                    this.RegisterTranslatedHoverTooltip(
+                        $"JournalResult-{(nint)addon:X}",
+                        addon,
+                        questNameText,
+                        translatedNameText);
+                }
             }
         }
         catch (Exception e)
