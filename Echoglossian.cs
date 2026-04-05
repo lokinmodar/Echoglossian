@@ -971,6 +971,82 @@ public partial class Echoglossian : IDalamudPlugin
   }
 
   /// <summary>
+  ///     Attempts to read a queued translation from the shared broker cache.
+  /// </summary>
+  /// <param name="key">Stable translation key.</param>
+  /// <param name="translatedText">The cached translated text, if any.</param>
+  /// <returns>True when a cached translation exists.</returns>
+  private bool TryGetQueuedTranslation(
+      string key,
+      out string translatedText)
+  {
+    return this.queuedTranslationBroker.TryGetCached(key, out translatedText);
+  }
+
+  /// <summary>
+  ///     Enqueues a translation request on the shared broker without blocking
+  ///     the addon lifecycle callback.
+  /// </summary>
+  /// <param name="key">Stable translation key.</param>
+  /// <param name="resolver">Function that returns the translated text.</param>
+  /// <param name="onResolved">Optional callback invoked after the text is cached.</param>
+  /// <returns>True if the request was queued, false if one is already in flight.</returns>
+  private bool QueueTranslation(
+      string key,
+      Func<string> resolver,
+      Action<string>? onResolved = null)
+  {
+    return this.queuedTranslationBroker.Queue(
+        key,
+        () => Task.FromResult(resolver()),
+        onResolved);
+  }
+
+  /// <summary>
+  ///     Serializes a pair of translated strings for broker caching.
+  /// </summary>
+  /// <param name="first">The first translated string.</param>
+  /// <param name="second">The second translated string.</param>
+  /// <returns>A JSON payload representing both strings.</returns>
+  private static string SerializeTranslationPair(string first, string second)
+  {
+    return JsonConvert.SerializeObject(new[] { first, second });
+  }
+
+  /// <summary>
+  ///     Tries to deserialize a cached translation pair payload.
+  /// </summary>
+  /// <param name="payload">The cached payload.</param>
+  /// <param name="first">The first translated string.</param>
+  /// <param name="second">The second translated string.</param>
+  /// <returns>True when the payload contains two strings.</returns>
+  private static bool TryDeserializeTranslationPair(
+      string payload,
+      out string first,
+      out string second)
+  {
+    first = string.Empty;
+    second = string.Empty;
+
+    try
+    {
+      var items = JsonConvert.DeserializeObject<string[]>(payload);
+      if (items == null || items.Length < 2)
+      {
+        return false;
+      }
+
+      first = items[0] ?? string.Empty;
+      second = items[1] ?? string.Empty;
+      return true;
+    }
+    catch
+    {
+      return false;
+    }
+  }
+
+  /// <summary>
   /// Persists a toast row into the correct historical cache/table according to
   /// its toast type.
   /// </summary>

@@ -43,6 +43,7 @@ public partial class Echoglossian
 
             var questPlate = this.FormatQuestPlate(questName, questMessage);
             var foundQuestPlate = this.FindQuestPlate(questPlate);
+            var cacheKey = $"JournalAccept|{questName}|{questMessage}";
 
             string translatedQuestName;
             string translatedQuestMessage;
@@ -50,32 +51,59 @@ public partial class Echoglossian
             // If the quest is not saved
             if (foundQuestPlate == null)
             {
-                translatedQuestName = this.Translate(questName);
-                translatedQuestMessage = this.Translate(questMessage);
-
+                if (this.TryGetQueuedTranslation(
+                        cacheKey,
+                        out var cachedTranslatedPayload) &&
+                    TryDeserializeTranslationPair(
+                        cachedTranslatedPayload,
+                        out translatedQuestName,
+                        out translatedQuestMessage))
+                {
 #if DEBUG
-                PluginLog.Debug(
-                    $"Translated quest name: {translatedQuestName}");
-                PluginLog.Debug(
-                    $"Translated quest message: {translatedQuestMessage}");
+                    PluginLog.Debug(
+                        $"Translated quest name: {translatedQuestName}");
+                    PluginLog.Debug(
+                        $"Translated quest message: {translatedQuestMessage}");
 #endif
-                QuestPlate translatedQuestPlate = new(
-                    questName,
-                    questMessage,
-                    ClientStateInterface.ClientLanguage.Humanize(),
-                    translatedQuestName,
-                    translatedQuestMessage,
-                    string.Empty,
-                    LangDict[LanguageInt].Code,
-                    this.configuration.ChosenTransEngine,
-                    DateTime.Now,
-                    DateTime.Now);
+                }
+                else
+                {
+                    this.QueueTranslation(
+                        cacheKey,
+                        () => SerializeTranslationPair(
+                            this.Translate(questName),
+                            this.Translate(questMessage)),
+                        translatedPayload =>
+                        {
+                            if (!TryDeserializeTranslationPair(
+                                    translatedPayload,
+                                    out var resolvedQuestName,
+                                    out var resolvedQuestMessage))
+                            {
+                                return;
+                            }
 
-                var result = this.InsertQuestPlate(translatedQuestPlate);
+                            QuestPlate translatedQuestPlate = new(
+                                questName,
+                                questMessage,
+                                ClientStateInterface.ClientLanguage.Humanize(),
+                                resolvedQuestName,
+                                resolvedQuestMessage,
+                                string.Empty,
+                                LangDict[LanguageInt].Code,
+                                this.configuration.ChosenTransEngine,
+                                DateTime.Now,
+                                DateTime.Now);
+
+                            var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-                PluginLog.Debug(
-                    $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+                            PluginLog.Debug(
+                                $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
+                        });
+
+                    return;
+                }
             }
             else
             {

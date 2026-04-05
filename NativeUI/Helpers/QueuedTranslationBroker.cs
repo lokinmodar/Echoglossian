@@ -27,7 +27,7 @@ public sealed class QueuedTranslationBroker
     /// <summary>
     ///     Queues a translation request if one is not already in flight for the key.
     /// </summary>
-    public bool Queue(string key, Func<Task<string>> resolver)
+    public bool Queue(string key, Func<Task<string>> resolver, Action<string>? onResolved = null)
     {
         if (!this.translationInFlight.TryAdd(key, 0))
         {
@@ -42,6 +42,7 @@ public sealed class QueuedTranslationBroker
                 if (!string.IsNullOrWhiteSpace(translatedText))
                 {
                     this.translationCache[key] = translatedText;
+                    onResolved?.Invoke(translatedText);
                 }
             }
             catch (Exception ex)

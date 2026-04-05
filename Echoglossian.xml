@@ -1118,6 +1118,41 @@
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryGetQueuedTranslation(System.String,System.String@)">
+            <summary>
+                Attempts to read a queued translation from the shared broker cache.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="translatedText">The cached translated text, if any.</param>
+            <returns>True when a cached translation exists.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QueueTranslation(System.String,System.Func{System.String},System.Action{System.String})">
+            <summary>
+                Enqueues a translation request on the shared broker without blocking
+                the addon lifecycle callback.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="resolver">Function that returns the translated text.</param>
+            <param name="onResolved">Optional callback invoked after the text is cached.</param>
+            <returns>True if the request was queued, false if one is already in flight.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SerializeTranslationPair(System.String,System.String)">
+            <summary>
+                Serializes a pair of translated strings for broker caching.
+            </summary>
+            <param name="first">The first translated string.</param>
+            <param name="second">The second translated string.</param>
+            <returns>A JSON payload representing both strings.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryDeserializeTranslationPair(System.String,System.String@,System.String@)">
+            <summary>
+                Tries to deserialize a cached translation pair payload.
+            </summary>
+            <param name="payload">The cached payload.</param>
+            <param name="first">The first translated string.</param>
+            <param name="second">The second translated string.</param>
+            <returns>True when the payload contains two strings.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.InsertToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
             <summary>
             Persists a toast row into the correct historical cache/table according to
@@ -6548,7 +6583,7 @@
                 Returns a cached translation if we already resolved it.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Queue(System.String,System.Func{System.Threading.Tasks.Task{System.String}})">
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Queue(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String})">
             <summary>
                 Queues a translation request if one is not already in flight for the key.
             </summary>

@@ -29,6 +29,7 @@ public partial class Echoglossian
 
         var questPlate = this.FormatQuestPlate(questNameText, string.Empty);
         var foundQuestPlate = this.FindQuestPlateByName(questPlate);
+        var cacheKey = $"ScenarioTree|{valueIndex}|{questNameText}";
         if (foundQuestPlate != null)
         {
 #if DEBUG
@@ -56,30 +57,15 @@ public partial class Echoglossian
                     questNameText,
                     translatedQuestName);
             }
+            return;
         }
-        else
+
+        if (this.TryGetQueuedTranslation(cacheKey, out var cachedTranslatedName))
         {
-            var translatedNameText = this.Translate(questNameText);
+            var translatedNameText = cachedTranslatedName;
 #if DEBUG
             // PluginLog.Debug(
             //     $"Name translated: {questNameText} -> {translatedNameText}");
-#endif
-            QuestPlate translatedQuestPlate = new(
-                questNameText,
-                string.Empty,
-                ClientStateInterface.ClientLanguage.Humanize(),
-                translatedNameText,
-                string.Empty,
-                string.Empty,
-                LangDict[LanguageInt].Code,
-                this.configuration.ChosenTransEngine,
-                DateTime.Now,
-                DateTime.Now);
-
-            var result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-            // PluginLog.Debug(
-            //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
             if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
             {
@@ -100,7 +86,32 @@ public partial class Echoglossian
                     questNameText,
                     translatedNameText);
             }
+            return;
         }
+
+        this.QueueTranslation(
+            cacheKey,
+            () => this.Translate(questNameText),
+            translatedNameText =>
+            {
+                QuestPlate translatedQuestPlate = new(
+                    questNameText,
+                    string.Empty,
+                    ClientStateInterface.ClientLanguage.Humanize(),
+                    translatedNameText,
+                    string.Empty,
+                    string.Empty,
+                    LangDict[LanguageInt].Code,
+                    this.configuration.ChosenTransEngine,
+                    DateTime.Now,
+                    DateTime.Now);
+
+                var result = this.InsertQuestPlate(translatedQuestPlate);
+#if DEBUG
+                // PluginLog.Debug(
+                //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+            });
     }
 
     private unsafe void UiScenarioTreeHandler(AddonEvent type, AddonArgs args)
