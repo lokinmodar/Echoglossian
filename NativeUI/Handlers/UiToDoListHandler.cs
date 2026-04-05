@@ -271,6 +271,7 @@ public partial class Echoglossian
                         foundTranslatedQuestName);
 
                     List<string> translatedStoredObjectives = new();
+                    var hasPendingFoundObjectives = false;
                     foreach (var objective in objectives)
                     {
                         if (objective.Text == EmptyObjective)
@@ -321,8 +322,30 @@ public partial class Echoglossian
                             continue;
                         }
 
-                        var translatedQuestObjective =
-                            this.Translate(objective.Text);
+                        var objectiveCacheKey =
+                            $"ToDoListObjective|{objective.Text}";
+                        if (!this.TryGetQueuedTranslation(
+                                objectiveCacheKey,
+                                out var translatedQuestObjective))
+                        {
+                            this.QueueTranslation(
+                                objectiveCacheKey,
+                                () => this.Translate(objective.Text),
+                                translatedObjectiveText =>
+                                {
+                                    var questPlateToUpdate =
+                                        foundQuestPlate.Clone();
+                                    questPlateToUpdate.Objectives[
+                                        objective.Text] =
+                                        translatedObjectiveText;
+                                    questPlateToUpdate.UpdatedDate =
+                                        DateTime.Now;
+                                    this.UpdateQuestPlate(
+                                        questPlateToUpdate);
+                                });
+                            hasPendingFoundObjectives = true;
+                            continue;
+                        }
                         foundQuestPlate.Objectives.TryAdd(
                             objective.Text,
                             translatedQuestObjective);
@@ -359,6 +382,11 @@ public partial class Echoglossian
                             translatedQuestObjective);
                     }
 
+                    if (hasPendingFoundObjectives)
+                    {
+                        continue;
+                    }
+
                     // because sometimes the quest name translation is the same as the original name but the objectives are not
                     var translatedStoredQuestWithObjectives =
                         foundQuestPlate.TranslatedQuestName +
@@ -370,16 +398,47 @@ public partial class Echoglossian
                     continue;
                 }
 
-                var translatedNameText = this.Translate(quest.Text);
+                var questNameCacheKey = $"ToDoListQuest|{quest.Text}";
+                if (!this.TryGetQueuedTranslation(
+                        questNameCacheKey,
+                        out var translatedNameText))
+                {
+                    this.QueueTranslation(
+                        questNameCacheKey,
+                        () => this.Translate(quest.Text),
+                        translatedQuestName =>
+                        {
+                            var translatedQuestPlate = new QuestPlate(
+                                quest.Text,
+                                string.Empty,
+                                ClientStateInterface.ClientLanguage.Humanize(),
+                                translatedQuestName,
+                                string.Empty,
+                                string.Empty,
+                                LangDict[LanguageInt].Code,
+                                this.configuration.ChosenTransEngine,
+                                DateTime.Now,
+                                DateTime.Now);
+
+                            var result = this.InsertQuestPlate(
+                                translatedQuestPlate);
+#if DEBUG
+                            // PluginLog.Debug(
+                            //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+                        });
+                    continue;
+                }
 #if DEBUG
                     // PluginLog.Debug(
                     //     $"Name translated: {quest.Text} -> {translatedNameText}");
 #endif
+                var storedTranslatedNameText = translatedNameText;
                 QuestPlate translatedQuestPlate = new(
                     quest.Text,
                     string.Empty,
                     ClientStateInterface.ClientLanguage.Humanize(),
-                    translatedNameText,
+                    storedTranslatedNameText,
                     string.Empty,
                     string.Empty,
                     LangDict[LanguageInt].Code,
@@ -408,6 +467,7 @@ public partial class Echoglossian
                     translatedNameText);
 
                 List<string> translatedObjectives = new();
+                var hasPendingNewObjectives = false;
                 foreach (var objective in objectives)
                 {
                     if (objective.Text == EmptyObjective)
@@ -424,8 +484,52 @@ public partial class Echoglossian
                         continue;
                     }
 
-                    var translatedObjectiveText =
-                        this.Translate(objective.Text);
+                    var objectiveCacheKey =
+                        $"ToDoListObjective|{objective.Text}";
+                    if (!this.TryGetQueuedTranslation(
+                            objectiveCacheKey,
+                            out var translatedObjectiveText))
+                    {
+                        this.QueueTranslation(
+                            objectiveCacheKey,
+                            () => this.Translate(objective.Text),
+                            translatedQuestObjective =>
+                            {
+                                var existingQuestPlate =
+                                    this.FindQuestPlateByName(
+                                        this.FormatQuestPlate(
+                                            storedTranslatedNameText,
+                                            string.Empty));
+                                if (existingQuestPlate == null)
+                                {
+                                    existingQuestPlate = new QuestPlate(
+                                        quest.Text,
+                                        string.Empty,
+                                        ClientStateInterface.ClientLanguage.Humanize(),
+                                        storedTranslatedNameText,
+                                        string.Empty,
+                                        string.Empty,
+                                        LangDict[LanguageInt].Code,
+                                        this.configuration.ChosenTransEngine,
+                                        DateTime.Now,
+                                        DateTime.Now);
+                                }
+
+                                existingQuestPlate.Objectives.TryAdd(
+                                    objective.Text,
+                                    translatedQuestObjective);
+                                var result = existingQuestPlate.Id == 0
+                                    ? this.InsertQuestPlate(existingQuestPlate)
+                                    : this.UpdateQuestPlate(
+                                        existingQuestPlate);
+#if DEBUG
+                                // PluginLog.Debug(
+                                //     $"Using QuestPlate Replace - QuestPlate DB Update operation result: {result}");
+#endif
+                            });
+                        hasPendingNewObjectives = true;
+                        continue;
+                    }
 #if DEBUG
                     // PluginLog.Debug(
                     //     $"Objective translated: {translatedObjectiveText}");
@@ -462,6 +566,11 @@ public partial class Echoglossian
                 // PluginLog.Debug(
                 //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
+
+                if (hasPendingNewObjectives)
+                {
+                    continue;
+                }
 
                 // because sometimes the quest name translation is the same as the original name but the objectives are not
                 var translatedQuestWithObjectives = translatedNameText +

@@ -1014,6 +1014,17 @@ public partial class Echoglossian : IDalamudPlugin
   }
 
   /// <summary>
+  /// Serializes a batch of translated strings for broker caching.
+  /// </summary>
+  /// <param name="values">The translated strings.</param>
+  /// <returns>A JSON payload representing the translated strings.</returns>
+  private static string SerializeTranslationBatch(
+      IReadOnlyCollection<string> values)
+  {
+    return JsonConvert.SerializeObject(values, Formatting.None);
+  }
+
+  /// <summary>
   ///     Tries to deserialize a cached translation pair payload.
   /// </summary>
   /// <param name="payload">The cached payload.</param>
@@ -1044,6 +1055,56 @@ public partial class Echoglossian : IDalamudPlugin
     {
       return false;
     }
+  }
+
+  /// <summary>
+  /// Tries to deserialize a cached translation batch payload.
+  /// </summary>
+  /// <param name="payload">The cached payload.</param>
+  /// <param name="values">The translated strings.</param>
+  /// <returns>True when the payload contains a valid batch.</returns>
+  private static bool TryDeserializeTranslationBatch(
+      string payload,
+      out string[] values)
+  {
+    try
+    {
+      values = JsonConvert.DeserializeObject<string[]>(payload) ?? [];
+      return true;
+    }
+    catch
+    {
+      values = [];
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Queues a batch translation request and stores the serialized array result.
+  /// </summary>
+  /// <param name="key">The cache key.</param>
+  /// <param name="sourceTexts">The source texts to translate.</param>
+  /// <param name="onResolved">Optional callback invoked with the translated array.</param>
+  /// <returns>True when the request is queued.</returns>
+  private bool QueueTranslationBatch(
+      string key,
+      IReadOnlyCollection<string> sourceTexts,
+      Action<string[]>? onResolved = null)
+  {
+    return this.QueueTranslation(
+        key,
+        () => SerializeTranslationBatch(sourceTexts.Select(this.Translate).ToArray()),
+        translatedPayload =>
+        {
+          if (!TryDeserializeTranslationBatch(
+                  translatedPayload,
+                  out var translatedTexts))
+          {
+            return;
+          }
+
+          onResolved?.Invoke(translatedTexts);
+        });
   }
 
   /// <summary>

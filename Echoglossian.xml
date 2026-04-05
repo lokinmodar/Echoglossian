@@ -1144,6 +1144,13 @@
             <param name="second">The second translated string.</param>
             <returns>A JSON payload representing both strings.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.SerializeTranslationBatch(System.Collections.Generic.IReadOnlyCollection{System.String})">
+            <summary>
+            Serializes a batch of translated strings for broker caching.
+            </summary>
+            <param name="values">The translated strings.</param>
+            <returns>A JSON payload representing the translated strings.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryDeserializeTranslationPair(System.String,System.String@,System.String@)">
             <summary>
                 Tries to deserialize a cached translation pair payload.
@@ -1152,6 +1159,23 @@
             <param name="first">The first translated string.</param>
             <param name="second">The second translated string.</param>
             <returns>True when the payload contains two strings.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryDeserializeTranslationBatch(System.String,System.String[]@)">
+            <summary>
+            Tries to deserialize a cached translation batch payload.
+            </summary>
+            <param name="payload">The cached payload.</param>
+            <param name="values">The translated strings.</param>
+            <returns>True when the payload contains a valid batch.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},System.Action{System.String[]})">
+            <summary>
+            Queues a batch translation request and stores the serialized array result.
+            </summary>
+            <param name="key">The cache key.</param>
+            <param name="sourceTexts">The source texts to translate.</param>
+            <param name="onResolved">Optional callback invoked with the translated array.</param>
+            <returns>True when the request is queued.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
             <summary>

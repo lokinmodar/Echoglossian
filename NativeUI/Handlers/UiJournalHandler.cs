@@ -68,13 +68,41 @@ public partial class Echoglossian
                 continue;
             }
 
-            var translatedText = this.Translate(originalText);
+            if (foundQuestPlate != null)
+            {
+                var summaryCacheKey = $"JournalDetailSummary|{originalText}";
+                if (this.TryGetQueuedTranslation(
+                        summaryCacheKey,
+                        out var cachedTranslatedText))
+                {
+                    summaries.Add(
+                        new SummaryQuest(
+                            originalText,
+                            cachedTranslatedText,
+                            summaryTextNode,
+                            true));
+                    continue;
+                }
+
+                this.QueueTranslation(
+                    summaryCacheKey,
+                    () => this.Translate(originalText),
+                    translatedText =>
+                    {
+                        var questPlateToUpdate = foundQuestPlate.Clone();
+                        questPlateToUpdate.Summaries[originalText] =
+                            translatedText;
+                        questPlateToUpdate.UpdatedDate = DateTime.Now;
+                        this.UpdateQuestPlate(questPlateToUpdate);
+                    });
+            }
+
             summaries.Add(
                 new SummaryQuest(
                     originalText,
-                    translatedText,
+                    originalText,
                     summaryTextNode,
-                    true));
+                    false));
         }
 
         return summaries;
@@ -92,132 +120,219 @@ public partial class Echoglossian
         AtkTextNode* objectiveNode,
         AtkTextNode* summaryNode)
     {
-        string translatedQuestName;
-        string translatedQuestMessage;
-        string translatedQuestObjective;
-        var translatedQuestSummary = string.Empty;
-        List<SummaryQuest> summaries;
+        string translatedQuestName = questName;
+        string translatedQuestMessage = questMessage;
+        string translatedQuestObjective = objectiveText;
+        var translatedQuestSummary = summaryText;
+
+        var summaries = this.TranslateSummaries(
+            journalBox,
+            foundQuestPlate,
+            summaryText);
 
         if (foundQuestPlate != null)
         {
             translatedQuestName = foundQuestPlate.TranslatedQuestName;
             translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
-            var shouldUpdateQuest = false;
 
+            var objectiveCacheKey = $"JournalDetailObjective|{objectiveText}";
             if (foundQuestPlate.Objectives.TryGetValue(
                     objectiveText,
                     out var storedObjectiveText))
             {
                 translatedQuestObjective = storedObjectiveText;
             }
+            else if (this.TryGetQueuedTranslation(
+                         objectiveCacheKey,
+                         out var cachedTranslatedObjective))
+            {
+                translatedQuestObjective = cachedTranslatedObjective;
+            }
             else
             {
-                translatedQuestObjective = this.Translate(objectiveText);
-                foundQuestPlate.Objectives.Add(
-                    objectiveText,
-                    translatedQuestObjective);
-                shouldUpdateQuest = true;
+                this.QueueTranslation(
+                    objectiveCacheKey,
+                    () => this.Translate(objectiveText),
+                    translatedObjective =>
+                    {
+                        var questPlateToUpdate = foundQuestPlate.Clone();
+                        questPlateToUpdate.Objectives[objectiveText] =
+                            translatedObjective;
+                        questPlateToUpdate.UpdatedDate = DateTime.Now;
+                        this.UpdateQuestPlate(questPlateToUpdate);
+                    });
+                translatedQuestObjective = objectiveText;
             }
 
             if (summaryText != string.Empty)
             {
+                var summaryCacheKey = $"JournalDetailSummaryText|{summaryText}";
                 if (foundQuestPlate.Summaries.TryGetValue(
                         summaryText,
                         out var storedSummaryText))
                 {
                     translatedQuestSummary = storedSummaryText;
                 }
+                else if (this.TryGetQueuedTranslation(
+                             summaryCacheKey,
+                             out var cachedTranslatedSummary))
+                {
+                    translatedQuestSummary = cachedTranslatedSummary;
+                }
                 else
                 {
-                    translatedQuestSummary = this.Translate(summaryText);
-                    foundQuestPlate.Summaries.Add(
-                        summaryText,
-                        translatedQuestSummary);
-                    shouldUpdateQuest = true;
+                    this.QueueTranslation(
+                        summaryCacheKey,
+                        () => this.Translate(summaryText),
+                        translatedSummary =>
+                        {
+                            var questPlateToUpdate = foundQuestPlate.Clone();
+                            questPlateToUpdate.Summaries[summaryText] =
+                                translatedSummary;
+                            questPlateToUpdate.UpdatedDate = DateTime.Now;
+                            this.UpdateQuestPlate(questPlateToUpdate);
+                        });
+                    translatedQuestSummary = summaryText;
                 }
             }
-
-            summaries = this.TranslateSummaries(
-                journalBox,
-                foundQuestPlate,
-                summaryText);
-            foreach (var summary in summaries)
-            {
-                if (summary.IsTranslated)
-                {
-                    foundQuestPlate.Summaries.Add(
-                        summary.OriginalText,
-                        summary.TranslatedText);
-                    shouldUpdateQuest = true;
-                }
-            }
-
-            if (shouldUpdateQuest)
-            {
-                var result = this.UpdateQuestPlate(foundQuestPlate);
-#if DEBUG
-                // PluginLog.Debug(
-                //     $"Using QuestPlate Replace - QuestPlate DB Update operation result: {result}");
-#endif
-            }
-#if DEBUG
-            // PluginLog.Debug(
-            //     $"From database - Name: {foundQuestPlate.TranslatedQuestName}, Message: {foundQuestPlate.TranslatedQuestMessage}");
-#endif
         }
         else
         {
-            translatedQuestName = this.Translate(questName);
-            translatedQuestMessage = this.Translate(questMessage);
-            translatedQuestObjective = this.Translate(objectiveText);
-
-            QuestPlate translatedQuestPlate = new(
+            List<string> journalDetailBatchSources =
+            [
                 questName,
                 questMessage,
-                ClientStateInterface.ClientLanguage.Humanize(),
-                translatedQuestName,
-                translatedQuestMessage,
-                string.Empty,
-                LangDict[LanguageInt].Code,
-                this.configuration.ChosenTransEngine,
-                DateTime.Now,
-                DateTime.Now);
+                objectiveText,
+            ];
 
             if (summaryText != string.Empty)
             {
-                translatedQuestSummary = this.Translate(summaryText);
-                translatedQuestPlate.Summaries.Add(
-                    summaryText,
-                    translatedQuestSummary);
+                journalDetailBatchSources.Add(summaryText);
             }
 
-            summaries = this.TranslateSummaries(
-                journalBox,
-                foundQuestPlate,
-                summaryText);
-            foreach (var summary in summaries)
+            journalDetailBatchSources.AddRange(
+                summaries.Select(summary => summary.OriginalText));
+
+            var cacheKey =
+                $"JournalDetail|{SerializeTranslationBatch(journalDetailBatchSources)}";
+
+            if (this.TryGetQueuedTranslation(
+                    cacheKey,
+                    out var cachedTranslatedPayload) &&
+                TryDeserializeTranslationBatch(
+                    cachedTranslatedPayload,
+                    out var cachedTranslatedTexts) &&
+                cachedTranslatedTexts.Length == journalDetailBatchSources.Count)
             {
-                translatedQuestPlate.Summaries.Add(
-                    summary.OriginalText,
-                    summary.TranslatedText);
+                translatedQuestName = cachedTranslatedTexts[0];
+                translatedQuestMessage = cachedTranslatedTexts[1];
+                translatedQuestObjective = cachedTranslatedTexts[2];
+                var textIndex = 3;
+                if (summaryText != string.Empty)
+                {
+                    translatedQuestSummary = cachedTranslatedTexts[textIndex++];
+                }
+
+                for (var i = 0; i < summaries.Count; i++)
+                {
+                    summaries[i].TranslatedText = cachedTranslatedTexts[textIndex++];
+                }
+
+                QuestPlate translatedQuestPlate = new(
+                    questName,
+                    questMessage,
+                    ClientStateInterface.ClientLanguage.Humanize(),
+                    translatedQuestName,
+                    translatedQuestMessage,
+                    string.Empty,
+                    LangDict[LanguageInt].Code,
+                    this.configuration.ChosenTransEngine,
+                    DateTime.Now,
+                    DateTime.Now);
+
+                if (summaryText != string.Empty)
+                {
+                    translatedQuestPlate.Summaries.Add(
+                        summaryText,
+                        translatedQuestSummary);
+                }
+
+                foreach (var summary in summaries)
+                {
+                    translatedQuestPlate.Summaries.Add(
+                        summary.OriginalText,
+                        summary.TranslatedText);
+                }
+
+                translatedQuestPlate.Objectives.Add(
+                    objectiveText,
+                    translatedQuestObjective);
+                var result = this.InsertQuestPlate(translatedQuestPlate);
             }
+            else
+            {
+                this.QueueTranslationBatch(
+                    cacheKey,
+                    journalDetailBatchSources,
+                    translatedTexts =>
+                    {
+                        if (translatedTexts.Length !=
+                            journalDetailBatchSources.Count)
+                        {
+                            return;
+                        }
 
-            translatedQuestPlate.Objectives.Add(
-                objectiveText,
-                translatedQuestObjective);
+                        var translatedIndex = 0;
+                        var batchTranslatedQuestName =
+                            translatedTexts[translatedIndex++];
+                        var batchTranslatedQuestMessage =
+                            translatedTexts[translatedIndex++];
+                        var batchTranslatedQuestObjective =
+                            translatedTexts[translatedIndex++];
+                        var batchTranslatedQuestSummary =
+                            string.Empty;
 
-            var result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-            // PluginLog.Debug($"Translated quest name: {translatedQuestName}");
-            // PluginLog.Debug(
-            //     $"Translated quest message: {translatedQuestMessage}");
-            // PluginLog.Debug(
-            //     $"Translated quest objective: {translatedQuestObjective}");
-            // PluginLog.Debug(
-            //     $"Translated quest summary: {translatedQuestSummary}");
-            // PluginLog.Debug(
-            //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
-#endif
+                        if (summaryText != string.Empty)
+                        {
+                            batchTranslatedQuestSummary =
+                                translatedTexts[translatedIndex++];
+                        }
+
+                        QuestPlate translatedQuestPlate = new(
+                            questName,
+                            questMessage,
+                            ClientStateInterface.ClientLanguage.Humanize(),
+                            batchTranslatedQuestName,
+                            batchTranslatedQuestMessage,
+                            string.Empty,
+                            LangDict[LanguageInt].Code,
+                            this.configuration.ChosenTransEngine,
+                            DateTime.Now,
+                            DateTime.Now);
+
+                        if (summaryText != string.Empty)
+                        {
+                            translatedQuestPlate.Summaries.Add(
+                                summaryText,
+                                batchTranslatedQuestSummary);
+                        }
+
+                        translatedQuestPlate.Objectives.Add(
+                            objectiveText,
+                            batchTranslatedQuestObjective);
+
+                        foreach (var summary in summaries)
+                        {
+                            translatedQuestPlate.Summaries.Add(
+                                summary.OriginalText,
+                                translatedTexts[translatedIndex++]);
+                        }
+
+                        var result = this.InsertQuestPlate(
+                            translatedQuestPlate);
+                    });
+                return;
+            }
         }
 
         if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
@@ -431,32 +546,61 @@ public partial class Echoglossian
             }
             else
             {
-                translatedQuestName = this.Translate(questName);
-                translatedQuestMessage = this.Translate(questMessage);
-
+                var questDetailCacheKey =
+                    $"JournalDetailCompleted|{questName}|{questMessage}";
+                if (this.TryGetQueuedTranslation(
+                        questDetailCacheKey,
+                        out var cachedTranslatedPayload) &&
+                    TryDeserializeTranslationPair(
+                        cachedTranslatedPayload,
+                        out translatedQuestName,
+                        out translatedQuestMessage))
+                {
 #if DEBUG
-                // PluginLog.Debug(
-                //     $"Translated quest name: {translatedQuestName}");
-                // PluginLog.Debug(
-                //     $"Translated quest message: {translatedQuestMessage}");
+                    // PluginLog.Debug(
+                    //     $"Translated quest name: {translatedQuestName}");
+                    // PluginLog.Debug(
+                    //     $"Translated quest message: {translatedQuestMessage}");
 #endif
+                }
+                else
+                {
+                    this.QueueTranslation(
+                        questDetailCacheKey,
+                        () => SerializeTranslationPair(
+                            this.Translate(questName),
+                            this.Translate(questMessage)),
+                        translatedPayload =>
+                        {
+                            if (!TryDeserializeTranslationPair(
+                                    translatedPayload,
+                                    out var resolvedQuestName,
+                                    out var resolvedQuestMessage))
+                            {
+                                return;
+                            }
 
-                QuestPlate translatedQuestPlate = new(
-                    questName,
-                    questMessage,
-                    ClientStateInterface.ClientLanguage.Humanize(),
-                    translatedQuestName,
-                    translatedQuestMessage,
-                    string.Empty,
-                    LangDict[LanguageInt].Code,
-                    this.configuration.ChosenTransEngine,
-                    DateTime.Now,
-                    DateTime.Now);
-                var result = this.InsertQuestPlate(translatedQuestPlate);
+                            QuestPlate translatedQuestPlate = new(
+                                questName,
+                                questMessage,
+                                ClientStateInterface.ClientLanguage.Humanize(),
+                                resolvedQuestName,
+                                resolvedQuestMessage,
+                                string.Empty,
+                                LangDict[LanguageInt].Code,
+                                this.configuration.ChosenTransEngine,
+                                DateTime.Now,
+                                DateTime.Now);
+                            var result = this.InsertQuestPlate(
+                                translatedQuestPlate);
 #if DEBUG
-                // PluginLog.Debug(
-                //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+                            // PluginLog.Debug(
+                            //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
+                        });
+
+                    return;
+                }
             }
 
             if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
@@ -609,27 +753,40 @@ public partial class Echoglossian
                     continue;
                 }
 
-                var translatedNameText = this.Translate(questNameText);
+                var journalQuestCacheKey = $"Journal|{questNameText}";
+                if (!this.TryGetQueuedTranslation(
+                        journalQuestCacheKey,
+                        out var translatedNameText))
+                {
+                    this.QueueTranslation(
+                        journalQuestCacheKey,
+                        () => this.Translate(questNameText),
+                        resolvedTranslatedNameText =>
+                        {
+                            QuestPlate translatedQuestPlate = new(
+                                questNameText,
+                                string.Empty,
+                                ClientStateInterface.ClientLanguage.Humanize(),
+                                resolvedTranslatedNameText,
+                                string.Empty,
+                                string.Empty,
+                                LangDict[LanguageInt].Code,
+                                this.configuration.ChosenTransEngine,
+                                DateTime.Now,
+                                DateTime.Now);
+
+                            var result = this.InsertQuestPlate(
+                                translatedQuestPlate);
+#if DEBUG
+                            // PluginLog.Debug(
+                            //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+                        });
+                    continue;
+                }
 #if DEBUG
                     // PluginLog.Debug(
                     //     $"Name translated: {questNameText} -> {translatedNameText}");
-#endif
-                QuestPlate translatedQuestPlate = new(
-                    questNameText,
-                    string.Empty,
-                    ClientStateInterface.ClientLanguage.Humanize(),
-                    translatedNameText,
-                    string.Empty,
-                    string.Empty,
-                    LangDict[LanguageInt].Code,
-                    this.configuration.ChosenTransEngine,
-                    DateTime.Now,
-                    DateTime.Now);
-
-                var result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-                // PluginLog.Debug(
-                //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
                 if (this.configuration
                     .RemoveDiacriticsWhenUsingReplacementQuest)

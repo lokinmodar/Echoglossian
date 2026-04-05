@@ -172,40 +172,87 @@ public partial class Echoglossian
                 var foundQuestPlate = this.FindQuestPlateByName(questPlate);
                 if (foundQuestPlate != null)
                 {
+                    var translatedQuestName = foundQuestPlate.TranslatedQuestName;
+                    if (this.configuration
+                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    {
+                        translatedQuestName = this.RemoveDiacritics(
+                            translatedQuestName,
+                            this.SpecialCharsSupportedByGameFont);
+                    }
+
+                    // because we are translating names, it's safer to use SetString instead of SetText
+                    questName->NodeText.SetString(translatedQuestName);
+                    this.translatedQuestNames.TryAdd(translatedQuestName, true);
+                    if (this.configuration.TranslateTooltips)
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"RecommendList-{(nint)questNameNode:X}",
+                            questName,
+                            questNameText,
+                            translatedQuestName);
+                    }
+
                     continue;
                 }
 
-                var translatedNameText = this.Translate(questNameText);
-#if DEBUG
-                // PluginLog.Debug(
-                //     $"Name translated: {questNameText} -> {translatedNameText}");
-#endif
-                QuestPlate translatedQuestPlate = new(
-                    questNameText,
-                    string.Empty,
-                    ClientStateInterface.ClientLanguage.Humanize(),
-                    translatedNameText,
-                    string.Empty,
-                    string.Empty,
-                    LangDict[LanguageInt].Code,
-                    this.configuration.ChosenTransEngine,
-                    DateTime.Now,
-                    DateTime.Now);
-
-                var result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-                // PluginLog.Debug(
-                //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
-#endif
-
-                if (this.configuration.TranslateTooltips)
+                var cacheKey = $"RecommendList|{questNameText}";
+                if (this.TryGetQueuedTranslation(
+                        cacheKey,
+                        out var cachedTranslatedName))
                 {
-                    this.RegisterTranslatedHoverTooltip(
-                        $"RecommendList-{(nint)questNameNode:X}",
-                        questName,
-                        questNameText,
-                        translatedNameText);
+                    var translatedNameText = cachedTranslatedName;
+                    if (this.configuration
+                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    {
+                        translatedNameText = this.RemoveDiacritics(
+                            translatedNameText,
+                            this.SpecialCharsSupportedByGameFont);
+                    }
+
+                    // because we are translating names, it's safer to use SetString instead of SetText
+                    questName->NodeText.SetString(translatedNameText);
+                    this.translatedQuestNames.TryAdd(translatedNameText, true);
+                    if (this.configuration.TranslateTooltips)
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"RecommendList-{(nint)questNameNode:X}",
+                            questName,
+                            questNameText,
+                            translatedNameText);
+                    }
+
+                    continue;
                 }
+
+                this.QueueTranslation(
+                    cacheKey,
+                    () => this.Translate(questNameText),
+                    translatedNameText =>
+                    {
+                        QuestPlate translatedQuestPlate = new(
+                            questNameText,
+                            string.Empty,
+                            ClientStateInterface.ClientLanguage.Humanize(),
+                            translatedNameText,
+                            string.Empty,
+                            string.Empty,
+                            LangDict[LanguageInt].Code,
+                            this.configuration.ChosenTransEngine,
+                            DateTime.Now,
+                            DateTime.Now);
+
+                        var result = this.InsertQuestPlate(
+                            translatedQuestPlate);
+#if DEBUG
+                        // PluginLog.Debug(
+                        //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+                    });
+#if DEBUG
+                // PluginLog.Debug(
+                //     $"Name translated queued: {questNameText}");
+#endif
             }
 
             // Then we replace the text in the nodes
