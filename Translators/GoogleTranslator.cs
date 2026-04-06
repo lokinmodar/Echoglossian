@@ -263,13 +263,35 @@ public class GoogleTranslator : ITranslator
                 return translatedText;
             }
 
-            this.pluginLog.Error("Translation not found in response.");
+            this.pluginLog.Error(
+                $"GoogleTranslator returned no translateResponse.translateText for input '{parsedText}'. " +
+                $"Status={(int)response.StatusCode} {response.ReasonPhrase}. " +
+                $"Content preview: {FormatResponsePreview(content)}");
             return string.Empty;
         }
         catch (JsonException ex)
         {
-            this.pluginLog.Error("Error parsing JSON: " + ex.Message);
+            this.pluginLog.Error(
+                $"GoogleTranslator JSON parse error for input '{parsedText}': {ex.Message}. " +
+                $"Content preview: {FormatResponsePreview(content)}");
             return string.Empty;
         }
+    }
+
+    private static string FormatResponsePreview(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return "<empty>";
+        }
+
+        var preview = content.ReplaceLineEndings(" ").Trim();
+        const int maxLength = 240;
+        if (preview.Length <= maxLength)
+        {
+            return preview;
+        }
+
+        return preview[..maxLength] + "...";
     }
 }

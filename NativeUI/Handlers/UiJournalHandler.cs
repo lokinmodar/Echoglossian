@@ -3,14 +3,12 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
 {
-    // used to be sure we don't translate the same quest name twice
-    private readonly ConcurrentDictionary<string, bool> translatedQuestNames =
-        new();
-
     // keeps journal quest hover translations alive across refreshes
     private readonly ConcurrentDictionary<
         nint,
@@ -60,6 +58,19 @@ public partial class Echoglossian
             var originalText = MemoryHelper.ReadSeStringAsString(
                 out _,
                 (nint)summaryTextNode->NodeText.StringPtr.Value);
+            if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                    originalText,
+                    out var appliedSummarySnapshot))
+            {
+                summaries.Add(
+                    new SummaryQuest(
+                        appliedSummarySnapshot.OriginalText,
+                        appliedSummarySnapshot.AppliedText,
+                        summaryTextNode,
+                        true));
+                continue;
+            }
+
             if (foundQuestPlate != null &&
                 foundQuestPlate.Summaries.TryGetValue(
                     originalText,
@@ -71,6 +82,9 @@ public partial class Echoglossian
                         storedSummaryText,
                         summaryTextNode,
                         false));
+                QuestUiTranslationCache.Remember(
+                    originalText,
+                    storedSummaryText);
                 continue;
             }
 
@@ -87,6 +101,9 @@ public partial class Echoglossian
                             cachedTranslatedText,
                             summaryTextNode,
                             true));
+                    QuestUiTranslationCache.Remember(
+                        originalText,
+                        cachedTranslatedText);
                     continue;
                 }
 
@@ -131,6 +148,24 @@ public partial class Echoglossian
         string translatedQuestObjective = objectiveText;
         var translatedQuestSummary = summaryText;
 
+        if (!this.JournalUsesHoverTooltips &&
+            QuestUiTranslationCache.TryGetAppliedSnapshot(
+                questName,
+                out _) &&
+            QuestUiTranslationCache.TryGetAppliedSnapshot(
+                questMessage,
+                out _) &&
+            QuestUiTranslationCache.TryGetAppliedSnapshot(
+                objectiveText,
+                out _) &&
+            (summaryText == string.Empty ||
+             QuestUiTranslationCache.TryGetAppliedSnapshot(
+                 summaryText,
+                 out _)))
+        {
+            return;
+        }
+
         var summaries = this.TranslateSummaries(
             journalBox,
             foundQuestPlate,
@@ -173,7 +208,7 @@ public partial class Echoglossian
             if (summaryText != string.Empty)
             {
                 var summaryCacheKey = $"JournalDetailSummaryText|{summaryText}";
-                if (foundQuestPlate.Summaries.TryGetValue(
+            if (foundQuestPlate.Summaries.TryGetValue(
                         summaryText,
                         out var storedSummaryText))
                 {
@@ -364,36 +399,63 @@ public partial class Echoglossian
             }
         }
 
-        questNameNode->SetText(translatedQuestName);
-        descriptionNode->SetText(translatedQuestMessage);
-        objectiveNode->SetText(translatedQuestObjective);
-        if (summaryText != string.Empty && summaryNode != null)
+        if (this.JournalWritesNativeTranslation)
         {
-            summaryNode->SetText(translatedQuestSummary);
+            questNameNode->SetText(translatedQuestName);
+            descriptionNode->SetText(translatedQuestMessage);
+            objectiveNode->SetText(translatedQuestObjective);
+            if (summaryText != string.Empty && summaryNode != null)
+            {
+                summaryNode->SetText(translatedQuestSummary);
+            }
+        }
+
+        QuestUiTranslationCache.Remember(questName, translatedQuestName);
+        QuestUiTranslationCache.Remember(questMessage, translatedQuestMessage);
+        QuestUiTranslationCache.Remember(
+            objectiveText,
+            translatedQuestObjective);
+        if (summaryText != string.Empty)
+        {
+            QuestUiTranslationCache.Remember(
+                summaryText,
+                translatedQuestSummary);
         }
 
         foreach (var summary in summaries)
         {
-            summary.Node->SetText(summary.TranslatedText);
+            if (this.JournalWritesNativeTranslation)
+            {
+                summary.Node->SetText(summary.TranslatedText);
+            }
+            QuestUiTranslationCache.Remember(
+                summary.OriginalText,
+                summary.TranslatedText);
         }
 
-        if (this.configuration.TranslateTooltips)
+        if (this.JournalUsesHoverTooltips)
         {
             this.RegisterTranslatedHoverTooltip(
                 $"JournalDetail-QuestName-{(nint)questNameNode:X}",
                 questNameNode,
                 questName,
-                translatedQuestName);
+                translatedQuestName,
+                swapEnabled: this.JournalHoverShowsOriginal,
+                forceEnabled: true);
             this.RegisterTranslatedHoverTooltip(
                 $"JournalDetail-Description-{(nint)descriptionNode:X}",
                 descriptionNode,
                 questMessage,
-                translatedQuestMessage);
+                translatedQuestMessage,
+                swapEnabled: this.JournalHoverShowsOriginal,
+                forceEnabled: true);
             this.RegisterTranslatedHoverTooltip(
                 $"JournalDetail-Objective-{(nint)objectiveNode:X}",
                 objectiveNode,
                 objectiveText,
-                translatedQuestObjective);
+                translatedQuestObjective,
+                swapEnabled: this.JournalHoverShowsOriginal,
+                forceEnabled: true);
 
             if (summaryNode != null)
             {
@@ -401,7 +463,9 @@ public partial class Echoglossian
                     $"JournalDetail-Summary-{(nint)summaryNode:X}",
                     summaryNode,
                     summaryText,
-                    translatedQuestSummary);
+                    translatedQuestSummary,
+                    swapEnabled: this.JournalHoverShowsOriginal,
+                    forceEnabled: true);
             }
 
             foreach (var summary in summaries)
@@ -410,7 +474,9 @@ public partial class Echoglossian
                     $"JournalDetail-SummaryItem-{(nint)summary.Node:X}",
                     summary.Node,
                     summary.OriginalText,
-                    summary.TranslatedText);
+                    summary.TranslatedText,
+                    swapEnabled: this.JournalHoverShowsOriginal,
+                    forceEnabled: true);
             }
         }
     }
@@ -475,6 +541,11 @@ public partial class Echoglossian
                 out _,
                 (nint)objectiveNode->NodeText.StringPtr.Value);
             var questPlate = this.FormatQuestPlate(questName, questMessage);
+            // TODO: Journal lookups still depend on exact raw text matching, so
+            // sub-entries like objectives and summaries can trigger their own
+            // requests even when the main quest row already exists in the DB.
+            // If that stays noisy, move this to a normalized or quest-identity
+            // keyed cache instead of raw string equality.
             var foundQuestPlate = this.FindQuestPlate(questPlate);
 
 #if DEBUG
@@ -619,21 +690,28 @@ public partial class Echoglossian
                     this.SpecialCharsSupportedByGameFont);
             }
 
-            questNameNode->SetText(translatedQuestName);
-            descriptionNode->SetText(translatedQuestMessage);
+            if (this.JournalWritesNativeTranslation)
+            {
+                questNameNode->SetText(translatedQuestName);
+                descriptionNode->SetText(translatedQuestMessage);
+            }
 
-            if (this.configuration.TranslateTooltips)
+            if (this.JournalUsesHoverTooltips)
             {
                 this.RegisterTranslatedHoverTooltip(
                     $"JournalDetail-CompletedQuestName-{(nint)questNameNode:X}",
                     questNameNode,
                     questName,
-                    translatedQuestName);
+                    translatedQuestName,
+                    swapEnabled: this.JournalHoverShowsOriginal,
+                    forceEnabled: true);
                 this.RegisterTranslatedHoverTooltip(
                     $"JournalDetail-CompletedQuestMessage-{(nint)descriptionNode:X}",
                     descriptionNode,
                     questMessage,
-                    translatedQuestMessage);
+                    translatedQuestMessage,
+                    swapEnabled: this.JournalHoverShowsOriginal,
+                    forceEnabled: true);
             }
         }
         catch (Exception e)
@@ -690,8 +768,18 @@ public partial class Echoglossian
 #endif
         try
         {
-            var questListNode =
-                journal->GetNodeById(25)->GetAsAtkComponentNode()->Component;
+            var questListRoot = journal->GetNodeById(25);
+            if (questListRoot == null || !questListRoot->IsVisible())
+            {
+                return;
+            }
+
+            var questListNode = questListRoot->GetAsAtkComponentNode()->Component;
+            if (questListNode == null)
+            {
+                return;
+            }
+
             for (var i = 0; i < questListNode->UldManager.NodeListCount; i++)
             {
                 if (!questListNode->UldManager.NodeList[i]->IsVisible() ||
@@ -728,9 +816,11 @@ public partial class Echoglossian
                     out _,
                     (nint)questName->NodeText.StringPtr.Value);
                 var questNameNodeKey = (nint)questNameNode;
-                if (this.translatedQuestNames.ContainsKey(questNameText))
+                if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                        questNameText,
+                        out var translatedQuestSnapshot))
                 {
-                    if (this.configuration.TranslateTooltips &&
+                    if (this.JournalUsesHoverTooltips &&
                         this.journalHoverTranslationCache.TryGetValue(
                             questNameNodeKey,
                             out var cachedHoverTranslation))
@@ -739,7 +829,19 @@ public partial class Echoglossian
                             $"JournalList-{questNameNodeKey:X}",
                             questName,
                             cachedHoverTranslation.OriginalText,
-                            cachedHoverTranslation.TranslatedText);
+                            cachedHoverTranslation.TranslatedText,
+                            swapEnabled: this.JournalHoverShowsOriginal,
+                            forceEnabled: true);
+                    }
+                    else if (this.JournalUsesHoverTooltips)
+                    {
+                        this.RegisterTranslatedHoverTooltip(
+                            $"JournalList-{questNameNodeKey:X}",
+                            questName,
+                            translatedQuestSnapshot.OriginalText,
+                            translatedQuestSnapshot.AppliedText,
+                            swapEnabled: this.JournalHoverShowsOriginal,
+                            forceEnabled: true);
                     }
 
                     continue;
@@ -764,21 +866,26 @@ public partial class Echoglossian
                             this.SpecialCharsSupportedByGameFont);
                     }
 
-                    questName->SetText(translQuestName);
+                    if (this.JournalWritesNativeTranslation)
+                    {
+                        questName->SetText(translQuestName);
+                    }
                     this.journalHoverTranslationCache[questNameNodeKey] = (
                         questNameText,
                         translQuestName);
 
-                    this.translatedQuestNames.TryAdd(
-                        foundQuestPlate.TranslatedQuestName,
-                        true);
-                    if (this.configuration.TranslateTooltips)
+                    QuestUiTranslationCache.Remember(
+                        questNameText,
+                        translQuestName);
+                    if (this.JournalUsesHoverTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
                             $"JournalList-{questNameNodeKey:X}",
                             questName,
                             questNameText,
-                            translQuestName);
+                            translQuestName,
+                            swapEnabled: this.JournalHoverShowsOriginal,
+                            forceEnabled: true);
                     }
                     continue;
                 }
@@ -826,18 +933,25 @@ public partial class Echoglossian
                         this.SpecialCharsSupportedByGameFont);
                 }
 
-                questName->SetText(translatedNameText);
+                if (this.JournalWritesNativeTranslation)
+                {
+                    questName->SetText(translatedNameText);
+                }
                 this.journalHoverTranslationCache[questNameNodeKey] = (
                     questNameText,
                     translatedNameText);
-                this.translatedQuestNames.TryAdd(translatedNameText, true);
-                if (this.configuration.TranslateTooltips)
+                QuestUiTranslationCache.Remember(
+                    questNameText,
+                    translatedNameText);
+                if (this.JournalUsesHoverTooltips)
                 {
                     this.RegisterTranslatedHoverTooltip(
                         $"JournalList-{questNameNodeKey:X}",
                         questName,
                         questNameText,
-                        translatedNameText);
+                        translatedNameText,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
                 }
             }
         }

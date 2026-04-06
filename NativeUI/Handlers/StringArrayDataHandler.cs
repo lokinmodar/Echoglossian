@@ -118,6 +118,13 @@ namespace Echoglossian.NativeUI.Handlers
             }
 
             var stringArrayData = atkStage->GetStringArrayData(type);
+            if (stringArrayData == null)
+            {
+              PluginLog.Debug(
+                $"[LoadAndTranslateStringArrayDatas] StringArrayData of type {type} is unavailable, skipping.");
+              continue;
+            }
+
             var stringArray = stringArrayData->StringArray;
 
             var arraySize = stringArrayData->Size;

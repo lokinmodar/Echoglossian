@@ -44,6 +44,57 @@
             <param name="originalJson">The serialized original content to match.</param>
             <returns>A matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> if found; otherwise, <see langword="null"/>.</returns>
         </member>
+        <member name="T:Echoglossian.Cache.QuestUiTranslationCache">
+            <summary>
+                Stores quest-related UI texts that were already applied to addon nodes.
+                This lets the quest handlers skip reprocessing text that is already on screen.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.QuestUiTranslationCache.TryGetAppliedSnapshot(System.String,Echoglossian.Cache.QuestUiTranslationSnapshot@)">
+            <summary>
+                Tries to get a cached applied text snapshot for the given visible text.
+            </summary>
+            <param name="appliedText">The currently visible text.</param>
+            <param name="snapshot">The cached snapshot if the text was previously applied.</param>
+            <returns>True when the visible text is already known to be translated.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.QuestUiTranslationCache.Remember(System.String,System.String)">
+            <summary>
+                Remembers the applied text for a quest-related node.
+            </summary>
+            <param name="originalText">The source text before translation.</param>
+            <param name="appliedText">The exact text written to the UI.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.QuestUiTranslationCache.Clear">
+            <summary>
+                Clears the cached quest UI texts.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Cache.QuestUiTranslationSnapshot">
+            <summary>
+                Captures the original and applied quest UI text for a node.
+            </summary>
+            <param name="OriginalText">The original text read from the addon.</param>
+            <param name="AppliedText">The text written to the addon or shown in the UI.</param>
+            <param name="LastUpdatedUtc">The time the cached text was last updated.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.QuestUiTranslationSnapshot.#ctor(System.String,System.String,System.DateTime)">
+            <summary>
+                Captures the original and applied quest UI text for a node.
+            </summary>
+            <param name="OriginalText">The original text read from the addon.</param>
+            <param name="AppliedText">The text written to the addon or shown in the UI.</param>
+            <param name="LastUpdatedUtc">The time the cached text was last updated.</param>
+        </member>
+        <member name="P:Echoglossian.Cache.QuestUiTranslationSnapshot.OriginalText">
+            <summary>The original text read from the addon.</summary>
+        </member>
+        <member name="P:Echoglossian.Cache.QuestUiTranslationSnapshot.AppliedText">
+            <summary>The text written to the addon or shown in the UI.</summary>
+        </member>
+        <member name="P:Echoglossian.Cache.QuestUiTranslationSnapshot.LastUpdatedUtc">
+            <summary>The time the cached text was last updated.</summary>
+        </member>
         <member name="F:Echoglossian.Config.AiTranslatorPrompt">
             <summary>Generic prompt used by all AI translators when applicable.</summary>
         </member>
@@ -123,6 +174,18 @@
             <summary>
                 Legacy shared title-bar toggle kept for config migration from older
                 versions that still used a single overlay title-bar setting.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.SwapJournalTextsUsingImGui">
+            <summary>Swap Journal hover tooltip text independently from the global overlay swap toggle.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.JournalTranslationDisplayMode">
+            <summary>
+                How journal-like quest windows should present translated text.
+                NativeUiTranslation writes only to the native addon, TooltipTranslation
+                keeps the addon intact and uses hover tooltips, and
+                NativeUiTranslationWithOriginalTooltips writes translation natively
+                while showing the original in hover tooltips.
             </summary>
         </member>
         <member name="F:Echoglossian.Config.BattleTalkForceShowTitle">
@@ -996,200 +1059,6 @@
             </summary>
             <param name="disposing">Indicates whether the method was called from managed code.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.Tick(Dalamud.Plugin.Services.IFramework)">
-            <summary>
-            Updates the plugin's state on each tick.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildUi">
-            <summary>
-                Builds the UI for the plugin.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawDbEditorWindow">
-            <summary>
-            Draws the database editor window.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloDbEditorCommand(System.String,System.String)">
-            <summary>
-            Open the Echoglossian DB Editor window when the command is executed.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ConfigWindow">
-            <summary>
-            Sets the configuration flag to true when the config window is opened.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.Command(System.String,System.String)">
-            <summary>
-            Sets the configuration flag to true when the command is executed.
-            </summary>
-            <param name="command">The command that triggered the execution.</param>
-            <param name="arguments">Arguments associated with the command.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name and optional index.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name and index to probe.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-            Updates the shared toast overlay bounds using a live "_WideText" addon
-            instance received from AddonLifecycle.
-            </summary>
-            <param name="addon">The live "_WideText" addon.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SyncErrorToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-            Updates the error toast overlay bounds using a live "_TextError" addon
-            instance received from AddonLifecycle.
-            </summary>
-            <param name="addon">The live "_TextError" addon.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SyncAreaToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-            Updates the area toast overlay bounds using a live "_AreaText" addon
-            instance received from AddonLifecycle.
-            </summary>
-            <param name="addon">The live "_AreaText" addon.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SyncClassChangeToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-            Updates the class/job change toast overlay bounds using a live
-            "_TextClassChange" addon instance received from AddonLifecycle.
-            </summary>
-            <param name="addon">The live "_TextClassChange" addon.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SyncTextGimmickHintToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-            Updates the text gimmick hint overlay bounds using a live addon instance
-            received from AddonLifecycle.
-            </summary>
-            <param name="addon">The live "_TextGimmickHint" addon.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String)">
-            <summary>
-            Registers a hover tooltip for a text node using its current screen bounds.
-            </summary>
-            <param name="key">Stable key used to refresh the tooltip target.</param>
-            <param name="textNode">The text node to anchor the tooltip to.</param>
-            <param name="title">Tooltip title.</param>
-            <param name="body">Tooltip body text.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String)">
-            <summary>
-            Registers a hover tooltip for a whole addon window using its root node.
-            </summary>
-            <param name="key">Stable key used to refresh the tooltip target.</param>
-            <param name="addon">The live addon window to anchor the tooltip to.</param>
-            <param name="title">Tooltip title.</param>
-            <param name="body">Tooltip body text.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String)">
-            <summary>
-            Registers a hover tooltip for a text node using its translated and
-            original text, swapping the visible content when swap mode is active.
-            </summary>
-            <param name="key">Stable key used to refresh the tooltip target.</param>
-            <param name="textNode">The text node to anchor the tooltip to.</param>
-            <param name="originalText">The original visible text.</param>
-            <param name="translatedText">The translated text.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String)">
-            <summary>
-            Registers a hover tooltip for a whole addon window using translated and
-            original text, swapping the visible content when swap mode is active.
-            </summary>
-            <param name="key">Stable key used to refresh the tooltip target.</param>
-            <param name="addon">The live addon window to anchor the tooltip to.</param>
-            <param name="originalText">The original visible text.</param>
-            <param name="translatedText">The translated text.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryGetQueuedTranslation(System.String,System.String@)">
-            <summary>
-                Attempts to read a queued translation from the shared broker cache.
-            </summary>
-            <param name="key">Stable translation key.</param>
-            <param name="translatedText">The cached translated text, if any.</param>
-            <returns>True when a cached translation exists.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.QueueTranslation(System.String,System.Func{System.String},System.Action{System.String})">
-            <summary>
-                Enqueues a translation request on the shared broker without blocking
-                the addon lifecycle callback.
-            </summary>
-            <param name="key">Stable translation key.</param>
-            <param name="resolver">Function that returns the translated text.</param>
-            <param name="onResolved">Optional callback invoked after the text is cached.</param>
-            <returns>True if the request was queued, false if one is already in flight.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SerializeTranslationPair(System.String,System.String)">
-            <summary>
-                Serializes a pair of translated strings for broker caching.
-            </summary>
-            <param name="first">The first translated string.</param>
-            <param name="second">The second translated string.</param>
-            <returns>A JSON payload representing both strings.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.SerializeTranslationBatch(System.Collections.Generic.IReadOnlyCollection{System.String})">
-            <summary>
-            Serializes a batch of translated strings for broker caching.
-            </summary>
-            <param name="values">The translated strings.</param>
-            <returns>A JSON payload representing the translated strings.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryDeserializeTranslationPair(System.String,System.String@,System.String@)">
-            <summary>
-                Tries to deserialize a cached translation pair payload.
-            </summary>
-            <param name="payload">The cached payload.</param>
-            <param name="first">The first translated string.</param>
-            <param name="second">The second translated string.</param>
-            <returns>True when the payload contains two strings.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryDeserializeTranslationBatch(System.String,System.String[]@)">
-            <summary>
-            Tries to deserialize a cached translation batch payload.
-            </summary>
-            <param name="payload">The cached payload.</param>
-            <param name="values">The translated strings.</param>
-            <returns>True when the payload contains a valid batch.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},System.Action{System.String[]})">
-            <summary>
-            Queues a batch translation request and stores the serialized array result.
-            </summary>
-            <param name="key">The cache key.</param>
-            <param name="sourceTexts">The source texts to translate.</param>
-            <param name="onResolved">Optional callback invoked with the translated array.</param>
-            <returns>True when the request is queued.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.InsertToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
-            <summary>
-            Persists a toast row into the correct historical cache/table according to
-            its toast type.
-            </summary>
-            <param name="toastMessage">The translated toast row to persist.</param>
-            <returns>The persistence result message.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
-            <summary>
-            Handles the registration of addon handlers.
-            </summary>
-        </member>
         <member name="T:Echoglossian.Echoglossian.PromptType">
             <summary>
                 Enum for the different prompt types.
@@ -1363,15 +1232,174 @@
             <param name="input">The translated payload.</param>
             <returns>A dictionary mapping indices to translated strings.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
+            <summary>
+            Handles the registration of addon handlers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log so we can
+            inspect its live node tree, component roots, and likely overlay anchors.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
+            <summary>
+            Parses the addon probe command arguments into an addon name and optional index.
+            </summary>
+            <param name="args">The raw command arguments.</param>
+            <returns>The addon name and index to probe.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean)">
+            <summary>
+            Registers a hover tooltip for a text node using its current screen bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="textNode">The text node to anchor the tooltip to.</param>
+            <param name="title">Tooltip title.</param>
+            <param name="body">Tooltip body text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Boolean)">
+            <summary>
+            Registers a hover tooltip for a whole addon window using its root node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="addon">The live addon window to anchor the tooltip to.</param>
+            <param name="title">Tooltip title.</param>
+            <param name="body">Tooltip body text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean)">
+            <summary>
+            Registers a hover tooltip for a text node using its translated and
+            original text, swapping the visible content when swap mode is active.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="textNode">The text node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean)">
+            <summary>
+            Registers a hover tooltip for a whole addon window using translated and
+            original text, swapping the visible content when swap mode is active.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="addon">The live addon window to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryGetQueuedTranslation(System.String,System.String@)">
+            <summary>
+                Attempts to read a queued translation from the shared broker cache.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="translatedText">The cached translated text, if any.</param>
+            <returns>True when a cached translation exists.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QueueTranslation(System.String,System.Func{System.String},System.Action{System.String})">
+            <summary>
+                Enqueues a translation request on the shared broker without blocking
+                the addon lifecycle callback.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="resolver">Function that returns the translated text.</param>
+            <param name="onResolved">Optional callback invoked after the text is cached.</param>
+            <returns>True if the request was queued, false if one is already in flight.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SerializeTranslationPair(System.String,System.String)">
+            <summary>
+                Serializes a pair of translated strings for broker caching.
+            </summary>
+            <param name="first">The first translated string.</param>
+            <param name="second">The second translated string.</param>
+            <returns>A JSON payload representing both strings.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SerializeTranslationBatch(System.Collections.Generic.IReadOnlyCollection{System.String})">
+            <summary>
+            Serializes a batch of translated strings for broker caching.
+            </summary>
+            <param name="values">The translated strings.</param>
+            <returns>A JSON payload representing the translated strings.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryDeserializeTranslationPair(System.String,System.String@,System.String@)">
+            <summary>
+                Tries to deserialize a cached translation pair payload.
+            </summary>
+            <param name="payload">The cached payload.</param>
+            <param name="first">The first translated string.</param>
+            <param name="second">The second translated string.</param>
+            <returns>True when the payload contains two strings.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryDeserializeTranslationBatch(System.String,System.String[]@)">
+            <summary>
+            Tries to deserialize a cached translation batch payload.
+            </summary>
+            <param name="payload">The cached payload.</param>
+            <param name="values">The translated strings.</param>
+            <returns>True when the payload contains a valid batch.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},System.Action{System.String[]})">
+            <summary>
+            Queues a batch translation request and stores the serialized array result.
+            </summary>
+            <param name="key">The cache key.</param>
+            <param name="sourceTexts">The source texts to translate.</param>
+            <param name="onResolved">Optional callback invoked with the translated array.</param>
+            <returns>True when the request is queued.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
+            <summary>
+            Persists a toast row into the correct historical cache/table according to
+            its toast type.
+            </summary>
+            <param name="toastMessage">The translated toast row to persist.</param>
+            <returns>The persistence result message.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.MountFontPaths">
             <summary>
             Mounts the font paths for the plugin.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.Tick(Dalamud.Plugin.Services.IFramework)">
+            <summary>
+            Updates the plugin's state on each tick.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildUi">
+            <summary>
+                Builds the UI for the plugin.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawDbEditorWindow">
+            <summary>
+            Draws the database editor window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloDbEditorCommand(System.String,System.String)">
+            <summary>
+            Open the Echoglossian DB Editor window when the command is executed.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ConfigWindow">
+            <summary>
+            Sets the configuration flag to true when the config window is opened.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.Command(System.String,System.String)">
+            <summary>
+            Sets the configuration flag to true when the command is executed.
+            </summary>
+            <param name="command">The command that triggered the execution.</param>
+            <param name="arguments">Arguments associated with the command.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.EchoglossianConfigUi">
             <summary>
@@ -1537,6 +1565,41 @@
             <summary>
             Logs CutSceneSelectString overlay renders once per content version.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the shared toast overlay bounds using a live "_WideText" addon
+            instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_WideText" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncErrorToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the error toast overlay bounds using a live "_TextError" addon
+            instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_TextError" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncAreaToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the area toast overlay bounds using a live "_AreaText" addon
+            instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_AreaText" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncClassChangeToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the class/job change toast overlay bounds using a live
+            "_TextClassChange" addon instance received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_TextClassChange" addon.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SyncTextGimmickHintToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+            Updates the text gimmick hint overlay bounds using a live addon instance
+            received from AddonLifecycle.
+            </summary>
+            <param name="addon">The live "_TextGimmickHint" addon.</param>
         </member>
         <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
             <summary>
@@ -4474,6 +4537,21 @@
             </summary>
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.CaptureOriginalTalkTextNodeState(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <summary>
+                Captures the original Talk text-node presentation so it can be restored
+                after native replacement or when the handler is disabled mid-stream.
+            </summary>
+            <param name="textNode">The Talk text node to snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryRestoreOriginalTalkText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Restores the original Talk text node presentation for the active line.
+            </summary>
+            <param name="nameNode">The Talk sender-name node.</param>
+            <param name="textNode">The Talk message text node.</param>
+            <returns>True when at least one node was restored.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.BuildLookupMessage(System.String,System.String)">
             <summary>

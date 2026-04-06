@@ -5,6 +5,8 @@
 
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
@@ -43,6 +45,13 @@ public partial class Echoglossian
                 return;
             }
 
+            if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                    questNameText,
+                    out _))
+            {
+                return;
+            }
+
             var questPlate = this.FormatQuestPlate(questNameText, string.Empty);
             var foundQuestPlate = this.FindQuestPlateByName(questPlate);
             var cacheKey = $"JournalResult|{questNameText}";
@@ -60,18 +69,26 @@ public partial class Echoglossian
                         this.SpecialCharsSupportedByGameFont);
                 }
 
-                setupAtkValues[1]
-                    .SetManagedString(foundQuestPlate.TranslatedQuestName);
+                if (this.JournalWritesNativeTranslation)
+                {
+                    setupAtkValues[1]
+                        .SetManagedString(foundQuestPlate.TranslatedQuestName);
+                }
+                QuestUiTranslationCache.Remember(
+                    questNameText,
+                    foundQuestPlate.TranslatedQuestName);
 
-                if (this.configuration.TranslateTooltips)
+                if (this.JournalUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("JournalResult");
                     this.RegisterTranslatedHoverTooltip(
                         $"JournalResult-{(nint)addon:X}",
-                    addon,
-                    questNameText,
-                    foundQuestPlate.TranslatedQuestName);
+                        addon,
+                        questNameText,
+                        foundQuestPlate.TranslatedQuestName,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
                 }
                 return;
             }
@@ -91,17 +108,25 @@ public partial class Echoglossian
                         this.SpecialCharsSupportedByGameFont);
                 }
 
-                setupAtkValues[1].SetManagedString(translatedNameText);
+                if (this.JournalWritesNativeTranslation)
+                {
+                    setupAtkValues[1].SetManagedString(translatedNameText);
+                }
+                QuestUiTranslationCache.Remember(
+                    questNameText,
+                    translatedNameText);
 
-                if (this.configuration.TranslateTooltips)
+                if (this.JournalUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("JournalResult");
                     this.RegisterTranslatedHoverTooltip(
                         $"JournalResult-{(nint)addon:X}",
-                    addon,
-                    questNameText,
-                    translatedNameText);
+                        addon,
+                        questNameText,
+                        translatedNameText,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
                 }
                 return;
             }

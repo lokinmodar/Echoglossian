@@ -5,6 +5,8 @@
 
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
 using ValueType = ValueType;
@@ -49,6 +51,13 @@ public partial class Echoglossian
                 return;
             }
 
+            if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                    questNameText,
+                    out _))
+            {
+                return;
+            }
+
             var questPlate = this.FormatQuestPlate(questNameText, string.Empty);
             var foundQuestPlate = this.FindQuestPlateByName(questPlate);
             var cacheKey = $"AreaMap|{questNameText}";
@@ -58,10 +67,16 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
-                setupAtkValues[142]
-                    .SetManagedString(foundQuestPlate.TranslatedQuestName);
+                if (this.JournalWritesNativeTranslation)
+                {
+                    setupAtkValues[142]
+                        .SetManagedString(foundQuestPlate.TranslatedQuestName);
+                }
+                QuestUiTranslationCache.Remember(
+                    questNameText,
+                    foundQuestPlate.TranslatedQuestName);
 
-                if (this.configuration.TranslateTooltips)
+                if (this.JournalUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("AreaMap");
@@ -69,7 +84,9 @@ public partial class Echoglossian
                         $"AreaMap-{(nint)addon:X}-142",
                         addon,
                         questNameText,
-                        foundQuestPlate.TranslatedQuestName);
+                        foundQuestPlate.TranslatedQuestName,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
                 }
                 return;
             }
@@ -81,9 +98,15 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
-                setupAtkValues[142].SetManagedString(translatedNameText);
+                if (this.JournalWritesNativeTranslation)
+                {
+                    setupAtkValues[142].SetManagedString(translatedNameText);
+                }
+                QuestUiTranslationCache.Remember(
+                    questNameText,
+                    translatedNameText);
 
-                if (this.configuration.TranslateTooltips)
+                if (this.JournalUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("AreaMap");
@@ -91,7 +114,9 @@ public partial class Echoglossian
                         $"AreaMap-{(nint)addon:X}-142",
                         addon,
                         questNameText,
-                        translatedNameText);
+                        translatedNameText,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
                 }
                 return;
             }

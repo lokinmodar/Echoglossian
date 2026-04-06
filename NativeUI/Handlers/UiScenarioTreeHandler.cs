@@ -5,6 +5,8 @@
 
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
@@ -27,6 +29,26 @@ public partial class Echoglossian
             return;
         }
 
+        if (this.JournalUsesHoverTooltips)
+        {
+            var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                ->GetAddonByName("ScenarioTree");
+            this.RegisterTranslatedHoverTooltip(
+                $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
+                addon,
+                questNameText,
+                questNameText,
+                swapEnabled: this.JournalHoverShowsOriginal,
+                forceEnabled: true);
+        }
+
+        if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                questNameText,
+                out _))
+        {
+            return;
+        }
+
         var questPlate = this.FormatQuestPlate(questNameText, string.Empty);
         var foundQuestPlate = this.FindQuestPlateByName(questPlate);
         var cacheKey = $"ScenarioTree|{valueIndex}|{questNameText}";
@@ -45,9 +67,16 @@ public partial class Echoglossian
                     this.SpecialCharsSupportedByGameFont);
             }
 
-            setupAtkValues[valueIndex].SetManagedString(translatedQuestName);
+            if (this.JournalWritesNativeTranslation)
+            {
+                setupAtkValues[valueIndex].SetManagedString(
+                    translatedQuestName);
+            }
+            QuestUiTranslationCache.Remember(
+                questNameText,
+                translatedQuestName);
 
-            if (this.configuration.TranslateTooltips)
+            if (this.JournalUsesHoverTooltips)
             {
                 var addon = AtkStage.Instance()->RaptureAtkUnitManager
                     ->GetAddonByName("ScenarioTree");
@@ -55,7 +84,9 @@ public partial class Echoglossian
                     $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
                     addon,
                     questNameText,
-                    translatedQuestName);
+                    translatedQuestName,
+                    swapEnabled: this.JournalHoverShowsOriginal,
+                    forceEnabled: true);
             }
             return;
         }
@@ -74,9 +105,16 @@ public partial class Echoglossian
                     this.SpecialCharsSupportedByGameFont);
             }
 
-            setupAtkValues[valueIndex].SetManagedString(translatedNameText);
+            if (this.JournalWritesNativeTranslation)
+            {
+                setupAtkValues[valueIndex].SetManagedString(
+                    translatedNameText);
+            }
+            QuestUiTranslationCache.Remember(
+                questNameText,
+                translatedNameText);
 
-            if (this.configuration.TranslateTooltips)
+            if (this.JournalUsesHoverTooltips)
             {
                 var addon = AtkStage.Instance()->RaptureAtkUnitManager
                     ->GetAddonByName("ScenarioTree");
@@ -84,7 +122,9 @@ public partial class Echoglossian
                     $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
                     addon,
                     questNameText,
-                    translatedNameText);
+                    translatedNameText,
+                    swapEnabled: this.JournalHoverShowsOriginal,
+                    forceEnabled: true);
             }
             return;
         }

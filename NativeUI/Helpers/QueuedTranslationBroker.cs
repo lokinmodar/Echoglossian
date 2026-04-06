@@ -15,6 +15,8 @@ public sealed class QueuedTranslationBroker
 {
     private readonly ConcurrentDictionary<string, string> translationCache = new();
     private readonly ConcurrentDictionary<string, byte> translationInFlight = new();
+    private readonly ConcurrentDictionary<string, DateTime> failedTranslations = new();
+    private readonly TimeSpan failureRetryCooldown = TimeSpan.FromSeconds(30);
 
     /// <summary>
     ///     Returns a cached translation if we already resolved it.
@@ -29,6 +31,12 @@ public sealed class QueuedTranslationBroker
     /// </summary>
     public bool Queue(string key, Func<Task<string>> resolver, Action<string>? onResolved = null)
     {
+        if (this.failedTranslations.TryGetValue(key, out var lastFailureUtc) &&
+            DateTime.UtcNow - lastFailureUtc < this.failureRetryCooldown)
+        {
+            return false;
+        }
+
         if (!this.translationInFlight.TryAdd(key, 0))
         {
             return false;
@@ -42,13 +50,18 @@ public sealed class QueuedTranslationBroker
                 if (!string.IsNullOrWhiteSpace(translatedText))
                 {
                     this.translationCache[key] = translatedText;
+                    this.failedTranslations.TryRemove(key, out _);
                     onResolved?.Invoke(translatedText);
+                    return;
                 }
+
+                this.failedTranslations[key] = DateTime.UtcNow;
             }
             catch (Exception ex)
             {
                 global::Echoglossian.Echoglossian.PluginLog.Error(
                     $"[QueuedTranslationBroker] Error resolving '{key}': {ex}");
+                this.failedTranslations[key] = DateTime.UtcNow;
             }
             finally
             {

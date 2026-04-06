@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
@@ -17,7 +19,7 @@ public partial class Echoglossian
         string originalText,
         string translatedText)
     {
-        if (!this.configuration.TranslateTooltips)
+        if (!this.JournalUsesHoverTooltips)
         {
             return;
         }
@@ -29,7 +31,9 @@ public partial class Echoglossian
             $"ToDoList-{indexI}-{indexJ}-{nodeId}-{(nint)textNode:X}",
             textNode,
             originalText,
-            translatedText);
+            translatedText,
+            swapEnabled: this.JournalHoverShowsOriginal,
+            forceEnabled: true);
     }
 
     private unsafe void TranslateToDoList()
@@ -108,6 +112,20 @@ public partial class Echoglossian
                     // PluginLog.Debug("Skipping time format translation");
 #endif
                     continue;
+                }
+
+                var originalStepText = MemoryHelper.ReadSeStringAsString(
+                    out _,
+                    (nint)originalStep.StringPtr.Value);
+                if (this.JournalUsesHoverTooltips)
+                {
+                    this.RegisterToDoTooltip(
+                        todoList,
+                        i,
+                        j,
+                        nodeID,
+                        originalStepText,
+                        originalStepText);
                 }
 
                 // don't translate unneeded levelquest information
@@ -231,8 +249,9 @@ public partial class Echoglossian
                 // because sometimes the quest name translation is the same as the original name but the objectives are not
                 var questWithObjectives =
                     quest.Text + string.Join(",", objectives);
-                if (this.translatedQuestNames.ContainsKey(
-                        Sanitizer.Sanitize(questWithObjectives)))
+                if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                        Sanitizer.Sanitize(questWithObjectives),
+                        out _))
                 {
                     continue;
                 }
@@ -258,10 +277,13 @@ public partial class Echoglossian
                             this.SpecialCharsSupportedByGameFont);
                     }
 
-                    todoList->UldManager.NodeList[quest.IndexI]->
-                            GetAsAtkComponentNode()->Component->UldManager
-                        .NodeList[quest.IndexJ]->GetAsAtkTextNode()->SetText(
-                        foundTranslatedQuestName);
+                    if (this.JournalWritesNativeTranslation)
+                    {
+                        todoList->UldManager.NodeList[quest.IndexI]->
+                                GetAsAtkComponentNode()->Component->UldManager
+                            .NodeList[quest.IndexJ]->GetAsAtkTextNode()
+                            ->SetText(foundTranslatedQuestName);
+                    }
                     this.RegisterToDoTooltip(
                         todoList,
                         quest.IndexI,
@@ -306,12 +328,16 @@ public partial class Echoglossian
                                     this.SpecialCharsSupportedByGameFont);
                             }
 
-                            todoList->UldManager.NodeList[objective.IndexI]->
+                            if (this.JournalWritesNativeTranslation)
+                            {
+                                todoList->UldManager.NodeList[
+                                            objective.IndexI]->
                                         GetAsAtkComponentNode()->Component->
                                     UldManager
                                     .NodeList[objective.IndexJ]->
-                                GetAsAtkTextNode()->
-                                SetText(storedObjectiveText);
+                                    GetAsAtkTextNode()->SetText(
+                                        storedObjectiveText);
+                            }
                             this.RegisterToDoTooltip(
                                 todoList,
                                 objective.IndexI,
@@ -391,9 +417,9 @@ public partial class Echoglossian
                     var translatedStoredQuestWithObjectives =
                         foundQuestPlate.TranslatedQuestName +
                         string.Join<string>(",", translatedStoredObjectives);
-                    this.translatedQuestNames.TryAdd(
-                        translatedStoredQuestWithObjectives,
-                        true);
+                    QuestUiTranslationCache.Remember(
+                        quest.Text,
+                        Sanitizer.Sanitize(translatedStoredQuestWithObjectives));
 
                     continue;
                 }
@@ -454,10 +480,13 @@ public partial class Echoglossian
                         this.SpecialCharsSupportedByGameFont);
                 }
 
-                todoList->UldManager.NodeList[quest.IndexI]->
-                        GetAsAtkComponentNode()->Component->UldManager
-                    .NodeList[quest.IndexJ]->GetAsAtkTextNode()->SetText(
-                    translatedNameText);
+                if (this.JournalWritesNativeTranslation)
+                {
+                    todoList->UldManager.NodeList[quest.IndexI]->
+                            GetAsAtkComponentNode()->Component->UldManager
+                        .NodeList[quest.IndexJ]->GetAsAtkTextNode()->SetText(
+                            translatedNameText);
+                }
                 this.RegisterToDoTooltip(
                     todoList,
                     quest.IndexI,
@@ -547,11 +576,13 @@ public partial class Echoglossian
                             this.SpecialCharsSupportedByGameFont);
                     }
 
-                    todoList->UldManager.NodeList[objective.IndexI]->
-                            GetAsAtkComponentNode()->Component->UldManager
-                        .NodeList[objective.IndexJ]->GetAsAtkTextNode()->
-                    SetText(
-                        translatedObjectiveText);
+                    if (this.JournalWritesNativeTranslation)
+                    {
+                        todoList->UldManager.NodeList[objective.IndexI]->
+                                GetAsAtkComponentNode()->Component->UldManager
+                            .NodeList[objective.IndexJ]->GetAsAtkTextNode()
+                            ->SetText(translatedObjectiveText);
+                    }
                     this.RegisterToDoTooltip(
                         todoList,
                         objective.IndexI,
@@ -577,9 +608,9 @@ public partial class Echoglossian
                                                     string.Join<string>(
                                                         ",",
                                                         translatedObjectives);
-                this.translatedQuestNames.TryAdd(
-                    translatedQuestWithObjectives,
-                    true);
+                QuestUiTranslationCache.Remember(
+                    quest.Text,
+                    Sanitizer.Sanitize(translatedQuestWithObjectives));
             }
         }
         catch (Exception e)

@@ -34,6 +34,12 @@ public sealed class TalkHandler : IAddonTranslationHandler
   private string currentReplacementText = string.Empty;
   private string currentTranslatedName = string.Empty;
   private string currentTranslatedText = string.Empty;
+  private bool nativeTalkTextNodeStateCaptured;
+  private bool nativeTalkTextNodeStateDirty;
+  private byte originalTalkFontSize;
+  private float originalTalkTextWidth;
+  private TextFlags originalTalkTextFlags;
+  private string nativeTalkTextNodeStateCapturedForSourceText = string.Empty;
   private bool translationInFlight;
 
   /// <summary>
@@ -149,6 +155,20 @@ public sealed class TalkHandler : IAddonTranslationHandler
       return;
     }
 
+    var addonPtr = GameGuiInterface.GetAddonByName(TalkAddonName);
+    if (addonPtr.Address != IntPtr.Zero)
+    {
+      var talkAddon = (AtkUnitBase*)addonPtr.Address;
+      if (talkAddon != null && talkAddon->IsVisible)
+      {
+        var textNode = talkAddon->GetTextNodeById(TextNodeId);
+        if (textNode != null && !textNode->NodeText.IsEmpty)
+        {
+          this.CaptureOriginalTalkTextNodeState(textNode, originalText);
+        }
+      }
+    }
+
     if (this.TryGetCachedTranslation(
             originalName,
             originalText,
@@ -213,7 +233,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
   /// <param name="args">The addon arguments associated with the update or draw.</param>
   private unsafe void OnApplyNativeTalkText(AddonEvent type, AddonArgs args)
   {
-    if (args.AddonName != TalkAddonName || !this.ShouldApplyNativeTalkText())
+    if (args.AddonName != TalkAddonName)
     {
       return;
     }
@@ -239,17 +259,36 @@ public sealed class TalkHandler : IAddonTranslationHandler
       return;
     }
 
+    var shouldApplyNativeTalkText = this.ShouldApplyNativeTalkText();
+    if (!shouldApplyNativeTalkText)
+    {
+      return;
+    }
+
     if (!this.TryGetCurrentResolvedTranslation(
             out var translatedName,
             out var translatedText,
             out var replacementName,
             out var replacementText))
     {
+      this.TryRestoreOriginalTalkText(
+          nameNode,
+          textNode);
+
       return;
     }
 
     var visibleName = this.ReadNodeText(nameNode);
     var visibleText = this.ReadNodeText(textNode);
+
+    if (!shouldApplyNativeTalkText)
+    {
+      this.TryRestoreOriginalTalkText(
+          nameNode,
+          textNode);
+
+      return;
+    }
 
     if (this.IsNativeTalkAlreadyApplied(
             visibleName,
@@ -268,6 +307,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
       nameNode->SetText(replacementName);
     }
 
+    this.CaptureOriginalTalkTextNodeState(textNode, visibleText);
     textNode->TextFlags = TextFlags.WordWrap
                           | TextFlags.MultiLine
                           | TextFlags.AutoAdjustNodeSize;
@@ -277,6 +317,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
     textNode->SetWidth(parentNode->GetWidth());
     textNode->SetText(replacementText);
     textNode->ResizeNodeForCurrentText();
+    this.nativeTalkTextNodeStateDirty = true;
   }
 
   /// <summary>
@@ -285,11 +326,26 @@ public sealed class TalkHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="type">The lifecycle event that triggered the reset.</param>
   /// <param name="args">The addon arguments associated with the reset.</param>
-  private void OnResetState(AddonEvent type, AddonArgs args)
+  private unsafe void OnResetState(AddonEvent type, AddonArgs args)
   {
     if (args.AddonName != TalkAddonName)
     {
       return;
+    }
+
+    var addonPtr = GameGuiInterface.GetAddonByName(TalkAddonName);
+    if (addonPtr.Address != IntPtr.Zero)
+    {
+      var talkAddon = (AtkUnitBase*)addonPtr.Address;
+      if (talkAddon != null && talkAddon->IsVisible)
+      {
+        var nameNode = talkAddon->GetTextNodeById(NameNodeId);
+        var textNode = talkAddon->GetTextNodeById(TextNodeId);
+        if (nameNode != null || textNode != null)
+        {
+          this.TryRestoreOriginalTalkText(nameNode, textNode);
+        }
+      }
     }
 
     lock (this.stateGate)
@@ -304,7 +360,77 @@ public sealed class TalkHandler : IAddonTranslationHandler
       this.translationInFlight = false;
     }
 
+    this.nativeTalkTextNodeStateCaptured = false;
+    this.nativeTalkTextNodeStateDirty = false;
+    this.nativeTalkTextNodeStateCapturedForSourceText = string.Empty;
     this.clearOverlay();
+  }
+
+  /// <summary>
+  ///     Captures the original Talk text-node presentation so it can be restored
+  ///     after native replacement or when the handler is disabled mid-stream.
+  /// </summary>
+  /// <param name="textNode">The Talk text node to snapshot.</param>
+  private unsafe void CaptureOriginalTalkTextNodeState(
+      AtkTextNode* textNode,
+      string sourceText)
+  {
+    if (textNode == null || string.IsNullOrWhiteSpace(sourceText))
+    {
+      return;
+    }
+
+    if (this.nativeTalkTextNodeStateCaptured &&
+        this.nativeTalkTextNodeStateCapturedForSourceText == sourceText)
+    {
+      return;
+    }
+
+    this.originalTalkTextFlags = textNode->TextFlags;
+    this.originalTalkFontSize = textNode->FontSize;
+    this.originalTalkTextWidth = textNode->GetWidth();
+    this.nativeTalkTextNodeStateCaptured = true;
+    this.nativeTalkTextNodeStateCapturedForSourceText = sourceText;
+  }
+
+  /// <summary>
+  ///     Restores the original Talk text node presentation for the active line.
+  /// </summary>
+  /// <param name="nameNode">The Talk sender-name node.</param>
+  /// <param name="textNode">The Talk message text node.</param>
+  /// <returns>True when at least one node was restored.</returns>
+  private unsafe bool TryRestoreOriginalTalkText(
+      AtkTextNode* nameNode,
+      AtkTextNode* textNode)
+  {
+    lock (this.stateGate)
+    {
+      if (!this.nativeTalkTextNodeStateCaptured ||
+          this.nativeTalkTextNodeStateCapturedForSourceText != this.currentOriginalText ||
+          string.IsNullOrWhiteSpace(this.currentOriginalText))
+      {
+        return false;
+      }
+
+      var originalName = this.currentOriginalName;
+      var originalText = this.currentOriginalText;
+
+      if (nameNode != null && this.ReadNodeText(nameNode) != originalName)
+      {
+        nameNode->SetText(originalName);
+      }
+
+      if (textNode != null && this.ReadNodeText(textNode) != originalText)
+      {
+        textNode->SetWidth((ushort)Math.Max(0f, this.originalTalkTextWidth));
+        textNode->TextFlags = this.originalTalkTextFlags;
+        textNode->FontSize = this.originalTalkFontSize;
+        textNode->SetText(originalText);
+      }
+
+      this.nativeTalkTextNodeStateDirty = false;
+      return true;
+    }
   }
 
   /// <summary>

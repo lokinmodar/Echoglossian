@@ -11,6 +11,13 @@ using Echoglossian.Translators.LibreTranslate;
 
 namespace Echoglossian;
 
+public enum JournalTranslationDisplayMode
+{
+  NativeUiTranslation = 0,
+  TooltipTranslation = 1,
+  NativeUiTranslationWithOriginalTooltips = 2,
+}
+
 public class Config : IPluginConfiguration
 {
   /// <summary>Generic prompt used by all AI translators when applicable.</summary>
@@ -96,6 +103,20 @@ public class Config : IPluginConfiguration
   ///     versions that still used a single overlay title-bar setting.
   /// </summary>
   [DefaultValue(false)] public bool ForceShowTitle = false;
+
+  /// <summary>Swap Journal hover tooltip text independently from the global overlay swap toggle.</summary>
+  [DefaultValue(false)] public bool SwapJournalTextsUsingImGui = false;
+
+  /// <summary>
+  ///     How journal-like quest windows should present translated text.
+  ///     NativeUiTranslation writes only to the native addon, TooltipTranslation
+  ///     keeps the addon intact and uses hover tooltips, and
+  ///     NativeUiTranslationWithOriginalTooltips writes translation natively
+  ///     while showing the original in hover tooltips.
+  /// </summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode JournalTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Always show the BattleTalk overlay title bar.</summary>
   [DefaultValue(false)] public bool BattleTalkForceShowTitle = false;

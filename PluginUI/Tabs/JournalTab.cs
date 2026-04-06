@@ -13,6 +13,7 @@ public static class JournalTab
     public static bool Draw(Config config, bool langToRemoveDiacritics)
     {
         var changed = false;
+        var displayMode = (int)config.JournalTranslationDisplayMode;
 
         if (config.Translate)
         {
@@ -20,13 +21,29 @@ public static class JournalTab
                 Resources.TranslateJournalToggle,
                 ref config.TranslateJournal);
 
-            changed |= ImGui.Checkbox(
-                "Show journal and quest translations as hover tooltips",
-                ref config.TranslateTooltips);
+            var journalDisplayModes = new[]
+            {
+                "Native UI translation",
+                "Tooltip translation only",
+                "Native UI translation + original tooltips",
+            };
+
+            if (ImGui.Combo(
+                    "Journal quest display mode",
+                    ref displayMode,
+                    journalDisplayModes,
+                    journalDisplayModes.Length))
+            {
+                config.JournalTranslationDisplayMode = (JournalTranslationDisplayMode)displayMode;
+                changed = true;
+            }
+
+            ImGui.TextWrapped(
+                "This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Hover tooltips from other plugins still use the global tooltip toggle.");
 
             changed |= ImGui.Checkbox(
-                "Swap original and translated text in hover tooltips",
-                ref config.SwapTextsUsingImGui);
+                "Enable global hover tooltips for other translated UI",
+                ref config.TranslateTooltips);
         }
 
         if (langToRemoveDiacritics)

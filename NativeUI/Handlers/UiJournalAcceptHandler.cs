@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Cache;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
@@ -44,6 +46,16 @@ public partial class Echoglossian
             var questPlate = this.FormatQuestPlate(questName, questMessage);
             var foundQuestPlate = this.FindQuestPlate(questPlate);
             var cacheKey = $"JournalAccept|{questName}|{questMessage}";
+
+            if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                    questName,
+                    out _) &&
+                QuestUiTranslationCache.TryGetAppliedSnapshot(
+                    questMessage,
+                    out _))
+            {
+                return;
+            }
 
             string translatedQuestName;
             string translatedQuestMessage;
@@ -129,10 +141,17 @@ public partial class Echoglossian
                     this.SpecialCharsSupportedByGameFont);
             }
 
-            setupAtkValues[5].SetManagedString(translatedQuestName);
-            setupAtkValues[12].SetManagedString(translatedQuestMessage);
+            if (this.JournalWritesNativeTranslation)
+            {
+                setupAtkValues[5].SetManagedString(translatedQuestName);
+                setupAtkValues[12].SetManagedString(translatedQuestMessage);
+            }
+            QuestUiTranslationCache.Remember(questName, translatedQuestName);
+            QuestUiTranslationCache.Remember(
+                questMessage,
+                translatedQuestMessage);
 
-            if (this.configuration.TranslateTooltips)
+            if (this.JournalUsesHoverTooltips)
             {
                 var addon = AtkStage.Instance()->RaptureAtkUnitManager
                     ->GetAddonByName("JournalAccept");
@@ -140,7 +159,9 @@ public partial class Echoglossian
                     $"JournalAccept-{(nint)addon:X}",
                     addon,
                     $"{questName}\n{questMessage}",
-                    $"{translatedQuestName}\n{translatedQuestMessage}");
+                    $"{translatedQuestName}\n{translatedQuestMessage}",
+                    swapEnabled: this.JournalHoverShowsOriginal,
+                    forceEnabled: true);
             }
         }
         catch (Exception e)

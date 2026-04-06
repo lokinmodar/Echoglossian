@@ -12,8 +12,12 @@ namespace Echoglossian.NativeUI.Helpers;
 /// </summary>
 public sealed class HoverTooltipManager
 {
+    private const int TooltipWrapLimit = 80;
+    private static readonly TimeSpan HoverLogCooldown = TimeSpan.FromSeconds(1);
+
     private readonly ConcurrentDictionary<string, HoverTooltipEntry> entries = new();
     private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(8);
+    private readonly ConcurrentDictionary<string, DateTime> lastHoverLogUtc = new();
 
     /// <summary>
     ///     Registers or updates a tooltip target.
@@ -26,13 +30,31 @@ public sealed class HoverTooltipManager
         string body,
         bool enabled = true)
     {
-        this.entries[key] = new HoverTooltipEntry(
+        var newEntry = new HoverTooltipEntry(
             topLeft,
             bottomRight,
             title,
             body,
             enabled,
             DateTime.UtcNow);
+
+        if (this.entries.TryGetValue(key, out var existingEntry))
+        {
+            if (!this.IsSameVisualEntry(existingEntry, newEntry))
+            {
+                PluginLog.Debug(
+                    $"[HoverTooltip] register key='{key}' bounds=({topLeft.X:0.0},{topLeft.Y:0.0})-({bottomRight.X:0.0},{bottomRight.Y:0.0}) " +
+                    $"enabled={enabled} title='{TruncateForLog(title)}' body='{TruncateForLog(body)}'");
+            }
+        }
+        else
+        {
+            PluginLog.Debug(
+                $"[HoverTooltip] register key='{key}' bounds=({topLeft.X:0.0},{topLeft.Y:0.0})-({bottomRight.X:0.0},{bottomRight.Y:0.0}) " +
+                $"enabled={enabled} title='{TruncateForLog(title)}' body='{TruncateForLog(body)}'");
+        }
+
+        this.entries[key] = newEntry;
     }
 
     /// <summary>
@@ -56,15 +78,15 @@ public sealed class HoverTooltipManager
     /// </summary>
     public void Draw()
     {
-        this.RemoveStaleEntries();
-
         if (this.entries.Count == 0)
         {
             return;
         }
 
         var mousePosition = ImGui.GetMousePos();
-        foreach (var entry in this.entries.Values)
+        string? hoveredKey = null;
+        HoverTooltipEntry? hoveredEntry = null;
+        foreach (var (key, entry) in this.entries)
         {
             if (!entry.Enabled)
             {
@@ -79,34 +101,63 @@ public sealed class HoverTooltipManager
                 continue;
             }
 
-            ImGui.SetNextWindowBgAlpha(0.95f);
-            ImGui.BeginTooltip();
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(entry.Title))
-                {
-                    ImGui.TextUnformatted(entry.Title);
-                    ImGui.Separator();
-                }
-
-                ImGui.TextWrapped(string.IsNullOrWhiteSpace(entry.Body)
-                    ? string.Empty
-                    : entry.Body);
-            }
-            finally
-            {
-                ImGui.EndTooltip();
-            }
-
+            hoveredKey = key;
+            hoveredEntry = entry;
             break;
+        }
+
+        this.RemoveStaleEntries(hoveredKey);
+
+        if (hoveredKey == null || hoveredEntry == null)
+        {
+            return;
+        }
+
+        this.entries[hoveredKey] = hoveredEntry with
+        {
+            LastUpdatedUtc = DateTime.UtcNow,
+        };
+
+        if (this.ShouldLogHover(hoveredKey))
+        {
+            PluginLog.Debug(
+                $"[HoverTooltip] hover key='{hoveredKey}' mouse=({mousePosition.X:0.0},{mousePosition.Y:0.0}) " +
+                $"bounds=({hoveredEntry.TopLeft.X:0.0},{hoveredEntry.TopLeft.Y:0.0})-({hoveredEntry.BottomRight.X:0.0},{hoveredEntry.BottomRight.Y:0.0}) " +
+                $"title='{TruncateForLog(hoveredEntry.Title)}' body='{TruncateForLog(hoveredEntry.Body)}'");
+        }
+
+        ImGui.SetNextWindowBgAlpha(0.95f);
+        ImGui.BeginTooltip();
+        try
+        {
+            var title = WrapTooltipText(hoveredEntry.Title);
+            var body = WrapTooltipText(hoveredEntry.Body);
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                ImGui.TextUnformatted(title);
+                ImGui.Separator();
+            }
+
+            ImGui.TextUnformatted(body);
+        }
+        finally
+        {
+            ImGui.EndTooltip();
         }
     }
 
-    private void RemoveStaleEntries()
+    private void RemoveStaleEntries(string? preserveKey)
     {
         var cutoff = DateTime.UtcNow - this.staleEntryLifetime;
         foreach (var (key, entry) in this.entries)
         {
+            if (!string.IsNullOrWhiteSpace(preserveKey) &&
+                string.Equals(key, preserveKey, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             if (entry.LastUpdatedUtc >= cutoff)
             {
                 continue;
@@ -114,6 +165,100 @@ public sealed class HoverTooltipManager
 
             this.entries.TryRemove(key, out _);
         }
+    }
+
+    private bool ShouldLogHover(string key)
+    {
+        var now = DateTime.UtcNow;
+        if (this.lastHoverLogUtc.TryGetValue(key, out var lastLoggedUtc) &&
+            now - lastLoggedUtc < HoverLogCooldown)
+        {
+            return false;
+        }
+
+        this.lastHoverLogUtc[key] = now;
+        return true;
+    }
+
+    private bool IsSameVisualEntry(
+        HoverTooltipEntry existingEntry,
+        HoverTooltipEntry newEntry)
+    {
+        return existingEntry.TopLeft == newEntry.TopLeft &&
+               existingEntry.BottomRight == newEntry.BottomRight &&
+               existingEntry.Title == newEntry.Title &&
+               existingEntry.Body == newEntry.Body &&
+               existingEntry.Enabled == newEntry.Enabled;
+    }
+
+    private static string TruncateForLog(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        const int maxLength = 96;
+        return value.Length <= maxLength
+            ? value
+            : value[..maxLength] + "…";
+    }
+
+    private static string WrapTooltipText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        var normalizedText = text.Replace("\r\n", "\n").Replace('\r', '\n');
+        var paragraphs = normalizedText.Split('\n');
+        var builder = new System.Text.StringBuilder();
+
+        for (var paragraphIndex = 0; paragraphIndex < paragraphs.Length; paragraphIndex++)
+        {
+            if (paragraphIndex > 0)
+            {
+                builder.AppendLine();
+            }
+
+            var paragraph = paragraphs[paragraphIndex].Trim();
+            if (paragraph.Length == 0)
+            {
+                continue;
+            }
+
+            var words = paragraph.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+            var line = new System.Text.StringBuilder();
+
+            foreach (var word in words)
+            {
+                if (line.Length == 0)
+                {
+                    line.Append(word);
+                    continue;
+                }
+
+                if (line.Length + 1 + word.Length > TooltipWrapLimit)
+                {
+                    builder.AppendLine(line.ToString());
+                    line.Clear();
+                    line.Append(word);
+                    continue;
+                }
+
+                line.Append(' ').Append(word);
+            }
+
+            if (line.Length > 0)
+            {
+                builder.Append(line);
+            }
+        }
+
+        return builder.ToString();
     }
 
     private sealed record HoverTooltipEntry(
