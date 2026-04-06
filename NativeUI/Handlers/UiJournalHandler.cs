@@ -979,26 +979,3 @@ public partial class Echoglossian
         this.TranslateJournalQuests();
     }
 }
-
-public unsafe class SummaryQuest
-{
-    public SummaryQuest(
-        string originalText,
-        string translatedText,
-        AtkTextNode* node,
-        bool isTranslated)
-    {
-        this.OriginalText = originalText;
-        this.TranslatedText = translatedText;
-        this.Node = node;
-        this.IsTranslated = isTranslated;
-    }
-
-    public string OriginalText { get; set; }
-
-    public string TranslatedText { get; set; }
-
-    public AtkTextNode* Node { get; set; }
-
-    public bool IsTranslated { get; set; }
-}

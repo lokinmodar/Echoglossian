@@ -6690,6 +6690,77 @@
                 Queues a translation request if one is not already in flight for the key.
             </summary>
         </member>
+        <member name="T:Echoglossian.SummaryQuest">
+            <summary>
+            Represents a journal summary quest entry and its translation state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.SummaryQuest.#ctor(System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.SummaryQuest"/> class.
+            </summary>
+            <param name="originalText">The original source text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="node">The backing text node.</param>
+            <param name="isTranslated">Whether the text has already been translated.</param>
+        </member>
+        <member name="P:Echoglossian.SummaryQuest.OriginalText">
+            <summary>
+            Gets or sets the original source text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.SummaryQuest.TranslatedText">
+            <summary>
+            Gets or sets the translated text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.SummaryQuest.Node">
+            <summary>
+            Gets or sets the backing text node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.SummaryQuest.IsTranslated">
+            <summary>
+            Gets or sets a value indicating whether the text has already been translated.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.ToDoItem">
+            <summary>
+            Represents a ToDo list entry and the node coordinates it belongs to.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ToDoItem.#ctor(System.String,System.Int32,System.Int32,System.UInt32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.ToDoItem"/> class.
+            </summary>
+            <param name="text">The entry text.</param>
+            <param name="indexI">The first index component.</param>
+            <param name="indexJ">The second index component.</param>
+            <param name="nodeID">The backing node identifier.</param>
+        </member>
+        <member name="P:Echoglossian.ToDoItem.Text">
+            <summary>
+            Gets or sets the entry text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.ToDoItem.IndexI">
+            <summary>
+            Gets or sets the first index component.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.ToDoItem.IndexJ">
+            <summary>
+            Gets or sets the second index component.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.ToDoItem.NodeId">
+            <summary>
+            Gets or sets the backing node identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ToDoItem.ToString">
+            <inheritdoc/>
+        </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
             <summary>
                 Provides helper methods for rendering a language dropdown in the UI.

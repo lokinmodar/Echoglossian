@@ -634,27 +634,3 @@ public partial class Echoglossian
         this.TranslateToDoList();
     }
 }
-
-public class ToDoItem
-{
-    public ToDoItem(string text, int indexI, int indexJ, uint nodeID)
-    {
-        this.Text = text;
-        this.IndexI = indexI;
-        this.IndexJ = indexJ;
-        this.NodeId = nodeID;
-    }
-
-    public string Text { get; set; }
-
-    public int IndexI { get; set; }
-
-    public int IndexJ { get; set; }
-
-    public uint NodeId { get; set; }
-
-    public override string ToString()
-    {
-        return this.Text;
-    }
-}
