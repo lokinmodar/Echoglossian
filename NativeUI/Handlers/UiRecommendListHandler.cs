@@ -1,4 +1,4 @@
-﻿// <copyright file="UiRecommendListHandler.cs" company="lokinmodar">
+// <copyright file="UiRecommendListHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -9,11 +9,6 @@ namespace Echoglossian;
 
 public partial class Echoglossian
 {
-    private readonly ConcurrentDictionary<
-        nint,
-        (string OriginalText, string TranslatedText)>
-        recommendHoverTranslationCache = new();
-
     private unsafe void UpdateRecommendList()
     {
         var atkStage = AtkStage.Instance();
@@ -81,14 +76,14 @@ public partial class Echoglossian
                         questNameText,
                         questNameText,
                         swapEnabled: this.JournalHoverShowsOriginal,
-                        forceEnabled: true);
+                        forceEnabled: true, denseHitbox: true);
                 }
                 if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                         questNameText,
                         out var translatedQuestSnapshot))
                 {
                     if (this.JournalUsesHoverTooltips &&
-                        this.recommendHoverTranslationCache.TryGetValue(
+                        QuestHoverTranslationCache.TryGet(
                             questNameNodeKey,
                             out var cachedHoverTranslation))
                     {
@@ -98,7 +93,7 @@ public partial class Echoglossian
                             cachedHoverTranslation.OriginalText,
                             cachedHoverTranslation.TranslatedText,
                             swapEnabled: this.JournalHoverShowsOriginal,
-                            forceEnabled: true);
+                            forceEnabled: true, denseHitbox: true);
                     }
                     else if (this.JournalUsesHoverTooltips)
                     {
@@ -108,7 +103,7 @@ public partial class Echoglossian
                             translatedQuestSnapshot.OriginalText,
                             translatedQuestSnapshot.AppliedText,
                             swapEnabled: this.JournalHoverShowsOriginal,
-                            forceEnabled: true);
+                            forceEnabled: true, denseHitbox: true);
                     }
 
                     continue;
@@ -140,7 +135,8 @@ public partial class Echoglossian
                         // because we are translating names, it's safer to use SetString instead of SetText
                         questName->NodeText.SetString(translatedQuestName);
                     }
-                    this.recommendHoverTranslationCache[questNameNodeKey] = (
+                    QuestHoverTranslationCache.Remember(
+                        questNameNodeKey,
                         questNameText,
                         translatedQuestName);
                     QuestUiTranslationCache.Remember(
@@ -154,7 +150,7 @@ public partial class Echoglossian
                             questNameText,
                             translatedQuestName,
                             swapEnabled: this.JournalHoverShowsOriginal,
-                            forceEnabled: true);
+                            forceEnabled: true, denseHitbox: true);
                     }
                 }
             }
@@ -232,14 +228,14 @@ public partial class Echoglossian
                         questNameText,
                         questNameText,
                         swapEnabled: this.JournalHoverShowsOriginal,
-                        forceEnabled: true);
+                        forceEnabled: true, denseHitbox: true);
                 }
                 if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                         questNameText,
                         out var translatedQuestSnapshot))
                 {
                     if (this.JournalUsesHoverTooltips &&
-                        this.recommendHoverTranslationCache.TryGetValue(
+                        QuestHoverTranslationCache.TryGet(
                             questNameNodeKey,
                             out var cachedHoverTranslation))
                     {
@@ -278,7 +274,8 @@ public partial class Echoglossian
 
                     // because we are translating names, it's safer to use SetString instead of SetText
                     questName->NodeText.SetString(translatedQuestName);
-                    this.recommendHoverTranslationCache[questNameNodeKey] = (
+                    QuestHoverTranslationCache.Remember(
+                        questNameNodeKey,
                         questNameText,
                         translatedQuestName);
                     QuestUiTranslationCache.Remember(
@@ -315,7 +312,8 @@ public partial class Echoglossian
                         // because we are translating names, it's safer to use SetString instead of SetText
                         questName->NodeText.SetString(translatedNameText);
                     }
-                    this.recommendHoverTranslationCache[questNameNodeKey] = (
+                    QuestHoverTranslationCache.Remember(
+                        questNameNodeKey,
                         questNameText,
                         translatedNameText);
                     QuestUiTranslationCache.Remember(
@@ -329,7 +327,7 @@ public partial class Echoglossian
                             questNameText,
                             translatedNameText,
                             swapEnabled: this.JournalHoverShowsOriginal,
-                            forceEnabled: true);
+                            forceEnabled: true, denseHitbox: true);
                     }
 
                     continue;
@@ -409,3 +407,4 @@ public partial class Echoglossian
         Task.Delay(200).ContinueWith(t => this.TranslateRecommendListHandler());
     }
 }
+

@@ -1897,6 +1897,309 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Awaiting translation....
         /// </summary>
+        public static string AddonProbeHelpMessage {
+            get {
+                return ResourceManager.GetString("AddonProbeHelpMessage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Native UI translation.
+        /// </summary>
+        public static string JournalQuestDisplayModeNativeUiTranslation {
+            get {
+                return ResourceManager.GetString("JournalQuestDisplayModeNativeUiTranslation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Tooltip translation only.
+        /// </summary>
+        public static string JournalQuestDisplayModeTooltipTranslationOnly {
+            get {
+                return ResourceManager.GetString("JournalQuestDisplayModeTooltipTranslationOnly", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Native UI translation + original tooltips.
+        /// </summary>
+        public static string JournalQuestDisplayModeNativeUiTranslationWithOriginalTooltips {
+            get {
+                return ResourceManager.GetString("JournalQuestDisplayModeNativeUiTranslationWithOriginalTooltips", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Journal quest display mode.
+        /// </summary>
+        public static string JournalQuestDisplayModeLabel {
+            get {
+                return ResourceManager.GetString("JournalQuestDisplayModeLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal hover tooltips follow this mode directly; the global tooltip toggle only affects other translated UI..
+        /// </summary>
+        public static string JournalQuestDisplayModeDescription {
+            get {
+                return ResourceManager.GetString("JournalQuestDisplayModeDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Enable global hover tooltips for other translated UI.
+        /// </summary>
+        public static string JournalGlobalHoverTooltipsLabel {
+            get {
+                return ResourceManager.GetString("JournalGlobalHoverTooltipsLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate Text Gimmick Hint.
+        /// </summary>
+        public static string TranslateTextGimmickHintToggleText {
+            get {
+                return ResourceManager.GetString("TranslateTextGimmickHintToggleText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to MiniTalk.
+        /// </summary>
+        public static string OverlayTabMiniTalkText {
+            get {
+                return ResourceManager.GetString("OverlayTabMiniTalkText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to CutSceneSelectString.
+        /// </summary>
+        public static string OverlayTabCutSceneSelectStringText {
+            get {
+                return ResourceManager.GetString("OverlayTabCutSceneSelectStringText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to General.
+        /// </summary>
+        public static string ToastOverlayTabGeneralText {
+            get {
+                return ResourceManager.GetString("ToastOverlayTabGeneralText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Screen Info.
+        /// </summary>
+        public static string ToastOverlayTabScreenInfoText {
+            get {
+                return ResourceManager.GetString("ToastOverlayTabScreenInfoText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string ToastOverlayTabErrorText {
+            get {
+                return ResourceManager.GetString("ToastOverlayTabErrorText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Area.
+        /// </summary>
+        public static string ToastOverlayTabAreaText {
+            get {
+                return ResourceManager.GetString("ToastOverlayTabAreaText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Class / Job.
+        /// </summary>
+        public static string ToastOverlayTabClassJobText {
+            get {
+                return ResourceManager.GetString("ToastOverlayTabClassJobText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Text Gimmick Hint.
+        /// </summary>
+        public static string ToastOverlayTabTextGimmickHintText {
+            get {
+                return ResourceManager.GetString("ToastOverlayTabTextGimmickHintText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Quest.
+        /// </summary>
+        public static string ToastOverlayTabQuestText {
+            get {
+                return ResourceManager.GetString("ToastOverlayTabQuestText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Each toast type can choose independently between native replacement and overlay rendering..
+        /// </summary>
+        public static string ToastModeDescription {
+            get {
+                return ResourceManager.GetString("ToastModeDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation..
+        /// </summary>
+        public static string ToastModeSwapDescription {
+            get {
+                return ResourceManager.GetString("ToastModeSwapDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Overlay-only language is active, so all toast types will render through overlays..
+        /// </summary>
+        public static string OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays {
+            get {
+                return ResourceManager.GetString("OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Overlay-only language is active, so this toast type will render through an overlay..
+        /// </summary>
+        public static string OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay {
+            get {
+                return ResourceManager.GetString("OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Native replacement mode is active for this toast type. Overlay style controls are not used in this mode..
+        /// </summary>
+        public static string NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode {
+            get {
+                return ResourceManager.GetString("NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Screen Info (_WideText).
+        /// </summary>
+        public static string ToastOverlayScreenInfoWideTextSectionTitle {
+            get {
+                return ResourceManager.GetString("ToastOverlayScreenInfoWideTextSectionTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error Toast.
+        /// </summary>
+        public static string ToastOverlayErrorSectionTitle {
+            get {
+                return ResourceManager.GetString("ToastOverlayErrorSectionTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Area Toast.
+        /// </summary>
+        public static string ToastOverlayAreaSectionTitle {
+            get {
+                return ResourceManager.GetString("ToastOverlayAreaSectionTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Class / Job Change Toast.
+        /// </summary>
+        public static string ToastOverlayClassJobChangeSectionTitle {
+            get {
+                return ResourceManager.GetString("ToastOverlayClassJobChangeSectionTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Text Gimmick Hint.
+        /// </summary>
+        public static string ToastOverlayTextGimmickHintSectionTitle {
+            get {
+                return ResourceManager.GetString("ToastOverlayTextGimmickHintSectionTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Quest Toast.
+        /// </summary>
+        public static string ToastOverlayQuestSectionTitle {
+            get {
+                return ResourceManager.GetString("ToastOverlayQuestSectionTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Enable this toast type.
+        /// </summary>
+        public static string ToastOverlayEnableThisToastTypeLabel {
+            get {
+                return ResourceManager.GetString("ToastOverlayEnableThisToastTypeLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Use overlay for this toast type.
+        /// </summary>
+        public static string ToastOverlayUseOverlayForThisToastTypeLabel {
+            get {
+                return ResourceManager.GetString("ToastOverlayUseOverlayForThisToastTypeLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate MiniTalk.
+        /// </summary>
+        public static string TranslateMiniTalkLabel {
+            get {
+                return ResourceManager.GetString("TranslateMiniTalkLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The question is used as the window title and the options are rendered one per line..
+        /// </summary>
+        public static string CutSceneSelectStringOverlayHelpText {
+            get {
+                return ResourceManager.GetString("CutSceneSelectStringOverlayHelpText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Background opacity.
+        /// </summary>
+        public static string ToastOverlayBackgroundOpacityLabel {
+            get {
+                return ResourceManager.GetString("ToastOverlayBackgroundOpacityLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background..
+        /// </summary>
+        public static string ToastOverlayBackgroundOpacityTooltip {
+            get {
+                return ResourceManager.GetString("ToastOverlayBackgroundOpacityTooltip", resourceCulture);
+            }
+        }
+
         public static string WaitingForTranslation {
             get {
                 return ResourceManager.GetString("WaitingForTranslation", resourceCulture);

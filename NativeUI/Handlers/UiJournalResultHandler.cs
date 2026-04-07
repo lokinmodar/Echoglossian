@@ -1,4 +1,4 @@
-﻿// <copyright file="UiJournalResultHandler.cs" company="lokinmodar">
+// <copyright file="UiJournalResultHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -88,7 +88,7 @@ public partial class Echoglossian
                         questNameText,
                         foundQuestPlate.TranslatedQuestName,
                         swapEnabled: this.JournalHoverShowsOriginal,
-                        forceEnabled: true);
+                        forceEnabled: true, denseHitbox: true);
                 }
                 return;
             }
@@ -126,7 +126,7 @@ public partial class Echoglossian
                         questNameText,
                         translatedNameText,
                         swapEnabled: this.JournalHoverShowsOriginal,
-                        forceEnabled: true);
+                        forceEnabled: true, denseHitbox: true);
                 }
                 return;
             }
@@ -162,3 +162,4 @@ public partial class Echoglossian
         }
     }
 }
+

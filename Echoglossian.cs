@@ -173,8 +173,7 @@ public partial class Echoglossian : IDalamudPlugin
         AddonProbeCommand,
         new CommandInfo(this.OnEgloAddonProbeCommand)
         {
-            HelpMessage =
-              "Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe <addon name> [index] or /egloaddonprobe stop",
+            HelpMessage = Resources.AddonProbeHelpMessage,
         });
 
     Sanitizer = PluginInterface.Sanitizer as Sanitizer;
@@ -437,6 +436,7 @@ public partial class Echoglossian : IDalamudPlugin
   {
     AddonLifecycle.UnLogAddon("CutSceneSelectString");
     QuestUiTranslationCache.Clear();
+    QuestHoverTranslationCache.Clear();
 
     this.addonProbeWatch?.Dispose();
     this.addonProbeWatch = null;

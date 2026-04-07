@@ -1,4 +1,4 @@
-﻿// <copyright file="UiScenarioTreeHandler.cs" company="lokinmodar">
+// <copyright file="UiScenarioTreeHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -39,7 +39,7 @@ public partial class Echoglossian
                 questNameText,
                 questNameText,
                 swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true);
+                forceEnabled: true, denseHitbox: true);
         }
 
         if (QuestUiTranslationCache.TryGetAppliedSnapshot(
@@ -86,7 +86,7 @@ public partial class Echoglossian
                     questNameText,
                     translatedQuestName,
                     swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true);
+                    forceEnabled: true, denseHitbox: true);
             }
             return;
         }
@@ -124,7 +124,7 @@ public partial class Echoglossian
                     questNameText,
                     translatedNameText,
                     swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true);
+                    forceEnabled: true, denseHitbox: true);
             }
             return;
         }
@@ -189,3 +189,4 @@ public partial class Echoglossian
         }
     }
 }
+

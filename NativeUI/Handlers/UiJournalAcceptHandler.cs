@@ -1,4 +1,4 @@
-﻿// <copyright file="UiJournalAcceptHandler.cs" company="lokinmodar">
+// <copyright file="UiJournalAcceptHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -161,7 +161,7 @@ public partial class Echoglossian
                     $"{questName}\n{questMessage}",
                     $"{translatedQuestName}\n{translatedQuestMessage}",
                     swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true);
+                    forceEnabled: true, denseHitbox: true);
             }
         }
         catch (Exception e)
@@ -170,3 +170,4 @@ public partial class Echoglossian
         }
     }
 }
+

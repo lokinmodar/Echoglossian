@@ -748,4 +748,106 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Loaded {0} records</value>
   </data>
+  <data name="AddonProbeHelpMessage" xml:space="preserve">
+    <value>Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe &lt;addon name&gt; [index] or /egloaddonprobe stop</value>
+  </data>
+  <data name="JournalQuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Native UI translation</value>
+  </data>
+  <data name="JournalQuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Tooltip translation only</value>
+  </data>
+  <data name="JournalQuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Native UI translation + original tooltips</value>
+  </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Journal quest display mode</value>
+  </data>
+  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
+    <value>This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal hover tooltips follow this mode directly; the global tooltip toggle only affects other translated UI.</value>
+  </data>
+  <data name="JournalGlobalHoverTooltipsLabel" xml:space="preserve">
+    <value>Enable global hover tooltips for other translated UI</value>
+  </data>
+  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
+    <value>Translate Text Gimmick Hint</value>
+  </data>
+  <data name="OverlayTabMiniTalkText" xml:space="preserve">
+    <value>MiniTalk</value>
+  </data>
+  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
+    <value>Screen Info</value>
+  </data>
+  <data name="ToastOverlayTabErrorText" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="ToastOverlayTabAreaText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
+    <value>Class / Job</value>
+  </data>
+  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayTabQuestText" xml:space="preserve">
+    <value>Quest</value>
+  </data>
+  <data name="ToastModeDescription" xml:space="preserve">
+    <value>Each toast type can choose independently between native replacement and overlay rendering.</value>
+  </data>
+  <data name="ToastModeSwapDescription" xml:space="preserve">
+    <value>When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation.</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
+    <value>Overlay-only language is active, so all toast types will render through overlays.</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay" xml:space="preserve">
+    <value>Overlay-only language is active, so this toast type will render through an overlay.</value>
+  </data>
+  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
+    <value>Native replacement mode is active for this toast type. Overlay style controls are not used in this mode.</value>
+  </data>
+  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
+    <value>Screen Info (_WideText)</value>
+  </data>
+  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
+    <value>Error Toast</value>
+  </data>
+  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
+    <value>Area Toast</value>
+  </data>
+  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
+    <value>Class / Job Change Toast</value>
+  </data>
+  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
+    <value>Quest Toast</value>
+  </data>
+  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
+    <value>Enable this toast type</value>
+  </data>
+  <data name="ToastOverlayUseOverlayForThisToastTypeLabel" xml:space="preserve">
+    <value>Use overlay for this toast type</value>
+  </data>
+  <data name="TranslateMiniTalkLabel" xml:space="preserve">
+    <value>Translate MiniTalk</value>
+  </data>
+  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
+    <value>The question is used as the window title and the options are rendered one per line.</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Background opacity</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
+    <value>Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</value>
+  </data>
 </root>

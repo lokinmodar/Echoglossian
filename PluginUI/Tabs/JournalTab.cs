@@ -23,13 +23,13 @@ public static class JournalTab
 
             var journalDisplayModes = new[]
             {
-                "Native UI translation",
-                "Tooltip translation only",
-                "Native UI translation + original tooltips",
+                Resources.JournalQuestDisplayModeNativeUiTranslation,
+                Resources.JournalQuestDisplayModeTooltipTranslationOnly,
+                Resources.JournalQuestDisplayModeNativeUiTranslationWithOriginalTooltips,
             };
 
             if (ImGui.Combo(
-                    "Journal quest display mode",
+                    Resources.JournalQuestDisplayModeLabel,
                     ref displayMode,
                     journalDisplayModes,
                     journalDisplayModes.Length))
@@ -39,10 +39,10 @@ public static class JournalTab
             }
 
             ImGui.TextWrapped(
-                "This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Hover tooltips from other plugins still use the global tooltip toggle.");
+                Resources.JournalQuestDisplayModeDescription);
 
             changed |= ImGui.Checkbox(
-                "Enable global hover tooltips for other translated UI",
+                Resources.JournalGlobalHoverTooltipsLabel,
                 ref config.TranslateTooltips);
         }
 

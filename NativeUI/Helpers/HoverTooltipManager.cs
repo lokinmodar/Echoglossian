@@ -16,7 +16,7 @@ public sealed class HoverTooltipManager
     private static readonly TimeSpan HoverLogCooldown = TimeSpan.FromSeconds(1);
 
     private readonly ConcurrentDictionary<string, HoverTooltipEntry> entries = new();
-    private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(8);
+    private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(30);
     private readonly ConcurrentDictionary<string, DateTime> lastHoverLogUtc = new();
 
     /// <summary>

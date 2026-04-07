@@ -20,21 +20,21 @@ public static class OverlayTab
         Resources.BattleTalkTabTitle,
         Resources.ToastTabTitle,
         Resources.SubtitleTabTitle,
-        "MiniTalk",
-        "CutSceneSelectString",
+        Resources.OverlayTabMiniTalkText,
+        Resources.OverlayTabCutSceneSelectStringText,
         Resources.ConfigTab4Name,
         Resources.OtherUIElementsTabTitle,
     };
 
     private static readonly string[] ToastOverlayTabs =
     {
-        "General",
-        "Screen Info",
-        "Error",
-        "Area",
-        "Class / Job",
-        "Text Gimmick Hint",
-        "Quest",
+        Resources.ToastOverlayTabGeneralText,
+        Resources.ToastOverlayTabScreenInfoText,
+        Resources.ToastOverlayTabErrorText,
+        Resources.ToastOverlayTabAreaText,
+        Resources.ToastOverlayTabClassJobText,
+        Resources.ToastOverlayTabTextGimmickHintText,
+        Resources.ToastOverlayTabQuestText,
     };
 
     /// <summary>
@@ -290,7 +290,7 @@ public static class OverlayTab
             case 1:
                 changed |= DrawToastTypePage(
                     config,
-                    "Screen Info (_WideText)",
+                    Resources.ToastOverlayScreenInfoWideTextSectionTitle,
                     ref config.TranslateWideTextToast,
                     ref config.UseImGuiForWideTextToast,
                     ref config.WideTextToastFontScale,
@@ -303,7 +303,7 @@ public static class OverlayTab
             case 2:
                 changed |= DrawToastTypePage(
                     config,
-                    "Error Toast",
+                    Resources.ToastOverlayErrorSectionTitle,
                     ref config.TranslateErrorToast,
                     ref config.UseImGuiForErrorToast,
                     ref config.ErrorToastFontScale,
@@ -316,7 +316,7 @@ public static class OverlayTab
             case 3:
                 changed |= DrawToastTypePage(
                     config,
-                    "Area Toast",
+                    Resources.ToastOverlayAreaSectionTitle,
                     ref config.TranslateAreaToast,
                     ref config.UseImGuiForAreaToast,
                     ref config.AreaToastFontScale,
@@ -329,7 +329,7 @@ public static class OverlayTab
             case 4:
                 changed |= DrawToastTypePage(
                     config,
-                    "Class / Job Change Toast",
+                    Resources.ToastOverlayClassJobChangeSectionTitle,
                     ref config.TranslateClassChangeToast,
                     ref config.UseImGuiForClassChangeToast,
                     ref config.ClassChangeToastFontScale,
@@ -342,7 +342,7 @@ public static class OverlayTab
             case 5:
                 changed |= DrawToastTypePage(
                     config,
-                    "Text Gimmick Hint",
+                    Resources.ToastOverlayTextGimmickHintSectionTitle,
                     ref config.TranslateTextGimmickHint,
                     ref config.UseImGuiForTextGimmickHint,
                     ref config.TextGimmickHintFontScale,
@@ -355,7 +355,7 @@ public static class OverlayTab
             case 6:
                 changed |= DrawToastTypePage(
                     config,
-                    "Quest Toast",
+                    Resources.ToastOverlayQuestSectionTitle,
                     ref config.TranslateQuestToast,
                     ref config.UseImGuiForQuestToast,
                     ref config.QuestToastFontScale,
@@ -392,7 +392,7 @@ public static class OverlayTab
             Resources.TranslateClassChangeToastToggleText,
             ref config.TranslateClassChangeToast);
         changed |= ImGui.Checkbox(
-            "Translate Text Gimmick Hint",
+            Resources.TranslateTextGimmickHintToggleText,
             ref config.TranslateTextGimmickHint);
         changed |= ImGui.Checkbox(
             Resources.TranslateQuestToastToggleText,
@@ -400,15 +400,15 @@ public static class OverlayTab
 
         ImGui.Spacing();
         ImGui.TextWrapped(
-            "Each toast type can choose independently between native replacement and overlay rendering.");
+            Resources.ToastModeDescription);
         ImGui.TextWrapped(
-            "When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation.");
+            Resources.ToastModeSwapDescription);
 
         if (config.OverlayOnlyLanguage)
         {
             ImGui.Spacing();
             ImGui.TextWrapped(
-                "Overlay-only language is active, so all toast types will render through overlays.");
+                Resources.OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays);
         }
 
         return changed;
@@ -431,7 +431,9 @@ public static class OverlayTab
         ImGui.TextUnformatted(sectionTitle);
         ImGui.Separator();
 
-        changed |= ImGui.Checkbox("Enable this toast type", ref isEnabled);
+        changed |= ImGui.Checkbox(
+            Resources.ToastOverlayEnableThisToastTypeLabel,
+            ref isEnabled);
 
         if (!isEnabled)
         {
@@ -443,11 +445,13 @@ public static class OverlayTab
             changed |= AssignIfChanged(ref useOverlay, true);
             changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
             ImGui.TextWrapped(
-                "Overlay-only language is active, so this toast type will render through an overlay.");
+                Resources.OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay);
         }
         else
         {
-            changed |= ImGui.Checkbox("Use overlay for this toast type", ref useOverlay);
+            changed |= ImGui.Checkbox(
+                Resources.ToastOverlayUseOverlayForThisToastTypeLabel,
+                ref useOverlay);
         }
 
         if (!config.OverlayOnlyLanguage && useOverlay)
@@ -461,7 +465,7 @@ public static class OverlayTab
         {
             ImGui.Spacing();
             ImGui.TextWrapped(
-                "Native replacement mode is active for this toast type. Overlay style controls are not used in this mode.");
+                Resources.NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode);
             return changed;
         }
 
@@ -548,7 +552,7 @@ public static class OverlayTab
         }
 
         changed |= ImGui.Checkbox(
-            "Translate MiniTalk",
+            Resources.TranslateMiniTalkLabel,
             ref config.TranslateMiniTalk);
 
         if (!config.TranslateMiniTalk)
@@ -645,7 +649,7 @@ public static class OverlayTab
                 ref config.CutSceneSelectStringBackgroundOpacity,
                 ref config.FontChangeTime);
             ImGui.TextWrapped(
-                "The question is used as the window title and the options are rendered one per line.");
+                Resources.CutSceneSelectStringOverlayHelpText);
         }
 
         if (!config.OverlayOnlyLanguage &&
@@ -863,7 +867,7 @@ public static class OverlayTab
         }
 
         changed |= ImGui.SliderFloat(
-            "Background opacity",
+            Resources.ToastOverlayBackgroundOpacityLabel,
             ref backgroundOpacity,
             0f,
             1f,
@@ -874,7 +878,7 @@ public static class OverlayTab
         if (ImGui.IsItemHovered())
         {
             ImGui.SetTooltip(
-                "Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.");
+                Resources.ToastOverlayBackgroundOpacityTooltip);
         }
 
         return changed;

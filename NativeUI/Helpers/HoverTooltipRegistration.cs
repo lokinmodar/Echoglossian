@@ -21,7 +21,8 @@ public partial class Echoglossian
       AtkTextNode* textNode,
       string title,
       string body,
-      bool forceEnabled = false)
+      bool forceEnabled = false,
+      bool denseHitbox = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -38,8 +39,12 @@ public partial class Echoglossian
     var right = left + Math.Max(1f, textNode->GetWidth());
     var bottom = top + Math.Max(1f, textNode->GetHeight());
 
-    var widthPadding = Math.Clamp(textNode->GetWidth() * 0.08f, 12f, 24f);
-    var heightPadding = Math.Clamp(textNode->GetHeight() * 0.3f, 8f, 14f);
+    var widthPadding = denseHitbox
+        ? Math.Clamp(textNode->GetWidth() * 0.15f, 18f, 40f)
+        : Math.Clamp(textNode->GetWidth() * 0.08f, 12f, 24f);
+    var heightPadding = denseHitbox
+        ? Math.Clamp(textNode->GetHeight() * 0.45f, 10f, 22f)
+        : Math.Clamp(textNode->GetHeight() * 0.3f, 8f, 14f);
     left -= widthPadding;
     top -= heightPadding;
     right += widthPadding;
@@ -66,7 +71,8 @@ public partial class Echoglossian
       AtkUnitBase* addon,
       string title,
       string body,
-      bool forceEnabled = false)
+      bool forceEnabled = false,
+      bool denseHitbox = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -88,6 +94,13 @@ public partial class Echoglossian
     var top = rootNode->Y;
     var right = left + Math.Max(1f, rootNode->Width * addon->Scale);
     var bottom = top + Math.Max(1f, rootNode->Height * addon->Scale);
+    if (denseHitbox)
+    {
+      left -= 24f;
+      right += 24f;
+      top -= 16f;
+      bottom += 16f;
+    }
 
     this.hoverTooltipManager.Register(
         key,
@@ -112,7 +125,8 @@ public partial class Echoglossian
       string originalText,
       string translatedText,
       bool? swapEnabled = null,
-      bool forceEnabled = false)
+      bool forceEnabled = false,
+      bool denseHitbox = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -140,7 +154,8 @@ public partial class Echoglossian
         textNode,
         string.Empty,
         displayText,
-        forceEnabled);
+        forceEnabled,
+        denseHitbox);
   }
 
   /// <summary>
@@ -157,7 +172,8 @@ public partial class Echoglossian
       string originalText,
       string translatedText,
       bool? swapEnabled = null,
-      bool forceEnabled = false)
+      bool forceEnabled = false,
+      bool denseHitbox = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -185,7 +201,8 @@ public partial class Echoglossian
         addon,
         string.Empty,
         displayText,
-        forceEnabled);
+        forceEnabled,
+        denseHitbox);
   }
 
   private bool JournalUsesNativeTranslation =>

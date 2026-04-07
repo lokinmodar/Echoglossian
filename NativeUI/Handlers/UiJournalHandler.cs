@@ -1,4 +1,4 @@
-﻿// <copyright file="UiJournalHandler.cs" company="lokinmodar">
+// <copyright file="UiJournalHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -10,11 +10,6 @@ namespace Echoglossian;
 public partial class Echoglossian
 {
     // keeps journal quest hover translations alive across refreshes
-    private readonly ConcurrentDictionary<
-        nint,
-        (string OriginalText, string TranslatedText)>
-        journalHoverTranslationCache = new();
-
     private unsafe List<SummaryQuest> TranslateSummaries(
         AtkComponentBase* journalBox,
         QuestPlate foundQuestPlate,
@@ -441,21 +436,21 @@ public partial class Echoglossian
                 questName,
                 translatedQuestName,
                 swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true);
+                forceEnabled: true, denseHitbox: true);
             this.RegisterTranslatedHoverTooltip(
                 $"JournalDetail-Description-{(nint)descriptionNode:X}",
                 descriptionNode,
                 questMessage,
                 translatedQuestMessage,
                 swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true);
+                forceEnabled: true, denseHitbox: true);
             this.RegisterTranslatedHoverTooltip(
                 $"JournalDetail-Objective-{(nint)objectiveNode:X}",
                 objectiveNode,
                 objectiveText,
                 translatedQuestObjective,
                 swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true);
+                forceEnabled: true, denseHitbox: true);
 
             if (summaryNode != null)
             {
@@ -465,7 +460,7 @@ public partial class Echoglossian
                     summaryText,
                     translatedQuestSummary,
                     swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true);
+                    forceEnabled: true, denseHitbox: true);
             }
 
             foreach (var summary in summaries)
@@ -476,7 +471,7 @@ public partial class Echoglossian
                     summary.OriginalText,
                     summary.TranslatedText,
                     swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true);
+                    forceEnabled: true, denseHitbox: true);
             }
         }
     }
@@ -704,14 +699,14 @@ public partial class Echoglossian
                     questName,
                     translatedQuestName,
                     swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true);
+                    forceEnabled: true, denseHitbox: true);
                 this.RegisterTranslatedHoverTooltip(
                     $"JournalDetail-CompletedQuestMessage-{(nint)descriptionNode:X}",
                     descriptionNode,
                     questMessage,
                     translatedQuestMessage,
                     swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true);
+                    forceEnabled: true, denseHitbox: true);
             }
         }
         catch (Exception e)
@@ -821,7 +816,7 @@ public partial class Echoglossian
                         out var translatedQuestSnapshot))
                 {
                     if (this.JournalUsesHoverTooltips &&
-                        this.journalHoverTranslationCache.TryGetValue(
+                        QuestHoverTranslationCache.TryGet(
                             questNameNodeKey,
                             out var cachedHoverTranslation))
                     {
@@ -831,7 +826,7 @@ public partial class Echoglossian
                             cachedHoverTranslation.OriginalText,
                             cachedHoverTranslation.TranslatedText,
                             swapEnabled: this.JournalHoverShowsOriginal,
-                            forceEnabled: true);
+                            forceEnabled: true, denseHitbox: true);
                     }
                     else if (this.JournalUsesHoverTooltips)
                     {
@@ -841,7 +836,7 @@ public partial class Echoglossian
                             translatedQuestSnapshot.OriginalText,
                             translatedQuestSnapshot.AppliedText,
                             swapEnabled: this.JournalHoverShowsOriginal,
-                            forceEnabled: true);
+                            forceEnabled: true, denseHitbox: true);
                     }
 
                     continue;
@@ -870,7 +865,8 @@ public partial class Echoglossian
                     {
                         questName->SetText(translQuestName);
                     }
-                    this.journalHoverTranslationCache[questNameNodeKey] = (
+                    QuestHoverTranslationCache.Remember(
+                        questNameNodeKey,
                         questNameText,
                         translQuestName);
 
@@ -885,7 +881,7 @@ public partial class Echoglossian
                             questNameText,
                             translQuestName,
                             swapEnabled: this.JournalHoverShowsOriginal,
-                            forceEnabled: true);
+                            forceEnabled: true, denseHitbox: true);
                     }
                     continue;
                 }
@@ -937,7 +933,8 @@ public partial class Echoglossian
                 {
                     questName->SetText(translatedNameText);
                 }
-                this.journalHoverTranslationCache[questNameNodeKey] = (
+                QuestHoverTranslationCache.Remember(
+                    questNameNodeKey,
                     questNameText,
                     translatedNameText);
                 QuestUiTranslationCache.Remember(
@@ -951,7 +948,7 @@ public partial class Echoglossian
                         questNameText,
                         translatedNameText,
                         swapEnabled: this.JournalHoverShowsOriginal,
-                        forceEnabled: true);
+                        forceEnabled: true, denseHitbox: true);
                 }
             }
         }
@@ -979,3 +976,4 @@ public partial class Echoglossian
         this.TranslateJournalQuests();
     }
 }
+
