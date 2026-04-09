@@ -333,6 +333,8 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      QuestLuminaResolver.TryPopulateQuestId(questPlate);
+
       var existingQuestPlate = context.QuestPlate.AsNoTracking().Where(t =>
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
@@ -345,9 +347,28 @@ public partial class Echoglossian
       }
 
       var localFoundQuestPlate = existingQuestPlate.FirstOrDefault();
+      var matchedByQuestId = false;
+      if (localFoundQuestPlate == null &&
+          !string.IsNullOrWhiteSpace(questPlate.QuestId))
+      {
+        var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
+            t.QuestId == questPlate.QuestId &&
+            t.TranslationLang == questPlate.TranslationLang);
+
+        if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
+        {
+          questIdMatch = questIdMatch.Where(t =>
+              t.TranslationEngine == questPlate.TranslationEngine);
+        }
+
+        localFoundQuestPlate = questIdMatch.FirstOrDefault();
+        matchedByQuestId = localFoundQuestPlate != null;
+      }
+
       if (localFoundQuestPlate == null ||
-          localFoundQuestPlate.OriginalQuestMessage !=
-          questPlate.OriginalQuestMessage)
+          (!matchedByQuestId &&
+           localFoundQuestPlate.OriginalQuestMessage !=
+           questPlate.OriginalQuestMessage))
       {
         return null;
       }
@@ -371,6 +392,8 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      QuestLuminaResolver.TryPopulateQuestId(questPlate);
+
       var existingQuestPlate = context.QuestPlate.AsNoTracking().Where(t =>
           t.QuestName == questPlate.QuestName && t.TranslationLang ==
           questPlate.TranslationLang);
@@ -382,9 +405,28 @@ public partial class Echoglossian
       }
 
       var localFoundQuestPlate = existingQuestPlate.FirstOrDefault();
+      var matchedByQuestId = false;
+
+      if (localFoundQuestPlate == null &&
+          !string.IsNullOrWhiteSpace(questPlate.QuestId))
+      {
+        var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
+            t.QuestId == questPlate.QuestId &&
+            t.TranslationLang == questPlate.TranslationLang);
+
+        if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
+        {
+          questIdMatch = questIdMatch.Where(t =>
+              t.TranslationEngine == questPlate.TranslationEngine);
+        }
+
+        localFoundQuestPlate = questIdMatch.FirstOrDefault();
+        matchedByQuestId = localFoundQuestPlate != null;
+      }
 
       if (localFoundQuestPlate == null ||
-          localFoundQuestPlate.QuestName != questPlate.QuestName)
+          (!matchedByQuestId &&
+           localFoundQuestPlate.QuestName != questPlate.QuestName))
       {
         return null;
       }
@@ -956,6 +998,7 @@ public partial class Echoglossian
 
     try
     {
+      QuestLuminaResolver.TryPopulateQuestId(questPlate);
       questPlate.UpdateFieldsAsText();
       context.QuestPlate.Attach(questPlate);
 
@@ -985,6 +1028,7 @@ public partial class Echoglossian
 
     try
     {
+      QuestLuminaResolver.TryPopulateQuestId(questPlate);
       questPlate.UpdateFieldsAsText();
       context.QuestPlate.Update(questPlate);
 

@@ -6848,6 +6848,33 @@
         <member name="M:Echoglossian.ToDoItem.ToString">
             <inheritdoc/>
         </member>
+        <member name="T:Echoglossian.QuestLuminaResolver">
+            <summary>
+                Resolves quest metadata from Lumina so quest records can be enriched
+                without changing the current UI-driven capture flow.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestLuminaResolver.Clear">
+            <summary>
+                Clears cached Lumina quest lookups.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestLuminaResolver.TryPopulateQuestId(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Tries to populate the quest identifier on an existing quest plate.
+            </summary>
+            <param name="questPlate">The quest plate to enrich.</param>
+            <returns>True when a quest id was resolved or already present.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestLuminaResolver.TryResolveQuestId(System.String,System.String@)">
+            <summary>
+                Tries to resolve a quest identifier from the current client-language
+                Lumina quest sheet.
+            </summary>
+            <param name="questName">The visible quest name.</param>
+            <param name="questId">The resolved quest id, if any.</param>
+            <returns>True when the quest id was found.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
             <summary>
                 Provides helper methods for rendering a language dropdown in the UI.

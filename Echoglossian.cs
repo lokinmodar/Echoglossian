@@ -437,6 +437,7 @@ public partial class Echoglossian : IDalamudPlugin
     AddonLifecycle.UnLogAddon("CutSceneSelectString");
     QuestUiTranslationCache.Clear();
     QuestHoverTranslationCache.Clear();
+    QuestLuminaResolver.Clear();
 
     this.addonProbeWatch?.Dispose();
     this.addonProbeWatch = null;
