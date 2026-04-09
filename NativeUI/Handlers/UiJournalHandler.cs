@@ -437,41 +437,97 @@ public partial class Echoglossian
                 translatedQuestName,
                 swapEnabled: this.JournalHoverShowsOriginal,
                 forceEnabled: true, denseHitbox: true);
-            this.RegisterTranslatedHoverTooltip(
-                $"JournalDetail-Description-{(nint)descriptionNode:X}",
-                descriptionNode,
-                questMessage,
-                translatedQuestMessage,
-                swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true, denseHitbox: true);
-            this.RegisterTranslatedHoverTooltip(
-                $"JournalDetail-Objective-{(nint)objectiveNode:X}",
-                objectiveNode,
-                objectiveText,
-                translatedQuestObjective,
-                swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true, denseHitbox: true);
 
-            if (summaryNode != null)
-            {
-                this.RegisterTranslatedHoverTooltip(
-                    $"JournalDetail-Summary-{(nint)summaryNode:X}",
-                    summaryNode,
+            var originalQuestBody = BuildQuestPlateHoverBody(
+                new[]
+                {
+                    questMessage,
+                    objectiveText,
                     summaryText,
+                }.Concat(summaries.Select(summary => summary.OriginalText))
+                    .ToArray());
+            var translatedQuestBody = BuildQuestPlateHoverBody(
+                new[]
+                {
+                    translatedQuestMessage,
+                    translatedQuestObjective,
                     translatedQuestSummary,
-                    swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true, denseHitbox: true);
-            }
+                }.Concat(summaries.Select(summary => summary.TranslatedText))
+                    .ToArray());
 
-            foreach (var summary in summaries)
+            if (!string.IsNullOrWhiteSpace(originalQuestBody) ||
+                !string.IsNullOrWhiteSpace(translatedQuestBody))
             {
-                this.RegisterTranslatedHoverTooltip(
-                    $"JournalDetail-SummaryItem-{(nint)summary.Node:X}",
-                    summary.Node,
-                    summary.OriginalText,
-                    summary.TranslatedText,
-                    swapEnabled: this.JournalHoverShowsOriginal,
-                    forceEnabled: true, denseHitbox: true);
+                var questCanvasNode =
+                    journalBox->UldManager.SearchNodeById(14);
+                var questBodyHoverKey = questCanvasNode != null
+                    ? $"JournalDetail-QuestBody-{(nint)questCanvasNode:X}"
+                    : $"JournalDetail-QuestBody-{(nint)descriptionNode:X}";
+                if (this.TryGetQuestPlateHoverBounds(
+                        questCanvasNode,
+                        out var bodyTopLeft,
+                        out var bodyBottomRight))
+                {
+                    this.RegisterTranslatedHoverTooltip(
+                        questBodyHoverKey,
+                        bodyTopLeft,
+                        bodyBottomRight,
+                        originalQuestBody,
+                        translatedQuestBody,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
+                }
+                else
+                {
+                    var bodyLeft = descriptionNode->ScreenX;
+                    var bodyTop = descriptionNode->ScreenY;
+                    var bodyRight =
+                        bodyLeft + Math.Max(1f, descriptionNode->GetWidth());
+                    var bodyBottom =
+                        bodyTop + Math.Max(1f, descriptionNode->GetHeight());
+
+                    void ExpandBodyBounds(AtkTextNode* node)
+                    {
+                        if (node == null || !node->IsVisible())
+                        {
+                            return;
+                        }
+
+                        bodyLeft = Math.Min(bodyLeft, node->ScreenX);
+                        bodyTop = Math.Min(bodyTop, node->ScreenY);
+                        bodyRight = Math.Max(
+                            bodyRight,
+                            node->ScreenX + Math.Max(1f, node->GetWidth()));
+                        bodyBottom = Math.Max(
+                            bodyBottom,
+                            node->ScreenY + Math.Max(1f, node->GetHeight()));
+                    }
+
+                    ExpandBodyBounds(objectiveNode);
+                    if (summaryNode != null)
+                    {
+                        ExpandBodyBounds(summaryNode);
+                    }
+
+                    foreach (var summary in summaries)
+                    {
+                        ExpandBodyBounds(summary.Node);
+                    }
+
+                    bodyLeft -= 28f;
+                    bodyTop -= 18f;
+                    bodyRight += 28f;
+                    bodyBottom += 22f;
+
+                    this.RegisterTranslatedHoverTooltip(
+                        questBodyHoverKey,
+                        new Vector2(bodyLeft, bodyTop),
+                        new Vector2(bodyRight, bodyBottom),
+                        originalQuestBody,
+                        translatedQuestBody,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
+                }
             }
         }
     }
@@ -707,6 +763,46 @@ public partial class Echoglossian
                     translatedQuestMessage,
                     swapEnabled: this.JournalHoverShowsOriginal,
                     forceEnabled: true, denseHitbox: true);
+
+                var completedQuestBodyHoverKey =
+                    $"JournalDetail-CompletedQuestBody-{(nint)descriptionNode:X}";
+                var questCanvasNode = journalDetail->GetNodeById(14);
+                if (this.TryGetQuestPlateHoverBounds(
+                        questCanvasNode,
+                        out var bodyTopLeft,
+                        out var bodyBottomRight))
+                {
+                    this.RegisterTranslatedHoverTooltip(
+                        completedQuestBodyHoverKey,
+                        bodyTopLeft,
+                        bodyBottomRight,
+                        questMessage,
+                        translatedQuestMessage,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
+                }
+                else
+                {
+                    var bodyLeft = descriptionNode->ScreenX;
+                    var bodyTop = descriptionNode->ScreenY;
+                    var bodyRight =
+                        bodyLeft + Math.Max(1f, descriptionNode->GetWidth());
+                    var bodyBottom =
+                        bodyTop + Math.Max(1f, descriptionNode->GetHeight());
+                    bodyLeft -= 28f;
+                    bodyTop -= 18f;
+                    bodyRight += 28f;
+                    bodyBottom += 22f;
+
+                    this.RegisterTranslatedHoverTooltip(
+                        completedQuestBodyHoverKey,
+                        new Vector2(bodyLeft, bodyTop),
+                        new Vector2(bodyRight, bodyBottom),
+                        questMessage,
+                        translatedQuestMessage,
+                        swapEnabled: this.JournalHoverShowsOriginal,
+                        forceEnabled: true);
+                }
             }
         }
         catch (Exception e)
@@ -974,6 +1070,59 @@ public partial class Echoglossian
         //     $"UiJournalQuestHandler AddonEvent: {type} {args.AddonName}");
 #endif
         this.TranslateJournalQuests();
+    }
+
+    /// <summary>
+    /// Builds a single multi-paragraph tooltip body from the quest plate text
+    /// sections that are currently visible.
+    /// </summary>
+    /// <param name="sections">Quest plate text sections to join.</param>
+    /// <returns>A multi-paragraph tooltip body.</returns>
+    private static string BuildQuestPlateHoverBody(params string?[] sections)
+    {
+        List<string> lines = new();
+        foreach (var section in sections)
+        {
+            if (string.IsNullOrWhiteSpace(section))
+            {
+                continue;
+            }
+
+            lines.Add(section.Trim());
+        }
+
+        return string.Join(Environment.NewLine + Environment.NewLine, lines);
+    }
+
+    /// <summary>
+    /// Gets the bounds of the JournalCanvasComponentNode used as the quest
+    /// plate hover trigger.
+    /// </summary>
+    /// <param name="journalBox">The journal detail component.</param>
+    /// <param name="topLeft">The top-left screen coordinate of the node.</param>
+    /// <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
+    /// <returns>True when the node is visible and the bounds are usable.</returns>
+    private unsafe bool TryGetQuestPlateHoverBounds(
+        AtkResNode* questCanvasNode,
+        out Vector2 topLeft,
+        out Vector2 bottomRight)
+    {
+        topLeft = default;
+        bottomRight = default;
+
+        if (questCanvasNode == null || !questCanvasNode->IsVisible())
+        {
+            return false;
+        }
+
+        topLeft = new Vector2(
+            questCanvasNode->ScreenX,
+            questCanvasNode->ScreenY);
+        bottomRight = new Vector2(
+            questCanvasNode->ScreenX + Math.Max(1f, questCanvasNode->Width),
+            questCanvasNode->ScreenY + Math.Max(1f, questCanvasNode->Height));
+
+        return true;
     }
 }
 

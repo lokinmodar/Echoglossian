@@ -112,6 +112,37 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Registers a hover tooltip using explicit screen bounds.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="topLeft">Top-left screen coordinate.</param>
+  /// <param name="bottomRight">Bottom-right screen coordinate.</param>
+  /// <param name="title">Tooltip title.</param>
+  /// <param name="body">Tooltip body text.</param>
+  /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+  private void RegisterHoverTooltip(
+      string key,
+      Vector2 topLeft,
+      Vector2 bottomRight,
+      string title,
+      string body,
+      bool forceEnabled = false)
+  {
+    if (!forceEnabled && !this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    this.hoverTooltipManager.Register(
+        key,
+        topLeft,
+        bottomRight,
+        title,
+        body,
+        true);
+  }
+
+  /// <summary>
   /// Registers a hover tooltip for a text node using its translated and
   /// original text, swapping the visible content when swap mode is active.
   /// </summary>
@@ -203,6 +234,55 @@ public partial class Echoglossian
         displayText,
         forceEnabled,
         denseHitbox);
+  }
+
+  /// <summary>
+  /// Registers a translated hover tooltip using explicit screen bounds.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="topLeft">Top-left screen coordinate.</param>
+  /// <param name="bottomRight">Bottom-right screen coordinate.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <param name="swapEnabled">Optional explicit swap override.</param>
+  /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+  private void RegisterTranslatedHoverTooltip(
+      string key,
+      Vector2 topLeft,
+      Vector2 bottomRight,
+      string originalText,
+      string translatedText,
+      bool? swapEnabled = null,
+      bool forceEnabled = false)
+  {
+    if (!forceEnabled && !this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    var shouldSwap = swapEnabled ?? this.configuration.SwapTextsUsingImGui;
+    var displayText = shouldSwap
+        ? originalText
+        : translatedText;
+    if (string.IsNullOrWhiteSpace(displayText))
+    {
+      displayText = shouldSwap
+          ? translatedText
+          : originalText;
+    }
+
+    if (string.IsNullOrWhiteSpace(displayText))
+    {
+      return;
+    }
+
+    this.RegisterHoverTooltip(
+        key,
+        topLeft,
+        bottomRight,
+        string.Empty,
+        displayText,
+        forceEnabled);
   }
 
   private bool JournalUsesNativeTranslation =>

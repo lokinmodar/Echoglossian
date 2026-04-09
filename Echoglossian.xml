@@ -1278,6 +1278,24 @@
             <param name="input">The translated payload.</param>
             <returns>A dictionary mapping indices to translated strings.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.BuildQuestPlateHoverBody(System.String[])">
+            <summary>
+            Builds a single multi-paragraph tooltip body from the quest plate text
+            sections that are currently visible.
+            </summary>
+            <param name="sections">Quest plate text sections to join.</param>
+            <returns>A multi-paragraph tooltip body.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryGetQuestPlateHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
+            <summary>
+            Gets the bounds of the JournalCanvasComponentNode used as the quest
+            plate hover trigger.
+            </summary>
+            <param name="journalBox">The journal detail component.</param>
+            <param name="topLeft">The top-left screen coordinate of the node.</param>
+            <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
+            <returns>True when the node is visible and the bounds are usable.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
             <summary>
             Handles the registration of addon handlers.
@@ -1321,6 +1339,17 @@
             <param name="title">Tooltip title.</param>
             <param name="body">Tooltip body text.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean)">
+            <summary>
+            Registers a hover tooltip using explicit screen bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="topLeft">Top-left screen coordinate.</param>
+            <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="title">Tooltip title.</param>
+            <param name="body">Tooltip body text.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
             Registers a hover tooltip for a text node using its translated and
@@ -1340,6 +1369,18 @@
             <param name="addon">The live addon window to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Nullable{System.Boolean},System.Boolean)">
+            <summary>
+            Registers a translated hover tooltip using explicit screen bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="topLeft">Top-left screen coordinate.</param>
+            <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryGetQueuedTranslation(System.String,System.String@)">
             <summary>
