@@ -25,9 +25,9 @@
       },
       "DeepL.net": {
         "type": "Direct",
-        "requested": "[1.20.0, )",
-        "resolved": "1.20.0",
-        "contentHash": "JwpKxCEgIrKVkYzZ9bo1uNf584Q27+DO9/lfha+ZCpa3v3Gqzio9o7INq/Vqt/3EJPsswn0jN+Fc6JEmR/RwVw==",
+        "requested": "[1.21.0, )",
+        "resolved": "1.21.0",
+        "contentHash": "FZCR2UQ5XEgcI8SANyxFWvyKtN3b1Sg11KOVv9P7/uwHCbHzuFCBAvGNRadc/0qjzKn7LK8YaTmjygfh1xV7aA==",
         "dependencies": {
           "Microsoft.Extensions.Http.Polly": "5.0.1"
         }
