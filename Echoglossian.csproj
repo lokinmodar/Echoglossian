@@ -240,7 +240,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoCtor" Version="2.12.0" />
-    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.22" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.24" />
 
     <PackageReference Include="DeepL.net" Version="1.20.0" />
     <PackageReference Include="GTranslate" Version="2.3.1" />
