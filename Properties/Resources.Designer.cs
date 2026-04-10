@@ -1904,6 +1904,114 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Dumps a full quest data probe to the log. Usage: /egloquestprobe &lt;quest name or quest id&gt;.
+        /// </summary>
+        public static string QuestProbeHelpMessage {
+            get {
+                return ResourceManager.GetString("QuestProbeHelpMessage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Native UI translation.
+        /// </summary>
+        public static string QuestDisplayModeNativeUiTranslation {
+            get {
+                return ResourceManager.GetString("QuestDisplayModeNativeUiTranslation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Tooltip translation only.
+        /// </summary>
+        public static string QuestDisplayModeTooltipTranslationOnly {
+            get {
+                return ResourceManager.GetString("QuestDisplayModeTooltipTranslationOnly", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Native UI translation + original tooltips.
+        /// </summary>
+        public static string QuestDisplayModeNativeUiTranslationWithOriginalTooltips {
+            get {
+                return ResourceManager.GetString("QuestDisplayModeNativeUiTranslationWithOriginalTooltips", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Quest display mode.
+        /// </summary>
+        public static string QuestDisplayModeLabel {
+            get {
+                return ResourceManager.GetString("QuestDisplayModeLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips..
+        /// </summary>
+        public static string QuestDisplayModeDescription {
+            get {
+                return ResourceManager.GetString("QuestDisplayModeDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate JournalAccept.
+        /// </summary>
+        public static string TranslateJournalAcceptToggle {
+            get {
+                return ResourceManager.GetString("TranslateJournalAcceptToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate JournalResult.
+        /// </summary>
+        public static string TranslateJournalResultToggle {
+            get {
+                return ResourceManager.GetString("TranslateJournalResultToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate RecommendList.
+        /// </summary>
+        public static string TranslateRecommendListToggle {
+            get {
+                return ResourceManager.GetString("TranslateRecommendListToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate AreaMap.
+        /// </summary>
+        public static string TranslateAreaMapToggle {
+            get {
+                return ResourceManager.GetString("TranslateAreaMapToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate ScenarioTree.
+        /// </summary>
+        public static string TranslateScenarioTreeToggle {
+            get {
+                return ResourceManager.GetString("TranslateScenarioTreeToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate ToDoList.
+        /// </summary>
+        public static string TranslateToDoListToggle {
+            get {
+                return ResourceManager.GetString("TranslateToDoListToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native UI translation.
         /// </summary>
         public static string JournalQuestDisplayModeNativeUiTranslation {

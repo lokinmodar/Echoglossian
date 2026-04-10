@@ -19,7 +19,7 @@ public partial class Echoglossian
         PluginLog.Debug(
             $"UiAreaMapHandler AddonEvent: {type} {args.AddonName}");
 #endif
-        if (!this.configuration.TranslateJournal)
+        if (!this.configuration.TranslateAreaMap)
         {
             return;
         }
@@ -67,7 +67,7 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
-                if (this.JournalWritesNativeTranslation)
+                if (this.AreaMapWritesNativeTranslation)
                 {
                     setupAtkValues[142]
                         .SetManagedString(foundQuestPlate.TranslatedQuestName);
@@ -76,7 +76,7 @@ public partial class Echoglossian
                     questNameText,
                     foundQuestPlate.TranslatedQuestName);
 
-                if (this.JournalUsesHoverTooltips)
+                if (this.AreaMapUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("AreaMap");
@@ -85,7 +85,7 @@ public partial class Echoglossian
                         addon,
                         questNameText,
                         foundQuestPlate.TranslatedQuestName,
-                        swapEnabled: this.JournalHoverShowsOriginal,
+                        swapEnabled: this.AreaMapHoverShowsOriginal,
                         forceEnabled: true, denseHitbox: true);
                 }
                 return;
@@ -98,7 +98,7 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
-                if (this.JournalWritesNativeTranslation)
+                if (this.AreaMapWritesNativeTranslation)
                 {
                     setupAtkValues[142].SetManagedString(translatedNameText);
                 }
@@ -106,7 +106,7 @@ public partial class Echoglossian
                     questNameText,
                     translatedNameText);
 
-                if (this.JournalUsesHoverTooltips)
+                if (this.AreaMapUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("AreaMap");
@@ -115,7 +115,7 @@ public partial class Echoglossian
                         addon,
                         questNameText,
                         translatedNameText,
-                        swapEnabled: this.JournalHoverShowsOriginal,
+                        swapEnabled: this.AreaMapHoverShowsOriginal,
                         forceEnabled: true, denseHitbox: true);
                 }
                 return;

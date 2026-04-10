@@ -32,6 +32,8 @@ public partial class Echoglossian : IDalamudPlugin
 
   private const string AddonProbeCommand = "/egloaddonprobe";
 
+  private const string QuestProbeCommand = "/egloquestprobe";
+
   /// <summary>
   /// The language ID to translate to.
   /// </summary>
@@ -174,6 +176,13 @@ public partial class Echoglossian : IDalamudPlugin
         new CommandInfo(this.OnEgloAddonProbeCommand)
         {
             HelpMessage = Resources.AddonProbeHelpMessage,
+        });
+
+    CommandManager.AddHandler(
+        QuestProbeCommand,
+        new CommandInfo(this.OnEgloQuestProbeCommand)
+        {
+            HelpMessage = Resources.QuestProbeHelpMessage,
         });
 
     Sanitizer = PluginInterface.Sanitizer as Sanitizer;
@@ -370,6 +379,9 @@ public partial class Echoglossian : IDalamudPlugin
   [PluginService]
   public static IClientState ClientStateInterface { get; set; } = null!;
 
+  [PluginService]
+  public static ISeStringEvaluator SeStringEvaluator { get; set; } = null!;
+
   [PluginService] public static IToastGui ToastGuiInterface { get; set; } = null!;
 
   [PluginService]
@@ -438,13 +450,16 @@ public partial class Echoglossian : IDalamudPlugin
     QuestUiTranslationCache.Clear();
     QuestHoverTranslationCache.Clear();
     QuestLuminaResolver.Clear();
+    QuestProgressResolver.Clear();
+    QuestTodoProgressResolver.Clear();
 
-    this.addonProbeWatch?.Dispose();
-    this.addonProbeWatch = null;
+      this.addonProbeWatch?.Dispose();
+      this.addonProbeWatch = null;
 
-    ToastGuiInterface.QuestToast -= this.questToastRuntime.HandleQuestToast;
+      ToastGuiInterface.QuestToast -= this.questToastRuntime.HandleQuestToast;
+      this.queuedTranslationBroker.Dispose();
 
-    PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
+      PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
     this.nameTranslationSemaphore?.Dispose();
     this.talkTranslationSemaphore?.Dispose();
@@ -492,38 +507,6 @@ public partial class Echoglossian : IDalamudPlugin
     if (this.configuration.TranslateJournal)
     {
       AddonLifecycle.UnregisterListener(
-          AddonEvent.PreSetup,
-          "JournalResult",
-          this.UiJournalResultHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PostReceiveEvent,
-          "RecommendList",
-          this.UiRecommendListHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "RecommendList",
-          this.UiRecommendListHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PostRequestedUpdate,
-          "RecommendList",
-          this.UiRecommendListHandlerAsync);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRefresh,
-          "AreaMap",
-          this.UiAreaMapHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "AreaMap",
-          this.UiAreaMapHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRefresh,
-          "ScenarioTree",
-          this.UiScenarioTreeHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "ScenarioTree",
-          this.UiScenarioTreeHandler);
-      AddonLifecycle.UnregisterListener(
           AddonEvent.PreUpdate,
           "Journal",
           this.UiJournalQuestHandler);
@@ -539,10 +522,66 @@ public partial class Echoglossian : IDalamudPlugin
           AddonEvent.PreRequestedUpdate,
           "JournalDetail",
           this.UiJournalDetailHandler);
+    }
+
+    if (this.configuration.TranslateJournalAccept)
+    {
       AddonLifecycle.UnregisterListener(
           AddonEvent.PreSetup,
           "JournalAccept",
           this.UiJournalAcceptHandler);
+    }
+
+    if (this.configuration.TranslateJournalResult)
+    {
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PreSetup,
+          "JournalResult",
+          this.UiJournalResultHandler);
+    }
+
+    if (this.configuration.TranslateRecommendList)
+    {
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PostReceiveEvent,
+          "RecommendList",
+          this.UiRecommendListHandler);
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PreRequestedUpdate,
+          "RecommendList",
+          this.UiRecommendListHandler);
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PostRequestedUpdate,
+          "RecommendList",
+          this.UiRecommendListHandlerAsync);
+    }
+
+    if (this.configuration.TranslateAreaMap)
+    {
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PreRefresh,
+          "AreaMap",
+          this.UiAreaMapHandler);
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PreRequestedUpdate,
+          "AreaMap",
+          this.UiAreaMapHandler);
+    }
+
+    if (this.configuration.TranslateScenarioTree)
+    {
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PreRefresh,
+          "ScenarioTree",
+          this.UiScenarioTreeHandler);
+      AddonLifecycle.UnregisterListener(
+          AddonEvent.PreRequestedUpdate,
+          "ScenarioTree",
+          this.UiScenarioTreeHandler);
+    }
+
+    if (this.configuration.TranslateToDoList)
+    {
       AddonLifecycle.UnregisterListener(
           AddonEvent.PostRequestedUpdate,
           "_ToDoList",
@@ -562,6 +601,7 @@ public partial class Echoglossian : IDalamudPlugin
     CommandManager.RemoveHandler(SlashCommand);
     CommandManager.RemoveHandler(DBManagerWindowCommand);
     CommandManager.RemoveHandler(AddonProbeCommand);
+    CommandManager.RemoveHandler(QuestProbeCommand);
   }
 
 }

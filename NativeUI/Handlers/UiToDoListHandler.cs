@@ -17,9 +17,16 @@ public partial class Echoglossian
         int indexJ,
         uint nodeId,
         string originalText,
-        string translatedText)
+        string translatedText,
+        string? progressKey = null)
     {
-        if (!this.JournalUsesHoverTooltips)
+        PluginLog.Debug(
+            $"[ToDoList] tooltip candidate key='{(progressKey == null ? $"ToDoList-{indexI}-{indexJ}-{nodeId}" : $"ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}")}' " +
+            $"index=({indexI},{indexJ}) nodeId={nodeId} progressKey='{progressKey ?? string.Empty}' " +
+            $"mode={this.configuration.ToDoListTranslationDisplayMode} hover={this.ToDoListUsesHoverTooltips} " +
+            $"native={this.ToDoListWritesNativeTranslation} swap={this.ToDoListHoverShowsOriginal}");
+
+        if (!this.ToDoListUsesHoverTooltips)
         {
             return;
         }
@@ -28,17 +35,19 @@ public partial class Echoglossian
             ->GetAsAtkComponentNode()->Component->UldManager.NodeList[indexJ]
             ->GetAsAtkTextNode();
         this.RegisterTranslatedHoverTooltip(
-            $"ToDoList-{indexI}-{indexJ}-{nodeId}-{(nint)textNode:X}",
+            progressKey == null
+                ? $"ToDoList-{indexI}-{indexJ}-{nodeId}-{(nint)textNode:X}"
+                : $"ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}-{(nint)textNode:X}",
             textNode,
             originalText,
             translatedText,
-            swapEnabled: this.JournalHoverShowsOriginal,
+            swapEnabled: this.ToDoListHoverShowsOriginal,
             forceEnabled: true, denseHitbox: true);
     }
 
     private unsafe void TranslateToDoList()
     {
-        if (!this.configuration.TranslateJournal)
+        if (!this.configuration.TranslateToDoList)
         {
             return;
         }
@@ -50,6 +59,10 @@ public partial class Echoglossian
         {
             return;
         }
+
+        PluginLog.Debug(
+            $"[ToDoList] scan start mode={this.configuration.ToDoListTranslationDisplayMode} hover={this.ToDoListUsesHoverTooltips} " +
+            $"native={this.ToDoListWritesNativeTranslation} swap={this.ToDoListHoverShowsOriginal} nodeCount={todoList->UldManager.NodeListCount}");
 
         List<ToDoItem> questNamesToTranslate = [];
         List<ToDoItem> objectivesToTranslate = [];
@@ -117,7 +130,7 @@ public partial class Echoglossian
                 var originalStepText = MemoryHelper.ReadSeStringAsString(
                     out _,
                     (nint)originalStep.StringPtr.Value);
-                if (this.JournalUsesHoverTooltips)
+                if (this.ToDoListUsesHoverTooltips)
                 {
                     this.RegisterToDoTooltip(
                         todoList,
@@ -176,10 +189,16 @@ public partial class Echoglossian
 
         if (questNamesToTranslate.Count == 0)
         {
+            PluginLog.Debug(
+                $"[ToDoList] scan result questNames=0 objectives={objectivesToTranslate.Count} levelQuestObjectives={levelQuestObjectivesToTranslate.Count}");
             return;
         }
 
         objectivesToTranslate.Reverse();
+
+        PluginLog.Debug(
+            $"[ToDoList] scan result questNames={questNamesToTranslate.Count} objectives={objectivesToTranslate.Count} " +
+            $"levelQuestObjectives={levelQuestObjectivesToTranslate.Count}");
 
         this.TranslateTodoItems(
             questNamesToTranslate,
@@ -246,9 +265,24 @@ public partial class Echoglossian
                     objectives.AddRange(levelQuestObjectivesToTranslate);
                 }
 
+                var questPlate = this.FormatQuestPlate(
+                    quest.Text,
+                    string.Empty);
+                var questTodoProgressSnapshot = default(
+                    QuestTodoProgressSnapshot?);
+                if (QuestTodoProgressResolver.TryResolveQuestTodoProgress(
+                        quest.Text,
+                        out var resolvedTodoProgressSnapshot))
+                {
+                    questTodoProgressSnapshot = resolvedTodoProgressSnapshot;
+                }
+
+                var questTodoProgressKey =
+                    questTodoProgressSnapshot?.CacheKey ?? quest.Text;
+
                 // because sometimes the quest name translation is the same as the original name but the objectives are not
                 var questWithObjectives =
-                    quest.Text + string.Join(",", objectives);
+                    $"{questTodoProgressKey}|{quest.Text}|{string.Join(",", objectives)}";
                 if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                         Sanitizer.Sanitize(questWithObjectives),
                         out _))
@@ -256,9 +290,6 @@ public partial class Echoglossian
                     continue;
                 }
 
-                var questPlate = this.FormatQuestPlate(
-                    quest.Text,
-                    string.Empty);
                 var foundQuestPlate = this.FindQuestPlateByName(questPlate);
                 if (foundQuestPlate != null)
                 {
@@ -277,7 +308,7 @@ public partial class Echoglossian
                             this.SpecialCharsSupportedByGameFont);
                     }
 
-                    if (this.JournalWritesNativeTranslation)
+                    if (this.ToDoListWritesNativeTranslation)
                     {
                         todoList->UldManager.NodeList[quest.IndexI]->
                                 GetAsAtkComponentNode()->Component->UldManager
@@ -290,7 +321,8 @@ public partial class Echoglossian
                         quest.IndexJ,
                         quest.NodeId,
                         quest.Text,
-                        foundTranslatedQuestName);
+                        foundTranslatedQuestName,
+                        questTodoProgressKey);
 
                     List<string> translatedStoredObjectives = new();
                     var hasPendingFoundObjectives = false;
@@ -328,7 +360,7 @@ public partial class Echoglossian
                                     this.SpecialCharsSupportedByGameFont);
                             }
 
-                            if (this.JournalWritesNativeTranslation)
+                            if (this.ToDoListWritesNativeTranslation)
                             {
                                 todoList->UldManager.NodeList[
                                             objective.IndexI]->
@@ -344,12 +376,13 @@ public partial class Echoglossian
                                 objective.IndexJ,
                                 objective.NodeId,
                                 objective.Text,
-                                storedObjectiveText);
+                                storedObjectiveText,
+                                questTodoProgressKey);
                             continue;
                         }
 
                         var objectiveCacheKey =
-                            $"ToDoListObjective|{objective.Text}";
+                            $"ToDoListObjective|{questTodoProgressKey}|{objective.Text}";
                         if (!this.TryGetQueuedTranslation(
                                 objectiveCacheKey,
                                 out var translatedQuestObjective))
@@ -405,7 +438,8 @@ public partial class Echoglossian
                             objective.IndexJ,
                             objective.NodeId,
                             objective.Text,
-                            translatedQuestObjective);
+                            translatedQuestObjective,
+                            questTodoProgressKey);
                     }
 
                     if (hasPendingFoundObjectives)
@@ -418,13 +452,14 @@ public partial class Echoglossian
                         foundQuestPlate.TranslatedQuestName +
                         string.Join<string>(",", translatedStoredObjectives);
                     QuestUiTranslationCache.Remember(
-                        quest.Text,
+                        $"{questTodoProgressKey}|{quest.Text}",
                         Sanitizer.Sanitize(translatedStoredQuestWithObjectives));
 
                     continue;
                 }
 
-                var questNameCacheKey = $"ToDoListQuest|{quest.Text}";
+                var questNameCacheKey =
+                    $"ToDoListQuest|{questTodoProgressKey}|{quest.Text}";
                 if (!this.TryGetQueuedTranslation(
                         questNameCacheKey,
                         out var translatedNameText))
@@ -444,7 +479,8 @@ public partial class Echoglossian
                                 LangDict[LanguageInt].Code,
                                 this.configuration.ChosenTransEngine,
                                 DateTime.Now,
-                                DateTime.Now);
+                                DateTime.Now,
+                                GetGameVersion());
 
                             var result = this.InsertQuestPlate(
                                 translatedQuestPlate);
@@ -470,7 +506,8 @@ public partial class Echoglossian
                     LangDict[LanguageInt].Code,
                     this.configuration.ChosenTransEngine,
                     DateTime.Now,
-                    DateTime.Now);
+                    DateTime.Now,
+                    GetGameVersion());
 
                 if (this.configuration
                     .RemoveDiacriticsWhenUsingReplacementQuest)
@@ -480,7 +517,7 @@ public partial class Echoglossian
                         this.SpecialCharsSupportedByGameFont);
                 }
 
-                if (this.JournalWritesNativeTranslation)
+                if (this.ToDoListWritesNativeTranslation)
                 {
                     todoList->UldManager.NodeList[quest.IndexI]->
                             GetAsAtkComponentNode()->Component->UldManager
@@ -493,7 +530,8 @@ public partial class Echoglossian
                     quest.IndexJ,
                     quest.NodeId,
                     quest.Text,
-                    translatedNameText);
+                    translatedNameText,
+                    questTodoProgressKey);
 
                 List<string> translatedObjectives = new();
                 var hasPendingNewObjectives = false;
@@ -514,7 +552,7 @@ public partial class Echoglossian
                     }
 
                     var objectiveCacheKey =
-                        $"ToDoListObjective|{objective.Text}";
+                        $"ToDoListObjective|{questTodoProgressKey}|{objective.Text}";
                     if (!this.TryGetQueuedTranslation(
                             objectiveCacheKey,
                             out var translatedObjectiveText))
@@ -541,7 +579,8 @@ public partial class Echoglossian
                                         LangDict[LanguageInt].Code,
                                         this.configuration.ChosenTransEngine,
                                         DateTime.Now,
-                                        DateTime.Now);
+                                        DateTime.Now,
+                                        GetGameVersion());
                                 }
 
                                 existingQuestPlate.Objectives.TryAdd(
@@ -576,7 +615,7 @@ public partial class Echoglossian
                             this.SpecialCharsSupportedByGameFont);
                     }
 
-                    if (this.JournalWritesNativeTranslation)
+                    if (this.ToDoListWritesNativeTranslation)
                     {
                         todoList->UldManager.NodeList[objective.IndexI]->
                                 GetAsAtkComponentNode()->Component->UldManager
@@ -589,7 +628,8 @@ public partial class Echoglossian
                         objective.IndexJ,
                         objective.NodeId,
                         objective.Text,
-                        translatedObjectiveText);
+                        translatedObjectiveText,
+                        questTodoProgressKey);
                 }
 
                 var result = this.InsertQuestPlate(translatedQuestPlate);
@@ -609,7 +649,7 @@ public partial class Echoglossian
                                                         ",",
                                                         translatedObjectives);
                 QuestUiTranslationCache.Remember(
-                    quest.Text,
+                    $"{questTodoProgressKey}|{quest.Text}",
                     Sanitizer.Sanitize(translatedQuestWithObjectives));
             }
         }

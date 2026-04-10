@@ -1,0 +1,261 @@
+// <copyright file="QuestProgressResolver.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using System.Collections.Concurrent;
+
+using Lumina.Excel;
+using Lumina.Excel.Sheets;
+using Lumina.Text.ReadOnly;
+
+using QuestManager = FFXIVClientStructs.FFXIV.Client.Game.QuestManager;
+
+namespace Echoglossian;
+
+/// <summary>
+///     Resolves quest progression data from Lumina and the live quest manager
+///     so quest windows can key their hover and translation behavior from a
+///     stable quest identity instead of raw UI text alone.
+/// </summary>
+internal static class QuestProgressResolver
+{
+    private static readonly ConcurrentDictionary<string, QuestProgressSnapshot> QuestProgressCache =
+        new(StringComparer.Ordinal);
+
+    /// <summary>
+    ///     Clears cached quest progression lookups.
+    /// </summary>
+    public static void Clear()
+    {
+        QuestProgressCache.Clear();
+    }
+
+    /// <summary>
+    ///     Tries to resolve the current quest progression snapshot for the given
+    ///     quest plate.
+    /// </summary>
+    /// <param name="questPlate">The quest plate to enrich with progression data.</param>
+    /// <param name="snapshot">The resolved progression snapshot, if any.</param>
+    /// <returns>True when progression data could be resolved.</returns>
+    public static bool TryResolveQuestProgress(
+        QuestPlate? questPlate,
+        out QuestProgressSnapshot snapshot)
+    {
+        snapshot = default;
+
+        if (questPlate == null)
+        {
+            return false;
+        }
+
+        if (!QuestLuminaResolver.TryPopulateQuestId(questPlate))
+        {
+            return false;
+        }
+
+        return TryResolveQuestProgress(questPlate.QuestId, out snapshot);
+    }
+
+    /// <summary>
+    ///     Tries to resolve the current quest progression snapshot for the
+    ///     supplied quest id.
+    /// </summary>
+    /// <param name="questIdText">The quest id resolved from Lumina.</param>
+    /// <param name="snapshot">The resolved progression snapshot, if any.</param>
+    /// <returns>True when progression data could be resolved.</returns>
+    public static bool TryResolveQuestProgress(
+        string? questIdText,
+        out QuestProgressSnapshot snapshot)
+    {
+        snapshot = default;
+
+        if (string.IsNullOrWhiteSpace(questIdText) ||
+            !uint.TryParse(
+                questIdText,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var questId))
+        {
+            return false;
+        }
+
+        var dataManager = Echoglossian.DManager;
+        if (dataManager == null)
+        {
+            return false;
+        }
+
+        var questSheet =
+            dataManager.GetExcelSheet<Quest>(Echoglossian.ClientStateInterface.ClientLanguage);
+        if (questSheet == null || !questSheet.TryGetRow(questId, out var questRow))
+        {
+            return false;
+        }
+
+        var questSequence = QuestManager.GetQuestSequence(questId);
+        var cacheKey = $"{questId}:{questSequence}";
+        if (QuestProgressCache.TryGetValue(cacheKey, out snapshot))
+        {
+            return true;
+        }
+
+        var questSheetName = BuildQuestTextSheetName(questRow);
+        if (questSheetName.Length == 0)
+        {
+            return false;
+        }
+
+        var questTextSheet =
+            dataManager.GameData.GetExcelSheet<RawRow>(name: questSheetName);
+        if (questTextSheet == null || questTextSheet.Count == 0)
+        {
+            return false;
+        }
+
+        var questName = ReadQuestString(questRow, "Name", "Text", "QuestName");
+        var questSteps = ReadQuestStepTexts(questTextSheet);
+        if (questSteps.Count == 0)
+        {
+            return false;
+        }
+
+        snapshot = new QuestProgressSnapshot(
+            questId,
+            questSequence,
+            questName,
+            questSheetName,
+            questSteps);
+
+        QuestProgressCache[cacheKey] = snapshot;
+        return true;
+    }
+
+    private static List<QuestProgressEntry> ReadQuestStepTexts(
+        ExcelSheet<RawRow> questTextSheet)
+    {
+        var questSteps = new List<QuestProgressEntry>();
+        var evaluator = Echoglossian.SeStringEvaluator;
+
+        var rowCount = Convert.ToInt32(questTextSheet.Count, CultureInfo.InvariantCulture);
+        for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
+        {
+            var row = questTextSheet.GetRow((uint)rowIndex);
+
+            ReadOnlySeString rawKey = row.ReadStringColumn(0);
+            ReadOnlySeString rawValue = row.ReadStringColumn(1);
+            var keyText = EvaluateQuestText(rawKey, evaluator);
+            var valueText = EvaluateQuestText(rawValue, evaluator);
+
+            if (keyText.Length == 0 ||
+                !keyText.Contains("_TODO_", StringComparison.Ordinal) ||
+                valueText.Length == 0)
+            {
+                continue;
+            }
+
+            questSteps.Add(new QuestProgressEntry(
+                rawKey,
+                rawValue,
+                keyText,
+                valueText));
+        }
+
+        return questSteps;
+    }
+
+    private static string EvaluateQuestText(
+        ReadOnlySeString text,
+        ISeStringEvaluator? evaluator)
+    {
+        if (evaluator == null)
+        {
+            return text.ExtractText();
+        }
+
+        try
+        {
+            return evaluator.Evaluate(
+                    text,
+                    language: Echoglossian.ClientStateInterface.ClientLanguage)
+                .ExtractText();
+        }
+        catch (Exception)
+        {
+            return text.ExtractText();
+        }
+    }
+
+    private static string BuildQuestTextSheetName(object questRow)
+    {
+        var questId = ReadQuestString(questRow, "Id");
+        if (questId.Length < 5)
+        {
+            return string.Empty;
+        }
+
+        var dir = questId.Substring(questId.Length - 5, 3);
+        return $"quest/{dir}/{questId}";
+    }
+
+    private static string ReadQuestString(
+        object quest,
+        params string[] propertyNames)
+    {
+        var questType = quest.GetType();
+        foreach (var propertyName in propertyNames)
+        {
+            var property = questType.GetProperty(
+                propertyName,
+                BindingFlags.Instance | BindingFlags.Public);
+
+            if (property?.GetValue(quest) is null)
+            {
+                continue;
+            }
+
+            var value = property.GetValue(quest)?.ToString();
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value.Trim();
+            }
+        }
+
+        return string.Empty;
+    }
+}
+
+/// <summary>
+///     Represents a quest progression snapshot derived from Lumina and the
+///     live quest manager.
+/// </summary>
+/// <param name="QuestId">The quest identifier.</param>
+/// <param name="QuestSequence">The live quest sequence.</param>
+/// <param name="QuestName">The quest name resolved from Lumina.</param>
+/// <param name="QuestSheetName">The text sheet name used for the quest.</param>
+/// <param name="QuestSteps">The quest step texts preserved as structured strings.</param>
+internal readonly record struct QuestProgressSnapshot(
+    uint QuestId,
+    byte QuestSequence,
+    string QuestName,
+    string QuestSheetName,
+    IReadOnlyList<QuestProgressEntry> QuestSteps)
+{
+    /// <summary>
+    /// Gets a stable cache key for the quest progress snapshot.
+    /// </summary>
+    public string CacheKey => $"{this.QuestId}:{this.QuestSequence}";
+}
+
+/// <summary>
+///     Represents a quest step entry preserving the original structured text.
+/// </summary>
+/// <param name="OriginalKey">The original structured key payload.</param>
+/// <param name="OriginalText">The original structured text payload.</param>
+/// <param name="KeyText">The evaluated text for the key.</param>
+/// <param name="Text">The evaluated quest step text.</param>
+internal readonly record struct QuestProgressEntry(
+    ReadOnlySeString OriginalKey,
+    ReadOnlySeString OriginalText,
+    string KeyText,
+    string Text);

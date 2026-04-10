@@ -213,19 +213,17 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<string>("OriginalQuestMessage")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("GameVersion")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("QuestId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("QuestName")
-                        .HasColumnType("TEXT");
+            b.Property<string>("QuestName")
+                .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("BLOB");
-
-                    b.Property<string>("SummariesAsText")
-                        .HasColumnType("TEXT");
+            b.Property<string>("SummariesAsText")
+                .HasColumnType("TEXT");
 
                     b.Property<string>("TranslatedQuestMessage")
                         .HasColumnType("TEXT");
@@ -244,8 +242,11 @@ namespace Echoglossian.EFCoreSqlite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("QuestName", "TranslationLang", "TranslationEngine")
+                    b.HasIndex("QuestName", "TranslationLang", "TranslationEngine", "GameVersion")
                         .HasDatabaseName("IX_questplates_lookup");
+
+                    b.HasIndex("QuestId", "TranslationLang", "TranslationEngine", "GameVersion")
+                        .HasDatabaseName("IX_questplates_questid_lookup");
 
                     b.ToTable("questplates", (string)null);
                 });

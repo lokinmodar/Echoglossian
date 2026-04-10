@@ -318,40 +318,6 @@ public partial class Echoglossian
 
     if (this.configuration.TranslateJournal)
     {
-      PluginLog.Debug(
-          "Registering Journal addon listeners for translation.");
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreSetup,
-          "JournalResult",
-          this.UiJournalResultHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PostReceiveEvent,
-          "RecommendList",
-          this.UiRecommendListHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "RecommendList",
-          this.UiRecommendListHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PostRequestedUpdate,
-          "RecommendList",
-          this.UiRecommendListHandlerAsync);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRefresh,
-          "AreaMap",
-          this.UiAreaMapHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "AreaMap",
-          this.UiAreaMapHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRefresh,
-          "ScenarioTree",
-          this.UiScenarioTreeHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "ScenarioTree",
-          this.UiScenarioTreeHandler);
       AddonLifecycle.RegisterListener(
           AddonEvent.PreUpdate,
           "Journal",
@@ -368,10 +334,66 @@ public partial class Echoglossian
           AddonEvent.PreRequestedUpdate,
           "JournalDetail",
           this.UiJournalDetailHandler);
+    }
+
+    if (this.configuration.TranslateJournalAccept)
+    {
       AddonLifecycle.RegisterListener(
           AddonEvent.PreSetup,
           "JournalAccept",
           this.UiJournalAcceptHandler);
+    }
+
+    if (this.configuration.TranslateJournalResult)
+    {
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PreSetup,
+          "JournalResult",
+          this.UiJournalResultHandler);
+    }
+
+    if (this.configuration.TranslateRecommendList)
+    {
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PostReceiveEvent,
+          "RecommendList",
+          this.UiRecommendListHandler);
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PreRequestedUpdate,
+          "RecommendList",
+          this.UiRecommendListHandler);
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PostRequestedUpdate,
+          "RecommendList",
+          this.UiRecommendListHandlerAsync);
+    }
+
+    if (this.configuration.TranslateAreaMap)
+    {
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PreRefresh,
+          "AreaMap",
+          this.UiAreaMapHandler);
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PreRequestedUpdate,
+          "AreaMap",
+          this.UiAreaMapHandler);
+    }
+
+    if (this.configuration.TranslateScenarioTree)
+    {
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PreRefresh,
+          "ScenarioTree",
+          this.UiScenarioTreeHandler);
+      AddonLifecycle.RegisterListener(
+          AddonEvent.PreRequestedUpdate,
+          "ScenarioTree",
+          this.UiScenarioTreeHandler);
+    }
+
+    if (this.configuration.TranslateToDoList)
+    {
       AddonLifecycle.RegisterListener(
           AddonEvent.PostRequestedUpdate,
           "_ToDoList",

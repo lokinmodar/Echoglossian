@@ -29,21 +29,33 @@ public partial class Echoglossian
             return;
         }
 
-        if (this.JournalUsesHoverTooltips)
+        var questTodoProgressSnapshot = default(
+            QuestTodoProgressSnapshot?);
+        if (QuestTodoProgressResolver.TryResolveQuestTodoProgress(
+                questNameText,
+                out var resolvedTodoProgressSnapshot))
+        {
+            questTodoProgressSnapshot = resolvedTodoProgressSnapshot;
+        }
+
+        var questTodoProgressKey =
+            questTodoProgressSnapshot?.CacheKey ?? questNameText;
+
+                if (this.ScenarioTreeUsesHoverTooltips)
         {
             var addon = AtkStage.Instance()->RaptureAtkUnitManager
                 ->GetAddonByName("ScenarioTree");
             this.RegisterTranslatedHoverTooltip(
-                $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
+                $"ScenarioTree-{(nint)addon:X}-{valueIndex}-{questTodoProgressKey}",
                 addon,
                 questNameText,
                 questNameText,
-                swapEnabled: this.JournalHoverShowsOriginal,
+                swapEnabled: this.ScenarioTreeHoverShowsOriginal,
                 forceEnabled: true, denseHitbox: true);
         }
 
         if (QuestUiTranslationCache.TryGetAppliedSnapshot(
-                questNameText,
+                questTodoProgressKey + "|" + questNameText,
                 out _))
         {
             return;
@@ -51,7 +63,8 @@ public partial class Echoglossian
 
         var questPlate = this.FormatQuestPlate(questNameText, string.Empty);
         var foundQuestPlate = this.FindQuestPlateByName(questPlate);
-        var cacheKey = $"ScenarioTree|{valueIndex}|{questNameText}";
+        var cacheKey =
+            $"ScenarioTree|{valueIndex}|{questTodoProgressKey}|{questNameText}";
         if (foundQuestPlate != null)
         {
 #if DEBUG
@@ -67,25 +80,25 @@ public partial class Echoglossian
                     this.SpecialCharsSupportedByGameFont);
             }
 
-            if (this.JournalWritesNativeTranslation)
+            if (this.ScenarioTreeWritesNativeTranslation)
             {
                 setupAtkValues[valueIndex].SetManagedString(
                     translatedQuestName);
             }
             QuestUiTranslationCache.Remember(
-                questNameText,
+                questTodoProgressKey + "|" + questNameText,
                 translatedQuestName);
 
-            if (this.JournalUsesHoverTooltips)
+            if (this.ScenarioTreeUsesHoverTooltips)
             {
                 var addon = AtkStage.Instance()->RaptureAtkUnitManager
                     ->GetAddonByName("ScenarioTree");
                 this.RegisterTranslatedHoverTooltip(
-                    $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
+                    $"ScenarioTree-{(nint)addon:X}-{valueIndex}-{questTodoProgressKey}",
                     addon,
                     questNameText,
                     translatedQuestName,
-                    swapEnabled: this.JournalHoverShowsOriginal,
+                    swapEnabled: this.ScenarioTreeHoverShowsOriginal,
                     forceEnabled: true, denseHitbox: true);
             }
             return;
@@ -105,25 +118,25 @@ public partial class Echoglossian
                     this.SpecialCharsSupportedByGameFont);
             }
 
-            if (this.JournalWritesNativeTranslation)
+            if (this.ScenarioTreeWritesNativeTranslation)
             {
                 setupAtkValues[valueIndex].SetManagedString(
                     translatedNameText);
             }
             QuestUiTranslationCache.Remember(
-                questNameText,
+                questTodoProgressKey + "|" + questNameText,
                 translatedNameText);
 
-            if (this.JournalUsesHoverTooltips)
+            if (this.ScenarioTreeUsesHoverTooltips)
             {
                 var addon = AtkStage.Instance()->RaptureAtkUnitManager
                     ->GetAddonByName("ScenarioTree");
                 this.RegisterTranslatedHoverTooltip(
-                    $"ScenarioTree-{(nint)addon:X}-{valueIndex}",
+                    $"ScenarioTree-{(nint)addon:X}-{valueIndex}-{questTodoProgressKey}",
                     addon,
                     questNameText,
                     translatedNameText,
-                    swapEnabled: this.JournalHoverShowsOriginal,
+                    swapEnabled: this.ScenarioTreeHoverShowsOriginal,
                     forceEnabled: true, denseHitbox: true);
             }
             return;
@@ -157,7 +170,7 @@ public partial class Echoglossian
     private unsafe void UiScenarioTreeHandler(AddonEvent type, AddonArgs args)
     {
         // PluginLog.Debug($"UiScenarioTreeHandler AddonEvent: {type} {args.AddonName}");
-        if (!this.configuration.TranslateJournal)
+        if (!this.configuration.TranslateScenarioTree)
         {
             return;
         }

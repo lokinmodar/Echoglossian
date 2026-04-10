@@ -108,14 +108,24 @@ public class Config : IPluginConfiguration
   [DefaultValue(false)] public bool SwapJournalTextsUsingImGui = false;
 
   /// <summary>
-  ///     How journal-like quest windows should present translated text.
-  ///     NativeUiTranslation writes only to the native addon, TooltipTranslation
-  ///     keeps the addon intact and uses hover tooltips, and
+  ///     How Journal should present translated text. NativeUiTranslation
+  ///     writes only to the native addon, TooltipTranslation keeps the addon
+  ///     intact and uses hover tooltips, and
   ///     NativeUiTranslationWithOriginalTooltips writes translation natively
   ///     while showing the original in hover tooltips.
   /// </summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode JournalTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for JournalAccept quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode JournalAcceptTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for JournalResult quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode JournalResultTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Always show the BattleTalk overlay title bar.</summary>
@@ -501,6 +511,12 @@ public class Config : IPluginConfiguration
   /// <summary>Translate entries in the quest journal.</summary>
   [DefaultValue(false)] public bool TranslateJournal = false;
 
+  /// <summary>Translate JournalAccept quest entries.</summary>
+  [DefaultValue(false)] public bool TranslateJournalAccept = false;
+
+  /// <summary>Translate JournalResult quest entries.</summary>
+  [DefaultValue(false)] public bool TranslateJournalResult = false;
+
   /// <summary>
   ///     Legacy shared NPC-name translation toggle kept for migration from
   ///     older configs that did not yet separate Talk and BattleTalk.
@@ -509,6 +525,12 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate quest-related toasts.</summary>
   [DefaultValue(false)] public bool TranslateQuestToast = false;
+
+  /// <summary>Translate the RecommendList quest window.</summary>
+  [DefaultValue(false)] public bool TranslateRecommendList = false;
+
+  /// <summary>Translate the AreaMap quest window.</summary>
+  [DefaultValue(false)] public bool TranslateAreaMap = false;
 
   /// <summary>Translate entries in the scenario tree (progress graph).</summary>
   [DefaultValue(false)] public bool TranslateScenarioTree = false;
@@ -539,6 +561,26 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate To-Do List entries.</summary>
   [DefaultValue(false)] public bool TranslateToDoList = false;
+
+  /// <summary>Display mode for ToDoList quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode ToDoListTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for ScenarioTree quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode ScenarioTreeTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for RecommendList quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode RecommendListTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for AreaMap quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode AreaMapTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Translate UI tooltips.</summary>
   [DefaultValue(false)] public bool TranslateTooltips = false;
@@ -640,8 +682,8 @@ public class Config : IPluginConfiguration
   [DefaultValue("")] public string YandexPaidApiKey = string.Empty;
 
   /// <summary>Plugin configuration version number (used during migration).</summary>
-  [DefaultValue(10)]
-  public int Version { get; set; } = 10;
+  [DefaultValue(12)]
+  public int Version { get; set; } = 12;
 
   /// <summary>
   /// Gets or sets a value indicating whether translation should run asynchronously.

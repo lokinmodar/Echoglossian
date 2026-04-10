@@ -160,9 +160,19 @@ public class EchoglossianDbContext : DbContext
         {
           q.QuestName,
           q.TranslationLang,
-          q.TranslationEngine
+          q.TranslationEngine,
+          q.GameVersion
         })
         .HasDatabaseName("IX_questplates_lookup");
+    modelBuilder.Entity<QuestPlate>()
+        .HasIndex(q => new
+        {
+          q.QuestId,
+          q.TranslationLang,
+          q.TranslationEngine,
+          q.GameVersion
+        })
+        .HasDatabaseName("IX_questplates_questid_lookup");
     modelBuilder.Entity<NpcNames>().ToTable("npcnames");
     modelBuilder.Entity<LocationName>().ToTable("locationnames");
     modelBuilder.Entity<StringArrayDatas>()

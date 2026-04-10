@@ -17,6 +17,12 @@ namespace Echoglossian;
 ///     Resolves quest metadata from Lumina so quest records can be enriched
 ///     without changing the current UI-driven capture flow.
 /// </summary>
+/// <remarks>
+///     The cache-and-index shape follows the general Lumina usage pattern seen
+///     in several Practical Dalamud plugins, especially Critical-Impact
+///     projects that reuse IDataManager and ExcelSheet access instead of
+///     querying the sheet repeatedly.
+/// </remarks>
 public static class QuestLuminaResolver
 {
     private static readonly ConcurrentDictionary<string, string> QuestIdCache =

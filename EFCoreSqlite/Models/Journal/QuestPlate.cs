@@ -18,6 +18,17 @@ public class QuestPlate
     /// <summary>
     ///     Initializes a new instance of the <see cref="QuestPlate" /> class.
     /// </summary>
+    /// <param name="questName">The quest name.</param>
+    /// <param name="originalQuestMessage">The original quest message.</param>
+    /// <param name="originalLang">The original language code.</param>
+    /// <param name="translatedQuestName">The translated quest name.</param>
+    /// <param name="translatedQuestMessage">The translated quest message.</param>
+    /// <param name="questId">The resolved quest identifier.</param>
+    /// <param name="translationLang">The target translation language.</param>
+    /// <param name="translationEngine">The translation engine id.</param>
+    /// <param name="createdDate">The created date.</param>
+    /// <param name="updatedDate">The updated date.</param>
+    /// <param name="gameVersion">The game version snapshot.</param>
     public QuestPlate(
         string? questName,
         string? originalQuestMessage,
@@ -28,7 +39,8 @@ public class QuestPlate
         string? translationLang,
         int? translationEngine,
         DateTime? createdDate,
-        DateTime? updatedDate)
+        DateTime? updatedDate,
+        string? gameVersion = null)
     {
         this.QuestId = questId;
         this.QuestName = questName;
@@ -38,6 +50,7 @@ public class QuestPlate
         this.TranslatedQuestMessage = translatedQuestMessage;
         this.TranslationLang = translationLang;
         this.TranslationEngine = translationEngine;
+        this.GameVersion = gameVersion;
         this.CreatedDate = createdDate;
         this.UpdatedDate = updatedDate;
         this.objectives = new Dictionary<string, string>();
@@ -62,6 +75,11 @@ public class QuestPlate
 
     public int? TranslationEngine { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the game version the quest plate was captured from.
+    /// </summary>
+    public string? GameVersion { get; set; }
+
     public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
@@ -69,8 +87,6 @@ public class QuestPlate
     public string? ObjectivesAsText { get; set; }
 
     public string? SummariesAsText { get; set; }
-
-    [Timestamp] public byte[]? RowVersion { get; set; }
 
     /// <summary>
     ///     Gets lazily loads Objectives from text if needed.
@@ -150,6 +166,6 @@ public class QuestPlate
     public override string? ToString()
     {
         return
-            $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.Objectives}, Summaries: {this.Summaries}";
+            $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, GameVersion: {this.GameVersion}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.Objectives}, Summaries: {this.Summaries}";
     }
 }

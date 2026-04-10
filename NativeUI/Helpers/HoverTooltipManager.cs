@@ -44,14 +44,14 @@ public sealed class HoverTooltipManager
             {
                 PluginLog.Debug(
                     $"[HoverTooltip] register key='{key}' bounds=({topLeft.X:0.0},{topLeft.Y:0.0})-({bottomRight.X:0.0},{bottomRight.Y:0.0}) " +
-                    $"enabled={enabled} title='{TruncateForLog(title)}' body='{TruncateForLog(body)}'");
+                    $"enabled={enabled}");
             }
         }
         else
         {
             PluginLog.Debug(
                 $"[HoverTooltip] register key='{key}' bounds=({topLeft.X:0.0},{topLeft.Y:0.0})-({bottomRight.X:0.0},{bottomRight.Y:0.0}) " +
-                $"enabled={enabled} title='{TruncateForLog(title)}' body='{TruncateForLog(body)}'");
+                $"enabled={enabled}");
         }
 
         this.entries[key] = newEntry;
@@ -122,8 +122,7 @@ public sealed class HoverTooltipManager
         {
             PluginLog.Debug(
                 $"[HoverTooltip] hover key='{hoveredKey}' mouse=({mousePosition.X:0.0},{mousePosition.Y:0.0}) " +
-                $"bounds=({hoveredEntry.TopLeft.X:0.0},{hoveredEntry.TopLeft.Y:0.0})-({hoveredEntry.BottomRight.X:0.0},{hoveredEntry.BottomRight.Y:0.0}) " +
-                $"title='{TruncateForLog(hoveredEntry.Title)}' body='{TruncateForLog(hoveredEntry.Body)}'");
+                $"bounds=({hoveredEntry.TopLeft.X:0.0},{hoveredEntry.TopLeft.Y:0.0})-({hoveredEntry.BottomRight.X:0.0},{hoveredEntry.BottomRight.Y:0.0})");
         }
 
         ImGui.SetNextWindowBgAlpha(0.95f);
@@ -189,19 +188,6 @@ public sealed class HoverTooltipManager
                existingEntry.Title == newEntry.Title &&
                existingEntry.Body == newEntry.Body &&
                existingEntry.Enabled == newEntry.Enabled;
-    }
-
-    private static string TruncateForLog(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return string.Empty;
-        }
-
-        const int maxLength = 96;
-        return value.Length <= maxLength
-            ? value
-            : value[..maxLength] + "…";
     }
 
     private static string WrapTooltipText(string text)

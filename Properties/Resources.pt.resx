@@ -645,6 +645,9 @@
   <data name="AddonProbeHelpMessage" xml:space="preserve">
     <value>Despeja uma sonda recursiva da estrutura do addon no registo. Uso: /egloaddonprobe &lt;nome do addon&gt; [índice] ou /egloaddonprobe stop</value>
   </data>
+  <data name="QuestProbeHelpMessage" xml:space="preserve">
+    <value>Despeja um probe completo dos dados de uma quest no registo. Uso: /egloquestprobe &lt;nome da quest ou id da quest&gt;</value>
+  </data>
   <data name="JournalQuestDisplayModeNativeUiTranslation" xml:space="preserve">
     <value>Tradução na IU nativa</value>
   </data>
@@ -662,6 +665,39 @@
   </data>
   <data name="JournalGlobalHoverTooltipsLabel" xml:space="preserve">
     <value>Ativar tooltips globais de hover para outras IU traduzidas</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Tradução na IU nativa</value>
+  </data>
+  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Apenas tradução em tooltip</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Tradução na IU nativa + tooltips originais</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Modo de exibição da quest</value>
+  </data>
+  <data name="QuestDisplayModeDescription" xml:space="preserve">
+    <value>Este modo controla como esta janela de quest é apresentada. A IU nativa escreve a tradução no addon, apenas tooltip mantém o addon intacto, e a IU nativa com tooltips originais escreve a tradução nativamente enquanto mostra o original nas tooltips.</value>
+  </data>
+  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
+    <value>Traduzir JournalAccept</value>
+  </data>
+  <data name="TranslateJournalResultToggle" xml:space="preserve">
+    <value>Traduzir JournalResult</value>
+  </data>
+  <data name="TranslateRecommendListToggle" xml:space="preserve">
+    <value>Traduzir RecommendList</value>
+  </data>
+  <data name="TranslateAreaMapToggle" xml:space="preserve">
+    <value>Traduzir AreaMap</value>
+  </data>
+  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
+    <value>Traduzir ScenarioTree</value>
+  </data>
+  <data name="TranslateToDoListToggle" xml:space="preserve">
+    <value>Traduzir ToDoList</value>
   </data>
   <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
     <value>Traduzir Text Gimmick Hint</value>

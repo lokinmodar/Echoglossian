@@ -60,6 +60,53 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Registers a hover tooltip for a generic node using its current screen
+  /// bounds.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="node">The node to anchor the tooltip to.</param>
+  /// <param name="title">Tooltip title.</param>
+  /// <param name="body">Tooltip body text.</param>
+  private unsafe void RegisterHoverTooltip(
+      string key,
+      AtkResNode* node,
+      string title,
+      string body,
+      bool forceEnabled = false,
+      bool denseHitbox = false)
+  {
+    if (!forceEnabled && !this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    if (node == null || !node->IsVisible())
+    {
+      return;
+    }
+
+    var left = node->ScreenX;
+    var top = node->ScreenY;
+    var right = left + Math.Max(1f, node->Width);
+    var bottom = top + Math.Max(1f, node->Height);
+    if (denseHitbox)
+    {
+      left -= 8f;
+      right += 8f;
+      top -= 4f;
+      bottom += 4f;
+    }
+
+    this.hoverTooltipManager.Register(
+        key,
+        new Vector2(left, top),
+        new Vector2(right, bottom),
+        title,
+        body,
+        true);
+  }
+
+  /// <summary>
   /// Registers a hover tooltip for a whole addon window using its root node.
   /// </summary>
   /// <param name="key">Stable key used to refresh the tooltip target.</param>
@@ -190,6 +237,54 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Registers a translated hover tooltip using a generic node's screen bounds.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="node">The node to anchor the tooltip to.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <param name="swapEnabled">Optional explicit swap override.</param>
+  /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+  private unsafe void RegisterTranslatedHoverTooltip(
+      string key,
+      AtkResNode* node,
+      string originalText,
+      string translatedText,
+      bool? swapEnabled = null,
+      bool forceEnabled = false,
+      bool denseHitbox = false)
+  {
+    if (!forceEnabled && !this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    var shouldSwap = swapEnabled ?? this.configuration.SwapTextsUsingImGui;
+    var displayText = shouldSwap
+        ? originalText
+        : translatedText;
+    if (string.IsNullOrWhiteSpace(displayText))
+    {
+      displayText = shouldSwap
+          ? translatedText
+          : originalText;
+    }
+
+    if (string.IsNullOrWhiteSpace(displayText))
+    {
+      return;
+    }
+
+    this.RegisterHoverTooltip(
+        key,
+        node,
+        string.Empty,
+        displayText,
+        forceEnabled,
+        denseHitbox);
+  }
+
+  /// <summary>
   /// Registers a hover tooltip for a whole addon window using translated and
   /// original text, swapping the visible content when swap mode is active.
   /// </summary>
@@ -285,19 +380,4 @@ public partial class Echoglossian
         forceEnabled);
   }
 
-  private bool JournalUsesNativeTranslation =>
-      this.configuration.JournalTranslationDisplayMode !=
-      JournalTranslationDisplayMode.TooltipTranslation;
-
-  private bool JournalWritesNativeTranslation =>
-      this.JournalUsesNativeTranslation;
-
-  private bool JournalUsesHoverTooltips =>
-      this.configuration.JournalTranslationDisplayMode !=
-      JournalTranslationDisplayMode.NativeUiTranslation;
-
-  private bool JournalHoverShowsOriginal =>
-      this.configuration.JournalTranslationDisplayMode ==
-      JournalTranslationDisplayMode
-          .NativeUiTranslationWithOriginalTooltips;
 }

@@ -11,7 +11,7 @@ public partial class Echoglossian
 {
     private unsafe void UiJournalAcceptHandler(AddonEvent type, AddonArgs args)
     {
-        if (!this.configuration.TranslateJournal)
+        if (!this.configuration.TranslateJournalAccept)
         {
             return;
         }
@@ -141,7 +141,7 @@ public partial class Echoglossian
                     this.SpecialCharsSupportedByGameFont);
             }
 
-            if (this.JournalWritesNativeTranslation)
+            if (this.JournalAcceptWritesNativeTranslation)
             {
                 setupAtkValues[5].SetManagedString(translatedQuestName);
                 setupAtkValues[12].SetManagedString(translatedQuestMessage);
@@ -151,7 +151,7 @@ public partial class Echoglossian
                 questMessage,
                 translatedQuestMessage);
 
-            if (this.JournalUsesHoverTooltips)
+            if (this.JournalAcceptUsesHoverTooltips)
             {
                 var addon = AtkStage.Instance()->RaptureAtkUnitManager
                     ->GetAddonByName("JournalAccept");
@@ -160,7 +160,7 @@ public partial class Echoglossian
                     addon,
                     $"{questName}\n{questMessage}",
                     $"{translatedQuestName}\n{translatedQuestMessage}",
-                    swapEnabled: this.JournalHoverShowsOriginal,
+                    swapEnabled: this.JournalAcceptHoverShowsOriginal,
                     forceEnabled: true, denseHitbox: true);
             }
         }

@@ -68,21 +68,21 @@ public partial class Echoglossian
                     out _,
                     (nint)questName->NodeText.StringPtr.Value);
                 var questNameNodeKey = (nint)questNameNode;
-                if (this.JournalUsesHoverTooltips)
+                if (this.RecommendListUsesHoverTooltips)
                 {
                     this.RegisterTranslatedHoverTooltip(
                         $"RecommendList-{questNameNodeKey:X}",
                         questName,
                         questNameText,
                         questNameText,
-                        swapEnabled: this.JournalHoverShowsOriginal,
+                        swapEnabled: this.RecommendListHoverShowsOriginal,
                         forceEnabled: true, denseHitbox: true);
                 }
                 if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                         questNameText,
                         out var translatedQuestSnapshot))
                 {
-                    if (this.JournalUsesHoverTooltips &&
+                    if (this.RecommendListUsesHoverTooltips &&
                         QuestHoverTranslationCache.TryGet(
                             questNameNodeKey,
                             out var cachedHoverTranslation))
@@ -92,17 +92,17 @@ public partial class Echoglossian
                             questName,
                             cachedHoverTranslation.OriginalText,
                             cachedHoverTranslation.TranslatedText,
-                            swapEnabled: this.JournalHoverShowsOriginal,
+                            swapEnabled: this.RecommendListHoverShowsOriginal,
                             forceEnabled: true, denseHitbox: true);
                     }
-                    else if (this.JournalUsesHoverTooltips)
+                    else if (this.RecommendListUsesHoverTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
                             $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             translatedQuestSnapshot.OriginalText,
                             translatedQuestSnapshot.AppliedText,
-                            swapEnabled: this.JournalHoverShowsOriginal,
+                            swapEnabled: this.RecommendListHoverShowsOriginal,
                             forceEnabled: true, denseHitbox: true);
                     }
 
@@ -130,7 +130,7 @@ public partial class Echoglossian
                             this.SpecialCharsSupportedByGameFont);
                     }
 
-                    if (this.JournalWritesNativeTranslation)
+                if (this.RecommendListWritesNativeTranslation)
                     {
                         // because we are translating names, it's safer to use SetString instead of SetText
                         questName->NodeText.SetString(translatedQuestName);
@@ -142,14 +142,14 @@ public partial class Echoglossian
                     QuestUiTranslationCache.Remember(
                         questNameText,
                         translatedQuestName);
-                    if (this.JournalUsesHoverTooltips)
+                    if (this.RecommendListUsesHoverTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
                             $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             questNameText,
                             translatedQuestName,
-                            swapEnabled: this.JournalHoverShowsOriginal,
+                            swapEnabled: this.RecommendListHoverShowsOriginal,
                             forceEnabled: true, denseHitbox: true);
                     }
                 }
@@ -220,21 +220,21 @@ public partial class Echoglossian
                     out _,
                     (nint)questName->NodeText.StringPtr.Value);
                 var questNameNodeKey = (nint)questNameNode;
-                if (this.JournalUsesHoverTooltips)
+                if (this.RecommendListUsesHoverTooltips)
                 {
                     this.RegisterTranslatedHoverTooltip(
                         $"RecommendList-{questNameNodeKey:X}",
                         questName,
                         questNameText,
                         questNameText,
-                        swapEnabled: this.JournalHoverShowsOriginal,
+                        swapEnabled: this.RecommendListHoverShowsOriginal,
                         forceEnabled: true, denseHitbox: true);
                 }
                 if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                         questNameText,
                         out var translatedQuestSnapshot))
                 {
-                    if (this.JournalUsesHoverTooltips &&
+                    if (this.RecommendListUsesHoverTooltips &&
                         QuestHoverTranslationCache.TryGet(
                             questNameNodeKey,
                             out var cachedHoverTranslation))
@@ -245,7 +245,7 @@ public partial class Echoglossian
                             cachedHoverTranslation.OriginalText,
                             cachedHoverTranslation.TranslatedText);
                     }
-                    else if (this.JournalUsesHoverTooltips)
+                    else if (this.RecommendListUsesHoverTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
                             $"RecommendList-{questNameNodeKey:X}",
@@ -281,7 +281,7 @@ public partial class Echoglossian
                     QuestUiTranslationCache.Remember(
                         questNameText,
                         translatedQuestName);
-                    if (this.JournalUsesHoverTooltips)
+                    if (this.RecommendListUsesHoverTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
                             $"RecommendList-{questNameNodeKey:X}",
@@ -307,7 +307,7 @@ public partial class Echoglossian
                             this.SpecialCharsSupportedByGameFont);
                     }
 
-                    if (this.JournalWritesNativeTranslation)
+                    if (this.RecommendListWritesNativeTranslation)
                     {
                         // because we are translating names, it's safer to use SetString instead of SetText
                         questName->NodeText.SetString(translatedNameText);
@@ -319,14 +319,14 @@ public partial class Echoglossian
                     QuestUiTranslationCache.Remember(
                         questNameText,
                         translatedNameText);
-                    if (this.JournalUsesHoverTooltips)
+                    if (this.RecommendListUsesHoverTooltips)
                     {
                         this.RegisterTranslatedHoverTooltip(
                             $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             questNameText,
                             translatedNameText,
-                            swapEnabled: this.JournalHoverShowsOriginal,
+                            swapEnabled: this.RecommendListHoverShowsOriginal,
                             forceEnabled: true, denseHitbox: true);
                     }
 
@@ -384,7 +384,7 @@ public partial class Echoglossian
             return;
         }
 
-        if (!this.configuration.TranslateJournal)
+        if (!this.configuration.TranslateRecommendList)
         {
             return;
         }
@@ -398,7 +398,7 @@ public partial class Echoglossian
         // PluginLog.Debug(
         //     $"UiRecommendListHandlerAsync AddonEvent: {type} {args.AddonName}");
 #endif
-        if (!this.configuration.TranslateJournal)
+        if (!this.configuration.TranslateRecommendList)
         {
             return;
         }

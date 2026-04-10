@@ -126,9 +126,98 @@ public partial class Echoglossian
         return summaries;
     }
 
+    /// <summary>
+    ///     Resolves quest progress step texts from the quest sheet so the
+    ///     Journal body tooltip can follow the quest progression source instead
+    ///     of depending only on the live UI text.
+    /// </summary>
+    /// <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
+    /// <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
+    /// <returns>The translated quest progress step texts in display order.</returns>
+    private List<string> TranslateQuestProgressSections(
+        QuestPlate? foundQuestPlate,
+        QuestProgressSnapshot questProgressSnapshot)
+    {
+        List<string> translatedQuestProgressSections = new();
+        HashSet<string> seenQuestSteps = new(StringComparer.Ordinal);
+        if (questProgressSnapshot.QuestSteps.Count == 0)
+        {
+            return translatedQuestProgressSections;
+        }
+
+        foreach (var questStep in questProgressSnapshot.QuestSteps)
+        {
+            if (string.IsNullOrWhiteSpace(questStep.Text))
+            {
+                continue;
+            }
+
+            if (!seenQuestSteps.Add(questStep.Text))
+            {
+                continue;
+            }
+
+            if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                    questStep.Text,
+                    out var appliedQuestStepSnapshot))
+            {
+                translatedQuestProgressSections.Add(
+                    appliedQuestStepSnapshot.AppliedText);
+                continue;
+            }
+
+            if (foundQuestPlate != null &&
+                foundQuestPlate.Objectives.TryGetValue(
+                    questStep.Text,
+                    out var storedQuestStepText))
+            {
+                translatedQuestProgressSections.Add(storedQuestStepText);
+                QuestUiTranslationCache.Remember(
+                    questStep.Text,
+                    storedQuestStepText);
+                continue;
+            }
+
+            var questProgressCacheKey =
+                $"JournalDetailProgress|{questProgressSnapshot.CacheKey}|{questStep.KeyText}|{questStep.Text}";
+            if (foundQuestPlate != null &&
+                this.TryGetQueuedTranslation(
+                    questProgressCacheKey,
+                    out var cachedTranslatedQuestStepText))
+            {
+                translatedQuestProgressSections.Add(
+                    cachedTranslatedQuestStepText);
+                QuestUiTranslationCache.Remember(
+                    questStep.Text,
+                    cachedTranslatedQuestStepText);
+                continue;
+            }
+
+            if (foundQuestPlate != null)
+            {
+                this.QueueTranslation(
+                    questProgressCacheKey,
+                    () => this.Translate(questStep.Text),
+                    translatedQuestStepText =>
+                    {
+                        var questPlateToUpdate = foundQuestPlate.Clone();
+                        questPlateToUpdate.Objectives[questStep.Text] =
+                            translatedQuestStepText;
+                        questPlateToUpdate.UpdatedDate = DateTime.Now;
+                        this.UpdateQuestPlate(questPlateToUpdate);
+                    });
+            }
+
+            translatedQuestProgressSections.Add(questStep.Text);
+        }
+
+        return translatedQuestProgressSections;
+    }
+
     private unsafe void TranslateQuestOnJournalBox(
         AtkComponentBase* journalBox,
         QuestPlate foundQuestPlate,
+        QuestProgressSnapshot? questProgressSnapshot,
         string questName,
         string questMessage,
         string objectiveText,
@@ -171,7 +260,9 @@ public partial class Echoglossian
             translatedQuestName = foundQuestPlate.TranslatedQuestName;
             translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
 
-            var objectiveCacheKey = $"JournalDetailObjective|{objectiveText}";
+            var objectiveCacheKey = questProgressSnapshot.HasValue
+                ? $"JournalDetailObjective|{questProgressSnapshot.Value.CacheKey}|{objectiveText}"
+                : $"JournalDetailObjective|{objectiveText}";
             if (foundQuestPlate.Objectives.TryGetValue(
                     objectiveText,
                     out var storedObjectiveText))
@@ -202,7 +293,9 @@ public partial class Echoglossian
 
             if (summaryText != string.Empty)
             {
-                var summaryCacheKey = $"JournalDetailSummaryText|{summaryText}";
+                var summaryCacheKey = questProgressSnapshot.HasValue
+                    ? $"JournalDetailSummaryText|{questProgressSnapshot.Value.CacheKey}|{summaryText}"
+                    : $"JournalDetailSummaryText|{summaryText}";
             if (foundQuestPlate.Summaries.TryGetValue(
                         summaryText,
                         out var storedSummaryText))
@@ -249,8 +342,9 @@ public partial class Echoglossian
             journalDetailBatchSources.AddRange(
                 summaries.Select(summary => summary.OriginalText));
 
-            var cacheKey =
-                $"JournalDetail|{SerializeTranslationBatch(journalDetailBatchSources)}";
+            var cacheKey = questProgressSnapshot.HasValue
+                ? $"JournalDetail|{questProgressSnapshot.Value.CacheKey}|{SerializeTranslationBatch(journalDetailBatchSources)}"
+                : $"JournalDetail|{SerializeTranslationBatch(journalDetailBatchSources)}";
 
             if (this.TryGetQueuedTranslation(
                     cacheKey,
@@ -438,13 +532,27 @@ public partial class Echoglossian
                 swapEnabled: this.JournalHoverShowsOriginal,
                 forceEnabled: true, denseHitbox: true);
 
+            var originalQuestProgressSections = questProgressSnapshot.HasValue
+                ? questProgressSnapshot.Value.QuestSteps
+                    .Select(step => step.Text)
+                    .Where(stepText => !string.IsNullOrWhiteSpace(stepText))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray()
+                : [];
+            var translatedQuestProgressSections = questProgressSnapshot.HasValue
+                ? this.TranslateQuestProgressSections(
+                    foundQuestPlate,
+                    questProgressSnapshot.Value)
+                : [];
             var originalQuestBody = BuildQuestPlateHoverBody(
                 new[]
                 {
                     questMessage,
                     objectiveText,
                     summaryText,
-                }.Concat(summaries.Select(summary => summary.OriginalText))
+                }
+                    .Concat(summaries.Select(summary => summary.OriginalText))
+                    .Concat(originalQuestProgressSections)
                     .ToArray());
             var translatedQuestBody = BuildQuestPlateHoverBody(
                 new[]
@@ -452,7 +560,9 @@ public partial class Echoglossian
                     translatedQuestMessage,
                     translatedQuestObjective,
                     translatedQuestSummary,
-                }.Concat(summaries.Select(summary => summary.TranslatedText))
+                }
+                    .Concat(summaries.Select(summary => summary.TranslatedText))
+                    .Concat(translatedQuestProgressSections)
                     .ToArray());
 
             if (!string.IsNullOrWhiteSpace(originalQuestBody) ||
@@ -461,8 +571,13 @@ public partial class Echoglossian
                 var questCanvasNode =
                     journalBox->UldManager.SearchNodeById(14);
                 var questBodyHoverKey = questCanvasNode != null
-                    ? $"JournalDetail-QuestBody-{(nint)questCanvasNode:X}"
-                    : $"JournalDetail-QuestBody-{(nint)descriptionNode:X}";
+                    ? $"JournalDetail-QuestBody-{(nint)questCanvasNode:X}-{questProgressSnapshot?.CacheKey ?? questName}"
+                    : $"JournalDetail-QuestBody-{(nint)descriptionNode:X}-{questProgressSnapshot?.CacheKey ?? questName}";
+                PluginLog.Debug(
+                    $"[JournalDetail] body candidate key='{questBodyHoverKey}' mode={this.configuration.JournalTranslationDisplayMode} " +
+                    $"hover={this.JournalUsesHoverTooltips} native={this.JournalWritesNativeTranslation} swap={this.JournalHoverShowsOriginal} " +
+                    $"summaryCount={summaries.Count} progressSections={translatedQuestProgressSections.Count} " +
+                    $"trigger={(questCanvasNode != null ? "JournalCanvasComponentNode14" : "descriptionFallback")}");
                 if (this.TryGetQuestPlateHoverBounds(
                         questCanvasNode,
                         out var bodyTopLeft,
@@ -598,6 +713,18 @@ public partial class Echoglossian
             // If that stays noisy, move this to a normalized or quest-identity
             // keyed cache instead of raw string equality.
             var foundQuestPlate = this.FindQuestPlate(questPlate);
+            QuestProgressSnapshot? questProgressSnapshot = null;
+            if (QuestProgressResolver.TryResolveQuestProgress(
+                    foundQuestPlate ?? questPlate,
+                    out var resolvedQuestProgressSnapshot))
+            {
+                questProgressSnapshot = resolvedQuestProgressSnapshot;
+            }
+
+            PluginLog.Debug(
+                $"[JournalDetail] scan mode={this.configuration.JournalTranslationDisplayMode} " +
+                $"hover={this.JournalUsesHoverTooltips} native={this.JournalWritesNativeTranslation} swap={this.JournalHoverShowsOriginal} " +
+                $"summaryPresent={!string.IsNullOrWhiteSpace(summaryText)} progressKey='{questProgressSnapshot?.CacheKey ?? string.Empty}'");
 
 #if DEBUG
             // PluginLog.Debug($"Quest name: {questName}");
@@ -608,6 +735,7 @@ public partial class Echoglossian
             this.TranslateQuestOnJournalBox(
                 journalBox,
                 foundQuestPlate,
+                questProgressSnapshot,
                 questName,
                 questMessage,
                 objectiveText,
@@ -767,6 +895,10 @@ public partial class Echoglossian
                 var completedQuestBodyHoverKey =
                     $"JournalDetail-CompletedQuestBody-{(nint)descriptionNode:X}";
                 var questCanvasNode = journalDetail->GetNodeById(14);
+                PluginLog.Debug(
+                    $"[JournalDetail] completed body candidate key='{completedQuestBodyHoverKey}' mode={this.configuration.JournalTranslationDisplayMode} " +
+                    $"hover={this.JournalUsesHoverTooltips} native={this.JournalWritesNativeTranslation} swap={this.JournalHoverShowsOriginal} " +
+                    $"trigger={(questCanvasNode != null ? "JournalCanvasComponentNode14" : "descriptionFallback")}");
                 if (this.TryGetQuestPlateHoverBounds(
                         questCanvasNode,
                         out var bodyTopLeft,

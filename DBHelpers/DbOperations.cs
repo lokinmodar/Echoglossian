@@ -333,36 +333,53 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
+      var hasGameVersion = !string.IsNullOrWhiteSpace(questPlate.GameVersion);
+      var filterByEngine = this.configuration?.TranslateAlreadyTranslatedTexts ==
+                           true;
 
-      var existingQuestPlate = context.QuestPlate.AsNoTracking().Where(t =>
-          t.QuestName == questPlate.QuestName &&
-          t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
-          t.TranslationLang == questPlate.TranslationLang);
-
-      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-      {
-        existingQuestPlate = existingQuestPlate.Where(t =>
-            t.TranslationEngine == questPlate.TranslationEngine);
-      }
-
-      var localFoundQuestPlate = existingQuestPlate.FirstOrDefault();
+      QuestPlate? localFoundQuestPlate = null;
       var matchedByQuestId = false;
-      if (localFoundQuestPlate == null &&
-          !string.IsNullOrWhiteSpace(questPlate.QuestId))
+
+      if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang);
-
-        if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-        {
-          questIdMatch = questIdMatch.Where(t =>
-              t.TranslationEngine == questPlate.TranslationEngine);
-        }
+            t.TranslationLang == questPlate.TranslationLang &&
+            (!filterByEngine ||
+             t.TranslationEngine == questPlate.TranslationEngine) &&
+            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
 
         localFoundQuestPlate = questIdMatch.FirstOrDefault();
         matchedByQuestId = localFoundQuestPlate != null;
+      }
+
+      if (localFoundQuestPlate == null &&
+          !string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
+      {
+        var questMessageMatch = context.QuestPlate.AsNoTracking().Where(t =>
+            t.QuestName == questPlate.QuestName &&
+            t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
+            t.TranslationLang == questPlate.TranslationLang &&
+            (!filterByEngine ||
+             t.TranslationEngine == questPlate.TranslationEngine) &&
+            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+
+        localFoundQuestPlate = questMessageMatch.FirstOrDefault();
+      }
+
+      if (localFoundQuestPlate == null &&
+          !string.IsNullOrWhiteSpace(questPlate.QuestName))
+      {
+        var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
+            t.QuestName == questPlate.QuestName &&
+            t.TranslationLang == questPlate.TranslationLang &&
+            (!filterByEngine ||
+             t.TranslationEngine == questPlate.TranslationEngine) &&
+            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+
+        localFoundQuestPlate = questNameMatch.FirstOrDefault();
       }
 
       if (localFoundQuestPlate == null ||
@@ -392,17 +409,18 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
+      var hasGameVersion = !string.IsNullOrWhiteSpace(questPlate.GameVersion);
+      var filterByEngine = this.configuration?.TranslateAlreadyTranslatedTexts ==
+                           true;
 
       var existingQuestPlate = context.QuestPlate.AsNoTracking().Where(t =>
-          t.QuestName == questPlate.QuestName && t.TranslationLang ==
-          questPlate.TranslationLang);
-
-      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-      {
-        existingQuestPlate = existingQuestPlate.Where(t =>
-            t.TranslationEngine == questPlate.TranslationEngine);
-      }
+          t.QuestName == questPlate.QuestName &&
+          t.TranslationLang == questPlate.TranslationLang &&
+          (!filterByEngine ||
+           t.TranslationEngine == questPlate.TranslationEngine) &&
+          (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
 
       var localFoundQuestPlate = existingQuestPlate.FirstOrDefault();
       var matchedByQuestId = false;
@@ -412,13 +430,10 @@ public partial class Echoglossian
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang);
-
-        if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-        {
-          questIdMatch = questIdMatch.Where(t =>
-              t.TranslationEngine == questPlate.TranslationEngine);
-        }
+            t.TranslationLang == questPlate.TranslationLang &&
+            (!filterByEngine ||
+             t.TranslationEngine == questPlate.TranslationEngine) &&
+            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
 
         localFoundQuestPlate = questIdMatch.FirstOrDefault();
         matchedByQuestId = localFoundQuestPlate != null;
@@ -999,6 +1014,23 @@ public partial class Echoglossian
     try
     {
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
+
+      var existingQuestPlate = this.TryFindQuestPlateForSave(context, questPlate);
+      if (existingQuestPlate != null)
+      {
+        this.MergeQuestPlateValues(existingQuestPlate, questPlate);
+        existingQuestPlate.UpdatedDate = DateTime.Now;
+        existingQuestPlate.UpdateFieldsAsText();
+
+        if (this.configuration.CopyTranslationToClipboard)
+        {
+          ImGui.SetClipboardText(existingQuestPlate.ToString());
+        }
+
+        context.SaveChanges();
+        return "Data merged into QuestPlate table.";
+      }
+
       questPlate.UpdateFieldsAsText();
       context.QuestPlate.Attach(questPlate);
 
@@ -1029,6 +1061,23 @@ public partial class Echoglossian
     try
     {
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
+
+      var existingQuestPlate = this.TryFindQuestPlateForSave(context, questPlate);
+      if (existingQuestPlate != null)
+      {
+        this.MergeQuestPlateValues(existingQuestPlate, questPlate);
+        existingQuestPlate.UpdatedDate = DateTime.Now;
+        existingQuestPlate.UpdateFieldsAsText();
+
+        if (this.configuration.CopyTranslationToClipboard)
+        {
+          ImGui.SetClipboardText(existingQuestPlate.ToString());
+        }
+
+        context.SaveChanges();
+        return "Data updated on QuestPlate table.";
+      }
+
       questPlate.UpdateFieldsAsText();
       context.QuestPlate.Update(questPlate);
 
@@ -1044,6 +1093,136 @@ public partial class Echoglossian
     catch (Exception e)
     {
       return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Finds a quest plate for save/merge operations using QuestId first
+  ///     and falling back to the existing name-based keys.
+  /// </summary>
+  /// <param name="context">The active DB context.</param>
+  /// <param name="questPlate">The quest plate being saved.</param>
+  /// <returns>The existing quest plate if one should be merged; otherwise null.</returns>
+  private QuestPlate? TryFindQuestPlateForSave(
+      EchoglossianDbContext context,
+      QuestPlate questPlate)
+  {
+    questPlate.GameVersion ??= GetGameVersion();
+    var hasGameVersion = !string.IsNullOrWhiteSpace(questPlate.GameVersion);
+
+    if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
+    {
+      var questIdMatch = context.QuestPlate.FirstOrDefault(t =>
+          t.QuestId == questPlate.QuestId &&
+          t.TranslationLang == questPlate.TranslationLang &&
+          (!this.configuration.TranslateAlreadyTranslatedTexts ||
+           t.TranslationEngine == questPlate.TranslationEngine) &&
+          (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+
+      if (questIdMatch != null)
+      {
+        questIdMatch.UpdateFieldsFromText();
+        return questIdMatch;
+      }
+    }
+
+    if (!string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
+    {
+      var questMessageMatch = context.QuestPlate.FirstOrDefault(t =>
+          t.QuestName == questPlate.QuestName &&
+          t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
+          t.TranslationLang == questPlate.TranslationLang &&
+          (!this.configuration.TranslateAlreadyTranslatedTexts ||
+           t.TranslationEngine == questPlate.TranslationEngine) &&
+          (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+
+      if (questMessageMatch != null)
+      {
+        questMessageMatch.UpdateFieldsFromText();
+        return questMessageMatch;
+      }
+    }
+
+    var questNameMatch = context.QuestPlate.FirstOrDefault(t =>
+        t.QuestName == questPlate.QuestName &&
+        t.TranslationLang == questPlate.TranslationLang &&
+        (!this.configuration.TranslateAlreadyTranslatedTexts ||
+         t.TranslationEngine == questPlate.TranslationEngine) &&
+        (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+
+    if (questNameMatch != null)
+    {
+      questNameMatch.UpdateFieldsFromText();
+    }
+
+    return questNameMatch;
+  }
+
+  /// <summary>
+  ///     Merges quest plate data without overwriting already populated fields.
+  /// </summary>
+  /// <param name="target">The database record to be enriched.</param>
+  /// <param name="source">The newer quest plate values.</param>
+  private void MergeQuestPlateValues(
+      QuestPlate target,
+      QuestPlate source)
+  {
+    if (target == null || source == null)
+    {
+      return;
+    }
+
+    target.QuestId = string.IsNullOrWhiteSpace(source.QuestId)
+        ? target.QuestId
+        : source.QuestId;
+    target.QuestName = string.IsNullOrWhiteSpace(source.QuestName)
+        ? target.QuestName
+        : source.QuestName;
+    target.OriginalQuestMessage =
+        string.IsNullOrWhiteSpace(source.OriginalQuestMessage)
+            ? target.OriginalQuestMessage
+            : source.OriginalQuestMessage;
+    target.OriginalLang = string.IsNullOrWhiteSpace(source.OriginalLang)
+        ? target.OriginalLang
+        : source.OriginalLang;
+    target.TranslatedQuestName =
+        string.IsNullOrWhiteSpace(source.TranslatedQuestName)
+            ? target.TranslatedQuestName
+            : source.TranslatedQuestName;
+    target.TranslatedQuestMessage =
+        string.IsNullOrWhiteSpace(source.TranslatedQuestMessage)
+            ? target.TranslatedQuestMessage
+            : source.TranslatedQuestMessage;
+    target.TranslationLang = string.IsNullOrWhiteSpace(source.TranslationLang)
+        ? target.TranslationLang
+        : source.TranslationLang;
+    target.TranslationEngine = source.TranslationEngine ?? target.TranslationEngine;
+    target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion)
+        ? target.GameVersion
+        : source.GameVersion;
+    target.CreatedDate ??= source.CreatedDate;
+    target.UpdatedDate = DateTime.Now;
+
+    foreach (var (objectiveKey, objectiveValue) in source.Objectives)
+    {
+      if (string.IsNullOrWhiteSpace(objectiveKey) ||
+          string.IsNullOrWhiteSpace(objectiveValue))
+      {
+        continue;
+      }
+
+      target.Objectives[objectiveKey] = objectiveValue;
+    }
+
+    foreach (var (summaryKey, summaryValue) in source.Summaries)
+    {
+      if (string.IsNullOrWhiteSpace(summaryKey) ||
+          string.IsNullOrWhiteSpace(summaryValue))
+      {
+        continue;
+      }
+
+      target.Summaries[summaryKey] = summaryValue;
     }
   }
 

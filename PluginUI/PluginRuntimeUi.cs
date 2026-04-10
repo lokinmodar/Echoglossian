@@ -102,11 +102,7 @@ public partial class Echoglossian
     }
 
     this.DrawMiniTalkBubbleOverlays();
-    var shouldDrawHoverTooltips =
-        this.configuration.TranslateTooltips ||
-        (this.configuration.TranslateJournal &&
-         this.configuration.JournalTranslationDisplayMode !=
-         JournalTranslationDisplayMode.NativeUiTranslation);
+    var shouldDrawHoverTooltips = this.ShouldDrawHoverTooltips;
 
     if (shouldDrawHoverTooltips)
     {

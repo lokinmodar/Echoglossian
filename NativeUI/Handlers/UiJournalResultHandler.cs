@@ -13,7 +13,7 @@ public partial class Echoglossian
 {
     private unsafe void UiJournalResultHandler(AddonEvent type, AddonArgs args)
     {
-        if (!this.configuration.TranslateJournal)
+        if (!this.configuration.TranslateJournalResult)
         {
             return;
         }
@@ -69,7 +69,7 @@ public partial class Echoglossian
                         this.SpecialCharsSupportedByGameFont);
                 }
 
-                if (this.JournalWritesNativeTranslation)
+                if (this.JournalResultWritesNativeTranslation)
                 {
                     setupAtkValues[1]
                         .SetManagedString(foundQuestPlate.TranslatedQuestName);
@@ -78,7 +78,7 @@ public partial class Echoglossian
                     questNameText,
                     foundQuestPlate.TranslatedQuestName);
 
-                if (this.JournalUsesHoverTooltips)
+                if (this.JournalResultUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("JournalResult");
@@ -87,7 +87,7 @@ public partial class Echoglossian
                         addon,
                         questNameText,
                         foundQuestPlate.TranslatedQuestName,
-                        swapEnabled: this.JournalHoverShowsOriginal,
+                        swapEnabled: this.JournalResultHoverShowsOriginal,
                         forceEnabled: true, denseHitbox: true);
                 }
                 return;
@@ -108,7 +108,7 @@ public partial class Echoglossian
                         this.SpecialCharsSupportedByGameFont);
                 }
 
-                if (this.JournalWritesNativeTranslation)
+                if (this.JournalResultWritesNativeTranslation)
                 {
                     setupAtkValues[1].SetManagedString(translatedNameText);
                 }
@@ -116,7 +116,7 @@ public partial class Echoglossian
                     questNameText,
                     translatedNameText);
 
-                if (this.JournalUsesHoverTooltips)
+                if (this.JournalResultUsesHoverTooltips)
                 {
                     var addon = AtkStage.Instance()->RaptureAtkUnitManager
                         ->GetAddonByName("JournalResult");
@@ -125,7 +125,7 @@ public partial class Echoglossian
                         addon,
                         questNameText,
                         translatedNameText,
-                        swapEnabled: this.JournalHoverShowsOriginal,
+                        swapEnabled: this.JournalResultHoverShowsOriginal,
                         forceEnabled: true, denseHitbox: true);
                 }
                 return;

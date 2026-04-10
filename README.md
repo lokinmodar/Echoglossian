@@ -41,6 +41,11 @@ Enable the desired translations and configure the various options through the Co
 - Soreepeong aka Kizer for the fontConfig fix
 - samulopez for all the contributions
 - pbzweihander for all the contributions
+- Critical-Impact projects such as InventoryTools, AllaganMarket, CriticalCommonLib, LuminaSupplemental, DalaMock, and AllaganLib for practical Lumina/data-access patterns
+- Era-FFXIV QuestShare.Plugin for quest progression and quest-sheet resolution patterns
+- HaselDebug for addon inspection and probe patterns
+- DelvUI and DelvCD for tooltip/hover UX patterns
+- ChatBubbles for bubble-style addon handling references
 
 ## Contributors
 

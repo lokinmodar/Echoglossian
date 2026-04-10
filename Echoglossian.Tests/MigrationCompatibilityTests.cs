@@ -78,6 +78,13 @@ public class MigrationCompatibilityTests
 
             foreach (var tableName in TableNames)
             {
+                if (string.Equals(tableName, "questplates", StringComparison.OrdinalIgnoreCase))
+                {
+                    Assert.Equal(1, countsBefore[tableName]);
+                    Assert.Equal(0, countsAfter[tableName]);
+                    continue;
+                }
+
                 Assert.True(
                     countsBefore[tableName] == countsAfter[tableName],
                     $"Row count changed for table {tableName}.");
@@ -156,9 +163,39 @@ public class MigrationCompatibilityTests
             translationLang: "pt",
             translationEngine: 1,
             createdDate: now,
-            updatedDate: now);
+            updatedDate: now,
+            gameVersion: "7.2");
         questPlate.UpdateFieldsAsText();
-        context.QuestPlate.Add(questPlate);
+
+        context.Database.ExecuteSqlInterpolated($"""
+            INSERT INTO questplates (
+                QuestId,
+                QuestName,
+                OriginalQuestMessage,
+                OriginalLang,
+                TranslatedQuestName,
+                TranslatedQuestMessage,
+                TranslationLang,
+                TranslationEngine,
+                CreatedDate,
+                UpdatedDate,
+                ObjectivesAsText,
+                SummariesAsText
+            ) VALUES (
+                {questPlate.QuestId},
+                {questPlate.QuestName},
+                {questPlate.OriginalQuestMessage},
+                {questPlate.OriginalLang},
+                {questPlate.TranslatedQuestName},
+                {questPlate.TranslatedQuestMessage},
+                {questPlate.TranslationLang},
+                {questPlate.TranslationEngine},
+                {questPlate.CreatedDate},
+                {questPlate.UpdatedDate},
+                {questPlate.ObjectivesAsText},
+                {questPlate.SummariesAsText}
+            )
+            """);
 
         context.GameWindow.Add(new GameWindow(
             windowAddonName: "JournalDetail",

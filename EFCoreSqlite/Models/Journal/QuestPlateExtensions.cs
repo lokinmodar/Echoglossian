@@ -11,7 +11,7 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
     /// Creates a deep copy of the QuestPlate instance.
     /// </summary>
     /// <param name="original">The QuestPlate to clone.</param>
-    /// <param name="resetIdentifiers">If true, resets Id and RowVersion to prepare for new insertion.</param>
+    /// <param name="resetIdentifiers">If true, resets Id to prepare for new insertion.</param>
     /// <returns>A deep-cloned QuestPlate object.</returns>
     public static QuestPlate Clone(this QuestPlate original, bool resetIdentifiers = false)
     {
@@ -31,7 +31,6 @@ namespace Echoglossian.EFCoreSqlite.Models.Journal
       if (resetIdentifiers)
       {
         cloned.Id = 0;
-        cloned.RowVersion = null;
       }
 
       return cloned;

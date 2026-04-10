@@ -76,7 +76,8 @@ public partial class Echoglossian
         this.languagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
-        DateTime.Now);
+        DateTime.Now,
+        GetGameVersion());
   }
 
   public TalkSubtitleMessage FormatTalkSubtitleMessage(string text)

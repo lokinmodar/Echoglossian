@@ -227,12 +227,18 @@
         </member>
         <member name="F:Echoglossian.Config.JournalTranslationDisplayMode">
             <summary>
-                How journal-like quest windows should present translated text.
-                NativeUiTranslation writes only to the native addon, TooltipTranslation
-                keeps the addon intact and uses hover tooltips, and
+                How Journal should present translated text. NativeUiTranslation
+                writes only to the native addon, TooltipTranslation keeps the addon
+                intact and uses hover tooltips, and
                 NativeUiTranslationWithOriginalTooltips writes translation natively
                 while showing the original in hover tooltips.
             </summary>
+        </member>
+        <member name="F:Echoglossian.Config.JournalAcceptTranslationDisplayMode">
+            <summary>Display mode for JournalAccept quest entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.JournalResultTranslationDisplayMode">
+            <summary>Display mode for JournalResult quest entries.</summary>
         </member>
         <member name="F:Echoglossian.Config.BattleTalkForceShowTitle">
             <summary>Always show the BattleTalk overlay title bar.</summary>
@@ -534,6 +540,12 @@
         <member name="F:Echoglossian.Config.TranslateJournal">
             <summary>Translate entries in the quest journal.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateJournalAccept">
+            <summary>Translate JournalAccept quest entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateJournalResult">
+            <summary>Translate JournalResult quest entries.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateNpcNames">
             <summary>
                 Legacy shared NPC-name translation toggle kept for migration from
@@ -542,6 +554,12 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateQuestToast">
             <summary>Translate quest-related toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateRecommendList">
+            <summary>Translate the RecommendList quest window.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateAreaMap">
+            <summary>Translate the AreaMap quest window.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateScenarioTree">
             <summary>Translate entries in the scenario tree (progress graph).</summary>
@@ -572,6 +590,18 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateToDoList">
             <summary>Translate To-Do List entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ToDoListTranslationDisplayMode">
+            <summary>Display mode for ToDoList quest entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ScenarioTreeTranslationDisplayMode">
+            <summary>Display mode for ScenarioTree quest entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.RecommendListTranslationDisplayMode">
+            <summary>Display mode for RecommendList quest entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AreaMapTranslationDisplayMode">
+            <summary>Display mode for AreaMap quest entries.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateTooltips">
             <summary>Translate UI tooltips.</summary>
@@ -705,6 +735,11 @@
             </summary>
             <summary>
                 A class that contains a dictionary of language information.
+            </summary>
+            <summary>
+                Handles the quest probe command used to inspect the complete quest data
+                shape from Lumina, the live quest progress resolver, and the current
+                QuestPlate database rows.
             </summary>
             <summary>
             Font handling helpers for the Echoglossian plugin.
@@ -872,6 +907,22 @@
             </summary>
             <param name="questPlate">QuestPlate to be updated</param>
             <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindQuestPlateForSave(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Finds a quest plate for save/merge operations using QuestId first
+                and falling back to the existing name-based keys.
+            </summary>
+            <param name="context">The active DB context.</param>
+            <param name="questPlate">The quest plate being saved.</param>
+            <returns>The existing quest plate if one should be merged; otherwise null.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.MergeQuestPlateValues(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Merges quest plate data without overwriting already populated fields.
+            </summary>
+            <param name="target">The database record to be enriched.</param>
+            <param name="source">The newer quest plate values.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
@@ -1278,6 +1329,16 @@
             <param name="input">The translated payload.</param>
             <returns>A dictionary mapping indices to translated strings.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TranslateQuestProgressSections(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Resolves quest progress step texts from the quest sheet so the
+                Journal body tooltip can follow the quest progression source instead
+                of depending only on the live UI text.
+            </summary>
+            <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
+            <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
+            <returns>The translated quest progress step texts in display order.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.BuildQuestPlateHoverBody(System.String[])">
             <summary>
             Builds a single multi-paragraph tooltip body from the quest plate text
@@ -1330,6 +1391,16 @@
             <param name="title">Tooltip title.</param>
             <param name="body">Tooltip body text.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Registers a hover tooltip for a generic node using its current screen
+            bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="node">The node to anchor the tooltip to.</param>
+            <param name="title">Tooltip title.</param>
+            <param name="body">Tooltip body text.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Registers a hover tooltip for a whole addon window using its root node.
@@ -1360,6 +1431,17 @@
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+            <summary>
+            Registers a translated hover tooltip using a generic node's screen bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="node">The node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
             Registers a hover tooltip for a whole addon window using translated and
@@ -1381,6 +1463,242 @@
             <param name="translatedText">The translated text.</param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
+            <summary>
+                Handles the quest probe command.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
+            <summary>
+                Tries to resolve the quest probe target from either a quest id or a
+                quest name.
+            </summary>
+            <param name="input">The command argument.</param>
+            <param name="questIdText">The resolved quest id as text.</param>
+            <param name="questName">The resolved quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>True when the quest could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the quest data structure for inspection.
+            </summary>
+            <param name="questIdText">The quest id as text.</param>
+            <param name="questName">The quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the raw Lumina quest row properties.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs all rows from the quest text sheet, not just the live todo
+                entries, so we can inspect the full structure of the quest sheet.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
+            <summary>
+                Logs the QuestPlate rows currently stored for the quest.
+            </summary>
+            <param name="questIdText">The quest id text.</param>
+            <param name="questName">The quest name.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Logs the resolved live quest progression snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves a human-readable quest name from a quest row.
+            </summary>
+            <param name="questRow">The quest row.</param>
+            <returns>The resolved quest name, if available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
+            <summary>
+                Converts quest text to a readable string for probe output.
+            </summary>
+            <param name="text">The quest text.</param>
+            <returns>The evaluated text string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
+            <summary>
+                Formats a probe value for log output.
+            </summary>
+            <param name="value">The value to format.</param>
+            <returns>A human-readable value string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Builds the raw quest sheet name used by the game files.
+            </summary>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>The quest text sheet name, if it can be derived.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest row id as text through reflection so the probe
+                stays compatible with generated sheet shapes.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest row id as text, or an empty string if unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QuestModeUsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether a quest-like display mode should show hover tooltips.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when hover tooltips should be rendered.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QuestModeWritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether a quest-like display mode should write translated text
+                into the native addon.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when the native addon should receive translated text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QuestModeShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether a quest-like display mode should show the original text
+                in hover tooltips.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when hover tooltips should show the original text.</returns>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalWritesNativeTranslation">
+            <summary>
+                Gets whether the Journal family should write translated text into the
+                native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalUsesHoverTooltips">
+            <summary>
+                Gets whether the Journal family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalHoverShowsOriginal">
+            <summary>
+                Gets whether the Journal family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ToDoListUsesHoverTooltips">
+            <summary>
+                Gets whether the ToDoList family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ToDoListWritesNativeTranslation">
+            <summary>
+                Gets whether the ToDoList family should write translated text into the
+                native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ToDoListHoverShowsOriginal">
+            <summary>
+                Gets whether the ToDoList family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ScenarioTreeUsesHoverTooltips">
+            <summary>
+                Gets whether the ScenarioTree family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ScenarioTreeWritesNativeTranslation">
+            <summary>
+                Gets whether the ScenarioTree family should write translated text into
+                the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ScenarioTreeHoverShowsOriginal">
+            <summary>
+                Gets whether the ScenarioTree family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.RecommendListUsesHoverTooltips">
+            <summary>
+                Gets whether the RecommendList family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.RecommendListWritesNativeTranslation">
+            <summary>
+                Gets whether the RecommendList family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.RecommendListHoverShowsOriginal">
+            <summary>
+                Gets whether the RecommendList family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.AreaMapUsesHoverTooltips">
+            <summary>
+                Gets whether the AreaMap family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.AreaMapWritesNativeTranslation">
+            <summary>
+                Gets whether the AreaMap family should write translated text into the
+                native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.AreaMapHoverShowsOriginal">
+            <summary>
+                Gets whether the AreaMap family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalAcceptUsesHoverTooltips">
+            <summary>
+                Gets whether the JournalAccept family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalAcceptWritesNativeTranslation">
+            <summary>
+                Gets whether the JournalAccept family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalAcceptHoverShowsOriginal">
+            <summary>
+                Gets whether the JournalAccept family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalResultUsesHoverTooltips">
+            <summary>
+                Gets whether the JournalResult family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalResultWritesNativeTranslation">
+            <summary>
+                Gets whether the JournalResult family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalResultHoverShowsOriginal">
+            <summary>
+                Gets whether the JournalResult family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ShouldDrawHoverTooltips">
+            <summary>
+                Gets whether any quest family is currently configured to render hover
+                tooltips.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryGetQueuedTranslation(System.String,System.String@)">
             <summary>
@@ -2569,9 +2887,25 @@
                 Represents a quest plate in the database.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" /> class.
+            </summary>
+            <param name="questName">The quest name.</param>
+            <param name="originalQuestMessage">The original quest message.</param>
+            <param name="originalLang">The original language code.</param>
+            <param name="translatedQuestName">The translated quest name.</param>
+            <param name="translatedQuestMessage">The translated quest message.</param>
+            <param name="questId">The resolved quest identifier.</param>
+            <param name="translationLang">The target translation language.</param>
+            <param name="translationEngine">The translation engine id.</param>
+            <param name="createdDate">The created date.</param>
+            <param name="updatedDate">The updated date.</param>
+            <param name="gameVersion">The game version snapshot.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.GameVersion">
+            <summary>
+                Gets or sets the game version the quest plate was captured from.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.Objectives">
@@ -2604,7 +2938,7 @@
             Creates a deep copy of the QuestPlate instance.
             </summary>
             <param name="original">The QuestPlate to clone.</param>
-            <param name="resetIdentifiers">If true, resets Id and RowVersion to prepare for new insertion.</param>
+            <param name="resetIdentifiers">If true, resets Id to prepare for new insertion.</param>
             <returns>A deep-cloned QuestPlate object.</returns>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.LocationName.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
@@ -6763,8 +7097,9 @@
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker">
             <summary>
-                Keeps a shared in-memory translation cache and makes translation requests
-                asynchronous so legacy UI event handlers can stop blocking the game thread.
+                Keeps a shared in-memory translation cache and drains translation
+                requests through a single paced background pump so dense UI refreshes do
+                not spam the translator or create request bursts.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.TryGetCached(System.String,System.String@)">
@@ -6775,6 +7110,33 @@
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Queue(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String})">
             <summary>
                 Queues a translation request if one is not already in flight for the key.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.StartPump">
+            <summary>
+                Starts the shared background pump once for the lifetime of the broker.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.ProcessQueueAsync">
+            <summary>
+                Processes queued translations sequentially with a small pacing gap.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.DelayForNextRequestSlotAsync(System.Threading.CancellationToken)">
+            <summary>
+                Ensures translation requests start at a controlled pace.
+            </summary>
+            <param name="cancellationToken">Cancellation token for shutdown.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.ProcessRequestAsync(Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationRequest)">
+            <summary>
+                Resolves a single queued translation request.
+            </summary>
+            <param name="request">The queued translation request.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Dispose">
+            <summary>
+                Releases broker resources and stops the background pump.
             </summary>
         </member>
         <member name="T:Echoglossian.SummaryQuest">
@@ -6853,6 +7215,12 @@
                 Resolves quest metadata from Lumina so quest records can be enriched
                 without changing the current UI-driven capture flow.
             </summary>
+            <remarks>
+                The cache-and-index shape follows the general Lumina usage pattern seen
+                in several Practical Dalamud plugins, especially Critical-Impact
+                projects that reuse IDataManager and ExcelSheet access instead of
+                querying the sheet repeatedly.
+            </remarks>
         </member>
         <member name="M:Echoglossian.QuestLuminaResolver.Clear">
             <summary>
@@ -6874,6 +7242,161 @@
             <param name="questName">The visible quest name.</param>
             <param name="questId">The resolved quest id, if any.</param>
             <returns>True when the quest id was found.</returns>
+        </member>
+        <member name="T:Echoglossian.QuestProgressResolver">
+            <summary>
+                Resolves quest progression data from Lumina and the live quest manager
+                so quest windows can key their hover and translation behavior from a
+                stable quest identity instead of raw UI text alone.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestProgressResolver.Clear">
+            <summary>
+                Clears cached quest progression lookups.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestProgressResolver.TryResolveQuestProgress(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot@)">
+            <summary>
+                Tries to resolve the current quest progression snapshot for the given
+                quest plate.
+            </summary>
+            <param name="questPlate">The quest plate to enrich with progression data.</param>
+            <param name="snapshot">The resolved progression snapshot, if any.</param>
+            <returns>True when progression data could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestProgressResolver.TryResolveQuestProgress(System.String,Echoglossian.QuestProgressSnapshot@)">
+            <summary>
+                Tries to resolve the current quest progression snapshot for the
+                supplied quest id.
+            </summary>
+            <param name="questIdText">The quest id resolved from Lumina.</param>
+            <param name="snapshot">The resolved progression snapshot, if any.</param>
+            <returns>True when progression data could be resolved.</returns>
+        </member>
+        <member name="T:Echoglossian.QuestProgressSnapshot">
+            <summary>
+                Represents a quest progression snapshot derived from Lumina and the
+                live quest manager.
+            </summary>
+            <param name="QuestId">The quest identifier.</param>
+            <param name="QuestSequence">The live quest sequence.</param>
+            <param name="QuestName">The quest name resolved from Lumina.</param>
+            <param name="QuestSheetName">The text sheet name used for the quest.</param>
+            <param name="QuestSteps">The quest step texts preserved as structured strings.</param>
+        </member>
+        <member name="M:Echoglossian.QuestProgressSnapshot.#ctor(System.UInt32,System.Byte,System.String,System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry})">
+            <summary>
+                Represents a quest progression snapshot derived from Lumina and the
+                live quest manager.
+            </summary>
+            <param name="QuestId">The quest identifier.</param>
+            <param name="QuestSequence">The live quest sequence.</param>
+            <param name="QuestName">The quest name resolved from Lumina.</param>
+            <param name="QuestSheetName">The text sheet name used for the quest.</param>
+            <param name="QuestSteps">The quest step texts preserved as structured strings.</param>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.QuestId">
+            <summary>The quest identifier.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.QuestSequence">
+            <summary>The live quest sequence.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.QuestName">
+            <summary>The quest name resolved from Lumina.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.QuestSheetName">
+            <summary>The text sheet name used for the quest.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.QuestSteps">
+            <summary>The quest step texts preserved as structured strings.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.CacheKey">
+            <summary>
+            Gets a stable cache key for the quest progress snapshot.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.QuestProgressEntry">
+            <summary>
+                Represents a quest step entry preserving the original structured text.
+            </summary>
+            <param name="OriginalKey">The original structured key payload.</param>
+            <param name="OriginalText">The original structured text payload.</param>
+            <param name="KeyText">The evaluated text for the key.</param>
+            <param name="Text">The evaluated quest step text.</param>
+        </member>
+        <member name="M:Echoglossian.QuestProgressEntry.#ctor(Lumina.Text.ReadOnly.ReadOnlySeString,Lumina.Text.ReadOnly.ReadOnlySeString,System.String,System.String)">
+            <summary>
+                Represents a quest step entry preserving the original structured text.
+            </summary>
+            <param name="OriginalKey">The original structured key payload.</param>
+            <param name="OriginalText">The original structured text payload.</param>
+            <param name="KeyText">The evaluated text for the key.</param>
+            <param name="Text">The evaluated quest step text.</param>
+        </member>
+        <member name="P:Echoglossian.QuestProgressEntry.OriginalKey">
+            <summary>The original structured key payload.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressEntry.OriginalText">
+            <summary>The original structured text payload.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressEntry.KeyText">
+            <summary>The evaluated text for the key.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressEntry.Text">
+            <summary>The evaluated quest step text.</summary>
+        </member>
+        <member name="T:Echoglossian.QuestTodoProgressResolver">
+            <summary>
+                Resolves live quest todo state from the native quest progress arrays so
+                quest handlers can key their cache and hover state off the current quest
+                sequence instead of depending only on the visible addon text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestTodoProgressResolver.Clear">
+            <summary>
+                Clears cached quest todo lookups.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestTodoProgressResolver.TryResolveQuestTodoProgress(System.String,Echoglossian.QuestTodoProgressSnapshot@)">
+            <summary>
+                Tries to resolve the current quest todo snapshot for the supplied
+                quest text.
+            </summary>
+            <param name="questText">The visible quest text or quest name.</param>
+            <param name="snapshot">The resolved live todo snapshot, if any.</param>
+            <returns>True when the quest todo state could be resolved.</returns>
+        </member>
+        <member name="T:Echoglossian.QuestTodoProgressSnapshot">
+            <summary>
+                Represents the live todo progress for a quest.
+            </summary>
+            <param name="QuestProgress">The resolved quest progress snapshot.</param>
+            <param name="ObjectiveProgress">The current objective progress value.</param>
+            <param name="ObjectiveCount">The current objective count value.</param>
+            <param name="CurrentDutyObjective">The current duty objective index.</param>
+        </member>
+        <member name="M:Echoglossian.QuestTodoProgressSnapshot.#ctor(Echoglossian.QuestProgressSnapshot,System.Int32,System.Int32,System.Int32)">
+            <summary>
+                Represents the live todo progress for a quest.
+            </summary>
+            <param name="QuestProgress">The resolved quest progress snapshot.</param>
+            <param name="ObjectiveProgress">The current objective progress value.</param>
+            <param name="ObjectiveCount">The current objective count value.</param>
+            <param name="CurrentDutyObjective">The current duty objective index.</param>
+        </member>
+        <member name="P:Echoglossian.QuestTodoProgressSnapshot.QuestProgress">
+            <summary>The resolved quest progress snapshot.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestTodoProgressSnapshot.ObjectiveProgress">
+            <summary>The current objective progress value.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestTodoProgressSnapshot.ObjectiveCount">
+            <summary>The current objective count value.</summary>
+        </member>
+        <member name="P:Echoglossian.QuestTodoProgressSnapshot.CacheKey">
+            <summary>
+                Gets a stable key for the live todo progress snapshot.
+            </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
             <summary>
@@ -7084,8 +7607,40 @@
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.JournalTab">
             <summary>
-                Renders the settings tab for journal, quest, and tooltip translation.
+                Renders the settings tab for journal and quest-family translation.
             </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.Draw(Echoglossian.Config,System.Boolean)">
+            <summary>
+                Draws the Journal settings tab.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <param name="langToRemoveDiacritics">Whether the selected language supports diacritic removal.</param>
+            <returns><c>true</c> when a setting changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawJournalSection(Echoglossian.Config)">
+            <summary>
+                Draws the Journal-specific quest translation controls.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <returns><c>true</c> when a setting changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestFamilySection(System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@)">
+            <summary>
+                Draws a quest family settings section with an enable toggle and
+                display mode combo.
+            </summary>
+            <param name="sectionLabel">The label used for the section.</param>
+            <param name="enabled">The toggle that enables translation for the family.</param>
+            <param name="displayMode">The configured display mode for the family.</param>
+            <returns><c>true</c> when a setting changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestDisplayModeCombo(Echoglossian.JournalTranslationDisplayMode@)">
+            <summary>
+                Draws the generic quest display mode combo and description text.
+            </summary>
+            <param name="displayMode">The configured display mode to edit.</param>
+            <returns><c>true</c> when the combo selection changed.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.MiscTab">
             <summary>
@@ -8272,6 +8827,66 @@
         <member name="P:Echoglossian.Properties.Resources.AddonProbeHelpMessage">
             <summary>
               Looks up a localized string similar to Awaiting translation....
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.QuestProbeHelpMessage">
+            <summary>
+              Looks up a localized string similar to Dumps a full quest data probe to the log. Usage: /egloquestprobe &lt;quest name or quest id&gt;.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslation">
+            <summary>
+              Looks up a localized string similar to Native UI translation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeTooltipTranslationOnly">
+            <summary>
+              Looks up a localized string similar to Tooltip translation only.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslationWithOriginalTooltips">
+            <summary>
+              Looks up a localized string similar to Native UI translation + original tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeLabel">
+            <summary>
+              Looks up a localized string similar to Quest display mode.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeDescription">
+            <summary>
+              Looks up a localized string similar to This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateJournalAcceptToggle">
+            <summary>
+              Looks up a localized string similar to Translate JournalAccept.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateJournalResultToggle">
+            <summary>
+              Looks up a localized string similar to Translate JournalResult.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateRecommendListToggle">
+            <summary>
+              Looks up a localized string similar to Translate RecommendList.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateAreaMapToggle">
+            <summary>
+              Looks up a localized string similar to Translate AreaMap.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateScenarioTreeToggle">
+            <summary>
+              Looks up a localized string similar to Translate ScenarioTree.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateToDoListToggle">
+            <summary>
+              Looks up a localized string similar to Translate ToDoList.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.JournalQuestDisplayModeNativeUiTranslation">
