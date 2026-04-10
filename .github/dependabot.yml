@@ -9,3 +9,8 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"] # Optional: ignore major jumps
+      - dependency-name: "*"
+        versions: ["*-alpha*", "*-beta*", "*-rc*", "*-next*"]
