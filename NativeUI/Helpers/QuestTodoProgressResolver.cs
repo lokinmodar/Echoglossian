@@ -40,8 +40,13 @@ internal static class QuestTodoProgressResolver
     {
         snapshot = default;
 
-        if (!QuestProgressResolver.TryResolveQuestProgress(
-                questText,
+        // Resolve the numeric quest ID from the display name so the underlying
+        // progress resolver can perform its Lumina-keyed lookup. Passing a raw
+        // display name to TryResolveQuestProgress(string) would fail because
+        // that overload expects a numeric row-id string.
+        if (!QuestLuminaResolver.TryResolveQuestId(questText, out var questIdStr) ||
+            !QuestProgressResolver.TryResolveQuestProgress(
+                questIdStr,
                 out var questProgressSnapshot))
         {
             return false;

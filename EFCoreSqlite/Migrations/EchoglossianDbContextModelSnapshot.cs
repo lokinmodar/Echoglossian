@@ -222,8 +222,26 @@ namespace Echoglossian.EFCoreSqlite.Migrations
             b.Property<string>("QuestName")
                 .HasColumnType("TEXT");
 
-            b.Property<string>("SummariesAsText")
+            b.Property<string>("QuestTextSheetName")
                 .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceContentHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SummariesAsText")
+                .HasColumnType("TEXT");
+
+                    b.Property<string>("SystemRowsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedObjectivesAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedSummariesAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedSystemRowsAsText")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TranslatedQuestMessage")
                         .HasColumnType("TEXT");

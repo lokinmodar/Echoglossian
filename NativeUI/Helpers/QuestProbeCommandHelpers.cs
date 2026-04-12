@@ -193,7 +193,7 @@ public partial class Echoglossian
     if (questSheetName.Length == 0)
     {
       PluginLog.Information(
-          $"[QuestProbe] quest text sheet name unavailable questId={this.GetQuestIdText(questRow)}");
+          $"[QuestProbe] quest text sheet name unavailable questRowId={this.GetQuestRowIdText(questRow)} questSheetId='{this.GetQuestSheetIdText(questRow)}'");
       return;
     }
 
@@ -254,13 +254,27 @@ public partial class Echoglossian
       QuestProgressSnapshot questProgressSnapshot)
   {
     PluginLog.Information(
-        $"[QuestProbe] progress questId={questProgressSnapshot.QuestId} questSequence={questProgressSnapshot.QuestSequence} questName='{questProgressSnapshot.QuestName}' sheet='{questProgressSnapshot.QuestSheetName}' stepCount={questProgressSnapshot.QuestSteps.Count}");
+        $"[QuestProbe] progress questId={questProgressSnapshot.QuestId} questSequence={questProgressSnapshot.QuestSequence} questName='{questProgressSnapshot.QuestName}' sheet='{questProgressSnapshot.QuestSheetName}' stepCount={questProgressSnapshot.QuestSteps.Count} seqCount={questProgressSnapshot.QuestSeqTexts.Count} systemCount={questProgressSnapshot.QuestSystemTexts.Count}");
 
     for (var i = 0; i < questProgressSnapshot.QuestSteps.Count; i++)
     {
       var questStep = questProgressSnapshot.QuestSteps[i];
       PluginLog.Debug(
           $"[QuestProbe] step[{i}] keyText='{questStep.KeyText}' text='{questStep.Text}' rawKey='{questStep.OriginalKey.ExtractText()}' rawText='{questStep.OriginalText.ExtractText()}'");
+    }
+
+    for (var i = 0; i < questProgressSnapshot.QuestSeqTexts.Count; i++)
+    {
+      var seqEntry = questProgressSnapshot.QuestSeqTexts[i];
+      PluginLog.Debug(
+          $"[QuestProbe] seq[{i}] keyText='{seqEntry.KeyText}' text='{seqEntry.Text}'");
+    }
+
+    for (var i = 0; i < questProgressSnapshot.QuestSystemTexts.Count; i++)
+    {
+      var sysEntry = questProgressSnapshot.QuestSystemTexts[i];
+      PluginLog.Debug(
+          $"[QuestProbe] system[{i}] keyText='{sysEntry.KeyText}' text='{sysEntry.Text}'");
     }
   }
 
@@ -369,14 +383,14 @@ public partial class Echoglossian
   /// <returns>The quest text sheet name, if it can be derived.</returns>
   private string BuildQuestTextSheetName(Quest questRow)
   {
-    var questIdText = this.GetQuestIdText(questRow);
-    if (questIdText.Length < 5)
+    var questSheetId = this.GetQuestSheetIdText(questRow);
+    if (questSheetId.Length < 5)
     {
       return string.Empty;
     }
 
-    var dir = questIdText.Substring(questIdText.Length - 5, 3);
-    return $"quest/{dir}/{questIdText}";
+    var dir = questSheetId.Substring(questSheetId.Length - 5, 3);
+    return $"quest/{dir}/{questSheetId}";
   }
 
   /// <summary>
@@ -385,10 +399,39 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="questRow">The Lumina quest row.</param>
   /// <returns>The quest row id as text, or an empty string if unavailable.</returns>
-  private string GetQuestIdText(Quest questRow)
+  private string GetQuestRowIdText(Quest questRow)
   {
     var questType = questRow.GetType();
     foreach (var propertyName in new[] { "RowId", "Id" })
+    {
+      var property = questType.GetProperty(
+          propertyName,
+          BindingFlags.Instance | BindingFlags.Public);
+      if (property?.GetValue(questRow) is null)
+      {
+        continue;
+      }
+
+      var value = property.GetValue(questRow)?.ToString();
+      if (!string.IsNullOrWhiteSpace(value))
+      {
+        return value.Trim();
+      }
+    }
+
+    return string.Empty;
+  }
+
+  /// <summary>
+  ///     Resolves the quest sheet identifier used to mount the quest text
+  ///     sheet path.
+  /// </summary>
+  /// <param name="questRow">The Lumina quest row.</param>
+  /// <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
+  private string GetQuestSheetIdText(Quest questRow)
+  {
+    var questType = questRow.GetType();
+    foreach (var propertyName in new[] { "Id" })
     {
       var property = questType.GetProperty(
           propertyName,

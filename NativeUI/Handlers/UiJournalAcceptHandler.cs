@@ -44,16 +44,47 @@ public partial class Echoglossian
 #endif
 
             var questPlate = this.FormatQuestPlate(questName, questMessage);
+            if (QuestProgressResolver.TryResolveQuestProgress(
+                    questPlate,
+                    out var resolvedAcceptSnapshot))
+            {
+                questPlate.SourceContentHash = resolvedAcceptSnapshot.ContentHash;
+            }
+
             var foundQuestPlate = this.FindQuestPlate(questPlate);
+            if (foundQuestPlate != null &&
+                !string.Equals(
+                    foundQuestPlate.GameVersion,
+                    GetGameVersion(),
+                    StringComparison.Ordinal))
+            {
+                this.UpdateQuestPlateGameVersion(
+                    foundQuestPlate.Id,
+                    GetGameVersion());
+            }
+
             var cacheKey = $"JournalAccept|{questName}|{questMessage}";
 
             if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                     questName,
-                    out _) &&
+                    out var cachedNameSnapshot) &&
                 QuestUiTranslationCache.TryGetAppliedSnapshot(
                     questMessage,
-                    out _))
+                    out var cachedMessageSnapshot))
             {
+                if (this.JournalAcceptUsesHoverTooltips)
+                {
+                    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                        ->GetAddonByName("JournalAccept");
+                    this.RegisterTranslatedHoverTooltip(
+                        $"JournalAccept-{(nint)addon:X}",
+                        addon,
+                        $"{questName}\n{questMessage}",
+                        $"{cachedNameSnapshot.AppliedText}\n{cachedMessageSnapshot.AppliedText}",
+                        swapEnabled: this.JournalAcceptHoverShowsOriginal,
+                        forceEnabled: true, denseHitbox: true);
+                }
+
                 return;
             }
 
@@ -131,7 +162,7 @@ public partial class Echoglossian
             PluginLog.Debug(
                 $"Using QuestPlate Replace - {translatedQuestName}: {translatedQuestMessage}");
 #endif
-            if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
+            if (this.JournalAcceptShouldRemoveDiacritics)
             {
                 translatedQuestName = this.RemoveDiacritics(
                     translatedQuestName,

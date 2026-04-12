@@ -325,9 +325,23 @@ public partial class Echoglossian
 
   /// <summary>
   ///     Finds and returns a QuestPlate from the database.
+  ///
+  ///     Lookup is content-aware: GameVersion is not used as a filter so that
+  ///     existing translations survive game patches. When a row is found and its
+  ///     <see cref="QuestPlate.SourceContentHash" /> matches the hash on the
+  ///     incoming plate, the translation is still valid. In that case the caller
+  ///     should call <see cref="UpdateQuestPlateGameVersion" /> to bump the
+  ///     GameVersion field without retranslating. When the hashes differ (content
+  ///     changed in a patch), this method returns null, signalling that
+  ///     retranslation is needed.
+  ///     Rows with no stored hash (legacy rows) are treated as hash-mismatch and
+  ///     will be retranslated once so they gain a hash on the next save.
   /// </summary>
-  /// <param name="questPlate">Formatted QuestPlate to be found in the database</param>
-  /// <returns></returns>
+  /// <param name="questPlate">Formatted QuestPlate to be found in the database.</param>
+  /// <returns>
+  ///     The matching plate when translation is still valid, or null when a new
+  ///     translation run is required.
+  /// </returns>
   public QuestPlate? FindQuestPlate(QuestPlate questPlate)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
@@ -335,21 +349,20 @@ public partial class Echoglossian
     {
       questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
-      var hasGameVersion = !string.IsNullOrWhiteSpace(questPlate.GameVersion);
       var filterByEngine = this.configuration?.TranslateAlreadyTranslatedTexts ==
                            true;
 
       QuestPlate? localFoundQuestPlate = null;
       var matchedByQuestId = false;
 
+      // Look up without GameVersion so that cross-patch reuse is possible.
       if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
             t.TranslationLang == questPlate.TranslationLang &&
             (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine) &&
-            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+             t.TranslationEngine == questPlate.TranslationEngine));
 
         localFoundQuestPlate = questIdMatch.FirstOrDefault();
         matchedByQuestId = localFoundQuestPlate != null;
@@ -363,8 +376,7 @@ public partial class Echoglossian
             t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
             t.TranslationLang == questPlate.TranslationLang &&
             (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine) &&
-            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+             t.TranslationEngine == questPlate.TranslationEngine));
 
         localFoundQuestPlate = questMessageMatch.FirstOrDefault();
       }
@@ -376,8 +388,7 @@ public partial class Echoglossian
             t.QuestName == questPlate.QuestName &&
             t.TranslationLang == questPlate.TranslationLang &&
             (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine) &&
-            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+             t.TranslationEngine == questPlate.TranslationEngine));
 
         localFoundQuestPlate = questNameMatch.FirstOrDefault();
       }
@@ -390,17 +401,63 @@ public partial class Echoglossian
         return null;
       }
 
+      // Content-hash check: when the incoming plate carries a hash (meaning the
+      // snapshot was resolved from the live sheet) compare it with what is stored.
+      // A mismatch means quest content changed in a patch → need retranslation.
+      // An empty stored hash means a legacy row → retranslate once to populate it.
+      var incomingHash = questPlate.SourceContentHash;
+      var storedHash = localFoundQuestPlate.SourceContentHash;
+      if (!string.IsNullOrEmpty(incomingHash) &&
+          !string.Equals(incomingHash, storedHash, StringComparison.Ordinal))
+      {
+        // Content changed or missing — signal the caller to retranslate.
+        return null;
+      }
+
       localFoundQuestPlate.UpdateFieldsFromText();
       return localFoundQuestPlate;
     }
     catch (Exception e)
     {
+      PluginLog.Debug($"FindQuestPlate exception: {e}");
       return null;
     }
   }
 
   /// <summary>
-  ///   Finds a QuestPlate by its name and translation language.
+  ///     Updates only the <see cref="QuestPlate.GameVersion" /> and
+  ///     <see cref="QuestPlate.UpdatedDate" /> of an existing row without touching
+  ///     any translated content. Call this when
+  ///     <see cref="FindQuestPlate" /> returned a non-null plate (content hash
+  ///     matched), meaning the existing translation is still valid but was stored
+  ///     under an older game version.
+  /// </summary>
+  /// <param name="id">Primary key of the row to update.</param>
+  /// <param name="newGameVersion">Current game version string.</param>
+  public void UpdateQuestPlateGameVersion(int id, string? newGameVersion)
+  {
+    if (string.IsNullOrWhiteSpace(newGameVersion))
+    {
+      return;
+    }
+
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    try
+    {
+      context.QuestPlate
+        .Where(t => t.Id == id)
+        .ExecuteUpdate(setters => setters
+          .SetProperty(t => t.GameVersion, newGameVersion)
+          .SetProperty(t => t.UpdatedDate, DateTime.Now));
+    }
+    catch (Exception e)
+    {
+      PluginLog.Debug($"UpdateQuestPlateGameVersion exception: {e}");
+    }
+  }
+
+  /// <summary>
+  ///     Finds a QuestPlate by its name and translation language.
   /// </summary>
   /// <param name="questPlate">Formatted QuestPlate to be found in the database</param>
   /// <returns></returns>
@@ -411,37 +468,54 @@ public partial class Echoglossian
     {
       questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
-      var hasGameVersion = !string.IsNullOrWhiteSpace(questPlate.GameVersion);
       var filterByEngine = this.configuration?.TranslateAlreadyTranslatedTexts ==
                            true;
 
-      var existingQuestPlate = context.QuestPlate.AsNoTracking().Where(t =>
-          t.QuestName == questPlate.QuestName &&
-          t.TranslationLang == questPlate.TranslationLang &&
-          (!filterByEngine ||
-           t.TranslationEngine == questPlate.TranslationEngine) &&
-          (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
-
-      var localFoundQuestPlate = existingQuestPlate.FirstOrDefault();
+      // Prefer QuestId lookup (stable primary key) when available so that two
+      // quests sharing a display name are never confused. Fall back to name-only
+      // match for legacy rows that were stored before QuestId was populated.
+      QuestPlate? localFoundQuestPlate = null;
       var matchedByQuestId = false;
 
-      if (localFoundQuestPlate == null &&
-          !string.IsNullOrWhiteSpace(questPlate.QuestId))
+      if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
             t.TranslationLang == questPlate.TranslationLang &&
             (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine) &&
-            (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+             t.TranslationEngine == questPlate.TranslationEngine));
 
         localFoundQuestPlate = questIdMatch.FirstOrDefault();
         matchedByQuestId = localFoundQuestPlate != null;
       }
 
+      if (localFoundQuestPlate == null &&
+          !string.IsNullOrWhiteSpace(questPlate.QuestName))
+      {
+        var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
+            t.QuestName == questPlate.QuestName &&
+            t.TranslationLang == questPlate.TranslationLang &&
+            (!filterByEngine ||
+             t.TranslationEngine == questPlate.TranslationEngine));
+
+        localFoundQuestPlate = questNameMatch.FirstOrDefault();
+      }
+
       if (localFoundQuestPlate == null ||
           (!matchedByQuestId &&
            localFoundQuestPlate.QuestName != questPlate.QuestName))
+      {
+        return null;
+      }
+
+      // Content-hash check: same semantics as FindQuestPlate.
+      // When the caller sets SourceContentHash on the incoming plate, a mismatch
+      // means quest content changed → retranslate. Empty incoming hash is a
+      // no-op so callers that don't resolve a snapshot still get the old behavior.
+      var incomingHash = questPlate.SourceContentHash;
+      var storedHash = localFoundQuestPlate.SourceContentHash;
+      if (!string.IsNullOrEmpty(incomingHash) &&
+          !string.Equals(incomingHash, storedHash, StringComparison.Ordinal))
       {
         return null;
       }
@@ -1223,6 +1297,28 @@ public partial class Echoglossian
       }
 
       target.Summaries[summaryKey] = summaryValue;
+    }
+
+    foreach (var (objKey, objValue) in source.TranslatedObjectives)
+    {
+      if (string.IsNullOrWhiteSpace(objKey) ||
+          string.IsNullOrWhiteSpace(objValue))
+      {
+        continue;
+      }
+
+      target.TranslatedObjectives[objKey] = objValue;
+    }
+
+    foreach (var (sumKey, sumValue) in source.TranslatedSummaries)
+    {
+      if (string.IsNullOrWhiteSpace(sumKey) ||
+          string.IsNullOrWhiteSpace(sumValue))
+      {
+        continue;
+      }
+
+      target.TranslatedSummaries[sumKey] = sumValue;
     }
   }
 

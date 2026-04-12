@@ -41,23 +41,23 @@ public partial class Echoglossian
         var questTodoProgressKey =
             questTodoProgressSnapshot?.CacheKey ?? questNameText;
 
-                if (this.ScenarioTreeUsesHoverTooltips)
-        {
-            var addon = AtkStage.Instance()->RaptureAtkUnitManager
-                ->GetAddonByName("ScenarioTree");
-            this.RegisterTranslatedHoverTooltip(
-                $"ScenarioTree-{(nint)addon:X}-{valueIndex}-{questTodoProgressKey}",
-                addon,
-                questNameText,
-                questNameText,
-                swapEnabled: this.ScenarioTreeHoverShowsOriginal,
-                forceEnabled: true, denseHitbox: true);
-        }
-
         if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                 questTodoProgressKey + "|" + questNameText,
-                out _))
+                out var cachedScenarioSnap))
         {
+            if (this.ScenarioTreeUsesHoverTooltips)
+            {
+                var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                    ->GetAddonByName("ScenarioTree");
+                this.RegisterTranslatedHoverTooltip(
+                    $"ScenarioTree-{(nint)addon:X}-{valueIndex}-{questTodoProgressKey}",
+                    addon,
+                    questNameText,
+                    cachedScenarioSnap.AppliedText,
+                    swapEnabled: this.ScenarioTreeHoverShowsOriginal,
+                    forceEnabled: true, denseHitbox: true);
+            }
+
             return;
         }
 
@@ -73,7 +73,7 @@ public partial class Echoglossian
 #endif
             var translatedQuestName = foundQuestPlate.TranslatedQuestName;
 
-            if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
+            if (this.ScenarioTreeShouldRemoveDiacritics)
             {
                 translatedQuestName = this.RemoveDiacritics(
                     translatedQuestName,
@@ -111,7 +111,7 @@ public partial class Echoglossian
             // PluginLog.Debug(
             //     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
-            if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
+            if (this.ScenarioTreeShouldRemoveDiacritics)
             {
                 translatedNameText = this.RemoveDiacritics(
                     translatedNameText,

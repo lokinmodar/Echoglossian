@@ -67,6 +67,13 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
+                if (this.AreaMapShouldRemoveDiacritics)
+                {
+                    foundQuestPlate.TranslatedQuestName = this.RemoveDiacritics(
+                        foundQuestPlate.TranslatedQuestName,
+                        this.SpecialCharsSupportedByGameFont);
+                }
+
                 if (this.AreaMapWritesNativeTranslation)
                 {
                     setupAtkValues[142]
@@ -98,6 +105,13 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
+                if (this.AreaMapShouldRemoveDiacritics)
+                {
+                    translatedNameText = this.RemoveDiacritics(
+                        translatedNameText,
+                        this.SpecialCharsSupportedByGameFont);
+                }
+
                 if (this.AreaMapWritesNativeTranslation)
                 {
                     setupAtkValues[142].SetManagedString(translatedNameText);

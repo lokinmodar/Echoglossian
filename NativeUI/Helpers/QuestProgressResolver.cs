@@ -114,27 +114,34 @@ internal static class QuestProgressResolver
         }
 
         var questName = ReadQuestString(questRow, "Name", "Text", "QuestName");
-        var questSteps = ReadQuestStepTexts(questTextSheet);
-        if (questSteps.Count == 0)
+        var (questSteps, questSeqs, questSystemTexts) = ReadQuestTextRows(questTextSheet);
+        if (questSteps.Count == 0 && questSeqs.Count == 0)
         {
             return false;
         }
+
+        var contentHash = QuestContentHash.Compute(questSeqs, questSteps, questSystemTexts);
 
         snapshot = new QuestProgressSnapshot(
             questId,
             questSequence,
             questName,
             questSheetName,
-            questSteps);
+            questSteps,
+            questSeqs,
+            questSystemTexts,
+            contentHash);
 
         QuestProgressCache[cacheKey] = snapshot;
         return true;
     }
 
-    private static List<QuestProgressEntry> ReadQuestStepTexts(
+    private static (List<QuestProgressEntry> Steps, List<QuestProgressEntry> Seqs, List<QuestProgressEntry> SystemTexts) ReadQuestTextRows(
         ExcelSheet<RawRow> questTextSheet)
     {
-        var questSteps = new List<QuestProgressEntry>();
+        var steps = new List<QuestProgressEntry>();
+        var seqs = new List<QuestProgressEntry>();
+        var systemTexts = new List<QuestProgressEntry>();
         var evaluator = Echoglossian.SeStringEvaluator;
 
         var rowCount = Convert.ToInt32(questTextSheet.Count, CultureInfo.InvariantCulture);
@@ -147,21 +154,28 @@ internal static class QuestProgressResolver
             var keyText = EvaluateQuestText(rawKey, evaluator);
             var valueText = EvaluateQuestText(rawValue, evaluator);
 
-            if (keyText.Length == 0 ||
-                !keyText.Contains("_TODO_", StringComparison.Ordinal) ||
-                valueText.Length == 0)
+            if (keyText.Length == 0 || valueText.Length == 0)
             {
                 continue;
             }
 
-            questSteps.Add(new QuestProgressEntry(
-                rawKey,
-                rawValue,
-                keyText,
-                valueText));
+            var entry = new QuestProgressEntry(rawKey, rawValue, keyText, valueText);
+
+            if (keyText.Contains("_TODO_", StringComparison.Ordinal))
+            {
+                steps.Add(entry);
+            }
+            else if (keyText.Contains("_SEQ_", StringComparison.Ordinal))
+            {
+                seqs.Add(entry);
+            }
+            else if (keyText.Contains("_SYSTEM_", StringComparison.Ordinal))
+            {
+                systemTexts.Add(entry);
+            }
         }
 
-        return questSteps;
+        return (steps, seqs, systemTexts);
     }
 
     private static string EvaluateQuestText(
@@ -233,13 +247,19 @@ internal static class QuestProgressResolver
 /// <param name="QuestSequence">The live quest sequence.</param>
 /// <param name="QuestName">The quest name resolved from Lumina.</param>
 /// <param name="QuestSheetName">The text sheet name used for the quest.</param>
-/// <param name="QuestSteps">The quest step texts preserved as structured strings.</param>
+/// <param name="QuestSteps">The TODO row texts (active objectives).</param>
+/// <param name="QuestSeqTexts">The SEQ row texts (journal summaries per phase).</param>
+/// <param name="QuestSystemTexts">The SYSTEM row texts (cinematic captions).</param>
+/// <param name="ContentHash">A stable content fingerprint of all translatable row texts.</param>
 internal readonly record struct QuestProgressSnapshot(
     uint QuestId,
     byte QuestSequence,
     string QuestName,
     string QuestSheetName,
-    IReadOnlyList<QuestProgressEntry> QuestSteps)
+    IReadOnlyList<QuestProgressEntry> QuestSteps,
+    IReadOnlyList<QuestProgressEntry> QuestSeqTexts,
+    IReadOnlyList<QuestProgressEntry> QuestSystemTexts,
+    string ContentHash)
 {
     /// <summary>
     /// Gets a stable cache key for the quest progress snapshot.

@@ -205,6 +205,64 @@ public partial class Echoglossian
           this.configuration.JournalResultTranslationDisplayMode);
 
   /// <summary>
+  ///     Gets whether the Journal family should strip diacritics from translated
+  ///     text before use. Diacritics removal is only meaningful when translated
+  ///     text is written directly into native addon nodes, because our own
+  ///     overlays and tooltips always use fonts that support every diacritic.
+  /// </summary>
+  private bool JournalShouldRemoveDiacritics =>
+      this.JournalWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
+  ///     Gets whether the JournalAccept family should strip diacritics.
+  ///     Only active when writing to native addon nodes.
+  /// </summary>
+  private bool JournalAcceptShouldRemoveDiacritics =>
+      this.JournalAcceptWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
+  ///     Gets whether the JournalResult family should strip diacritics.
+  ///     Only active when writing to native addon nodes.
+  /// </summary>
+  private bool JournalResultShouldRemoveDiacritics =>
+      this.JournalResultWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
+  ///     Gets whether the ScenarioTree family should strip diacritics.
+  ///     Only active when writing to native addon nodes.
+  /// </summary>
+  private bool ScenarioTreeShouldRemoveDiacritics =>
+      this.ScenarioTreeWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
+  ///     Gets whether the ToDoList family should strip diacritics.
+  ///     Only active when writing to native addon nodes.
+  /// </summary>
+  private bool ToDoListShouldRemoveDiacritics =>
+      this.ToDoListWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
+  ///     Gets whether the RecommendList family should strip diacritics.
+  ///     Only active when writing to native addon nodes.
+  /// </summary>
+  private bool RecommendListShouldRemoveDiacritics =>
+      this.RecommendListWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
+  ///     Gets whether the AreaMap family should strip diacritics.
+  ///     Only active when writing to native addon nodes.
+  /// </summary>
+  private bool AreaMapShouldRemoveDiacritics =>
+      this.AreaMapWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
   ///     Gets whether any quest family is currently configured to render hover
   ///     tooltips.
   /// </summary>

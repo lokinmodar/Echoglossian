@@ -465,7 +465,7 @@ public partial class Echoglossian
             }
         }
 
-        if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
+        if (this.JournalShouldRemoveDiacritics)
         {
             translatedQuestName = this.RemoveDiacritics(
                 translatedQuestName,
@@ -571,28 +571,13 @@ public partial class Echoglossian
                 var questCanvasNode =
                     journalBox->UldManager.SearchNodeById(14);
                 var questBodyHoverKey = questCanvasNode != null
-                    ? $"JournalDetail-QuestBody-{(nint)questCanvasNode:X}-{questProgressSnapshot?.CacheKey ?? questName}"
-                    : $"JournalDetail-QuestBody-{(nint)descriptionNode:X}-{questProgressSnapshot?.CacheKey ?? questName}";
+                    ? $"JournalDetail-QuestBody-{(nint)questCanvasNode:X}"
+                    : $"JournalDetail-QuestBody-{(nint)descriptionNode:X}";
                 PluginLog.Debug(
                     $"[JournalDetail] body candidate key='{questBodyHoverKey}' mode={this.configuration.JournalTranslationDisplayMode} " +
                     $"hover={this.JournalUsesHoverTooltips} native={this.JournalWritesNativeTranslation} swap={this.JournalHoverShowsOriginal} " +
                     $"summaryCount={summaries.Count} progressSections={translatedQuestProgressSections.Count} " +
                     $"trigger={(questCanvasNode != null ? "JournalCanvasComponentNode14" : "descriptionFallback")}");
-                if (this.TryGetQuestPlateHoverBounds(
-                        questCanvasNode,
-                        out var bodyTopLeft,
-                        out var bodyBottomRight))
-                {
-                    this.RegisterTranslatedHoverTooltip(
-                        questBodyHoverKey,
-                        bodyTopLeft,
-                        bodyBottomRight,
-                        originalQuestBody,
-                        translatedQuestBody,
-                        swapEnabled: this.JournalHoverShowsOriginal,
-                        forceEnabled: true);
-                }
-                else
                 {
                     var bodyLeft = descriptionNode->ScreenX;
                     var bodyTop = descriptionNode->ScreenY;
@@ -707,18 +692,38 @@ public partial class Echoglossian
                 out _,
                 (nint)objectiveNode->NodeText.StringPtr.Value);
             var questPlate = this.FormatQuestPlate(questName, questMessage);
+
+            // Resolve quest progress before the DB lookup so we can attach the
+            // content hash to the quest plate. FindQuestPlate uses the hash to
+            // distinguish a game-version-only change (translation still valid,
+            // just bump the version) from a content change (retranslate).
+            QuestProgressSnapshot? questProgressSnapshot = null;
+            if (QuestProgressResolver.TryResolveQuestProgress(
+                    questPlate,
+                    out var resolvedQuestProgressSnapshot))
+            {
+                questProgressSnapshot = resolvedQuestProgressSnapshot;
+                questPlate.SourceContentHash = resolvedQuestProgressSnapshot.ContentHash;
+            }
+
             // TODO: Journal lookups still depend on exact raw text matching, so
             // sub-entries like objectives and summaries can trigger their own
             // requests even when the main quest row already exists in the DB.
             // If that stays noisy, move this to a normalized or quest-identity
             // keyed cache instead of raw string equality.
             var foundQuestPlate = this.FindQuestPlate(questPlate);
-            QuestProgressSnapshot? questProgressSnapshot = null;
-            if (QuestProgressResolver.TryResolveQuestProgress(
-                    foundQuestPlate ?? questPlate,
-                    out var resolvedQuestProgressSnapshot))
+
+            // Translation is still valid but was stored under an older game
+            // version — bump it in-place so future lookups match.
+            if (foundQuestPlate != null &&
+                !string.Equals(
+                    foundQuestPlate.GameVersion,
+                    GetGameVersion(),
+                    StringComparison.Ordinal))
             {
-                questProgressSnapshot = resolvedQuestProgressSnapshot;
+                this.UpdateQuestPlateGameVersion(
+                    foundQuestPlate.Id,
+                    GetGameVersion());
             }
 
             PluginLog.Debug(
@@ -782,7 +787,25 @@ public partial class Echoglossian
                 out _,
                 (nint)descriptionNode->NodeText.StringPtr.Value);
             var questPlate = this.FormatQuestPlate(questName, questMessage);
+            if (QuestProgressResolver.TryResolveQuestProgress(
+                    questPlate,
+                    out var resolvedCompletedSnapshot))
+            {
+                questPlate.SourceContentHash = resolvedCompletedSnapshot.ContentHash;
+            }
+
             var foundQuestPlate = this.FindQuestPlate(questPlate);
+            if (foundQuestPlate != null &&
+                !string.Equals(
+                    foundQuestPlate.GameVersion,
+                    GetGameVersion(),
+                    StringComparison.Ordinal))
+            {
+                this.UpdateQuestPlateGameVersion(
+                    foundQuestPlate.Id,
+                    GetGameVersion());
+            }
+
 #if DEBUG
             // PluginLog.Debug($"Quest name: {questName}");
             // PluginLog.Debug($"Quest message: {questMessage}");
@@ -859,7 +882,7 @@ public partial class Echoglossian
                 }
             }
 
-            if (this.configuration.RemoveDiacriticsWhenUsingReplacementQuest)
+            if (this.JournalShouldRemoveDiacritics)
             {
                 translatedQuestName = this.RemoveDiacritics(
                     translatedQuestName,
@@ -1081,8 +1104,7 @@ public partial class Echoglossian
                     //     $"Name from database: {questName->NodeText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
                     var translQuestName = foundQuestPlate.TranslatedQuestName;
-                    if (this.configuration
-                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    if (this.JournalShouldRemoveDiacritics)
                     {
                         translQuestName = this.RemoveDiacritics(
                             foundQuestPlate.TranslatedQuestName,
@@ -1149,8 +1171,7 @@ public partial class Echoglossian
                     // PluginLog.Debug(
                     //     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
-                if (this.configuration
-                    .RemoveDiacriticsWhenUsingReplacementQuest)
+                if (this.JournalShouldRemoveDiacritics)
                 {
                     translatedNameText = this.RemoveDiacritics(
                         translatedNameText,

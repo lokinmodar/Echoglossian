@@ -94,6 +94,7 @@ This probe gives a direct way to inspect the quest data sources before deciding 
 - `NativeUI/Helpers/QuestProbeCommandHelpers.cs`
 - `EFCoreSqlite/Models/Journal/QuestPlate.cs`
 - `EFCoreSqlite/Migrations/20260409193000_RecreateQuestPlateTable.cs`
+- [Quest Sheet Acquisition Pipeline](quest-sheet-acquisition-pipeline.md)
 
 ## Notes
 

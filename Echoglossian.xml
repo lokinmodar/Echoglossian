@@ -790,15 +790,41 @@
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+             <summary>
+                 Finds and returns a QuestPlate from the database.
+            
+                 Lookup is content-aware: GameVersion is not used as a filter so that
+                 existing translations survive game patches. When a row is found and its
+                 <see cref="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SourceContentHash" /> matches the hash on the
+                 incoming plate, the translation is still valid. In that case the caller
+                 should call <see cref="M:Echoglossian.Echoglossian.UpdateQuestPlateGameVersion(System.Int32,System.String)" /> to bump the
+                 GameVersion field without retranslating. When the hashes differ (content
+                 changed in a patch), this method returns null, signalling that
+                 retranslation is needed.
+                 Rows with no stored hash (legacy rows) are treated as hash-mismatch and
+                 will be retranslated once so they gain a hash on the next save.
+             </summary>
+             <param name="questPlate">Formatted QuestPlate to be found in the database.</param>
+             <returns>
+                 The matching plate when translation is still valid, or null when a new
+                 translation run is required.
+             </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateQuestPlateGameVersion(System.Int32,System.String)">
             <summary>
-                Finds and returns a QuestPlate from the database.
+                Updates only the <see cref="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.GameVersion" /> and
+                <see cref="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.UpdatedDate" /> of an existing row without touching
+                any translated content. Call this when
+                <see cref="M:Echoglossian.Echoglossian.FindQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)" /> returned a non-null plate (content hash
+                matched), meaning the existing translation is still valid but was stored
+                under an older game version.
             </summary>
-            <param name="questPlate">Formatted QuestPlate to be found in the database</param>
-            <returns></returns>
+            <param name="id">Primary key of the row to update.</param>
+            <param name="newGameVersion">Current game version string.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.FindQuestPlateByName(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
-              Finds a QuestPlate by its name and translation language.
+                Finds a QuestPlate by its name and translation language.
             </summary>
             <param name="questPlate">Formatted QuestPlate to be found in the database</param>
             <returns></returns>
@@ -1544,13 +1570,21 @@
             <param name="questRow">The resolved Lumina quest row.</param>
             <returns>The quest text sheet name, if it can be derived.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestIdText(Lumina.Excel.Sheets.Quest)">
+        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
             <summary>
                 Resolves the quest row id as text through reflection so the probe
                 stays compatible with generated sheet shapes.
             </summary>
             <param name="questRow">The Lumina quest row.</param>
             <returns>The quest row id as text, or an empty string if unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest sheet identifier used to mount the quest text
+                sheet path.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.QuestModeUsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode)">
             <summary>
@@ -1692,6 +1726,50 @@
             <summary>
                 Gets whether the JournalResult family hover tooltips should show the
                 original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalShouldRemoveDiacritics">
+            <summary>
+                Gets whether the Journal family should strip diacritics from translated
+                text before use. Diacritics removal is only meaningful when translated
+                text is written directly into native addon nodes, because our own
+                overlays and tooltips always use fonts that support every diacritic.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalAcceptShouldRemoveDiacritics">
+            <summary>
+                Gets whether the JournalAccept family should strip diacritics.
+                Only active when writing to native addon nodes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalResultShouldRemoveDiacritics">
+            <summary>
+                Gets whether the JournalResult family should strip diacritics.
+                Only active when writing to native addon nodes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ScenarioTreeShouldRemoveDiacritics">
+            <summary>
+                Gets whether the ScenarioTree family should strip diacritics.
+                Only active when writing to native addon nodes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ToDoListShouldRemoveDiacritics">
+            <summary>
+                Gets whether the ToDoList family should strip diacritics.
+                Only active when writing to native addon nodes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.RecommendListShouldRemoveDiacritics">
+            <summary>
+                Gets whether the RecommendList family should strip diacritics.
+                Only active when writing to native addon nodes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.AreaMapShouldRemoveDiacritics">
+            <summary>
+                Gets whether the AreaMap family should strip diacritics.
+                Only active when writing to native addon nodes.
             </summary>
         </member>
         <member name="P:Echoglossian.Echoglossian.ShouldDrawHoverTooltips">
@@ -2407,6 +2485,30 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSelectStringOptions.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddQuestSheetFields">
+            <summary>
+                Adds the quest text sheet name and structured translated-row columns to questplates.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestSheetFields.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestSheetFields.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddSourceContentHash">
+            <summary>
+                Adds the SourceContentHash column to questplates for content-aware
+                retranslation detection: translations can be reused across game patches
+                when the quest text has not changed.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSourceContentHash.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSourceContentHash.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
                 Represents a translation entity for action tooltips in the database.
@@ -2908,6 +3010,41 @@
                 Gets or sets the game version the quest plate was captured from.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.QuestTextSheetName">
+            <summary>
+                Gets or sets the canonical quest text sheet path (e.g. "quest/043/AktKmb114_04393").
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SourceContentHash">
+            <summary>
+                Gets or sets the content fingerprint of the quest's translatable rows
+                (SEQ + TODO + SYSTEM) at the time the snapshot was last saved.
+                Used to detect whether quest text actually changed between game patches
+                so that translations can be reused without retranslating.
+                A null or empty value means the row predates content-hash tracking and
+                should be retranslated conservatively.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedObjectivesAsText">
+            <summary>
+                Gets or sets the translated TODO rows serialized as JSON.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSummariesAsText">
+            <summary>
+                Gets or sets the translated SEQ rows serialized as JSON.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SystemRowsAsText">
+            <summary>
+                Gets or sets the original SYSTEM (cinematic caption) rows serialized as JSON.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSystemRowsAsText">
+            <summary>
+                Gets or sets the translated SYSTEM rows serialized as JSON.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.Objectives">
             <summary>
                 Gets lazily loads Objectives from text if needed.
@@ -2918,10 +3055,29 @@
                 Gets lazily loads Summaries from text if needed.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedObjectives">
+            <summary>
+                Gets or sets the translated TODO row dictionary.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSummaries">
+            <summary>
+                Gets or sets the translated SEQ row dictionary.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SystemRows">
+            <summary>
+                Gets or sets the original SYSTEM row dictionary.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSystemRows">
+            <summary>
+                Gets or sets the translated SYSTEM row dictionary.
+            </summary>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.UpdateFieldsAsText(System.Boolean)">
             <summary>
-                Updates the ObjectivesAsText and SummariesAsText fields based on their
-                dictionaries.
+                Updates the serialized text fields from their in-memory dictionaries.
             </summary>
             <param name="prettyPrint">Should it be pretty printed?.</param>
         </member>
@@ -7210,6 +7366,27 @@
         <member name="M:Echoglossian.ToDoItem.ToString">
             <inheritdoc/>
         </member>
+        <member name="T:Echoglossian.QuestContentHash">
+             <summary>
+                 Computes a stable content fingerprint for a quest text sheet snapshot.
+                 Used to detect whether a quest's translatable text actually changed between
+                 game patches so that translations can be reused without retranslating.
+            
+                 Hash input: all SEQ, TODO, and SYSTEM rows concatenated as
+                 "{key}={value}\n" pairs sorted by key. Result is the first 16 hex
+                 characters of the SHA-256 digest (64-bit fingerprint — sufficient for
+                 change detection, not a security primitive).
+             </summary>
+        </member>
+        <member name="M:Echoglossian.QuestContentHash.Compute(System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry},System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry},System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry})">
+            <summary>
+                Computes the content hash from classified quest text rows.
+            </summary>
+            <param name="seqRows">SEQ (journal summary) rows.</param>
+            <param name="todoRows">TODO (objective) rows.</param>
+            <param name="systemRows">SYSTEM (cinematic caption) rows.</param>
+            <returns>A 16-character lowercase hex string fingerprint.</returns>
+        </member>
         <member name="T:Echoglossian.QuestLuminaResolver">
             <summary>
                 Resolves quest metadata from Lumina so quest records can be enriched
@@ -7282,9 +7459,12 @@
             <param name="QuestSequence">The live quest sequence.</param>
             <param name="QuestName">The quest name resolved from Lumina.</param>
             <param name="QuestSheetName">The text sheet name used for the quest.</param>
-            <param name="QuestSteps">The quest step texts preserved as structured strings.</param>
+            <param name="QuestSteps">The TODO row texts (active objectives).</param>
+            <param name="QuestSeqTexts">The SEQ row texts (journal summaries per phase).</param>
+            <param name="QuestSystemTexts">The SYSTEM row texts (cinematic captions).</param>
+            <param name="ContentHash">A stable content fingerprint of all translatable row texts.</param>
         </member>
-        <member name="M:Echoglossian.QuestProgressSnapshot.#ctor(System.UInt32,System.Byte,System.String,System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry})">
+        <member name="M:Echoglossian.QuestProgressSnapshot.#ctor(System.UInt32,System.Byte,System.String,System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry},System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry},System.Collections.Generic.IReadOnlyList{Echoglossian.QuestProgressEntry},System.String)">
             <summary>
                 Represents a quest progression snapshot derived from Lumina and the
                 live quest manager.
@@ -7293,7 +7473,10 @@
             <param name="QuestSequence">The live quest sequence.</param>
             <param name="QuestName">The quest name resolved from Lumina.</param>
             <param name="QuestSheetName">The text sheet name used for the quest.</param>
-            <param name="QuestSteps">The quest step texts preserved as structured strings.</param>
+            <param name="QuestSteps">The TODO row texts (active objectives).</param>
+            <param name="QuestSeqTexts">The SEQ row texts (journal summaries per phase).</param>
+            <param name="QuestSystemTexts">The SYSTEM row texts (cinematic captions).</param>
+            <param name="ContentHash">A stable content fingerprint of all translatable row texts.</param>
         </member>
         <member name="P:Echoglossian.QuestProgressSnapshot.QuestId">
             <summary>The quest identifier.</summary>
@@ -7308,7 +7491,16 @@
             <summary>The text sheet name used for the quest.</summary>
         </member>
         <member name="P:Echoglossian.QuestProgressSnapshot.QuestSteps">
-            <summary>The quest step texts preserved as structured strings.</summary>
+            <summary>The TODO row texts (active objectives).</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.QuestSeqTexts">
+            <summary>The SEQ row texts (journal summaries per phase).</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.QuestSystemTexts">
+            <summary>The SYSTEM row texts (cinematic captions).</summary>
+        </member>
+        <member name="P:Echoglossian.QuestProgressSnapshot.ContentHash">
+            <summary>A stable content fingerprint of all translatable row texts.</summary>
         </member>
         <member name="P:Echoglossian.QuestProgressSnapshot.CacheKey">
             <summary>

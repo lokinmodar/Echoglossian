@@ -122,8 +122,7 @@ public partial class Echoglossian
                     var translatedQuestName =
                         foundQuestPlate.TranslatedQuestName;
 
-                    if (this.configuration
-                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    if (this.RecommendListShouldRemoveDiacritics)
                     {
                         translatedQuestName = this.RemoveDiacritics(
                             translatedQuestName,
@@ -243,7 +242,9 @@ public partial class Echoglossian
                             $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             cachedHoverTranslation.OriginalText,
-                            cachedHoverTranslation.TranslatedText);
+                            cachedHoverTranslation.TranslatedText,
+                            swapEnabled: this.RecommendListHoverShowsOriginal,
+                            forceEnabled: true, denseHitbox: true);
                     }
                     else if (this.RecommendListUsesHoverTooltips)
                     {
@@ -251,7 +252,9 @@ public partial class Echoglossian
                             $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             translatedQuestSnapshot.OriginalText,
-                            translatedQuestSnapshot.AppliedText);
+                            translatedQuestSnapshot.AppliedText,
+                            swapEnabled: this.RecommendListHoverShowsOriginal,
+                            forceEnabled: true, denseHitbox: true);
                     }
 
                     continue;
@@ -264,8 +267,7 @@ public partial class Echoglossian
                 if (foundQuestPlate != null)
                 {
                     var translatedQuestName = foundQuestPlate.TranslatedQuestName;
-                    if (this.configuration
-                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    if (this.RecommendListShouldRemoveDiacritics)
                     {
                         translatedQuestName = this.RemoveDiacritics(
                             translatedQuestName,
@@ -287,7 +289,9 @@ public partial class Echoglossian
                             $"RecommendList-{questNameNodeKey:X}",
                             questName,
                             questNameText,
-                            translatedQuestName);
+                            translatedQuestName,
+                            swapEnabled: this.RecommendListHoverShowsOriginal,
+                            forceEnabled: true, denseHitbox: true);
                     }
 
                     continue;
@@ -299,8 +303,7 @@ public partial class Echoglossian
                         out var cachedTranslatedName))
                 {
                     var translatedNameText = cachedTranslatedName;
-                    if (this.configuration
-                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    if (this.RecommendListShouldRemoveDiacritics)
                     {
                         translatedNameText = this.RemoveDiacritics(
                             translatedNameText,

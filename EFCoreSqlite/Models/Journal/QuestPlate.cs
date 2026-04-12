@@ -15,6 +15,14 @@ public class QuestPlate
 
     [NotMapped] private Dictionary<string, string>? summaries;
 
+    [NotMapped] private Dictionary<string, string>? translatedObjectives;
+
+    [NotMapped] private Dictionary<string, string>? translatedSummaries;
+
+    [NotMapped] private Dictionary<string, string>? systemRows;
+
+    [NotMapped] private Dictionary<string, string>? translatedSystemRows;
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="QuestPlate" /> class.
     /// </summary>
@@ -55,6 +63,10 @@ public class QuestPlate
         this.UpdatedDate = updatedDate;
         this.objectives = new Dictionary<string, string>();
         this.summaries = new Dictionary<string, string>();
+        this.translatedObjectives = new Dictionary<string, string>();
+        this.translatedSummaries = new Dictionary<string, string>();
+        this.systemRows = new Dictionary<string, string>();
+        this.translatedSystemRows = new Dictionary<string, string>();
     }
 
     [Key] public int Id { get; set; }
@@ -84,9 +96,44 @@ public class QuestPlate
 
     public DateTime? UpdatedDate { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the canonical quest text sheet path (e.g. "quest/043/AktKmb114_04393").
+    /// </summary>
+    public string? QuestTextSheetName { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the content fingerprint of the quest's translatable rows
+    ///     (SEQ + TODO + SYSTEM) at the time the snapshot was last saved.
+    ///     Used to detect whether quest text actually changed between game patches
+    ///     so that translations can be reused without retranslating.
+    ///     A null or empty value means the row predates content-hash tracking and
+    ///     should be retranslated conservatively.
+    /// </summary>
+    public string? SourceContentHash { get; set; }
+
     public string? ObjectivesAsText { get; set; }
 
     public string? SummariesAsText { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the translated TODO rows serialized as JSON.
+    /// </summary>
+    public string? TranslatedObjectivesAsText { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the translated SEQ rows serialized as JSON.
+    /// </summary>
+    public string? TranslatedSummariesAsText { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the original SYSTEM (cinematic caption) rows serialized as JSON.
+    /// </summary>
+    public string? SystemRowsAsText { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the translated SYSTEM rows serialized as JSON.
+    /// </summary>
+    public string? TranslatedSystemRowsAsText { get; set; }
 
     /// <summary>
     ///     Gets lazily loads Objectives from text if needed.
@@ -121,14 +168,89 @@ public class QuestPlate
     }
 
     /// <summary>
-    ///     Updates the ObjectivesAsText and SummariesAsText fields based on their
-    ///     dictionaries.
+    ///     Gets or sets the translated TODO row dictionary.
+    /// </summary>
+    [NotMapped]
+    public Dictionary<string, string> TranslatedObjectives
+    {
+        get
+        {
+            return this.translatedObjectives ??=
+                !string.IsNullOrEmpty(this.TranslatedObjectivesAsText)
+                    ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                          this.TranslatedObjectivesAsText) ??
+                      new Dictionary<string, string>()
+                    : new Dictionary<string, string>();
+        }
+        init => this.translatedObjectives = value;
+    }
+
+    /// <summary>
+    ///     Gets or sets the translated SEQ row dictionary.
+    /// </summary>
+    [NotMapped]
+    public Dictionary<string, string> TranslatedSummaries
+    {
+        get
+        {
+            return this.translatedSummaries ??=
+                !string.IsNullOrEmpty(this.TranslatedSummariesAsText)
+                    ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                          this.TranslatedSummariesAsText) ??
+                      new Dictionary<string, string>()
+                    : new Dictionary<string, string>();
+        }
+        init => this.translatedSummaries = value;
+    }
+
+    /// <summary>
+    ///     Gets or sets the original SYSTEM row dictionary.
+    /// </summary>
+    [NotMapped]
+    public Dictionary<string, string> SystemRows
+    {
+        get
+        {
+            return this.systemRows ??=
+                !string.IsNullOrEmpty(this.SystemRowsAsText)
+                    ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                          this.SystemRowsAsText) ??
+                      new Dictionary<string, string>()
+                    : new Dictionary<string, string>();
+        }
+        init => this.systemRows = value;
+    }
+
+    /// <summary>
+    ///     Gets or sets the translated SYSTEM row dictionary.
+    /// </summary>
+    [NotMapped]
+    public Dictionary<string, string> TranslatedSystemRows
+    {
+        get
+        {
+            return this.translatedSystemRows ??=
+                !string.IsNullOrEmpty(this.TranslatedSystemRowsAsText)
+                    ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                          this.TranslatedSystemRowsAsText) ??
+                      new Dictionary<string, string>()
+                    : new Dictionary<string, string>();
+        }
+        init => this.translatedSystemRows = value;
+    }
+
+    /// <summary>
+    ///     Updates the serialized text fields from their in-memory dictionaries.
     /// </summary>
     /// <param name="prettyPrint">Should it be pretty printed?.</param>
     public void UpdateFieldsAsText(bool prettyPrint = false)
     {
         this.ObjectivesAsText = string.Empty;
         this.SummariesAsText = string.Empty;
+        this.TranslatedObjectivesAsText = string.Empty;
+        this.TranslatedSummariesAsText = string.Empty;
+        this.SystemRowsAsText = string.Empty;
+        this.TranslatedSystemRowsAsText = string.Empty;
 
         if (this.objectives != null && this.objectives.Count != 0)
         {
@@ -141,6 +263,34 @@ public class QuestPlate
         {
             this.SummariesAsText = JsonConvert.SerializeObject(
                 this.summaries,
+                prettyPrint ? Formatting.Indented : Formatting.None);
+        }
+
+        if (this.translatedObjectives != null && this.translatedObjectives.Count != 0)
+        {
+            this.TranslatedObjectivesAsText = JsonConvert.SerializeObject(
+                this.translatedObjectives,
+                prettyPrint ? Formatting.Indented : Formatting.None);
+        }
+
+        if (this.translatedSummaries != null && this.translatedSummaries.Count != 0)
+        {
+            this.TranslatedSummariesAsText = JsonConvert.SerializeObject(
+                this.translatedSummaries,
+                prettyPrint ? Formatting.Indented : Formatting.None);
+        }
+
+        if (this.systemRows != null && this.systemRows.Count != 0)
+        {
+            this.SystemRowsAsText = JsonConvert.SerializeObject(
+                this.systemRows,
+                prettyPrint ? Formatting.Indented : Formatting.None);
+        }
+
+        if (this.translatedSystemRows != null && this.translatedSystemRows.Count != 0)
+        {
+            this.TranslatedSystemRowsAsText = JsonConvert.SerializeObject(
+                this.translatedSystemRows,
                 prettyPrint ? Formatting.Indented : Formatting.None);
         }
     }
@@ -160,12 +310,32 @@ public class QuestPlate
             ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
                 this.SummariesAsText) ?? new Dictionary<string, string>()
             : new Dictionary<string, string>();
+
+        this.translatedObjectives = !string.IsNullOrEmpty(this.TranslatedObjectivesAsText)
+            ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                this.TranslatedObjectivesAsText) ?? new Dictionary<string, string>()
+            : new Dictionary<string, string>();
+
+        this.translatedSummaries = !string.IsNullOrEmpty(this.TranslatedSummariesAsText)
+            ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                this.TranslatedSummariesAsText) ?? new Dictionary<string, string>()
+            : new Dictionary<string, string>();
+
+        this.systemRows = !string.IsNullOrEmpty(this.SystemRowsAsText)
+            ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                this.SystemRowsAsText) ?? new Dictionary<string, string>()
+            : new Dictionary<string, string>();
+
+        this.translatedSystemRows = !string.IsNullOrEmpty(this.TranslatedSystemRowsAsText)
+            ? JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                this.TranslatedSystemRowsAsText) ?? new Dictionary<string, string>()
+            : new Dictionary<string, string>();
     }
 
     /// <inheritdoc />
     public override string? ToString()
     {
         return
-            $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, GameVersion: {this.GameVersion}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.Objectives}, Summaries: {this.Summaries}";
+            $"Id: {this.Id}, QuestName: {this.QuestName}, QuestID: {this.QuestId}, Sheet: {this.QuestTextSheetName}, OriginalMsg: {this.OriginalQuestMessage}, OriginalLang: {this.OriginalLang}, TranslQuestName: {this.TranslatedQuestName}, TranslMsg: {this.TranslatedQuestMessage}, TransLang: {this.TranslationLang}, TranEngine: {this.TranslationEngine}, GameVersion: {this.GameVersion}, CreatedAt: {this.CreatedDate}, UpdatedAt: {this.UpdatedDate}, Objectives: {this.ObjectivesAsText}, Summaries: {this.SummariesAsText}, SystemRows: {this.SystemRowsAsText}";
     }
 }

@@ -47,8 +47,21 @@ public partial class Echoglossian
 
             if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                     questNameText,
-                    out _))
+                    out var cachedSnapshot))
             {
+                if (this.JournalResultUsesHoverTooltips)
+                {
+                    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+                        ->GetAddonByName("JournalResult");
+                    this.RegisterTranslatedHoverTooltip(
+                        $"JournalResult-{(nint)addon:X}",
+                        addon,
+                        questNameText,
+                        cachedSnapshot.AppliedText,
+                        swapEnabled: this.JournalResultHoverShowsOriginal,
+                        forceEnabled: true, denseHitbox: true);
+                }
+
                 return;
             }
 
@@ -61,8 +74,7 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
-                if (this.configuration
-                    .RemoveDiacriticsWhenUsingReplacementQuest)
+                if (this.JournalResultShouldRemoveDiacritics)
                 {
                     foundQuestPlate.TranslatedQuestName = this.RemoveDiacritics(
                         foundQuestPlate.TranslatedQuestName,
@@ -100,8 +112,7 @@ public partial class Echoglossian
                 PluginLog.Debug(
                     $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
-                if (this.configuration
-                    .RemoveDiacriticsWhenUsingReplacementQuest)
+                if (this.JournalResultShouldRemoveDiacritics)
                 {
                     translatedNameText = this.RemoveDiacritics(
                         translatedNameText,

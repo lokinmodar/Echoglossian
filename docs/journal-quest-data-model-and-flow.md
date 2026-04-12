@@ -121,6 +121,21 @@ These are used to avoid keying quest state only by the visible text.
 
 Repeated translations are suppressed through the shared cache/broker layer so repaint-heavy windows do not requeue the same work every frame.
 
+## Quest Sheet Acquisition Pipeline
+
+The detailed sheet-mounting process is documented separately in [Quest Sheet Acquisition Pipeline](quest-sheet-acquisition-pipeline.md).
+
+That companion document explains:
+
+- the difference between `Quest.RowId` and `Quest.Id`
+- how the quest text sheet path is derived
+- how raw quest rows are read as structured text
+- how live quest progress is layered on top of the mounted sheet
+
+The broader SeString and payload-preservation rules that apply to quests, item tooltips, and action tooltips are documented in [Structured Text Payload Pipeline](structured-text-payload-pipeline.md).
+
+Use that document as the memory reference when deciding whether a quest should be captured from UI, Lumina, or live quest state.
+
 ## Runtime Flow
 
 ```mermaid

@@ -20,11 +20,13 @@ public partial class Echoglossian
         string translatedText,
         string? progressKey = null)
     {
+#if DEBUG
         PluginLog.Debug(
             $"[ToDoList] tooltip candidate key='{(progressKey == null ? $"ToDoList-{indexI}-{indexJ}-{nodeId}" : $"ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}")}' " +
             $"index=({indexI},{indexJ}) nodeId={nodeId} progressKey='{progressKey ?? string.Empty}' " +
             $"mode={this.configuration.ToDoListTranslationDisplayMode} hover={this.ToDoListUsesHoverTooltips} " +
             $"native={this.ToDoListWritesNativeTranslation} swap={this.ToDoListHoverShowsOriginal}");
+#endif
 
         if (!this.ToDoListUsesHoverTooltips)
         {
@@ -60,9 +62,11 @@ public partial class Echoglossian
             return;
         }
 
+#if DEBUG
         PluginLog.Debug(
             $"[ToDoList] scan start mode={this.configuration.ToDoListTranslationDisplayMode} hover={this.ToDoListUsesHoverTooltips} " +
             $"native={this.ToDoListWritesNativeTranslation} swap={this.ToDoListHoverShowsOriginal} nodeCount={todoList->UldManager.NodeListCount}");
+#endif
 
         List<ToDoItem> questNamesToTranslate = [];
         List<ToDoItem> objectivesToTranslate = [];
@@ -130,16 +134,6 @@ public partial class Echoglossian
                 var originalStepText = MemoryHelper.ReadSeStringAsString(
                     out _,
                     (nint)originalStep.StringPtr.Value);
-                if (this.ToDoListUsesHoverTooltips)
-                {
-                    this.RegisterToDoTooltip(
-                        todoList,
-                        i,
-                        j,
-                        nodeID,
-                        originalStepText,
-                        originalStepText);
-                }
 
                 // don't translate unneeded levelquest information
                 if (nodeID == 4 && childrenNodeID == 8)
@@ -189,16 +183,20 @@ public partial class Echoglossian
 
         if (questNamesToTranslate.Count == 0)
         {
+#if DEBUG
             PluginLog.Debug(
                 $"[ToDoList] scan result questNames=0 objectives={objectivesToTranslate.Count} levelQuestObjectives={levelQuestObjectivesToTranslate.Count}");
+#endif
             return;
         }
 
         objectivesToTranslate.Reverse();
 
+#if DEBUG
         PluginLog.Debug(
             $"[ToDoList] scan result questNames={questNamesToTranslate.Count} objectives={objectivesToTranslate.Count} " +
             $"levelQuestObjectives={levelQuestObjectivesToTranslate.Count}");
+#endif
 
         this.TranslateTodoItems(
             questNamesToTranslate,
@@ -265,9 +263,6 @@ public partial class Echoglossian
                     objectives.AddRange(levelQuestObjectivesToTranslate);
                 }
 
-                var questPlate = this.FormatQuestPlate(
-                    quest.Text,
-                    string.Empty);
                 var questTodoProgressSnapshot = default(
                     QuestTodoProgressSnapshot?);
                 if (QuestTodoProgressResolver.TryResolveQuestTodoProgress(
@@ -280,11 +275,40 @@ public partial class Echoglossian
                 var questTodoProgressKey =
                     questTodoProgressSnapshot?.CacheKey ?? quest.Text;
 
-                // because sometimes the quest name translation is the same as the original name but the objectives are not
-                var questWithObjectives =
-                    $"{questTodoProgressKey}|{quest.Text}|{string.Join(",", objectives)}";
+                // If resolution failed, quest.Text may already be a translated
+                // name written to the UI node in a previous frame. Recover the
+                // original name via the per-quest reverse-translation mapping so
+                // identity resolution can be retried with the right input.
+                var effectiveQuestName = quest.Text;
+                if (questTodoProgressSnapshot == null &&
+                    QuestUiTranslationCache.TryGetAppliedSnapshot(
+                        quest.Text,
+                        out var reverseNameSnapshot) &&
+                    !string.Equals(
+                        reverseNameSnapshot.OriginalText,
+                        quest.Text,
+                        StringComparison.Ordinal))
+                {
+                    effectiveQuestName = reverseNameSnapshot.OriginalText;
+                    if (QuestTodoProgressResolver.TryResolveQuestTodoProgress(
+                            effectiveQuestName,
+                            out var recoveredTodoSnapshot))
+                    {
+                        questTodoProgressSnapshot = recoveredTodoSnapshot;
+                        questTodoProgressKey = recoveredTodoSnapshot.CacheKey;
+                    }
+                }
+
+                var questPlate = this.FormatQuestPlate(
+                    effectiveQuestName,
+                    string.Empty);
+
+                // Use the stable progress key as the short-circuit guard so
+                // that subsequent frames skip quests whose translation is already
+                // fully applied. The key is stable per quest phase and is stored
+                // in the Remember call at the end of each successful translation.
                 if (QuestUiTranslationCache.TryGetAppliedSnapshot(
-                        Sanitizer.Sanitize(questWithObjectives),
+                        questTodoProgressKey,
                         out _))
                 {
                     continue;
@@ -300,8 +324,7 @@ public partial class Echoglossian
 
                     var foundTranslatedQuestName =
                         foundQuestPlate.TranslatedQuestName;
-                    if (this.configuration
-                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    if (this.ToDoListShouldRemoveDiacritics)
                     {
                         foundTranslatedQuestName = this.RemoveDiacritics(
                             foundTranslatedQuestName,
@@ -324,10 +347,25 @@ public partial class Echoglossian
                         foundTranslatedQuestName,
                         questTodoProgressKey);
 
+                    var snapshotSteps = questTodoProgressSnapshot?.QuestProgress.QuestSteps;
+                    var objIdx = 0;
                     List<string> translatedStoredObjectives = new();
                     var hasPendingFoundObjectives = false;
                     foreach (var objective in objectives)
                     {
+                        // Use the Lumina step text and key when the snapshot is
+                        // available so the translation source is stable even if
+                        // the UI node already shows a previously applied string.
+                        var stepText = snapshotSteps != null &&
+                                       objIdx < snapshotSteps.Count
+                            ? snapshotSteps[objIdx].Text
+                            : objective.Text;
+                        var stepKey = snapshotSteps != null &&
+                                      objIdx < snapshotSteps.Count
+                            ? snapshotSteps[objIdx].KeyText
+                            : objective.Text;
+                        objIdx++;
+
                         if (objective.Text == EmptyObjective)
                         {
                             translatedStoredObjectives.Add(EmptyObjective);
@@ -342,18 +380,31 @@ public partial class Echoglossian
                             continue;
                         }
 
-                        if (foundQuestPlate.Objectives.TryGetValue(
-                                objective.Text,
-                                out var storedObjectiveText))
+                        // Look up by stable Lumina key first, then fall back to
+                        // the legacy UI-text key for backward compatibility.
+                        string? storedObjectiveText = null;
+                        if (foundQuestPlate.TranslatedObjectives.TryGetValue(
+                                stepKey,
+                                out var byKey))
+                        {
+                            storedObjectiveText = byKey;
+                        }
+                        else if (foundQuestPlate.Objectives.TryGetValue(
+                                     stepText,
+                                     out var byLegacy))
+                        {
+                            storedObjectiveText = byLegacy;
+                        }
+
+                        if (storedObjectiveText != null)
                         {
 #if DEBUG
                             // PluginLog.Debug(
-                            //     $"Objective from database: {objective.Text} {storedObjectiveText}");
+                            //     $"Objective from database: {stepText} {storedObjectiveText}");
 #endif
                             translatedStoredObjectives.Add(storedObjectiveText);
 
-                            if (this.configuration
-                                .RemoveDiacriticsWhenUsingReplacementQuest)
+                            if (this.ToDoListShouldRemoveDiacritics)
                             {
                                 storedObjectiveText = this.RemoveDiacritics(
                                     storedObjectiveText,
@@ -382,21 +433,22 @@ public partial class Echoglossian
                         }
 
                         var objectiveCacheKey =
-                            $"ToDoListObjective|{questTodoProgressKey}|{objective.Text}";
+                            $"ToDoListObjective|{questTodoProgressKey}|{stepKey}";
                         if (!this.TryGetQueuedTranslation(
                                 objectiveCacheKey,
                                 out var translatedQuestObjective))
                         {
                             this.QueueTranslation(
                                 objectiveCacheKey,
-                                () => this.Translate(objective.Text),
+                                () => this.Translate(stepText),
                                 translatedObjectiveText =>
                                 {
                                     var questPlateToUpdate =
                                         foundQuestPlate.Clone();
+                                    questPlateToUpdate.TranslatedObjectives[
+                                        stepKey] = translatedObjectiveText;
                                     questPlateToUpdate.Objectives[
-                                        objective.Text] =
-                                        translatedObjectiveText;
+                                        stepText] = translatedObjectiveText;
                                     questPlateToUpdate.UpdatedDate =
                                         DateTime.Now;
                                     this.UpdateQuestPlate(
@@ -405,21 +457,23 @@ public partial class Echoglossian
                             hasPendingFoundObjectives = true;
                             continue;
                         }
+                        foundQuestPlate.TranslatedObjectives.TryAdd(
+                            stepKey,
+                            translatedQuestObjective);
                         foundQuestPlate.Objectives.TryAdd(
-                            objective.Text,
+                            stepText,
                             translatedQuestObjective);
                         translatedStoredObjectives.Add(
                             translatedQuestObjective);
                         // PluginLog.Debug(
-                        //     $"Objective translated: {objective.Text} {translatedQuestObjective}");
+                        //     $"Objective translated: {stepText} {translatedQuestObjective}");
                         var resultUpdate =
                             this.UpdateQuestPlate(foundQuestPlate);
 #if DEBUG
                         // PluginLog.Debug(
                         //     $"Using QuestPlate Replace - QuestPlate DB Update operation result: {resultUpdate}");
 #endif
-                        if (this.configuration
-                            .RemoveDiacriticsWhenUsingReplacementQuest)
+                        if (this.ToDoListShouldRemoveDiacritics)
                         {
                             translatedQuestObjective = this.RemoveDiacritics(
                                 translatedQuestObjective,
@@ -447,30 +501,28 @@ public partial class Echoglossian
                         continue;
                     }
 
-                    // because sometimes the quest name translation is the same as the original name but the objectives are not
-                    var translatedStoredQuestWithObjectives =
-                        foundQuestPlate.TranslatedQuestName +
-                        string.Join<string>(",", translatedStoredObjectives);
+                    // Mark the stable progress key as fully processed so
+                    // subsequent frames skip this quest without re-running.
                     QuestUiTranslationCache.Remember(
-                        $"{questTodoProgressKey}|{quest.Text}",
-                        Sanitizer.Sanitize(translatedStoredQuestWithObjectives));
+                        questTodoProgressKey,
+                        questTodoProgressKey);
 
                     continue;
                 }
 
                 var questNameCacheKey =
-                    $"ToDoListQuest|{questTodoProgressKey}|{quest.Text}";
+                    $"ToDoListQuest|{questTodoProgressKey}|{effectiveQuestName}";
                 if (!this.TryGetQueuedTranslation(
                         questNameCacheKey,
                         out var translatedNameText))
                 {
                     this.QueueTranslation(
                         questNameCacheKey,
-                        () => this.Translate(quest.Text),
+                        () => this.Translate(effectiveQuestName),
                         translatedQuestName =>
                         {
                             var translatedQuestPlate = new QuestPlate(
-                                quest.Text,
+                                effectiveQuestName,
                                 string.Empty,
                                 ClientStateInterface.ClientLanguage.Humanize(),
                                 translatedQuestName,
@@ -497,7 +549,7 @@ public partial class Echoglossian
 #endif
                 var storedTranslatedNameText = translatedNameText;
                 QuestPlate translatedQuestPlate = new(
-                    quest.Text,
+                    effectiveQuestName,
                     string.Empty,
                     ClientStateInterface.ClientLanguage.Humanize(),
                     storedTranslatedNameText,
@@ -509,8 +561,7 @@ public partial class Echoglossian
                     DateTime.Now,
                     GetGameVersion());
 
-                if (this.configuration
-                    .RemoveDiacriticsWhenUsingReplacementQuest)
+                if (this.ToDoListShouldRemoveDiacritics)
                 {
                     translatedNameText = this.RemoveDiacritics(
                         translatedNameText,
@@ -532,11 +583,30 @@ public partial class Echoglossian
                     quest.Text,
                     translatedNameText,
                     questTodoProgressKey);
+                // Store the per-quest reverse mapping so that if the UI node
+                // is mutated and shows translated text on the next frame, the
+                // original name can be recovered for identity re-resolution.
+                QuestUiTranslationCache.Remember(
+                    effectiveQuestName,
+                    storedTranslatedNameText);
 
+                var newSnapshotSteps =
+                    questTodoProgressSnapshot?.QuestProgress.QuestSteps;
+                var newObjIdx = 0;
                 List<string> translatedObjectives = new();
                 var hasPendingNewObjectives = false;
                 foreach (var objective in objectives)
                 {
+                    var newStepText = newSnapshotSteps != null &&
+                                      newObjIdx < newSnapshotSteps.Count
+                        ? newSnapshotSteps[newObjIdx].Text
+                        : objective.Text;
+                    var newStepKey = newSnapshotSteps != null &&
+                                     newObjIdx < newSnapshotSteps.Count
+                        ? newSnapshotSteps[newObjIdx].KeyText
+                        : objective.Text;
+                    newObjIdx++;
+
                     if (objective.Text == EmptyObjective)
                     {
                         translatedObjectives.Add(EmptyObjective);
@@ -552,25 +622,25 @@ public partial class Echoglossian
                     }
 
                     var objectiveCacheKey =
-                        $"ToDoListObjective|{questTodoProgressKey}|{objective.Text}";
+                        $"ToDoListObjective|{questTodoProgressKey}|{newStepKey}";
                     if (!this.TryGetQueuedTranslation(
                             objectiveCacheKey,
                             out var translatedObjectiveText))
                     {
                         this.QueueTranslation(
                             objectiveCacheKey,
-                            () => this.Translate(objective.Text),
+                            () => this.Translate(newStepText),
                             translatedQuestObjective =>
                             {
                                 var existingQuestPlate =
                                     this.FindQuestPlateByName(
                                         this.FormatQuestPlate(
-                                            storedTranslatedNameText,
+                                            effectiveQuestName,
                                             string.Empty));
                                 if (existingQuestPlate == null)
                                 {
                                     existingQuestPlate = new QuestPlate(
-                                        quest.Text,
+                                        effectiveQuestName,
                                         string.Empty,
                                         ClientStateInterface.ClientLanguage.Humanize(),
                                         storedTranslatedNameText,
@@ -583,8 +653,11 @@ public partial class Echoglossian
                                         GetGameVersion());
                                 }
 
+                                existingQuestPlate.TranslatedObjectives.TryAdd(
+                                    newStepKey,
+                                    translatedQuestObjective);
                                 existingQuestPlate.Objectives.TryAdd(
-                                    objective.Text,
+                                    newStepText,
                                     translatedQuestObjective);
                                 var result = existingQuestPlate.Id == 0
                                     ? this.InsertQuestPlate(existingQuestPlate)
@@ -603,12 +676,14 @@ public partial class Echoglossian
                     //     $"Objective translated: {translatedObjectiveText}");
 #endif
                     translatedObjectives.Add(translatedObjectiveText);
+                    translatedQuestPlate.TranslatedObjectives.TryAdd(
+                        newStepKey,
+                        translatedObjectiveText);
                     translatedQuestPlate.Objectives.TryAdd(
-                        objective.Text,
+                        newStepText,
                         translatedObjectiveText);
 
-                    if (this.configuration
-                        .RemoveDiacriticsWhenUsingReplacementQuest)
+                    if (this.ToDoListShouldRemoveDiacritics)
                     {
                         translatedObjectiveText = this.RemoveDiacritics(
                             translatedObjectiveText,
@@ -643,14 +718,10 @@ public partial class Echoglossian
                     continue;
                 }
 
-                // because sometimes the quest name translation is the same as the original name but the objectives are not
-                var translatedQuestWithObjectives = translatedNameText +
-                                                    string.Join<string>(
-                                                        ",",
-                                                        translatedObjectives);
+                // Mark the stable progress key as fully processed.
                 QuestUiTranslationCache.Remember(
-                    $"{questTodoProgressKey}|{quest.Text}",
-                    Sanitizer.Sanitize(translatedQuestWithObjectives));
+                    questTodoProgressKey,
+                    questTodoProgressKey);
             }
         }
         catch (Exception e)
