@@ -196,9 +196,16 @@ public partial class Echoglossian
 
         if (this.configuration.TranslateJournalResult)
         {
-            this.registeredAddonHandlers.Add(
-                    (AddonName: "JournalResult",
-                            Handler: new JournalResultHandler(questAddonDependencies)));
+          this.registeredAddonHandlers.Add(
+              (AddonName: "JournalResult",
+                  Handler: new JournalResultHandler(questAddonDependencies)));
+        }
+
+        if (this.configuration.TranslateScenarioTree)
+        {
+          this.registeredAddonHandlers.Add(
+              (AddonName: "ScenarioTree",
+                  Handler: new ScenarioTreeHandler(questAddonDependencies)));
         }
 
     if (this.configuration.TranslateAreaMap)
@@ -357,18 +364,6 @@ public partial class Echoglossian
           AddonEvent.PreRequestedUpdate,
           "JournalDetail",
           this.UiJournalDetailHandler);
-    }
-
-    if (this.configuration.TranslateScenarioTree)
-    {
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRefresh,
-          "ScenarioTree",
-          this.UiScenarioTreeHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "ScenarioTree",
-          this.UiScenarioTreeHandler);
     }
 
     if (this.configuration.TranslateToDoList)

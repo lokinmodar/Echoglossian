@@ -562,6 +562,36 @@ Move the next smallest quest handler into `NativeUI/AddonHandlers/Quest/` using 
 
 ---
 
+## Milestone — quest ScenarioTree migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added `NativeUI/AddonHandlers/Quest/ScenarioTreeHandler.cs` and moved the ScenarioTree capture logic, including its quest-progress helper, out of the legacy partial class path.
+- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so ScenarioTree now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
+- Removed the legacy ScenarioTree listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiScenarioTreeHandler.cs`.
+
+### Why it changed
+
+ScenarioTree was the first quest surface that depended on live progress resolution, so it was the right checkpoint to prove the standalone quest-handler pattern still works when the addon needs multiple quest-name refreshes per event.
+
+The handler still follows the same runtime behavior:
+
+- resolve quest progress through `QuestTodoProgressResolver`
+- reuse the quest translation cache and queue broker
+- write native text only when the configured display mode allows it
+- register hover tooltips through the shared quest tooltip path
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+
+### Next step
+
+Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and standalone registration pattern.
+
+---
+
 ## Milestone — quest JournalResult migrated to standalone quest handler (April 12, 2026)
 
 ### What changed

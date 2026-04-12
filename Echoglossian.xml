@@ -4874,6 +4874,55 @@
             </param>
             <returns><c>true</c> when normalization should be applied.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler">
+            <summary>
+                Handles the ScenarioTree quest addon runtime inside the standalone
+                quest-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler" /> class.
+            </summary>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeUsesHoverTooltips">
+            <summary>
+                Gets whether the ScenarioTree family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeWritesNativeTranslation">
+            <summary>
+                Gets whether the ScenarioTree family should write translated text into
+                the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverShowsOriginal">
+            <summary>
+                Gets whether the ScenarioTree family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeShouldRemoveDiacritics">
+            <summary>
+                Gets whether translated ScenarioTree text should be normalized before
+                being written into the native UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TranslateQuestOnScenarioTree(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.Int32)">
+            <summary>
+                Translates a single ScenarioTree quest entry.
+            </summary>
+            <param name="setupAtkValues">The addon payload.</param>
+            <param name="valueIndex">The quest-name value index to translate.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnScenarioTreeEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles ScenarioTree refresh and requested-update events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
             <summary>
                 Resolves the live MiniTalk bubble text-node instances that are currently
