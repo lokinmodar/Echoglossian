@@ -4622,6 +4622,13 @@
             <param name="text">The text to normalize.</param>
             <returns>The normalized quest text.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.DisableTranslationAccordingToState">
+            <summary>
+                Checks whether translation should be disabled for the current game
+                state.
+            </summary>
+            <returns>True when quest translation should be suppressed.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.FindQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
                 Resolves a quest plate using the full quest lookup.
@@ -4813,6 +4820,9 @@
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.NormalizeText">
             <summary>Gets or sets the quest text normalization delegate.</summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.DisableTranslationAccordingToState">
+            <summary>Gets or sets the global translation-state guard.</summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.TryGetQueuedTranslation">
             <summary>Gets or sets the queued translation lookup delegate.</summary>
         </member>
@@ -4873,6 +4883,65 @@
                 Whether the quest-family diacritics toggle is enabled.
             </param>
             <returns><c>true</c> when normalization should be applied.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler">
+            <summary>
+                Handles the RecommendList quest addon runtime inside the standalone
+                quest-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler" /> class.
+            </summary>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListUsesHoverTooltips">
+            <summary>
+                Gets whether the RecommendList family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListWritesNativeTranslation">
+            <summary>
+                Gets whether the RecommendList family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListHoverShowsOriginal">
+            <summary>
+                Gets whether the RecommendList family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListShouldRemoveDiacritics">
+            <summary>
+                Gets whether translated RecommendList text should be normalized before
+                being written into the native UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.UpdateRecommendList">
+            <summary>
+                Updates the visible quest names from the shared translation cache.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.OnRecommendListEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Performs the immediate RecommendList translation pass.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.OnRecommendListEventAsync(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Performs the delayed RecommendList translation pass.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TranslateRecommendListHandler">
+            <summary>
+                Runs the two-pass RecommendList translation flow.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler">
             <summary>

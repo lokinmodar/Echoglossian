@@ -94,6 +94,8 @@ Current status:
 - Step 2 (`JournalAccept`) is complete.
 - Step 3 (`JournalResult`) is complete.
 - Step 4 (`ScenarioTree`) is complete.
+- Step 5 (`RecommendList`) is complete.
+- Step 6 (`ToDoList`) is next.
 
 ### Phase 2: Migrate the smaller quest handlers first
 

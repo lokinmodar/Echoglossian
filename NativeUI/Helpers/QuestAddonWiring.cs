@@ -25,6 +25,7 @@ public partial class Echoglossian
       NormalizeText = text => this.RemoveDiacritics(
           text,
           this.SpecialCharsSupportedByGameFont),
+      DisableTranslationAccordingToState = this.DisableTranslationAccordingToState,
       TryGetQueuedTranslation = this.TryGetQueuedTranslation,
       QueueTranslation = this.QueueTranslation,
       QueueTranslationBatch = this.QueueTranslationBatch,

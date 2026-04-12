@@ -592,6 +592,67 @@ Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/
 
 ---
 
+## Milestone — quest RecommendList migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added `NativeUI/AddonHandlers/Quest/RecommendListHandler.cs` and moved the RecommendList two-pass translation logic out of the legacy partial class path.
+- Added the missing standalone registration path for RecommendList in `NativeUI/Helpers/AddonHandlerWiring.cs` so the documented `PostReceiveEvent`, `PreRequestedUpdate`, and delayed `PostRequestedUpdate` hooks now run through the new handler.
+- Removed the legacy `NativeUI/Handlers/UiRecommendListHandler.cs` partial file.
+
+### Why it changed
+
+RecommendList was the first quest window in the migration sequence that needed the two-pass queue/apply pattern plus a delayed refresh hook. Moving it last among the smaller quest windows kept the new quest bundle proven before restoring that more complex runtime path.
+
+The handler still follows the documented runtime behavior:
+
+- resolve quest names from the visible addon tree
+- reuse `QuestUiTranslationCache` and `QuestHoverTranslationCache`
+- apply queued translations and immediate DB hits the same way as before
+- honor the shared translation-state gate before starting the immediate pass
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+
+### Next step
+
+Move `ToDoList` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial file once the new handler is verified.
+
+---
+
+## Milestone — quest RecommendList migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added `NativeUI/AddonHandlers/Quest/RecommendListHandler.cs` and moved the RecommendList two-pass translation logic out of the legacy partial class path.
+- Added the missing standalone registration path for RecommendList in `NativeUI/Helpers/AddonHandlerWiring.cs` so the documented `PostReceiveEvent`, `PreRequestedUpdate`, and delayed `PostRequestedUpdate` hooks now run through the new handler.
+- Removed the legacy `NativeUI/Handlers/UiRecommendListHandler.cs` partial file.
+- Added the shared translation-state guard to the quest dependency bundle so RecommendList can preserve its existing state check in the new handler layout.
+
+### Why it changed
+
+RecommendList was the first quest window in the migration sequence that needed the two-pass queue/apply pattern plus a delayed refresh hook. Moving it after ScenarioTree kept the quest bundle proven before restoring that more complex runtime path.
+
+The handler still follows the documented runtime behavior:
+
+- resolve quest names from the visible addon tree
+- reuse `QuestUiTranslationCache` and `QuestHoverTranslationCache`
+- apply queued translations and immediate DB hits the same way as before
+- honor the shared translation-state gate before starting the immediate pass
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+
+### Next step
+
+Move `ToDoList` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial file once the new handler is verified.
+
+---
+
 ## Milestone — quest JournalResult migrated to standalone quest handler (April 12, 2026)
 
 ### What changed

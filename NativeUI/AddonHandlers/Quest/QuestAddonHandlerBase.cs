@@ -254,6 +254,16 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Checks whether translation should be disabled for the current game
+  ///     state.
+  /// </summary>
+  /// <returns>True when quest translation should be suppressed.</returns>
+  protected bool DisableTranslationAccordingToState()
+  {
+    return this.Dependencies.DisableTranslationAccordingToState();
+  }
+
+  /// <summary>
   ///     Resolves a quest plate using the full quest lookup.
   /// </summary>
   /// <param name="questPlate">The quest plate to look up.</param>

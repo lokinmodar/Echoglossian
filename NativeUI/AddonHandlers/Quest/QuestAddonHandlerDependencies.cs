@@ -146,6 +146,9 @@ internal sealed class QuestAddonHandlerDependencies
   /// <summary>Gets or sets the quest text normalization delegate.</summary>
   public required Func<string, string> NormalizeText { get; init; }
 
+    /// <summary>Gets or sets the global translation-state guard.</summary>
+    public required Func<bool> DisableTranslationAccordingToState { get; init; }
+
   /// <summary>Gets or sets the queued translation lookup delegate.</summary>
   public required TryGetQueuedTranslationDelegate TryGetQueuedTranslation { get; init; }
 

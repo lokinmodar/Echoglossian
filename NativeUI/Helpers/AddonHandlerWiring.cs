@@ -194,19 +194,26 @@ public partial class Echoglossian
               Handler: new JournalAcceptHandler(questAddonDependencies)));
     }
 
-        if (this.configuration.TranslateJournalResult)
-        {
-          this.registeredAddonHandlers.Add(
-              (AddonName: "JournalResult",
-                  Handler: new JournalResultHandler(questAddonDependencies)));
-        }
+    if (this.configuration.TranslateJournalResult)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "JournalResult",
+              Handler: new JournalResultHandler(questAddonDependencies)));
+    }
 
-        if (this.configuration.TranslateScenarioTree)
-        {
-          this.registeredAddonHandlers.Add(
-              (AddonName: "ScenarioTree",
-                  Handler: new ScenarioTreeHandler(questAddonDependencies)));
-        }
+    if (this.configuration.TranslateScenarioTree)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "ScenarioTree",
+              Handler: new ScenarioTreeHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateRecommendList)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "RecommendList",
+              Handler: new RecommendListHandler(questAddonDependencies)));
+    }
 
     if (this.configuration.TranslateAreaMap)
     {
