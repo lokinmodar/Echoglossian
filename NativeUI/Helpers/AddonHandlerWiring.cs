@@ -194,6 +194,13 @@ public partial class Echoglossian
               Handler: new JournalAcceptHandler(questAddonDependencies)));
     }
 
+        if (this.configuration.TranslateJournalResult)
+        {
+            this.registeredAddonHandlers.Add(
+                    (AddonName: "JournalResult",
+                            Handler: new JournalResultHandler(questAddonDependencies)));
+        }
+
     if (this.configuration.TranslateAreaMap)
     {
       this.registeredAddonHandlers.Add(
@@ -350,14 +357,6 @@ public partial class Echoglossian
           AddonEvent.PreRequestedUpdate,
           "JournalDetail",
           this.UiJournalDetailHandler);
-    }
-
-    if (this.configuration.TranslateJournalResult)
-    {
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreSetup,
-          "JournalResult",
-          this.UiJournalResultHandler);
     }
 
     if (this.configuration.TranslateScenarioTree)

@@ -562,6 +562,36 @@ Move the next smallest quest handler into `NativeUI/AddonHandlers/Quest/` using 
 
 ---
 
+## Milestone — quest JournalResult migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added `NativeUI/AddonHandlers/Quest/JournalResultHandler.cs` and moved the JournalResult capture logic out of the legacy partial class path.
+- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so JournalResult now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
+- Removed the legacy JournalResult listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiJournalResultHandler.cs`.
+
+### Why it changed
+
+JournalResult was the next small quest surface after JournalAccept, and it validated the same standalone quest-handler pattern on a simple `PreSetup` addon that only needs quest-name handling.
+
+The handler still follows the same runtime behavior:
+
+- resolve the quest name from the addon payload
+- reuse the quest translation cache and queue broker
+- write native text only when the configured display mode allows it
+- register hover tooltips through the shared quest tooltip path
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+
+### Next step
+
+Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and standalone registration pattern.
+
+---
+
 ## Milestone — quest JournalAccept migrated to standalone quest handler (April 12, 2026)
 
 ### What changed

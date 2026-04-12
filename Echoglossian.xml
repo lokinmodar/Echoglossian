@@ -4458,6 +4458,48 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler">
+            <summary>
+                Handles the JournalResult quest addon runtime inside the standalone
+                quest-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler" /> class.
+            </summary>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultUsesHoverTooltips">
+            <summary>
+                Gets whether the JournalResult family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultWritesNativeTranslation">
+            <summary>
+                Gets whether the JournalResult family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverShowsOriginal">
+            <summary>
+                Gets whether the JournalResult family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultShouldRemoveDiacritics">
+            <summary>
+                Gets whether translated JournalResult text should be normalized before
+                being written into the native UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.OnJournalResultEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles JournalResult setup events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase">
             <summary>
                 Shared base implementation for standalone quest addon handlers.

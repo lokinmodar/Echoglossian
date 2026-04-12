@@ -524,14 +524,6 @@ public partial class Echoglossian : IDalamudPlugin
           this.UiJournalDetailHandler);
     }
 
-    if (this.configuration.TranslateJournalResult)
-    {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreSetup,
-          "JournalResult",
-          this.UiJournalResultHandler);
-    }
-
     if (this.configuration.TranslateScenarioTree)
     {
       AddonLifecycle.UnregisterListener(
