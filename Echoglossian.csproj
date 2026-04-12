@@ -49,6 +49,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="NativeUI\AddonHandlers\ActionMenu\**" />
     <Compile Remove="scripts\**" />
   </ItemGroup>
   <ItemGroup>
@@ -244,9 +245,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoCtor" Version="2.12.0" />
-    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.22" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.25" />
 
-    <PackageReference Include="DeepL.net" Version="1.20.0" />
+    <PackageReference Include="DeepL.net" Version="1.21.0" />
     <PackageReference Include="GTranslate" Version="2.3.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="Injectio" Version="5.1.0" />
@@ -257,7 +258,7 @@
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="OpenAI" Version="2.9.1" />
+    <PackageReference Include="OpenAI" Version="2.10.0" />
     <PackageReference Include="RestSharp" Version="114.0.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
       <PrivateAssets>all</PrivateAssets>
@@ -316,9 +317,6 @@
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="NativeUI\AddonHandlers\ActionMenu\" />
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Remove="ImGui.NET" />
@@ -331,6 +329,7 @@
   <ItemGroup>
     <Compile Remove="Echoglossian.Tests\**" />
     <EmbeddedResource Remove="Echoglossian.Tests\**" />
+    <EmbeddedResource Remove="NativeUI\AddonHandlers\ActionMenu\**" />
     <None Remove="Echoglossian.Tests\**" />
   </ItemGroup>
 

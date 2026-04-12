@@ -847,6 +847,194 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Registros {0} carregados</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
+        <trans-unit id="OverlayForceShowTitleToggleLabel" translate="yes" xml:space="preserve">
+          <source>Show overlay title bar with speaker name when available</source>
+          <target state="new">Show overlay title bar with speaker name when available</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeHelpMessage" translate="yes" xml:space="preserve">
+          <source>Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe <it id="1" pos="open">&lt;addon name&gt;</it> [index] or /egloaddonprobe stop</source>
+          <target state="new">Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe <it id="1" pos="open">&lt;addon name&gt;</it> [index] or /egloaddonprobe stop</target>
+        </trans-unit>
+        <trans-unit id="QuestProbeHelpMessage" translate="yes" xml:space="preserve">
+          <source>Dumps a full quest data probe to the log. Usage: /egloquestprobe <it id="1" pos="open">&lt;quest name or quest id&gt;</it></source>
+          <target state="new">Dumps a full quest data probe to the log. Usage: /egloquestprobe <it id="1" pos="open">&lt;quest name or quest id&gt;</it></target>
+        </trans-unit>
+        <trans-unit id="JournalQuestDisplayModeNativeUiTranslation" translate="yes" xml:space="preserve">
+          <source>Native UI translation</source>
+          <target state="new">Native UI translation</target>
+        </trans-unit>
+        <trans-unit id="JournalQuestDisplayModeTooltipTranslationOnly" translate="yes" xml:space="preserve">
+          <source>Tooltip translation only</source>
+          <target state="new">Tooltip translation only</target>
+        </trans-unit>
+        <trans-unit id="JournalQuestDisplayModeNativeUiTranslationWithOriginalTooltips" translate="yes" xml:space="preserve">
+          <source>Native UI translation + original tooltips</source>
+          <target state="new">Native UI translation + original tooltips</target>
+        </trans-unit>
+        <trans-unit id="JournalQuestDisplayModeLabel" translate="yes" xml:space="preserve">
+          <source>Journal quest display mode</source>
+          <target state="new">Journal quest display mode</target>
+        </trans-unit>
+        <trans-unit id="JournalQuestDisplayModeDescription" translate="yes" xml:space="preserve">
+          <source>This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal hover tooltips follow this mode directly; the global tooltip toggle only affects other translated UI.</source>
+          <target state="new">This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal hover tooltips follow this mode directly; the global tooltip toggle only affects other translated UI.</target>
+        </trans-unit>
+        <trans-unit id="JournalGlobalHoverTooltipsLabel" translate="yes" xml:space="preserve">
+          <source>Enable global hover tooltips for other translated UI</source>
+          <target state="new">Enable global hover tooltips for other translated UI</target>
+        </trans-unit>
+        <trans-unit id="QuestDisplayModeNativeUiTranslation" translate="yes" xml:space="preserve">
+          <source>Native UI translation</source>
+          <target state="new">Native UI translation</target>
+        </trans-unit>
+        <trans-unit id="QuestDisplayModeTooltipTranslationOnly" translate="yes" xml:space="preserve">
+          <source>Tooltip translation only</source>
+          <target state="new">Tooltip translation only</target>
+        </trans-unit>
+        <trans-unit id="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" translate="yes" xml:space="preserve">
+          <source>Native UI translation + original tooltips</source>
+          <target state="new">Native UI translation + original tooltips</target>
+        </trans-unit>
+        <trans-unit id="QuestDisplayModeLabel" translate="yes" xml:space="preserve">
+          <source>Quest display mode</source>
+          <target state="new">Quest display mode</target>
+        </trans-unit>
+        <trans-unit id="QuestDisplayModeDescription" translate="yes" xml:space="preserve">
+          <source>This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips.</source>
+          <target state="new">This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips.</target>
+        </trans-unit>
+        <trans-unit id="TranslateJournalAcceptToggle" translate="yes" xml:space="preserve">
+          <source>Translate JournalAccept</source>
+          <target state="new">Translate JournalAccept</target>
+        </trans-unit>
+        <trans-unit id="TranslateJournalResultToggle" translate="yes" xml:space="preserve">
+          <source>Translate JournalResult</source>
+          <target state="new">Translate JournalResult</target>
+        </trans-unit>
+        <trans-unit id="TranslateRecommendListToggle" translate="yes" xml:space="preserve">
+          <source>Translate RecommendList</source>
+          <target state="new">Translate RecommendList</target>
+        </trans-unit>
+        <trans-unit id="TranslateAreaMapToggle" translate="yes" xml:space="preserve">
+          <source>Translate AreaMap</source>
+          <target state="new">Translate AreaMap</target>
+        </trans-unit>
+        <trans-unit id="TranslateScenarioTreeToggle" translate="yes" xml:space="preserve">
+          <source>Translate ScenarioTree</source>
+          <target state="new">Translate ScenarioTree</target>
+        </trans-unit>
+        <trans-unit id="TranslateToDoListToggle" translate="yes" xml:space="preserve">
+          <source>Translate ToDoList</source>
+          <target state="new">Translate ToDoList</target>
+        </trans-unit>
+        <trans-unit id="TranslateTextGimmickHintToggleText" translate="yes" xml:space="preserve">
+          <source>Translate Text Gimmick Hint</source>
+          <target state="new">Translate Text Gimmick Hint</target>
+        </trans-unit>
+        <trans-unit id="OverlayTabMiniTalkText" translate="yes" xml:space="preserve">
+          <source>MiniTalk</source>
+          <target state="new">MiniTalk</target>
+        </trans-unit>
+        <trans-unit id="OverlayTabCutSceneSelectStringText" translate="yes" xml:space="preserve">
+          <source>CutSceneSelectString</source>
+          <target state="new">CutSceneSelectString</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTabGeneralText" translate="yes" xml:space="preserve">
+          <source>General</source>
+          <target state="new">General</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTabScreenInfoText" translate="yes" xml:space="preserve">
+          <source>Screen Info</source>
+          <target state="new">Screen Info</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTabErrorText" translate="yes" xml:space="preserve">
+          <source>Error</source>
+          <target state="new">Error</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTabAreaText" translate="yes" xml:space="preserve">
+          <source>Area</source>
+          <target state="new">Area</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTabClassJobText" translate="yes" xml:space="preserve">
+          <source>Class / Job</source>
+          <target state="new">Class / Job</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTabTextGimmickHintText" translate="yes" xml:space="preserve">
+          <source>Text Gimmick Hint</source>
+          <target state="new">Text Gimmick Hint</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTabQuestText" translate="yes" xml:space="preserve">
+          <source>Quest</source>
+          <target state="new">Quest</target>
+        </trans-unit>
+        <trans-unit id="ToastModeDescription" translate="yes" xml:space="preserve">
+          <source>Each toast type can choose independently between native replacement and overlay rendering.</source>
+          <target state="new">Each toast type can choose independently between native replacement and overlay rendering.</target>
+        </trans-unit>
+        <trans-unit id="ToastModeSwapDescription" translate="yes" xml:space="preserve">
+          <source>When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation.</source>
+          <target state="new">When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation.</target>
+        </trans-unit>
+        <trans-unit id="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" translate="yes" xml:space="preserve">
+          <source>Overlay-only language is active, so all toast types will render through overlays.</source>
+          <target state="new">Overlay-only language is active, so all toast types will render through overlays.</target>
+        </trans-unit>
+        <trans-unit id="OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay" translate="yes" xml:space="preserve">
+          <source>Overlay-only language is active, so this toast type will render through an overlay.</source>
+          <target state="new">Overlay-only language is active, so this toast type will render through an overlay.</target>
+        </trans-unit>
+        <trans-unit id="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" translate="yes" xml:space="preserve">
+          <source>Native replacement mode is active for this toast type. Overlay style controls are not used in this mode.</source>
+          <target state="new">Native replacement mode is active for this toast type. Overlay style controls are not used in this mode.</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayScreenInfoWideTextSectionTitle" translate="yes" xml:space="preserve">
+          <source>Screen Info (_WideText)</source>
+          <target state="new">Screen Info (_WideText)</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayErrorSectionTitle" translate="yes" xml:space="preserve">
+          <source>Error Toast</source>
+          <target state="new">Error Toast</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayAreaSectionTitle" translate="yes" xml:space="preserve">
+          <source>Area Toast</source>
+          <target state="new">Area Toast</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayClassJobChangeSectionTitle" translate="yes" xml:space="preserve">
+          <source>Class / Job Change Toast</source>
+          <target state="new">Class / Job Change Toast</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTextGimmickHintSectionTitle" translate="yes" xml:space="preserve">
+          <source>Text Gimmick Hint</source>
+          <target state="new">Text Gimmick Hint</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayQuestSectionTitle" translate="yes" xml:space="preserve">
+          <source>Quest Toast</source>
+          <target state="new">Quest Toast</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayEnableThisToastTypeLabel" translate="yes" xml:space="preserve">
+          <source>Enable this toast type</source>
+          <target state="new">Enable this toast type</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayUseOverlayForThisToastTypeLabel" translate="yes" xml:space="preserve">
+          <source>Use overlay for this toast type</source>
+          <target state="new">Use overlay for this toast type</target>
+        </trans-unit>
+        <trans-unit id="TranslateMiniTalkLabel" translate="yes" xml:space="preserve">
+          <source>Translate MiniTalk</source>
+          <target state="new">Translate MiniTalk</target>
+        </trans-unit>
+        <trans-unit id="CutSceneSelectStringOverlayHelpText" translate="yes" xml:space="preserve">
+          <source>The question is used as the window title and the options are rendered one per line.</source>
+          <target state="new">The question is used as the window title and the options are rendered one per line.</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayBackgroundOpacityLabel" translate="yes" xml:space="preserve">
+          <source>Background opacity</source>
+          <target state="new">Background opacity</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayBackgroundOpacityTooltip" translate="yes" xml:space="preserve">
+          <source>Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</source>
+          <target state="new">Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</target>
+        </trans-unit>
       </group>
     </body>
   </file>

@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <Platforms>AnyCPU</Platforms>
+    <Platforms>x64</Platforms>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
