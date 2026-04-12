@@ -4416,6 +4416,48 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler">
+            <summary>
+                Handles the JournalAccept quest addon runtime inside the standalone
+                quest-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler" /> class.
+            </summary>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptUsesHoverTooltips">
+            <summary>
+                Gets whether the JournalAccept family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptWritesNativeTranslation">
+            <summary>
+                Gets whether the JournalAccept family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverShowsOriginal">
+            <summary>
+                Gets whether the JournalAccept family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptShouldRemoveDiacritics">
+            <summary>
+                Gets whether translated JournalAccept text should be normalized before
+                being written into the native UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.OnJournalAcceptEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles JournalAccept setup events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase">
             <summary>
                 Shared base implementation for standalone quest addon handlers.
@@ -4513,6 +4555,23 @@
             <param name="sourceTexts">The source texts to translate.</param>
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True if the request was queued.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.SerializeTranslationPair(System.String,System.String)">
+            <summary>
+                Serializes a pair of translated strings for broker caching.
+            </summary>
+            <param name="first">The first translated string.</param>
+            <param name="second">The second translated string.</param>
+            <returns>A JSON payload representing both strings.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryDeserializeTranslationPair(System.String,System.String@,System.String@)">
+            <summary>
+                Tries to deserialize a cached translation pair payload.
+            </summary>
+            <param name="payload">The cached payload.</param>
+            <param name="first">The first translated string.</param>
+            <param name="second">The second translated string.</param>
+            <returns>True when the payload contains two strings.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.NormalizeQuestText(System.String)">
             <summary>

@@ -559,3 +559,34 @@ The AreaMap runtime still uses the same capture logic, DB lookup, queue fallback
 ### Next step
 
 Move the next smallest quest handler into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and wiring pattern, then remove its legacy registration path only after the standalone handler is verified.
+
+---
+
+## Milestone — quest JournalAccept migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added `NativeUI/AddonHandlers/Quest/JournalAcceptHandler.cs` and moved the JournalAccept capture logic out of the legacy partial class path.
+- Added reusable quest-pair payload helpers to `NativeUI/AddonHandlers/Quest/QuestAddonHandlerBase.cs` so quest handlers can share the same cached pair serialization logic.
+- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so JournalAccept now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
+- Removed the legacy JournalAccept listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiJournalAcceptHandler.cs`.
+
+### Why it changed
+
+JournalAccept was the next smallest quest surface after AreaMap, so it was the right checkpoint to prove the new standalone quest handler pattern on a real `PreSetup` addon.
+
+The handler still follows the same runtime behavior:
+
+- resolve quest identity through the shared quest lookup path
+- reuse the quest translation cache and queue broker
+- write native text only when the configured display mode allows it
+- register hover tooltips using the shared quest tooltip path
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+
+### Next step
+
+Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and standalone registration pattern.

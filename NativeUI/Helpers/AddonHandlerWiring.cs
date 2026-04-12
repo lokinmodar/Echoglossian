@@ -185,14 +185,21 @@ public partial class Echoglossian
       PluginLog.Debug("[Echoglossian] CutSceneSelectString handler registered");
     }
 
-        var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();
+    var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();
 
-        if (this.configuration.TranslateAreaMap)
-        {
-            this.registeredAddonHandlers.Add(
-                    (AddonName: "AreaMap",
-                            Handler: new AreaMapHandler(questAddonDependencies)));
-        }
+    if (this.configuration.TranslateJournalAccept)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "JournalAccept",
+              Handler: new JournalAcceptHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateAreaMap)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "AreaMap",
+              Handler: new AreaMapHandler(questAddonDependencies)));
+    }
 
     if (this.configuration.TranslateToast &&
         this.configuration.TranslateWideTextToast)
@@ -343,14 +350,6 @@ public partial class Echoglossian
           AddonEvent.PreRequestedUpdate,
           "JournalDetail",
           this.UiJournalDetailHandler);
-    }
-
-    if (this.configuration.TranslateJournalAccept)
-    {
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreSetup,
-          "JournalAccept",
-          this.UiJournalAcceptHandler);
     }
 
     if (this.configuration.TranslateJournalResult)

@@ -200,6 +200,50 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Serializes a pair of translated strings for broker caching.
+  /// </summary>
+  /// <param name="first">The first translated string.</param>
+  /// <param name="second">The second translated string.</param>
+  /// <returns>A JSON payload representing both strings.</returns>
+  protected static string SerializeTranslationPair(string first, string second)
+  {
+    return JsonConvert.SerializeObject(new[] { first, second });
+  }
+
+  /// <summary>
+  ///     Tries to deserialize a cached translation pair payload.
+  /// </summary>
+  /// <param name="payload">The cached payload.</param>
+  /// <param name="first">The first translated string.</param>
+  /// <param name="second">The second translated string.</param>
+  /// <returns>True when the payload contains two strings.</returns>
+  protected static bool TryDeserializeTranslationPair(
+      string payload,
+      out string first,
+      out string second)
+  {
+    first = string.Empty;
+    second = string.Empty;
+
+    try
+    {
+      var items = JsonConvert.DeserializeObject<string[]>(payload);
+      if (items == null || items.Length < 2)
+      {
+        return false;
+      }
+
+      first = items[0] ?? string.Empty;
+      second = items[1] ?? string.Empty;
+      return true;
+    }
+    catch
+    {
+      return false;
+    }
+  }
+
+  /// <summary>
   ///     Normalizes quest text before writing it to the native UI.
   /// </summary>
   /// <param name="text">The text to normalize.</param>

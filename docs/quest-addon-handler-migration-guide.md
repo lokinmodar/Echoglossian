@@ -88,6 +88,11 @@ The migration should be executed in this order so each step stays reusable and e
 
 Every step should keep the old handlers untouched only until the new handler is registered and verified, then remove the legacy registration for that addon.
 
+Current status:
+
+- Step 1 is complete.
+- Step 2 (`JournalAccept`) is complete.
+
 ### Phase 2: Migrate the smaller quest handlers first
 
 Move the easiest handlers first so the new structure is proven before the larger quest surfaces are touched:
