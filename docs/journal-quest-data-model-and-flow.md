@@ -301,6 +301,8 @@ The live step state belongs in the runtime progress key, not as a duplicate pers
 
 Because the current table is still fragmented and `QuestId` is empty in the stored legacy rows, a clean migration is the least ambiguous path.
 
+The quest-handler migration itself is documented separately in [Quest Addon Handler Migration Guide](./quest-addon-handler-migration-guide.md). That guide covers the runtime-side move from legacy partial classes to standalone quest handlers under `NativeUI/AddonHandlers/`.
+
 Recommended options:
 
 1. Rebuild the quest storage into a canonical quest table and backfill only what can be matched safely.

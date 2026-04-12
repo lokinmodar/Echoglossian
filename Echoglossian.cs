@@ -540,34 +540,6 @@ public partial class Echoglossian : IDalamudPlugin
           this.UiJournalResultHandler);
     }
 
-    if (this.configuration.TranslateRecommendList)
-    {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PostReceiveEvent,
-          "RecommendList",
-          this.UiRecommendListHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "RecommendList",
-          this.UiRecommendListHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PostRequestedUpdate,
-          "RecommendList",
-          this.UiRecommendListHandlerAsync);
-    }
-
-    if (this.configuration.TranslateAreaMap)
-    {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRefresh,
-          "AreaMap",
-          this.UiAreaMapHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "AreaMap",
-          this.UiAreaMapHandler);
-    }
-
     if (this.configuration.TranslateScenarioTree)
     {
       AddonLifecycle.UnregisterListener(

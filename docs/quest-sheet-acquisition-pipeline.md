@@ -160,3 +160,4 @@ Structured quest text should follow the shared payload-aware pipeline documented
 - Do not create persistent quest rows from live step state alone.
 - Keep live progress keys strictly in-memory.
 - If the quest data becomes available directly from sheets more reliably than from UI, prefer the sheet data as the primary source and the UI as fallback.
+- The quest-family addon migration plan is documented in [Quest Addon Handler Migration Guide](./quest-addon-handler-migration-guide.md).

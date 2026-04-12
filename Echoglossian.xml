@@ -1490,6 +1490,12 @@
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.CreateQuestAddonHandlerDependencies">
+            <summary>
+                Builds the shared dependency bundle for standalone quest handlers.
+            </summary>
+            <returns>The reusable quest-handler dependency bundle.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
             <summary>
                 Handles the quest probe command.
@@ -4367,6 +4373,405 @@
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler">
+            <summary>
+                Handles the AreaMap quest addon runtime inside the standalone quest-
+                handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler" /> class.
+            </summary>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapUsesHoverTooltips">
+            <summary>
+                Gets whether the AreaMap family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapWritesNativeTranslation">
+            <summary>
+                Gets whether the AreaMap family should write translated text into the
+                native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapHoverShowsOriginal">
+            <summary>
+                Gets whether the AreaMap family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapShouldRemoveDiacritics">
+            <summary>
+                Gets whether the AreaMap family should strip diacritics from
+                translated text before it is written to the native UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.OnAreaMapEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles AreaMap refresh and requested-update events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase">
+            <summary>
+                Shared base implementation for standalone quest addon handlers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase" /> class.
+            </summary>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.Dependencies">
+            <summary>
+                Gets the shared dependencies used by the quest handlers.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.Config">
+            <summary>Gets the active plugin configuration.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TranslationService">
+            <summary>Gets the shared translation service.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the quest addon flow.
+            </summary>
+            <returns>A dictionary mapping addon events to combined delegates.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local delegate for the specified addon event.
+            </summary>
+            <param name="evt">The lifecycle event to handle.</param>
+            <param name="handler">The delegate invoked for that event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.CreateQuestPlate(System.String,System.String,System.String)">
+            <summary>
+                Creates a canonical quest plate snapshot using the current plugin
+                language and engine settings.
+            </summary>
+            <param name="questName">The quest name.</param>
+            <param name="questMessage">The quest message.</param>
+            <param name="questId">Optional quest id.</param>
+            <returns>A canonical quest plate snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.CreateTranslatedQuestPlate(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+                Creates a canonical quest plate snapshot with translated fields.
+            </summary>
+            <param name="questName">The original quest name.</param>
+            <param name="questMessage">The original quest message.</param>
+            <param name="translatedQuestName">The translated quest name.</param>
+            <param name="translatedQuestMessage">The translated quest message.</param>
+            <param name="questId">Optional quest id.</param>
+            <returns>A translated quest plate snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.Translate(System.String)">
+            <summary>
+                Translates the given text using the shared translation service.
+            </summary>
+            <param name="text">Text to translate.</param>
+            <returns>The translated text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TranslateAsync(System.String)">
+            <summary>
+                Translates the given text asynchronously using the shared translation
+                service.
+            </summary>
+            <param name="text">Text to translate.</param>
+            <returns>The translated text task.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryGetQueuedTranslation(System.String,System.String@)">
+            <summary>
+                Attempts to read a queued translation from the shared broker cache.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="translatedText">The cached translated text, if any.</param>
+            <returns>True when a cached translation exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.QueueTranslation(System.String,System.Func{System.String},System.Action{System.String})">
+            <summary>
+                Enqueues a translation request on the shared broker without blocking
+                the addon lifecycle callback.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="resolver">Function that returns the translated text.</param>
+            <param name="onResolved">Optional callback invoked after the text is cached.</param>
+            <returns>True if the request was queued, false if one is already in flight.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},System.Action{System.String[]})">
+            <summary>
+                Queues a batch translation request on the shared broker.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="sourceTexts">The source texts to translate.</param>
+            <param name="onResolved">Optional callback invoked with the translated batch.</param>
+            <returns>True if the request was queued.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.NormalizeQuestText(System.String)">
+            <summary>
+                Normalizes quest text before writing it to the native UI.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized quest text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.FindQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Resolves a quest plate using the full quest lookup.
+            </summary>
+            <param name="questPlate">The quest plate to look up.</param>
+            <returns>The matching quest plate, if one exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.FindQuestPlateByName(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Resolves a quest plate using the quest-name-only lookup.
+            </summary>
+            <param name="questPlate">The quest plate to look up.</param>
+            <returns>The matching quest plate, if one exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.InsertQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Persists a quest plate insert into the database.
+            </summary>
+            <param name="questPlate">The quest plate to insert.</param>
+            <returns>The persistence result.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.UpdateQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Persists a quest plate update into the database.
+            </summary>
+            <param name="questPlate">The quest plate to update.</param>
+            <returns>The persistence result.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.UpdateQuestPlateGameVersion(System.Int32,System.String)">
+            <summary>
+                Updates the stored game version for a quest plate.
+            </summary>
+            <param name="id">The quest plate id.</param>
+            <param name="newGameVersion">The game version to store.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+            <summary>
+                Registers a hover tooltip for a text node using its current screen
+                bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="textNode">The text node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+            <param name="denseHitbox">Whether to use the denser node hitbox.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+            <summary>
+                Registers a hover tooltip for a generic node using its current screen
+                bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="node">The node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+            <param name="denseHitbox">Whether to use the denser node hitbox.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+            <summary>
+                Registers a hover tooltip for a whole addon window using its root
+                node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="addon">The live addon window to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+            <param name="denseHitbox">Whether to use the denser addon hitbox.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Nullable{System.Boolean},System.Boolean)">
+            <summary>
+                Registers a hover tooltip using explicit screen bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="topLeft">Top-left screen coordinate.</param>
+            <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.TryGetQueuedTranslationDelegate">
+            <summary>
+                Delegate used to read a queued quest translation from the shared
+                broker.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="translatedText">The cached translated text, if any.</param>
+            <returns>True when a cached translation exists.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QueueTranslationDelegate">
+            <summary>
+                Delegate used to queue a quest translation request.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="resolver">Function that resolves the translated text.</param>
+            <param name="onResolved">Optional callback invoked once the text is cached.</param>
+            <returns>True when the request was queued.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QueueTranslationBatchDelegate">
+            <summary>
+                Delegate used to queue a quest translation batch request.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="sourceTexts">The source texts that will be translated.</param>
+            <param name="onResolved">Optional callback invoked with the translated batch.</param>
+            <returns>True when the request was queued.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RegisterTranslatedHoverTooltipAddonDelegate">
+            <summary>
+                Delegate used to register a hover tooltip against a live addon window.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="addon">The live addon window to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+            <param name="denseHitbox">Whether to use the denser addon hitbox.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RegisterTranslatedHoverTooltipTextNodeDelegate">
+            <summary>
+                Delegate used to register a hover tooltip against a live text node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="textNode">The text node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+            <param name="denseHitbox">Whether to use the denser node hitbox.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RegisterTranslatedHoverTooltipResNodeDelegate">
+            <summary>
+                Delegate used to register a hover tooltip against a live generic node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="node">The node to anchor the tooltip to.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+            <param name="denseHitbox">Whether to use the denser node hitbox.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RegisterTranslatedHoverTooltipBoundsDelegate">
+            <summary>
+                Delegate used to register a hover tooltip from explicit screen bounds.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="topLeft">Top-left screen coordinate.</param>
+            <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies">
+            <summary>
+                Bundles the quest-specific delegates and services needed by standalone
+                quest handlers.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.Config">
+            <summary>Gets or sets the active plugin configuration.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.TranslationService">
+            <summary>Gets or sets the shared translation service.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.FindQuestPlate">
+            <summary>Gets or sets the full quest lookup delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.FindQuestPlateByName">
+            <summary>Gets or sets the name-only quest lookup delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.InsertQuestPlate">
+            <summary>Gets or sets the quest insert delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.UpdateQuestPlate">
+            <summary>Gets or sets the quest update delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.UpdateQuestPlateGameVersion">
+            <summary>Gets or sets the game-version update delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.NormalizeText">
+            <summary>Gets or sets the quest text normalization delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.TryGetQueuedTranslation">
+            <summary>Gets or sets the queued translation lookup delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.QueueTranslation">
+            <summary>Gets or sets the queued translation delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.QueueTranslationBatch">
+            <summary>Gets or sets the queued batch translation delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RegisterTranslatedHoverTooltipAddon">
+            <summary>Gets or sets the addon tooltip registration delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RegisterTranslatedHoverTooltipTextNode">
+            <summary>Gets or sets the text-node tooltip registration delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RegisterTranslatedHoverTooltipResNode">
+            <summary>Gets or sets the generic-node tooltip registration delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RegisterTranslatedHoverTooltipBounds">
+            <summary>Gets or sets the bounds-based tooltip registration delegate.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers">
+            <summary>
+                Shared display-mode helpers for quest-family addon handlers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.UsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether the quest family display mode should render hover
+                tooltips.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when hover tooltips should be rendered.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.WritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether the quest family display mode should write translated
+                text into the native addon.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when native addon text should be replaced.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.ShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether the quest family hover tooltips should show the original
+                text.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when hover tooltips should keep the original text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.ShouldRemoveDiacritics(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Gets whether translated quest text should be normalized before being
+                written into the native UI.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="removeDiacriticsWhenUsingReplacementQuest">
+                Whether the quest-family diacritics toggle is enabled.
+            </param>
+            <returns><c>true</c> when normalization should be applied.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
             <summary>

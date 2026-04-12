@@ -287,6 +287,7 @@ flowchart TD
 - [Quest Sheet Acquisition Pipeline](./quest-sheet-acquisition-pipeline.md)
 - [Journal Quest Data Model and Flow](./journal-quest-data-model-and-flow.md)
 - [Quest Probe Command](./quest-probe-command.md)
+- [Quest Addon Handler Migration Guide](./quest-addon-handler-migration-guide.md)
 - [scripts/quest-reader](../scripts/quest-reader/) — offline Lumina-based verification tool
 - Lumina docs: https://lumina.xiv.dev/docs/intro.html
 - EXDViewer: https://exd.camora.dev/sheet/Quest

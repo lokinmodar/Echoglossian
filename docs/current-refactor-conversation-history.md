@@ -500,3 +500,62 @@ No new errors from these changes.
 Dalamud `14.0.5.1` update cleared `dev\Dalamud.dll`. Resolved by copying from
 `addon\Hooks\14.0.5.1\` to `addon\Hooks\dev\`. This will need repeating after
 future Dalamud staging updates.
+
+---
+
+## Milestone — quest-handler migration guide added (April 12, 2026)
+
+### What changed
+
+- Added [docs/quest-addon-handler-migration-guide.md](./quest-addon-handler-migration-guide.md).
+- The guide captures the docs-based target structure for quest-family addon handlers under `NativeUI/AddonHandlers/`.
+- It records the phased migration order: shared quest support first, then the smaller quest handlers, then the dense Journal / ToDoList / RecommendList windows, then removal of the legacy partials.
+
+### Why it was added
+
+The quest docs now define the authoritative runtime rules clearly enough to make the migration plan explicit:
+
+- UI is a capture surface, not the source of truth
+- Lumina and live quest progress define identity
+- quest windows need shared caches and stable keys
+- the new structure should reuse the existing brokered translation flow and hover infrastructure
+
+### Next step
+
+Start the actual code migration from the guide by extracting shared quest support and moving the quest addon handlers into standalone classes under `NativeUI/AddonHandlers/`.
+
+---
+
+## Milestone — quest AreaMap migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added the first standalone quest-family support layer under `NativeUI/AddonHandlers/Quest/`:
+  - `QuestAddonModeHelpers.cs`
+  - `QuestAddonHandlerDependencies.cs`
+  - `QuestAddonHandlerBase.cs`
+- Added `NativeUI/Helpers/QuestAddonWiring.cs` so the quest-specific delegate bundle can be created once and reused as more quest handlers move over.
+- Added the first migrated quest handler: `NativeUI/AddonHandlers/Quest/AreaMapHandler.cs`.
+- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so AreaMap now registers through `registeredAddonHandlers` instead of a manual `AddonLifecycle.RegisterListener` path.
+- Removed the legacy `NativeUI/Handlers/UiAreaMapHandler.cs` partial file.
+- Added the new quest namespace to `GlobalUsings.cs` so the wiring can stay concise.
+
+### Why it changed
+
+This step proves the new quest-handler pattern with the smallest quest surface before moving to denser windows.
+
+The AreaMap runtime still uses the same capture logic, DB lookup, queue fallback, and hover registration behavior. The only thing that changed is the architecture around it:
+
+- standalone handler class instead of a legacy partial method
+- reusable quest dependencies bundle instead of ad hoc host wiring
+- shared quest mode helpers instead of re-encoding the same display-mode logic per handler
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+- `dotnet build Echoglossian.sln -c Debug --no-restore` still fails in `Echoglossian.Tests` with the existing `Echoglossian.EFCoreSqlite` namespace resolution error, which is unrelated to the AreaMap migration step
+
+### Next step
+
+Move the next smallest quest handler into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and wiring pattern, then remove its legacy registration path only after the standalone handler is verified.

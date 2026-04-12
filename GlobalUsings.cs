@@ -63,6 +63,7 @@ global using Echoglossian.NativeUI.AddonHandlers.Character;
 global using Echoglossian.NativeUI.AddonHandlers.Hud;
 global using Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString;
 global using Echoglossian.NativeUI.AddonHandlers.SingleText;
+global using Echoglossian.NativeUI.AddonHandlers.Quest;
 global using Echoglossian.NativeUI.AddonHandlers.Toasts;
 global using Echoglossian.NativeUI.AddonHandlers.Talk;
 global using Echoglossian.NativeUI.Handlers;

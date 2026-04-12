@@ -20,6 +20,8 @@ This document describes the **current actual** runtime translation flow for ever
 
 All registrations and unregistrations live in `NativeUI/Helpers/AddonHandlerWiring.cs`. The unregisters live in `Echoglossian.cs` (plugin teardown).
 
+The quest-family handlers described in this document are still implemented as legacy partial classes under `NativeUI/Handlers/`. The migration plan for moving them into standalone quest handlers under `NativeUI/AddonHandlers/Quest/` is documented in [Quest Addon Handler Migration Guide](./quest-addon-handler-migration-guide.md).
+
 ---
 
 ## Translation display modes
