@@ -18,15 +18,15 @@ This document describes the **current actual** runtime translation flow for ever
 | `ScenarioTree`      | `TranslateScenarioTree`              | `AddonHandlerWiring.cs`      |
 | `_ToDoList`         | `TranslateToDoList`                  | `AddonHandlerWiring.cs`      |
 
-All registrations and unregistrations live in `NativeUI/Helpers/AddonHandlerWiring.cs`. The unregisters live in `Echoglossian.cs` (plugin teardown).
+Registrations are assembled in `NativeUI/Helpers/AddonHandlerWiring.cs`, registered through `NativeUI/Helpers/AddonHandlerRegistrar.cs`, and unregistered from `Echoglossian.cs` during plugin teardown.
 
-The quest-family handlers described in this document are still implemented as legacy partial classes under `NativeUI/Handlers/`. The migration plan for moving them into standalone quest handlers under `NativeUI/AddonHandlers/Quest/` is documented in [Quest Addon Handler Migration Guide](./quest-addon-handler-migration-guide.md).
+The quest-family handlers described in this document now live as standalone handlers under `NativeUI/AddonHandlers/Quest/`. The migration plan for that structure is documented in [Quest Addon Handler Migration Guide](./quest-addon-handler-migration-guide.md).
 
 ---
 
 ## Translation display modes
 
-Every addon family has its own `JournalTranslationDisplayMode`-typed config property. The shared helper properties are computed in `NativeUI/Helpers/QuestTranslationModeHelpers.cs`:
+Every addon family has its own `JournalTranslationDisplayMode`-typed config property. The shared helper properties are computed in `NativeUI/AddonHandlers/Quest/QuestAddonModeHelpers.cs`:
 
 | Mode enum value                          | `WritesNative` | `UsesHoverTooltips` | `HoverShowsOriginal` |
 |------------------------------------------|:--------------:|:-------------------:|:--------------------:|
@@ -82,7 +82,7 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 ### `Journal` (quest list panel)
 
 **Trigger events:**
-- `AddonEvent.PreUpdate` → `UiJournalQuestHandler` → `TranslateJournalQuests()`
+- `AddonEvent.PreUpdate` → `JournalHandler.OnJournalQuestEvent` → `TranslateJournalQuests()`
 - `AddonEvent.PreRequestedUpdate` → same
 
 **What fires on each event:** `TranslateJournalQuests()` scans all visible quest name nodes in the sidebar list (NodeId 25 → component list). For each visible quest name node:
@@ -104,7 +104,7 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 ### `JournalDetail` (quest body panel — active quest)
 
 **Trigger events:**
-- `AddonEvent.PostRequestedUpdate` on `"Journal"` → `UiJournalDetailHandler` → `TranslateJournalDetail()`
+- `AddonEvent.PostRequestedUpdate` on `"Journal"` → `JournalHandler.OnJournalDetailEvent` → `TranslateJournalDetail()`
 - `AddonEvent.PreRequestedUpdate` on `"JournalDetail"` → same
 
 **What fires:** `TranslateJournalDetail()` calls `TranslateJournalBox` first; if no active quest node found, falls back to `TranslateCompletedQuest`.
@@ -137,7 +137,7 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 ### `JournalAccept` (quest accept dialog)
 
 **Trigger event:**
-- `AddonEvent.PreSetup` → `UiJournalAcceptHandler`
+- `AddonEvent.PreSetup` → `JournalAcceptHandler.OnJournalAcceptEvent`
 
 **Why `PreSetup`:** this fires once when the addon is being built, before any node text is visible. The `AtkValues` array passed in `AddonSetupArgs` contains the raw quest data before it is written to nodes.
 
@@ -168,7 +168,7 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 ### `JournalResult` (quest completion result screen)
 
 **Trigger event:**
-- `AddonEvent.PreSetup` → `UiJournalResultHandler`
+- `AddonEvent.PreSetup` → `JournalResultHandler.OnJournalResultEvent`
 
 **Flow:**
 
@@ -190,9 +190,9 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 ### `RecommendList` (recommended quests panel)
 
 **Trigger events (all three register the same handler or its async variant):**
-- `AddonEvent.PostReceiveEvent` → `UiRecommendListHandler` → `TranslateRecommendListHandler()`
+- `AddonEvent.PostReceiveEvent` → `RecommendListHandler.OnRecommendListEvent` → `TranslateRecommendListHandler()`
 - `AddonEvent.PreRequestedUpdate` → same
-- `AddonEvent.PostRequestedUpdate` → `UiRecommendListHandlerAsync` → `Task.Delay(200).ContinueWith(TranslateRecommendListHandler)` (zone-change delay guard)
+- `AddonEvent.PostRequestedUpdate` → `RecommendListHandler.OnRecommendListEventAsync` → `Task.Delay(200).ContinueWith(TranslateRecommendListHandler)` (zone-change delay guard)
 
 **Why three events:** `PostReceiveEvent` catches user interactions; `PreRequestedUpdate` catches server-push refreshes; the async variant catches zone transitions where node layout may not be settled yet.
 
@@ -222,7 +222,7 @@ Identical traversal after pass 1. Re-reads all nodes and rewrites from `QuestUiT
 ### `ScenarioTree` (main scenario quest tracker)
 
 **Trigger events:**
-- `AddonEvent.PreRefresh` → `UiScenarioTreeHandler` → `TranslateQuestOnScenarioTree`
+- `AddonEvent.PreRefresh` → `ScenarioTreeHandler.OnScenarioTreeEvent` → `TranslateQuestOnScenarioTree`
 - `AddonEvent.PreRequestedUpdate` → same
 
 **Args type:** `AddonRefreshArgs` (not `AddonSetupArgs`) — the text data arrives as `AtkValue*` on every refresh.
@@ -252,7 +252,7 @@ Called twice per event: once for index 7 (MSQ entry) and once for index 2 (sub-q
 ### `_ToDoList` (active quest objective list)
 
 **Trigger events:**
-- `AddonEvent.PostRequestedUpdate` → `UiToDoListHandler` → `TranslateToDoList()`
+- `AddonEvent.PostRequestedUpdate` → `ToDoListHandler.OnToDoListEvent` → `TranslateToDoList()`
 - `AddonEvent.PreRequestedUpdate` → same
 
 **Why both Pre and Post:** `PreRequestedUpdate` fires before game updates node text; `PostRequestedUpdate` fires after. Using both catches different game-driven refresh cycles.
@@ -359,15 +359,16 @@ The intended fix (described in `quest-full-pipeline-design.md`) is to capture ob
 | Concern           | File                                                   |
 |-------------------|--------------------------------------------------------|
 | Event wiring      | `NativeUI/Helpers/AddonHandlerWiring.cs`               |
-| Mode flag helpers | `NativeUI/Helpers/QuestTranslationModeHelpers.cs`      |
+| Event registrar   | `NativeUI/Helpers/AddonHandlerRegistrar.cs`            |
+| Mode flag helpers | `NativeUI/AddonHandlers/Quest/QuestAddonModeHelpers.cs` |
 | Hover registration| `NativeUI/Helpers/HoverTooltipRegistration.cs`         |
 | Hover manager     | `NativeUI/Helpers/HoverTooltipManager.cs`              |
-| Journal handlers  | `NativeUI/Handlers/UiJournalHandler.cs`                |
-| JournalAccept     | `NativeUI/Handlers/UiJournalAcceptHandler.cs`          |
-| JournalResult     | `NativeUI/Handlers/UiJournalResultHandler.cs`          |
-| ScenarioTree      | `NativeUI/Handlers/UiScenarioTreeHandler.cs`           |
-| ToDoList          | `NativeUI/Handlers/UiToDoListHandler.cs`               |
-| RecommendList     | `NativeUI/Handlers/UiRecommendListHandler.cs`          |
+| Journal handlers  | `NativeUI/AddonHandlers/Quest/JournalHandler.cs`       |
+| JournalAccept     | `NativeUI/AddonHandlers/Quest/JournalAcceptHandler.cs` |
+| JournalResult     | `NativeUI/AddonHandlers/Quest/JournalResultHandler.cs` |
+| ScenarioTree      | `NativeUI/AddonHandlers/Quest/ScenarioTreeHandler.cs`  |
+| ToDoList          | `NativeUI/AddonHandlers/Quest/ToDoListHandler.cs`      |
+| RecommendList     | `NativeUI/AddonHandlers/Quest/RecommendListHandler.cs` |
 | UI text cache     | `Cache/QuestUiTranslationCache.cs`                     |
 | Hover cache       | `Cache/QuestHoverTranslationCache.cs`                  |
 | DB operations     | `DBHelpers/DbOperations.cs`                            |

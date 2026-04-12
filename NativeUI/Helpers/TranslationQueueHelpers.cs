@@ -57,7 +57,7 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="values">The translated strings.</param>
   /// <returns>A JSON payload representing the translated strings.</returns>
-  private static string SerializeTranslationBatch(
+  internal static string SerializeTranslationBatch(
       IReadOnlyCollection<string> values)
   {
     return JsonConvert.SerializeObject(values, Formatting.None);
@@ -102,7 +102,7 @@ public partial class Echoglossian
   /// <param name="payload">The cached payload.</param>
   /// <param name="values">The translated strings.</param>
   /// <returns>True when the payload contains a valid batch.</returns>
-  private static bool TryDeserializeTranslationBatch(
+  internal static bool TryDeserializeTranslationBatch(
       string payload,
       out string[] values)
   {

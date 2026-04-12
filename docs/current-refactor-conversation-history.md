@@ -562,24 +562,24 @@ Move the next smallest quest handler into `NativeUI/AddonHandlers/Quest/` using 
 
 ---
 
-## Milestone — quest ScenarioTree migrated to standalone quest handler (April 12, 2026)
-
 ### What changed
 
-- Added `NativeUI/AddonHandlers/Quest/ScenarioTreeHandler.cs` and moved the ScenarioTree capture logic, including its quest-progress helper, out of the legacy partial class path.
-- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so ScenarioTree now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
-- Removed the legacy ScenarioTree listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiScenarioTreeHandler.cs`.
+- Added `NativeUI/AddonHandlers/Quest/ToDoListHandler.cs` and moved the dense ToDoList capture, progress matching, and translation logic out of the legacy partial class path.
+- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so ToDoList now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
+- Removed the legacy ToDoList listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiToDoListHandler.cs`.
+- Exposed the shared time-format validator in `GeneralHelpers/Utils.cs` as an internal static helper so the new handler could reuse it without duplicating the logic.
 
 ### Why it changed
 
-ScenarioTree was the first quest surface that depended on live progress resolution, so it was the right checkpoint to prove the standalone quest-handler pattern still works when the addon needs multiple quest-name refreshes per event.
+ToDoList is the densest quest surface in the migration set, so it was moved only after the shared quest support layer and the smaller quest handlers were proven.
 
 The handler still follows the same runtime behavior:
 
-- resolve quest progress through `QuestTodoProgressResolver`
+- resolve quest identity through the shared quest lookup and live progress path
 - reuse the quest translation cache and queue broker
 - write native text only when the configured display mode allows it
 - register hover tooltips through the shared quest tooltip path
+- avoid repeated frame-by-frame retranslations by short-circuiting on stable progress keys
 
 ### Validation
 
@@ -588,7 +588,7 @@ The handler still follows the same runtime behavior:
 
 ### Next step
 
-Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and standalone registration pattern.
+Move `Journal` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial path once the new handler is verified.
 
 ---
 
@@ -680,6 +680,70 @@ The handler still follows the same runtime behavior:
 ### Next step
 
 Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and standalone registration pattern.
+
+---
+
+## Milestone — quest ToDoList migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added `NativeUI/AddonHandlers/Quest/ToDoListHandler.cs` and moved the dense ToDoList capture, progress matching, and translation logic out of the legacy partial class path.
+- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so ToDoList now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
+- Removed the legacy ToDoList listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiToDoListHandler.cs`.
+- Exposed the shared time-format validator in `GeneralHelpers/Utils.cs` as an internal static helper so the new handler could reuse it without duplicating the logic.
+
+### Why it changed
+
+ToDoList is the densest quest surface in the migration set, so it was moved only after the shared quest support layer and the smaller quest handlers were proven.
+
+The handler still follows the same runtime behavior:
+
+- resolve quest identity through the shared quest lookup and live progress path
+- reuse the quest translation cache and queue broker
+- write native text only when the configured display mode allows it
+- register hover tooltips through the shared quest tooltip path
+- avoid repeated frame-by-frame retranslations by short-circuiting on stable progress keys
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+
+### Next step
+
+Move `Journal` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial path once the new handler is verified.
+
+---
+
+## Milestone — quest Journal migrated to standalone quest handler (April 12, 2026)
+
+### What changed
+
+- Added `NativeUI/AddonHandlers/Quest/JournalHandler.cs` and moved the Journal and JournalDetail capture, translation, and hover logic out of the legacy partial class path.
+- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so both `Journal` and `JournalDetail` now register through the standalone quest handler map.
+- Removed the legacy Journal listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiJournalHandler.cs`.
+- Reused the shared quest normalization and batch helpers instead of keeping Journal-local duplicates.
+
+### Why it changed
+
+Journal was the largest and most sensitive quest surface in the migration set, so it was left for last after the smaller quest windows had already proven the standalone handler pattern.
+
+The handler still follows the same runtime behavior:
+
+- resolve quest identity through the shared quest lookup and live progress path
+- reuse the quest translation cache and queue broker
+- write native text only when the configured display mode allows it
+- register hover tooltips through the shared quest tooltip path
+- avoid duplicated helper logic by using the shared quest base and static queue helpers
+
+### Validation
+
+- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+
+### Next step
+
+Continue with the next non-quest surface now that the quest migration slice is complete.
 
 ---
 

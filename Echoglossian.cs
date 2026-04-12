@@ -504,38 +504,6 @@ public partial class Echoglossian : IDalamudPlugin
       // Talk now unregisters through the addon-handler registrar.
     }
 
-    if (this.configuration.TranslateJournal)
-    {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreUpdate,
-          "Journal",
-          this.UiJournalQuestHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "Journal",
-          this.UiJournalQuestHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PostRequestedUpdate,
-          "Journal",
-          this.UiJournalDetailHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "JournalDetail",
-          this.UiJournalDetailHandler);
-    }
-
-    if (this.configuration.TranslateToDoList)
-    {
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PostRequestedUpdate,
-          "_ToDoList",
-          this.UiToDoListHandler);
-      AddonLifecycle.UnregisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "_ToDoList",
-          this.UiToDoListHandler);
-    }
-
     FrameworkInterface.Update -= this.Tick;
 
     this.GlyphRangeConfigText?.Free();

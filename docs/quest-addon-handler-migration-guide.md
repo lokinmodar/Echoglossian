@@ -95,7 +95,9 @@ Current status:
 - Step 3 (`JournalResult`) is complete.
 - Step 4 (`ScenarioTree`) is complete.
 - Step 5 (`RecommendList`) is complete.
-- Step 6 (`ToDoList`) is next.
+- Step 6 (`ToDoList`) is complete.
+- Step 7 (`Journal`) is complete.
+- All quest-addon steps in this guide are complete.
 
 ### Phase 2: Migrate the smaller quest handlers first
 

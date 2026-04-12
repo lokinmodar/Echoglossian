@@ -187,6 +187,17 @@ public partial class Echoglossian
 
     var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();
 
+    if (this.configuration.TranslateJournal)
+    {
+      var journalHandler = new JournalHandler(questAddonDependencies);
+      this.registeredAddonHandlers.Add(
+          (AddonName: "Journal",
+              Handler: journalHandler));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "JournalDetail",
+              Handler: journalHandler));
+    }
+
     if (this.configuration.TranslateJournalAccept)
     {
       this.registeredAddonHandlers.Add(
@@ -214,6 +225,13 @@ public partial class Echoglossian
           (AddonName: "RecommendList",
               Handler: new RecommendListHandler(questAddonDependencies)));
     }
+
+        if (this.configuration.TranslateToDoList)
+        {
+            this.registeredAddonHandlers.Add(
+                    (AddonName: "_ToDoList",
+                            Handler: new ToDoListHandler(questAddonDependencies)));
+        }
 
     if (this.configuration.TranslateAreaMap)
     {
@@ -352,38 +370,6 @@ public partial class Echoglossian
     AddonHandlerRegistrar.RegisterMany(
         this.registeredAddonHandlers,
         AddonLifecycle);
-
-    if (this.configuration.TranslateJournal)
-    {
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreUpdate,
-          "Journal",
-          this.UiJournalQuestHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "Journal",
-          this.UiJournalQuestHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PostRequestedUpdate,
-          "Journal",
-          this.UiJournalDetailHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "JournalDetail",
-          this.UiJournalDetailHandler);
-    }
-
-    if (this.configuration.TranslateToDoList)
-    {
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PostRequestedUpdate,
-          "_ToDoList",
-          this.UiToDoListHandler);
-      AddonLifecycle.RegisterListener(
-          AddonEvent.PreRequestedUpdate,
-          "_ToDoList",
-          this.UiToDoListHandler);
-    }
 
     /*"PreSetup","PostSetup", "PreUpdate", "PostUpdate", "PreDraw", "PostDraw", "PreFinalize", "PreReceiveEvent", "PostReceiveEvent", "PreRequestedUpdate", "PostRequestedUpdate", "PreRefresh", "PostRefresh" */
 
