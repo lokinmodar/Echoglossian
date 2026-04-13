@@ -276,7 +276,9 @@ For each quest name entry:
 2. `QuestTodoProgressResolver.TryResolveQuestTodoProgress` → `questTodoProgressKey`.
 3. Build compound cache key `$"{progressKey}|{questName}|{objectives joined}"`.
 4. **Cache check** `QuestUiTranslationCache.TryGetAppliedSnapshot(sanitized key)`:
-   - Hit: `continue` (entire quest + objectives already applied).
+   - Hit: if no quest plate can be resolved, `continue`; otherwise reuse the
+     resolved quest-plate path so hover registration and any native refresh
+     still happen without queuing new translations.
    - Miss: proceed.
 5. `FindQuestPlateByName`.
 6. **DB hit:** write quest name node if `WritesNative`; call `RegisterToDoTooltip` with translated name; iterate objectives:

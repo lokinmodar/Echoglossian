@@ -334,15 +334,16 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         var questPlate = this.CreateQuestPlate(
             effectiveQuestName,
             string.Empty);
+        var foundQuestPlate = this.FindQuestPlateByName(questPlate);
 
         if (QuestUiTranslationCache.TryGetAppliedSnapshot(
                 questTodoProgressKey,
-                out _))
+                out _) &&
+            foundQuestPlate == null)
         {
           continue;
         }
 
-        var foundQuestPlate = this.FindQuestPlateByName(questPlate);
         if (foundQuestPlate != null)
         {
           var foundTranslatedQuestName = foundQuestPlate.TranslatedQuestName;

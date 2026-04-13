@@ -83,8 +83,11 @@ Important observations from the logs and probing:
   and the other quest addons in hover coverage
 - `JournalDetail` body coverage improved with the `JournalCanvasComponentNode`
   trigger, but the body still depends on a mix of UI surface and DB material
-- `ToDoList`, `ScenarioTree`, `RecommendList`, and `AreaMap` still need a
-  dedicated trigger/registration pass even when their config flags are enabled
+- `ToDoList` and `AreaMap` showed a cache-hit short-circuit that could skip
+  hover re-registration after the first translated pass
+- `ScenarioTree` and `RecommendList` remain part of the same verification
+  surface, but they already follow a more cache-friendly hover path in the
+  current runtime model
 - the next step should keep the sheet-first quest pipeline as the source of
   truth for content while treating the UI strictly as a locator
 

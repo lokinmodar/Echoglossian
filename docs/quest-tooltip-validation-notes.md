@@ -45,7 +45,10 @@ The current runtime behavior points to two separate problems:
 
 1. `Journal` and `JournalDetail` are mostly working, but `JournalDetail` still
    needs a better body trigger and a more complete source composition strategy.
-2. The other quest addons likely still have a trigger or registration gap, not
+2. Some quest addons can still short-circuit on cache hits before re-registering
+   hover targets, which makes them look silent after the first translated pass.
+   This showed up most clearly in `ToDoList` and `AreaMap`.
+3. The other quest addons likely still have a trigger or registration gap, not
    just a translation gap.
 
 The data-source direction remains the same:

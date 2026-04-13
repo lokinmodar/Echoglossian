@@ -109,8 +109,28 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
 
       if (QuestUiTranslationCache.TryGetAppliedSnapshot(
               questNameText,
-              out _))
+              out var appliedQuestSnapshot))
       {
+        if (this.AreaMapWritesNativeTranslation)
+        {
+          setupAtkValues[142].SetManagedString(
+              appliedQuestSnapshot.AppliedText);
+        }
+
+        if (this.AreaMapUsesHoverTooltips)
+        {
+          var addon = AtkStage.Instance()->RaptureAtkUnitManager
+              ->GetAddonByName(AreaMapAddonName);
+          this.RegisterTranslatedHoverTooltip(
+              $"AreaMap-{(nint)addon:X}-142",
+              addon,
+              questNameText,
+              appliedQuestSnapshot.AppliedText,
+              swapEnabled: this.AreaMapHoverShowsOriginal,
+              forceEnabled: true,
+              denseHitbox: true);
+        }
+
         return;
       }
 
