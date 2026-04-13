@@ -19,6 +19,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
 
   private const string ToDoListHoverPrefix = "ToDoList-";
 
+  private readonly Dictionary<string, ToDoHoverEntry> toDoHoverEntries = [];
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="ToDoListHandler" /> class.
   /// </summary>
@@ -28,6 +30,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PostRequestedUpdate, this.OnToDoListEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnToDoListEvent);
+    this.RegisterHandler(AddonEvent.PreDraw, this.OnToDoListHoverRefreshEvent);
     this.RegisterHandler(AddonEvent.PreHide, this.OnToDoListCleanupEvent);
     this.RegisterHandler(AddonEvent.PreFinalize, this.OnToDoListCleanupEvent);
   }
@@ -88,19 +91,146 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       return;
     }
 
+    var hoverKey = progressKey == null
+        ? $"ToDoList-{indexI}-{indexJ}-{nodeId}"
+        : $"ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}";
+
+    this.RememberToDoHoverEntry(
+        hoverKey,
+        indexI,
+        indexJ,
+        nodeId,
+        originalText,
+        translatedText);
+
+    if (this.TryGetToDoHoverBounds(
+            todoList,
+            indexI,
+            indexJ,
+            out var topLeft,
+            out var bottomRight))
+    {
+      this.RegisterTranslatedHoverTooltip(
+          hoverKey,
+          topLeft,
+          bottomRight,
+          originalText,
+          translatedText,
+          swapEnabled: this.ToDoListHoverShowsOriginal,
+          forceEnabled: true);
+      return;
+    }
+
     var textNode = todoList->UldManager.NodeList[indexI]
         ->GetAsAtkComponentNode()->Component->UldManager.NodeList[indexJ]
         ->GetAsAtkTextNode();
     this.RegisterTranslatedHoverTooltip(
-        progressKey == null
-            ? $"ToDoList-{indexI}-{indexJ}-{nodeId}-{(nint)textNode:X}"
-            : $"ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}-{(nint)textNode:X}",
+        hoverKey,
         textNode,
         originalText,
         translatedText,
         swapEnabled: this.ToDoListHoverShowsOriginal,
         forceEnabled: true,
         denseHitbox: true);
+  }
+
+  /// <summary>
+  ///     Tries to resolve a practical hover rectangle for a ToDoList row by
+  ///     combining the full row node bounds with the inner text node bounds.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  /// <param name="indexI">The outer row index.</param>
+  /// <param name="indexJ">The inner text-node index.</param>
+  /// <param name="topLeft">The resolved top-left screen coordinate.</param>
+  /// <param name="bottomRight">The resolved bottom-right screen coordinate.</param>
+  /// <returns>True when usable hover bounds were resolved.</returns>
+  private unsafe bool TryGetToDoHoverBounds(
+      AtkUnitBase* todoList,
+      int indexI,
+      int indexJ,
+      out Vector2 topLeft,
+      out Vector2 bottomRight)
+  {
+    topLeft = default;
+    bottomRight = default;
+
+    if (todoList == null ||
+        indexI < 0 ||
+        indexI >= todoList->UldManager.NodeListCount)
+    {
+      return false;
+    }
+
+    var rowNode = todoList->UldManager.NodeList[indexI];
+    if (rowNode == null || !rowNode->IsVisible())
+    {
+      return false;
+    }
+
+    var rowComponentNode = rowNode->GetAsAtkComponentNode();
+    if (rowComponentNode == null ||
+        rowComponentNode->Component == null ||
+        indexJ < 0 ||
+        indexJ >= rowComponentNode->Component->UldManager.NodeListCount)
+    {
+      return false;
+    }
+
+    var childNode = rowComponentNode->Component->UldManager.NodeList[indexJ];
+    if (childNode == null || !childNode->IsVisible() || childNode->Type != NodeType.Text)
+    {
+      return false;
+    }
+
+    var textNode = childNode->GetAsAtkTextNode();
+    if (textNode == null)
+    {
+      return false;
+    }
+
+    var left = Math.Min(rowNode->ScreenX, textNode->ScreenX);
+    var top = Math.Min(rowNode->ScreenY, textNode->ScreenY);
+    var right = Math.Max(
+        rowNode->ScreenX + Math.Max(1f, rowNode->Width),
+        textNode->ScreenX + Math.Max(1f, textNode->GetWidth()));
+    var bottom = Math.Max(
+        rowNode->ScreenY + Math.Max(1f, rowNode->Height),
+        textNode->ScreenY + Math.Max(1f, textNode->GetHeight()));
+
+    topLeft = new Vector2(
+        Math.Max(0f, left - 16f),
+        Math.Max(0f, top - 10f));
+    bottomRight = new Vector2(
+        right + 16f,
+        bottom + 12f);
+    return true;
+  }
+
+  /// <summary>
+  ///     Remembers the latest tooltip payload for one ToDoList row so it can
+  ///     be refreshed during draw without recomputing translations.
+  /// </summary>
+  /// <param name="key">The stable hover key.</param>
+  /// <param name="indexI">The outer row index.</param>
+  /// <param name="indexJ">The inner text-node index.</param>
+  /// <param name="nodeId">The backing node identifier.</param>
+  /// <param name="originalText">The current original text.</param>
+  /// <param name="translatedText">The current translated text.</param>
+  private void RememberToDoHoverEntry(
+      string key,
+      int indexI,
+      int indexJ,
+      uint nodeId,
+      string originalText,
+      string translatedText)
+  {
+    this.toDoHoverEntries[key] = new ToDoHoverEntry(
+        key,
+        indexI,
+        indexJ,
+        nodeId,
+        originalText ?? string.Empty,
+        translatedText ?? string.Empty);
   }
 
   /// <summary>
@@ -698,6 +828,54 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Refreshes ToDoList hover targets every draw using the most recently
+  ///     resolved row payloads without queueing new translations.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private unsafe void OnToDoListHoverRefreshEvent(AddonEvent type, AddonArgs args)
+  {
+    if (!this.Config.TranslateToDoList || !this.ToDoListUsesHoverTooltips)
+    {
+      return;
+    }
+
+    if (this.toDoHoverEntries.Count == 0)
+    {
+      return;
+    }
+
+    var todoList = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+        ToDoListAddonName);
+    if (todoList == null || !todoList->IsVisible)
+    {
+      return;
+    }
+
+    foreach (var hoverEntry in this.toDoHoverEntries.Values.ToList())
+    {
+      if (!this.TryGetToDoHoverBounds(
+              todoList,
+              hoverEntry.IndexI,
+              hoverEntry.IndexJ,
+              out var topLeft,
+              out var bottomRight))
+      {
+        continue;
+      }
+
+      this.RegisterTranslatedHoverTooltip(
+          hoverEntry.Key,
+          topLeft,
+          bottomRight,
+          hoverEntry.OriginalText,
+          hoverEntry.TranslatedText,
+          swapEnabled: this.ToDoListHoverShowsOriginal,
+          forceEnabled: true);
+    }
+  }
+
+  /// <summary>
   ///     Clears ToDoList hover registrations when the addon closes.
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
@@ -706,7 +884,25 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   {
     if (string.Equals(args.AddonName, ToDoListAddonName, StringComparison.Ordinal))
     {
+      this.toDoHoverEntries.Clear();
       this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
     }
   }
+
+  /// <summary>
+  ///     Captures the latest tooltip payload for one visible ToDoList row.
+  /// </summary>
+  /// <param name="Key">The stable hover key.</param>
+  /// <param name="IndexI">The outer row index.</param>
+  /// <param name="IndexJ">The inner text-node index.</param>
+  /// <param name="NodeId">The backing node identifier.</param>
+  /// <param name="OriginalText">The current original text.</param>
+  /// <param name="TranslatedText">The current translated text.</param>
+  private sealed record ToDoHoverEntry(
+      string Key,
+      int IndexI,
+      int IndexJ,
+      uint NodeId,
+      string OriginalText,
+      string TranslatedText);
 }

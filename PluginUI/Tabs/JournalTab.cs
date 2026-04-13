@@ -88,6 +88,7 @@ public static class JournalTab
             ref config.TranslateJournal);
 
         changed |= DrawQuestDisplayModeCombo(
+            nameof(config.JournalTranslationDisplayMode),
             ref config.JournalTranslationDisplayMode);
 
         changed |= ImGui.Checkbox(
@@ -116,7 +117,7 @@ public static class JournalTab
         ImGui.Separator();
 
         changed |= ImGui.Checkbox(sectionLabel, ref enabled);
-        changed |= DrawQuestDisplayModeCombo(ref displayMode);
+        changed |= DrawQuestDisplayModeCombo(sectionLabel, ref displayMode);
 
         return changed;
     }
@@ -124,13 +125,16 @@ public static class JournalTab
     /// <summary>
     ///     Draws the generic quest display mode combo and description text.
     /// </summary>
+    /// <param name="comboId">A unique ImGui id suffix for this combo.</param>
     /// <param name="displayMode">The configured display mode to edit.</param>
     /// <returns><c>true</c> when the combo selection changed.</returns>
     private static bool DrawQuestDisplayModeCombo(
+        string comboId,
         ref JournalTranslationDisplayMode displayMode)
     {
         var changed = false;
         var modeValue = (int)displayMode;
+        ImGui.PushID(comboId);
         if (ImGui.Combo(
                 Resources.QuestDisplayModeLabel,
                 ref modeValue,
@@ -142,6 +146,7 @@ public static class JournalTab
         }
 
         ImGui.TextWrapped(Resources.QuestDisplayModeDescription);
+        ImGui.PopID();
         return changed;
     }
 }

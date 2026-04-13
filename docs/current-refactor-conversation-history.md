@@ -2,788 +2,724 @@
 
 ## Purpose
 
-This document is a condensed chronological archive of the ongoing refactor conversation for Echoglossian.
+This document is the living memory of the current Echoglossian refactor.
 
-It is not a verbatim transcript. It exists as a durable memory of the important decisions, observations, and architectural changes that were made during the work on quest handling, payload preservation, tooltips, Lumina-based sheet acquisition, and DB normalization.
+It is intentionally not a raw transcript. It should answer:
 
-If this archive ever diverges from the current code, the code and the focused technical docs should take precedence.
+- what changed
+- when it changed
+- why it changed
+- what evidence led to the change
+- where the refactor currently stands
+
+If this document ever diverges from the code, the code and the focused technical docs take precedence.
 
 ## Maintenance Rule
 
-Treat this as a living document.
+Keep this file append-oriented and chronological.
 
-After each meaningful milestone in the conversation, append a short, high-signal update here that captures:
+When adding a new milestone:
 
-- what changed
-- why it changed
-- what new evidence or decision it produced
-- what the next likely step is
+1. Prefer the real git commit timestamp when the work was committed.
+2. If the work is still uncommitted, mark it clearly as an uncommitted working-tree checkpoint.
+3. Do not insert new milestones out of order.
+4. Do not replace prior milestones unless they were factually wrong.
+5. If older sections become inaccurate, add a correction milestone instead of silently rewriting history.
 
-Keep updates concise. This document should stay useful as a memory aid, not become a full raw transcript.
+## Long-Term Conclusions
 
-## High-Level Outcome
+The refactor converged on these stable decisions:
 
-The conversation converged on a few strong conclusions:
-
-- quest data should not be treated as UI text alone
-- the UI is useful for identifying the active quest and current visible surface, but not as the authoritative source of quest content
-- stable quest identity should come from Lumina and quest sheet identifiers
-- live quest progress should come from native runtime state such as `QuestManager` and director todo data
+- quest data must not be treated as UI text alone
+- UI is a locator and presentation surface, not the canonical quest source
+- stable quest identity should come from Lumina
+- live quest progress should come from runtime state such as `QuestManager` and director todos
 - structured text must preserve payloads, placeholders, and formatting
-- quests, item tooltips, and action tooltips should share the same payload-aware logic
-- the quest database should store canonical, versioned quest snapshots instead of fragmented UI snapshots
+- hover and native mutation modes must remain separate
+- quest persistence should converge on canonical, versioned snapshots rather than fragmented UI captures
 
-## Chronological Summary
+## Current State
 
-### 1. MiniTalk stabilization and multi-overlay reasoning
+As of the latest working-tree checkpoint:
 
-The work began with `_MiniTalk`.
+- quest-family addons have been migrated to standalone handlers under `NativeUI/AddonHandlers/Quest/`
+- `Journal` and `JournalDetail` tooltips are partially working, but `JournalDetail` remains the least stable surface
+- `ToDoList` tooltip behavior improved, but the dense quest-family hover surfaces still need more runtime validation
+- the quest pipeline is moving toward sheet-first composition using Lumina plus live progress
+- the current `questplates` table is no longer fragmented by duplicate quest rows, but older rows were sparse and legacy-shaped
+- the current uncommitted change narrows `JournalDetail` body hover content to the current SEQ row and enlarges the hover bounds
 
-The key findings were:
+## Reference Docs
 
-- the addon has multiple simultaneous instances
-- the overlay must follow the visible bubble, not a single global text source
-- a bubble that is not in the viewport does not need an injected overlay
-- the correct approach is to key overlays by bubble instance and update them frame by frame only while visible
-
-This established an important pattern for future dense UI work:
-
-- follow the addon instance, not a raw node id
-- avoid forcing overlay insertion when the addon is off-screen
-- keep translation state separate from visual attachment
-
-### 2. CutSceneSelectString probing and list rendering
-
-The next focus was `CutSceneSelectString`.
-
-The debugging process confirmed:
-
-- the addon exposes a title/question plus multiple options
-- the tooltip overlay should render one item per line
-- the quest-like selection UI is better handled as a structured list, not a single blob of text
-
-The probe work also confirmed that the addon can have multiple options and that any implementation must be prepared for more than two choices.
-
-### 3. Journal and quest hover behavior
-
-The Journal family became a major focus:
-
-- `Journal`
-- `JournalDetail`
-- `JournalAccept`
-- `JournalResult`
-- `ToDoList`
-- `RecommendList`
-- `ScenarioTree`
-- `AreaMap`
-
-Important observations from the logs and probing:
-
-- the current runtime still shows a gap between `Journal` / `JournalDetail`
-  and the other quest addons in hover coverage
-- `JournalDetail` body coverage improved with the `JournalCanvasComponentNode`
-  trigger, but the body still depends on a mix of UI surface and DB material
-- `ToDoList` and `AreaMap` showed a cache-hit short-circuit that could skip
-  hover re-registration after the first translated pass
-- `ScenarioTree` and `RecommendList` remain part of the same verification
-  surface, but they already follow a more cache-friendly hover path in the
-  current runtime model
-- the next step should keep the sheet-first quest pipeline as the source of
-  truth for content while treating the UI strictly as a locator
-
-- the quest title portion of Journal was generally more stable
-- the body of `JournalDetail` was hard to hit with a small trigger area
-- `ToDoList`, `RecommendList`, and `ScenarioTree` were initially not producing hover hits consistently
-- tooltip behavior should be per-addon and not inherit global toggle effects unintentionally
-- some modes were mutating native UI when tooltip-only behavior was intended
-
-The work led to a stronger distinction between:
-
-- reading quest data
-- choosing whether to show translation in the native UI
-- choosing whether to show translation in tooltip only
-- choosing whether to show original text in tooltip when swap is enabled
-
-### 4. JournalDetail trigger and tooltip body
-
-We settled on using the `JournalCanvasComponentNode` with node id `14` as the preferred trigger for the Journal quest body hover.
-
-The goal was:
-
-- keep the quest title stable
-- let the body hover cover the correct visual region
-- show the full quest body in the tooltip
-- rely less on the tiny title/body text bounds
-
-This was still considered a compromise because the UI was not always the right source of truth for the body text.
-
-### 5. Quest sheet acquisition through Lumina
-
-The project then shifted toward a sheet-first quest pipeline.
-
-The key realization was:
-
-- `Quest.RowId` is not the same as the quest text sheet identifier
-- `Quest.Id` is the textual quest sheet identifier used to mount the quest text sheet
-- live quest progress comes from runtime quest state, not from the visible Journal text
-
-That led to a reusable pipeline documented separately and reinforced through the quest probe:
-
-- resolve the quest through Lumina
-- mount the correct raw quest sheet from `Quest.Id`
-- preserve structured text rather than flattening it too early
-- combine the sheet with live quest progress
-- use the result as the canonical quest snapshot
-
-This was later validated against external sources:
-
-- Lumina
-- Lumina.Excel
-- Lumina docs
-- QuestShare
-- EXDViewer
-- HaselDebug
-- `exd.camora.dev`
-
-### 6. QuestPlate schema redesign
-
-The live SQLite database showed that the old `questplates` table was fragmented:
-
-- many rows per quest
-- no meaningful `QuestId` population in the historical data
-- no `GameVersion` column in the old shape
-- quest content often split across partial step snapshots
-
-The new canonical direction became:
-
-- one logical row per quest identity and translation context
-- keyed by `QuestId + TranslationLang + TranslationEngine + GameVersion`
-- updated as the quest advances
-- no reliance on `RowVersion` for meaning
-
-The old `RowVersion` field was removed from `QuestPlate`, because it was not contributing to a reliable persistence model in SQLite.
-
-### 7. Structured payload handling
-
-Another central insight was that quest text, item tooltips, and action tooltips should not be treated as plain strings.
-
-The shared rule became:
-
-- preserve payload structure
-- translate only human-readable text segments
-- reassemble the output with payload order intact
-- never flatten away formatting and placeholders unless the feature is intentionally lossy
-
-This was formalized as a reusable structured text pipeline for:
-
-- quests
-- `ItemTooltip`
-- `ActionTooltip`
-- `StringArrayData`
-
-### 8. Tooltips, hover logs, and log hygiene
-
-Hover-based debugging became important, but logs had to be kept under control.
-
-The work uncovered that:
-
-- some tooltip-related logs were emitted far too often even without hover
-- some Journal and ToDoList paths were still mixing content capture with native mutation
-- some hover triggers were too small or too inconsistent
-
-The rule that emerged was:
-
-- logs should show the minimum needed to understand whether hover registered and which target was selected
-- do not log full translated text in hot paths
-- suppress repeated per-frame chatter once the issue is understood
-
-### 9. Translation queue pacing and rate-limit protection
-
-The first-load stutter problem exposed that too many quest-related translations could fire at once.
-
-The queue/broker layer was therefore used to:
-
-- serialize translation work
-- suppress duplicate in-flight translations
-- avoid hammering the translation backend
-- reduce the risk of rate limiting
-
-### 10. Command docs and probe tooling
-
-To keep the workflow reproducible, documentation was added for:
-
-- `/eglo`
-- `/eglodbmanager`
-- `/egloaddonprobe`
-- `/egloquestprobe`
-
-The quest probe was especially important because it showed:
-
-- the quest row in Lumina
-- the quest text sheet path
-- the live todo/progress state
-- the current DB row
-
-This helped prove that the old quest data shape was too sparse and that the new quest pipeline was needed.
-
-### 11. Refactor documentation as memory
-
-Several docs were created to serve as long-term memory for the refactor:
-
-- `docs/refactor-timeline-and-flow-analysis.md`
-- `docs/quest-sheet-acquisition-pipeline.md`
-- `docs/journal-quest-data-model-and-flow.md`
-- `docs/structured-text-payload-pipeline.md`
-- `docs/quest-probe-command.md`
-- `docs/commands/README.md`
-
-These docs are meant to remain useful even after the code evolves, because they explain the intended flow and the reasoning behind it.
-
-## Current Working Model
-
-The current design intent can be summarized like this:
-
-```mermaid
-flowchart TD
-    A[UI identifies active quest or addon] --> B[Lumina resolves stable identity]
-    B --> C[Live runtime progress resolves current step]
-    C --> D[Raw sheet or structured text source is read]
-    D --> E[Payloads and human-readable text are separated]
-    E --> F[Only text segments are translated]
-    F --> G[Structured translated output is reassembled]
-    G --> H[Canonical DB snapshot is updated]
-    H --> I[Native UI or tooltip renders the chosen mode]
-```
-
-## Working Agreements Reached During the Conversation
-
-- Quest UI should be used as a capture surface, not as the long-term source of truth.
-- Quest identity should be stable and sheet-driven.
-- Live progress should come from the director/quest manager state.
-- Quest text should preserve payload structure.
-- Item and action tooltips should eventually follow the same payload-aware pattern.
-- Hover mode and native mutation mode must remain separate.
-- Per-addon behavior should not leak into unrelated addons through a global toggle.
-- Logs should stay narrow and actionable.
-- The DB should store canonical, versioned quest snapshots, not fragmented UI-only slices.
-
-## Notes For Future Work
-
-- Keep using the quest probe whenever a quest shape looks suspicious.
-- Prefer sheet-first capture whenever the sheet identity is known.
-- Use the UI only to disambiguate what is currently visible.
-- Continue treating payload handling as a shared pipeline, not a one-off quest workaround.
-- If the quest DB shape still proves too narrow, redesign it from the sheet/progress model rather than extending the old UI snapshot model.
-
-## Related Reference Docs
-
-- [Quest Sheet Acquisition Pipeline](./quest-sheet-acquisition-pipeline.md)
-- [Structured Text Payload Pipeline](./structured-text-payload-pipeline.md)
-- [Journal Quest Data Model and Flow](./journal-quest-data-model-and-flow.md)
-- [Quest Probe Command](./quest-probe-command.md)
 - [Refactor Timeline and Flow Analysis](./refactor-timeline-and-flow-analysis.md)
+- [Quest Sheet Acquisition Pipeline](./quest-sheet-acquisition-pipeline.md)
+- [Quest Full Pipeline Design](./quest-full-pipeline-design.md)
+- [Journal Quest Data Model and Flow](./journal-quest-data-model-and-flow.md)
+- [Quest Addon Translation Runtime Flow](./quest-addon-translation-runtime-flow.md)
+- [Quest Tooltip Validation Notes](./quest-tooltip-validation-notes.md)
+- [Structured Text Payload Pipeline](./structured-text-payload-pipeline.md)
+- [Quest Probe Command](./quest-probe-command.md)
 
----
+## Chronological Milestones
 
-## Milestone — scripts/quest-reader created and verified (April 2026)
+### 2026-04-03 15:23:57 -0300 - `2591513` - talk flow migrated to addon-handler runtime
 
-### What changed
+**What changed**
 
-- **`scripts/quest-reader/quest-reader.csproj`** and **`scripts/quest-reader/Program.cs`** were created.
-  This is a standalone .NET 10 console project that reads FFXIV game data using the exact same Lumina DLLs used by Dalamud at runtime (`%APPDATA%\XIVLauncher\addon\Hooks\dev\`).
-- **`AGENTS.md`** was updated to add SaintCoinach (https://github.com/xivapi/SaintCoinach) to the References section as a fallback for offline scripts where Dalamud is not available.
+- `Talk` moved to the addon-handler runtime and stopped depending on the older mixed path.
 
-### Why it was added
+**Why it changed**
 
-The prior work used in-game probe output from log files to understand quest sheet structure.
-The script replaces that manual approach — it reads the live game files offline, using `Lumina.GameData`, so the full structured quest text sheet can be inspected without running the game.
+- This established the modern separation of capture, translation, overlay, and native mutation that the rest of the refactor now follows.
 
-This was needed to answer design questions about the quest pipeline:
+**Next step**
 
-- Which row types does a quest text sheet actually contain?
-- What is the current gap between sheet data and what `QuestProgressResolver` reads?
-- What should `QuestPlate` store to represent the full structured payload?
+- Apply the same runtime separation to the next addon families.
 
-### Evidence confirmed by the script
+### 2026-04-03 19:51:40 -0300 - `2b4d548` - talk and battletalk handlers stabilized
 
-The script was verified against two quests from prior log probes:
+**What changed**
 
-**Strange Bedfellows** (`RowId=69929`, `InternalId=AktKmb114_04393`, `Sheet=quest/043/AktKmb114_04393`):
+- The new talk-family runtime was hardened.
 
-- 122 total rows
-- **1 SEQ** — journal summary shown in `JournalDetail` body
-- **8 TODO** — active objectives shown in `ToDoList` / `ScenarioTree`
-- **1 SYSTEM** — cinematic caption
-- **73 DIALOG** — NPC/character dialog lines
+**Why it changed**
 
-**The Paths We Walk** (`RowId=67011`, `InternalId=HeaVnz025_01475`, `Sheet=quest/014/HeaVnz025_01475`):
+- This reduced the risk of restoring native state incorrectly and helped define the later quest-mode rules.
 
-- 130 total rows
-- **10 SEQ** rows (one per journal phase), **8 TODO** rows (padded to 24 empty slots)
-- **4 SYSTEM** rows, **~85 DIALOG** rows
+**Next step**
 
-### Row classification rule (confirmed)
+- Keep extending the handler-based runtime to the remaining UI families.
 
-| Key pattern           | Type   | Shown where                              |
-|-----------------------|--------|------------------------------------------|
-| `_SEQ_NN`             | SEQ    | JournalDetail body (per quest phase)     |
-| `_TODO_NN`            | TODO   | ToDoList, ScenarioTree objectives        |
-| `_SYSTEM_NNN_NNN`     | SYSTEM | Cinematic captions                       |
-| `NPC_NAME_NNN_NNN`    | DIALOG | NPC/character dialog lines               |
-| empty value           | EMPTY  | Padding slots (safe to skip)             |
+### 2026-04-04 23:07:47 -0300 - `aa65f16` - MiniTalk finalized
 
-### Gaps confirmed in the current implementation
+**What changed**
 
-- `QuestProgressResolver.ReadQuestStepTexts()` filters for `_TODO_` rows **only** — SEQ, SYSTEM, and DIALOG rows are never read or stored.
-- `QuestPlate.ObjectivesAsText` and `QuestPlate.SummariesAsText` are **always empty** in the DB (confirmed from log probe db output: `objectives=0 summaries=0`).
-- `QuestPlate.OriginalQuestMessage` holds visible UI body text, not the sheet-sourced SEQ summary.
-- There is no field in `QuestPlate` for SEQ rows, SYSTEM rows, or DIALOG rows.
+- `_MiniTalk` was reworked to support multiple overlay instances and viewport-aware rendering.
 
-### Technical notes
+**Why it changed**
 
-- Lumina requires the `sqpack/` subdirectory as the constructor path, not the parent `game/` directory. The script normalizes any supplied path automatically.
-- `LuminaOptions { PanicOnSheetChecksumMismatch = false }` is required for offline use.
-- Quest sheet path is derived from `Quest.Id.ExtractText()` (the internal textual key), **not** from `Quest.RowId`. Formula: `quest/{internalId[-5..-3]}/{internalId}`.
-- SaintCoinach was considered but is not needed — the Lumina DLLs from Dalamud are sufficient and are already installed locally.
+- This reinforced the rule that visual attachment should follow visible addon instances, not a single global text slot.
 
-### Script usage reference
+**Next step**
 
-```powershell
-cd scripts/quest-reader
-dotnet run -- --quest "Strange Bedfellows"
-dotnet run -- --quest-id 67011 --lang en --all-rows
-dotnet run -- --sheet quest/014/HeaVnz025_01475 --json output.json
-dotnet run -- --game-dir "D:\FFXIV\game" --quest "The Paths We Walk"
-```
+- Reuse the same instance-aware mindset on other dense UI surfaces.
 
-### Next steps
+### 2026-04-05 10:35:10 -0300 - `96352ab` - checkpoint before removing legacy overlay handlers
 
-1. Write `docs/quest-full-pipeline-design.md` — full design doc covering sheet acquisition → row classification → translation per type (SEQ/TODO/SYSTEM separately; DIALOG optional) → DB save → display routing per addon.
-2. Redesign `QuestPlate` model: add `QuestTextSheetName`, `SeqRowsAsText`, `SystemRowsAsText`, `DialogRowsAsText`; rename `ObjectivesAsText` to `TodoRowsAsText` for clarity.
-3. Add the EF Core migration for the redesigned model (additive, nullable new fields).
-4. Update `QuestProgressResolver.ReadQuestStepTexts()` to also collect SEQ and SYSTEM rows.
+**What changed**
 
----
+- Overlay work for the earlier addon families reached a stable checkpoint.
 
-## Milestone — quest-reader validated; ScenarioTree documented (April 12, 2026)
+**Why it changed**
 
-### What changed
+- This became the safe boundary before legacy overlay handler cleanup.
 
-- **`scripts/quest-reader/Program.cs`** — added `--scenario-tree` probe mode.
-  Probes the typed `ScenarioTree` Excel sheet and cross-references each row's
-  `RowId` against the Quest sheet to show the quest name, internal ID, and text sheet path.
-  Optionally filter to a single quest with `--quest-id`. Includes property reflection
-  dump of `RowOffset`, `Name`, `Addon`, `QuestChapter`, `Type`, and unknown fields.
-- **`docs/quest-full-pipeline-design.md`** — prepended a new **ScenarioTree Sheet** section
-  documenting the confirmed sheet structure and its implications for the plugin.
+**Next step**
 
-### Validation runs
+- Remove the legacy overlay handlers that already have modern replacements.
 
-All runs used `--game-dir` default (Steam path) with `Language.English`.
+### 2026-04-05 10:38:07 -0300 - `e972ea3` - legacy overlay handlers removed
 
-**Coming to Gridania** (`RowId=65575`, `InternalId=ManFst001_00039`):
-- 90 rows — 3 SEQ, 1 TODO, 5 SYSTEM, ~50 DIALOG
-- Confirms early ARR quests follow the same row classification pattern.
+**What changed**
 
-**Strange Bedfellows** (`RowId=69929`) — re-confirmed:
-- 122 rows — 1 SEQ, 8 TODO, 1 SYSTEM, 73 DIALOG
+- Old overlay handlers that already had modern replacements were removed.
 
-**The Paths We Walk** (`RowId=67011`) — re-confirmed:
-- 130 rows — 10 SEQ, 8 TODO, 4 SYSTEM, ~85 DIALOG
+**Why it changed**
 
-### ScenarioTree confirmed facts
+- This left quest and Journal work as the main remaining legacy-heavy surface.
 
-- `ScenarioTree.RowId == Quest.RowId` — **direct join**, no string matching needed.
-- Total rows: **1,044** — only main-scenario and listed side-story quests.
-- "The Paths We Walk" (`RowId=67011`) has **no** ScenarioTree entry.
-- "Strange Bedfellows" (`RowId=69929`) **does** have a ScenarioTree entry:
-  `RowOffset=46518`, `Name=T_VER600_02_14`, `Type→ScenarioType`, chapter/addon refs.
-- The in-game `ScenarioTree` addon renders the active TODO row for each listed quest.
-- Chapter header text comes from `ScenarioTree.Addon` (a second translation surface if needed).
+**Next step**
 
-### Implications captured in the design doc
+- Start modernizing the Journal-family flow.
 
-- When `ScenarioTree` addon is open, quest can be identified by `RowId` directly.
-- Overlay should render the active `TODO row` from `QuestProgressSnapshot.QuestSteps`.
-- `Addon` field is a separate translation target for the scenario chapter header if wanted.
+### 2026-04-05 11:41:33 -0300 - `109b838` - journal tooltip foundation added
 
-### Next steps
+**What changed**
 
-These remain from the previous milestone:
-1. Write `docs/quest-full-pipeline-design.md` — ✅ done (includes ScenarioTree section now).
-2. Redesign `QuestPlate` model — ✅ done.
-3. Add EF Core migration — ✅ done.
-4. Update `QuestProgressResolver.ReadQuestStepTexts()` — ✅ done (now `ReadQuestTextRows`, returns SEQ + TODO + SYSTEM).
+- The first shared quest hover tooltip foundation was introduced.
 
-**New — pending implementation:**
-- Hook ScenarioTree addon handler to use `ScenarioTree.RowId` for quest identity lookup.
-- Route SEQ rows to `JournalDetail` overlay.
-- Route active TODO row to `ScenarioTree` addon overlay.
+**Why it changed**
 
----
+- The DB save semantics were explicitly preserved while the new presentation path was added.
 
-## Milestone — content-hash smart retranslation detection (April 12, 2026)
+**Next step**
 
-### Goal
+- Expand hover presentation across the rest of the Journal family.
 
-Avoid retranslating quest text on every game update when the actual quest content
-hasn't changed. Instead: detect whether the source text has changed by comparing
-a content fingerprint, and if unchanged, only bump the stored `GameVersion` in-place.
+### 2026-04-05 11:58:45 -0300 - `00abaac` - hover tooltips for journal windows
 
-### What was done
+**What changed**
 
-**New file: `NativeUI/Helpers/QuestContentHash.cs`**
-- Static helper `QuestContentHash.Compute(seqRows, todoRows, systemRows)`
-- Sorts all `{key}={value}` pairs from SEQ + TODO + SYSTEM rows, UTF-8-encodes them,
-  SHA256-hashes them, and returns the first 8 bytes as a 16-char lowercase hex string.
-- Stable fingerprint: same quest content → same hash across game versions.
+- Hover-driven translation display was expanded across Journal-family windows.
 
-**`NativeUI/Helpers/QuestProgressResolver.cs`**
-- `QuestProgressSnapshot` gained a new `ContentHash` string parameter (8th field).
-- `TryResolveQuestProgress` computes the hash via `QuestContentHash.Compute()` before
-  constructing the snapshot.
+**Why it changed**
 
-**`EFCoreSqlite/Models/Journal/QuestPlate.cs`**
-- New nullable `SourceContentHash` property between `QuestTextSheetName` and
-  `ObjectivesAsText`. Null/empty = legacy row (conservative retranslation path).
+- This created the first stable tooltip-only path for dense quest surfaces.
 
-**`EFCoreSqlite/Migrations/20260412200000_AddSourceContentHash.cs`**
-- Additive migration: `AddColumn<string>("SourceContentHash", nullable: true)`.
+**Next step**
 
-**`EFCoreSqlite/Migrations/EchoglossianDbContextModelSnapshot.cs`**
-- `SourceContentHash` property added to the `QuestPlate` entity block.
+- Remove synchronous hot-path translation from those windows.
 
-**`DBHelpers/DbOperations.cs` — `FindQuestPlate` rewritten**
-- `GameVersion` removed from all three WHERE clauses (QuestId / message / name match).
-- After finding a row, compares `questPlate.SourceContentHash` with stored hash:
-  - Hash match (or incoming hash empty) → return the plate (translation still valid).
-  - Hash mismatch → return `null` → force retranslation.
-  - Stored hash empty (legacy row) → return `null` → retranslate once to populate hash.
+### 2026-04-05 12:52:52 -0300 - `fdb28e7` - quest window translations moved to queueing
 
-**`DBHelpers/DbOperations.cs` — new `UpdateQuestPlateGameVersion`**
-- Targeted `ExecuteUpdate` setting only `GameVersion` and `UpdatedDate` by primary key.
-- Called when `FindQuestPlate` returns non-null but the stored version != current version.
+**What changed**
 
-**`NativeUI/Handlers/UiJournalHandler.cs` — active-quest detail path wired**
-- `TryResolveQuestProgress` now runs before `FindQuestPlate` so the hash is populated
-  on the quest plate before the DB lookup.
-- After `FindQuestPlate` returns non-null with a different `GameVersion`, calls
-  `UpdateQuestPlateGameVersion` to bump the version in-place.
+- Quest-family windows began using queued background translation rather than synchronous hot-path translation.
 
-### Build status
+**Why it changed**
 
-Only the pre-existing `CS0579` duplicate-attribute `obj/` artifact errors remain.
-No new errors from these changes.
+- This was the first big step toward reducing UI stalls in Journal-family addons.
 
-### Pending
+**Next step**
 
-_(none — all three items resolved in the following milestone)_
+- Migrate the remaining heavy Journal-adjacent handlers to the async path.
 
----
+### 2026-04-05 14:14:09 -0300 - `2736097` - journal and recommend handlers migrated to async flow
 
-## Milestone — hash wiring completed across all quest call sites (April 12, 2026)
+**What changed**
 
-### What was done
+- The heaviest remaining quest-adjacent handlers were moved off the synchronous runtime path.
 
-**`NativeUI/Handlers/UiJournalHandler.cs` — `TranslateCompletedQuest`**
-- `TryResolveQuestProgress` now runs before `FindQuestPlate` so the content hash is
-  set on the quest plate prior to the DB lookup.
-- After `FindQuestPlate` returns non-null with a differing `GameVersion`, calls
-  `UpdateQuestPlateGameVersion` to bump the version in-place.
+**Why it changed**
 
-**`NativeUI/Handlers/UiJournalAcceptHandler.cs`**
-- Same hash-before-lookup pattern applied: resolve snapshot → set
-  `questPlate.SourceContentHash` → `FindQuestPlate` → optional version bump.
+- This reduced frame-time risk but left tooltip consistency work still open.
 
-**`DBHelpers/DbOperations.cs` — `FindQuestPlateByName`**
-- Removed `hasGameVersion` and the `(!hasGameVersion || t.GameVersion == …)` predicate
-  from both WHERE clauses, matching the `FindQuestPlate` semantics.
-- Added the same content-hash comparison block before `UpdateFieldsFromText()`:
-  mismatch on incoming hash → return null → force retranslation.
-  Empty incoming hash (callers that don't resolve a snapshot) → no-op, old behavior.
+**Next step**
 
-### Build status
+- Tighten hover renewal and cache-hit behavior.
 
-Only the pre-existing `CS0579` duplicate-attribute `obj/` artifact errors remain.
-No new errors from these changes.
+### 2026-04-05 19:38:06 -0300 - `feecc77` - journal hover tooltip refresh fixed
 
-### Note
+**What changed**
 
-Dalamud `14.0.5.1` update cleared `dev\Dalamud.dll`. Resolved by copying from
-`addon\Hooks\14.0.5.1\` to `addon\Hooks\dev\`. This will need repeating after
-future Dalamud staging updates.
+- Hover renewal for quest windows was improved so tooltips would not disappear simply because a translated node was no longer re-registered in that frame.
 
----
+**Why it changed**
 
-## Milestone — quest-handler migration guide added (April 12, 2026)
+- Dense quest windows repaint often and needed a more persistent hover registration path.
 
-### What changed
+**Next step**
 
-- Added [docs/quest-addon-handler-migration-guide.md](./quest-addon-handler-migration-guide.md).
-- The guide captures the docs-based target structure for quest-family addon handlers under `NativeUI/AddonHandlers/`.
-- It records the phased migration order: shared quest support first, then the smaller quest handlers, then the dense Journal / ToDoList / RecommendList windows, then removal of the legacy partials.
+- Keep trimming `Echoglossian.cs` while preserving the new quest flow.
 
-### Why it was added
+### 2026-04-06 08:03:42 -0300 - `ec62d99` - core wiring and quest flow split
 
-The quest docs now define the authoritative runtime rules clearly enough to make the migration plan explicit:
+**What changed**
 
-- UI is a capture surface, not the source of truth
-- Lumina and live quest progress define identity
-- quest windows need shared caches and stable keys
-- the new structure should reuse the existing brokered translation flow and hover infrastructure
+- `Echoglossian.cs` was trimmed by extracting core wiring and quest-related helper logic.
 
-### Next step
+**Why it changed**
 
-Start the actual code migration from the guide by extracting shared quest support and moving the quest addon handlers into standalone classes under `NativeUI/AddonHandlers/`.
+- This made the quest refactor easier to reason about and modify safely.
 
----
+**Next step**
 
-## Milestone — quest AreaMap migrated to standalone quest handler (April 12, 2026)
+- Continue splitting quest-specific helper types out of monolithic files.
 
-### What changed
+### 2026-04-06 13:08:46 -0300 - `505c8b7` - quest item helper types extracted
 
-- Added the first standalone quest-family support layer under `NativeUI/AddonHandlers/Quest/`:
-  - `QuestAddonModeHelpers.cs`
-  - `QuestAddonHandlerDependencies.cs`
-  - `QuestAddonHandlerBase.cs`
-- Added `NativeUI/Helpers/QuestAddonWiring.cs` so the quest-specific delegate bundle can be created once and reused as more quest handlers move over.
-- Added the first migrated quest handler: `NativeUI/AddonHandlers/Quest/AreaMapHandler.cs`.
-- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so AreaMap now registers through `registeredAddonHandlers` instead of a manual `AddonLifecycle.RegisterListener` path.
-- Removed the legacy `NativeUI/Handlers/UiAreaMapHandler.cs` partial file.
-- Added the new quest namespace to `GlobalUsings.cs` so the wiring can stay concise.
+**What changed**
 
-### Why it changed
+- `SummaryQuest` and `ToDoItem` were split into their own files.
 
-This step proves the new quest-handler pattern with the smallest quest surface before moving to denser windows.
+**Why it changed**
 
-The AreaMap runtime still uses the same capture logic, DB lookup, queue fallback, and hover registration behavior. The only thing that changed is the architecture around it:
+- This was a structural cleanup step that made the quest handlers more readable.
 
-- standalone handler class instead of a legacy partial method
-- reusable quest dependencies bundle instead of ad hoc host wiring
-- shared quest mode helpers instead of re-encoding the same display-mode logic per handler
+**Next step**
 
-### Validation
+- Keep pushing Journal toward a better data source than raw UI text.
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
-- `dotnet build Echoglossian.sln -c Debug --no-restore` still fails in `Echoglossian.Tests` with the existing `Echoglossian.EFCoreSqlite` namespace resolution error, which is unrelated to the AreaMap migration step
+### 2026-04-07 03:45:01 -0300 - `eba106e` - Journal improvements checkpoint
 
-### Next step
+**What changed**
 
-Move the next smallest quest handler into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and wiring pattern, then remove its legacy registration path only after the standalone handler is verified.
+- Journal behavior and presentation were improved enough to support the next Lumina-oriented push.
 
----
+**Why it changed**
 
-### What changed
+- This commit was an early sign that the Journal family needed a better source of truth than raw UI text.
 
-- Added `NativeUI/AddonHandlers/Quest/ToDoListHandler.cs` and moved the dense ToDoList capture, progress matching, and translation logic out of the legacy partial class path.
-- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so ToDoList now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
-- Removed the legacy ToDoList listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiToDoListHandler.cs`.
-- Exposed the shared time-format validator in `GeneralHelpers/Utils.cs` as an internal static helper so the new handler could reuse it without duplicating the logic.
+**Next step**
 
-### Why it changed
+- Start enriching quest identity with Lumina data.
 
-ToDoList is the densest quest surface in the migration set, so it was moved only after the shared quest support layer and the smaller quest handlers were proven.
+### 2026-04-09 00:10:03 -0300 - `1905ab9` - journal quest body hover stabilized
 
-The handler still follows the same runtime behavior:
+**What changed**
 
-- resolve quest identity through the shared quest lookup and live progress path
-- reuse the quest translation cache and queue broker
-- write native text only when the configured display mode allows it
-- register hover tooltips through the shared quest tooltip path
-- avoid repeated frame-by-frame retranslations by short-circuiting on stable progress keys
+- `JournalDetail` started using the `JournalCanvasComponentNode` as the preferred body trigger.
 
-### Validation
+**Why it changed**
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+- This improved hitbox stability, but the body content still came from a mixed UI-plus-cache composition.
 
-### Next step
+**Next step**
 
-Move `Journal` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial path once the new handler is verified.
+- Improve quest identity so the Journal family stops keying off raw UI text alone.
 
----
+### 2026-04-09 00:49:15 -0300 - `05b5289` - quest plates enriched from Lumina
 
-## Milestone — quest RecommendList migrated to standalone quest handler (April 12, 2026)
+**What changed**
 
-### What changed
+- Quest identity resolution began using Lumina to populate `QuestId`.
 
-- Added `NativeUI/AddonHandlers/Quest/RecommendListHandler.cs` and moved the RecommendList two-pass translation logic out of the legacy partial class path.
-- Added the missing standalone registration path for RecommendList in `NativeUI/Helpers/AddonHandlerWiring.cs` so the documented `PostReceiveEvent`, `PreRequestedUpdate`, and delayed `PostRequestedUpdate` hooks now run through the new handler.
-- Removed the legacy `NativeUI/Handlers/UiRecommendListHandler.cs` partial file.
+**Why it changed**
 
-### Why it changed
+- This reduced ambiguity and prepared the database for a more canonical quest model.
 
-RecommendList was the first quest window in the migration sequence that needed the two-pass queue/apply pattern plus a delayed refresh hook. Moving it last among the smaller quest windows kept the new quest bundle proven before restoring that more complex runtime path.
+**Next step**
 
-The handler still follows the documented runtime behavior:
+- Split quest flows more cleanly and add stronger probe/documentation support.
 
-- resolve quest names from the visible addon tree
-- reuse `QuestUiTranslationCache` and `QuestHoverTranslationCache`
-- apply queued translations and immediate DB hits the same way as before
-- honor the shared translation-state gate before starting the immediate pass
+### 2026-04-10 08:14:53 -0300 - `0f466ff` - quest flows split and command docs added
 
-### Validation
+**What changed**
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+- The quest-family flows were split more cleanly and the probe/documentation surface was expanded.
 
-### Next step
+**Why it changed**
 
-Move `ToDoList` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial file once the new handler is verified.
+- `/egloquestprobe` and the related docs became part of the repeatable refactor workflow.
 
----
+**Next step**
 
-## Milestone — quest RecommendList migrated to standalone quest handler (April 12, 2026)
+- Make the quest translation pipeline more stable and identity-aware.
 
-### What changed
+### 2026-04-12 16:14:31 -0300 - `a065dc3` - stable quest translation pipeline fixes
 
-- Added `NativeUI/AddonHandlers/Quest/RecommendListHandler.cs` and moved the RecommendList two-pass translation logic out of the legacy partial class path.
-- Added the missing standalone registration path for RecommendList in `NativeUI/Helpers/AddonHandlerWiring.cs` so the documented `PostReceiveEvent`, `PreRequestedUpdate`, and delayed `PostRequestedUpdate` hooks now run through the new handler.
-- Removed the legacy `NativeUI/Handlers/UiRecommendListHandler.cs` partial file.
-- Added the shared translation-state guard to the quest dependency bundle so RecommendList can preserve its existing state check in the new handler layout.
+**What changed**
 
-### Why it changed
+- `FindQuestPlateByName` became `QuestId`-first when possible.
+- `MergeQuestPlateValues` began preserving translated objectives and summaries better.
+- Quest progress resolution became more stable across AreaMap and ToDoList flows.
 
-RecommendList was the first quest window in the migration sequence that needed the two-pass queue/apply pattern plus a delayed refresh hook. Moving it after ScenarioTree kept the quest bundle proven before restoring that more complex runtime path.
+**Why it changed**
 
-The handler still follows the documented runtime behavior:
+- The quest-family windows needed a more stable identity path and less fragile persistence behavior.
 
-- resolve quest names from the visible addon tree
-- reuse `QuestUiTranslationCache` and `QuestHoverTranslationCache`
-- apply queued translations and immediate DB hits the same way as before
-- honor the shared translation-state gate before starting the immediate pass
+**Next step**
 
-### Validation
+- Move the quest-family addons into the standalone handler architecture.
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+### 2026-04-12 17:03:47 -0300 - `5569e96` - AreaMap migrated to standalone quest handler
 
-### Next step
+**What changed**
 
-Move `ToDoList` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial file once the new handler is verified.
+- `AreaMap` became the first quest-family addon migrated to the standalone `NativeUI/AddonHandlers/Quest/` architecture.
+- Shared quest dependencies and mode helpers were introduced to support further migrations.
 
----
+**Why it changed**
 
-## Milestone — quest JournalResult migrated to standalone quest handler (April 12, 2026)
+- This proved the quest handler bundle on the smallest quest-family addon before moving to denser windows.
 
-### What changed
+**Next step**
 
-- Added `NativeUI/AddonHandlers/Quest/JournalResultHandler.cs` and moved the JournalResult capture logic out of the legacy partial class path.
-- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so JournalResult now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
-- Removed the legacy JournalResult listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiJournalResultHandler.cs`.
+- Migrate the remaining small quest addons.
 
-### Why it changed
+### 2026-04-12 17:09:35 -0300 - `d7d15b4` - JournalAccept migrated
 
-JournalResult was the next small quest surface after JournalAccept, and it validated the same standalone quest-handler pattern on a simple `PreSetup` addon that only needs quest-name handling.
+**What changed**
 
-The handler still follows the same runtime behavior:
+- `JournalAccept` moved to the standalone quest handler architecture.
 
-- resolve the quest name from the addon payload
-- reuse the quest translation cache and queue broker
-- write native text only when the configured display mode allows it
-- register hover tooltips through the shared quest tooltip path
+**Why it changed**
 
-### Validation
+- This proved the new shared quest dependency bundle on a small `PreSetup` surface.
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+**Next step**
 
-### Next step
+- Continue through the rest of the small quest surfaces.
 
-Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and standalone registration pattern.
+### 2026-04-12 17:11:11 -0300 - `3e0d496` - JournalResult migrated
 
----
+**What changed**
 
-## Milestone — quest ToDoList migrated to standalone quest handler (April 12, 2026)
+- `JournalResult` moved to the standalone quest handler architecture.
 
-### What changed
+**Why it changed**
 
-- Added `NativeUI/AddonHandlers/Quest/ToDoListHandler.cs` and moved the dense ToDoList capture, progress matching, and translation logic out of the legacy partial class path.
-- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so ToDoList now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
-- Removed the legacy ToDoList listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiToDoListHandler.cs`.
-- Exposed the shared time-format validator in `GeneralHelpers/Utils.cs` as an internal static helper so the new handler could reuse it without duplicating the logic.
+- The quest-family migration path stayed consistent across small setup-based addons.
 
-### Why it changed
+**Next step**
 
-ToDoList is the densest quest surface in the migration set, so it was moved only after the shared quest support layer and the smaller quest handlers were proven.
+- Move on to the next quest surface in the migration guide.
 
-The handler still follows the same runtime behavior:
+### 2026-04-12 17:15:21 -0300 - `8ce521c` - ScenarioTree migrated
 
-- resolve quest identity through the shared quest lookup and live progress path
-- reuse the quest translation cache and queue broker
-- write native text only when the configured display mode allows it
-- register hover tooltips through the shared quest tooltip path
-- avoid repeated frame-by-frame retranslations by short-circuiting on stable progress keys
+**What changed**
 
-### Validation
+- `ScenarioTree` moved into the standalone quest handler architecture.
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+**Why it changed**
 
-### Next step
+- This extended the new model into a denser quest surface.
 
-Move `Journal` into `NativeUI/AddonHandlers/Quest/` using the same standalone quest bundle, then remove the legacy partial path once the new handler is verified.
+**Next step**
 
----
+- Bring `RecommendList` into the same architecture.
 
-## Milestone — quest Journal migrated to standalone quest handler (April 12, 2026)
+### 2026-04-12 17:19:33 -0300 - `c031b40` - RecommendList migrated
 
-### What changed
+**What changed**
 
-- Added `NativeUI/AddonHandlers/Quest/JournalHandler.cs` and moved the Journal and JournalDetail capture, translation, and hover logic out of the legacy partial class path.
-- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so both `Journal` and `JournalDetail` now register through the standalone quest handler map.
-- Removed the legacy Journal listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiJournalHandler.cs`.
-- Reused the shared quest normalization and batch helpers instead of keeping Journal-local duplicates.
+- `RecommendList` moved into the standalone quest handler architecture.
 
-### Why it changed
+**Why it changed**
 
-Journal was the largest and most sensitive quest surface in the migration set, so it was left for last after the smaller quest windows had already proven the standalone handler pattern.
+- Its more complex delayed and two-pass behavior was preserved under the new quest bundle.
 
-The handler still follows the same runtime behavior:
+**Next step**
 
-- resolve quest identity through the shared quest lookup and live progress path
-- reuse the quest translation cache and queue broker
-- write native text only when the configured display mode allows it
-- register hover tooltips through the shared quest tooltip path
-- avoid duplicated helper logic by using the shared quest base and static queue helpers
+- Consolidate the migration checkpoint and finish the remaining quest-family handlers.
 
-### Validation
+### 2026-04-12 17:55:43 -0300 - `feae983` - standalone quest architecture migration checkpoint
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+**What changed**
 
-### Next step
+- The quest-family addon migration was consolidated under the standalone architecture.
 
-Continue with the next non-quest surface now that the quest migration slice is complete.
+**Why it changed**
 
----
+- From this point on, the main work shifted from migration itself to correctness, hover stability, and data-source quality.
 
-## Milestone — quest JournalAccept migrated to standalone quest handler (April 12, 2026)
+**Next step**
 
-### What changed
+- Stabilize tooltip behavior and hover registration across the quest-family surfaces.
 
-- Added `NativeUI/AddonHandlers/Quest/JournalAcceptHandler.cs` and moved the JournalAccept capture logic out of the legacy partial class path.
-- Added reusable quest-pair payload helpers to `NativeUI/AddonHandlers/Quest/QuestAddonHandlerBase.cs` so quest handlers can share the same cached pair serialization logic.
-- Updated `NativeUI/Helpers/AddonHandlerWiring.cs` so JournalAccept now registers through `registeredAddonHandlers` alongside the other standalone quest handlers.
-- Removed the legacy JournalAccept listener cleanup from `Echoglossian.cs` and deleted `NativeUI/Handlers/UiJournalAcceptHandler.cs`.
+### 2026-04-12 22:32:54 -0300 - `dfc7a17` - quest tooltip flow stabilized
 
-### Why it changed
+**What changed**
 
-JournalAccept was the next smallest quest surface after AreaMap, so it was the right checkpoint to prove the new standalone quest handler pattern on a real `PreSetup` addon.
+- Quest-family tooltip behavior was tightened and documented.
 
-The handler still follows the same runtime behavior:
+**Why it changed**
 
-- resolve quest identity through the shared quest lookup path
-- reuse the quest translation cache and queue broker
-- write native text only when the configured display mode allows it
-- register hover tooltips using the shared quest tooltip path
+- `Journal` and `JournalDetail` became the main active tooltip debugging target after this point.
 
-### Validation
+**Next step**
 
-- `dotnet build Echoglossian.csproj -c Debug --no-restore` succeeded with warnings only
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build` succeeded
+- Fix tooltip lifetime on cache hits.
 
-### Next step
+### 2026-04-12 22:39:53 -0300 - `fafc9d5` - hover targets kept alive on cache hits
 
-Move the next quest addon from the migration guide into `NativeUI/AddonHandlers/Quest/` using the same dependency bundle and standalone registration pattern.
+**What changed**
+
+- `AreaMap` and `ToDoList` stopped silently skipping hover re-registration on cache hits.
+
+**Why it changed**
+
+- This specifically targeted the problem where tooltips would work once and then disappear.
+
+**Next step**
+
+- Audit the live quest database and compare runtime composition against what gets persisted.
+
+### 2026-04-12 late evening - questplate audit from the live SQLite file
+
+**What changed**
+
+- The live `questplates` table was inspected directly.
+- The table was no longer fragmented into many rows per quest.
+- The rows were still sparse and legacy-shaped:
+- `GameVersion` present
+- `QuestTextSheetName` missing
+- `SourceContentHash` missing
+
+**Why it changed**
+
+- This changed the diagnosis: the remaining inconsistency looked more like runtime composition trouble than database row contamination.
+
+**Next step**
+
+- Narrow `JournalDetail` body composition so it follows the sheet-first design instead of mixing UI fragments and quest-step lists.
+
+### 2026-04-13 working tree checkpoint - JournalDetail body narrowed to current SEQ row
+
+**What changed**
+
+- `JournalDetail` body hover was changed to prefer the current SEQ row from `QuestProgressSnapshot`.
+- The body no longer concatenates the visible description, current objective, summary nodes, and all TODO rows into one tooltip blob.
+- The `JournalCanvasComponentNode` hover bounds were padded so the body trigger is easier to hit.
+- This checkpoint is not yet committed at the time of this entry.
+
+**Why it changed**
+
+- `JournalDetail` was still the biggest source of tooltip inconsistency, especially mixed content and an impractical body trigger.
+
+**Next step**
+
+- Validate this in-game and then revisit event choice for hover maintenance on the dense quest-family addons.
+
+### 2026-04-13 09:34:05 -03:00 - working tree checkpoint - quest hover maintenance and Journal config combo ids
+
+**What changed**
+
+- Addon-wide hover registration now uses the root node screen coordinates instead of local node coordinates.
+- `AreaMap` and `ScenarioTree` now keep lightweight hover payload snapshots and refresh their tooltip targets during `PreDraw` without queueing new translations.
+- `RecommendList` now has a `PreDraw` hover-refresh pass that re-registers visible quest-name targets from cache or persisted data only.
+- The `JournalTab` quest display-mode combos now use unique ImGui ids, fixing the broken dropdown behavior where options would not open or select correctly.
+- This checkpoint is not yet committed at the time of this entry.
+
+**Why it changed**
+
+- `AreaMap` and `ScenarioTree` were anchoring whole-addon tooltips from the wrong coordinate space, which made those hover surfaces effectively unreachable.
+- Several quest-family addons still depended on sparse lifecycle events to keep tooltip targets alive, so targets could disappear even when the addon was still visible.
+- The config UI regression was a pure ImGui id collision: every quest-family display-mode combo reused the same label id.
+
+**Next step**
+
+- Validate in-game that `AreaMap`, `ScenarioTree`, and `RecommendList` now emit practical hover targets.
+- Re-check whether `JournalDetail` body still needs an even larger hitbox after the hover-maintenance changes.
+- Do a focused follow-up on `PluginVersion`, because the config on disk still reports `0.0.0.0`.
+
+### 2026-04-13 10:18:00 -03:00 - working tree checkpoint - plugin version metadata fixed at the assembly level
+
+**What changed**
+
+- `Echoglossian.csproj` now generates assembly info again.
+- `FileVersion` and `InformationalVersion` are now explicitly set from the existing calculated `$(Version)` property.
+- The rebuilt DLL now reports:
+  - `AssemblyVersion = 4.0.2604.797`
+  - `FileVersion = 4.0.2604.797`
+  - `ProductVersion = 4.0.2604.797+fafc9d5f293f0fbb0637efb17317a843679df352`
+- This checkpoint is not yet committed at the time of this entry.
+
+**Why it changed**
+
+- The plugin UI and config were showing `0.0.0.0` because the project had `GenerateAssemblyInfo=false` without any manual version attributes, so the built assembly genuinely had zeroed version metadata.
+
+**Next step**
+
+- Reload the plugin and confirm that the config window and persisted config now pick up the real build version.
+- Keep runtime validation focused on the quest-family tooltip surfaces.
+
+### 2026-04-13 12:40:47 -03:00 - working tree checkpoint - ToDoList row hover refresh and JournalDetail body rebuilt
+
+**What changed**
+
+- `ToDoList` now stores per-row hover payloads and refreshes them in `PreDraw`, so tooltip visibility is no longer tied only to the translation/update event.
+- `ToDoList` hover registration now uses the full row bounds combined with the inner text bounds instead of the narrow text-node rectangle alone.
+- `JournalDetail` body hover now rebuilds its tooltip from three visible sections again:
+  - description
+  - current objective
+  - current summary block
+- `JournalDetail` body bounds now expand from the `JournalCanvasComponentNode` to include the visible description/objective/summary nodes as well, with larger padding.
+- The noisy `AreaMap` hot-path lifecycle debug line was removed.
+- This checkpoint is not yet committed at the time of this entry.
+
+**Why it changed**
+
+- `ToDoList` was registering tooltip targets without producing practical on-screen hover behavior, which strongly suggested that the hitbox and target lifetime were still too fragile.
+- `JournalDetail` had swung too far toward a single description-like source and stopped reflecting the expected quest plate shape of description + current objective + summary.
+- `AreaMap` logs were noisy enough to bury useful hover diagnostics for the other quest-family addons.
+
+**Next step**
+
+- Validate in-game that `ToDoList` now shows tooltips when hovering the row, not just the text.
+- Re-check whether `JournalDetail` now shows the correct three-part body without cross-quest contamination.
+- Confirm whether `ScenarioTree`, `RecommendList`, and `AreaMap` still need additional trigger/event adjustments after the log noise reduction.
+
+### 2026-04-13 12:55:02 -03:00 - runtime validation checkpoint - ToDoList closed out, JournalDetail narrowed to content stability
+
+**What changed**
+
+- Runtime validation confirmed repeated real `hover` hits for `ToDoList`, not just registrations.
+- `ToDoList` is now considered stable and removed from the active quest-tooltip problem list.
+- `JournalDetail` continued to produce consistent body hover hits with the larger trigger.
+- The remaining `JournalDetail` problem is now the stability of the composed body content and bounds across refreshes.
+- This checkpoint is not yet committed at the time of this entry.
+
+**Why it changed**
+
+- The latest logs showed that the previous `ToDoList` work solved the actual UX bug, so continuing to change it would add risk without value.
+- The same logs also showed that `JournalDetail` has moved past trigger failure and into a narrower content-composition problem, which is a healthier place to debug from.
+
+**Next step**
+
+- Make the `JournalDetail` body composition less dependent on changing visible node sets.
+- Keep `ToDoList` untouched unless a fresh regression appears.
+- Do focused runtime passes later for `ScenarioTree`, `RecommendList`, and `AreaMap`.
+
+## Runtime Findings That Matter
+
+These findings were learned from probes, logs, and in-game validation and are still important:
+
+- `Journal` title hover is generally stable.
+- `JournalDetail` body is the most fragile quest hover surface.
+- `ToDoList` tooltip behavior has improved, but it needs repeated runtime validation because dense quest windows can silently stop re-registering hover targets.
+- Addon-wide quest tooltips are sensitive to coordinate space; using local root-node coordinates was not sufficient.
+- `ScenarioTree`, `RecommendList`, and `AreaMap` have all had moments where lifecycle events were firing but tooltip registration was missing or not surviving cache-hit paths.
+- A tooltip registration event does not guarantee the bounds are good enough for a practical hover experience.
+- In dense quest windows, capture/update events and hover-maintenance events may not be the same ideal event.
+- The plugin version label in the UI depends on real assembly metadata, not just the config default string.
+
+## Where We Are Now
+
+The repo is in the post-migration stabilization phase for quests.
+
+The main active problems are:
+
+- verifying that the standalone quest handlers all keep tooltip registration alive under real gameplay repaint patterns
+- making `JournalDetail` body content fully sheet-first and stable
+- confirming that the new `questplates` rows repopulate with the intended fields after the table reset
+- confirming that nested hover targets prefer the most specific node instead of whichever overlapping rect happens to win first
+- continuing the shared structured-text pipeline so quest logic can later be reused for `ItemTooltip` and `ActionTooltip`
+
+## Next Likely Steps
+
+- Validate the new `JournalDetail` SEQ-only hover body in-game.
+- Validate the new `PreDraw` hover maintenance path on `AreaMap`, `ScenarioTree`, and `RecommendList`.
+- Confirm whether `QuestTextSheetName` and `SourceContentHash` start populating correctly after the quest table reset.
+- Revisit event choice per quest addon:
+  - use setup/requested-update style hooks for capture and queueing
+  - use a lighter continuous hook only where hover maintenance needs it
+- Keep this document append-only from here, with exact timestamps whenever a milestone corresponds to a commit.
+
+### 2026-04-13 13:18:42 -03:00 - working tree checkpoint - JournalDetail persistence aligned with runtime composition
+
+**What changed**
+
+- `JournalDetail` now treats the quest description and current sequence summary as separate pieces again:
+  - description comes from `TranslatedQuestMessage`
+  - the SEQ row is folded into the summary block instead of replacing the description
+- Existing `QuestPlate` rows now backfill missing `TranslatedQuestMessage` on demand instead of assuming that a quest-name-only row already contains the full detail translation.
+- `JournalDetail` save/update paths now populate and reuse:
+  - `QuestId`
+  - `QuestTextSheetName`
+  - `SourceContentHash`
+  - translated objective rows
+  - translated summary / SEQ rows
+- Existing rows found from the DB now get their sheet-first quest metadata persisted the first time `JournalDetail` resolves a live quest snapshot.
+- Build and tests both passed after this adjustment.
+- This checkpoint is not yet committed at the time of this entry.
+
+**Why it changed**
+
+- The latest DB inspection showed real gaps between what `JournalDetail` used at runtime and what it materialized into `questplates`.
+- Description text could stay in English because `JournalDetail` sometimes matched an existing row created from the Journal list, then trusted that row even when `TranslatedQuestMessage` was empty.
+- Summary and SEQ translation state was being cached and queued, but not consistently materialized into the translated quest maps, which made DB reuse weaker than intended.
+- The previous body composition had also drifted into using the SEQ text as the description, which made the tooltip feel inconsistent with the actual quest plate.
+
+**Next step**
+
+- Reload in-game and verify that `JournalDetail` now:
+  - shows translated description text reliably after the first resolve
+  - keeps the current SEQ row inside the summary block
+  - repopulates `questplates` with `QuestTextSheetName` and `SourceContentHash`
+- If the new build is loaded, a controlled wipe of `questplates` is now reasonable so the table can repopulate without legacy partial rows.
+
+### 2026-04-13 15:59:46 -03:00 - working tree checkpoint - JournalDetail canonical data isolated from stale UI summaries
+
+**What changed**
+
+- `QuestPlate` merge now persists the sheet-first metadata fields that were
+  previously being dropped during save:
+  - `QuestTextSheetName`
+  - `SourceContentHash`
+  - `SystemRows`
+  - `TranslatedSystemRows`
+- `JournalDetail` no longer aggregates the extra summary-node collection into
+  the canonical persisted quest body.
+- The quest body now stays anchored to:
+  - description
+  - current objective
+  - live summary text
+  - current `SEQ` row
+- The older UI-derived summary-node list remains out of the persisted row so it
+  cannot contaminate one quest with leftover text from another quest.
+
+**Why it changed**
+
+- Fresh DB inspection showed that several recent `questplates` rows still had
+  empty `QuestTextSheetName` and `SourceContentHash`, even after the metadata
+  backfill work. The root cause was that the merge routine never copied those
+  fields.
+- The same DB inspection also confirmed real cross-quest contamination in
+  `TranslatedSummariesAsText`: rows such as `Three Beaks to the Wind` and
+  `Protecting the Pom` were carrying an unrelated summary fragment from a
+  different quest.
+- That contamination matches the current `JournalDetail` implementation, which
+  was still reading additional visible summary nodes from the live UI and
+  persisting them into the row.
+
+**Next step**
+
+- Reload in-game and confirm that new `questplates` rows now populate
+  `QuestTextSheetName` and `SourceContentHash`.
+- Re-check whether `JournalDetail` tooltips stop inheriting stale summary text
+  from previously viewed quests.
+- Validate whether translated description text now stabilizes after the first
+  translation pass, with fewer repeated `GoogleTranslator` bursts in the log.
+
+### 2026-04-13 19:05:00 -03:00 - working tree checkpoint - quest hover selection and requested-update fallback tightened
+
+**What changed**
+
+- `HoverTooltipManager` now picks the smallest hovered rectangle instead of the
+  first matching entry in dictionary iteration order.
+- `ScenarioTree` now resolves its `AtkValues` from the live addon when the
+  lifecycle event comes through `PreRequestedUpdate` without `AddonRefreshArgs`.
+- `AreaMap` now does the same requested-update fallback instead of silently
+  returning.
+
+**Why it changed**
+
+- Dense quest windows can register overlapping hover targets. Picking the first
+  match is effectively arbitrary, and it can cause a larger quest-title target
+  to swallow a smaller objective target beneath the cursor.
+- `ScenarioTree` and `AreaMap` were both registered on `PreRequestedUpdate`,
+  but their handlers only accepted `AddonRefreshArgs`. That turned one of their
+  intended trigger paths into a no-op.
+- The latest user validation pointed directly at these two symptoms:
+  `ToDoList` showing title tooltips but not objective-node tooltips, and
+  `ScenarioTree` staying completely silent.
+
+**Next step**
+
+- Validate in-game whether objective-node hovers now win over broader title-row
+  hovers in `_ToDoList`.
+- Re-test `ScenarioTree` and `AreaMap` to confirm they now register tooltips in
+  sessions where only `PreRequestedUpdate` fires.
+- Keep `JournalDetail` work focused on content stability, not trigger liveness.
+
+### 2026-04-13 20:20:09 -03:00 - working tree checkpoint - latest 10-minute log slice suggests quest-addon runtime is still too coupled
+
+**What changed**
+
+- No code changed in this checkpoint; this is a runtime diagnosis milestone.
+- The last 10-minute `dalamud.log` slice was reduced almost entirely to
+  `JournalList` hovers, with only a few `JournalDetail` body hovers and no
+  visible activity from `_ToDoList`, `ScenarioTree`, `RecommendList`, or
+  `AreaMap`.
+- Screenshot review in the same session showed `JournalDetail` still producing
+  inconsistent body content for the same quest and switching between different
+  content shapes.
+
+**Why it changed**
+
+- The current quest-family runtime still shares too much transient state across
+  addons.
+- Even when the shared DB and translation broker are correct abstractions, the
+  shared UI caches and hover runtime make it too easy for one addon's
+  repaint/hover behavior to dominate the debugging picture while others go
+  effectively silent.
+- The latest evidence points away from “one shared quest UI cache for all
+  addons” and toward “shared data source, isolated addon runtime state.”
+
+**Next step**
+
+- Split quest-addon runtime state by surface:
+  - `JournalList`
+  - `JournalDetail`
+  - `_ToDoList`
+  - `ScenarioTree`
+  - `RecommendList`
+  - `AreaMap`
+- Keep the shared pieces limited to:
+  - `QuestPlate` persistence
+  - Lumina/sheet resolvers
+  - live quest-progress resolvers
+  - translation broker
+- Treat reflection cleanup as a separate follow-up pass once the quest-addon
+  runtime stops regressing across unrelated surfaces.

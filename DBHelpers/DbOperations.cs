@@ -1274,6 +1274,14 @@ public partial class Echoglossian
     target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion)
         ? target.GameVersion
         : source.GameVersion;
+    target.QuestTextSheetName =
+        string.IsNullOrWhiteSpace(source.QuestTextSheetName)
+            ? target.QuestTextSheetName
+            : source.QuestTextSheetName;
+    target.SourceContentHash =
+        string.IsNullOrWhiteSpace(source.SourceContentHash)
+            ? target.SourceContentHash
+            : source.SourceContentHash;
     target.CreatedDate ??= source.CreatedDate;
     target.UpdatedDate = DateTime.Now;
 
@@ -1319,6 +1327,28 @@ public partial class Echoglossian
       }
 
       target.TranslatedSummaries[sumKey] = sumValue;
+    }
+
+    foreach (var (systemKey, systemValue) in source.SystemRows)
+    {
+      if (string.IsNullOrWhiteSpace(systemKey) ||
+          string.IsNullOrWhiteSpace(systemValue))
+      {
+        continue;
+      }
+
+      target.SystemRows[systemKey] = systemValue;
+    }
+
+    foreach (var (systemKey, systemValue) in source.TranslatedSystemRows)
+    {
+      if (string.IsNullOrWhiteSpace(systemKey) ||
+          string.IsNullOrWhiteSpace(systemValue))
+      {
+        continue;
+      }
+
+      target.TranslatedSystemRows[systemKey] = systemValue;
     }
   }
 

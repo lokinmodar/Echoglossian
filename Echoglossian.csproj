@@ -12,13 +12,15 @@
     <Platforms>x64</Platforms>
     <Authors>lokinmodar</Authors>
     <NeutralLanguage>en</NeutralLanguage>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <VersionMajor>4</VersionMajor>
     <VersionMinor>0</VersionMinor>
     <VersionPatch Condition="'$(VersionPatch)' == ''">$([System.DateTime]::UtcNow.ToString("yyMM"))</VersionPatch>
     <VersionRevision Condition="'$(VersionRevision)' == ''">$([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes.ToString("0"))</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <InformationalVersion>$(Version)</InformationalVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

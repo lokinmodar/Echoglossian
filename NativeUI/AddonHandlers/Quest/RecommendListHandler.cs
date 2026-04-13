@@ -25,6 +25,9 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
     this.RegisterHandler(AddonEvent.PostReceiveEvent, this.OnRecommendListEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnRecommendListEvent);
     this.RegisterHandler(
+        AddonEvent.PreDraw,
+        this.OnRecommendListHoverRefreshEvent);
+    this.RegisterHandler(
         AddonEvent.PostRequestedUpdate,
         this.OnRecommendListEventAsync);
     this.RegisterHandler(AddonEvent.PreHide, this.OnRecommendListCleanupEvent);
@@ -338,6 +341,22 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Refreshes RecommendList hover targets every draw without queueing new
+  ///     translations.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnRecommendListHoverRefreshEvent(AddonEvent type, AddonArgs args)
+  {
+    if (!this.Config.TranslateRecommendList || !this.RecommendListUsesHoverTooltips)
+    {
+      return;
+    }
+
+    this.RefreshRecommendListHoverTooltips();
+  }
+
+  /// <summary>
   ///     Clears RecommendList hover registrations when the addon closes.
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
@@ -347,6 +366,135 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
     if (string.Equals(args.AddonName, "RecommendList", StringComparison.Ordinal))
     {
       this.RemoveHoverTooltipsByPrefix(RecommendListHoverPrefix);
+    }
+  }
+
+  /// <summary>
+  ///     Re-registers visible RecommendList hover targets using only cached or
+  ///     already-persisted translations.
+  /// </summary>
+  private unsafe void RefreshRecommendListHoverTooltips()
+  {
+    var atkStage = AtkStage.Instance();
+    var recommendList =
+        atkStage->RaptureAtkUnitManager->GetAddonByName("RecommendList");
+    if (recommendList == null || !recommendList->IsVisible)
+    {
+      return;
+    }
+
+    var questListNode = recommendList->GetNodeById(5);
+    if (questListNode == null || !questListNode->IsVisible())
+    {
+      return;
+    }
+
+    var questListComponent = questListNode->GetAsAtkComponentNode()->Component;
+    for (var i = 0; i < questListComponent->UldManager.NodeListCount; i++)
+    {
+      if (!questListComponent->UldManager.NodeList[i]->IsVisible())
+      {
+        continue;
+      }
+
+      if (questListComponent->UldManager.NodeList[i]->Type == NodeType.Collision ||
+          questListComponent->UldManager.NodeList[i]->Type == NodeType.Res)
+      {
+        continue;
+      }
+
+      var questItemNode =
+          questListComponent->UldManager.NodeList[i]->GetAsAtkComponentNode();
+      var questNameNode = questItemNode->Component->UldManager.SearchNodeById(5);
+      if (questNameNode == null || !questNameNode->IsVisible() ||
+          questNameNode->Type != NodeType.Text)
+      {
+        continue;
+      }
+
+      var questName = questNameNode->GetAsAtkTextNode();
+      if (questName->NodeText.IsEmpty)
+      {
+        continue;
+      }
+
+      var questNameText = MemoryHelper.ReadSeStringAsString(
+          out _,
+          (nint)questName->NodeText.StringPtr.Value);
+      var questNameNodeKey = (nint)questNameNode;
+      var originalText = questNameText;
+      var translatedText = questNameText;
+
+      if (QuestHoverTranslationCache.TryGet(
+              questNameNodeKey,
+              out var cachedHoverTranslation))
+      {
+        originalText = cachedHoverTranslation.OriginalText;
+        translatedText = cachedHoverTranslation.TranslatedText;
+      }
+      else if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+                   questNameText,
+                   out var translatedQuestSnapshot))
+      {
+        originalText = translatedQuestSnapshot.OriginalText;
+        translatedText = translatedQuestSnapshot.AppliedText;
+        QuestHoverTranslationCache.Remember(
+            questNameNodeKey,
+            originalText,
+            translatedText);
+      }
+      else
+      {
+        var questPlate = this.CreateQuestPlate(questNameText, string.Empty);
+        var foundQuestPlate = this.FindQuestPlateByName(questPlate);
+        if (foundQuestPlate != null)
+        {
+          translatedText = foundQuestPlate.TranslatedQuestName;
+          if (this.RecommendListShouldRemoveDiacritics)
+          {
+            translatedText = this.NormalizeQuestText(
+                translatedText ?? string.Empty);
+          }
+
+          QuestHoverTranslationCache.Remember(
+              questNameNodeKey,
+              originalText,
+              translatedText);
+          QuestUiTranslationCache.Remember(
+              originalText,
+              translatedText);
+        }
+        else
+        {
+          var cacheKey = $"RecommendList|{questNameText}";
+          if (this.TryGetQueuedTranslation(cacheKey, out var cachedTranslatedName))
+          {
+            translatedText = cachedTranslatedName;
+            if (this.RecommendListShouldRemoveDiacritics)
+            {
+              translatedText = this.NormalizeQuestText(
+                  translatedText ?? string.Empty);
+            }
+
+            QuestHoverTranslationCache.Remember(
+                questNameNodeKey,
+                originalText,
+                translatedText);
+            QuestUiTranslationCache.Remember(
+                originalText,
+                translatedText);
+          }
+        }
+      }
+
+      this.RegisterTranslatedHoverTooltip(
+          $"RecommendList-{questNameNodeKey:X}",
+          questName,
+          originalText,
+          translatedText,
+          swapEnabled: this.RecommendListHoverShowsOriginal,
+          forceEnabled: true,
+          denseHitbox: true);
     }
   }
 

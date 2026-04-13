@@ -138,9 +138,12 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       }
 
       if (foundQuestPlate != null &&
-          foundQuestPlate.Summaries.TryGetValue(
-              originalText,
-              out var storedSummaryText))
+          (foundQuestPlate.TranslatedSummaries.TryGetValue(
+               originalText,
+               out var storedSummaryText) ||
+           foundQuestPlate.Summaries.TryGetValue(
+               originalText,
+               out storedSummaryText)))
       {
         summaries.Add(
             new SummaryQuest(
@@ -180,6 +183,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             {
               var questPlateToUpdate = foundQuestPlate.Clone();
               questPlateToUpdate.Summaries[originalText] = translatedText;
+              questPlateToUpdate.TranslatedSummaries[originalText] =
+                  translatedText;
               questPlateToUpdate.UpdatedDate = DateTime.Now;
               this.UpdateQuestPlate(questPlateToUpdate);
             });
@@ -285,6 +290,119 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Gets the quest sequence row text for the current quest phase so the
+  ///     JournalDetail hover body can stay anchored to one sheet row instead of
+  ///     aggregating multiple quest steps.
+  /// </summary>
+  /// <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
+  /// <returns>The current quest sequence row text, or an empty string when unavailable.</returns>
+  private static string GetCurrentQuestSequenceText(
+      QuestProgressSnapshot questProgressSnapshot)
+  {
+    if (questProgressSnapshot.QuestSeqTexts.Count == 0)
+    {
+      return string.Empty;
+    }
+
+    var questSequenceIndex = Math.Min(
+        (int)questProgressSnapshot.QuestSequence,
+        questProgressSnapshot.QuestSeqTexts.Count - 1);
+
+    if (questSequenceIndex >= 0 &&
+        questSequenceIndex < questProgressSnapshot.QuestSeqTexts.Count)
+    {
+      var questSequenceText =
+          questProgressSnapshot.QuestSeqTexts[questSequenceIndex].Text;
+      if (!string.IsNullOrWhiteSpace(questSequenceText))
+      {
+        return questSequenceText;
+      }
+    }
+
+    foreach (var questSequenceEntry in questProgressSnapshot.QuestSeqTexts)
+    {
+      if (!string.IsNullOrWhiteSpace(questSequenceEntry.Text))
+      {
+        return questSequenceEntry.Text;
+      }
+    }
+
+    return string.Empty;
+  }
+
+  /// <summary>
+  ///     Gets the translated quest sequence text for the current quest phase.
+  ///     The result is cached back into the quest plate so the same sequence row
+  ///     does not keep re-translating while the addon repaints.
+  /// </summary>
+  /// <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
+  /// <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
+  /// <returns>The translated quest sequence row text, or the source text if translation is not ready yet.</returns>
+  private string TranslateCurrentQuestSequenceText(
+      QuestPlate? foundQuestPlate,
+      QuestProgressSnapshot questProgressSnapshot)
+  {
+    var currentQuestSequenceText = GetCurrentQuestSequenceText(questProgressSnapshot);
+    if (string.IsNullOrWhiteSpace(currentQuestSequenceText))
+    {
+      return string.Empty;
+    }
+
+    if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+            currentQuestSequenceText,
+            out var appliedQuestSequenceSnapshot))
+    {
+      return appliedQuestSequenceSnapshot.AppliedText;
+    }
+
+    if (foundQuestPlate != null &&
+        (foundQuestPlate.TranslatedSummaries.TryGetValue(
+             currentQuestSequenceText,
+             out var storedQuestSequenceText) ||
+         foundQuestPlate.Summaries.TryGetValue(
+             currentQuestSequenceText,
+             out storedQuestSequenceText)))
+    {
+      QuestUiTranslationCache.Remember(
+          currentQuestSequenceText,
+          storedQuestSequenceText);
+      return storedQuestSequenceText;
+    }
+
+    var questSequenceCacheKey =
+        $"JournalDetailSequence|{questProgressSnapshot.CacheKey}|{currentQuestSequenceText}";
+    if (foundQuestPlate != null &&
+        this.TryGetQueuedTranslation(
+            questSequenceCacheKey,
+            out var cachedTranslatedQuestSequenceText))
+    {
+      QuestUiTranslationCache.Remember(
+          currentQuestSequenceText,
+          cachedTranslatedQuestSequenceText);
+      return cachedTranslatedQuestSequenceText;
+    }
+
+    if (foundQuestPlate != null)
+    {
+      this.QueueTranslation(
+          questSequenceCacheKey,
+          () => this.Translate(currentQuestSequenceText),
+            translatedQuestSequenceText =>
+            {
+              var questPlateToUpdate = foundQuestPlate.Clone();
+              questPlateToUpdate.Summaries[currentQuestSequenceText] =
+                  translatedQuestSequenceText;
+              questPlateToUpdate.TranslatedSummaries[currentQuestSequenceText] =
+                  translatedQuestSequenceText;
+              questPlateToUpdate.UpdatedDate = DateTime.Now;
+              this.UpdateQuestPlate(questPlateToUpdate);
+            });
+    }
+
+    return currentQuestSequenceText;
+  }
+
+  /// <summary>
   ///     Applies translations to the active Journal detail box.
   /// </summary>
   /// <param name="journalBox">The journal detail component.</param>
@@ -334,22 +452,56 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       return;
     }
 
-    var summaries = this.TranslateSummaries(
-        journalBox,
-        foundQuestPlate,
-        summaryText);
+    // Do not aggregate the extra JournalDetail summary nodes into the
+    // canonical quest body. Those nodes can retain stale visible text across
+    // quest switches and contaminate the persisted row with summaries from a
+    // different quest. For the stable body, use only the current description,
+    // current objective, live summary node, and current SEQ row.
+    List<SummaryQuest> summaries = [];
 
     if (foundQuestPlate != null)
     {
       translatedQuestName = foundQuestPlate.TranslatedQuestName;
-      translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
+      if (!string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestMessage))
+      {
+        translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
+      }
+      else
+      {
+        var messageCacheKey = questProgressSnapshot.HasValue
+            ? $"JournalDetailMessage|{questProgressSnapshot.Value.CacheKey}|{questMessage}"
+            : $"JournalDetailMessage|{questMessage}";
+        if (this.TryGetQueuedTranslation(
+                messageCacheKey,
+                out var cachedTranslatedQuestMessage))
+        {
+          translatedQuestMessage = cachedTranslatedQuestMessage;
+        }
+        else
+        {
+          this.QueueTranslation(
+              messageCacheKey,
+              () => this.Translate(questMessage),
+              translatedMessage =>
+              {
+                var questPlateToUpdate = foundQuestPlate.Clone();
+                questPlateToUpdate.TranslatedQuestMessage =
+                    translatedMessage;
+                questPlateToUpdate.UpdatedDate = DateTime.Now;
+                this.UpdateQuestPlate(questPlateToUpdate);
+              });
+        }
+      }
 
       var objectiveCacheKey = questProgressSnapshot.HasValue
           ? $"JournalDetailObjective|{questProgressSnapshot.Value.CacheKey}|{objectiveText}"
           : $"JournalDetailObjective|{objectiveText}";
-      if (foundQuestPlate.Objectives.TryGetValue(
+      if (foundQuestPlate.TranslatedObjectives.TryGetValue(
               objectiveText,
-              out var storedObjectiveText))
+              out var storedObjectiveText) ||
+          foundQuestPlate.Objectives.TryGetValue(
+              objectiveText,
+              out storedObjectiveText))
       {
         translatedQuestObjective = storedObjectiveText;
       }
@@ -369,6 +521,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               var questPlateToUpdate = foundQuestPlate.Clone();
               questPlateToUpdate.Objectives[objectiveText] =
                   translatedObjective;
+              questPlateToUpdate.TranslatedObjectives[objectiveText] =
+                  translatedObjective;
               questPlateToUpdate.UpdatedDate = DateTime.Now;
               this.UpdateQuestPlate(questPlateToUpdate);
             });
@@ -380,9 +534,12 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         var summaryCacheKey = questProgressSnapshot.HasValue
             ? $"JournalDetailSummaryText|{questProgressSnapshot.Value.CacheKey}|{summaryText}"
             : $"JournalDetailSummaryText|{summaryText}";
-        if (foundQuestPlate.Summaries.TryGetValue(
+        if (foundQuestPlate.TranslatedSummaries.TryGetValue(
                 summaryText,
-                out var storedSummaryText))
+                out var storedSummaryText) ||
+            foundQuestPlate.Summaries.TryGetValue(
+                summaryText,
+                out storedSummaryText))
         {
           translatedQuestSummary = storedSummaryText;
         }
@@ -401,6 +558,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               {
                 var questPlateToUpdate = foundQuestPlate.Clone();
                 questPlateToUpdate.Summaries[summaryText] = translatedSummary;
+                questPlateToUpdate.TranslatedSummaries[summaryText] =
+                    translatedSummary;
                 questPlateToUpdate.UpdatedDate = DateTime.Now;
                 this.UpdateQuestPlate(questPlateToUpdate);
               });
@@ -416,14 +575,24 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         questMessage,
         objectiveText,
       ];
+      var currentQuestSequenceText = questProgressSnapshot.HasValue
+          ? GetCurrentQuestSequenceText(questProgressSnapshot.Value)
+          : string.Empty;
+      var includesCurrentQuestSequenceText =
+          !string.IsNullOrWhiteSpace(currentQuestSequenceText) &&
+          !journalDetailBatchSources.Contains(
+              currentQuestSequenceText,
+              StringComparer.Ordinal);
 
       if (summaryText != string.Empty)
       {
         journalDetailBatchSources.Add(summaryText);
       }
 
-      journalDetailBatchSources.AddRange(
-          summaries.Select(summary => summary.OriginalText));
+      if (includesCurrentQuestSequenceText)
+      {
+        journalDetailBatchSources.Add(currentQuestSequenceText);
+      }
 
       var cacheKey = questProgressSnapshot.HasValue
           ? $"JournalDetail|{questProgressSnapshot.Value.CacheKey}|{SerializeTranslationBatch(journalDetailBatchSources)}"
@@ -446,11 +615,6 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           translatedQuestSummary = cachedTranslatedTexts[textIndex++];
         }
 
-        for (var i = 0; i < summaries.Count; i++)
-        {
-          summaries[i].TranslatedText = cachedTranslatedTexts[textIndex++];
-        }
-
         QuestPlate translatedQuestPlate = new(
             questName,
             questMessage,
@@ -462,24 +626,35 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             this.configuration.ChosenTransEngine,
             DateTime.Now,
             DateTime.Now);
+        this.ApplyQuestProgressMetadata(
+            translatedQuestPlate,
+            questProgressSnapshot);
 
         if (summaryText != string.Empty)
         {
           translatedQuestPlate.Summaries.Add(
               summaryText,
               translatedQuestSummary);
+          translatedQuestPlate.TranslatedSummaries.Add(
+              summaryText,
+              translatedQuestSummary);
         }
 
-        foreach (var summary in summaries)
+        if (includesCurrentQuestSequenceText)
         {
-          translatedQuestPlate.Summaries.Add(
-              summary.OriginalText,
-              summary.TranslatedText);
+          var translatedCurrentQuestSequenceText =
+              cachedTranslatedTexts[textIndex++];
+          translatedQuestPlate.Summaries[currentQuestSequenceText] =
+              translatedCurrentQuestSequenceText;
+          translatedQuestPlate.TranslatedSummaries[currentQuestSequenceText] =
+              translatedCurrentQuestSequenceText;
         }
 
         translatedQuestPlate.Objectives.Add(
             objectiveText,
             translatedQuestObjective);
+        translatedQuestPlate.TranslatedObjectives[objectiveText] =
+            translatedQuestObjective;
         this.InsertQuestPlate(translatedQuestPlate);
       }
       else
@@ -518,10 +693,16 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
                   this.configuration.ChosenTransEngine,
                   DateTime.Now,
                   DateTime.Now);
+              this.ApplyQuestProgressMetadata(
+                  translatedQuestPlate,
+                  questProgressSnapshot);
 
               if (summaryText != string.Empty)
               {
                 translatedQuestPlate.Summaries.Add(
+                    summaryText,
+                    batchTranslatedQuestSummary);
+                translatedQuestPlate.TranslatedSummaries.Add(
                     summaryText,
                     batchTranslatedQuestSummary);
               }
@@ -529,12 +710,18 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               translatedQuestPlate.Objectives.Add(
                   objectiveText,
                   batchTranslatedQuestObjective);
+              translatedQuestPlate.TranslatedObjectives[objectiveText] =
+                  batchTranslatedQuestObjective;
 
-              foreach (var summary in summaries)
+              if (includesCurrentQuestSequenceText)
               {
-                translatedQuestPlate.Summaries.Add(
-                    summary.OriginalText,
-                    translatedTexts[translatedIndex++]);
+                var batchTranslatedCurrentQuestSequenceText =
+                    translatedTexts[translatedIndex++];
+                translatedQuestPlate.Summaries[currentQuestSequenceText] =
+                    batchTranslatedCurrentQuestSequenceText;
+                translatedQuestPlate.TranslatedSummaries[
+                    currentQuestSequenceText] =
+                    batchTranslatedCurrentQuestSequenceText;
               }
 
               this.InsertQuestPlate(translatedQuestPlate);
@@ -583,20 +770,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           translatedQuestSummary);
     }
 
-    foreach (var summary in summaries)
+    if (this.JournalUsesHoverTooltips)
     {
-      if (this.JournalWritesNativeTranslation)
-      {
-        summary.Node->SetText(summary.TranslatedText);
-      }
-      QuestUiTranslationCache.Remember(
-          summary.OriginalText,
-          summary.TranslatedText);
-    }
-
-      if (this.JournalUsesHoverTooltips)
-      {
-        this.RegisterTranslatedHoverTooltip(
+      this.RegisterTranslatedHoverTooltip(
           $"JournalDetail-QuestName-{(nint)questNameNode:X}",
           questNameNode,
           questName,
@@ -605,38 +781,36 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           forceEnabled: true,
           denseHitbox: true);
 
-      var originalQuestProgressSections = questProgressSnapshot.HasValue
-          ? questProgressSnapshot.Value.QuestSteps
-              .Select(step => step.Text)
-              .Where(stepText => !string.IsNullOrWhiteSpace(stepText))
-              .Distinct(StringComparer.Ordinal)
-              .ToArray()
-          : [];
-      var translatedQuestProgressSections = questProgressSnapshot.HasValue
-          ? this.TranslateQuestProgressSections(
-              foundQuestPlate,
-              questProgressSnapshot.Value)
-          : [];
+      var currentQuestSequenceText = questProgressSnapshot.HasValue
+          ? GetCurrentQuestSequenceText(questProgressSnapshot.Value)
+          : string.Empty;
+      var originalQuestDescription = questMessage;
+      var translatedQuestDescription = translatedQuestMessage;
+      var translatedCurrentQuestSequenceText =
+          !string.IsNullOrWhiteSpace(currentQuestSequenceText) &&
+          questProgressSnapshot.HasValue
+              ? this.TranslateCurrentQuestSequenceText(
+                  foundQuestPlate,
+                  questProgressSnapshot.Value)
+              : string.Empty;
+      var originalQuestSummaryBody = BuildQuestPlateSummarySection(
+          currentQuestSequenceText,
+          summaryText,
+          summaries,
+          useTranslatedText: false);
+      var translatedQuestSummaryBody = BuildQuestPlateSummarySection(
+          translatedCurrentQuestSequenceText,
+          translatedQuestSummary,
+          summaries,
+          useTranslatedText: true);
       var originalQuestBody = BuildQuestPlateHoverBody(
-          new[]
-          {
-            questMessage,
-            objectiveText,
-            summaryText,
-          }
-              .Concat(summaries.Select(summary => summary.OriginalText))
-              .Concat(originalQuestProgressSections)
-              .ToArray());
+          originalQuestDescription,
+          objectiveText,
+          originalQuestSummaryBody);
       var translatedQuestBody = BuildQuestPlateHoverBody(
-          new[]
-          {
-            translatedQuestMessage,
-            translatedQuestObjective,
-            translatedQuestSummary,
-          }
-              .Concat(summaries.Select(summary => summary.TranslatedText))
-              .Concat(translatedQuestProgressSections)
-              .ToArray());
+          translatedQuestDescription,
+          translatedQuestObjective,
+          translatedQuestSummaryBody);
 
       if (!string.IsNullOrWhiteSpace(originalQuestBody) ||
           !string.IsNullOrWhiteSpace(translatedQuestBody))
@@ -651,6 +825,19 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
                 out var bodyTopLeft,
                 out var bodyBottomRight))
         {
+          ExpandQuestPlateHoverBoundsForTextNode(
+              ref bodyTopLeft,
+              ref bodyBottomRight,
+              descriptionNode);
+          ExpandQuestPlateHoverBoundsForTextNode(
+              ref bodyTopLeft,
+              ref bodyBottomRight,
+              objectiveNode);
+          ExpandQuestPlateHoverBoundsForTextNode(
+              ref bodyTopLeft,
+              ref bodyBottomRight,
+              summaryNode);
+
           this.RegisterTranslatedHoverTooltip(
               questBodyHoverKey,
               bodyTopLeft,
@@ -690,11 +877,6 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           if (summaryNode != null)
           {
             ExpandBodyBounds(summaryNode);
-          }
-
-          foreach (var summary in summaries)
-          {
-            ExpandBodyBounds(summary.Node);
           }
 
           bodyLeft -= 28f;
@@ -889,17 +1071,11 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               () => this.Translate(questNameText),
               resolvedTranslatedNameText =>
               {
-                QuestPlate translatedQuestPlate = new(
+                var translatedQuestPlate = this.CreateTranslatedQuestPlate(
                     questNameText,
                     string.Empty,
-                    ClientStateInterface.ClientLanguage.Humanize(),
                     resolvedTranslatedNameText,
-                    string.Empty,
-                    string.Empty,
-                    LangDict[LanguageInt].Code,
-                    this.configuration.ChosenTransEngine,
-                    DateTime.Now,
-                    DateTime.Now);
+                    string.Empty);
 
                 this.InsertQuestPlate(translatedQuestPlate);
               });
@@ -1032,17 +1208,14 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
                   return;
                 }
 
-                QuestPlate translatedQuestPlate = new(
+                var translatedQuestPlate = this.CreateTranslatedQuestPlate(
                     questName,
                     questMessage,
-                    ClientStateInterface.ClientLanguage.Humanize(),
                     resolvedQuestName,
-                    resolvedQuestMessage,
-                    string.Empty,
-                    LangDict[LanguageInt].Code,
-                    this.configuration.ChosenTransEngine,
-                    DateTime.Now,
-                    DateTime.Now);
+                    resolvedQuestMessage);
+                this.ApplyQuestProgressMetadata(
+                    translatedQuestPlate,
+                    resolvedCompletedSnapshot);
                 this.InsertQuestPlate(translatedQuestPlate);
               });
       }
@@ -1217,6 +1390,10 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             GetGameVersion());
       }
 
+      this.EnsureQuestPlateMetadataPersisted(
+          foundQuestPlate,
+          questProgressSnapshot);
+
       this.TranslateQuestOnJournalBox(
           journalBox,
           foundQuestPlate,
@@ -1296,6 +1473,79 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Applies canonical quest metadata resolved from the current quest
+  ///     progress snapshot so persisted JournalDetail rows stay aligned with
+  ///     the sheet-first quest model.
+  /// </summary>
+  /// <param name="questPlate">The quest plate being materialized.</param>
+  /// <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
+  private void ApplyQuestProgressMetadata(
+      QuestPlate questPlate,
+      QuestProgressSnapshot? questProgressSnapshot)
+  {
+    if (questPlate == null)
+    {
+      return;
+    }
+
+    questPlate.GameVersion ??= GetGameVersion();
+    if (!questProgressSnapshot.HasValue)
+    {
+      return;
+    }
+
+    questPlate.QuestId = questProgressSnapshot.Value.QuestId.ToString();
+    questPlate.QuestTextSheetName = questProgressSnapshot.Value.QuestSheetName;
+    questPlate.SourceContentHash = questProgressSnapshot.Value.ContentHash;
+  }
+
+  /// <summary>
+  ///     Persists canonical quest metadata into an existing JournalDetail row
+  ///     when the row was created before the sheet-first fields were populated.
+  /// </summary>
+  /// <param name="questPlate">The quest plate currently loaded from the DB.</param>
+  /// <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
+  private void EnsureQuestPlateMetadataPersisted(
+      QuestPlate? questPlate,
+      QuestProgressSnapshot? questProgressSnapshot)
+  {
+    if (questPlate == null || !questProgressSnapshot.HasValue)
+    {
+      return;
+    }
+
+    var expectedQuestId = questProgressSnapshot.Value.QuestId.ToString();
+    var expectedSheetName = questProgressSnapshot.Value.QuestSheetName;
+    var expectedContentHash = questProgressSnapshot.Value.ContentHash;
+    if (string.Equals(
+            questPlate.QuestId,
+            expectedQuestId,
+            StringComparison.Ordinal) &&
+        string.Equals(
+            questPlate.QuestTextSheetName,
+            expectedSheetName,
+            StringComparison.Ordinal) &&
+        string.Equals(
+            questPlate.SourceContentHash,
+            expectedContentHash,
+            StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    var questPlateToUpdate = questPlate.Clone();
+    this.ApplyQuestProgressMetadata(
+        questPlateToUpdate,
+        questProgressSnapshot);
+    questPlateToUpdate.UpdatedDate = DateTime.Now;
+    this.UpdateQuestPlate(questPlateToUpdate);
+
+    this.ApplyQuestProgressMetadata(
+        questPlate,
+        questProgressSnapshot);
+  }
+
+  /// <summary>
   ///     Builds a single multi-paragraph tooltip body from the quest plate text
   ///     sections that are currently visible.
   /// </summary>
@@ -1304,6 +1554,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   private static string BuildQuestPlateHoverBody(params string?[] sections)
   {
     List<string> lines = [];
+    HashSet<string> seenSections = new(StringComparer.Ordinal);
     foreach (var section in sections)
     {
       if (string.IsNullOrWhiteSpace(section))
@@ -1311,10 +1562,88 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         continue;
       }
 
-      lines.Add(section.Trim());
+      var normalizedSection = section.Trim();
+      if (!seenSections.Add(normalizedSection))
+      {
+        continue;
+      }
+
+      lines.Add(normalizedSection);
     }
 
     return string.Join(Environment.NewLine + Environment.NewLine, lines);
+  }
+
+  /// <summary>
+  ///     Builds the visible JournalDetail summary block from the currently
+  ///     visible summary text and summary nodes.
+  /// </summary>
+  /// <param name="primarySummaryText">The main summary text currently shown in the detail pane.</param>
+  /// <param name="summaries">The visible summary nodes collected for the detail pane.</param>
+  /// <param name="useTranslatedText">Whether to use translated or original summary entries.</param>
+  /// <returns>A deduplicated summary block for the tooltip body.</returns>
+  private static string BuildQuestPlateSummarySection(
+      string? currentQuestSequenceText,
+      string? primarySummaryText,
+      IReadOnlyCollection<SummaryQuest> summaries,
+      bool useTranslatedText)
+  {
+    List<string> sections = [];
+    HashSet<string> seenSections = new(StringComparer.Ordinal);
+
+    void AddSection(string? text)
+    {
+      if (string.IsNullOrWhiteSpace(text))
+      {
+        return;
+      }
+
+      var normalizedSection = text.Trim();
+      if (!seenSections.Add(normalizedSection))
+      {
+        return;
+      }
+
+      sections.Add(normalizedSection);
+    }
+
+    AddSection(currentQuestSequenceText);
+    AddSection(primarySummaryText);
+    foreach (var summary in summaries)
+    {
+      AddSection(useTranslatedText ? summary.TranslatedText : summary.OriginalText);
+    }
+
+    return string.Join(Environment.NewLine, sections);
+  }
+
+  /// <summary>
+  ///     Expands an existing quest-body hover rectangle to include a visible
+  ///     text node and some practical padding around it.
+  /// </summary>
+  /// <param name="topLeft">The current top-left coordinate.</param>
+  /// <param name="bottomRight">The current bottom-right coordinate.</param>
+  /// <param name="textNode">The text node to include.</param>
+  private static unsafe void ExpandQuestPlateHoverBoundsForTextNode(
+      ref Vector2 topLeft,
+      ref Vector2 bottomRight,
+      AtkTextNode* textNode)
+  {
+    if (textNode == null || !textNode->IsVisible())
+    {
+      return;
+    }
+
+    topLeft = new Vector2(
+        Math.Max(0f, Math.Min(topLeft.X, textNode->ScreenX - 20f)),
+        Math.Max(0f, Math.Min(topLeft.Y, textNode->ScreenY - 12f)));
+    bottomRight = new Vector2(
+        Math.Max(
+            bottomRight.X,
+            textNode->ScreenX + Math.Max(1f, textNode->GetWidth()) + 20f),
+        Math.Max(
+            bottomRight.Y,
+            textNode->ScreenY + Math.Max(1f, textNode->GetHeight()) + 16f));
   }
 
   /// <summary>
@@ -1338,12 +1667,19 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       return false;
     }
 
+    const float hoverPaddingX = 48f;
+    const float hoverPaddingY = 28f;
+
     topLeft = new Vector2(
-        questCanvasNode->ScreenX,
-        questCanvasNode->ScreenY);
+        Math.Max(0f, questCanvasNode->ScreenX - hoverPaddingX),
+        Math.Max(0f, questCanvasNode->ScreenY - hoverPaddingY));
     bottomRight = new Vector2(
-        questCanvasNode->ScreenX + Math.Max(1f, questCanvasNode->Width),
-        questCanvasNode->ScreenY + Math.Max(1f, questCanvasNode->Height));
+        questCanvasNode->ScreenX +
+            Math.Max(1f, questCanvasNode->Width) +
+            hoverPaddingX,
+        questCanvasNode->ScreenY +
+            Math.Max(1f, questCanvasNode->Height) +
+            hoverPaddingY);
 
     return true;
   }

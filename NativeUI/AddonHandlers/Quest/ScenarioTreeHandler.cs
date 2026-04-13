@@ -18,6 +18,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
   private const string ScenarioTreeHoverPrefix = "ScenarioTree-";
 
+  private readonly Dictionary<int, ScenarioTreeHoverEntry> scenarioTreeHoverEntries = [];
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="ScenarioTreeHandler" /> class.
   /// </summary>
@@ -27,6 +29,9 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnScenarioTreeEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnScenarioTreeEvent);
+    this.RegisterHandler(
+        AddonEvent.PreDraw,
+        this.OnScenarioTreeHoverRefreshEvent);
     this.RegisterHandler(AddonEvent.PreHide, this.OnScenarioTreeCleanupEvent);
     this.RegisterHandler(
         AddonEvent.PreFinalize,
@@ -102,6 +107,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
             questTodoProgressKey + "|" + questNameText,
             out var cachedScenarioSnap))
     {
+      this.RememberScenarioTreeHoverEntry(
+          valueIndex,
+          questTodoProgressKey,
+          questNameText,
+          cachedScenarioSnap.AppliedText);
+
       if (this.ScenarioTreeUsesHoverTooltips)
       {
         var addon = AtkStage.Instance()->RaptureAtkUnitManager
@@ -136,6 +147,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         translatedQuestName = this.NormalizeQuestText(
             translatedQuestName ?? string.Empty);
       }
+
+      this.RememberScenarioTreeHoverEntry(
+          valueIndex,
+          questTodoProgressKey,
+          questNameText,
+          translatedQuestName);
 
       if (this.ScenarioTreeWritesNativeTranslation)
       {
@@ -177,6 +194,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
             translatedNameText ?? string.Empty);
       }
 
+      this.RememberScenarioTreeHoverEntry(
+          valueIndex,
+          questTodoProgressKey,
+          questNameText,
+          translatedNameText);
+
       if (this.ScenarioTreeWritesNativeTranslation)
       {
         setupAtkValues[valueIndex].SetManagedString(
@@ -203,6 +226,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
       return;
     }
+
+    this.RememberScenarioTreeHoverEntry(
+        valueIndex,
+        questTodoProgressKey,
+        questNameText,
+        questNameText);
 
     this.QueueTranslation(
         cacheKey,
@@ -240,14 +269,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       return;
     }
 
-    if (args is not AddonRefreshArgs setupArgs)
-    {
-      return;
-    }
-
-    var setupAtkValues = (AtkValue*)setupArgs.AtkValues;
-
-    if (setupAtkValues == null)
+    if (!this.TryResolveScenarioTreeAtkValues(args, out var setupAtkValues))
     {
       return;
     }
@@ -268,6 +290,120 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Resolves the live ScenarioTree ATK value array for refresh and
+  ///     requested-update events.
+  /// </summary>
+  /// <param name="args">The lifecycle arguments for the current event.</param>
+  /// <param name="atkValues">The resolved ATK value pointer.</param>
+  /// <returns>True when a usable ATK value array was found.</returns>
+  private unsafe bool TryResolveScenarioTreeAtkValues(
+      AddonArgs args,
+      out AtkValue* atkValues)
+  {
+    atkValues = null;
+
+    if (!string.Equals(args.AddonName, ScenarioTreeAddonName, StringComparison.Ordinal))
+    {
+      return false;
+    }
+
+    if (args is AddonRefreshArgs refreshArgs)
+    {
+      atkValues = (AtkValue*)refreshArgs.AtkValues;
+      return atkValues != null;
+    }
+
+    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+        ->GetAddonByName(ScenarioTreeAddonName);
+    if (addon == null || !addon->IsVisible || addon->AtkValues == null)
+    {
+      return false;
+    }
+
+    atkValues = addon->AtkValues;
+    return true;
+  }
+
+  /// <summary>
+  ///     Refreshes the ScenarioTree hover target every draw using the most
+  ///     recently resolved quest names without queueing new translations.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private unsafe void OnScenarioTreeHoverRefreshEvent(
+      AddonEvent type,
+      AddonArgs args)
+  {
+    if (!this.Config.TranslateScenarioTree || !this.ScenarioTreeUsesHoverTooltips)
+    {
+      return;
+    }
+
+    if (this.scenarioTreeHoverEntries.Count == 0)
+    {
+      return;
+    }
+
+    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+        ->GetAddonByName(ScenarioTreeAddonName);
+    if (addon == null || !addon->IsVisible)
+    {
+      return;
+    }
+
+    var orderedEntries = this.scenarioTreeHoverEntries
+        .OrderByDescending(entry => entry.Key)
+        .Select(entry => entry.Value)
+        .ToList();
+    var originalText = string.Join(
+        $"{Environment.NewLine}{Environment.NewLine}",
+        orderedEntries
+            .Select(entry => entry.OriginalText)
+            .Where(text => !string.IsNullOrWhiteSpace(text))
+            .Distinct(StringComparer.Ordinal));
+    var translatedText = string.Join(
+        $"{Environment.NewLine}{Environment.NewLine}",
+        orderedEntries
+            .Select(entry => entry.TranslatedText)
+            .Where(text => !string.IsNullOrWhiteSpace(text))
+            .Distinct(StringComparer.Ordinal));
+    if (string.IsNullOrWhiteSpace(originalText) &&
+        string.IsNullOrWhiteSpace(translatedText))
+    {
+      return;
+    }
+
+    this.RegisterTranslatedHoverTooltip(
+        $"ScenarioTree-{(nint)addon:X}",
+        addon,
+        originalText,
+        translatedText,
+        swapEnabled: this.ScenarioTreeHoverShowsOriginal,
+        forceEnabled: true,
+        denseHitbox: true);
+  }
+
+  /// <summary>
+  ///     Remembers the latest ScenarioTree hover payload for one visible quest
+  ///     slot so the combined tooltip can be refreshed on draw.
+  /// </summary>
+  /// <param name="valueIndex">The addon value index that produced the text.</param>
+  /// <param name="progressKey">The resolved quest-progress key.</param>
+  /// <param name="originalText">The current original quest name.</param>
+  /// <param name="translatedText">The current translated quest name.</param>
+  private void RememberScenarioTreeHoverEntry(
+      int valueIndex,
+      string progressKey,
+      string originalText,
+      string translatedText)
+  {
+    this.scenarioTreeHoverEntries[valueIndex] = new ScenarioTreeHoverEntry(
+        progressKey,
+        originalText ?? string.Empty,
+        translatedText ?? string.Empty);
+  }
+
+  /// <summary>
   ///     Clears ScenarioTree hover registrations when the addon closes.
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
@@ -276,7 +412,20 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   {
     if (string.Equals(args.AddonName, ScenarioTreeAddonName, StringComparison.Ordinal))
     {
+      this.scenarioTreeHoverEntries.Clear();
       this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
     }
   }
+
+  /// <summary>
+  ///     Captures the latest hover payload for a visible ScenarioTree quest
+  ///     slot.
+  /// </summary>
+  /// <param name="ProgressKey">The stable quest-progress key.</param>
+  /// <param name="OriginalText">The original quest name.</param>
+  /// <param name="TranslatedText">The translated quest name.</param>
+  private sealed record ScenarioTreeHoverEntry(
+      string ProgressKey,
+      string OriginalText,
+      string TranslatedText);
 }

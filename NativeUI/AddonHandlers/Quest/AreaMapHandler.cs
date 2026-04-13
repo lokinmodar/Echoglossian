@@ -18,6 +18,10 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
 
   private const string AreaMapHoverPrefix = "AreaMap-";
 
+  private string areaMapHoverOriginalText = string.Empty;
+
+  private string areaMapHoverTranslatedText = string.Empty;
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="AreaMapHandler" /> class.
   /// </summary>
@@ -27,6 +31,7 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnAreaMapEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnAreaMapEvent);
+    this.RegisterHandler(AddonEvent.PreDraw, this.OnAreaMapHoverRefreshEvent);
     this.RegisterHandler(AddonEvent.PreHide, this.OnAreaMapCleanupEvent);
     this.RegisterHandler(AddonEvent.PreFinalize, this.OnAreaMapCleanupEvent);
   }
@@ -70,23 +75,12 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// <param name="args">The addon lifecycle arguments.</param>
   private unsafe void OnAreaMapEvent(AddonEvent type, AddonArgs args)
   {
-#if DEBUG
-    PluginLog.Debug(
-  $"AreaMapHandler AddonEvent: {type} {args.AddonName}");
-#endif
-
     if (!this.Config.TranslateAreaMap)
     {
       return;
     }
 
-    if (args is not AddonRefreshArgs setupArgs)
-    {
-      return;
-    }
-
-    var setupAtkValues = (AtkValue*)setupArgs.AtkValues;
-    if (setupAtkValues == null)
+    if (!this.TryResolveAreaMapAtkValues(args, out var setupAtkValues))
     {
       return;
     }
@@ -111,6 +105,10 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
               questNameText,
               out var appliedQuestSnapshot))
       {
+        this.RememberAreaMapHoverTexts(
+            questNameText,
+            appliedQuestSnapshot.AppliedText);
+
         if (this.AreaMapWritesNativeTranslation)
         {
           setupAtkValues[142].SetManagedString(
@@ -148,6 +146,10 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
           foundQuestPlate.TranslatedQuestName = this.NormalizeQuestText(
               foundQuestPlate.TranslatedQuestName ?? string.Empty);
         }
+
+        this.RememberAreaMapHoverTexts(
+            questNameText,
+            foundQuestPlate.TranslatedQuestName ?? string.Empty);
 
         if (this.AreaMapWritesNativeTranslation)
         {
@@ -188,6 +190,10 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
           translatedNameText = this.NormalizeQuestText(translatedNameText);
         }
 
+        this.RememberAreaMapHoverTexts(
+            questNameText,
+            translatedNameText);
+
         if (this.AreaMapWritesNativeTranslation)
         {
           setupAtkValues[142].SetManagedString(translatedNameText);
@@ -214,6 +220,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
         return;
       }
 
+      this.RememberAreaMapHoverTexts(questNameText, questNameText);
+
       this.QueueTranslation(
           cacheKey,
           () => this.Translate(questNameText),
@@ -239,6 +247,89 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Resolves the live AreaMap ATK value array for refresh and requested-
+  ///     update events.
+  /// </summary>
+  /// <param name="args">The lifecycle arguments for the current event.</param>
+  /// <param name="atkValues">The resolved ATK value pointer.</param>
+  /// <returns>True when a usable ATK value array was found.</returns>
+  private unsafe bool TryResolveAreaMapAtkValues(
+      AddonArgs args,
+      out AtkValue* atkValues)
+  {
+    atkValues = null;
+
+    if (!string.Equals(args.AddonName, AreaMapAddonName, StringComparison.Ordinal))
+    {
+      return false;
+    }
+
+    if (args is AddonRefreshArgs refreshArgs)
+    {
+      atkValues = (AtkValue*)refreshArgs.AtkValues;
+      return atkValues != null;
+    }
+
+    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+        ->GetAddonByName(AreaMapAddonName);
+    if (addon == null || !addon->IsVisible || addon->AtkValues == null)
+    {
+      return false;
+    }
+
+    atkValues = addon->AtkValues;
+    return true;
+  }
+
+  /// <summary>
+  ///     Refreshes the AreaMap hover target every draw using the most recently
+  ///     resolved text pair without queueing new translations.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private unsafe void OnAreaMapHoverRefreshEvent(AddonEvent type, AddonArgs args)
+  {
+    if (!this.Config.TranslateAreaMap || !this.AreaMapUsesHoverTooltips)
+    {
+      return;
+    }
+
+    if (string.IsNullOrWhiteSpace(this.areaMapHoverOriginalText) &&
+        string.IsNullOrWhiteSpace(this.areaMapHoverTranslatedText))
+    {
+      return;
+    }
+
+    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+        ->GetAddonByName(AreaMapAddonName);
+    if (addon == null || !addon->IsVisible)
+    {
+      return;
+    }
+
+    this.RegisterTranslatedHoverTooltip(
+        $"AreaMap-{(nint)addon:X}-142",
+        addon,
+        this.areaMapHoverOriginalText,
+        this.areaMapHoverTranslatedText,
+        swapEnabled: this.AreaMapHoverShowsOriginal,
+        forceEnabled: true,
+        denseHitbox: true);
+  }
+
+  /// <summary>
+  ///     Remembers the latest AreaMap hover text pair so the tooltip can be
+  ///     refreshed on draw without recomputing translations.
+  /// </summary>
+  /// <param name="originalText">The current original AreaMap quest text.</param>
+  /// <param name="translatedText">The current translated AreaMap quest text.</param>
+  private void RememberAreaMapHoverTexts(string originalText, string translatedText)
+  {
+    this.areaMapHoverOriginalText = originalText ?? string.Empty;
+    this.areaMapHoverTranslatedText = translatedText ?? string.Empty;
+  }
+
+  /// <summary>
   ///     Clears AreaMap hover registrations when the addon closes.
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
@@ -247,6 +338,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   {
     if (string.Equals(args.AddonName, AreaMapAddonName, StringComparison.Ordinal))
     {
+      this.areaMapHoverOriginalText = string.Empty;
+      this.areaMapHoverTranslatedText = string.Empty;
       this.RemoveHoverTooltipsByPrefix(AreaMapHoverPrefix);
     }
   }

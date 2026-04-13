@@ -16,6 +16,7 @@ This document describes the **current actual** runtime translation flow for ever
 | `JournalResult`     | `TranslateJournalResult`             | `AddonHandlerWiring.cs`      |
 | `RecommendList`     | `TranslateRecommendList`             | `AddonHandlerWiring.cs`      |
 | `ScenarioTree`      | `TranslateScenarioTree`              | `AddonHandlerWiring.cs`      |
+| `AreaMap`           | `TranslateAreaMap`                   | `AddonHandlerWiring.cs`      |
 | `_ToDoList`         | `TranslateToDoList`                  | `AddonHandlerWiring.cs`      |
 
 Registrations are assembled in `NativeUI/Helpers/AddonHandlerWiring.cs`, registered through `NativeUI/Helpers/AddonHandlerRegistrar.cs`, and unregistered from `Echoglossian.cs` during plugin teardown.
@@ -56,6 +57,9 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 - **Purpose:** stable per-node hover translation memory so the tooltip can be re-registered on refresh without looking up the DB again
 - Used by `Journal` quest list (`JournalList-*` keys) and `RecommendList`
 - `Remember(nodePtr, original, translated)` writes; `TryGet(nodePtr, out snap)` reads
+- When several tooltip targets overlap, the hover manager now prefers the
+  smallest hovered rectangle. This matters for dense quest rows where a broad
+  title or row trigger can otherwise swallow a narrower objective trigger.
 
 ### 3. In-memory translation queue (instance-scoped)
 
@@ -122,11 +126,15 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
    - Queue absent → `QueueTranslationBatch` then `return`
 7. Apply `RemoveDiacritics` if configured.
 8. If `WritesNative`: `SetText` on all four nodes.
-9. Populate `QuestUiTranslationCache` for all four texts (and summary items).
+9. Populate `QuestUiTranslationCache` for the four canonical texts only.
 10. If `UsesHoverTooltips`:
     - Register `JournalDetail-QuestName-{nodePtr}` on the name node.
-    - Build `originalQuestBody` and `translatedQuestBody` strings (message + objective + summary + summary items + progress sections) via `BuildQuestPlateHoverBody`.
-    - Register `JournalDetail-QuestBody-{nodePtr}` using expanded bounds from description + objective + summary node rectangles (stable key, no progress suffix — overwrites in place on quest navigation).
+    - Build `originalQuestBody` and `translatedQuestBody` from the visible three-part shape:
+      - current description source (the visible quest description / translated quest message)
+      - current objective text
+      - current summary block (current `SEQ` row plus the live summary node text, when present)
+    - Register `JournalDetail-QuestBody-{nodePtr}` using bounds that start from `JournalCanvasComponentNode` and then expand to include the visible description, objective, and summary nodes only.
+    - Do **not** fold the additional visible Journal summary-node list into the canonical body or persisted row; those nodes can retain stale text across quest switches and were observed contaminating one quest with summary text from another.
 
 **`TranslateCompletedQuest` flow:** same as above but reads only name + message (no objective/summary), uses `JournalDetail-CompletedQuestName-*` and `JournalDetail-CompletedQuestMessage-*` + `JournalDetail-CompletedQuestBody-*` hover keys.
 
@@ -192,6 +200,7 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 **Trigger events (all three register the same handler or its async variant):**
 - `AddonEvent.PostReceiveEvent` → `RecommendListHandler.OnRecommendListEvent` → `TranslateRecommendListHandler()`
 - `AddonEvent.PreRequestedUpdate` → same
+- `AddonEvent.PreDraw` → `RecommendListHandler.OnRecommendListHoverRefreshEvent` → `RefreshRecommendListHoverTooltips()` (hover maintenance only)
 - `AddonEvent.PostRequestedUpdate` → `RecommendListHandler.OnRecommendListEventAsync` → `Task.Delay(200).ContinueWith(TranslateRecommendListHandler)` (zone-change delay guard)
 
 **Why three events:** `PostReceiveEvent` catches user interactions; `PreRequestedUpdate` catches server-push refreshes; the async variant catches zone transitions where node layout may not be settled yet.
@@ -215,6 +224,12 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 **Pass 2 — `UpdateRecommendList()`:**
 Identical traversal after pass 1. Re-reads all nodes and rewrites from `QuestUiTranslationCache` + `QuestHoverTranslationCache`. This ensures that translations that arrived from the async queue during pass 1 are visible immediately without waiting for the next event cycle.
 
+**Hover maintenance — `RefreshRecommendListHoverTooltips()`:**
+- Runs on `PreDraw`.
+- Re-scans only the visible quest name nodes.
+- Re-registers tooltip targets from `QuestHoverTranslationCache`, `QuestUiTranslationCache`, or the persisted `QuestPlate` row.
+- Does **not** queue new translations and does **not** mutate native text.
+
 **DB table used:** `questplates` — `FindQuestPlateByName` (name only).
 
 ---
@@ -224,8 +239,12 @@ Identical traversal after pass 1. Re-reads all nodes and rewrites from `QuestUiT
 **Trigger events:**
 - `AddonEvent.PreRefresh` → `ScenarioTreeHandler.OnScenarioTreeEvent` → `TranslateQuestOnScenarioTree`
 - `AddonEvent.PreRequestedUpdate` → same
+- `AddonEvent.PreDraw` → `ScenarioTreeHandler.OnScenarioTreeHoverRefreshEvent` → combined hover refresh only
 
-**Args type:** `AddonRefreshArgs` (not `AddonSetupArgs`) — the text data arrives as `AtkValue*` on every refresh.
+**Args type:** primarily `AddonRefreshArgs`, with a live-addon fallback for
+`PreRequestedUpdate` — if the requested-update event does not carry refresh
+args, the handler now resolves `AtkUnitBase->AtkValues` directly from the
+visible addon instead of turning that trigger path into a no-op.
 
 **`TranslateQuestOnScenarioTree(setupAtkValues, valueIndex)` flow:**
 
@@ -243,7 +262,35 @@ Called twice per event: once for index 7 (MSQ entry) and once for index 2 (sub-q
    - Hit: same output path as DB hit.
    - Miss: `QueueTranslation` (persist InsertQuestPlate); return.
 
+**Hover maintenance:**
+- Every resolved slot also updates an in-memory hover snapshot for the current `valueIndex`.
+- `PreDraw` combines the visible MSQ/subquest entries into one tooltip payload and re-registers it on the addon root.
+- This path is read-only and avoids requeueing translation work.
+
 **Key difference from other addons:** text is written via `SetManagedString` directly into the `AtkValue*` array in `PreRefresh` / `PreRequestedUpdate`, so the game's own node layout picks up the translated string without the handler touching node pointers directly.
+
+**DB table used:** `questplates` — `FindQuestPlateByName` (name only).
+
+---
+
+### `AreaMap` (quest tracker inside the map window)
+
+**Trigger events:**
+- `AddonEvent.PreRefresh` → `AreaMapHandler.OnAreaMapEvent`
+- `AddonEvent.PreRequestedUpdate` → same
+- `AddonEvent.PreDraw` → `AreaMapHandler.OnAreaMapHoverRefreshEvent` (hover maintenance only)
+
+**Args type:** primarily `AddonRefreshArgs`, with a live-addon fallback for
+`PreRequestedUpdate` — if the requested-update event does not carry refresh
+args, the handler resolves `AtkUnitBase->AtkValues` from the visible addon.
+
+**Flow:**
+
+1. Read the quest name from `setupAtkValues[142]`.
+2. Resolve translation from `QuestUiTranslationCache`, `QuestPlate`, or the queued-translation cache.
+3. If `WritesNative`, apply the translated quest name back to `setupAtkValues[142]`.
+4. Always remember the latest `(original, translated)` pair for hover maintenance.
+5. `PreDraw` re-registers a whole-addon tooltip from that remembered pair without queueing new translation work.
 
 **DB table used:** `questplates` — `FindQuestPlateByName` (name only).
 
@@ -290,7 +337,11 @@ For each quest name entry:
    - Hit: build `QuestPlate`; write name node if `WritesNative`; `RegisterToDoTooltip`; iterate objectives (same queue/write pattern); `InsertQuestPlate`.
    - Miss: `QueueTranslation`; `continue`.
 
-**`RegisterToDoTooltip`:** inner helper that calls `RegisterTranslatedHoverTooltip` on the specific text node (not the addon window), keyed as `ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}-{textNodePtr}`. Only fires if `ToDoListUsesHoverTooltips`.
+**`RegisterToDoTooltip`:** inner helper that stores a stable row hover payload and registers it from explicit screen bounds computed as the union of:
+- the full visible row node
+- the inner text node
+
+The stable key is `ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}`. A lightweight `PreDraw` pass refreshes those row targets without queueing new translations.
 
 **DB tables used:** `questplates` — `FindQuestPlateByName` (name only); objectives looked up from `foundQuestPlate.Objectives` dict (stored inline in the plate record).
 
@@ -318,8 +369,9 @@ Key patterns per addon:
 | JournalDetail completed body | `JournalDetail-CompletedQuestBody-{ptr:X}` | explicit bounds rect |
 | JournalAccept | `JournalAccept-{addonPtr:X}`                         | `AtkUnitBase*`          |
 | JournalResult | `JournalResult-{addonPtr:X}`                         | `AtkUnitBase*`          |
-| ScenarioTree | `ScenarioTree-{addonPtr:X}-{valueIndex}-{progressKey}` | `AtkUnitBase*`        |
-| ToDoList     | `ToDoList-{progressKey}-{i}-{j}-{nodeId}-{textNodePtr:X}` | `AtkTextNode*`    |
+| ScenarioTree | `ScenarioTree-{addonPtr:X}`                            | `AtkUnitBase*`        |
+| AreaMap      | `AreaMap-{addonPtr:X}-142`                             | `AtkUnitBase*`        |
+| ToDoList     | `ToDoList-{progressKey}-{i}-{j}-{nodeId}` | explicit row bounds |
 | RecommendList | `RecommendList-{questNameNodePtr:X}`                 | `AtkTextNode*`          |
 
 ---
@@ -343,6 +395,25 @@ Current behavior for `JournalDetail` and `ToDoList` objectives: the text is capt
 - Objectives in `QuestPlate.Objectives` are stored as `{original UI text} → {translated text}` dict entries, which are fragile to UI text changes across game patches.
 
 The intended fix (described in `quest-full-pipeline-design.md`) is to capture objectives from `_TODO_NN` rows in the quest text sheet via `QuestProgressSnapshot.QuestSteps`, keyed by stable row key rather than raw UI text. That migration is not yet implemented.
+
+---
+
+## JournalDetail persistence alignment update
+
+`JournalDetail` now follows this runtime/persistence contract more closely:
+
+- The tooltip description uses `QuestPlate.TranslatedQuestMessage` when available.
+- The current SEQ row from `QuestProgressSnapshot` is translated and persisted as a summary-like translated row, then folded into the tooltip summary block instead of replacing the description.
+- When an existing `QuestPlate` row is found but was originally created from a looser Journal list/title path, `JournalDetail` now fills in missing metadata and message translation on demand:
+  - `QuestId`
+  - `QuestTextSheetName`
+  - `SourceContentHash`
+  - `TranslatedQuestMessage`
+  - translated objective and summary/SEQ rows
+
+This means the DB row is expected to become more complete the first time the
+quest is opened in `JournalDetail`, even if an earlier title-only row already
+existed.
 
 ---
 

@@ -106,6 +106,7 @@ public sealed class HoverTooltipManager
         var mousePosition = ImGui.GetMousePos();
         string? hoveredKey = null;
         HoverTooltipEntry? hoveredEntry = null;
+        var hoveredArea = float.MaxValue;
         foreach (var (key, entry) in this.entries)
         {
             if (!entry.Enabled)
@@ -121,9 +122,17 @@ public sealed class HoverTooltipManager
                 continue;
             }
 
+            var width = Math.Max(1f, entry.BottomRight.X - entry.TopLeft.X);
+            var height = Math.Max(1f, entry.BottomRight.Y - entry.TopLeft.Y);
+            var area = width * height;
+            if (hoveredEntry != null && area >= hoveredArea)
+            {
+                continue;
+            }
+
             hoveredKey = key;
             hoveredEntry = entry;
-            break;
+            hoveredArea = area;
         }
 
         this.RemoveStaleEntries(hoveredKey);

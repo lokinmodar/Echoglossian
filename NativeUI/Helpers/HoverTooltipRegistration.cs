@@ -137,8 +137,8 @@ public partial class Echoglossian
       return;
     }
 
-    var left = rootNode->X;
-    var top = rootNode->Y;
+    var left = rootNode->ScreenX;
+    var top = rootNode->ScreenY;
     var right = left + Math.Max(1f, rootNode->Width * addon->Scale);
     var bottom = top + Math.Max(1f, rootNode->Height * addon->Scale);
     if (denseHitbox)
