@@ -79,6 +79,15 @@ The Journal family became a major focus:
 
 Important observations from the logs and probing:
 
+- the current runtime still shows a gap between `Journal` / `JournalDetail`
+  and the other quest addons in hover coverage
+- `JournalDetail` body coverage improved with the `JournalCanvasComponentNode`
+  trigger, but the body still depends on a mix of UI surface and DB material
+- `ToDoList`, `ScenarioTree`, `RecommendList`, and `AreaMap` still need a
+  dedicated trigger/registration pass even when their config flags are enabled
+- the next step should keep the sheet-first quest pipeline as the source of
+  truth for content while treating the UI strictly as a locator
+
 - the quest title portion of Journal was generally more stable
 - the body of `JournalDetail` was hard to hit with a small trigger area
 - `ToDoList`, `RecommendList`, and `ScenarioTree` were initially not producing hover hits consistently

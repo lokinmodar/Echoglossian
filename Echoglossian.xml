@@ -1226,6 +1226,13 @@
                 Fixes the configuration file if it is missing or has an incorrect version.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ResolvePluginVersion">
+            <summary>
+                Resolves the current plugin version from the loaded assembly
+                metadata.
+            </summary>
+            <returns>The best available version string, or null when unavailable.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.MigrateOverlayStyleSettings">
             <summary>
                 Migrates legacy shared overlay style settings and NPC-name settings into
@@ -4388,6 +4395,13 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.OnAreaMapCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears AreaMap hover registrations when the addon closes.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler">
             <summary>
                 Handles the JournalAccept quest addon runtime inside the standalone
@@ -4426,6 +4440,13 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.OnJournalAcceptEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Handles JournalAccept setup events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.OnJournalAcceptCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears JournalAccept hover registrations when the addon closes.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
@@ -4541,6 +4562,13 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears quest hover registrations when Journal views close.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.BuildQuestPlateHoverBody(System.String[])">
             <summary>
                 Builds a single multi-paragraph tooltip body from the quest plate text
@@ -4597,6 +4625,13 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.OnJournalResultEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Handles JournalResult setup events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.OnJournalResultCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears JournalResult hover registrations when the addon closes.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
@@ -4698,6 +4733,12 @@
             <param name="sourceTexts">The source texts to translate.</param>
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True if the request was queued.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RemoveHoverTooltipsByPrefix(System.String)">
+            <summary>
+                Removes quest hover tooltips whose keys share the specified prefix.
+            </summary>
+            <param name="prefix">The tooltip key prefix to remove.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.SerializeTranslationPair(System.String,System.String)">
             <summary>
@@ -4843,6 +4884,12 @@
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True when the request was queued.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RemoveHoverTooltipByPrefixDelegate">
+            <summary>
+                Delegate used to remove quest hover tooltips by prefix.
+            </summary>
+            <param name="prefix">The tooltip key prefix to remove.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RegisterTranslatedHoverTooltipAddonDelegate">
             <summary>
                 Delegate used to register a hover tooltip against a live addon window.
@@ -4932,6 +4979,9 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.QueueTranslationBatch">
             <summary>Gets or sets the queued batch translation delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RemoveHoverTooltipByPrefix">
+            <summary>Gets or sets the hover tooltip prefix removal delegate.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RegisterTranslatedHoverTooltipAddon">
             <summary>Gets or sets the addon tooltip registration delegate.</summary>
@@ -5039,6 +5089,13 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.OnRecommendListCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears RecommendList hover registrations when the addon closes.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TranslateRecommendListHandler">
             <summary>
                 Runs the two-pass RecommendList translation flow.
@@ -5089,6 +5146,13 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnScenarioTreeEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Handles ScenarioTree refresh and requested-update events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnScenarioTreeCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears ScenarioTree hover registrations when the addon closes.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
@@ -5169,6 +5233,13 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.OnToDoListEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Handles ToDoList refresh events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.OnToDoListCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears ToDoList hover registrations when the addon closes.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
@@ -8045,6 +8116,12 @@
             <summary>
                 Removes tooltip targets by exact key.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.RemoveByPrefix(System.String)">
+            <summary>
+                Removes tooltip targets whose keys start with the specified prefix.
+            </summary>
+            <param name="prefix">The key prefix to remove.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Clear">
             <summary>

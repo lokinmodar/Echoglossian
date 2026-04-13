@@ -73,6 +73,7 @@ StyleCopReport.xml
 *.pgc
 *.pgd
 *.rsp
+!Directory.Build.rsp
 *.sbr
 *.tlb
 *.tli
@@ -348,3 +349,4 @@ docs/project-chat-import/
 docs/refactor-timeline-and-flow-analysis.md
 AGENTS.md
 /.agents
+/docs/current-refactor-conversation-history.md

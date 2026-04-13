@@ -225,8 +225,8 @@ public partial class Echoglossian : IDalamudPlugin
     ComplementaryFont7FilePath =
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-7.ttf";
 
-    this.configuration.PluginVersion = Assembly.GetExecutingAssembly()
-        .GetName().Version?.ToString();
+    this.configuration.PluginVersion =
+        ResolvePluginVersion() ?? this.configuration.PluginVersion;
     if (this.configuration.Version < 5)
     {
       this.FixConfig();
@@ -447,6 +447,7 @@ public partial class Echoglossian : IDalamudPlugin
   protected virtual void Dispose(bool disposing)
   {
     AddonLifecycle.UnLogAddon("CutSceneSelectString");
+    this.hoverTooltipManager.Clear();
     QuestUiTranslationCache.Clear();
     QuestHoverTranslationCache.Clear();
     QuestLuminaResolver.Clear();

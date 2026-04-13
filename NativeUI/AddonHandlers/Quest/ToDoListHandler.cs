@@ -15,6 +15,10 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
 {
   private const string EmptyObjective = "???";
 
+  private const string ToDoListAddonName = "_ToDoList";
+
+  private const string ToDoListHoverPrefix = "ToDoList-";
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="ToDoListHandler" /> class.
   /// </summary>
@@ -24,6 +28,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PostRequestedUpdate, this.OnToDoListEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnToDoListEvent);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnToDoListCleanupEvent);
+    this.RegisterHandler(AddonEvent.PreFinalize, this.OnToDoListCleanupEvent);
   }
 
   /// <summary>
@@ -109,7 +115,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     }
 
     var atkStage = AtkStage.Instance();
-    var todoList = atkStage->RaptureAtkUnitManager->GetAddonByName("_ToDoList");
+    var todoList = atkStage->RaptureAtkUnitManager->GetAddonByName(
+        ToDoListAddonName);
     if (todoList == null || !todoList->IsVisible)
     {
       return;
@@ -687,5 +694,18 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     }
 
     this.TranslateToDoList();
+  }
+
+  /// <summary>
+  ///     Clears ToDoList hover registrations when the addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnToDoListCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (string.Equals(args.AddonName, ToDoListAddonName, StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+    }
   }
 }

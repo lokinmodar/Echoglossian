@@ -16,6 +16,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 {
   private const string JournalResultAddonName = "JournalResult";
 
+  private const string JournalResultHoverPrefix = "JournalResult-";
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="JournalResultHandler" /> class.
   /// </summary>
@@ -24,6 +26,10 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       : base(dependencies)
   {
     this.RegisterHandler(AddonEvent.PreSetup, this.OnJournalResultEvent);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnJournalResultCleanupEvent);
+    this.RegisterHandler(
+        AddonEvent.PreFinalize,
+        this.OnJournalResultCleanupEvent);
   }
 
   /// <summary>
@@ -225,6 +231,19 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     catch (Exception e)
     {
       PluginLog.Error("UiJournalResultHandler Exception: " + e.StackTrace);
+    }
+  }
+
+  /// <summary>
+  ///     Clears JournalResult hover registrations when the addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnJournalResultCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (string.Equals(args.AddonName, JournalResultAddonName, StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(JournalResultHoverPrefix);
     }
   }
 }

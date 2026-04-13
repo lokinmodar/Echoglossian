@@ -15,6 +15,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
 {
   private const string JournalAcceptAddonName = "JournalAccept";
 
+  private const string JournalAcceptHoverPrefix = "JournalAccept-";
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="JournalAcceptHandler" /> class.
   /// </summary>
@@ -23,6 +25,10 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       : base(dependencies)
   {
     this.RegisterHandler(AddonEvent.PreSetup, this.OnJournalAcceptEvent);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnJournalAcceptCleanupEvent);
+    this.RegisterHandler(
+        AddonEvent.PreFinalize,
+        this.OnJournalAcceptCleanupEvent);
   }
 
   /// <summary>
@@ -250,6 +256,19 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     catch (Exception e)
     {
       PluginLog.Error("Exception at JournalAcceptHandler: " + e);
+    }
+  }
+
+  /// <summary>
+  ///     Clears JournalAccept hover registrations when the addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnJournalAcceptCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (string.Equals(args.AddonName, JournalAcceptAddonName, StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(JournalAcceptHoverPrefix);
     }
   }
 }

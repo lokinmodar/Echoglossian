@@ -16,6 +16,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
 {
   private const string AreaMapAddonName = "AreaMap";
 
+  private const string AreaMapHoverPrefix = "AreaMap-";
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="AreaMapHandler" /> class.
   /// </summary>
@@ -25,6 +27,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnAreaMapEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnAreaMapEvent);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnAreaMapCleanupEvent);
+    this.RegisterHandler(AddonEvent.PreFinalize, this.OnAreaMapCleanupEvent);
   }
 
   /// <summary>
@@ -211,6 +215,19 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
     catch (Exception e)
     {
       PluginLog.Error("Exception at AreaMapHandler: " + e);
+    }
+  }
+
+  /// <summary>
+  ///     Clears AreaMap hover registrations when the addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnAreaMapCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (string.Equals(args.AddonName, AreaMapAddonName, StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(AreaMapHoverPrefix);
     }
   }
 }

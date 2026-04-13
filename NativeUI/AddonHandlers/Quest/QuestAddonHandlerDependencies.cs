@@ -41,6 +41,12 @@ internal delegate bool QueueTranslationBatchDelegate(
     Action<string[]>? onResolved = null);
 
 /// <summary>
+///     Delegate used to remove quest hover tooltips by prefix.
+/// </summary>
+/// <param name="prefix">The tooltip key prefix to remove.</param>
+internal delegate void RemoveHoverTooltipByPrefixDelegate(string prefix);
+
+/// <summary>
 ///     Delegate used to register a hover tooltip against a live addon window.
 /// </summary>
 /// <param name="key">Stable key used to refresh the tooltip target.</param>
@@ -157,6 +163,9 @@ internal sealed class QuestAddonHandlerDependencies
 
   /// <summary>Gets or sets the queued batch translation delegate.</summary>
   public required QueueTranslationBatchDelegate QueueTranslationBatch { get; init; }
+
+  /// <summary>Gets or sets the hover tooltip prefix removal delegate.</summary>
+  public required RemoveHoverTooltipByPrefixDelegate RemoveHoverTooltipByPrefix { get; init; }
 
   /// <summary>Gets or sets the addon tooltip registration delegate.</summary>
   public required RegisterTranslatedHoverTooltipAddonDelegate

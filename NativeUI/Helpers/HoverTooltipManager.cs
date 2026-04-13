@@ -63,6 +63,25 @@ public sealed class HoverTooltipManager
     public void Remove(string key)
     {
         this.entries.TryRemove(key, out _);
+        this.lastHoverLogUtc.TryRemove(key, out _);
+    }
+
+    /// <summary>
+    ///     Removes tooltip targets whose keys start with the specified prefix.
+    /// </summary>
+    /// <param name="prefix">The key prefix to remove.</param>
+    public void RemoveByPrefix(string prefix)
+    {
+        foreach (var (key, _) in this.entries)
+        {
+            if (!key.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            this.entries.TryRemove(key, out _);
+            this.lastHoverLogUtc.TryRemove(key, out _);
+        }
     }
 
     /// <summary>
@@ -71,6 +90,7 @@ public sealed class HoverTooltipManager
     public void Clear()
     {
         this.entries.Clear();
+        this.lastHoverLogUtc.Clear();
     }
 
     /// <summary>

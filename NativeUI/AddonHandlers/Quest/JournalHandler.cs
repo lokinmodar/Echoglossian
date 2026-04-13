@@ -17,6 +17,10 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
   private const string JournalDetailAddonName = "JournalDetail";
 
+  private const string JournalListHoverPrefix = "JournalList-";
+
+  private const string JournalDetailHoverPrefix = "JournalDetail-";
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="JournalHandler" /> class.
   /// </summary>
@@ -28,6 +32,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnJournalQuestEvent);
     this.RegisterHandler(AddonEvent.PostRequestedUpdate, this.OnJournalDetailEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnJournalDetailEvent);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnJournalCleanupEvent);
+    this.RegisterHandler(AddonEvent.PreFinalize, this.OnJournalCleanupEvent);
   }
 
   /// <summary>
@@ -533,7 +539,6 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
               this.InsertQuestPlate(translatedQuestPlate);
             });
-        return;
       }
     }
 
@@ -589,9 +594,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           summary.TranslatedText);
     }
 
-    if (this.JournalUsesHoverTooltips)
-    {
-      this.RegisterTranslatedHoverTooltip(
+      if (this.JournalUsesHoverTooltips)
+      {
+        this.RegisterTranslatedHoverTooltip(
           $"JournalDetail-QuestName-{(nint)questNameNode:X}",
           questNameNode,
           questName,
@@ -640,11 +645,22 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         var questBodyHoverKey = questCanvasNode != null
             ? $"JournalDetail-QuestBody-{(nint)questCanvasNode:X}"
             : $"JournalDetail-QuestBody-{(nint)descriptionNode:X}";
-        PluginLog.Debug(
-            $"[JournalDetail] body candidate key='{questBodyHoverKey}' mode={this.configuration.JournalTranslationDisplayMode} " +
-            $"hover={this.JournalUsesHoverTooltips} native={this.JournalWritesNativeTranslation} swap={this.JournalHoverShowsOriginal} " +
-            $"summaryCount={summaries.Count} progressSections={translatedQuestProgressSections.Count} " +
-            $"trigger={(questCanvasNode != null ? "JournalCanvasComponentNode14" : "descriptionFallback")}");
+        if (questCanvasNode != null &&
+            this.TryGetQuestPlateHoverBounds(
+                questCanvasNode,
+                out var bodyTopLeft,
+                out var bodyBottomRight))
+        {
+          this.RegisterTranslatedHoverTooltip(
+              questBodyHoverKey,
+              bodyTopLeft,
+              bodyBottomRight,
+              originalQuestBody,
+              translatedQuestBody,
+              swapEnabled: this.JournalHoverShowsOriginal,
+              forceEnabled: true);
+        }
+        else
         {
           var bodyLeft = descriptionNode->ScreenX;
           var bodyTop = descriptionNode->ScreenY;
@@ -978,8 +994,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             GetGameVersion());
       }
 
-      string translatedQuestName;
-      string translatedQuestMessage;
+      string translatedQuestName = questName;
+      string translatedQuestMessage = questMessage;
 
       if (foundQuestPlate != null)
       {
@@ -1029,9 +1045,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
                     DateTime.Now);
                 this.InsertQuestPlate(translatedQuestPlate);
               });
-
-          return;
-        }
+      }
       }
 
       if (this.JournalShouldRemoveDiacritics)
@@ -1203,11 +1217,6 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             GetGameVersion());
       }
 
-      PluginLog.Debug(
-          $"[JournalDetail] scan mode={this.configuration.JournalTranslationDisplayMode} " +
-          $"hover={this.JournalUsesHoverTooltips} native={this.JournalWritesNativeTranslation} swap={this.JournalHoverShowsOriginal} " +
-          $"summaryPresent={!string.IsNullOrWhiteSpace(summaryText)} progressKey='{questProgressSnapshot?.CacheKey ?? string.Empty}'");
-
       this.TranslateQuestOnJournalBox(
           journalBox,
           foundQuestPlate,
@@ -1264,6 +1273,26 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     }
 
     this.TranslateJournalQuests();
+  }
+
+  /// <summary>
+  ///     Clears quest hover registrations when Journal views close.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnJournalCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (string.Equals(args.AddonName, JournalAddonName, StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
+      this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+      return;
+    }
+
+    if (string.Equals(args.AddonName, JournalDetailAddonName, StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+    }
   }
 
   /// <summary>

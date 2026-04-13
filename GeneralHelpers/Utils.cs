@@ -161,9 +161,7 @@ public partial class Echoglossian
 
     // Restore runtime-mutable metadata
     config.FontChangeTime = DateTime.Now.Ticks;
-    config.PluginVersion =
-        Assembly.GetExecutingAssembly().GetName().Version?.ToString() ??
-        "unknown";
+    config.PluginVersion = ResolvePluginVersion() ?? config.PluginVersion;
     config.Version = 10;
 
     // Persist config
@@ -206,6 +204,24 @@ public partial class Echoglossian
     ResetSettings(this.configuration, () => SaveConfig(this.configuration));
 
     PluginInterface.GetPluginConfig();
+  }
+
+  /// <summary>
+  ///     Resolves the current plugin version from the loaded assembly
+  ///     metadata.
+  /// </summary>
+  /// <returns>The best available version string, or null when unavailable.</returns>
+  private static string? ResolvePluginVersion()
+  {
+    var fileVersion = System.Diagnostics.FileVersionInfo
+        .GetVersionInfo(PluginInterface.AssemblyLocation.FullName)
+        .FileVersion;
+    if (!string.IsNullOrWhiteSpace(fileVersion))
+    {
+      return fileVersion;
+    }
+
+    return Assembly.GetExecutingAssembly().GetName().Version?.ToString();
   }
 
   /// <summary>

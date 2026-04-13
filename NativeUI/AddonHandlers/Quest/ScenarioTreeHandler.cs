@@ -16,6 +16,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 {
   private const string ScenarioTreeAddonName = "ScenarioTree";
 
+  private const string ScenarioTreeHoverPrefix = "ScenarioTree-";
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="ScenarioTreeHandler" /> class.
   /// </summary>
@@ -25,6 +27,10 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnScenarioTreeEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnScenarioTreeEvent);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnScenarioTreeCleanupEvent);
+    this.RegisterHandler(
+        AddonEvent.PreFinalize,
+        this.OnScenarioTreeCleanupEvent);
   }
 
   /// <summary>
@@ -258,6 +264,19 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     {
       PluginLog.Error(
           "Exception at UiScenarioTreeHandler: " + e.StackTrace);
+    }
+  }
+
+  /// <summary>
+  ///     Clears ScenarioTree hover registrations when the addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnScenarioTreeCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (string.Equals(args.AddonName, ScenarioTreeAddonName, StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
     }
   }
 }

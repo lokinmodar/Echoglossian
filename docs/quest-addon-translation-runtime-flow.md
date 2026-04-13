@@ -351,6 +351,7 @@ The intended fix (described in `quest-full-pipeline-design.md`) is to capture ob
 - [quest-sheet-acquisition-pipeline.md](./quest-sheet-acquisition-pipeline.md) — Lumina sheet access details
 - [quest-probe-command.md](./quest-probe-command.md) — in-game debugging tools
 - [structured-text-payload-pipeline.md](./structured-text-payload-pipeline.md) — payload-safe translation rules
+- [quest-tooltip-validation-notes.md](./quest-tooltip-validation-notes.md) — observed hover and tooltip coverage from the current validation pass
 
 ---
 

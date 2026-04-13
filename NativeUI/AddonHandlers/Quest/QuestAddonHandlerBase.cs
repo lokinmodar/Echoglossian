@@ -200,6 +200,15 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Removes quest hover tooltips whose keys share the specified prefix.
+  /// </summary>
+  /// <param name="prefix">The tooltip key prefix to remove.</param>
+  protected void RemoveHoverTooltipsByPrefix(string prefix)
+  {
+    this.Dependencies.RemoveHoverTooltipByPrefix(prefix);
+  }
+
+  /// <summary>
   ///     Serializes a pair of translated strings for broker caching.
   /// </summary>
   /// <param name="first">The first translated string.</param>

@@ -13,6 +13,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 /// </summary>
 internal sealed class RecommendListHandler : QuestAddonHandlerBase
 {
+  private const string RecommendListHoverPrefix = "RecommendList-";
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="RecommendListHandler" /> class.
   /// </summary>
@@ -25,6 +27,10 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
     this.RegisterHandler(
         AddonEvent.PostRequestedUpdate,
         this.OnRecommendListEventAsync);
+    this.RegisterHandler(AddonEvent.PreHide, this.OnRecommendListCleanupEvent);
+    this.RegisterHandler(
+        AddonEvent.PreFinalize,
+        this.OnRecommendListCleanupEvent);
   }
 
   /// <summary>
@@ -329,6 +335,19 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
 
     // delay added to be sure the nodes are loaded when the player changes zones
     Task.Delay(200).ContinueWith(t => this.TranslateRecommendListHandler());
+  }
+
+  /// <summary>
+  ///     Clears RecommendList hover registrations when the addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private void OnRecommendListCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (string.Equals(args.AddonName, "RecommendList", StringComparison.Ordinal))
+    {
+      this.RemoveHoverTooltipsByPrefix(RecommendListHoverPrefix);
+    }
   }
 
   /// <summary>
