@@ -48,6 +48,8 @@ As of the latest working-tree checkpoint:
 - the quest pipeline is moving toward sheet-first composition using Lumina plus live progress
 - the current `questplates` table is no longer fragmented by duplicate quest rows, but older rows were sparse and legacy-shaped
 - the current uncommitted change narrows `JournalDetail` body hover content to the current SEQ row and enlarges the hover bounds
+- the current uncommitted change also starts isolating `Journal` runtime state away from the broader quest-family caches by keeping a local cache for the visible quest list and a local scope cache for `JournalDetail`
+- the current uncommitted change also adds an accepted-quest background prefetch driven by `QuestManager`, so accepted quests can populate `questplates` before the quest UI needs them
 
 ## Reference Docs
 
@@ -257,6 +259,36 @@ As of the latest working-tree checkpoint:
 **Next step**
 
 - Improve quest identity so the Journal family stops keying off raw UI text alone.
+
+### 2026-04-13 20:34:00 -0300 - uncommitted working-tree checkpoint - Journal runtime isolation started
+
+**What changed**
+
+- `JournalHandler` now keeps a local runtime cache for the currently visible
+  Journal quest list instead of relying on the broader quest-family UI and
+  hover caches for that surface.
+- `JournalDetail` now has an explicit quest-scope runtime cache key and clears
+  its local body cache when the visible quest changes.
+- Journal cleanup now clears the Journal-local list cache, Journal-local hover
+  cache, and JournalDetail-local scope cache when the views close.
+
+**Why it changed**
+
+- Recent log slices showed the quest-family runtime collapsing into `Journal`
+  hover traffic while the other addons stayed silent, which strongly suggests
+  the shared short-lived caches are too broad.
+- The Journal list is dense, highly repainted, and a good first candidate for
+  addon-local runtime state.
+- This also matches the design direction discussed during the refactor: shared
+  DB, sheet resolution, live progress, and translation broker; local runtime
+  state per addon.
+
+**Next step**
+
+- Validate in game whether the Journal list remains stable while the shared
+  quest-family caches are no longer part of its hot path.
+- If that reduces regressions, apply the same isolation pattern incrementally
+  to `JournalDetail`, `ScenarioTree`, `RecommendList`, and `AreaMap`.
 
 ### 2026-04-09 00:49:15 -0300 - `05b5289` - quest plates enriched from Lumina
 
@@ -723,3 +755,50 @@ The main active problems are:
   - translation broker
 - Treat reflection cleanup as a separate follow-up pass once the quest-addon
   runtime stops regressing across unrelated surfaces.
+
+### 2026-04-13 21:23:11 -03:00 - working tree checkpoint - accepted quest prefetch runtime added
+
+**What changed**
+
+- Added `AcceptedQuestPrefetchRuntime` as a partial `Echoglossian` runtime helper.
+- The framework tick now performs a lightweight accepted-quest prefetch pass
+  when translation is enabled and any quest-family addon is enabled.
+- The prefetch runtime:
+  - reads accepted quests from `QuestManager`
+  - resolves each quest through `QuestProgressResolver`
+  - seeds or updates canonical `questplates` rows with:
+    - `QuestId`
+    - `QuestTextSheetName`
+    - `SourceContentHash`
+    - current SEQ body text
+    - objectives
+    - summaries
+    - system rows
+  - queues missing translations through the existing paced broker
+- The runtime is paced intentionally:
+  - at most `2` quests per tick cycle
+  - one prefetch cycle every `2` seconds
+  - only when the accepted-quest signature changes or the queue is still
+    draining
+- Dispose now clears the accepted-quest prefetch state explicitly.
+
+**Why it changed**
+
+- Quest-family surfaces were still doing too much discovery at the moment the
+  UI opened, which makes regressions feel random and contributes to cold-open
+  stutter.
+- The new accepted-quest prefetch path lets us warm `questplates` and the
+  queued translation cache from stable runtime data before `Journal`,
+  `JournalDetail`, `ScenarioTree`, or other quest surfaces need to render.
+- This follows the emerging architecture more closely:
+  - shared sources stay shared (`QuestManager`, Lumina, `QuestPlate`, broker)
+  - addon UI/runtime state stays local to each surface
+
+**Next step**
+
+- Validate in-game that newly accepted quests start appearing in `questplates`
+  with sheet metadata before their addon surfaces are opened.
+- Keep isolating addon-local runtime state, starting with `JournalDetail`, so
+  hover/content regressions cannot leak across quest-family addons.
+- After runtime isolation is stable, audit the remaining reflection-heavy quest
+  helpers for lower-overhead alternatives.

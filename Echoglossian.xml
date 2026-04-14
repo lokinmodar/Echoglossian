@@ -1362,6 +1362,153 @@
             <param name="input">The translated payload.</param>
             <returns>A dictionary mapping indices to translated strings.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickAcceptedQuestPrefetch">
+            <summary>
+                Ticks the accepted-quest prefetch runtime so active quests can be
+                translated into the canonical quest table before quest addons need to
+                render them.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ClearAcceptedQuestPrefetchState">
+            <summary>
+                Clears the accepted-quest prefetch runtime state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldPrefetchAcceptedQuests">
+            <summary>
+                Gets whether accepted quests should be prefetched in the current
+                runtime state.
+            </summary>
+            <returns>True when the background prefetch should run.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuest(System.UInt32)">
+            <summary>
+                Prefetches the canonical text for one accepted quest and schedules any
+                missing translations through the shared paced broker.
+            </summary>
+            <param name="questId">The accepted quest identifier.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestName(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Prefetches the translated quest name for an accepted quest when it is
+                not yet persisted.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Prefetches the current quest-body message for an accepted quest when it
+                is not yet persisted.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSummaries(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Prefetches all SEQ summary rows for an accepted quest.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestObjectives(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Prefetches all TODO rows for an accepted quest.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSystemRows(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Prefetches all SYSTEM rows for an accepted quest.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestNameTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String)">
+            <summary>
+                Applies a prefetched quest-name translation into the canonical quest
+                plate row.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="translatedQuestName">The translated quest name.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestMessageTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String)">
+            <summary>
+                Applies a prefetched current-message translation into the canonical
+                quest plate row.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="translatedQuestMessage">The translated quest message.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSummaryTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String)">
+            <summary>
+                Applies a prefetched SEQ summary translation into the canonical quest
+                plate row.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="originalSummaryText">The original summary text.</param>
+            <param name="translatedSummaryText">The translated summary text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestObjectiveTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String)">
+            <summary>
+                Applies a prefetched TODO translation into the canonical quest plate
+                row.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="originalObjectiveText">The original objective text.</param>
+            <param name="translatedObjectiveText">The translated objective text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSystemTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String)">
+            <summary>
+                Applies a prefetched SYSTEM-row translation into the canonical quest
+                plate row.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="originalSystemText">The original SYSTEM-row text.</param>
+            <param name="translatedSystemText">The translated SYSTEM-row text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateAcceptedQuestPrefetchPlate(Echoglossian.QuestProgressSnapshot,System.String)">
+            <summary>
+                Creates the canonical accepted-quest quest plate snapshot used by the
+                background prefetch runtime.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <returns>The canonical quest plate snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCollectAcceptedQuestIds(System.Collections.Generic.List{System.UInt32}@)">
+            <summary>
+                Collects the currently accepted quest ids from the live quest manager.
+            </summary>
+            <param name="acceptedQuestIds">The accepted quest ids.</param>
+            <returns>True when at least one accepted quest was collected.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildAcceptedQuestSignature(System.Collections.Generic.IReadOnlyCollection{System.UInt32})">
+            <summary>
+                Builds a stable signature for the currently accepted quests, including
+                their live sequence.
+            </summary>
+            <param name="acceptedQuestIds">The accepted quest ids.</param>
+            <returns>The stable accepted-quest signature.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetAcceptedQuestCurrentSequenceText(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Gets the current SEQ row text for an accepted quest snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <returns>The current SEQ row text, or an empty string when unavailable.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
             <summary>
             Handles the registration of addon handlers.
@@ -4545,7 +4692,7 @@
             <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
             <returns>The current quest sequence row text, or an empty string when unavailable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateCurrentQuestSequenceText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateCurrentQuestSequenceText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot,System.String)">
             <summary>
                 Gets the translated quest sequence text for the current quest phase.
                 The result is cached back into the quest plate so the same sequence row
@@ -4612,6 +4759,85 @@
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.BuildJournalDetailScopeKey(System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String)">
+            <summary>
+                Builds the current JournalDetail cache scope key so each quest detail
+                view can keep its own local runtime state.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
+            <param name="questName">The current quest name.</param>
+            <param name="questMessage">The current quest message.</param>
+            <returns>A stable scope key for the current quest detail body.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.EnsureJournalDetailScope(System.String)">
+            <summary>
+                Ensures the JournalDetail runtime cache is scoped to the currently
+                visible quest only.
+            </summary>
+            <param name="scopeKey">The quest-detail scope key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
+            <summary>
+                Attempts to get translated JournalDetail text from the local
+                quest-scoped runtime cache.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="originalText">The source text visible for that scope.</param>
+            <param name="translatedText">The cached translated text.</param>
+            <returns>True when the scoped runtime cache already has the text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalDetailCachedText(System.String,System.String,System.String)">
+            <summary>
+                Remembers translated JournalDetail text inside the local quest-scoped
+                runtime cache.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="originalText">The source text visible for that scope.</param>
+            <param name="translatedText">The translated text resolved for that scope.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListCachedText(System.String,System.String@)">
+            <summary>
+                Attempts to get translated text for a visible Journal quest-list
+                entry from the current list runtime cache.
+            </summary>
+            <param name="originalText">The original quest name.</param>
+            <param name="translatedText">The cached translated quest name.</param>
+            <returns>True when the current visible Journal list already cached the quest.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListCachedText(System.String,System.String)">
+            <summary>
+                Remembers a translated quest name inside the current Journal visible
+                list runtime cache.
+            </summary>
+            <param name="originalText">The original quest name.</param>
+            <param name="translatedText">The translated quest name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListHover(System.IntPtr,Echoglossian.Cache.QuestHoverTranslationSnapshot@)">
+            <summary>
+                Attempts to get a local hover snapshot for a visible Journal quest
+                list node.
+            </summary>
+            <param name="nodeKey">The live quest-name node key.</param>
+            <param name="snapshot">The cached local hover snapshot.</param>
+            <returns>True when a local hover snapshot exists for that node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListHover(System.IntPtr,System.String,System.String)">
+            <summary>
+                Remembers the hover translation pair for a visible Journal quest list
+                node.
+            </summary>
+            <param name="nodeKey">The live quest-name node key.</param>
+            <param name="originalText">The original visible quest name.</param>
+            <param name="translatedText">The translated visible quest name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TrimJournalListRuntimeState(System.Collections.Generic.HashSet{System.String},System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+                Trims Journal quest-list runtime caches so they only keep the quest
+                names and node anchors visible in the current list snapshot.
+            </summary>
+            <param name="visibleQuestNames">The currently visible quest names.</param>
+            <param name="visibleQuestNodeKeys">The currently visible quest node keys.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ApplyQuestProgressMetadata(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot})">
             <summary>

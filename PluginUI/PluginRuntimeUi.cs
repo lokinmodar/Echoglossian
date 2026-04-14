@@ -23,6 +23,8 @@ public partial class Echoglossian
       return;
     }
 
+    this.TickAcceptedQuestPrefetch();
+
     switch (this.configuration.UseImGuiForTalk ||
             this.configuration.UseImGuiForBattleTalk ||
             this.configuration.OverlayOnlyLanguage ||

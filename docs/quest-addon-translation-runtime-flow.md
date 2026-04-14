@@ -61,6 +61,27 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
   smallest hovered rectangle. This matters for dense quest rows where a broad
   title or row trigger can otherwise swallow a narrower objective trigger.
 
+### 2a. Journal-local runtime caches (instance-scoped)
+
+- `JournalHandler` now keeps its own local runtime state for the surfaces that
+  repaint the most and were shown to regress when coupled to the broader
+  quest-family caches.
+- Journal list:
+  - `journalListTextCache`
+  - `journalListHoverCache`
+  - these are trimmed to the currently visible quest names and node anchors at
+    the end of each Journal list scan
+- Journal detail:
+  - `journalDetailTextCache`
+  - scoped by a quest-detail key derived from `QuestProgressSnapshot.CacheKey`
+    when available, with a `questName|questMessage` fallback
+- These caches are cleared when `Journal` or `JournalDetail` closes.
+- Shared infrastructure still remains shared:
+  - SQLite `questplates`
+  - Lumina quest-sheet resolution
+  - live quest progress resolution
+  - queued translation broker
+
 ### 3. In-memory translation queue (instance-scoped)
 
 - Managed by `TryGetQueuedTranslation(cacheKey, out text)` / `QueueTranslation(key, workFn, persistFn)`
@@ -92,14 +113,21 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 **What fires on each event:** `TranslateJournalQuests()` scans all visible quest name nodes in the sidebar list (NodeId 25 → component list). For each visible quest name node:
 
 1. Read text from `AtkTextNode`.
-2. Check `QuestUiTranslationCache.TryGetAppliedSnapshot(questNameText)`:
-   - **Cache hit:** if `UsesHoverTooltips`, check `QuestHoverTranslationCache.TryGet(nodePtr)` for the tooltip pair, fall back to the cache snapshot if absent; register the hover tooltip; `continue`.
+2. Add the quest name and node pointer to the current visible Journal-list
+   snapshot.
+3. Check the Journal-local visible-list cache:
+   - **Cache hit:** if `WritesNative`, write the translated text into the node;
+     refresh the Journal-local hover snapshot; register the hover tooltip; `continue`.
    - **Cache miss:** proceed.
-3. Build a name-only `QuestPlate` and call `FindQuestPlateByName`.
+4. Build a name-only `QuestPlate` and call `FindQuestPlateByName`.
 4. **DB hit:** use `TranslatedQuestName`; write to node if `WritesNative`; `Remember` in both `QuestUiTranslationCache` and `QuestHoverTranslationCache`; register hover tooltip; `continue`.
 5. **DB miss:** call `TryGetQueuedTranslation($"Journal|{questNameText}")`.
    - **Queue hit:** diacritics-strip if configured; write to node if `WritesNative`; populate caches; register hover tooltip.
-   - **Queue miss:** call `QueueTranslation` (persist callback runs `InsertQuestPlate`); `continue` (no-op this cycle).
+   - **Queue miss:** register an original-text hover target for this cycle, call
+     `QueueTranslation` (persist callback runs `InsertQuestPlate`), then
+     `continue`.
+6. At the end of the scan, trim the Journal-local visible-list caches to only
+   the quest names and node anchors that were visible in that pass.
 
 **DB table used:** `questplates` — by name only via `FindQuestPlateByName`.
 
@@ -373,6 +401,109 @@ Key patterns per addon:
 | AreaMap      | `AreaMap-{addonPtr:X}-142`                             | `AtkUnitBase*`        |
 | ToDoList     | `ToDoList-{progressKey}-{i}-{j}-{nodeId}` | explicit row bounds |
 | RecommendList | `RecommendList-{questNameNodePtr:X}`                 | `AtkTextNode*`          |
+
+---
+
+## Accepted quest background prefetch
+
+Quest-family addons now have a background prefetch path that is intentionally
+separate from addon-local hover/runtime caches.
+
+**Entry point:** `Echoglossian.Tick(IFramework)` in
+`PluginUI/PluginRuntimeUi.cs`
+
+**Implementation:** `NativeUI/Helpers/AcceptedQuestPrefetchRuntime.cs`
+
+### Purpose
+
+Warm canonical quest data in `questplates` before quest-family addon surfaces
+need to render it.
+
+This reduces the amount of “discover, resolve, queue, and save” work that needs
+to happen during the first open of:
+
+- `Journal`
+- `JournalDetail`
+- `_ToDoList`
+- `ScenarioTree`
+- `RecommendList`
+- `AreaMap`
+
+### Scope
+
+The prefetch runtime is **shared data prewarm**, not shared addon UI state.
+
+It may populate:
+
+- `questplates`
+- brokered translation cache
+- canonical quest metadata derived from Lumina/live progress
+
+It does **not** populate or own:
+
+- addon-local hover targets
+- addon-local applied-text caches
+- addon-local bounds/trigger heuristics
+
+Those remain the responsibility of each quest-family addon handler.
+
+### Gating
+
+The prefetch runtime only runs when:
+
+- global translation is enabled
+- the player is logged in
+- at least one quest-family addon feature is enabled in config
+
+### Data source
+
+Accepted quests are collected from `QuestManager`, then resolved through the
+existing `QuestProgressResolver` pipeline. That means the prefetch path uses the
+same stable inputs as the sheet-first quest work:
+
+- live accepted-quest identity from `QuestManager`
+- current quest progress from runtime state
+- Lumina quest-sheet metadata and text rows
+
+### Pacing
+
+The runtime is intentionally slow and quiet:
+
+- one prefetch cycle every `2` seconds
+- up to `2` quests processed per cycle
+- only when the accepted-quest signature changes or the queue still has quests
+  left to process
+
+This keeps prewarm work from turning into a hot-path burst when the player logs
+in or opens a dense quest UI.
+
+### Persistence behavior
+
+For each accepted quest, the prefetch runtime seeds or updates a canonical
+`QuestPlate` row with:
+
+- `QuestId`
+- `QuestName`
+- `QuestTextSheetName`
+- `SourceContentHash`
+- current SEQ row in `OriginalQuestMessage`
+- summary rows
+- objective rows
+- system rows
+
+Missing translations are queued through the existing paced broker and applied
+back into the same canonical row shape once they resolve.
+
+### Relationship to addon handlers
+
+Quest-family addon handlers should assume that the DB may already be warm, but
+they must still tolerate cache misses and late-arriving translations.
+
+The intended division of responsibility is:
+
+- **Prefetch runtime:** accepted-quest discovery and background DB/broker warmup
+- **Addon handler:** local capture, local hover registration, local native write
+  decisions, and addon-specific runtime caches
 
 ---
 

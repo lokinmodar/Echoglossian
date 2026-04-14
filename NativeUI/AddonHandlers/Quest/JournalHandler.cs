@@ -21,6 +21,17 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
   private const string JournalDetailHoverPrefix = "JournalDetail-";
 
+  private readonly Dictionary<string, string> journalListTextCache =
+      new(StringComparer.Ordinal);
+
+  private readonly Dictionary<nint, QuestHoverTranslationSnapshot> journalListHoverCache =
+      [];
+
+  private readonly Dictionary<string, string> journalDetailTextCache =
+      new(StringComparer.Ordinal);
+
+  private string currentJournalDetailScopeKey = string.Empty;
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="JournalHandler" /> class.
   /// </summary>
@@ -340,7 +351,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   /// <returns>The translated quest sequence row text, or the source text if translation is not ready yet.</returns>
   private string TranslateCurrentQuestSequenceText(
       QuestPlate? foundQuestPlate,
-      QuestProgressSnapshot questProgressSnapshot)
+      QuestProgressSnapshot questProgressSnapshot,
+      string journalDetailScopeKey)
   {
     var currentQuestSequenceText = GetCurrentQuestSequenceText(questProgressSnapshot);
     if (string.IsNullOrWhiteSpace(currentQuestSequenceText))
@@ -348,11 +360,12 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       return string.Empty;
     }
 
-    if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+    if (this.TryGetJournalDetailCachedText(
+            journalDetailScopeKey,
             currentQuestSequenceText,
-            out var appliedQuestSequenceSnapshot))
+            out var cachedQuestSequenceText))
     {
-      return appliedQuestSequenceSnapshot.AppliedText;
+      return cachedQuestSequenceText;
     }
 
     if (foundQuestPlate != null &&
@@ -363,7 +376,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
              currentQuestSequenceText,
              out storedQuestSequenceText)))
     {
-      QuestUiTranslationCache.Remember(
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
           currentQuestSequenceText,
           storedQuestSequenceText);
       return storedQuestSequenceText;
@@ -376,7 +390,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             questSequenceCacheKey,
             out var cachedTranslatedQuestSequenceText))
     {
-      QuestUiTranslationCache.Remember(
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
           currentQuestSequenceText,
           cachedTranslatedQuestSequenceText);
       return cachedTranslatedQuestSequenceText;
@@ -433,19 +448,28 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     string translatedQuestMessage = questMessage;
     string translatedQuestObjective = objectiveText;
     var translatedQuestSummary = summaryText;
+    var journalDetailScopeKey = BuildJournalDetailScopeKey(
+        questProgressSnapshot,
+        questName,
+        questMessage);
+    this.EnsureJournalDetailScope(journalDetailScopeKey);
 
     if (!this.JournalUsesHoverTooltips &&
-        QuestUiTranslationCache.TryGetAppliedSnapshot(
+        this.TryGetJournalDetailCachedText(
+            journalDetailScopeKey,
             questName,
             out _) &&
-        QuestUiTranslationCache.TryGetAppliedSnapshot(
+        this.TryGetJournalDetailCachedText(
+            journalDetailScopeKey,
             questMessage,
             out _) &&
-        QuestUiTranslationCache.TryGetAppliedSnapshot(
+        this.TryGetJournalDetailCachedText(
+            journalDetailScopeKey,
             objectiveText,
             out _) &&
         (summaryText == string.Empty ||
-         QuestUiTranslationCache.TryGetAppliedSnapshot(
+         this.TryGetJournalDetailCachedText(
+             journalDetailScopeKey,
              summaryText,
              out _)))
     {
@@ -461,8 +485,21 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
     if (foundQuestPlate != null)
     {
-      translatedQuestName = foundQuestPlate.TranslatedQuestName;
-      if (!string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestMessage))
+      if (!this.TryGetJournalDetailCachedText(
+              journalDetailScopeKey,
+              questName,
+              out translatedQuestName))
+      {
+        translatedQuestName = foundQuestPlate.TranslatedQuestName;
+      }
+
+      if (this.TryGetJournalDetailCachedText(
+              journalDetailScopeKey,
+              questMessage,
+              out translatedQuestMessage))
+      {
+      }
+      else if (!string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestMessage))
       {
         translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
       }
@@ -496,12 +533,18 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       var objectiveCacheKey = questProgressSnapshot.HasValue
           ? $"JournalDetailObjective|{questProgressSnapshot.Value.CacheKey}|{objectiveText}"
           : $"JournalDetailObjective|{objectiveText}";
-      if (foundQuestPlate.TranslatedObjectives.TryGetValue(
+      if (this.TryGetJournalDetailCachedText(
+              journalDetailScopeKey,
               objectiveText,
-              out var storedObjectiveText) ||
-          foundQuestPlate.Objectives.TryGetValue(
-              objectiveText,
-              out storedObjectiveText))
+              out translatedQuestObjective))
+      {
+      }
+      else if (foundQuestPlate.TranslatedObjectives.TryGetValue(
+                   objectiveText,
+                   out var storedObjectiveText) ||
+               foundQuestPlate.Objectives.TryGetValue(
+                   objectiveText,
+                   out storedObjectiveText))
       {
         translatedQuestObjective = storedObjectiveText;
       }
@@ -534,12 +577,18 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         var summaryCacheKey = questProgressSnapshot.HasValue
             ? $"JournalDetailSummaryText|{questProgressSnapshot.Value.CacheKey}|{summaryText}"
             : $"JournalDetailSummaryText|{summaryText}";
-        if (foundQuestPlate.TranslatedSummaries.TryGetValue(
+        if (this.TryGetJournalDetailCachedText(
+                journalDetailScopeKey,
                 summaryText,
-                out var storedSummaryText) ||
-            foundQuestPlate.Summaries.TryGetValue(
-                summaryText,
-                out storedSummaryText))
+                out translatedQuestSummary))
+        {
+        }
+        else if (foundQuestPlate.TranslatedSummaries.TryGetValue(
+                     summaryText,
+                     out var storedSummaryText) ||
+                 foundQuestPlate.Summaries.TryGetValue(
+                     summaryText,
+                     out storedSummaryText))
         {
           translatedQuestSummary = storedSummaryText;
         }
@@ -758,14 +807,22 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       }
     }
 
-    QuestUiTranslationCache.Remember(questName, translatedQuestName);
-    QuestUiTranslationCache.Remember(questMessage, translatedQuestMessage);
-    QuestUiTranslationCache.Remember(
+    this.RememberJournalDetailCachedText(
+        journalDetailScopeKey,
+        questName,
+        translatedQuestName);
+    this.RememberJournalDetailCachedText(
+        journalDetailScopeKey,
+        questMessage,
+        translatedQuestMessage);
+    this.RememberJournalDetailCachedText(
+        journalDetailScopeKey,
         objectiveText,
         translatedQuestObjective);
     if (summaryText != string.Empty)
     {
-      QuestUiTranslationCache.Remember(
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
           summaryText,
           translatedQuestSummary);
     }
@@ -791,7 +848,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           questProgressSnapshot.HasValue
               ? this.TranslateCurrentQuestSequenceText(
                   foundQuestPlate,
-                  questProgressSnapshot.Value)
+                  questProgressSnapshot.Value,
+                  journalDetailScopeKey)
               : string.Empty;
       var originalQuestSummaryBody = BuildQuestPlateSummarySection(
           currentQuestSequenceText,
@@ -953,6 +1011,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         return;
       }
 
+      HashSet<string> visibleJournalQuestNames = new(StringComparer.Ordinal);
+      HashSet<nint> visibleJournalQuestNodeKeys = [];
+
       for (var i = 0; i < questListNode->UldManager.NodeListCount; i++)
       {
         if (!questListNode->UldManager.NodeList[i]->IsVisible() ||
@@ -988,12 +1049,24 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             out _,
             (nint)questName->NodeText.StringPtr.Value);
         var questNameNodeKey = (nint)questNameNode;
-        if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+        visibleJournalQuestNames.Add(questNameText);
+        visibleJournalQuestNodeKeys.Add(questNameNodeKey);
+
+        if (this.TryGetJournalListCachedText(
                 questNameText,
-                out var translatedQuestSnapshot))
+                out var cachedTranslatedQuestName))
         {
+          if (this.JournalWritesNativeTranslation)
+          {
+            questName->SetText(cachedTranslatedQuestName);
+          }
+
+          this.RememberJournalListHover(
+              questNameNodeKey,
+              questNameText,
+              cachedTranslatedQuestName);
           if (this.JournalUsesHoverTooltips &&
-              QuestHoverTranslationCache.TryGet(
+              this.TryGetJournalListHover(
                   questNameNodeKey,
                   out var cachedHoverTranslation))
           {
@@ -1002,17 +1075,6 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
                 questName,
                 cachedHoverTranslation.OriginalText,
                 cachedHoverTranslation.TranslatedText,
-                swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true,
-                denseHitbox: true);
-          }
-          else if (this.JournalUsesHoverTooltips)
-          {
-            this.RegisterTranslatedHoverTooltip(
-                $"JournalList-{questNameNodeKey:X}",
-                questName,
-                translatedQuestSnapshot.OriginalText,
-                translatedQuestSnapshot.AppliedText,
                 swapEnabled: this.JournalHoverShowsOriginal,
                 forceEnabled: true,
                 denseHitbox: true);
@@ -1039,14 +1101,16 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           {
             questName->SetText(translQuestName);
           }
-          QuestHoverTranslationCache.Remember(
+
+          this.RememberJournalListHover(
               questNameNodeKey,
               questNameText,
               translQuestName);
 
-          QuestUiTranslationCache.Remember(
+          this.RememberJournalListCachedText(
               questNameText,
               translQuestName);
+
           if (this.JournalUsesHoverTooltips)
           {
             this.RegisterTranslatedHoverTooltip(
@@ -1066,6 +1130,18 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
                 journalQuestCacheKey,
                 out var translatedNameText))
         {
+          if (this.JournalUsesHoverTooltips)
+          {
+            this.RegisterTranslatedHoverTooltip(
+                $"JournalList-{questNameNodeKey:X}",
+                questName,
+                questNameText,
+                questNameText,
+                swapEnabled: this.JournalHoverShowsOriginal,
+                forceEnabled: true,
+                denseHitbox: true);
+          }
+
           this.QueueTranslation(
               journalQuestCacheKey,
               () => this.Translate(questNameText),
@@ -1092,11 +1168,12 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         {
           questName->SetText(translatedNameText);
         }
-        QuestHoverTranslationCache.Remember(
+
+        this.RememberJournalListHover(
             questNameNodeKey,
             questNameText,
             translatedNameText);
-        QuestUiTranslationCache.Remember(
+        this.RememberJournalListCachedText(
             questNameText,
             translatedNameText);
         if (this.JournalUsesHoverTooltips)
@@ -1108,9 +1185,13 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               translatedNameText,
               swapEnabled: this.JournalHoverShowsOriginal,
               forceEnabled: true,
-              denseHitbox: true);
+          denseHitbox: true);
         }
       }
+
+      this.TrimJournalListRuntimeState(
+          visibleJournalQuestNames,
+          visibleJournalQuestNodeKeys);
     }
     catch (Exception e)
     {
@@ -1172,8 +1253,23 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
       string translatedQuestName = questName;
       string translatedQuestMessage = questMessage;
+      var journalDetailScopeKey = BuildJournalDetailScopeKey(
+          resolvedCompletedSnapshot,
+          questName,
+          questMessage);
+      this.EnsureJournalDetailScope(journalDetailScopeKey);
 
-      if (foundQuestPlate != null)
+      if (this.TryGetJournalDetailCachedText(
+              journalDetailScopeKey,
+              questName,
+              out translatedQuestName) &&
+          this.TryGetJournalDetailCachedText(
+              journalDetailScopeKey,
+              questMessage,
+              out translatedQuestMessage))
+      {
+      }
+      else if (foundQuestPlate != null)
       {
         translatedQuestName = foundQuestPlate.TranslatedQuestName;
         translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
@@ -1234,6 +1330,15 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         questNameNode->SetText(translatedQuestName);
         descriptionNode->SetText(translatedQuestMessage);
       }
+
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          questName,
+          translatedQuestName);
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          questMessage,
+          translatedQuestMessage);
 
       if (this.JournalUsesHoverTooltips)
       {
@@ -1461,6 +1566,10 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   {
     if (string.Equals(args.AddonName, JournalAddonName, StringComparison.Ordinal))
     {
+      this.journalListTextCache.Clear();
+      this.journalListHoverCache.Clear();
+      this.journalDetailTextCache.Clear();
+      this.currentJournalDetailScopeKey = string.Empty;
       this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
       this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
       return;
@@ -1468,7 +1577,211 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
     if (string.Equals(args.AddonName, JournalDetailAddonName, StringComparison.Ordinal))
     {
+      this.journalDetailTextCache.Clear();
+      this.currentJournalDetailScopeKey = string.Empty;
       this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+    }
+  }
+
+  /// <summary>
+  ///     Builds the current JournalDetail cache scope key so each quest detail
+  ///     view can keep its own local runtime state.
+  /// </summary>
+  /// <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
+  /// <param name="questName">The current quest name.</param>
+  /// <param name="questMessage">The current quest message.</param>
+  /// <returns>A stable scope key for the current quest detail body.</returns>
+  private static string BuildJournalDetailScopeKey(
+      QuestProgressSnapshot? questProgressSnapshot,
+      string questName,
+      string questMessage)
+  {
+    return questProgressSnapshot?.CacheKey ??
+           $"{questName}|{questMessage}";
+  }
+
+  /// <summary>
+  ///     Ensures the JournalDetail runtime cache is scoped to the currently
+  ///     visible quest only.
+  /// </summary>
+  /// <param name="scopeKey">The quest-detail scope key.</param>
+  private void EnsureJournalDetailScope(string scopeKey)
+  {
+    if (string.Equals(
+            this.currentJournalDetailScopeKey,
+            scopeKey,
+            StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    this.currentJournalDetailScopeKey = scopeKey;
+    this.journalDetailTextCache.Clear();
+    this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+  }
+
+  /// <summary>
+  ///     Attempts to get translated JournalDetail text from the local
+  ///     quest-scoped runtime cache.
+  /// </summary>
+  /// <param name="scopeKey">The current quest-detail scope key.</param>
+  /// <param name="originalText">The source text visible for that scope.</param>
+  /// <param name="translatedText">The cached translated text.</param>
+  /// <returns>True when the scoped runtime cache already has the text.</returns>
+  private bool TryGetJournalDetailCachedText(
+      string scopeKey,
+      string originalText,
+      out string translatedText)
+  {
+    translatedText = string.Empty;
+    if (string.IsNullOrWhiteSpace(scopeKey) ||
+        string.IsNullOrWhiteSpace(originalText))
+    {
+      return false;
+    }
+
+    return this.journalDetailTextCache.TryGetValue(
+        $"{scopeKey}|{originalText}",
+        out translatedText);
+  }
+
+  /// <summary>
+  ///     Remembers translated JournalDetail text inside the local quest-scoped
+  ///     runtime cache.
+  /// </summary>
+  /// <param name="scopeKey">The current quest-detail scope key.</param>
+  /// <param name="originalText">The source text visible for that scope.</param>
+  /// <param name="translatedText">The translated text resolved for that scope.</param>
+  private void RememberJournalDetailCachedText(
+      string scopeKey,
+      string originalText,
+      string translatedText)
+  {
+    if (string.IsNullOrWhiteSpace(scopeKey) ||
+        string.IsNullOrWhiteSpace(originalText) ||
+        string.IsNullOrWhiteSpace(translatedText))
+    {
+      return;
+    }
+
+    this.journalDetailTextCache[$"{scopeKey}|{originalText}"] =
+        translatedText;
+  }
+
+  /// <summary>
+  ///     Attempts to get translated text for a visible Journal quest-list
+  ///     entry from the current list runtime cache.
+  /// </summary>
+  /// <param name="originalText">The original quest name.</param>
+  /// <param name="translatedText">The cached translated quest name.</param>
+  /// <returns>True when the current visible Journal list already cached the quest.</returns>
+  private bool TryGetJournalListCachedText(
+      string originalText,
+      out string translatedText)
+  {
+    translatedText = string.Empty;
+    return !string.IsNullOrWhiteSpace(originalText) &&
+           this.journalListTextCache.TryGetValue(
+               originalText,
+               out translatedText);
+  }
+
+  /// <summary>
+  ///     Remembers a translated quest name inside the current Journal visible
+  ///     list runtime cache.
+  /// </summary>
+  /// <param name="originalText">The original quest name.</param>
+  /// <param name="translatedText">The translated quest name.</param>
+  private void RememberJournalListCachedText(
+      string originalText,
+      string translatedText)
+  {
+    if (string.IsNullOrWhiteSpace(originalText) ||
+        string.IsNullOrWhiteSpace(translatedText))
+    {
+      return;
+    }
+
+    this.journalListTextCache[originalText] = translatedText;
+  }
+
+  /// <summary>
+  ///     Attempts to get a local hover snapshot for a visible Journal quest
+  ///     list node.
+  /// </summary>
+  /// <param name="nodeKey">The live quest-name node key.</param>
+  /// <param name="snapshot">The cached local hover snapshot.</param>
+  /// <returns>True when a local hover snapshot exists for that node.</returns>
+  private bool TryGetJournalListHover(
+      nint nodeKey,
+      out QuestHoverTranslationSnapshot snapshot)
+  {
+    return this.journalListHoverCache.TryGetValue(
+        nodeKey,
+        out snapshot!);
+  }
+
+  /// <summary>
+  ///     Remembers the hover translation pair for a visible Journal quest list
+  ///     node.
+  /// </summary>
+  /// <param name="nodeKey">The live quest-name node key.</param>
+  /// <param name="originalText">The original visible quest name.</param>
+  /// <param name="translatedText">The translated visible quest name.</param>
+  private void RememberJournalListHover(
+      nint nodeKey,
+      string originalText,
+      string translatedText)
+  {
+    if (nodeKey == nint.Zero ||
+        string.IsNullOrWhiteSpace(originalText) ||
+        string.IsNullOrWhiteSpace(translatedText))
+    {
+      return;
+    }
+
+    this.journalListHoverCache[nodeKey] =
+        new QuestHoverTranslationSnapshot(
+            originalText,
+            translatedText);
+  }
+
+  /// <summary>
+  ///     Trims Journal quest-list runtime caches so they only keep the quest
+  ///     names and node anchors visible in the current list snapshot.
+  /// </summary>
+  /// <param name="visibleQuestNames">The currently visible quest names.</param>
+  /// <param name="visibleQuestNodeKeys">The currently visible quest node keys.</param>
+  private void TrimJournalListRuntimeState(
+      HashSet<string> visibleQuestNames,
+      HashSet<nint> visibleQuestNodeKeys)
+  {
+    List<string> hiddenQuestNames = [];
+    foreach (var cachedQuestName in this.journalListTextCache.Keys)
+    {
+      if (!visibleQuestNames.Contains(cachedQuestName))
+      {
+        hiddenQuestNames.Add(cachedQuestName);
+      }
+    }
+
+    foreach (var hiddenQuestName in hiddenQuestNames)
+    {
+      this.journalListTextCache.Remove(hiddenQuestName);
+    }
+
+    List<nint> hiddenQuestNodeKeys = [];
+    foreach (var cachedQuestNodeKey in this.journalListHoverCache.Keys)
+    {
+      if (!visibleQuestNodeKeys.Contains(cachedQuestNodeKey))
+      {
+        hiddenQuestNodeKeys.Add(cachedQuestNodeKey);
+      }
+    }
+
+    foreach (var hiddenQuestNodeKey in hiddenQuestNodeKeys)
+    {
+      this.journalListHoverCache.Remove(hiddenQuestNodeKey);
     }
   }
 

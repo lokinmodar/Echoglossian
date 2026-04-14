@@ -453,6 +453,7 @@ public partial class Echoglossian : IDalamudPlugin
     QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();
+    this.ClearAcceptedQuestPrefetchState();
 
       this.addonProbeWatch?.Dispose();
       this.addonProbeWatch = null;
