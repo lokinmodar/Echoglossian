@@ -748,6 +748,12 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Loaded {0} records</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>Background quest pre-translation started for {0} accepted quests.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>Background quest pre-translation finished for {0} accepted quests.</value>
+  </data>
   <data name="AddonProbeHelpMessage" xml:space="preserve">
     <value>Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe &lt;addon name&gt; [index] or /egloaddonprobe stop</value>
   </data>

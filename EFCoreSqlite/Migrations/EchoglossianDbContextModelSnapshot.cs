@@ -204,7 +204,13 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CanonicalRowsAsText")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ObjectivesAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ObjectiveRowsByKeyAsText")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("OriginalLang")
@@ -231,16 +237,31 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<string>("SummariesAsText")
                 .HasColumnType("TEXT");
 
+                    b.Property<string>("SummaryRowsByKeyAsText")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SystemRowsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SystemRowsByKeyAsText")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TranslatedObjectivesAsText")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("TranslatedObjectiveRowsByKeyAsText")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TranslatedSummariesAsText")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("TranslatedSummaryRowsByKeyAsText")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TranslatedSystemRowsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedSystemRowsByKeyAsText")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TranslatedQuestMessage")

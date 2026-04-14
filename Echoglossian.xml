@@ -1374,6 +1374,19 @@
                 Clears the accepted-quest prefetch runtime state.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.NotifyAcceptedQuestPrefetchStarted(System.Int32)">
+            <summary>
+                Shows the accepted-quest prefetch start notification when a new
+                accepted-quest queue begins.
+            </summary>
+            <param name="questCount">The number of accepted quests being prefetched.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCompleteAcceptedQuestPrefetchNotification">
+            <summary>
+                Shows the accepted-quest prefetch completion notification once the
+                current queue has fully drained.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ShouldPrefetchAcceptedQuests">
             <summary>
                 Gets whether accepted quests should be prefetched in the current
@@ -1448,7 +1461,7 @@
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="translatedQuestMessage">The translated quest message.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSummaryTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSummaryTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String)">
             <summary>
                 Applies a prefetched SEQ summary translation into the canonical quest
                 plate row.
@@ -1458,7 +1471,7 @@
             <param name="originalSummaryText">The original summary text.</param>
             <param name="translatedSummaryText">The translated summary text.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestObjectiveTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestObjectiveTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String)">
             <summary>
                 Applies a prefetched TODO translation into the canonical quest plate
                 row.
@@ -1468,7 +1481,7 @@
             <param name="originalObjectiveText">The original objective text.</param>
             <param name="translatedObjectiveText">The translated objective text.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSystemTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSystemTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String)">
             <summary>
                 Applies a prefetched SYSTEM-row translation into the canonical quest
                 plate row.
@@ -1478,14 +1491,61 @@
             <param name="originalSystemText">The original SYSTEM-row text.</param>
             <param name="translatedSystemText">The translated SYSTEM-row text.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.CreateAcceptedQuestPrefetchPlate(Echoglossian.QuestProgressSnapshot,System.String)">
+        <member name="M:Echoglossian.Echoglossian.CreateAcceptedQuestPrefetchPlate(Echoglossian.QuestCanonicalData)">
             <summary>
                 Creates the canonical accepted-quest quest plate snapshot used by the
                 background prefetch runtime.
             </summary>
-            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
-            <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="questCanonicalData">The canonical quest payload.</param>
             <returns>The canonical quest plate snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EmitAcceptedQuestPrefetchDiagnostic(Echoglossian.QuestCanonicalData,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Emits the current canonical accepted-quest payload and its projected
+                quest-plate shape into a purpose-named diagnostic file next to the DB.
+            </summary>
+            <param name="questCanonicalData">The canonical quest payload.</param>
+            <param name="questPlate">The projected quest plate.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryGetTranslatedQuestPlateValue(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve the current SEQ entry for the supplied quest snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="currentSequenceEntry">The current SEQ entry, when found.</param>
+            <returns>True when a current SEQ entry could be resolved.</returns>
+            <summary>
+                Tries to resolve an existing translated row using canonical row-keyed
+                storage first and legacy text-keyed storage second.
+            </summary>
+            <param name="canonicalRows">The canonical translated dictionary.</param>
+            <param name="legacyRows">The legacy translated dictionary.</param>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="sourceText">The legacy source text key.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>True when a translated value was found.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogAcceptedQuestPrefetchEvent(System.String,System.UInt32,System.String,System.String)">
+            <summary>
+            Emits a concise accepted-quest prefetch activity event to both the Dalamud
+            log and a purpose-named disk file.
+            </summary>
+            <param name="phase">The lifecycle phase being logged.</param>
+            <param name="questId">The quest id.</param>
+            <param name="questName">The quest name when available.</param>
+            <param name="detail">Additional structured detail.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogAcceptedQuestPrefetchTranslationEvent(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Emits a translation-stage accepted-quest prefetch event for one canonical
+            quest field or row.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
+            <param name="category">The translation category.</param>
+            <param name="phase">The translation phase.</param>
+            <param name="rowKey">The optional row key.</param>
+            <param name="sourceText">The source text.</param>
+            <param name="translatedText">The translated text, when resolved.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryCollectAcceptedQuestIds(System.Collections.Generic.List{System.UInt32}@)">
             <summary>
@@ -1501,13 +1561,6 @@
             </summary>
             <param name="acceptedQuestIds">The accepted quest ids.</param>
             <returns>The stable accepted-quest signature.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetAcceptedQuestCurrentSequenceText(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Gets the current SEQ row text for an accepted quest snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest snapshot.</param>
-            <returns>The current SEQ row text, or an empty string when unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
             <summary>
@@ -1573,7 +1626,7 @@
             <param name="body">Tooltip body text.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
             Registers a hover tooltip for a text node using its translated and
             original text, swapping the visible content when swap mode is active.
@@ -1582,8 +1635,11 @@
             <param name="textNode">The text node to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
             Registers a translated hover tooltip using a generic node's screen bounds.
             </summary>
@@ -1591,10 +1647,13 @@
             <param name="node">The node to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
             Registers a hover tooltip for a whole addon window using translated and
             original text, swapping the visible content when swap mode is active.
@@ -1603,8 +1662,11 @@
             <param name="addon">The live addon window to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Nullable{System.Boolean},System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean)">
             <summary>
             Registers a translated hover tooltip using explicit screen bounds.
             </summary>
@@ -1613,6 +1675,9 @@
             <param name="bottomRight">Bottom-right screen coordinate.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
@@ -2641,6 +2706,31 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSourceContentHash.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddCanonicalQuestRowPayloads">
+            <summary>
+                Adds canonical row-keyed quest payload columns so questplates can persist
+                the full resolved quest payload without collapsing repeated source text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddCanonicalQuestRowPayloads.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddCanonicalQuestRowPayloads.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddQuestCanonicalRowsColumn">
+            <summary>
+                Adds the persisted canonical quest row payload column after the
+                row-keyed quest payload migration so existing databases that already
+                applied the earlier migration can converge safely.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestCanonicalRowsColumn.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestCanonicalRowsColumn.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
                 Represents a translation entity for action tooltips in the database.
@@ -3118,7 +3208,96 @@
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate">
             <summary>
+                Provides canonical quest payload helpers for <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" />.
+            </summary>
+            <summary>
                 Represents a quest plate in the database.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.ApplyCanonicalPayload(Echoglossian.QuestCanonicalData)">
+            <summary>
+                Applies the current canonical quest payload to the quest plate,
+                replacing the original row sections with the latest resolved quest
+                data while preserving translated content whose row keys still match.
+            </summary>
+            <param name="questCanonicalData">The canonical quest payload.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.MergeCanonicalPayloadFrom(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Replaces the current canonical quest payload with the source quest
+                payload while preserving already translated row text whose row keys
+                still exist in the incoming canonical payload.
+            </summary>
+            <param name="source">The source quest plate carrying the newer payload.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TryGetTranslatedSummaryText(System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve a translated summary row, preferring canonical
+                structured rows before the legacy text-keyed projection.
+            </summary>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="sourceText">The visible source text.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>True when a translated summary row was found.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TryGetTranslatedObjectiveText(System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve a translated objective row, preferring canonical
+                structured rows before the legacy text-keyed projection.
+            </summary>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="sourceText">The visible source text.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>True when a translated objective row was found.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TryGetTranslatedSystemText(System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve a translated system row, preferring canonical
+                structured rows before the legacy text-keyed projection.
+            </summary>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="sourceText">The visible source text.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>True when a translated system row was found.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SetTranslatedSummaryText(System.String,System.String,System.String)">
+            <summary>
+                Stores a translated summary row in canonical structured rows and in
+                legacy-compatible text-keyed projections.
+            </summary>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="sourceText">The source text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SetTranslatedObjectiveText(System.String,System.String,System.String)">
+            <summary>
+                Stores a translated objective row in canonical structured rows and
+                in legacy-compatible text-keyed projections.
+            </summary>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="sourceText">The source text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SetTranslatedSystemText(System.String,System.String,System.String)">
+            <summary>
+                Stores a translated system row in canonical structured rows and in
+                legacy-compatible text-keyed projections.
+            </summary>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="sourceText">The source text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SynchronizeLegacyTextProjections">
+            <summary>
+                Rebuilds the legacy text-keyed projections from the canonical quest
+                payload when available. Legacy projections remain as a compatibility
+                surface for handlers that have not yet been migrated.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.PruneTranslatedRowsToCanonicalPayload">
+            <summary>
+                Prunes translated quest-row state so only rows still present in the
+                canonical payload remain.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
@@ -3142,9 +3321,20 @@
                 Gets or sets the game version the quest plate was captured from.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.CanonicalRowsAsText">
+            <summary>
+                Gets or sets the canonical structured quest payload serialized as
+                JSON rows.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.QuestTextSheetName">
             <summary>
                 Gets or sets the canonical quest text sheet path (e.g. "quest/043/AktKmb114_04393").
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.CanonicalRows">
+            <summary>
+                Gets the canonical structured quest rows.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SourceContentHash">
@@ -3157,9 +3347,24 @@
                 should be retranslated conservatively.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.ObjectiveRowsByKeyAsText">
+            <summary>
+                Gets or sets the canonical TODO rows serialized as JSON and keyed by row id text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SummaryRowsByKeyAsText">
+            <summary>
+                Gets or sets the canonical SEQ rows serialized as JSON and keyed by row id text.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedObjectivesAsText">
             <summary>
                 Gets or sets the translated TODO rows serialized as JSON.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedObjectiveRowsByKeyAsText">
+            <summary>
+                Gets or sets the translated TODO rows serialized as JSON and keyed by row id text.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSummariesAsText">
@@ -3167,9 +3372,19 @@
                 Gets or sets the translated SEQ rows serialized as JSON.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSummaryRowsByKeyAsText">
+            <summary>
+                Gets or sets the translated SEQ rows serialized as JSON and keyed by row id text.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SystemRowsAsText">
             <summary>
                 Gets or sets the original SYSTEM (cinematic caption) rows serialized as JSON.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SystemRowsByKeyAsText">
+            <summary>
+                Gets or sets the canonical SYSTEM rows serialized as JSON and keyed by row id text.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSystemRowsAsText">
@@ -3177,9 +3392,19 @@
                 Gets or sets the translated SYSTEM rows serialized as JSON.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSystemRowsByKeyAsText">
+            <summary>
+                Gets or sets the translated SYSTEM rows serialized as JSON and keyed by row id text.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.Objectives">
             <summary>
                 Gets lazily loads Objectives from text if needed.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.ObjectiveRowsByKey">
+            <summary>
+                Gets the canonical TODO rows keyed by quest text row key.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.Summaries">
@@ -3187,9 +3412,19 @@
                 Gets lazily loads Summaries from text if needed.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SummaryRowsByKey">
+            <summary>
+                Gets the canonical SEQ rows keyed by quest text row key.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedObjectives">
             <summary>
                 Gets or sets the translated TODO row dictionary.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedObjectiveRowsByKey">
+            <summary>
+                Gets or sets the translated TODO rows keyed by quest text row key.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSummaries">
@@ -3197,14 +3432,29 @@
                 Gets or sets the translated SEQ row dictionary.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSummaryRowsByKey">
+            <summary>
+                Gets or sets the translated SEQ rows keyed by quest text row key.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SystemRows">
             <summary>
                 Gets or sets the original SYSTEM row dictionary.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.SystemRowsByKey">
+            <summary>
+                Gets or sets the canonical SYSTEM rows keyed by quest text row key.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSystemRows">
             <summary>
                 Gets or sets the translated SYSTEM row dictionary.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.TranslatedSystemRowsByKey">
+            <summary>
+                Gets or sets the translated SYSTEM rows keyed by quest text row key.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.UpdateFieldsAsText(System.Boolean)">
@@ -3218,8 +3468,104 @@
                 Forces loading the Objectives and Summaries from the stored text fields.
             </summary>
         </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.LoadDictionaryFromTextOrKeepCurrent(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Loads a serialized dictionary when available and otherwise preserves
+                any current in-memory state that has not yet been materialized.
+            </summary>
+            <param name="serializedText">The serialized dictionary text.</param>
+            <param name="currentValue">The current in-memory dictionary.</param>
+            <returns>The resolved dictionary.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.LoadFromTextOrKeepCurrent``1(System.String,System.Collections.Generic.List{``0},System.Func{System.Collections.Generic.List{``0}})">
+            <summary>
+                Loads a serialized payload when available and otherwise preserves
+                any current in-memory state that has not yet been materialized.
+            </summary>
+            <typeparam name="T">The payload item type.</typeparam>
+            <param name="serializedText">The serialized payload text.</param>
+            <param name="currentValue">The current in-memory payload.</param>
+            <param name="loadFromText">The loader to invoke when serialized text exists.</param>
+            <returns>The resolved payload collection.</returns>
+        </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.ToString">
             <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection">
+            <summary>
+                Identifies one canonical quest-text row section inside the persisted
+                quest payload.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection.Summary">
+            <summary>
+                A SEQ / journal summary row.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection.Objective">
+            <summary>
+                A TODO / objective row.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection.System">
+            <summary>
+                A SYSTEM / system-message row.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow">
+            <summary>
+                Represents one canonical persisted quest row with section, row key,
+                ordering, original text, and translated text kept together.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.#ctor">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow" />
+                class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.#ctor(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection,System.String,System.String,System.Int32,System.Boolean,System.String)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow" />
+                class.
+            </summary>
+            <param name="section">The row section.</param>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="originalText">The original row text.</param>
+            <param name="order">The stable section-relative order.</param>
+            <param name="isCurrentSequence">Whether this row is the live current SEQ row.</param>
+            <param name="translatedText">The translated row text when available.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.Section">
+            <summary>
+                Gets or sets the row section.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.RowKey">
+            <summary>
+                Gets or sets the canonical row key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.OriginalText">
+            <summary>
+                Gets or sets the original row text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.TranslatedText">
+            <summary>
+                Gets or sets the translated row text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.Order">
+            <summary>
+                Gets or sets the section-relative order.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.IsCurrentSequence">
+            <summary>
+                Gets or sets a value indicating whether this row is the live current
+                SEQ row for the payload snapshot.
+            </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateExtensions.Clone(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Boolean)">
             <summary>
@@ -3907,6 +4253,23 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetGameVersion(System.String)">
             <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.DiagnosticFileEmitter">
+            <summary>
+                Emits purpose-specific diagnostic files into the plugin config
+                directory so structured runtime state can be inspected outside the
+                Dalamud log stream.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DiagnosticFileEmitter.Emit(System.String,System.String,System.String)">
+            <summary>
+                Appends a structured diagnostic block to a purpose-named log file in
+                the same directory as the SQLite DB.
+            </summary>
+            <param name="purpose">The purpose-specific file stem.</param>
+            <param name="title">The title of the emitted block.</param>
+            <param name="content">The structured content to append.</param>
+            <returns>The absolute path of the emitted file, or an empty string when unavailable.</returns>
         </member>
         <member name="T:Echoglossian.ImageGeneration.CachedTextureEntry">
             <summary>
@@ -4694,6 +5057,16 @@
                 original text.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.CanRenderJournalHoverTooltip(System.Boolean)">
+            <summary>
+                Gets whether the Journal family may render a hover tooltip for a
+                payload whose translated content is ready.
+            </summary>
+            <param name="translatedPayloadReady">
+                Whether the translated payload required by the current mode is ready.
+            </param>
+            <returns><c>true</c> when the hover tooltip may be rendered.</returns>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalShouldRemoveDiacritics">
             <summary>
                 Gets whether translated Journal text should be normalized before
@@ -4728,7 +5101,7 @@
             <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
             <returns>The current quest sequence row text, or an empty string when unavailable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateCurrentQuestSequenceText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateCurrentQuestSequenceText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot,System.String,System.Boolean@)">
             <summary>
                 Gets the translated quest sequence text for the current quest phase.
                 The result is cached back into the quest plate so the same sequence row
@@ -4736,6 +5109,9 @@
             </summary>
             <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
             <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
+            <param name="translatedCurrentQuestSequenceTextReady">
+                Whether the current SEQ row translation is ready.
+            </param>
             <returns>The translated quest sequence row text, or the source text if translation is not ready yet.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
@@ -4813,6 +5189,26 @@
             </summary>
             <param name="scopeKey">The quest-detail scope key.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalDetailOriginalSnapshot(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot@)">
+            <summary>
+                Attempts to get the original JournalDetail text snapshot for the
+                current quest scope.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="snapshot">The cached original snapshot.</param>
+            <returns>True when the scope already has an original snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalDetailOriginalSnapshot(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+                Remembers the original JournalDetail texts for the current quest
+                scope so mode switches can restore native UI state correctly.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="questName">The original quest name.</param>
+            <param name="questMessage">The original quest description.</param>
+            <param name="objectiveText">The original visible objective text.</param>
+            <param name="summaryText">The original visible summary text.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
             <summary>
                 Attempts to get translated JournalDetail text from the local
@@ -4866,6 +5262,23 @@
             <param name="nodeKey">The live quest-name node key.</param>
             <param name="originalText">The original visible quest name.</param>
             <param name="translatedText">The translated visible quest name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListOriginalText(System.IntPtr,System.String@)">
+            <summary>
+                Attempts to get the original quest title currently associated with a
+                visible Journal list node.
+            </summary>
+            <param name="nodeKey">The live quest-name node key.</param>
+            <param name="originalText">The cached original quest title.</param>
+            <returns>True when an original quest title is cached for that node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListOriginalText(System.IntPtr,System.String)">
+            <summary>
+                Remembers the original quest title associated with a visible Journal
+                list node so mode switches can restore native UI state correctly.
+            </summary>
+            <param name="nodeKey">The live quest-name node key.</param>
+            <param name="originalText">The original quest title.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TrimJournalListRuntimeState(System.Collections.Generic.HashSet{System.String},System.Collections.Generic.HashSet{System.IntPtr})">
             <summary>
@@ -4928,6 +5341,40 @@
             <param name="topLeft">The top-left screen coordinate of the node.</param>
             <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
             <returns>True when the node is visible and the bounds are usable.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot">
+            <summary>
+                Stores the original JournalDetail texts for a single visible quest
+                scope so mode changes can restore native UI state and drive swap
+                tooltips from stable source text.
+            </summary>
+            <param name="QuestName">The original quest title.</param>
+            <param name="QuestMessage">The original quest description.</param>
+            <param name="ObjectiveText">The original visible objective text.</param>
+            <param name="SummaryText">The original visible summary text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+                Stores the original JournalDetail texts for a single visible quest
+                scope so mode changes can restore native UI state and drive swap
+                tooltips from stable source text.
+            </summary>
+            <param name="QuestName">The original quest title.</param>
+            <param name="QuestMessage">The original quest description.</param>
+            <param name="ObjectiveText">The original visible objective text.</param>
+            <param name="SummaryText">The original visible summary text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.QuestName">
+            <summary>The original quest title.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.QuestMessage">
+            <summary>The original quest description.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.ObjectiveText">
+            <summary>The original visible objective text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.SummaryText">
+            <summary>The original visible summary text.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler">
             <summary>
@@ -5148,7 +5595,7 @@
             <param name="id">The quest plate id.</param>
             <param name="newGameVersion">The game version to store.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
                 Registers a hover tooltip for a text node using its current screen
                 bounds.
@@ -5157,11 +5604,14 @@
             <param name="textNode">The text node to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
             <param name="denseHitbox">Whether to use the denser node hitbox.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
                 Registers a hover tooltip for a generic node using its current screen
                 bounds.
@@ -5170,11 +5620,14 @@
             <param name="node">The node to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
             <param name="denseHitbox">Whether to use the denser node hitbox.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
                 Registers a hover tooltip for a whole addon window using its root
                 node.
@@ -5183,11 +5636,14 @@
             <param name="addon">The live addon window to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
             <param name="denseHitbox">Whether to use the denser addon hitbox.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Nullable{System.Boolean},System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean)">
             <summary>
                 Registers a hover tooltip using explicit screen bounds.
             </summary>
@@ -5196,6 +5652,9 @@
             <param name="bottomRight">Bottom-right screen coordinate.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
@@ -5240,6 +5699,9 @@
             <param name="addon">The live addon window to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
             <param name="denseHitbox">Whether to use the denser addon hitbox.</param>
@@ -5252,6 +5714,9 @@
             <param name="textNode">The text node to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
             <param name="denseHitbox">Whether to use the denser node hitbox.</param>
@@ -5264,6 +5729,9 @@
             <param name="node">The node to anchor the tooltip to.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
             <param name="denseHitbox">Whether to use the denser node hitbox.</param>
@@ -5277,6 +5745,9 @@
             <param name="bottomRight">Bottom-right screen coordinate.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
@@ -5365,6 +5836,21 @@
             </summary>
             <param name="displayMode">The configured display mode.</param>
             <returns><c>true</c> when hover tooltips should keep the original text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.CanRenderHoverTooltip(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Gets whether a quest-family hover tooltip may be rendered for the
+                current display mode, given the readiness of the translated payload
+                backing that tooltip.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="translatedPayloadReady">
+                Whether the translated payload required by the current mode is fully
+                ready.
+            </param>
+            <returns>
+                <c>true</c> when the tooltip may be rendered for the current mode.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.ShouldRemoveDiacritics(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
@@ -8852,6 +9338,131 @@
         <member name="M:Echoglossian.ToDoItem.ToString">
             <inheritdoc/>
         </member>
+        <member name="T:Echoglossian.QuestCanonicalData">
+            <summary>
+                Represents the current canonical quest payload resolved from Lumina and
+                live quest progress before it is projected into legacy-compatible
+                persistence and addon display shapes.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.QuestProgressSnapshot">
+            <summary>
+                Gets the backing progress snapshot that produced this canonical
+                quest payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.GameVersion">
+            <summary>
+                Gets the game version associated with this canonical quest payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.CurrentSequenceText">
+            <summary>
+                Gets the current SEQ text for the quest's live sequence.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.SummaryRowsByKey">
+            <summary>
+                Gets the canonical SEQ rows keyed by quest row key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.SummaryRowsByText">
+            <summary>
+                Gets the legacy-compatible SEQ projection keyed by source text.
+                Duplicate source texts collapse in this view.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.ObjectiveRowsByKey">
+            <summary>
+                Gets the canonical TODO rows keyed by quest row key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.ObjectiveRowsByText">
+            <summary>
+                Gets the legacy-compatible TODO projection keyed by source text.
+                Duplicate source texts collapse in this view.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.SystemRowsByKey">
+            <summary>
+                Gets the canonical SYSTEM rows keyed by quest row key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.SystemRowsByText">
+            <summary>
+                Gets the legacy-compatible SYSTEM projection keyed by source text.
+                Duplicate source texts collapse in this view.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.QuestCanonicalData.HasLossyTextProjection">
+            <summary>
+                Gets a value indicating whether the current legacy-compatible text
+                projection loses row identity due to repeated source text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.Create(Echoglossian.QuestProgressSnapshot,System.String)">
+            <summary>
+                Creates canonical quest data from the supplied quest progress
+                snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The canonical quest payload.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.ResolveCurrentSequenceText(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Resolves the current SEQ row text for the supplied quest progress
+                snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+            <returns>The current SEQ row text, or the first non-empty SEQ row text.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.TryGetCurrentSequenceEntry(Echoglossian.QuestProgressEntry@)">
+            <summary>
+                Tries to resolve the current SEQ entry for this canonical quest
+                payload.
+            </summary>
+            <param name="currentSequenceEntry">The current SEQ entry.</param>
+            <returns>True when the current SEQ entry could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.EnumerateSummaryRowKeysByText(System.String)">
+            <summary>
+                Enumerates canonical summary row keys whose source text matches the
+                supplied visible text.
+            </summary>
+            <param name="sourceText">The visible summary text.</param>
+            <returns>The matching canonical summary row keys.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.EnumerateObjectiveRowKeysByText(System.String)">
+            <summary>
+                Enumerates canonical objective row keys whose source text matches
+                the supplied visible text.
+            </summary>
+            <param name="sourceText">The visible objective text.</param>
+            <returns>The matching canonical objective row keys.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.EnumerateSystemRowKeysByText(System.String)">
+            <summary>
+                Enumerates canonical system row keys whose source text matches the
+                supplied visible text.
+            </summary>
+            <param name="sourceText">The visible system text.</param>
+            <returns>The matching canonical system row keys.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.ToQuestPlate(System.String,System.String,System.Int32,System.DateTime)">
+            <summary>
+                Materializes the current canonical quest payload into the current
+                legacy-compatible <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" /> shape.
+            </summary>
+            <param name="originalLanguage">The source language.</param>
+            <param name="translationLanguage">The target translation language.</param>
+            <param name="translationEngine">The translation engine id.</param>
+            <param name="timestamp">The materialization timestamp.</param>
+            <returns>The projected quest plate.</returns>
+        </member>
         <member name="T:Echoglossian.QuestContentHash">
              <summary>
                  Computes a stable content fingerprint for a quest text sheet snapshot.
@@ -10511,6 +11122,16 @@
         <member name="P:Echoglossian.Properties.Resources.QuestProbeHelpMessage">
             <summary>
               Looks up a localized string similar to Dumps a full quest data probe to the log. Usage: /egloquestprobe &lt;quest name or quest id&gt;.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AcceptedQuestPrefetchStartedNotification">
+            <summary>
+              Looks up a localized string similar to Background quest pre-translation started for {0} accepted quests..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AcceptedQuestPrefetchCompletedNotification">
+            <summary>
+              Looks up a localized string similar to Background quest pre-translation finished for {0} accepted quests..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslation">

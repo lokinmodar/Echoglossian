@@ -330,6 +330,9 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   /// <param name="textNode">The text node to anchor the tooltip to.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   /// <param name="swapEnabled">Optional explicit swap override.</param>
   /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
   /// <param name="denseHitbox">Whether to use the denser node hitbox.</param>
@@ -338,6 +341,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
       AtkTextNode* textNode,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false,
       bool denseHitbox = false)
@@ -347,6 +351,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
         textNode,
         originalText,
         translatedText,
+        translatedPayloadReady,
         swapEnabled,
         forceEnabled,
         denseHitbox);
@@ -360,6 +365,9 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   /// <param name="node">The node to anchor the tooltip to.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   /// <param name="swapEnabled">Optional explicit swap override.</param>
   /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
   /// <param name="denseHitbox">Whether to use the denser node hitbox.</param>
@@ -368,6 +376,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
       AtkResNode* node,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false,
       bool denseHitbox = false)
@@ -377,6 +386,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
         node,
         originalText,
         translatedText,
+        translatedPayloadReady,
         swapEnabled,
         forceEnabled,
         denseHitbox);
@@ -390,6 +400,9 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   /// <param name="addon">The live addon window to anchor the tooltip to.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   /// <param name="swapEnabled">Optional explicit swap override.</param>
   /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
   /// <param name="denseHitbox">Whether to use the denser addon hitbox.</param>
@@ -398,6 +411,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
       AtkUnitBase* addon,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false,
       bool denseHitbox = false)
@@ -407,6 +421,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
         addon,
         originalText,
         translatedText,
+        translatedPayloadReady,
         swapEnabled,
         forceEnabled,
         denseHitbox);
@@ -420,6 +435,9 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   /// <param name="bottomRight">Bottom-right screen coordinate.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   /// <param name="swapEnabled">Optional explicit swap override.</param>
   /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
   protected void RegisterTranslatedHoverTooltip(
@@ -428,6 +446,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
       Vector2 bottomRight,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false)
   {
@@ -437,6 +456,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
         bottomRight,
         originalText,
         translatedText,
+        translatedPayloadReady,
         swapEnabled,
         forceEnabled);
   }

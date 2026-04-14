@@ -639,4 +639,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Φορτωμένες εγγραφές {0}</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>Η προμετάφραση στο παρασκήνιο ξεκίνησε για {0} αποδεκτές αποστολές.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>Η προμετάφραση στο παρασκήνιο ολοκληρώθηκε για {0} αποδεκτές αποστολές.</value>
+  </data>
 </root>

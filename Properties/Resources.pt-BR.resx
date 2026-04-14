@@ -579,4 +579,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Registros {0} carregados</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>A pré-tradução em segundo plano começou para {0} quests aceitas.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>A pré-tradução em segundo plano terminou para {0} quests aceitas.</value>
+  </data>
 </root>

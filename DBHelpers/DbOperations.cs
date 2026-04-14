@@ -366,9 +366,15 @@ public partial class Echoglossian
 
         localFoundQuestPlate = questIdMatch.FirstOrDefault();
         matchedByQuestId = localFoundQuestPlate != null;
+
+        if (localFoundQuestPlate == null)
+        {
+          return null;
+        }
       }
 
       if (localFoundQuestPlate == null &&
+          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
           !string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
       {
         var questMessageMatch = context.QuestPlate.AsNoTracking().Where(t =>
@@ -382,6 +388,7 @@ public partial class Echoglossian
       }
 
       if (localFoundQuestPlate == null &&
+          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
           !string.IsNullOrWhiteSpace(questPlate.QuestName))
       {
         var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
@@ -487,9 +494,15 @@ public partial class Echoglossian
 
         localFoundQuestPlate = questIdMatch.FirstOrDefault();
         matchedByQuestId = localFoundQuestPlate != null;
+
+        if (localFoundQuestPlate == null)
+        {
+          return null;
+        }
       }
 
       if (localFoundQuestPlate == null &&
+          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
           !string.IsNullOrWhiteSpace(questPlate.QuestName))
       {
         var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
@@ -1198,6 +1211,8 @@ public partial class Echoglossian
         questIdMatch.UpdateFieldsFromText();
         return questIdMatch;
       }
+
+      return null;
     }
 
     if (!string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
@@ -1238,10 +1253,10 @@ public partial class Echoglossian
   /// <param name="target">The database record to be enriched.</param>
   /// <param name="source">The newer quest plate values.</param>
   private void MergeQuestPlateValues(
-      QuestPlate target,
-      QuestPlate source)
-  {
-    if (target == null || source == null)
+        QuestPlate target,
+        QuestPlate source)
+    {
+      if (target == null || source == null)
     {
       return;
     }
@@ -1278,79 +1293,37 @@ public partial class Echoglossian
         string.IsNullOrWhiteSpace(source.QuestTextSheetName)
             ? target.QuestTextSheetName
             : source.QuestTextSheetName;
-    target.SourceContentHash =
-        string.IsNullOrWhiteSpace(source.SourceContentHash)
-            ? target.SourceContentHash
-            : source.SourceContentHash;
-    target.CreatedDate ??= source.CreatedDate;
-    target.UpdatedDate = DateTime.Now;
+      target.SourceContentHash =
+          string.IsNullOrWhiteSpace(source.SourceContentHash)
+              ? target.SourceContentHash
+              : source.SourceContentHash;
+      target.CreatedDate ??= source.CreatedDate;
+      target.UpdatedDate = DateTime.Now;
 
-    foreach (var (objectiveKey, objectiveValue) in source.Objectives)
-    {
-      if (string.IsNullOrWhiteSpace(objectiveKey) ||
-          string.IsNullOrWhiteSpace(objectiveValue))
+      source.UpdateFieldsFromText();
+      target.UpdateFieldsFromText();
+
+      if (source.CanonicalRows.Count != 0)
       {
-        continue;
+        target.MergeCanonicalPayloadFrom(source);
       }
 
-      target.Objectives[objectiveKey] = objectiveValue;
-    }
+      target.TranslatedQuestName =
+          string.IsNullOrWhiteSpace(source.TranslatedQuestName)
+              ? target.TranslatedQuestName
+              : source.TranslatedQuestName;
+      target.TranslatedQuestMessage =
+          string.IsNullOrWhiteSpace(source.TranslatedQuestMessage)
+              ? target.TranslatedQuestMessage
+              : source.TranslatedQuestMessage;
 
-    foreach (var (summaryKey, summaryValue) in source.Summaries)
-    {
-      if (string.IsNullOrWhiteSpace(summaryKey) ||
-          string.IsNullOrWhiteSpace(summaryValue))
+      if (source.CanonicalRows.Count == 0)
       {
-        continue;
+        target.SynchronizeLegacyTextProjections();
       }
 
-      target.Summaries[summaryKey] = summaryValue;
+      target.PruneTranslatedRowsToCanonicalPayload();
     }
-
-    foreach (var (objKey, objValue) in source.TranslatedObjectives)
-    {
-      if (string.IsNullOrWhiteSpace(objKey) ||
-          string.IsNullOrWhiteSpace(objValue))
-      {
-        continue;
-      }
-
-      target.TranslatedObjectives[objKey] = objValue;
-    }
-
-    foreach (var (sumKey, sumValue) in source.TranslatedSummaries)
-    {
-      if (string.IsNullOrWhiteSpace(sumKey) ||
-          string.IsNullOrWhiteSpace(sumValue))
-      {
-        continue;
-      }
-
-      target.TranslatedSummaries[sumKey] = sumValue;
-    }
-
-    foreach (var (systemKey, systemValue) in source.SystemRows)
-    {
-      if (string.IsNullOrWhiteSpace(systemKey) ||
-          string.IsNullOrWhiteSpace(systemValue))
-      {
-        continue;
-      }
-
-      target.SystemRows[systemKey] = systemValue;
-    }
-
-    foreach (var (systemKey, systemValue) in source.TranslatedSystemRows)
-    {
-      if (string.IsNullOrWhiteSpace(systemKey) ||
-          string.IsNullOrWhiteSpace(systemValue))
-      {
-        continue;
-      }
-
-      target.TranslatedSystemRows[systemKey] = systemValue;
-    }
-  }
 
   /// <summary>
   /// Inserts or updates a GameWindow record in the database, ensuring uniqueness

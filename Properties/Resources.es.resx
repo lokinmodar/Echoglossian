@@ -612,4 +612,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Registros {0} cargados</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>La pretraducción en segundo plano comenzó para {0} misiones aceptadas.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>La pretraducción en segundo plano terminó para {0} misiones aceptadas.</value>
+  </data>
 </root>

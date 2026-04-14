@@ -49,6 +49,26 @@ internal static class QuestAddonModeHelpers
   }
 
   /// <summary>
+  ///     Gets whether a quest-family hover tooltip may be rendered for the
+  ///     current display mode, given the readiness of the translated payload
+  ///     backing that tooltip.
+  /// </summary>
+  /// <param name="displayMode">The configured display mode.</param>
+  /// <param name="translatedPayloadReady">
+  ///     Whether the translated payload required by the current mode is fully
+  ///     ready.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when the tooltip may be rendered for the current mode.
+  /// </returns>
+  internal static bool CanRenderHoverTooltip(
+      JournalTranslationDisplayMode displayMode,
+      bool translatedPayloadReady)
+  {
+    return UsesHoverTooltips(displayMode) && translatedPayloadReady;
+  }
+
+  /// <summary>
   ///     Gets whether translated quest text should be normalized before being
   ///     written into the native UI.
   /// </summary>

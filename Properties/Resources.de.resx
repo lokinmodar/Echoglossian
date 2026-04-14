@@ -639,4 +639,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Geladene {0} Datensätze</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>Die Hintergrund-Vorübersetzung wurde für {0} angenommene Quests gestartet.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>Die Hintergrund-Vorübersetzung wurde für {0} angenommene Quests abgeschlossen.</value>
+  </data>
 </root>

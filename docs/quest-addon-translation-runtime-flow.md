@@ -4,6 +4,18 @@
 
 This document describes the **current actual** runtime translation flow for every quest-family addon in Echoglossian. It does not describe the intended future pipeline (see `quest-full-pipeline-design.md` for that). It describes what the code does today, how each addon is triggered, how text is resolved, how the DB is queried, how caches work, and how hover tooltips are registered.
 
+## Current Stabilization Scope
+
+At the current checkpoint, the quest-family runtime is intentionally narrowed:
+
+- `Journal` and `JournalDetail` remain active
+- the other quest-family handlers remain in the repo but are not currently
+  registered
+- accepted-quest prefetch remains active so the DB can stay warm
+
+This document still records the wider handler model for reference, but in live
+runtime validation the active stabilization target is now the Journal family.
+
 ---
 
 ## Addons in scope
@@ -553,6 +565,19 @@ Handler-local runtime caches should **not** replace:
 - Lumina quest snapshots
 - shared translation queueing
 
+### Current Journal mode rule
+
+For the currently active `Journal` / `JournalDetail` stabilization pass, hover
+tooltips must now obey a strict readiness contract:
+
+- native-only mode: no hover tooltip
+- tooltip-translation mode: no tooltip until translated payload is ready
+- swap mode: no original-text tooltip until the translated/native payload is
+  ready
+
+This avoids misleading fallback where a “translation tooltip” still shows
+original text just because the DB row is not warm enough yet.
+
 ### Current isolated handlers
 
 **Journal / JournalDetail**
@@ -615,6 +640,36 @@ The intended fix (described in `quest-full-pipeline-design.md`) is to capture ob
 This means the DB row is expected to become more complete the first time the
 quest is opened in `JournalDetail`, even if an earlier title-only row already
 existed.
+
+---
+
+## Journal mode-switching runtime note
+
+`Journal` and `JournalDetail` no longer rely only on sparse requested-update
+events to react to display-mode changes while the addon remains open.
+
+Current behavior:
+
+- `Journal` list refreshes through `PreUpdate` and `PreRequestedUpdate`
+- `JournalDetail` refreshes through:
+  - `PreUpdate` on `JournalDetail`
+  - `PreRequestedUpdate` on `JournalDetail`
+  - `PostRequestedUpdate` on `Journal` for selection-driven updates
+
+This matters because the current stabilization pass is DB-first and
+mode-sensitive:
+
+- `TooltipTranslation` must restore original native text and show translated
+  hover text only when the translated payload is ready
+- `NativeUiTranslation` must actively reapply translated native text from cache
+  or DB, even when no fresh requested update occurs
+- `NativeUiTranslationWithOriginalTooltips` must write translated native text
+  and only expose the original text in hover once the translated/native payload
+  is ready
+
+Without the live `PreUpdate` path on `JournalDetail`, switching modes from the
+config window while the detail view stayed open could leave the pane in a stale
+visual state until a later addon refresh happened by chance.
 
 ---
 

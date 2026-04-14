@@ -639,4 +639,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Enregistrements {0} chargés</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>La pré-traduction en arrière-plan a commencé pour {0} quêtes acceptées.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>La pré-traduction en arrière-plan est terminée pour {0} quêtes acceptées.</value>
+  </data>
 </root>

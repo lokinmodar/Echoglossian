@@ -639,4 +639,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>{0} erregistroak kargatuta</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>Atzeko planoko aurreitzulpena hasi da onartutako {0} egitekoentzat.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>Atzeko planoko aurreitzulpena amaitu da onartutako {0} egitekoentzat.</value>
+  </data>
 </root>

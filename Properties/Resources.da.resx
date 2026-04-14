@@ -611,4 +611,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Indlæste {0}-poster</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>Baggrundsforoversættelsen er startet for {0} accepterede quests.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>Baggrundsforoversættelsen er afsluttet for {0} accepterede quests.</value>
+  </data>
 </root>

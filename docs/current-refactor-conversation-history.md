@@ -51,10 +51,16 @@ As of the latest working-tree checkpoint:
 - the current uncommitted change also starts isolating `Journal` runtime state away from the broader quest-family caches by keeping a local cache for the visible quest list and a local scope cache for `JournalDetail`
 - the current uncommitted change also adds an accepted-quest background prefetch driven by `QuestManager`, so accepted quests can populate `questplates` before the quest UI needs them
 - the current uncommitted change also moves `ScenarioTree`, `RecommendList`, and `AreaMap` off the shared quest UI caches and into handler-local runtime caches
+- the current uncommitted change also adds user-facing notifications for accepted-quest prefetch start and completion
+- the current uncommitted change also introduces `QuestCanonicalData` as the explicit current-state quest shape used by prefetch and shared SEQ resolution
+- the current uncommitted change also emits accepted-quest canonical dumps into a purpose-named file next to `Echoglossian.db`
+- the current uncommitted change also emits accepted-quest prefetch activity events into a separate purpose-named file so background translation can be traced step by step
+- the current uncommitted change also fixes accepted-quest prefetch quest-id resolution by promoting `QuestManager` work ids into full `Quest.RowId` values before resolving Lumina quest rows
 
 ## Reference Docs
 
 - [Refactor Timeline and Flow Analysis](./refactor-timeline-and-flow-analysis.md)
+- [Quest Data Assembly Current State](./quest-data-assembly-current-state.md)
 - [Quest Sheet Acquisition Pipeline](./quest-sheet-acquisition-pipeline.md)
 - [Quest Full Pipeline Design](./quest-full-pipeline-design.md)
 - [Journal Quest Data Model and Flow](./journal-quest-data-model-and-flow.md)
@@ -846,3 +852,414 @@ The main active problems are:
   start leaving clearer, more isolated hover behavior in the logs.
 - Continue focusing `JournalDetail` work on content stability rather than
   trigger liveness, now that more of the quest-family runtime is decoupled.
+
+### 2026-04-13 21:45:00 -03:00 - working tree checkpoint - accepted quest prefetch now signals start and completion
+
+**What changed**
+
+- Added two localized notification messages for the accepted-quest prefetch
+  runtime:
+  - start
+  - completion
+- The prefetch runtime now raises one notification when a new accepted-quest
+  prefetch queue begins and one when that queue fully drains.
+- The notifications are tied to the prefetch queue lifecycle itself, not to any
+  individual quest addon.
+
+**Why it changed**
+
+- The user wanted direct feedback about when the background quest-list
+  translation work starts and ends.
+- This makes it easier to correlate in-game behavior with the new
+  `QuestManager`-driven prewarm path without having to inspect logs for every
+  test pass.
+- The notifications were added with queue-level state so they do not spam every
+  quest translation callback.
+
+**Next step**
+
+- Rebuild the plugin and verify that:
+  - one notification appears when accepted-quest prefetch begins
+  - one notification appears when it completes
+  - no repeated spam occurs while the queue is still draining
+
+### 2026-04-13 22:05:00 -03:00 - working tree checkpoint - accepted quest prefetch now logs translation activity explicitly
+
+**What changed**
+
+- `AcceptedQuestPrefetchRuntime` now emits a structured activity trace for the
+  background accepted-quest pipeline into:
+  - `accepted-quest-prefetch-activity.log`
+- The prefetch runtime now logs, per accepted quest:
+  - quest selected for processing
+  - resolve failure
+  - resolve success
+  - existing persisted row state
+  - per-field/per-row translation state:
+    - `skip-existing`
+    - `skip-empty`
+    - `cache-hit`
+    - `queued`
+    - `already-in-flight`
+    - `resolved`
+- These same activity transitions are also written into the normal Dalamud log
+  with the `[AcceptedQuestPrefetch]` prefix.
+
+**Why it changed**
+
+- The user saw start/end notifications but no diagnostic file and no clear
+  proof that quest background translation was actually being queued or
+  resolved.
+- The earlier canonical dump only emitted after quest progress resolution, so
+  it could stay silent if the pipeline failed before that point.
+- We needed exact evidence for whether the accepted-quest background path is:
+  - discovering quests only
+  - failing before canonical assembly
+  - hitting existing rows
+  - relying on broker cache
+  - or actually queueing and resolving translations
+
+**Next step**
+
+- Reload the plugin and inspect:
+  - `accepted-quest-prefetch-activity.log`
+  - `accepted-quest-prefetch-canonical.log`
+- Compare the activity trace against the DB rows to see whether missing quest
+  data comes from resolve failures, skipped rows, cache hits, or incomplete
+  persistence after successful translation.
+
+### 2026-04-13 22:20:00 -03:00 - working tree checkpoint - accepted quest prefetch now resolves QuestManager ids correctly
+
+**What changed**
+
+- `QuestProgressResolver` now accepts both:
+  - full `Quest.RowId` values
+  - short runtime/work ids coming from `QuestManager`
+- When the incoming quest id is below `0x10000`, the resolver now promotes it
+  to the full `Quest.RowId` space by adding `0x10000` before looking up the
+  Lumina `Quest` row.
+- The resolved `QuestProgressSnapshot.QuestId` now stays anchored to the full
+  `Quest.RowId`, which aligns accepted-quest prefetch output with the ids seen
+  elsewhere in Journal and in the DB.
+
+**Why it changed**
+
+- The new accepted-quest activity logs showed a clean and repeatable failure:
+  every quest discovered from `QuestManager` reached `quest-start` and then
+  immediately died in `resolve-failed`.
+- The logged ids were values like `1475` and `4393`, which do not match the
+  full quest ids used in Journal (`67011`, `69929`, etc.), but do match the
+  low 16-bit/runtime form of those ids.
+- The resolver was incorrectly feeding those short runtime ids directly into
+  `questSheet.TryGetRow(...)` as if they were already full Lumina row ids.
+
+**Next step**
+
+- Reload the plugin and confirm that accepted-quest prefetch now starts
+  producing:
+  - `resolved`
+  - `existing-row`
+  - translation queue/cache events
+  - canonical dump file output
+- Compare the new canonical dumps against the DB rows to validate that accepted
+  quests now prewarm real `questplates` entries before Journal surfaces are
+  opened.
+
+### 2026-04-14 00:20:00 -03:00 - working tree checkpoint - canonical quest rows now lead persistence and merge
+
+**What changed**
+
+- `QuestCanonicalData.ToQuestPlate(...)` now materializes the quest through
+  `QuestPlate.ApplyCanonicalPayload(...)` instead of seeding only the old
+  text-keyed dictionaries.
+- `QuestPlate` persistence now includes `CanonicalRowsAsText` as the intended
+  source-of-truth payload for quest text rows.
+- `QuestPlate.Canonical.cs` now:
+  - loads canonical rows from persisted JSON
+  - falls back to rebuilding canonical rows from older projections when needed
+  - preserves translated row text by row key during payload replacement
+  - rebuilds legacy compatibility dictionaries from canonical rows
+- `DbOperations.MergeQuestPlateValues(...)` now merges canonical rows first and
+  treats the older dictionary fields as compatibility output rather than the
+  primary merge surface.
+- The pending migration and model snapshot were updated to include
+  `CanonicalRowsAsText`.
+
+**Why it changed**
+
+- The accepted-quest diagnostics showed the canonical quest assembly was rich,
+  but the projected `QuestPlate` shape still looked too poor and too dependent
+  on the older text-keyed dictionaries.
+- That gap meant background prefetch could resolve the quest correctly while
+  persistence still only saved a thinner, more failure-prone projection.
+- We needed one persisted quest payload that actually represents the full
+  quest rows and can survive repeated merges without losing row identity.
+
+**Next step**
+
+- Reload the plugin and inspect:
+  - `accepted-quest-prefetch-canonical.log`
+  - `accepted-quest-prefetch-activity.log`
+  - the `questplates` table
+- Verify that new prefetched rows now persist:
+  - `CanonicalRowsAsText`
+  - `QuestTextSheetName`
+  - `SourceContentHash`
+  - fuller translated/original row coverage
+- If the new canonical payload looks correct, continue by simplifying
+  `JournalDetail` and the other quest handlers to consume the canonical quest
+  row model more directly and rely less on UI-composed state.
+
+### 2026-04-14 11:40:00 -03:00 - working tree checkpoint - fixed quest canonical column migration drift
+
+**What changed**
+
+- Reverted the already-applied `20260414103000_AddCanonicalQuestRowPayloads`
+  migration so it again reflects the schema that existing databases actually
+  received.
+- Added a new additive migration:
+  - `20260414120000_AddQuestCanonicalRowsColumn`
+- That new migration adds only `CanonicalRowsAsText`, which is the missing
+  column the runtime now expects when loading `QuestPlate`.
+
+**Why it changed**
+
+- The accepted-quest prefetch logs showed that background translation was
+  absolutely running, but persistence still failed immediately with:
+  - `SQLite Error 1: 'no such column: q.CanonicalRowsAsText'`
+- The root cause was migration drift:
+  - the earlier migration id was already recorded in the user's DB history
+  - but the file had later been edited to add `CanonicalRowsAsText`
+  - so the DB history said the migration existed while the actual table did not
+    have the new column
+- A new additive migration is the safe fix for both:
+  - already-migrated user DBs
+  - clean DBs created from scratch
+
+**Next step**
+
+- Rebuild and reload the plugin so the new migration runs.
+- Confirm that:
+  - `questplates` now has `CanonicalRowsAsText`
+  - accepted-quest prefetch still resolves and translates
+  - rows finally begin to persist instead of dying during `FindQuestPlate`
+
+### 2026-04-14 12:10:00 -03:00 - working tree checkpoint - fixed in-memory quest translation loss before serialization
+
+**What changed**
+
+- `QuestPlate.UpdateFieldsFromText()` now preserves in-memory canonical rows and
+  translated row dictionaries when the serialized `...AsText` fields are still
+  empty.
+- Added `QuestPlatePersistenceTests` to lock the regression:
+  - an unsaved canonical translated row must survive a text refresh and still
+    rebuild the translated legacy projections
+
+**Why it changed**
+
+- The accepted-quest prefetch logs proved translations were resolving, and the
+  DB proved the original canonical quest payload was being saved.
+- But the translated quest-row payload never reached persistence.
+- The root cause was lifecycle-related:
+  - prefetch created a fresh `QuestPlate`
+  - applied translated canonical rows in memory
+  - then merge/save called `UpdateFieldsFromText()`
+  - because the serialized fields were still empty, that refresh wiped the
+    in-memory translated rows before `UpdateFieldsAsText()` could serialize them
+
+**Next step**
+
+- Reload the plugin and verify that:
+  - `TranslatedObjectiveRowsByKeyAsText`
+  - `TranslatedSummaryRowsByKeyAsText`
+  - `TranslatedSystemRowsByKeyAsText`
+  - `CanonicalRowsAsText` with non-null `TranslatedText`
+  now begin to fill during accepted-quest prefetch
+- If persistence starts filling correctly, then clean up the Journal-side
+  retraduction guard so PT text is not sent to translation again
+
+### 2026-04-14 13:40:00 -03:00 - working tree checkpoint - canonical row matching now respects row keys for duplicate texts
+
+**What changed**
+
+- `QuestPlate.Canonical.cs` now resolves canonical translated rows by exact
+  `RowKey` first and only falls back to source text when no row key was
+  supplied.
+- Added a regression test covering duplicated objective text with distinct row
+  keys so both rows keep their own translated value.
+
+**Why it changed**
+
+- After persistence started working again, duplicate text rows inside the same
+  quest still collided.
+- Example: two `TODO` rows with the same source text such as
+  `"Speak with Kupopo."`
+  could both translate successfully in logs, but only the first row would keep
+  the translated payload in the canonical model.
+- The cause was canonical row matching using:
+  - `rowKey OR sourceText`
+  in a single lookup, which let an earlier duplicate text row win even when a
+  more specific row key had been provided.
+
+**Next step**
+
+- Reload the plugin and confirm that duplicate-text rows now persist translated
+  payload independently by `RowKey`.
+- Re-read the DB for quests such as `70391` and confirm previously missing
+  duplicate `TODO` rows no longer stay `null`.
+
+### 2026-04-14 14:35:00 -03:00 - working tree checkpoint - documented per-addon quest flow and remediation plan
+
+**What changed**
+
+- Added a new operational doc:
+  - `docs/quest-addon-detailed-flow-and-remediation-plan.md`
+- The new document records, per quest-family addon:
+  - current trigger model
+  - current data source mix
+  - local cache scope
+  - current validation status
+  - recommended remediation path
+- The document also records a priority order for the next quest-addon cleanup
+  passes now that canonical DB persistence is behaving correctly.
+
+**Why it changed**
+
+- The quest DB and canonical payload are now in a much better place, so the
+  next source of confusion is no longer persistence alone.
+- We needed one place that answers, addon by addon:
+  - what each handler is doing today
+  - what is already good enough
+  - what still needs to be reworked
+- Without this, it is too easy to keep mixing runtime observations,
+  persistence work, and per-addon cleanup into one blurry stream.
+
+**Next step**
+
+- Use the new doc as the working map for quest-addon cleanup.
+- Start with `JournalDetail` as the first canonical-first consumer, then move
+  to `ScenarioTree`, `RecommendList`, and `AreaMap`.
+
+### 2026-04-14 15:05:00 -03:00 - working tree checkpoint - quest handlers narrowed to Journal and Journal switched to DB-only runtime
+
+**What changed**
+
+- Stopped registering the quest addon handlers we are not actively stabilizing:
+  - `JournalAccept`
+  - `JournalResult`
+  - `ScenarioTree`
+  - `RecommendList`
+  - `_ToDoList`
+  - `AreaMap`
+- Kept only `Journal` and `JournalDetail` active in the quest-family handler
+  registration.
+- Removed the local translation-generation paths from `JournalHandler`:
+  - no more `QueueTranslation` for Journal list titles
+  - no more `QueueTranslation` or `QueueTranslationBatch` for Journal detail
+  - no more Journal-side queue fallback for summaries, objectives, or current
+    sequence rows
+- Journal now behaves as:
+  - DB-first when a canonical `QuestPlate` row exists
+  - original-text fallback when the DB is not warm yet
+- Journal local caches now avoid storing untranslated fallback values, so a
+  later DB warmup can still be picked up while the addon remains open.
+
+**Why it changed**
+
+- The user wanted to stop the quest addons from continuing to invent or
+  generate translations locally while the DB and prefetch path are now healthy.
+- The cleanest stabilization move is to reduce the active quest-family runtime
+  to a single surface and make that surface consume the normalized DB instead
+  of reenqueuing translation work.
+- This also prevents regressions caused by multiple quest addons still running
+  their own local queue paths while we are trying to validate one addon family
+  at a time.
+
+**Next step**
+
+- Validate `Journal` and `JournalDetail` in-game in DB-first mode.
+- Confirm that:
+  - list titles read from the DB
+  - detail body no longer enqueues translation locally
+  - opening Journal while prefetch is warm gives stable native text and tooltip
+    content
+- After that, continue the canonical-first cleanup in `JournalDetail` itself.
+
+### 2026-04-14 15:40:00 -03:00 - working tree checkpoint - Journal hover modes now require ready translated payloads
+
+**What changed**
+
+- Added an explicit mode helper gate for quest-family hover rendering:
+  - `QuestAddonModeHelpers.CanRenderHoverTooltip(...)`
+- Extended translated-hover registration so callers can say whether the
+  translated payload is actually ready for the current mode.
+- Removed silent fallback between original and translated text inside the hover
+  registration helper.
+- `JournalHandler` now passes readiness explicitly for:
+  - Journal list titles
+  - JournalDetail title tooltip
+  - JournalDetail body tooltip
+  - completed-quest title/message/body tooltips
+- `Journal` and `JournalDetail` now also clear their hover prefix immediately
+  when hover mode is disabled, instead of waiting for stale-entry cleanup.
+
+**Why it changed**
+
+- The old hover helper still allowed a tooltip to appear when the configured
+  mode expected translated content, but only original fallback text was
+  available.
+- That made `TooltipTranslation` misleading, because the user could hover a
+  “translation tooltip” and still get original text.
+- It also made `NativeUiTranslationWithOriginalTooltips` misleading, because
+  the swap tooltip could appear before the translated/native side was actually
+  ready.
+- The desired contract is stricter:
+  - native-only mode: no quest-family hover tooltip
+  - tooltip-translation mode: no tooltip until translated payload is ready
+  - swap mode: no original-text tooltip until the translated/native payload is
+    ready
+
+**Next step**
+
+- Validate the three Journal modes in-game:
+  - native-only
+  - tooltip translation
+  - native translation with original tooltips
+- Confirm specifically that:
+  - no tooltip appears in translation mode while only original fallback exists
+  - no swap/original tooltip appears before the translated Journal payload is
+    ready
+  - stale Journal hover targets disappear immediately after switching back to
+    native-only mode
+
+### 2026-04-14 16:05:00 -03:00 - working tree checkpoint - Journal mode switching now reapplies on live detail updates
+
+**What changed**
+
+- `JournalDetail` now participates in `PreUpdate`, not only sparse requested
+  update events.
+- The active-detail handler no longer treats the native-only cached path as a
+  no-op; when cached translated payloads already exist, it now reapplies the
+  translated native text immediately.
+- Original-detail snapshots remain the source used to restore native text when
+  switching back to tooltip-only mode.
+
+**Why it changed**
+
+- Switching modes from the config UI while `JournalDetail` stayed open could
+  leave the detail pane in the last-applied visual state until the addon
+  happened to emit another requested update.
+- Native-only mode also had a fast-path bug where fully cached detail content
+  returned early before writing translated text into the native nodes.
+- Those two gaps together made mode switching feel inconsistent and made swap
+  mode look broken even when the DB payload itself was healthy.
+
+**Next step**
+
+- Validate in-game that:
+  - `TooltipTranslation -> NativeUiTranslation -> TooltipTranslation`
+    restores the original native Journal text correctly
+  - `NativeUiTranslationWithOriginalTooltips` writes translated text into the
+    native Journal UI and shows original text only in the tooltip
+  - mode changes apply while `JournalDetail` remains open, without requiring a
+    quest reselection

@@ -1913,6 +1913,24 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Background quest pre-translation started for {0} accepted quests..
+        /// </summary>
+        public static string AcceptedQuestPrefetchStartedNotification {
+            get {
+                return ResourceManager.GetString("AcceptedQuestPrefetchStartedNotification", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Background quest pre-translation finished for {0} accepted quests..
+        /// </summary>
+        public static string AcceptedQuestPrefetchCompletedNotification {
+            get {
+                return ResourceManager.GetString("AcceptedQuestPrefetchCompletedNotification", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native UI translation.
         /// </summary>
         public static string QuestDisplayModeNativeUiTranslation {

@@ -197,11 +197,15 @@ public partial class Echoglossian
   /// <param name="textNode">The text node to anchor the tooltip to.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   private unsafe void RegisterTranslatedHoverTooltip(
       string key,
       AtkTextNode* textNode,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false,
       bool denseHitbox = false)
@@ -211,19 +215,20 @@ public partial class Echoglossian
       return;
     }
 
+    if (!translatedPayloadReady)
+    {
+      this.hoverTooltipManager.Remove(key);
+      return;
+    }
+
     var shouldSwap = swapEnabled ?? this.configuration.SwapTextsUsingImGui;
     var displayText = shouldSwap
         ? originalText
         : translatedText;
-    if (string.IsNullOrWhiteSpace(displayText))
-    {
-      displayText = shouldSwap
-          ? translatedText
-          : originalText;
-    }
 
     if (string.IsNullOrWhiteSpace(displayText))
     {
+      this.hoverTooltipManager.Remove(key);
       return;
     }
 
@@ -243,6 +248,9 @@ public partial class Echoglossian
   /// <param name="node">The node to anchor the tooltip to.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   /// <param name="swapEnabled">Optional explicit swap override.</param>
   /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
   private unsafe void RegisterTranslatedHoverTooltip(
@@ -250,6 +258,7 @@ public partial class Echoglossian
       AtkResNode* node,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false,
       bool denseHitbox = false)
@@ -259,19 +268,20 @@ public partial class Echoglossian
       return;
     }
 
+    if (!translatedPayloadReady)
+    {
+      this.hoverTooltipManager.Remove(key);
+      return;
+    }
+
     var shouldSwap = swapEnabled ?? this.configuration.SwapTextsUsingImGui;
     var displayText = shouldSwap
         ? originalText
         : translatedText;
-    if (string.IsNullOrWhiteSpace(displayText))
-    {
-      displayText = shouldSwap
-          ? translatedText
-          : originalText;
-    }
 
     if (string.IsNullOrWhiteSpace(displayText))
     {
+      this.hoverTooltipManager.Remove(key);
       return;
     }
 
@@ -292,11 +302,15 @@ public partial class Echoglossian
   /// <param name="addon">The live addon window to anchor the tooltip to.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   private unsafe void RegisterTranslatedHoverTooltip(
       string key,
       AtkUnitBase* addon,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false,
       bool denseHitbox = false)
@@ -306,19 +320,20 @@ public partial class Echoglossian
       return;
     }
 
+    if (!translatedPayloadReady)
+    {
+      this.hoverTooltipManager.Remove(key);
+      return;
+    }
+
     var shouldSwap = swapEnabled ?? this.configuration.SwapTextsUsingImGui;
     var displayText = shouldSwap
         ? originalText
         : translatedText;
-    if (string.IsNullOrWhiteSpace(displayText))
-    {
-      displayText = shouldSwap
-          ? translatedText
-          : originalText;
-    }
 
     if (string.IsNullOrWhiteSpace(displayText))
     {
+      this.hoverTooltipManager.Remove(key);
       return;
     }
 
@@ -339,6 +354,9 @@ public partial class Echoglossian
   /// <param name="bottomRight">Bottom-right screen coordinate.</param>
   /// <param name="originalText">The original visible text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
   /// <param name="swapEnabled">Optional explicit swap override.</param>
   /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
   private void RegisterTranslatedHoverTooltip(
@@ -347,6 +365,7 @@ public partial class Echoglossian
       Vector2 bottomRight,
       string originalText,
       string translatedText,
+      bool translatedPayloadReady = true,
       bool? swapEnabled = null,
       bool forceEnabled = false)
   {
@@ -355,19 +374,20 @@ public partial class Echoglossian
       return;
     }
 
+    if (!translatedPayloadReady)
+    {
+      this.hoverTooltipManager.Remove(key);
+      return;
+    }
+
     var shouldSwap = swapEnabled ?? this.configuration.SwapTextsUsingImGui;
     var displayText = shouldSwap
         ? originalText
         : translatedText;
-    if (string.IsNullOrWhiteSpace(displayText))
-    {
-      displayText = shouldSwap
-          ? translatedText
-          : originalText;
-    }
 
     if (string.IsNullOrWhiteSpace(displayText))
     {
+      this.hoverTooltipManager.Remove(key);
       return;
     }
 

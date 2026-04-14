@@ -198,47 +198,10 @@ public partial class Echoglossian
               Handler: journalHandler));
     }
 
-    if (this.configuration.TranslateJournalAccept)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "JournalAccept",
-              Handler: new JournalAcceptHandler(questAddonDependencies)));
-    }
-
-    if (this.configuration.TranslateJournalResult)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "JournalResult",
-              Handler: new JournalResultHandler(questAddonDependencies)));
-    }
-
-    if (this.configuration.TranslateScenarioTree)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "ScenarioTree",
-              Handler: new ScenarioTreeHandler(questAddonDependencies)));
-    }
-
-    if (this.configuration.TranslateRecommendList)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "RecommendList",
-              Handler: new RecommendListHandler(questAddonDependencies)));
-    }
-
-        if (this.configuration.TranslateToDoList)
-        {
-            this.registeredAddonHandlers.Add(
-                    (AddonName: "_ToDoList",
-                            Handler: new ToDoListHandler(questAddonDependencies)));
-        }
-
-    if (this.configuration.TranslateAreaMap)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "AreaMap",
-              Handler: new AreaMapHandler(questAddonDependencies)));
-    }
+    // Quest-family stabilization pass:
+    // keep only Journal / JournalDetail active while the canonical DB-first
+    // runtime is being tightened. The other quest handlers remain in the repo
+    // but are intentionally not registered for now.
 
     if (this.configuration.TranslateToast &&
         this.configuration.TranslateWideTextToast)

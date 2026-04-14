@@ -88,13 +88,19 @@ internal static class QuestProgressResolver
 
         var questSheet =
             dataManager.GetExcelSheet<Quest>(Echoglossian.ClientStateInterface.ClientLanguage);
-        if (questSheet == null || !questSheet.TryGetRow(questId, out var questRow))
+        if (questSheet == null ||
+            !TryResolveQuestRow(
+                questSheet,
+                questId,
+                out var resolvedQuestRowId,
+                out var questRow))
         {
             return false;
         }
 
-        var questSequence = QuestManager.GetQuestSequence(questId);
-        var cacheKey = $"{questId}:{questSequence}";
+        var runtimeQuestId = (ushort)(resolvedQuestRowId & 0xFFFF);
+        var questSequence = QuestManager.GetQuestSequence(runtimeQuestId);
+        var cacheKey = $"{resolvedQuestRowId}:{questSequence}";
         if (QuestProgressCache.TryGetValue(cacheKey, out snapshot))
         {
             return true;
@@ -123,7 +129,7 @@ internal static class QuestProgressResolver
         var contentHash = QuestContentHash.Compute(questSeqs, questSteps, questSystemTexts);
 
         snapshot = new QuestProgressSnapshot(
-            questId,
+            resolvedQuestRowId,
             questSequence,
             questName,
             questSheetName,
@@ -134,6 +140,34 @@ internal static class QuestProgressResolver
 
         QuestProgressCache[cacheKey] = snapshot;
         return true;
+    }
+
+    private static bool TryResolveQuestRow(
+        ExcelSheet<Quest> questSheet,
+        uint questId,
+        out uint resolvedQuestRowId,
+        out Quest questRow)
+    {
+        resolvedQuestRowId = 0;
+        questRow = default;
+
+        if (questId < 0x10000)
+        {
+            var promotedQuestRowId = questId + 0x10000;
+            if (questSheet.TryGetRow(promotedQuestRowId, out questRow))
+            {
+                resolvedQuestRowId = promotedQuestRowId;
+                return true;
+            }
+        }
+
+        if (questSheet.TryGetRow(questId, out questRow))
+        {
+            resolvedQuestRowId = questId;
+            return true;
+        }
+
+        return false;
     }
 
     private static (List<QuestProgressEntry> Steps, List<QuestProgressEntry> Seqs, List<QuestProgressEntry> SystemTexts) ReadQuestTextRows(

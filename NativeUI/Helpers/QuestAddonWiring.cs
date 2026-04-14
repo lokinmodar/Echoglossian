@@ -32,43 +32,47 @@ public partial class Echoglossian
       RemoveHoverTooltipByPrefix =
           prefix => this.hoverTooltipManager.RemoveByPrefix(prefix),
       RegisterTranslatedHoverTooltipAddon =
-          (key, addon, originalText, translatedText, swapEnabled, forceEnabled, denseHitbox) =>
+          (key, addon, originalText, translatedText, translatedPayloadReady, swapEnabled, forceEnabled, denseHitbox) =>
               this.RegisterTranslatedHoverTooltip(
                   key,
                   addon,
                   originalText,
                   translatedText,
+                  translatedPayloadReady,
                   swapEnabled,
                   forceEnabled,
                   denseHitbox),
       RegisterTranslatedHoverTooltipTextNode =
-          (key, textNode, originalText, translatedText, swapEnabled, forceEnabled, denseHitbox) =>
+          (key, textNode, originalText, translatedText, translatedPayloadReady, swapEnabled, forceEnabled, denseHitbox) =>
               this.RegisterTranslatedHoverTooltip(
                   key,
                   textNode,
                   originalText,
                   translatedText,
+                  translatedPayloadReady,
                   swapEnabled,
                   forceEnabled,
                   denseHitbox),
       RegisterTranslatedHoverTooltipResNode =
-          (key, node, originalText, translatedText, swapEnabled, forceEnabled, denseHitbox) =>
+          (key, node, originalText, translatedText, translatedPayloadReady, swapEnabled, forceEnabled, denseHitbox) =>
               this.RegisterTranslatedHoverTooltip(
                   key,
                   node,
                   originalText,
                   translatedText,
+                  translatedPayloadReady,
                   swapEnabled,
                   forceEnabled,
                   denseHitbox),
       RegisterTranslatedHoverTooltipBounds =
-          (key, topLeft, bottomRight, originalText, translatedText, swapEnabled, forceEnabled) =>
+          (key, topLeft, bottomRight, originalText, translatedText, translatedPayloadReady, swapEnabled, forceEnabled) =>
               this.RegisterTranslatedHoverTooltip(
                   key,
                   topLeft,
                   bottomRight,
                   originalText,
                   translatedText,
+                  translatedPayloadReady,
                   swapEnabled,
                   forceEnabled),
     };

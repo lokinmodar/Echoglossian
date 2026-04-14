@@ -53,6 +53,9 @@ internal delegate void RemoveHoverTooltipByPrefixDelegate(string prefix);
 /// <param name="addon">The live addon window to anchor the tooltip to.</param>
 /// <param name="originalText">The original visible text.</param>
 /// <param name="translatedText">The translated text.</param>
+/// <param name="translatedPayloadReady">
+/// Whether the tooltip payload required by the current mode is ready.
+/// </param>
 /// <param name="swapEnabled">Optional explicit swap override.</param>
 /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
 /// <param name="denseHitbox">Whether to use the denser addon hitbox.</param>
@@ -61,6 +64,7 @@ internal unsafe delegate void RegisterTranslatedHoverTooltipAddonDelegate(
     AtkUnitBase* addon,
     string originalText,
     string translatedText,
+    bool translatedPayloadReady = true,
     bool? swapEnabled = null,
     bool forceEnabled = false,
     bool denseHitbox = false);
@@ -72,6 +76,9 @@ internal unsafe delegate void RegisterTranslatedHoverTooltipAddonDelegate(
 /// <param name="textNode">The text node to anchor the tooltip to.</param>
 /// <param name="originalText">The original visible text.</param>
 /// <param name="translatedText">The translated text.</param>
+/// <param name="translatedPayloadReady">
+/// Whether the tooltip payload required by the current mode is ready.
+/// </param>
 /// <param name="swapEnabled">Optional explicit swap override.</param>
 /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
 /// <param name="denseHitbox">Whether to use the denser node hitbox.</param>
@@ -80,6 +87,7 @@ internal unsafe delegate void RegisterTranslatedHoverTooltipTextNodeDelegate(
     AtkTextNode* textNode,
     string originalText,
     string translatedText,
+    bool translatedPayloadReady = true,
     bool? swapEnabled = null,
     bool forceEnabled = false,
     bool denseHitbox = false);
@@ -91,6 +99,9 @@ internal unsafe delegate void RegisterTranslatedHoverTooltipTextNodeDelegate(
 /// <param name="node">The node to anchor the tooltip to.</param>
 /// <param name="originalText">The original visible text.</param>
 /// <param name="translatedText">The translated text.</param>
+/// <param name="translatedPayloadReady">
+/// Whether the tooltip payload required by the current mode is ready.
+/// </param>
 /// <param name="swapEnabled">Optional explicit swap override.</param>
 /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
 /// <param name="denseHitbox">Whether to use the denser node hitbox.</param>
@@ -99,6 +110,7 @@ internal unsafe delegate void RegisterTranslatedHoverTooltipResNodeDelegate(
     AtkResNode* node,
     string originalText,
     string translatedText,
+    bool translatedPayloadReady = true,
     bool? swapEnabled = null,
     bool forceEnabled = false,
     bool denseHitbox = false);
@@ -111,6 +123,9 @@ internal unsafe delegate void RegisterTranslatedHoverTooltipResNodeDelegate(
 /// <param name="bottomRight">Bottom-right screen coordinate.</param>
 /// <param name="originalText">The original visible text.</param>
 /// <param name="translatedText">The translated text.</param>
+/// <param name="translatedPayloadReady">
+/// Whether the tooltip payload required by the current mode is ready.
+/// </param>
 /// <param name="swapEnabled">Optional explicit swap override.</param>
 /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
 internal delegate void RegisterTranslatedHoverTooltipBoundsDelegate(
@@ -119,6 +134,7 @@ internal delegate void RegisterTranslatedHoverTooltipBoundsDelegate(
     Vector2 bottomRight,
     string originalText,
     string translatedText,
+    bool translatedPayloadReady = true,
     bool? swapEnabled = null,
     bool forceEnabled = false);
 

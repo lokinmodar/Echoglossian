@@ -639,4 +639,10 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Загружены записи {0}</value>
   </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>Фоновый предварительный перевод запущен для {0} принятых заданий.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>Фоновый предварительный перевод завершен для {0} принятых заданий.</value>
+  </data>
 </root>
