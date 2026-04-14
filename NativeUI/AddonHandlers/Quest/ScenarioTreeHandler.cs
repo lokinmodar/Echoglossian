@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.Cache;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
@@ -19,6 +18,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   private const string ScenarioTreeHoverPrefix = "ScenarioTree-";
 
   private readonly Dictionary<int, ScenarioTreeHoverEntry> scenarioTreeHoverEntries = [];
+
+  private readonly Dictionary<string, ScenarioTreeTextCacheEntry> scenarioTreeTextCache = [];
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="ScenarioTreeHandler" /> class.
@@ -103,15 +104,18 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
     var questTodoProgressKey = questTodoProgressSnapshot?.CacheKey ?? questNameText;
 
-    if (QuestUiTranslationCache.TryGetAppliedSnapshot(
-            questTodoProgressKey + "|" + questNameText,
-            out var cachedScenarioSnap))
+    var scenarioTreeCacheKey = this.BuildScenarioTreeCacheKey(
+        questTodoProgressKey,
+        questNameText);
+    if (this.TryGetScenarioTreeCachedText(
+            scenarioTreeCacheKey,
+            out var cachedScenarioText))
     {
       this.RememberScenarioTreeHoverEntry(
           valueIndex,
           questTodoProgressKey,
-          questNameText,
-          cachedScenarioSnap.AppliedText);
+          cachedScenarioText.OriginalText,
+          cachedScenarioText.TranslatedText);
 
       if (this.ScenarioTreeUsesHoverTooltips)
       {
@@ -120,8 +124,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         this.RegisterTranslatedHoverTooltip(
             $"ScenarioTree-{(nint)addon:X}-{valueIndex}-{questTodoProgressKey}",
             addon,
-            questNameText,
-            cachedScenarioSnap.AppliedText,
+            cachedScenarioText.OriginalText,
+            cachedScenarioText.TranslatedText,
             swapEnabled: this.ScenarioTreeHoverShowsOriginal,
             forceEnabled: true,
             denseHitbox: true);
@@ -153,16 +157,16 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
           questTodoProgressKey,
           questNameText,
           translatedQuestName);
+      this.RememberScenarioTreeCachedText(
+          scenarioTreeCacheKey,
+          questNameText,
+          translatedQuestName);
 
       if (this.ScenarioTreeWritesNativeTranslation)
       {
         setupAtkValues[valueIndex].SetManagedString(
             translatedQuestName);
       }
-
-      QuestUiTranslationCache.Remember(
-          questTodoProgressKey + "|" + questNameText,
-          translatedQuestName);
 
       if (this.ScenarioTreeUsesHoverTooltips)
       {
@@ -199,16 +203,16 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
           questTodoProgressKey,
           questNameText,
           translatedNameText);
+      this.RememberScenarioTreeCachedText(
+          scenarioTreeCacheKey,
+          questNameText,
+          translatedNameText);
 
       if (this.ScenarioTreeWritesNativeTranslation)
       {
         setupAtkValues[valueIndex].SetManagedString(
             translatedNameText);
       }
-
-      QuestUiTranslationCache.Remember(
-          questTodoProgressKey + "|" + questNameText,
-          translatedNameText);
 
       if (this.ScenarioTreeUsesHoverTooltips)
       {
@@ -353,7 +357,52 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
     var orderedEntries = this.scenarioTreeHoverEntries
         .OrderByDescending(entry => entry.Key)
-        .Select(entry => entry.Value)
+        .Select(entry =>
+        {
+          var hoverEntry = entry.Value;
+          var scenarioTreeCacheKey = this.BuildScenarioTreeCacheKey(
+              hoverEntry.ProgressKey,
+              hoverEntry.OriginalText);
+          if (this.TryGetScenarioTreeCachedText(
+                  scenarioTreeCacheKey,
+                  out var cachedScenarioText))
+          {
+            hoverEntry = hoverEntry with
+            {
+                OriginalText = cachedScenarioText.OriginalText,
+                TranslatedText = cachedScenarioText.TranslatedText,
+            };
+            this.scenarioTreeHoverEntries[entry.Key] = hoverEntry;
+          }
+          else
+          {
+            var queuedTranslationKey =
+                $"ScenarioTree|{entry.Key}|{hoverEntry.ProgressKey}|{hoverEntry.OriginalText}";
+            if (this.TryGetQueuedTranslation(
+                    queuedTranslationKey,
+                    out var queuedScenarioTranslation))
+            {
+              var translatedScenarioText = queuedScenarioTranslation;
+              if (this.ScenarioTreeShouldRemoveDiacritics)
+              {
+                translatedScenarioText = this.NormalizeQuestText(
+                    translatedScenarioText ?? string.Empty);
+              }
+
+              this.RememberScenarioTreeCachedText(
+                  scenarioTreeCacheKey,
+                  hoverEntry.OriginalText,
+                  translatedScenarioText);
+              hoverEntry = hoverEntry with
+              {
+                  TranslatedText = translatedScenarioText,
+              };
+              this.scenarioTreeHoverEntries[entry.Key] = hoverEntry;
+            }
+          }
+
+          return hoverEntry;
+        })
         .ToList();
     var originalText = string.Join(
         $"{Environment.NewLine}{Environment.NewLine}",
@@ -418,6 +467,49 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Builds the local ScenarioTree text-cache key for one quest slot.
+  /// </summary>
+  /// <param name="progressKey">The stable quest-progress key.</param>
+  /// <param name="questNameText">The current quest name text.</param>
+  /// <returns>The local cache key.</returns>
+  private string BuildScenarioTreeCacheKey(
+      string progressKey,
+      string questNameText)
+  {
+    return $"{progressKey}|{questNameText}";
+  }
+
+  /// <summary>
+  ///     Attempts to read the local ScenarioTree applied-text cache.
+  /// </summary>
+  /// <param name="cacheKey">The local cache key.</param>
+  /// <param name="cachedText">The cached original/translated text pair.</param>
+  /// <returns>True when the local cache contains a value.</returns>
+  private bool TryGetScenarioTreeCachedText(
+      string cacheKey,
+      out ScenarioTreeTextCacheEntry cachedText)
+  {
+    return this.scenarioTreeTextCache.TryGetValue(cacheKey, out cachedText);
+  }
+
+  /// <summary>
+  ///     Remembers the latest resolved ScenarioTree text pair in the handler-
+  ///     local runtime cache.
+  /// </summary>
+  /// <param name="cacheKey">The local cache key.</param>
+  /// <param name="originalText">The original quest name.</param>
+  /// <param name="translatedText">The translated quest name.</param>
+  private void RememberScenarioTreeCachedText(
+      string cacheKey,
+      string originalText,
+      string translatedText)
+  {
+    this.scenarioTreeTextCache[cacheKey] = new ScenarioTreeTextCacheEntry(
+        originalText ?? string.Empty,
+        translatedText ?? string.Empty);
+  }
+
+  /// <summary>
   ///     Captures the latest hover payload for a visible ScenarioTree quest
   ///     slot.
   /// </summary>
@@ -426,6 +518,16 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// <param name="TranslatedText">The translated quest name.</param>
   private sealed record ScenarioTreeHoverEntry(
       string ProgressKey,
+      string OriginalText,
+      string TranslatedText);
+
+  /// <summary>
+  ///     Captures the locally cached ScenarioTree text pair for one quest
+  ///     slot.
+  /// </summary>
+  /// <param name="OriginalText">The original quest name.</param>
+  /// <param name="TranslatedText">The translated quest name.</param>
+  private sealed record ScenarioTreeTextCacheEntry(
       string OriginalText,
       string TranslatedText);
 }

@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.Cache;
-
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
@@ -14,6 +12,10 @@ namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 internal sealed class RecommendListHandler : QuestAddonHandlerBase
 {
   private const string RecommendListHoverPrefix = "RecommendList-";
+
+  private readonly Dictionary<nint, RecommendListHoverEntry> recommendListHoverEntries = [];
+
+  private readonly Dictionary<string, RecommendListTextCacheEntry> recommendListTextCache = [];
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="RecommendListHandler" /> class.
@@ -132,6 +134,10 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
         var questNameNodeKey = (nint)questNameNode;
         if (this.RecommendListUsesHoverTooltips)
         {
+          this.RememberRecommendListHoverEntry(
+              questNameNodeKey,
+              questNameText,
+              questNameText);
           this.RegisterTranslatedHoverTooltip(
               $"RecommendList-{questNameNodeKey:X}",
               questName,
@@ -142,12 +148,12 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
               denseHitbox: true);
         }
 
-        if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+        if (this.TryGetRecommendListCachedText(
                 questNameText,
                 out var translatedQuestSnapshot))
         {
           if (this.RecommendListUsesHoverTooltips &&
-              QuestHoverTranslationCache.TryGet(
+              this.TryGetRecommendListHoverEntry(
                   questNameNodeKey,
                   out var cachedHoverTranslation))
           {
@@ -166,7 +172,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
                 $"RecommendList-{questNameNodeKey:X}",
                 questName,
                 translatedQuestSnapshot.OriginalText,
-                translatedQuestSnapshot.AppliedText,
+                translatedQuestSnapshot.TranslatedText,
                 swapEnabled: this.RecommendListHoverShowsOriginal,
                 forceEnabled: true,
                 denseHitbox: true);
@@ -199,11 +205,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
             questName->NodeText.SetString(translatedQuestName);
           }
 
-          QuestHoverTranslationCache.Remember(
+          this.RememberRecommendListHoverEntry(
               questNameNodeKey,
               questNameText,
               translatedQuestName);
-          QuestUiTranslationCache.Remember(
+          this.RememberRecommendListCachedText(
               questNameText,
               translatedQuestName);
           if (this.RecommendListUsesHoverTooltips)
@@ -239,11 +245,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
             questName->NodeText.SetString(translatedNameText);
           }
 
-          QuestHoverTranslationCache.Remember(
+          this.RememberRecommendListHoverEntry(
               questNameNodeKey,
               questNameText,
               translatedNameText);
-          QuestUiTranslationCache.Remember(
+          this.RememberRecommendListCachedText(
               questNameText,
               translatedNameText);
           if (this.RecommendListUsesHoverTooltips)
@@ -365,6 +371,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   {
     if (string.Equals(args.AddonName, "RecommendList", StringComparison.Ordinal))
     {
+      this.recommendListHoverEntries.Clear();
       this.RemoveHoverTooltipsByPrefix(RecommendListHoverPrefix);
     }
   }
@@ -425,20 +432,20 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       var originalText = questNameText;
       var translatedText = questNameText;
 
-      if (QuestHoverTranslationCache.TryGet(
+      if (this.TryGetRecommendListHoverEntry(
               questNameNodeKey,
               out var cachedHoverTranslation))
       {
         originalText = cachedHoverTranslation.OriginalText;
         translatedText = cachedHoverTranslation.TranslatedText;
       }
-      else if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+      else if (this.TryGetRecommendListCachedText(
                    questNameText,
                    out var translatedQuestSnapshot))
       {
         originalText = translatedQuestSnapshot.OriginalText;
-        translatedText = translatedQuestSnapshot.AppliedText;
-        QuestHoverTranslationCache.Remember(
+        translatedText = translatedQuestSnapshot.TranslatedText;
+        this.RememberRecommendListHoverEntry(
             questNameNodeKey,
             originalText,
             translatedText);
@@ -456,11 +463,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
                 translatedText ?? string.Empty);
           }
 
-          QuestHoverTranslationCache.Remember(
+          this.RememberRecommendListHoverEntry(
               questNameNodeKey,
               originalText,
               translatedText);
-          QuestUiTranslationCache.Remember(
+          this.RememberRecommendListCachedText(
               originalText,
               translatedText);
         }
@@ -476,11 +483,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
                   translatedText ?? string.Empty);
             }
 
-            QuestHoverTranslationCache.Remember(
+            this.RememberRecommendListHoverEntry(
                 questNameNodeKey,
                 originalText,
                 translatedText);
-            QuestUiTranslationCache.Remember(
+            this.RememberRecommendListCachedText(
                 originalText,
                 translatedText);
           }
@@ -562,6 +569,10 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
         var questNameNodeKey = (nint)questNameNode;
         if (this.RecommendListUsesHoverTooltips)
         {
+          this.RememberRecommendListHoverEntry(
+              questNameNodeKey,
+              questNameText,
+              questNameText);
           this.RegisterTranslatedHoverTooltip(
               $"RecommendList-{questNameNodeKey:X}",
               questName,
@@ -572,12 +583,12 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
               denseHitbox: true);
         }
 
-        if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+        if (this.TryGetRecommendListCachedText(
                 questNameText,
                 out var translatedQuestSnapshot))
         {
           if (this.RecommendListUsesHoverTooltips &&
-              QuestHoverTranslationCache.TryGet(
+              this.TryGetRecommendListHoverEntry(
                   questNameNodeKey,
                   out var cachedHoverTranslation))
           {
@@ -596,7 +607,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
                 $"RecommendList-{questNameNodeKey:X}",
                 questName,
                 translatedQuestSnapshot.OriginalText,
-                translatedQuestSnapshot.AppliedText,
+                translatedQuestSnapshot.TranslatedText,
                 swapEnabled: this.RecommendListHoverShowsOriginal,
                 forceEnabled: true,
                 denseHitbox: true);
@@ -627,11 +638,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
           {
             questName->NodeText.SetString(translatedQuestName);
           }
-          QuestHoverTranslationCache.Remember(
+          this.RememberRecommendListHoverEntry(
               questNameNodeKey,
               questNameText,
               translatedQuestName);
-          QuestUiTranslationCache.Remember(
+          this.RememberRecommendListCachedText(
               questNameText,
               translatedQuestName);
           if (this.RecommendListUsesHoverTooltips)
@@ -666,11 +677,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
             // because we are translating names, it's safer to use SetString instead of SetText
             questName->NodeText.SetString(translatedNameText);
           }
-          QuestHoverTranslationCache.Remember(
+          this.RememberRecommendListHoverEntry(
               questNameNodeKey,
               questNameText,
               translatedNameText);
-          QuestUiTranslationCache.Remember(
+          this.RememberRecommendListCachedText(
               questNameText,
               translatedNameText);
           if (this.RecommendListUsesHoverTooltips)
@@ -721,4 +732,88 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       PluginLog.Error($"Error in UIRecommendListHandler: {e}");
     }
   }
+
+  /// <summary>
+  ///     Attempts to read the handler-local RecommendList translated-text
+  ///     cache.
+  /// </summary>
+  /// <param name="questNameText">The original visible quest name.</param>
+  /// <param name="cachedText">The locally cached text pair.</param>
+  /// <returns>True when a local cached text pair exists.</returns>
+  private bool TryGetRecommendListCachedText(
+      string questNameText,
+      out RecommendListTextCacheEntry cachedText)
+  {
+    return this.recommendListTextCache.TryGetValue(
+        questNameText,
+        out cachedText);
+  }
+
+  /// <summary>
+  ///     Remembers the latest translated RecommendList text pair in the
+  ///     handler-local runtime cache.
+  /// </summary>
+  /// <param name="originalText">The original visible quest name.</param>
+  /// <param name="translatedText">The translated quest name.</param>
+  private void RememberRecommendListCachedText(
+      string originalText,
+      string translatedText)
+  {
+    this.recommendListTextCache[originalText ?? string.Empty] =
+        new RecommendListTextCacheEntry(
+            originalText ?? string.Empty,
+            translatedText ?? string.Empty);
+  }
+
+  /// <summary>
+  ///     Attempts to read the handler-local hover payload for one visible
+  ///     RecommendList node.
+  /// </summary>
+  /// <param name="questNameNodeKey">The stable node pointer key.</param>
+  /// <param name="hoverEntry">The cached hover entry.</param>
+  /// <returns>True when a cached hover entry exists.</returns>
+  private bool TryGetRecommendListHoverEntry(
+      nint questNameNodeKey,
+      out RecommendListHoverEntry hoverEntry)
+  {
+    return this.recommendListHoverEntries.TryGetValue(
+        questNameNodeKey,
+        out hoverEntry);
+  }
+
+  /// <summary>
+  ///     Remembers the latest hover payload for one visible RecommendList
+  ///     node.
+  /// </summary>
+  /// <param name="questNameNodeKey">The stable node pointer key.</param>
+  /// <param name="originalText">The original visible quest name.</param>
+  /// <param name="translatedText">The translated quest name.</param>
+  private void RememberRecommendListHoverEntry(
+      nint questNameNodeKey,
+      string originalText,
+      string translatedText)
+  {
+    this.recommendListHoverEntries[questNameNodeKey] =
+        new RecommendListHoverEntry(
+            originalText ?? string.Empty,
+            translatedText ?? string.Empty);
+  }
+
+  /// <summary>
+  ///     Captures the handler-local RecommendList text-cache payload.
+  /// </summary>
+  /// <param name="OriginalText">The original visible quest name.</param>
+  /// <param name="TranslatedText">The translated quest name.</param>
+  private sealed record RecommendListTextCacheEntry(
+      string OriginalText,
+      string TranslatedText);
+
+  /// <summary>
+  ///     Captures the handler-local RecommendList hover payload.
+  /// </summary>
+  /// <param name="OriginalText">The original visible quest name.</param>
+  /// <param name="TranslatedText">The translated quest name.</param>
+  private sealed record RecommendListHoverEntry(
+      string OriginalText,
+      string TranslatedText);
 }

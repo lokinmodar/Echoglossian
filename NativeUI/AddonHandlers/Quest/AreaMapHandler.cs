@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.Cache;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
@@ -21,6 +20,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   private string areaMapHoverOriginalText = string.Empty;
 
   private string areaMapHoverTranslatedText = string.Empty;
+
+  private readonly Dictionary<string, AreaMapTextCacheEntry> areaMapTextCache = [];
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="AreaMapHandler" /> class.
@@ -101,18 +102,18 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
         return;
       }
 
-      if (QuestUiTranslationCache.TryGetAppliedSnapshot(
+      if (this.TryGetAreaMapCachedText(
               questNameText,
               out var appliedQuestSnapshot))
       {
         this.RememberAreaMapHoverTexts(
-            questNameText,
-            appliedQuestSnapshot.AppliedText);
+            appliedQuestSnapshot.OriginalText,
+            appliedQuestSnapshot.TranslatedText);
 
         if (this.AreaMapWritesNativeTranslation)
         {
           setupAtkValues[142].SetManagedString(
-              appliedQuestSnapshot.AppliedText);
+              appliedQuestSnapshot.TranslatedText);
         }
 
         if (this.AreaMapUsesHoverTooltips)
@@ -122,8 +123,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
           this.RegisterTranslatedHoverTooltip(
               $"AreaMap-{(nint)addon:X}-142",
               addon,
-              questNameText,
-              appliedQuestSnapshot.AppliedText,
+              appliedQuestSnapshot.OriginalText,
+              appliedQuestSnapshot.TranslatedText,
               swapEnabled: this.AreaMapHoverShowsOriginal,
               forceEnabled: true,
               denseHitbox: true);
@@ -150,16 +151,15 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
         this.RememberAreaMapHoverTexts(
             questNameText,
             foundQuestPlate.TranslatedQuestName ?? string.Empty);
+        this.RememberAreaMapCachedText(
+            questNameText,
+            foundQuestPlate.TranslatedQuestName ?? string.Empty);
 
         if (this.AreaMapWritesNativeTranslation)
         {
           setupAtkValues[142].SetManagedString(
               foundQuestPlate.TranslatedQuestName);
         }
-
-        QuestUiTranslationCache.Remember(
-            questNameText,
-            foundQuestPlate.TranslatedQuestName ?? string.Empty);
 
         if (this.AreaMapUsesHoverTooltips)
         {
@@ -193,15 +193,14 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
         this.RememberAreaMapHoverTexts(
             questNameText,
             translatedNameText);
+        this.RememberAreaMapCachedText(
+            questNameText,
+            translatedNameText);
 
         if (this.AreaMapWritesNativeTranslation)
         {
           setupAtkValues[142].SetManagedString(translatedNameText);
         }
-
-        QuestUiTranslationCache.Remember(
-            questNameText,
-            translatedNameText);
 
         if (this.AreaMapUsesHoverTooltips)
         {
@@ -300,6 +299,32 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       return;
     }
 
+    if (this.TryGetAreaMapCachedText(
+            this.areaMapHoverOriginalText,
+            out var cachedAreaMapText))
+    {
+      this.areaMapHoverOriginalText = cachedAreaMapText.OriginalText;
+      this.areaMapHoverTranslatedText = cachedAreaMapText.TranslatedText;
+    }
+    else
+    {
+      var cacheKey = $"AreaMap|{this.areaMapHoverOriginalText}";
+      if (this.TryGetQueuedTranslation(cacheKey, out var queuedAreaMapTranslation))
+      {
+        var translatedAreaMapText = queuedAreaMapTranslation;
+        if (this.AreaMapShouldRemoveDiacritics)
+        {
+          translatedAreaMapText = this.NormalizeQuestText(
+              translatedAreaMapText ?? string.Empty);
+        }
+
+        this.RememberAreaMapCachedText(
+            this.areaMapHoverOriginalText,
+            translatedAreaMapText);
+        this.areaMapHoverTranslatedText = translatedAreaMapText;
+      }
+    }
+
     var addon = AtkStage.Instance()->RaptureAtkUnitManager
         ->GetAddonByName(AreaMapAddonName);
     if (addon == null || !addon->IsVisible)
@@ -343,4 +368,41 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       this.RemoveHoverTooltipsByPrefix(AreaMapHoverPrefix);
     }
   }
+
+  /// <summary>
+  ///     Attempts to read the handler-local AreaMap translated-text cache.
+  /// </summary>
+  /// <param name="originalText">The original AreaMap quest text.</param>
+  /// <param name="cachedText">The cached original/translated pair.</param>
+  /// <returns>True when the local cache contains a value.</returns>
+  private bool TryGetAreaMapCachedText(
+      string originalText,
+      out AreaMapTextCacheEntry cachedText)
+  {
+    return this.areaMapTextCache.TryGetValue(originalText, out cachedText);
+  }
+
+  /// <summary>
+  ///     Remembers the latest translated AreaMap text pair in the handler-local
+  ///     runtime cache.
+  /// </summary>
+  /// <param name="originalText">The original AreaMap quest text.</param>
+  /// <param name="translatedText">The translated AreaMap quest text.</param>
+  private void RememberAreaMapCachedText(
+      string originalText,
+      string translatedText)
+  {
+    this.areaMapTextCache[originalText ?? string.Empty] = new AreaMapTextCacheEntry(
+        originalText ?? string.Empty,
+        translatedText ?? string.Empty);
+  }
+
+  /// <summary>
+  ///     Captures the handler-local AreaMap text-cache payload.
+  /// </summary>
+  /// <param name="OriginalText">The original AreaMap quest text.</param>
+  /// <param name="TranslatedText">The translated AreaMap quest text.</param>
+  private sealed record AreaMapTextCacheEntry(
+      string OriginalText,
+      string TranslatedText);
 }

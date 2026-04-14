@@ -50,6 +50,7 @@ As of the latest working-tree checkpoint:
 - the current uncommitted change narrows `JournalDetail` body hover content to the current SEQ row and enlarges the hover bounds
 - the current uncommitted change also starts isolating `Journal` runtime state away from the broader quest-family caches by keeping a local cache for the visible quest list and a local scope cache for `JournalDetail`
 - the current uncommitted change also adds an accepted-quest background prefetch driven by `QuestManager`, so accepted quests can populate `questplates` before the quest UI needs them
+- the current uncommitted change also moves `ScenarioTree`, `RecommendList`, and `AreaMap` off the shared quest UI caches and into handler-local runtime caches
 
 ## Reference Docs
 
@@ -802,3 +803,46 @@ The main active problems are:
   hover/content regressions cannot leak across quest-family addons.
 - After runtime isolation is stable, audit the remaining reflection-heavy quest
   helpers for lower-overhead alternatives.
+
+### 2026-04-13 21:35:00 -03:00 - working tree checkpoint - ScenarioTree, RecommendList, and AreaMap moved off shared UI caches
+
+**What changed**
+
+- `ScenarioTree`, `RecommendList`, and `AreaMap` now maintain their translated
+  text state in handler-local runtime caches rather than reusing the broader
+  quest-family UI caches.
+- `ScenarioTree` now keeps:
+  - local translated-text cache entries keyed by quest progress
+  - local hover payload entries per visible slot
+  - a `PreDraw` path that promotes queued results into the local cache before
+    building the combined tooltip
+- `RecommendList` now keeps:
+  - local translated-text cache entries keyed by visible quest name
+  - local hover payload entries keyed by visible node pointer
+  - `PreDraw` refresh based on its own local state instead of the shared hover
+    cache
+- `AreaMap` now keeps:
+  - local translated-text cache entries keyed by the visible area-map quest row
+  - local hover text state that can promote queued translations during draw
+
+**Why it changed**
+
+- The latest logs and screenshot review suggested that the shared quest-family
+  UI caches were still making the runtime picture too coupled: one addon's
+  state could dominate the session while other addons went quiet.
+- These three surfaces are all small enough that local runtime caches are a
+  better fit than a shared UI-layer cache, while still leaving the real shared
+  sources untouched:
+  - `questplates`
+  - Lumina/sheet resolvers
+  - live progress resolvers
+  - translation broker
+- This is the next step in the strategy of “shared data sources, isolated addon
+  runtime state.”
+
+**Next step**
+
+- Validate in-game whether `ScenarioTree`, `RecommendList`, and `AreaMap` now
+  start leaving clearer, more isolated hover behavior in the logs.
+- Continue focusing `JournalDetail` work on content stability rather than
+  trigger liveness, now that more of the quest-family runtime is decoupled.

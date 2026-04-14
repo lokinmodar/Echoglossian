@@ -4574,6 +4574,42 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.TryGetAreaMapCachedText(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapTextCacheEntry@)">
+            <summary>
+                Attempts to read the handler-local AreaMap translated-text cache.
+            </summary>
+            <param name="originalText">The original AreaMap quest text.</param>
+            <param name="cachedText">The cached original/translated pair.</param>
+            <returns>True when the local cache contains a value.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.RememberAreaMapCachedText(System.String,System.String)">
+            <summary>
+                Remembers the latest translated AreaMap text pair in the handler-local
+                runtime cache.
+            </summary>
+            <param name="originalText">The original AreaMap quest text.</param>
+            <param name="translatedText">The translated AreaMap quest text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapTextCacheEntry">
+            <summary>
+                Captures the handler-local AreaMap text-cache payload.
+            </summary>
+            <param name="OriginalText">The original AreaMap quest text.</param>
+            <param name="TranslatedText">The translated AreaMap quest text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapTextCacheEntry.#ctor(System.String,System.String)">
+            <summary>
+                Captures the handler-local AreaMap text-cache payload.
+            </summary>
+            <param name="OriginalText">The original AreaMap quest text.</param>
+            <param name="TranslatedText">The translated AreaMap quest text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapTextCacheEntry.OriginalText">
+            <summary>The original AreaMap quest text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapTextCacheEntry.TranslatedText">
+            <summary>The translated AreaMap quest text.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler">
             <summary>
                 Handles the JournalAccept quest addon runtime inside the standalone
@@ -5421,6 +5457,81 @@
                 Runs the two-pass RecommendList translation flow.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TryGetRecommendListCachedText(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListTextCacheEntry@)">
+            <summary>
+                Attempts to read the handler-local RecommendList translated-text
+                cache.
+            </summary>
+            <param name="questNameText">The original visible quest name.</param>
+            <param name="cachedText">The locally cached text pair.</param>
+            <returns>True when a local cached text pair exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RememberRecommendListCachedText(System.String,System.String)">
+            <summary>
+                Remembers the latest translated RecommendList text pair in the
+                handler-local runtime cache.
+            </summary>
+            <param name="originalText">The original visible quest name.</param>
+            <param name="translatedText">The translated quest name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TryGetRecommendListHoverEntry(System.IntPtr,Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListHoverEntry@)">
+            <summary>
+                Attempts to read the handler-local hover payload for one visible
+                RecommendList node.
+            </summary>
+            <param name="questNameNodeKey">The stable node pointer key.</param>
+            <param name="hoverEntry">The cached hover entry.</param>
+            <returns>True when a cached hover entry exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RememberRecommendListHoverEntry(System.IntPtr,System.String,System.String)">
+            <summary>
+                Remembers the latest hover payload for one visible RecommendList
+                node.
+            </summary>
+            <param name="questNameNodeKey">The stable node pointer key.</param>
+            <param name="originalText">The original visible quest name.</param>
+            <param name="translatedText">The translated quest name.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListTextCacheEntry">
+            <summary>
+                Captures the handler-local RecommendList text-cache payload.
+            </summary>
+            <param name="OriginalText">The original visible quest name.</param>
+            <param name="TranslatedText">The translated quest name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListTextCacheEntry.#ctor(System.String,System.String)">
+            <summary>
+                Captures the handler-local RecommendList text-cache payload.
+            </summary>
+            <param name="OriginalText">The original visible quest name.</param>
+            <param name="TranslatedText">The translated quest name.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListTextCacheEntry.OriginalText">
+            <summary>The original visible quest name.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListTextCacheEntry.TranslatedText">
+            <summary>The translated quest name.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListHoverEntry">
+            <summary>
+                Captures the handler-local RecommendList hover payload.
+            </summary>
+            <param name="OriginalText">The original visible quest name.</param>
+            <param name="TranslatedText">The translated quest name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListHoverEntry.#ctor(System.String,System.String)">
+            <summary>
+                Captures the handler-local RecommendList hover payload.
+            </summary>
+            <param name="OriginalText">The original visible quest name.</param>
+            <param name="TranslatedText">The translated quest name.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListHoverEntry.OriginalText">
+            <summary>The original visible quest name.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListHoverEntry.TranslatedText">
+            <summary>The translated quest name.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler">
             <summary>
                 Handles the ScenarioTree quest addon runtime inside the standalone
@@ -5504,6 +5615,31 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeCacheKey(System.String,System.String)">
+            <summary>
+                Builds the local ScenarioTree text-cache key for one quest slot.
+            </summary>
+            <param name="progressKey">The stable quest-progress key.</param>
+            <param name="questNameText">The current quest name text.</param>
+            <returns>The local cache key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryGetScenarioTreeCachedText(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry@)">
+            <summary>
+                Attempts to read the local ScenarioTree applied-text cache.
+            </summary>
+            <param name="cacheKey">The local cache key.</param>
+            <param name="cachedText">The cached original/translated text pair.</param>
+            <returns>True when the local cache contains a value.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RememberScenarioTreeCachedText(System.String,System.String,System.String)">
+            <summary>
+                Remembers the latest resolved ScenarioTree text pair in the handler-
+                local runtime cache.
+            </summary>
+            <param name="cacheKey">The local cache key.</param>
+            <param name="originalText">The original quest name.</param>
+            <param name="translatedText">The translated quest name.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverEntry">
             <summary>
                 Captures the latest hover payload for a visible ScenarioTree quest
@@ -5529,6 +5665,28 @@
             <summary>The original quest name.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverEntry.TranslatedText">
+            <summary>The translated quest name.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry">
+            <summary>
+                Captures the locally cached ScenarioTree text pair for one quest
+                slot.
+            </summary>
+            <param name="OriginalText">The original quest name.</param>
+            <param name="TranslatedText">The translated quest name.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry.#ctor(System.String,System.String)">
+            <summary>
+                Captures the locally cached ScenarioTree text pair for one quest
+                slot.
+            </summary>
+            <param name="OriginalText">The original quest name.</param>
+            <param name="TranslatedText">The translated quest name.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry.OriginalText">
+            <summary>The original quest name.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry.TranslatedText">
             <summary>The translated quest name.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler">

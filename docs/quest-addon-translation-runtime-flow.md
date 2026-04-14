@@ -507,6 +507,76 @@ The intended division of responsibility is:
 
 ---
 
+## Addon-local quest runtime caches
+
+The quest-family refactor now treats UI-facing runtime state as **per-addon
+state**, even when the canonical data sources remain shared.
+
+The shared layers are still:
+
+- `questplates`
+- Lumina/sheet resolvers
+- live quest-progress resolvers
+- the brokered translation queue
+
+But the following handlers now keep their own local UI/runtime state instead of
+depending on the broader quest-family UI caches:
+
+- `Journal`
+- `JournalDetail`
+- `ScenarioTree`
+- `RecommendList`
+- `AreaMap`
+
+### Why this matters
+
+The quest-family surfaces repaint differently and have different hover
+geometries. When they all depend on the same UI-layer text/hover caches, one
+surface can make another harder to reason about during validation.
+
+The current direction is:
+
+- share **data sources**
+- isolate **runtime presentation state**
+
+### Local cache responsibilities
+
+Handler-local runtime caches may hold:
+
+- last visible translated text for that addon
+- last visible hover payloads for that addon
+- addon-specific progress/body composition state
+
+Handler-local runtime caches should **not** replace:
+
+- canonical DB persistence
+- Lumina quest snapshots
+- shared translation queueing
+
+### Current isolated handlers
+
+**Journal / JournalDetail**
+
+- Local visible-list cache for the current Journal list.
+- Local scope cache for `JournalDetail`.
+
+**ScenarioTree**
+
+- Local translated-text cache keyed by progress-aware quest identity.
+- Local hover payload entries per visible value slot.
+
+**RecommendList**
+
+- Local translated-text cache keyed by visible quest name.
+- Local hover payload entries keyed by visible node pointer.
+
+**AreaMap**
+
+- Local translated-text cache keyed by the current AreaMap quest row.
+- Local hover payload state refreshed from the handler-local cache.
+
+---
+
 ## DB lookup method reference
 
 | Method                    | Match criteria                   | Used by                                   |
