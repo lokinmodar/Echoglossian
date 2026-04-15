@@ -1302,3 +1302,176 @@ The main active problems are:
 - Start treating `JournalDetail` as the next dedicated stabilization target,
   including any further mode, cache, and tooltip work without re-touching the
   Journal list unless necessary.
+
+### 2026-04-14 16:50:00 -03:00 - working tree checkpoint - JournalDetail lifecycle reconnected to Journal selection flow
+
+**What changed**
+
+- `JournalDetailHandler` is still a separate handler with separate config and
+  local runtime state.
+- It is now also registered against the `Journal` addon lifecycle, in addition
+  to `JournalDetail`.
+- The handler now accepts both `Journal` and `JournalDetail` lifecycle events
+  for refresh and cleanup.
+
+**Why it changed**
+
+- In practice, isolating the detail runtime was correct, but wiring it only to
+  `JournalDetail` was too strict.
+- The Journal list still drives selection changes that the detail pane needs to
+  react to, and the separate toggle also needed to work without relying on a
+  reload-time registration coincidence.
+- This keeps the runtime separated while reconnecting it to the real selection
+  lifecycle that feeds the detail pane.
+
+**Next step**
+
+- Revalidate all three `JournalDetail` modes in game:
+  - native-only
+  - tooltip translation
+  - native translation with original tooltips
+- Confirm that selection changes and mode switches now both reach the detail
+  handler consistently.
+
+### 2026-04-14 22:20:00 -03:00 - working tree checkpoint - JournalDetail selection refresh narrowed and summary collection restored
+
+**What changed**
+
+- `JournalDetailHandler` now treats `Journal` lifecycle events as a
+  selection-driven refresh path only when they arrive through
+  `PostRequestedUpdate`.
+- Cleanup is once again scoped to the real `JournalDetail` addon closing,
+  instead of reacting to any matching `Journal` cleanup event.
+- The handler now recollects visible summary rows from the detail pane and
+  filters them against the active canonical quest payload before using them.
+- Extra visible summary rows now participate in:
+  - native-mode writes
+  - swap restoration
+  - tooltip-body assembly
+- Tooltip readiness for the body now also depends on those visible summary
+  rows being translated, not just the single primary summary node.
+
+**Why it changed**
+
+- The broader `Journal` lifecycle hookup was making `JournalDetail` react too
+  early during quest selection changes, which is the most likely reason the
+  detail pane drifted back into tooltip-only behavior after a reselection.
+- The split handler had also lost the old summary-row collection path, so
+  quests with visible summary sections could end up missing part of the body in
+  the tooltip.
+- Filtering visible summary rows through the canonical quest payload keeps the
+  summary coverage while avoiding the stale cross-quest contamination that the
+  earlier implementation suffered from.
+
+**Next step**
+
+- Revalidate in game that:
+  - changing the selected quest keeps honoring the active `JournalDetail` mode
+  - native-only and swap continue to work after reselection
+  - tooltip bodies now include visible summary content when the quest has it
+  - no stale summary rows from other quests reappear in the detail tooltip
+
+### 2026-04-14 23:05:00 -03:00 - working tree checkpoint - JournalDetail summary path switched to canonical quest rows
+
+**What changed**
+
+- `JournalDetail` now derives its description from the current canonical `SEQ`
+  row resolved from `QuestManager` and `QuestCanonicalData`.
+- The detail summary block is now projected from canonical prior `SEQ` rows up
+  to the current quest sequence, instead of relying on the visible summary
+  texts as semantic input.
+- Supplemental summary nodes in the live addon are now treated as display
+  anchors only:
+  - their original text is snapshotted for restoration
+  - their translated/native content is assigned from canonical summary rows
+- Hover body composition for `JournalDetail` now uses canonical summary text
+  sections, not the volatile UI summary text set.
+
+**Why it changed**
+
+- The native-translation path was still only translating part of the
+  `JournalDetail` body because the summary block depended on whatever text the
+  UI happened to expose in that frame.
+- That meant summary translation could lag, partially apply, or drift when the
+  detail pane changed quests.
+- Moving the summary composition to `QuestManager + QuestCanonicalData +
+  QuestPlate` removes the most fragile UI dependency from the detail pane while
+  keeping the live nodes only for anchoring and restoration.
+
+**Next step**
+
+- Validate in game that native translation mode now updates both description
+  and summary consistently when switching quests.
+- Keep the current objective line under review until TODO row selection is also
+  derived canonically from live progress instead of the visible objective node.
+
+### 2026-04-14 23:30:00 -03:00 - working tree checkpoint - JournalDetail native summary consolidated into one node
+
+**What changed**
+
+- `JournalDetail` now collapses the canonical summary block into a single
+  display string when writing native translation.
+- The primary summary node receives the full canonical summary text for the
+  active quest phase.
+- Supplemental summary nodes are cleared in native mode instead of being fed a
+  partial subset of translated rows.
+- When the handler returns to a non-native mode, the original primary summary
+  text and original supplemental summary node texts are restored from the
+  snapshot.
+
+**Why it changed**
+
+- Some quests expose multiple summary paragraphs in the detail pane, and the
+  previous projection still distributed those paragraphs across multiple live
+  nodes.
+- That left room for one node to stay in English or drift out of sync even
+  though the canonical summary data was already correct in the DB.
+- Collapsing the translated summary into a single node narrows the render path
+  and better matches the canonicity work already done in `QuestManager +
+  QuestCanonicalData + QuestPlate`.
+
+**Next step**
+
+- Validate in game that quests with multi-paragraph summaries no longer leave a
+  trailing English block in `JournalDetail`.
+- If the primary summary node clips the longer text, inspect whether the live
+  node layout needs a small size adjustment in native mode.
+
+### 2026-04-15 00:20:00 -03:00 - working tree checkpoint - JournalDetail summary node restoration and supplemental-node capture hardened
+
+**What changed**
+
+- `JournalDetail` now snapshots the primary summary node presentation for each
+  scope:
+  - width
+  - text flags
+  - font size
+  - summary container height
+- The handler now snapshots the discovered supplemental summary node addresses
+  as part of the quest-detail scope.
+- Supplemental summary discovery was broadened so it no longer depends only on
+  the old `480700..480750` node-id window and no longer skips empty text nodes.
+- In native mode, the primary summary node is expanded with multiline auto-size
+  flags and the summary container height is raised to fit the translated block.
+- On restoration, the original primary summary presentation and the original
+  supplemental summary texts are reapplied from the scope snapshot.
+
+**Why it changed**
+
+- After collapsing the canonical summary into the primary summary node, some
+  quests still left residual English text behind because not every supplemental
+  node was being rediscovered and cleared.
+- Once a supplemental node had been cleared, the previous collector could stop
+  finding it entirely because it filtered out empty nodes, which made
+  restoration fragile.
+- The longer canonical summary blocks also needed the primary node's original
+  presentation to be expanded predictably in native mode instead of relying on
+  whatever size state happened to be active that frame.
+
+**Next step**
+
+- Validate in game that:
+  - residual English paragraphs are gone from `JournalDetail`
+  - long translated summaries no longer stack over stale nodes
+  - switching back out of native mode fully restores the original summary
+    presentation

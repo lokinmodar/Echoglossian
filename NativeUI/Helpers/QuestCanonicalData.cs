@@ -203,6 +203,35 @@ internal sealed class QuestCanonicalData
     }
 
     /// <summary>
+    ///     Gets the canonical SEQ entries that belong to phases completed
+    ///     before the current live quest sequence.
+    /// </summary>
+    /// <returns>
+    ///     The ordered SEQ entries whose text should populate the JournalDetail
+    ///     summary block for the active quest phase.
+    /// </returns>
+    public IReadOnlyList<QuestProgressEntry> GetSummaryEntriesBeforeCurrentSequence()
+    {
+        if (this.QuestProgressSnapshot.QuestSeqTexts.Count == 0)
+        {
+            return [];
+        }
+
+        var currentSequenceIndex = Math.Min(
+            (int)this.QuestProgressSnapshot.QuestSequence,
+            this.QuestProgressSnapshot.QuestSeqTexts.Count - 1);
+        if (currentSequenceIndex <= 0)
+        {
+            return [];
+        }
+
+        return this.QuestProgressSnapshot.QuestSeqTexts
+            .Take(currentSequenceIndex)
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.Text))
+            .ToArray();
+    }
+
+    /// <summary>
     ///     Enumerates canonical summary row keys whose source text matches the
     ///     supplied visible text.
     /// </summary>

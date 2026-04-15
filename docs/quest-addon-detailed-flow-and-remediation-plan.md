@@ -270,6 +270,7 @@ It is responsible for the full quest body presentation:
   - `PreUpdate` on `JournalDetail`
   - `PreRequestedUpdate` on `JournalDetail`
   - `PostRequestedUpdate` on `JournalDetail`
+  - Journal lifecycle updates used as a selection-driven refresh path
   - `PreHide` / `PreFinalize` on `JournalDetail`
 - runtime file:
   - `NativeUI/AddonHandlers/Quest/JournalDetailHandler.cs`
@@ -289,12 +290,14 @@ It is responsible for the full quest body presentation:
 ### Current data source
 
 This handler is now the first surface being pushed toward a **DB-first**
-composition model, but it still mixes several things:
+composition model.
+
+At the moment, the split is:
 
 1. UI nodes
-   - visible description
+   - selected quest context
    - visible objective text
-   - visible summary node text
+   - visible summary nodes only as anchors / original-state snapshots
 2. `QuestProgressResolver`
    - current sequence
    - canonical quest rows
@@ -330,10 +333,9 @@ still get mixed together.
 
 That means it can still show:
 
-- repeated sections
-- partial summaries
-- body composition that does not exactly match the canonical quest rows
-- or stale fallback behavior when the DB is still incomplete
+- objective selection that is still anchored to the visible objective node
+- stale fallback behavior when the DB is still incomplete
+- or UI-shape mismatches if the game changes how many summary nodes it exposes
 
 ### What needs to change
 
@@ -352,8 +354,9 @@ The ideal shape is:
 
 ### Specific remediation
 
-- stop treating live UI text as first-class quest content when canonical rows
-  already exist
+- keep the current description and summary flow canonical-first:
+  - description from current `SEQ`
+  - summary from prior `SEQ` rows through the current sequence
 - create an explicit `JournalDetailBodyModel` or similar helper that is built
   from `QuestCanonicalData`/`QuestPlate`
 - decide, in one place, which rows belong to:

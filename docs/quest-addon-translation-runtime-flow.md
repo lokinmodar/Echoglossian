@@ -160,7 +160,8 @@ Journal list.
 - `AddonEvent.PreUpdate` on `"JournalDetail"` → `JournalDetailHandler.OnJournalDetailEvent` → `TranslateJournalDetail()`
 - `AddonEvent.PreRequestedUpdate` on `"JournalDetail"` → same
 - `AddonEvent.PostRequestedUpdate` on `"JournalDetail"` → same
-- `AddonEvent.PreHide` / `AddonEvent.PreFinalize` on `"JournalDetail"` → `JournalDetailHandler.OnJournalDetailCleanupEvent`
+- `AddonEvent.PreUpdate` / `PreRequestedUpdate` / `PostRequestedUpdate` on `"Journal"` → same handler instance, used as a selection-driven refresh path
+- `AddonEvent.PreHide` / `AddonEvent.PreFinalize` on `"JournalDetail"` and `"Journal"` → `JournalDetailHandler.OnJournalDetailCleanupEvent`
 
 **Config surface:**
 - `TranslateJournalDetail`
@@ -173,7 +174,7 @@ Journal list.
 
 **`TranslateJournalBox` flow:**
 
-1. Read `questName` (node 38), `questMessage` (node 43→comp→node 8), `objectiveText` (node 43→comp→node 12→comp→node 3), `summaryText` (optional, node 43→comp→node 52→comp→node 2).
+1. Read `questName` (node 38), `questMessage` (node 43→comp→node 8), `objectiveText` (node 43→comp→node 12→comp→node 3), and the visible summary nodes only as UI anchors / original-text snapshots.
 2. Build `QuestPlate`; run `QuestProgressResolver.TryResolveQuestProgress` → attach `SourceContentHash` to plate.
 3. Build a JournalDetail-local scope key from the progress snapshot when
    available, with a `questName|questMessage` fallback.
@@ -184,23 +185,25 @@ Journal list.
    (non-blocking).
 7. Ensure metadata such as `QuestId`, `QuestTextSheetName`, and
    `SourceContentHash` is persisted when the DB row exists but is still thin.
-8. Resolve translated title, description, objective, and summary-like body only
-   from:
+8. Resolve translated title, description, objective, and summary-like body from:
    - JournalDetail-local runtime cache
    - persisted `QuestPlate`
-   - canonical current `SEQ` row from `QuestProgressSnapshot`
-   - original UI fallback when the DB is not ready yet
+   - canonical current `SEQ` row from `QuestProgressSnapshot` for the description
+   - canonical prior `SEQ` rows up to the current sequence for the summary block
+   - original UI fallback only when canonical/DB data is still unavailable
 9. Apply `RemoveDiacritics` if configured.
 10. If `WritesNative`: `SetText` on the visible detail nodes.
 11. Remember the translated values in the JournalDetail-local cache.
 12. If `UsesHoverTooltips`:
     - Register `JournalDetail-QuestName-{nodePtr}` on the name node.
-    - Build `originalQuestBody` and `translatedQuestBody` from the visible three-part shape:
-      - current description source (the visible quest description / translated quest message)
-      - current objective text
-      - current summary block (current `SEQ` row plus the live summary node text, when present)
+    - Build `originalQuestBody` and `translatedQuestBody` from the current three-part shape:
+      - description: current canonical `SEQ` row
+      - objective: current visible objective text (until TODO selection becomes fully canonical)
+      - summary: canonical prior `SEQ` rows up to the live quest sequence
     - Register `JournalDetail-QuestBody-{nodePtr}` using bounds that start from `JournalCanvasComponentNode` and then expand to include the visible description, objective, and summary nodes only.
-    - Do **not** fold the additional visible Journal summary-node list into the canonical body or persisted row; those nodes can retain stale text across quest switches and were observed contaminating one quest with summary text from another.
+    - The additional visible Journal summary nodes are now treated as presentation anchors only:
+      - they are snapshotted so original mode can restore them
+      - their translated/native content is assigned from canonical prior `SEQ` rows
 
 **`TranslateCompletedQuest` flow:** same as above but reads only name + message (no objective/summary), uses `JournalDetail-CompletedQuestName-*` and `JournalDetail-CompletedQuestMessage-*` + `JournalDetail-CompletedQuestBody-*` hover keys.
 
@@ -686,6 +689,7 @@ Current behavior:
   - `PreUpdate` on `JournalDetail`
   - `PreRequestedUpdate` on `JournalDetail`
   - `PostRequestedUpdate` on `JournalDetail`
+  - `PostRequestedUpdate` on `Journal` as the selection-driven refresh path
 
 This matters because the current stabilization pass is DB-first and
 mode-sensitive:
@@ -703,7 +707,33 @@ config window while the detail view stayed open could leave the pane in a stale
 visual state until a later addon refresh happened by chance. Now that
 `JournalDetail` is its own handler with its own toggle and display mode, that
 live update path is also what keeps detail behavior isolated from the Journal
-list.
+list. The `Journal`-driven path stays intentionally narrower: it is used only
+to react to quest selection changes after the list has finished updating, so
+the detail handler does not re-read half-updated UI state too early.
+
+Visible summary subrows in the `JournalDetail` body are now recollected through
+the detail handler itself, but they are filtered against the active canonical
+quest payload before being used for native writes or tooltip assembly. This
+keeps summary coverage while avoiding stale rows from a previously selected
+quest.
+
+For native-mode rendering, the detail handler now collapses the canonical
+summary paragraphs into the primary summary node and clears the supplemental
+summary nodes. The live supplemental nodes remain part of the original-state
+snapshot so tooltip-only mode and swap restoration can still put the addon back
+exactly as the game drew it.
+
+That snapshot now includes the primary summary node presentation as well:
+
+- original width
+- original text flags
+- original font size
+- original summary-container height
+- discovered supplemental summary node addresses
+
+This allows native mode to expand the primary summary block for longer
+translated text and still restore the original layout when `JournalDetail`
+returns to a non-native mode.
 
 ---
 

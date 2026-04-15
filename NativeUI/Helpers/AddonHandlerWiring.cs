@@ -187,19 +187,18 @@ public partial class Echoglossian
 
     var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();
 
-    if (this.configuration.TranslateJournal)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "Journal",
-              Handler: new JournalHandler(questAddonDependencies)));
-    }
+    var journalHandler = new JournalHandler(questAddonDependencies);
+    var journalDetailHandler = new JournalDetailHandler(questAddonDependencies);
 
-    if (this.configuration.TranslateJournalDetail)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "JournalDetail",
-              Handler: new JournalDetailHandler(questAddonDependencies)));
-    }
+    this.registeredAddonHandlers.Add(
+        (AddonName: "Journal",
+            Handler: journalHandler));
+    this.registeredAddonHandlers.Add(
+        (AddonName: "Journal",
+            Handler: journalDetailHandler));
+    this.registeredAddonHandlers.Add(
+        (AddonName: "JournalDetail",
+            Handler: journalDetailHandler));
 
     // Quest-family stabilization pass:
     // keep only Journal / JournalDetail active while the canonical DB-first
