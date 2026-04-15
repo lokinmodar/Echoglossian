@@ -201,14 +201,22 @@ public partial class Echoglossian
             Handler: journalDetailHandler));
 
     // Quest-family stabilization pass:
-    // keep Journal / JournalDetail / ToDoList active while each quest addon
-    // is isolated onto the canonical DB-first runtime. The other quest
-    // handlers remain in the repo but are intentionally not registered for now.
+    // keep Journal / JournalDetail / ToDoList / ScenarioTree active while each
+    // quest addon is isolated onto the canonical DB-first runtime. The other
+    // quest handlers remain in the repo but are intentionally not registered
+    // for now.
     if (this.configuration.TranslateToDoList)
     {
       this.registeredAddonHandlers.Add(
           (AddonName: "_ToDoList",
               Handler: new ToDoListHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateScenarioTree)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "ScenarioTree",
+              Handler: new ScenarioTreeHandler(questAddonDependencies)));
     }
 
     if (this.configuration.TranslateToast &&

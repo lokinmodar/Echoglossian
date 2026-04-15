@@ -6195,13 +6195,14 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler">
             <summary>
-                Handles the ScenarioTree quest addon runtime inside the standalone
-                quest-handler model.
+                Handles the ScenarioTree quest addon runtime using only QuestManager,
+                canonical quest data, and persisted quest plates.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler" /> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler" />
+                class.
             </summary>
             <param name="dependencies">The shared quest-handler dependencies.</param>
         </member>
@@ -6228,127 +6229,197 @@
                 being written into the native UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TranslateQuestOnScenarioTree(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RefreshScenarioTree">
             <summary>
-                Translates a single ScenarioTree quest entry.
+                Refreshes the ScenarioTree runtime from canonical quest data and the
+                DB.
             </summary>
-            <param name="setupAtkValues">The addon payload.</param>
-            <param name="valueIndex">The quest-name value index to translate.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryGetVisibleScenarioTree(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*@)">
+            <summary>
+                Tries to resolve the live ScenarioTree addon when it is visible.
+            </summary>
+            <param name="addon">The live addon pointer.</param>
+            <param name="atkValues">The live ATK value pointer.</param>
+            <returns>True when the visible addon was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CollectVisibleScenarioTreeEntries(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
+            <summary>
+                Collects the currently visible ScenarioTree quest slots.
+            </summary>
+            <param name="atkValues">The live addon payload.</param>
+            <returns>The visible quest slots.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveVisibleScenarioTreeEntry(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry@,System.String@)">
+            <summary>
+                Tries to resolve one visible ScenarioTree quest slot entirely from
+                canonical quest data and persisted quest plates.
+            </summary>
+            <param name="visibleEntry">The visible quest slot.</param>
+            <param name="runtimeEntry">The resolved runtime entry.</param>
+            <param name="blockingQuestLabel">
+                The quest label to use if this visible quest blocks activation.
+            </param>
+            <returns>
+                <c>true</c> when the required translated payload is already stored in
+                the DB.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CreateScenarioTreeRuntimeEntry(System.Int32,System.String,System.String,System.String)">
+            <summary>
+                Creates the runtime payload for one visible ScenarioTree slot.
+            </summary>
+            <param name="valueIndex">The addon value index.</param>
+            <param name="progressKey">The stable quest progress key.</param>
+            <param name="originalText">The original source text.</param>
+            <param name="translatedText">The translated text.</param>
+            <returns>The runtime entry.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeRuntimeEntryKey(System.String,System.Int32)">
+            <summary>
+                Builds the stable runtime key for one ScenarioTree slot.
+            </summary>
+            <param name="progressKey">The quest progress key.</param>
+            <param name="valueIndex">The addon value index.</param>
+            <returns>The stable runtime key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ResolveOriginalScenarioTreeText(System.Int32,System.String)">
+            <summary>
+                Resolves the original visible text for a ScenarioTree slot, even if
+                the addon currently shows translated text from a previously applied
+                mode.
+            </summary>
+            <param name="valueIndex">The addon value index.</param>
+            <param name="visibleText">The current visible text.</param>
+            <returns>The original source text for that slot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ApplyScenarioTreePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
+            <summary>
+                Applies the current ScenarioTree presentation mode using only the
+                local runtime entries resolved from the DB.
+            </summary>
+            <param name="addon">The live ScenarioTree addon.</param>
+            <param name="atkValues">The live addon payload.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RestoreScenarioTreeOriginals(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
+            <summary>
+                Restores the original ScenarioTree text for all slots currently
+                tracked in the local runtime state.
+            </summary>
+            <param name="atkValues">The live addon payload.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.GetScenarioTreeTranslatedDisplayText(System.String)">
+            <summary>
+                Normalizes translated ScenarioTree text before it is written into the
+                native UI.
+            </summary>
+            <param name="translatedText">The translated text.</param>
+            <returns>The translated text as it should be displayed natively.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RefreshScenarioTreeHoverTargets(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Refreshes hover targets for the currently visible ScenarioTree slots.
+            </summary>
+            <param name="addon">The live ScenarioTree addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.NotifyScenarioTreeWaitingForQuestData(System.Collections.Generic.IReadOnlyCollection{System.String})">
+            <summary>
+                Emits a notification while the ScenarioTree is waiting for all visible
+                quest data to exist in the DB.
+            </summary>
+            <param name="blockingQuestLabels">The visible quest labels still waiting.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ClearScenarioTreeWaitingState">
+            <summary>
+                Clears the debounced ScenarioTree waiting-notification state.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnScenarioTreeEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Handles ScenarioTree refresh and requested-update events.
             </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
+            <param name="type">The lifecycle event.</param>
+            <param name="args">The lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveScenarioTreeAtkValues(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnScenarioTreePreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Resolves the live ScenarioTree ATK value array for refresh and
-                requested-update events.
+                Handles ScenarioTree draw events so the addon can retry activation
+                after the background prefetch finishes and react immediately to mode
+                switches.
             </summary>
-            <param name="args">The lifecycle arguments for the current event.</param>
-            <param name="atkValues">The resolved ATK value pointer.</param>
-            <returns>True when a usable ATK value array was found.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnScenarioTreeHoverRefreshEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Refreshes the ScenarioTree hover target every draw using the most
-                recently resolved quest names without queueing new translations.
-            </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RememberScenarioTreeHoverEntry(System.Int32,System.String,System.String,System.String)">
-            <summary>
-                Remembers the latest ScenarioTree hover payload for one visible quest
-                slot so the combined tooltip can be refreshed on draw.
-            </summary>
-            <param name="valueIndex">The addon value index that produced the text.</param>
-            <param name="progressKey">The resolved quest-progress key.</param>
-            <param name="originalText">The current original quest name.</param>
-            <param name="translatedText">The current translated quest name.</param>
+            <param name="type">The lifecycle event.</param>
+            <param name="args">The lifecycle arguments.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnScenarioTreeCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Clears ScenarioTree hover registrations when the addon closes.
+                Clears the ScenarioTree runtime state when the addon closes.
             </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
+            <param name="type">The lifecycle event.</param>
+            <param name="args">The lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeCacheKey(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryGetScenarioTreeText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.Int32,System.String@)">
             <summary>
-                Builds the local ScenarioTree text-cache key for one quest slot.
+                Tries to read one visible ScenarioTree string slot.
             </summary>
-            <param name="progressKey">The stable quest-progress key.</param>
-            <param name="questNameText">The current quest name text.</param>
-            <returns>The local cache key.</returns>
+            <param name="atkValues">The live addon payload.</param>
+            <param name="valueIndex">The value index to read.</param>
+            <param name="visibleText">The visible string, if any.</param>
+            <returns>True when a usable visible string was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryGetScenarioTreeCachedText(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry@)">
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry">
             <summary>
-                Attempts to read the local ScenarioTree applied-text cache.
+                Represents one visible ScenarioTree quest slot.
             </summary>
-            <param name="cacheKey">The local cache key.</param>
-            <param name="cachedText">The cached original/translated text pair.</param>
-            <returns>True when the local cache contains a value.</returns>
+            <param name="ValueIndex">The addon value index.</param>
+            <param name="OriginalText">The original visible text.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RememberScenarioTreeCachedText(System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.#ctor(System.Int32,System.String)">
             <summary>
-                Remembers the latest resolved ScenarioTree text pair in the handler-
-                local runtime cache.
+                Represents one visible ScenarioTree quest slot.
             </summary>
-            <param name="cacheKey">The local cache key.</param>
-            <param name="originalText">The original quest name.</param>
-            <param name="translatedText">The translated quest name.</param>
+            <param name="ValueIndex">The addon value index.</param>
+            <param name="OriginalText">The original visible text.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverEntry">
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.ValueIndex">
+            <summary>The addon value index.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.OriginalText">
+            <summary>The original visible text.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry">
             <summary>
-                Captures the latest hover payload for a visible ScenarioTree quest
-                slot.
+                Represents one resolved ScenarioTree runtime slot.
             </summary>
-            <param name="ProgressKey">The stable quest-progress key.</param>
-            <param name="OriginalText">The original quest name.</param>
-            <param name="TranslatedText">The translated quest name.</param>
+            <param name="Key">The stable runtime key.</param>
+            <param name="ProgressKey">The stable quest progress key.</param>
+            <param name="ValueIndex">The addon value index.</param>
+            <param name="OriginalText">The original source text.</param>
+            <param name="TranslatedText">The translated text from the DB.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverEntry.#ctor(System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.String,System.String)">
             <summary>
-                Captures the latest hover payload for a visible ScenarioTree quest
-                slot.
+                Represents one resolved ScenarioTree runtime slot.
             </summary>
-            <param name="ProgressKey">The stable quest-progress key.</param>
-            <param name="OriginalText">The original quest name.</param>
-            <param name="TranslatedText">The translated quest name.</param>
+            <param name="Key">The stable runtime key.</param>
+            <param name="ProgressKey">The stable quest progress key.</param>
+            <param name="ValueIndex">The addon value index.</param>
+            <param name="OriginalText">The original source text.</param>
+            <param name="TranslatedText">The translated text from the DB.</param>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverEntry.ProgressKey">
-            <summary>The stable quest-progress key.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.Key">
+            <summary>The stable runtime key.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverEntry.OriginalText">
-            <summary>The original quest name.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.ProgressKey">
+            <summary>The stable quest progress key.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeHoverEntry.TranslatedText">
-            <summary>The translated quest name.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.ValueIndex">
+            <summary>The addon value index.</summary>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry">
-            <summary>
-                Captures the locally cached ScenarioTree text pair for one quest
-                slot.
-            </summary>
-            <param name="OriginalText">The original quest name.</param>
-            <param name="TranslatedText">The translated quest name.</param>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.OriginalText">
+            <summary>The original source text.</summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry.#ctor(System.String,System.String)">
-            <summary>
-                Captures the locally cached ScenarioTree text pair for one quest
-                slot.
-            </summary>
-            <param name="OriginalText">The original quest name.</param>
-            <param name="TranslatedText">The translated quest name.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry.OriginalText">
-            <summary>The original quest name.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeTextCacheEntry.TranslatedText">
-            <summary>The translated quest name.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.TranslatedText">
+            <summary>The translated text from the DB.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler">
             <summary>
@@ -11453,6 +11524,11 @@
         <member name="P:Echoglossian.Properties.Resources.ToDoListAwaitingQuestDataNotification">
             <summary>
               Looks up a localized string similar to ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ScenarioTreeAwaitingQuestDataNotification">
+            <summary>
+              Looks up a localized string similar to ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslation">

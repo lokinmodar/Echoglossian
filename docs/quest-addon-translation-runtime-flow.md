@@ -311,39 +311,62 @@ Identical traversal after pass 1. Re-reads all nodes and rewrites from `QuestUiT
 ### `ScenarioTree` (main scenario quest tracker)
 
 **Trigger events:**
-- `AddonEvent.PreRefresh` → `ScenarioTreeHandler.OnScenarioTreeEvent` → `TranslateQuestOnScenarioTree`
+- `AddonEvent.PreRefresh` → `ScenarioTreeHandler.OnScenarioTreeEvent` → `RefreshScenarioTree()`
 - `AddonEvent.PreRequestedUpdate` → same
-- `AddonEvent.PreDraw` → `ScenarioTreeHandler.OnScenarioTreeHoverRefreshEvent` → combined hover refresh only
+- `AddonEvent.PreDraw` → `ScenarioTreeHandler.OnScenarioTreePreDrawEvent`
+  → retry / hover refresh only
 
-**Args type:** primarily `AddonRefreshArgs`, with a live-addon fallback for
-`PreRequestedUpdate` — if the requested-update event does not carry refresh
-args, the handler now resolves `AtkUnitBase->AtkValues` directly from the
-visible addon instead of turning that trigger path into a no-op.
+**Args type:** the handler now resolves the live visible addon directly from
+`AtkStage` on each pass, so activation and retry behavior are no longer tied to
+whether the lifecycle event carries `AddonRefreshArgs`.
 
-**`TranslateQuestOnScenarioTree(setupAtkValues, valueIndex)` flow:**
+**`RefreshScenarioTree()` flow:**
 
-Called twice per event: once for index 7 (MSQ entry) and once for index 2 (sub-quest entry).
+The handler inspects the visible quest slots at value indices:
 
-1. Guard: `setupAtkValues[valueIndex].Type != ValueType.String`.
-2. Read `questNameText`.
-3. `QuestTodoProgressResolver.TryResolveQuestTodoProgress` → `questTodoProgressKey` (composite cache key including quest progress step identity).
-4. **Cache check:** `QuestUiTranslationCache.TryGetAppliedSnapshot(questTodoProgressKey + "|" + questNameText)`:
-   - **Hit:** if `UsesHoverTooltips` register `ScenarioTree-{addonPtr}-{valueIndex}-{progressKey}` with `cachedSnapshot.AppliedText`; `return`.
-   - **Miss:** continue.
-5. `FindQuestPlateByName`.
-6. **DB hit:** diacritics strip; `SetManagedString(setupAtkValues[valueIndex])` if `WritesNative`; `Remember`; if `UsesHoverTooltips` register; `return`.
-7. `TryGetQueuedTranslation($"ScenarioTree|{valueIndex}|{progressKey}|{questNameText}")`:
-   - Hit: same output path as DB hit.
-   - Miss: `QueueTranslation` (persist InsertQuestPlate); return.
+- `7` (MSQ entry)
+- `2` (sub-quest entry)
+
+For each visible slot:
+
+1. Read the visible quest name string from the live `AtkValue`.
+2. Recover the original source text from the local runtime state if the addon
+   was previously written in native mode.
+3. `QuestTodoProgressResolver.TryResolveQuestTodoProgress` → canonical
+   progress snapshot.
+4. Build `QuestCanonicalData` from live progress.
+5. Project a canonical `QuestPlate` lookup and resolve it through
+   `FindQuestPlate(...)`.
+6. Require `TranslatedQuestName` to already exist in the DB.
+
+If any visible quest slot fails resolution or is still missing translated DB
+data:
+
+- restore original ScenarioTree text
+- remove ScenarioTree hover targets
+- leave the addon untouched
+- emit a debounced notification explaining that ScenarioTree is waiting for
+  stored quest data
+
+If all visible slots are ready:
+
+- native mode writes only DB-backed translated quest names
+- tooltip modes use only DB-backed translated quest names
+- no translation is queued or performed from the addon
 
 **Hover maintenance:**
-- Every resolved slot also updates an in-memory hover snapshot for the current `valueIndex`.
-- `PreDraw` combines the visible MSQ/subquest entries into one tooltip payload and re-registers it on the addon root.
-- This path is read-only and avoids requeueing translation work.
+- Every resolved slot updates a local runtime entry keyed by quest progress and
+  addon value index.
+- `PreDraw` combines the visible MSQ/subquest entries into one tooltip payload
+  and re-registers it on the addon root.
+- This path is read-only and never queues translation work.
 
-**Key difference from other addons:** text is written via `SetManagedString` directly into the `AtkValue*` array in `PreRefresh` / `PreRequestedUpdate`, so the game's own node layout picks up the translated string without the handler touching node pointers directly.
+**Key difference from other addons:** text is still written via
+`SetManagedString` directly into the `AtkValue*` array, so the game's own node
+layout picks up the translated string without the handler touching node
+pointers directly. The content source, however, is now DB-only.
 
-**DB table used:** `questplates` — `FindQuestPlateByName` (name only).
+**DB table used:** `questplates` — canonical lookup via `FindQuestPlate(...)`.
 
 ---
 

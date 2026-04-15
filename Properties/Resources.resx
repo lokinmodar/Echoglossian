@@ -760,6 +760,9 @@
   <data name="ToDoListAwaitingQuestDataNotification" xml:space="preserve">
     <value>ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</value>
   </data>
+  <data name="ScenarioTreeAwaitingQuestDataNotification" xml:space="preserve">
+    <value>ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</value>
+  </data>
   <data name="AddonProbeHelpMessage" xml:space="preserve">
     <value>Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe &lt;addon name&gt; [index] or /egloaddonprobe stop</value>
   </data>

@@ -1510,3 +1510,38 @@ The main active problems are:
   - shows the waiting notification without spamming
   - applies native / tooltip / swap modes only after the visible data is
     complete
+
+### 2026-04-15 01:20:00 -03:00 - working tree checkpoint - ScenarioTree moved to DB-only quest runtime
+
+**What changed**
+
+- `ScenarioTree` now resolves visible quest slots through
+  `QuestTodoProgressResolver` and `QuestCanonicalData`, then reads translated
+  quest names only from persisted `QuestPlate` rows.
+- The handler no longer queues translation, reads queued translations, inserts
+  `QuestPlate` rows, or updates `QuestPlate` rows.
+- `ScenarioTree` now activates only when every visible quest slot already has
+  the required translated payload in the DB.
+- When any visible quest slot is still missing stored data, the addon is left
+  untouched, hover targets are removed, and a debounced notification is shown
+  to explain that `ScenarioTree` is waiting for quest data.
+- A lightweight `PreDraw` retry path now rechecks readiness every few seconds
+  without performing translation work.
+
+**Why it changed**
+
+- The user asked for `ScenarioTree` to follow the same strict constraints that
+  were just applied to `_ToDoList`.
+- The old handler still mixed DB reads with queued translation fallbacks, which
+  made addon behavior harder to reason about and violated the new quest-addon
+  isolation strategy.
+- Treating `ScenarioTree` as a strict DB consumer keeps quest translation
+  ownership in accepted-quest prefetch and the canonical persistence flow.
+
+**Next step**
+
+- Validate in game that `ScenarioTree`:
+  - stays untouched until all visible quest slots are ready in the DB
+  - shows the waiting notification without spamming
+  - applies native / tooltip / swap modes only after the visible data is
+    complete

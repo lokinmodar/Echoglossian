@@ -548,52 +548,48 @@ This surface handles the main scenario tree / quest tracker style entry points.
 - events:
   - `PreRefresh`
   - `PreRequestedUpdate`
-  - `PreDraw` for hover refresh
+  - `PreDraw` for retry / hover refresh
 - runtime file:
   - `NativeUI/AddonHandlers/Quest/ScenarioTreeHandler.cs`
 - local state:
-  - `scenarioTreeHoverEntries`
-  - `scenarioTreeTextCache`
+  - `scenarioTreeRuntimeEntries`
+  - readiness gate / retry timer / debounced waiting notification state
 - DB lookup:
-  - `FindQuestPlateByName(...)`
+  - `FindQuestPlate(...)`
 - progress helper:
   - `QuestTodoProgressResolver`
+- canonical helper:
+  - `QuestCanonicalData`
 
 ### Current status
 
-Historically this addon was often silent in validation windows.
+This surface now follows the same DB-only rule as `_ToDoList`.
 
-The handler structure is better now than before:
+It now:
 
-- local cache exists
-- hover refresh exists
-- requested-update fallback exists
-
-But this addon still needs stronger runtime proof that it is consistently:
-
-- registering tooltip targets
-- refreshing them while visible
-- resolving the correct quest content
+- never queues translation from the addon
+- never inserts or updates `QuestPlate` rows from the addon
+- resolves visible quest slots through `QuestManager + QuestCanonicalData`
+- activates only when all visible ScenarioTree quest slots already have the
+  required translated payload in the DB
+- restores original addon text and emits a notification when DB data is still
+  missing
+- keeps the runtime state local to ScenarioTree only
 
 ### What likely still needs to change
 
-- simplify the tooltip payload to one canonical text bundle per visible entry
-- avoid relying on weak name-only DB lookup when the progress helper can tell
-  us more
-- verify whether the current `AtkValue`-based capture is sufficient, or whether
-  the addon should consume accepted-quest/canonical DB rows more directly
+- validate in game that the all-or-nothing gate feels right on login and during
+  accepted-quest prefetch warm-up
+- confirm that the addon-level tooltip surface is the right UX for this window
+- if needed later, enrich the payload beyond quest names without reintroducing
+  any local translation path
 
 ### Recommendation
 
-This should be the next addon to revisit **after** `JournalDetail`.
+Keep the DB-only contract intact.
 
-It is a good candidate for:
-
-- “identify visible quest entry”
-- “bind to canonical quest row”
-- “render one deterministic tooltip”
-
-without much native mutation complexity.
+Future changes should focus on better visible-slot semantics and tooltip UX, not
+on restoring any translation queue inside the handler.
 
 ---
 
