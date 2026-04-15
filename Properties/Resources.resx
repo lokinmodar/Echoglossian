@@ -412,6 +412,9 @@
   <data name="TranslateJournalToggle" xml:space="preserve">
     <value>Translate quest name, description and objectives (WIP)</value>
   </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Translate JournalDetail</value>
+  </data>
   <data name="DeeplTranslatorApiKey" xml:space="preserve">
     <value>Add your DeepL API Key</value>
   </data>

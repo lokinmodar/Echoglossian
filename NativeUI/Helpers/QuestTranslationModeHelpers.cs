@@ -67,6 +67,29 @@ public partial class Echoglossian
           this.configuration.JournalTranslationDisplayMode);
 
   /// <summary>
+  ///     Gets whether the JournalDetail family should write translated text
+  ///     into the native addon.
+  /// </summary>
+  private bool JournalDetailWritesNativeTranslation =>
+      QuestModeWritesNativeTranslation(
+          this.configuration.JournalDetailTranslationDisplayMode);
+
+  /// <summary>
+  ///     Gets whether the JournalDetail family should use hover tooltips.
+  /// </summary>
+  private bool JournalDetailUsesHoverTooltips =>
+      QuestModeUsesHoverTooltips(
+          this.configuration.JournalDetailTranslationDisplayMode);
+
+  /// <summary>
+  ///     Gets whether the JournalDetail family hover tooltips should show the
+  ///     original text.
+  /// </summary>
+  private bool JournalDetailHoverShowsOriginal =>
+      QuestModeShowsOriginalTooltips(
+          this.configuration.JournalDetailTranslationDisplayMode);
+
+  /// <summary>
   ///     Gets whether the ToDoList family should use hover tooltips.
   /// </summary>
   private bool ToDoListUsesHoverTooltips =>
@@ -215,6 +238,14 @@ public partial class Echoglossian
       this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
 
   /// <summary>
+  ///     Gets whether the JournalDetail family should strip diacritics from
+  ///     translated text before use.
+  /// </summary>
+  private bool JournalDetailShouldRemoveDiacritics =>
+      this.JournalDetailWritesNativeTranslation &&
+      this.configuration.RemoveDiacriticsWhenUsingReplacementQuest;
+
+  /// <summary>
   ///     Gets whether the JournalAccept family should strip diacritics.
   ///     Only active when writing to native addon nodes.
   /// </summary>
@@ -269,6 +300,8 @@ public partial class Echoglossian
   private bool ShouldDrawHoverTooltips =>
       this.configuration.TranslateTooltips ||
       (this.configuration.TranslateJournal && this.JournalUsesHoverTooltips) ||
+      (this.configuration.TranslateJournalDetail &&
+       this.JournalDetailUsesHoverTooltips) ||
       (this.configuration.TranslateToDoList && this.ToDoListUsesHoverTooltips) ||
       (this.configuration.TranslateScenarioTree &&
        this.ScenarioTreeUsesHoverTooltips) ||

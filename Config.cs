@@ -118,6 +118,11 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode JournalTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Display mode for JournalDetail quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode JournalDetailTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Display mode for JournalAccept quest entries.</summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode JournalAcceptTranslationDisplayMode =
@@ -510,6 +515,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate entries in the quest journal.</summary>
   [DefaultValue(false)] public bool TranslateJournal = false;
+
+  /// <summary>Translate the Journal detail pane.</summary>
+  [DefaultValue(false)] public bool TranslateJournalDetail = false;
 
   /// <summary>Translate JournalAccept quest entries.</summary>
   [DefaultValue(false)] public bool TranslateJournalAccept = false;

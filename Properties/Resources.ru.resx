@@ -303,6 +303,9 @@
   <data name="TranslateJournalToggle" xml:space="preserve">
     <value>Перевод названия, описания и целей задания (WIP)</value>
   </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Переводить JournalDetail</value>
+  </data>
   <data name="DeeplTranslatorApiKey" xml:space="preserve">
     <value>Добавьте свой ключ API DeepL</value>
   </data>

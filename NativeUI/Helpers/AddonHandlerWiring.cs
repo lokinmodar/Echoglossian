@@ -189,13 +189,16 @@ public partial class Echoglossian
 
     if (this.configuration.TranslateJournal)
     {
-      var journalHandler = new JournalHandler(questAddonDependencies);
       this.registeredAddonHandlers.Add(
           (AddonName: "Journal",
-              Handler: journalHandler));
+              Handler: new JournalHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateJournalDetail)
+    {
       this.registeredAddonHandlers.Add(
           (AddonName: "JournalDetail",
-              Handler: journalHandler));
+              Handler: new JournalDetailHandler(questAddonDependencies)));
     }
 
     // Quest-family stabilization pass:

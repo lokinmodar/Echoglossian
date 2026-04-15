@@ -31,6 +31,10 @@ public static class JournalTab
         {
             changed |= DrawJournalSection(config);
             changed |= DrawQuestFamilySection(
+                Resources.TranslateJournalDetailToggle,
+                ref config.TranslateJournalDetail,
+                ref config.JournalDetailTranslationDisplayMode);
+            changed |= DrawQuestFamilySection(
                 Resources.TranslateJournalAcceptToggle,
                 ref config.TranslateJournalAccept,
                 ref config.JournalAcceptTranslationDisplayMode);

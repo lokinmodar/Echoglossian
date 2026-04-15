@@ -8,7 +8,8 @@ This document describes the **current actual** runtime translation flow for ever
 
 At the current checkpoint, the quest-family runtime is intentionally narrowed:
 
-- `Journal` and `JournalDetail` remain active
+- `Journal` and `JournalDetail` remain active as separate handler/runtime
+  surfaces
 - the other quest-family handlers remain in the repo but are not currently
   registered
 - accepted-quest prefetch remains active so the DB can stay warm
@@ -23,7 +24,7 @@ runtime validation the active stabilization target is now the Journal family.
 | Addon internal name | Config flag                          | Wiring file                  |
 |---------------------|--------------------------------------|------------------------------|
 | `Journal`           | `TranslateJournal`                   | `AddonHandlerWiring.cs`      |
-| `JournalDetail`     | `TranslateJournal`                   | `AddonHandlerWiring.cs`      |
+| `JournalDetail`     | `TranslateJournalDetail`             | `AddonHandlerWiring.cs`      |
 | `JournalAccept`     | `TranslateJournalAccept`             | `AddonHandlerWiring.cs`      |
 | `JournalResult`     | `TranslateJournalResult`             | `AddonHandlerWiring.cs`      |
 | `RecommendList`     | `TranslateRecommendList`             | `AddonHandlerWiring.cs`      |
@@ -47,7 +48,10 @@ Every addon family has its own `JournalTranslationDisplayMode`-typed config prop
 | `TooltipTranslation` (1)                 | ✗              | ✓                   | ✗ (shows translated) |
 | `NativeUiTranslationWithOriginalTooltips` (2) | ✓         | ✓                   | ✓ (shows original)   |
 
-The `ShouldDrawHoverTooltips` property in the same file aggregates all families to decide whether `hoverTooltipManager.Draw()` should run at all each frame.
+The `ShouldDrawHoverTooltips` property in the same file aggregates all families
+to decide whether `hoverTooltipManager.Draw()` should run at all each frame.
+`JournalDetail` now participates in that aggregation independently from the
+Journal list.
 
 ---
 
@@ -73,7 +77,7 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
   smallest hovered rectangle. This matters for dense quest rows where a broad
   title or row trigger can otherwise swallow a narrower objective trigger.
 
-### 2a. Journal-local runtime caches (instance-scoped)
+### 2a. Journal-family local runtime caches (instance-scoped)
 
 - `JournalHandler` now keeps its own local runtime state for the surfaces that
   repaint the most and were shown to regress when coupled to the broader
@@ -83,10 +87,11 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
   - `journalListHoverCache`
   - these are trimmed to the currently visible quest names and node anchors at
     the end of each Journal list scan
-- Journal detail:
+- `JournalDetailHandler` now keeps its own local runtime state, separate from
+  the Journal list handler:
   - `journalDetailTextCache`
-  - scoped by a quest-detail key derived from `QuestProgressSnapshot.CacheKey`
-    when available, with a `questName|questMessage` fallback
+  - `journalDetailOriginalCache`
+  - `currentJournalDetailScopeKey`
 - These caches are cleared when `Journal` or `JournalDetail` closes.
 - Shared infrastructure still remains shared:
   - SQLite `questplates`
@@ -100,6 +105,10 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 - Acts as the pending translation buffer — when a translation is queued but not yet complete, the handler returns early; on the next refresh cycle the handler calls `TryGetQueuedTranslation` again and finds the result
 - `QueueTranslationBatch(key, sources, persistFn)` is used by `JournalDetail` for multi-field batches (name + message + objective + summary + summaries)
 - The DB `InsertQuestPlate` / `UpdateQuestPlate` call is **inside the persist callback**, fired after translation completes asynchronously
+- In the current Journal-family stabilization pass, this queue is still used by
+  accepted-quest prefetch and other quest-family code paths that remain in the
+  repo, but `Journal` and `JournalDetail` themselves are being treated as
+  DB-first consumers and no longer enqueue local quest translation work.
 
 ### 4. SQLite DB (`questplates` / `QuestPlate` model)
 
@@ -132,13 +141,13 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
      refresh the Journal-local hover snapshot; register the hover tooltip; `continue`.
    - **Cache miss:** proceed.
 4. Build a name-only `QuestPlate` and call `FindQuestPlateByName`.
-4. **DB hit:** use `TranslatedQuestName`; write to node if `WritesNative`; `Remember` in both `QuestUiTranslationCache` and `QuestHoverTranslationCache`; register hover tooltip; `continue`.
-5. **DB miss:** call `TryGetQueuedTranslation($"Journal|{questNameText}")`.
-   - **Queue hit:** diacritics-strip if configured; write to node if `WritesNative`; populate caches; register hover tooltip.
-   - **Queue miss:** register an original-text hover target for this cycle, call
-     `QueueTranslation` (persist callback runs `InsertQuestPlate`), then
-     `continue`.
-6. At the end of the scan, trim the Journal-local visible-list caches to only
+5. **DB hit:** use `TranslatedQuestName`; write to node if `WritesNative`;
+   remember the translated title in the Journal-local cache and local hover
+   cache; register hover tooltip; `continue`.
+6. **DB miss:** keep the original title in the native node when needed and
+   register hover only according to the current hover-mode readiness rule. No
+   Journal-local translation is queued anymore.
+7. At the end of the scan, trim the Journal-local visible-list caches to only
    the quest names and node anchors that were visible in that pass.
 
 **DB table used:** `questplates` — by name only via `FindQuestPlateByName`.
@@ -148,8 +157,17 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 ### `JournalDetail` (quest body panel — active quest)
 
 **Trigger events:**
-- `AddonEvent.PostRequestedUpdate` on `"Journal"` → `JournalHandler.OnJournalDetailEvent` → `TranslateJournalDetail()`
+- `AddonEvent.PreUpdate` on `"JournalDetail"` → `JournalDetailHandler.OnJournalDetailEvent` → `TranslateJournalDetail()`
 - `AddonEvent.PreRequestedUpdate` on `"JournalDetail"` → same
+- `AddonEvent.PostRequestedUpdate` on `"JournalDetail"` → same
+- `AddonEvent.PreHide` / `AddonEvent.PreFinalize` on `"JournalDetail"` → `JournalDetailHandler.OnJournalDetailCleanupEvent`
+
+**Config surface:**
+- `TranslateJournalDetail`
+- `JournalDetailTranslationDisplayMode`
+
+**Runtime file:**
+- `NativeUI/AddonHandlers/Quest/JournalDetailHandler.cs`
 
 **What fires:** `TranslateJournalDetail()` calls `TranslateJournalBox` first; if no active quest node found, falls back to `TranslateCompletedQuest`.
 
@@ -157,17 +175,25 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 
 1. Read `questName` (node 38), `questMessage` (node 43→comp→node 8), `objectiveText` (node 43→comp→node 12→comp→node 3), `summaryText` (optional, node 43→comp→node 52→comp→node 2).
 2. Build `QuestPlate`; run `QuestProgressResolver.TryResolveQuestProgress` → attach `SourceContentHash` to plate.
-3. `FindQuestPlate(plate)` — by name + message.
-4. If found and `GameVersion` stale → `UpdateQuestPlateGameVersion` (non-blocking).
-5. **Early exit (non-hover mode only):** if all four texts hit `QuestUiTranslationCache` → skip everything; `return`.
-6. Resolve `translatedQuestName`, `translatedQuestMessage`, `translatedQuestObjective`, `translatedQuestSummary`:
-   - DB present → read directly from `foundQuestPlate` + `Objectives` dict
-   - DB absent → `TryGetQueuedTranslation($"JournalDetail|{batchKey}")` (batched)
-   - Queue absent → `QueueTranslationBatch` then `return`
-7. Apply `RemoveDiacritics` if configured.
-8. If `WritesNative`: `SetText` on all four nodes.
-9. Populate `QuestUiTranslationCache` for the four canonical texts only.
-10. If `UsesHoverTooltips`:
+3. Build a JournalDetail-local scope key from the progress snapshot when
+   available, with a `questName|questMessage` fallback.
+4. Preserve a JournalDetail-local original snapshot for that scope so mode
+   switches can restore native text correctly.
+5. `FindQuestPlate(plate)` — by name + message.
+6. If found and `GameVersion` stale → `UpdateQuestPlateGameVersion`
+   (non-blocking).
+7. Ensure metadata such as `QuestId`, `QuestTextSheetName`, and
+   `SourceContentHash` is persisted when the DB row exists but is still thin.
+8. Resolve translated title, description, objective, and summary-like body only
+   from:
+   - JournalDetail-local runtime cache
+   - persisted `QuestPlate`
+   - canonical current `SEQ` row from `QuestProgressSnapshot`
+   - original UI fallback when the DB is not ready yet
+9. Apply `RemoveDiacritics` if configured.
+10. If `WritesNative`: `SetText` on the visible detail nodes.
+11. Remember the translated values in the JournalDetail-local cache.
+12. If `UsesHoverTooltips`:
     - Register `JournalDetail-QuestName-{nodePtr}` on the name node.
     - Build `originalQuestBody` and `translatedQuestBody` from the visible three-part shape:
       - current description source (the visible quest description / translated quest message)
@@ -178,7 +204,12 @@ The `ShouldDrawHoverTooltips` property in the same file aggregates all families 
 
 **`TranslateCompletedQuest` flow:** same as above but reads only name + message (no objective/summary), uses `JournalDetail-CompletedQuestName-*` and `JournalDetail-CompletedQuestMessage-*` + `JournalDetail-CompletedQuestBody-*` hover keys.
 
-**DB table used:** `questplates` — by `QuestName + QuestMessage` via `FindQuestPlate`.
+**DB table used:** `questplates` — by `QuestName + QuestMessage` via
+`FindQuestPlate`.
+
+**Important current rule:** `JournalDetail` no longer generates or queues local
+quest translation work. It is now a DB-first consumer with original-text
+fallback, and that is intentional while this surface is being stabilized.
 
 ---
 
@@ -654,7 +685,7 @@ Current behavior:
 - `JournalDetail` refreshes through:
   - `PreUpdate` on `JournalDetail`
   - `PreRequestedUpdate` on `JournalDetail`
-  - `PostRequestedUpdate` on `Journal` for selection-driven updates
+  - `PostRequestedUpdate` on `JournalDetail`
 
 This matters because the current stabilization pass is DB-first and
 mode-sensitive:
@@ -669,7 +700,10 @@ mode-sensitive:
 
 Without the live `PreUpdate` path on `JournalDetail`, switching modes from the
 config window while the detail view stayed open could leave the pane in a stale
-visual state until a later addon refresh happened by chance.
+visual state until a later addon refresh happened by chance. Now that
+`JournalDetail` is its own handler with its own toggle and display mode, that
+live update path is also what keeps detail behavior isolated from the Journal
+list.
 
 ---
 

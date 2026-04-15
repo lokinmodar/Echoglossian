@@ -67,7 +67,8 @@ surface at a time.
 
 That means:
 
-- `Journal` and `JournalDetail` remain active
+- `Journal` and `JournalDetail` remain active as separate handlers with
+  separate toggles and display modes
 - the other quest addon handlers are intentionally not registered right now
 - accepted-quest prefetch remains active so the DB can stay warm
 
@@ -266,12 +267,19 @@ It is responsible for the full quest body presentation:
 ### Current flow
 
 - events:
-  - `PostRequestedUpdate` on `Journal`
+  - `PreUpdate` on `JournalDetail`
   - `PreRequestedUpdate` on `JournalDetail`
+  - `PostRequestedUpdate` on `JournalDetail`
+  - `PreHide` / `PreFinalize` on `JournalDetail`
 - runtime file:
-  - `NativeUI/AddonHandlers/Quest/JournalHandler.cs`
+  - `NativeUI/AddonHandlers/Quest/JournalDetailHandler.cs`
+- config:
+  - `TranslateJournalDetail`
+  - `JournalDetailTranslationDisplayMode`
 - local state:
   - `journalDetailTextCache`
+  - `journalDetailOriginalCache`
+  - `currentJournalDetailScopeKey`
 - DB lookup:
   - `FindQuestPlate(...)` using `QuestName + QuestMessage`
 - hover anchor:

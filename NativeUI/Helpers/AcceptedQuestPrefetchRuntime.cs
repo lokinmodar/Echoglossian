@@ -166,6 +166,7 @@ public partial class Echoglossian
     return this.configuration.Translate &&
            ClientStateInterface.IsLoggedIn &&
            (this.configuration.TranslateJournal ||
+            this.configuration.TranslateJournalDetail ||
             this.configuration.TranslateJournalAccept ||
             this.configuration.TranslateJournalResult ||
             this.configuration.TranslateToDoList ||

@@ -56,6 +56,9 @@ As of the latest working-tree checkpoint:
 - the current uncommitted change also emits accepted-quest canonical dumps into a purpose-named file next to `Echoglossian.db`
 - the current uncommitted change also emits accepted-quest prefetch activity events into a separate purpose-named file so background translation can be traced step by step
 - the current uncommitted change also fixes accepted-quest prefetch quest-id resolution by promoting `QuestManager` work ids into full `Quest.RowId` values before resolving Lumina quest rows
+- the current uncommitted change also splits `JournalDetail` into its own
+  handler, config toggle, display mode, and runtime caches so it no longer
+  shares Journal list presentation state
 
 ## Reference Docs
 
@@ -1263,3 +1266,39 @@ The main active problems are:
     native Journal UI and shows original text only in the tooltip
   - mode changes apply while `JournalDetail` remains open, without requiring a
     quest reselection
+
+### 2026-04-14 16:30:00 -03:00 - working tree checkpoint - JournalDetail split into its own handler and toggle
+
+**What changed**
+
+- `JournalDetail` now has its own config surface:
+  - `TranslateJournalDetail`
+  - `JournalDetailTranslationDisplayMode`
+- `AddonHandlerWiring` now registers `Journal` and `JournalDetail` separately.
+- `JournalHandler` was reduced to the Journal list only.
+- A new `JournalDetailHandler` now owns:
+  - detail-node capture
+  - detail hover registration
+  - detail original snapshot restoration
+  - detail-local caches and scope keys
+- The global hover-draw gate now knows that `JournalDetail` can be active even
+  when the Journal list is disabled.
+
+**Why it changed**
+
+- The next stabilization target is `JournalDetail`, and keeping it inside the
+  same handler/runtime surface as the Journal list kept making it harder to
+  reason about regressions.
+- The user explicitly wanted `JournalDetail` isolated so work on the detail
+  body, tooltips, and caches cannot contaminate the already-stable Journal
+  title list.
+- Separating the config toggle and display mode also gives us a cleaner path
+  for validating `JournalDetail` independently in game.
+
+**Next step**
+
+- Validate that `Journal` continues to behave as before with the list-only
+  handler.
+- Start treating `JournalDetail` as the next dedicated stabilization target,
+  including any further mode, cache, and tooltip work without re-touching the
+  Journal list unless necessary.

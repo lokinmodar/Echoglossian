@@ -275,6 +275,9 @@
   <data name="TranslateJournalToggle" xml:space="preserve">
     <value>Oversæt opgavenavn, beskrivelse og mål (WIP)</value>
   </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Oversæt JournalDetail</value>
+  </data>
   <data name="DeeplTranslatorApiKey" xml:space="preserve">
     <value>Tilføj din DeepL API-nøgle</value>
   </data>

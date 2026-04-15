@@ -1713,7 +1713,16 @@ namespace Echoglossian.Properties {
                 return ResourceManager.GetString("TranslateJournalToggle", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translate JournalDetail.
+        /// </summary>
+        public static string TranslateJournalDetailToggle {
+            get {
+                return ResourceManager.GetString("TranslateJournalDetailToggle", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Translate NPCs names in dialogue boxes.
         /// </summary>
