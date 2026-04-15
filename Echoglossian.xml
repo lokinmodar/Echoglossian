@@ -234,6 +234,9 @@
                 while showing the original in hover tooltips.
             </summary>
         </member>
+        <member name="F:Echoglossian.Config.JournalDetailTranslationDisplayMode">
+            <summary>Display mode for JournalDetail quest entries.</summary>
+        </member>
         <member name="F:Echoglossian.Config.JournalAcceptTranslationDisplayMode">
             <summary>Display mode for JournalAccept quest entries.</summary>
         </member>
@@ -539,6 +542,9 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateJournal">
             <summary>Translate entries in the quest journal.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateJournalDetail">
+            <summary>Translate the Journal detail pane.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateJournalAccept">
             <summary>Translate JournalAccept quest entries.</summary>
@@ -1823,6 +1829,23 @@
                 original text.
             </summary>
         </member>
+        <member name="P:Echoglossian.Echoglossian.JournalDetailWritesNativeTranslation">
+            <summary>
+                Gets whether the JournalDetail family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalDetailUsesHoverTooltips">
+            <summary>
+                Gets whether the JournalDetail family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalDetailHoverShowsOriginal">
+            <summary>
+                Gets whether the JournalDetail family hover tooltips should show the
+                original text.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Echoglossian.ToDoListUsesHoverTooltips">
             <summary>
                 Gets whether the ToDoList family should use hover tooltips.
@@ -1931,6 +1954,12 @@
                 text before use. Diacritics removal is only meaningful when translated
                 text is written directly into native addon nodes, because our own
                 overlays and tooltips always use fonts that support every diacritic.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.JournalDetailShouldRemoveDiacritics">
+            <summary>
+                Gets whether the JournalDetail family should strip diacritics from
+                translated text before use.
             </summary>
         </member>
         <member name="P:Echoglossian.Echoglossian.JournalAcceptShouldRemoveDiacritics">
@@ -5022,77 +5051,59 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler">
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler">
             <summary>
-                Handles the Journal and JournalDetail quest addon runtime inside the
-                standalone quest-handler model.
+                Handles the JournalDetail quest addon runtime inside the standalone
+                quest-handler model.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler" /> class.
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler" />
+                class.
             </summary>
             <param name="dependencies">The shared quest-handler dependencies.</param>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.configuration">
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.configuration">
             <summary>
-                Gets the active plugin configuration through the legacy Journal
+                Gets the active plugin configuration through the legacy JournalDetail
                 member name used by the ported code.
             </summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalUsesHoverTooltips">
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailUsesHoverTooltips">
             <summary>
-                Gets whether the Journal family should use hover tooltips.
+                Gets whether JournalDetail should use hover tooltips.
             </summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalWritesNativeTranslation">
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailWritesNativeTranslation">
             <summary>
-                Gets whether the Journal family should write translated text into the
+                Gets whether JournalDetail should write translated text into the
                 native addon.
             </summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalHoverShowsOriginal">
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailHoverShowsOriginal">
             <summary>
-                Gets whether the Journal family hover tooltips should show the
-                original text.
+                Gets whether JournalDetail hover tooltips should show the original
+                text.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.CanRenderJournalHoverTooltip(System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CanRenderJournalDetailHoverTooltip(System.Boolean)">
             <summary>
-                Gets whether the Journal family may render a hover tooltip for a
-                payload whose translated content is ready.
+                Gets whether JournalDetail may render a hover tooltip for a payload
+                whose translated content is ready.
             </summary>
             <param name="translatedPayloadReady">
                 Whether the translated payload required by the current mode is ready.
             </param>
             <returns><c>true</c> when the hover tooltip may be rendered.</returns>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalShouldRemoveDiacritics">
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailShouldRemoveDiacritics">
             <summary>
-                Gets whether translated Journal text should be normalized before
+                Gets whether translated JournalDetail text should be normalized before
                 being written into the native UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateSummaries(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.String)">
-            <summary>
-                Collects and resolves Journal summary nodes.
-            </summary>
-            <param name="journalBox">The Journal detail component.</param>
-            <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
-            <param name="summaryText">The current summary text.</param>
-            <returns>The summary entries to render and cache.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateQuestProgressSections(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Resolves quest progress step texts from the quest sheet so the
-                Journal body tooltip can follow the quest progression source instead
-                of depending only on the live UI text.
-            </summary>
-            <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
-            <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
-            <returns>The translated quest progress step texts in display order.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.GetCurrentQuestSequenceText(Echoglossian.QuestProgressSnapshot)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.GetCurrentQuestSequenceText(Echoglossian.QuestProgressSnapshot)">
             <summary>
                 Gets the quest sequence row text for the current quest phase so the
                 JournalDetail hover body can stay anchored to one sheet row instead of
@@ -5101,20 +5112,179 @@
             <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
             <returns>The current quest sequence row text, or an empty string when unavailable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateCurrentQuestSequenceText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot,System.String,System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateCurrentQuestSequenceText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot,System.String,System.Boolean@)">
             <summary>
                 Gets the translated quest sequence text for the current quest phase.
-                The result is cached back into the quest plate so the same sequence row
-                does not keep re-translating while the addon repaints.
+                The result is cached back into the quest plate so the same sequence
+                row does not keep re-reading while the addon repaints.
             </summary>
             <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
             <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
+            <param name="journalDetailScopeKey">The current detail runtime scope key.</param>
             <param name="translatedCurrentQuestSequenceTextReady">
                 Whether the current SEQ row translation is ready.
             </param>
             <returns>The translated quest sequence row text, or the source text if translation is not ready yet.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailScopeKey(System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String)">
+            <summary>
+                Builds the current JournalDetail cache scope key so each quest detail
+                view can keep its own local runtime state.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
+            <param name="questName">The current quest name.</param>
+            <param name="questMessage">The current quest message.</param>
+            <returns>A stable scope key for the current quest detail body.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.EnsureJournalDetailScope(System.String)">
+            <summary>
+                Ensures the JournalDetail runtime cache is scoped to the currently
+                visible quest detail body.
+            </summary>
+            <param name="scopeKey">The quest-detail scope key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetJournalDetailOriginalSnapshot(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot@)">
+            <summary>
+                Attempts to get the original JournalDetail text snapshot for the
+                current quest scope.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="snapshot">The cached original snapshot.</param>
+            <returns>True when the scope already has an original snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailOriginalSnapshot(System.String,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Remembers the original JournalDetail texts for the current quest
+                scope so mode switches can restore native UI state correctly.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="questName">The original quest name.</param>
+            <param name="questMessage">The original quest description.</param>
+            <param name="objectiveText">The original visible objective text.</param>
+            <param name="summaryText">The original visible summary text.</param>
+            <param name="summaryNode">The live primary summary text node, if any.</param>
+            <param name="summaryContainerNode">
+                The live summary container node, if any.
+            </param>
+            <param name="additionalSummaryNodeAddresses">
+                The supplemental summary text nodes discovered for this scope.
+            </param>
+            <param name="additionalSummaryTexts">
+                The original visible supplemental summary texts.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
+            <summary>
+                Attempts to get translated JournalDetail text from the local
+                quest-scoped runtime cache.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="originalText">The source text visible for that scope.</param>
+            <param name="translatedText">The cached translated text.</param>
+            <returns>True when the scoped runtime cache already has the text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailCachedText(System.String,System.String,System.String)">
+            <summary>
+                Remembers translated JournalDetail text inside the local quest-scoped
+                runtime cache.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="originalText">The source text visible for that scope.</param>
+            <param name="translatedText">The translated text resolved for that scope.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ApplyQuestProgressMetadata(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot})">
+            <summary>
+                Applies canonical quest metadata resolved from the current quest
+                progress snapshot so persisted JournalDetail rows stay aligned with
+                the sheet-first quest model.
+            </summary>
+            <param name="questPlate">The quest plate being materialized.</param>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.EnsureQuestPlateMetadataPersisted(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot})">
+            <summary>
+                Persists canonical quest metadata into an existing JournalDetail row
+                when the row was created before the sheet-first fields were populated.
+            </summary>
+            <param name="questPlate">The quest plate currently loaded from the DB.</param>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildQuestPlateHoverBody(System.String[])">
+            <summary>
+                Builds a single multi-paragraph tooltip body from the quest plate text
+                sections that are currently visible.
+            </summary>
+            <param name="sections">Quest plate text sections to join.</param>
+            <returns>A multi-paragraph tooltip body.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildQuestPlateSummarySection(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+                Builds the visible JournalDetail summary block from the supplied
+                ordered summary sections.
+            </summary>
+            <param name="sections">The summary sections to join.</param>
+            <returns>A deduplicated summary block for the JournalDetail body.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Collects the visible JournalDetail supplemental summary nodes in their
+                current display order.
+            </summary>
+            <param name="journalBox">The live JournalDetail box component.</param>
+            <param name="descriptionNode">The live description text node.</param>
+            <param name="objectiveNode">The live objective text node.</param>
+            <param name="summaryNode">The live primary summary text node, if any.</param>
+            <returns>The visible supplemental summary text nodes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureVisibleTextNodeTexts(System.Collections.Generic.IEnumerable{System.IntPtr})">
+            <summary>
+                Reads the current visible text of the supplied text nodes in order.
+            </summary>
+            <param name="nodes">The visible text nodes.</param>
+            <returns>The current visible text for each node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveTranslatedSummaryText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.String,System.String,System.String,System.String@)">
+            <summary>
+                Resolves a translated summary row from the JournalDetail cache or the
+                persisted quest plate.
+            </summary>
+            <param name="foundQuestPlate">The persisted quest plate, if any.</param>
+            <param name="journalDetailScopeKey">The current JournalDetail scope key.</param>
+            <param name="rowKey">The canonical summary row key.</param>
+            <param name="sourceText">The canonical summary row text.</param>
+            <param name="translatedText">The translated summary row text.</param>
+            <returns>True when the translated summary row is ready.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildCanonicalSummaryRows(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String)">
+            <summary>
+                Builds the canonical JournalDetail summary rows for the current quest
+                phase using the quest sequence resolved from QuestManager.
+            </summary>
+            <param name="foundQuestPlate">The persisted quest plate, if any.</param>
+            <param name="questCanonicalData">The canonical quest payload, if any.</param>
+            <param name="journalDetailScopeKey">The current JournalDetail scope key.</param>
+            <returns>The ordered summary rows that should populate the detail panel.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ExpandQuestPlateHoverBoundsForTextNode(System.Numerics.Vector2@,System.Numerics.Vector2@,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Expands an existing quest-body hover rectangle to include a visible
+                text node and some practical padding around it.
+            </summary>
+            <param name="topLeft">The current top-left coordinate.</param>
+            <param name="bottomRight">The current bottom-right coordinate.</param>
+            <param name="textNode">The text node to include.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetQuestPlateHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
+            <summary>
+                Gets the bounds of the JournalCanvasComponentNode used as the quest
+                plate hover trigger.
+            </summary>
+            <param name="questCanvasNode">The journal detail component.</param>
+            <param name="topLeft">The top-left screen coordinate of the node.</param>
+            <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
+            <returns>True when the node is visible and the bounds are usable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Applies translations to the active Journal detail box.
             </summary>
@@ -5128,35 +5298,184 @@
             <param name="questNameNode">The quest-name text node.</param>
             <param name="descriptionNode">The description text node.</param>
             <param name="objectiveNode">The objective text node.</param>
+            <param name="summaryContainerNode">The summary container node, if any.</param>
             <param name="summaryNode">The optional summary text node.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateJournalDetail">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalDetail">
             <summary>
-                Translates the active Journal detail addon.
+                Translates the active JournalDetail addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateCompletedQuest(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Translates a completed JournalDetail quest view.
+            </summary>
+            <param name="journalDetail">The journal detail addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Translates the active JournalDetail detail view.
+            </summary>
+            <param name="journalDetail">The live JournalDetail addon.</param>
+            <returns><c>true</c> when the active detail pane is the current-quest view.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.OnJournalDetailEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles JournalDetail refresh events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.OnJournalDetailCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears JournalDetail hover registrations and runtime cache when the
+                detail addon closes.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot">
+            <summary>
+                Stores the original JournalDetail texts for a single visible quest
+                scope so mode changes can restore native UI state and drive swap
+                tooltips from stable source text.
+            </summary>
+            <param name="QuestName">The original quest title.</param>
+            <param name="QuestMessage">The original quest description.</param>
+            <param name="ObjectiveText">The original visible objective text.</param>
+            <param name="SummaryText">The original visible summary text.</param>
+            <param name="AdditionalSummaryNodeAddresses">
+                The supplemental summary text nodes captured for this scope.
+            </param>
+            <param name="AdditionalSummaryTexts">
+                The original visible supplemental summary texts.
+            </param>
+            <param name="SummaryNodeWidth">The original primary summary node width.</param>
+            <param name="SummaryContainerHeight">
+                The original summary container height.
+            </param>
+            <param name="SummaryNodeTextFlags">
+                The original primary summary node text flags.
+            </param>
+            <param name="SummaryNodeFontSize">
+                The original primary summary node font size.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte)">
+            <summary>
+                Stores the original JournalDetail texts for a single visible quest
+                scope so mode changes can restore native UI state and drive swap
+                tooltips from stable source text.
+            </summary>
+            <param name="QuestName">The original quest title.</param>
+            <param name="QuestMessage">The original quest description.</param>
+            <param name="ObjectiveText">The original visible objective text.</param>
+            <param name="SummaryText">The original visible summary text.</param>
+            <param name="AdditionalSummaryNodeAddresses">
+                The supplemental summary text nodes captured for this scope.
+            </param>
+            <param name="AdditionalSummaryTexts">
+                The original visible supplemental summary texts.
+            </param>
+            <param name="SummaryNodeWidth">The original primary summary node width.</param>
+            <param name="SummaryContainerHeight">
+                The original summary container height.
+            </param>
+            <param name="SummaryNodeTextFlags">
+                The original primary summary node text flags.
+            </param>
+            <param name="SummaryNodeFontSize">
+                The original primary summary node font size.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.QuestName">
+            <summary>The original quest title.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.QuestMessage">
+            <summary>The original quest description.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveText">
+            <summary>The original visible objective text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryText">
+            <summary>The original visible summary text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.AdditionalSummaryNodeAddresses">
+            <summary>
+                The supplemental summary text nodes captured for this scope.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.AdditionalSummaryTexts">
+            <summary>
+                The original visible supplemental summary texts.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeWidth">
+            <summary>The original primary summary node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryContainerHeight">
+            <summary>
+                The original summary container height.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeTextFlags">
+            <summary>
+                The original primary summary node text flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeFontSize">
+            <summary>
+                The original primary summary node font size.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler">
+            <summary>
+                Handles the Journal quest-list runtime inside the standalone
+                quest-handler model.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler" /> class.
+            </summary>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalUsesHoverTooltips">
+            <summary>
+                Gets whether Journal should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalWritesNativeTranslation">
+            <summary>
+                Gets whether Journal should write translated text into the native
+                addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalHoverShowsOriginal">
+            <summary>
+                Gets whether Journal hover tooltips should show the original text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.CanRenderJournalHoverTooltip(System.Boolean)">
+            <summary>
+                Gets whether Journal may render a hover tooltip for a payload whose
+                translated content is ready.
+            </summary>
+            <param name="translatedPayloadReady">
+                Whether the translated payload required by the current mode is ready.
+            </param>
+            <returns><c>true</c> when the hover tooltip may be rendered.</returns>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalShouldRemoveDiacritics">
+            <summary>
+                Gets whether translated Journal text should be normalized before being
+                written into the native UI.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateJournalQuests">
             <summary>
                 Translates the active Journal quest list addon.
             </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateCompletedQuest(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-                Translates a completed Journal quest view.
-            </summary>
-            <param name="journalDetail">The journal detail addon.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-                Translates the active Journal detail view.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalDetailEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <summary>
-                Handles Journal detail refresh events.
-            </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalQuestEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
@@ -5167,66 +5486,10 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Clears quest hover registrations when Journal views close.
+                Clears Journal quest-list hover registrations when the addon closes.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.BuildJournalDetailScopeKey(System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String)">
-            <summary>
-                Builds the current JournalDetail cache scope key so each quest detail
-                view can keep its own local runtime state.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
-            <param name="questName">The current quest name.</param>
-            <param name="questMessage">The current quest message.</param>
-            <returns>A stable scope key for the current quest detail body.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.EnsureJournalDetailScope(System.String)">
-            <summary>
-                Ensures the JournalDetail runtime cache is scoped to the currently
-                visible quest only.
-            </summary>
-            <param name="scopeKey">The quest-detail scope key.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalDetailOriginalSnapshot(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot@)">
-            <summary>
-                Attempts to get the original JournalDetail text snapshot for the
-                current quest scope.
-            </summary>
-            <param name="scopeKey">The current quest-detail scope key.</param>
-            <param name="snapshot">The cached original snapshot.</param>
-            <returns>True when the scope already has an original snapshot.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalDetailOriginalSnapshot(System.String,System.String,System.String,System.String,System.String)">
-            <summary>
-                Remembers the original JournalDetail texts for the current quest
-                scope so mode switches can restore native UI state correctly.
-            </summary>
-            <param name="scopeKey">The current quest-detail scope key.</param>
-            <param name="questName">The original quest name.</param>
-            <param name="questMessage">The original quest description.</param>
-            <param name="objectiveText">The original visible objective text.</param>
-            <param name="summaryText">The original visible summary text.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
-            <summary>
-                Attempts to get translated JournalDetail text from the local
-                quest-scoped runtime cache.
-            </summary>
-            <param name="scopeKey">The current quest-detail scope key.</param>
-            <param name="originalText">The source text visible for that scope.</param>
-            <param name="translatedText">The cached translated text.</param>
-            <returns>True when the scoped runtime cache already has the text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalDetailCachedText(System.String,System.String,System.String)">
-            <summary>
-                Remembers translated JournalDetail text inside the local quest-scoped
-                runtime cache.
-            </summary>
-            <param name="scopeKey">The current quest-detail scope key.</param>
-            <param name="originalText">The source text visible for that scope.</param>
-            <param name="translatedText">The translated text resolved for that scope.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListCachedText(System.String,System.String@)">
             <summary>
@@ -5287,94 +5550,6 @@
             </summary>
             <param name="visibleQuestNames">The currently visible quest names.</param>
             <param name="visibleQuestNodeKeys">The currently visible quest node keys.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ApplyQuestProgressMetadata(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot})">
-            <summary>
-                Applies canonical quest metadata resolved from the current quest
-                progress snapshot so persisted JournalDetail rows stay aligned with
-                the sheet-first quest model.
-            </summary>
-            <param name="questPlate">The quest plate being materialized.</param>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.EnsureQuestPlateMetadataPersisted(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot})">
-            <summary>
-                Persists canonical quest metadata into an existing JournalDetail row
-                when the row was created before the sheet-first fields were populated.
-            </summary>
-            <param name="questPlate">The quest plate currently loaded from the DB.</param>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot, if any.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.BuildQuestPlateHoverBody(System.String[])">
-            <summary>
-                Builds a single multi-paragraph tooltip body from the quest plate text
-                sections that are currently visible.
-            </summary>
-            <param name="sections">Quest plate text sections to join.</param>
-            <returns>A multi-paragraph tooltip body.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.BuildQuestPlateSummarySection(System.String,System.String,System.Collections.Generic.IReadOnlyCollection{Echoglossian.SummaryQuest},System.Boolean)">
-            <summary>
-                Builds the visible JournalDetail summary block from the currently
-                visible summary text and summary nodes.
-            </summary>
-            <param name="primarySummaryText">The main summary text currently shown in the detail pane.</param>
-            <param name="summaries">The visible summary nodes collected for the detail pane.</param>
-            <param name="useTranslatedText">Whether to use translated or original summary entries.</param>
-            <returns>A deduplicated summary block for the tooltip body.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ExpandQuestPlateHoverBoundsForTextNode(System.Numerics.Vector2@,System.Numerics.Vector2@,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-                Expands an existing quest-body hover rectangle to include a visible
-                text node and some practical padding around it.
-            </summary>
-            <param name="topLeft">The current top-left coordinate.</param>
-            <param name="bottomRight">The current bottom-right coordinate.</param>
-            <param name="textNode">The text node to include.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetQuestPlateHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
-            <summary>
-                Gets the bounds of the JournalCanvasComponentNode used as the quest
-                plate hover trigger.
-            </summary>
-            <param name="questCanvasNode">The journal detail component.</param>
-            <param name="topLeft">The top-left screen coordinate of the node.</param>
-            <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
-            <returns>True when the node is visible and the bounds are usable.</returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot">
-            <summary>
-                Stores the original JournalDetail texts for a single visible quest
-                scope so mode changes can restore native UI state and drive swap
-                tooltips from stable source text.
-            </summary>
-            <param name="QuestName">The original quest title.</param>
-            <param name="QuestMessage">The original quest description.</param>
-            <param name="ObjectiveText">The original visible objective text.</param>
-            <param name="SummaryText">The original visible summary text.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String)">
-            <summary>
-                Stores the original JournalDetail texts for a single visible quest
-                scope so mode changes can restore native UI state and drive swap
-                tooltips from stable source text.
-            </summary>
-            <param name="QuestName">The original quest title.</param>
-            <param name="QuestMessage">The original quest description.</param>
-            <param name="ObjectiveText">The original visible objective text.</param>
-            <param name="SummaryText">The original visible summary text.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.QuestName">
-            <summary>The original quest title.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.QuestMessage">
-            <summary>The original quest description.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.ObjectiveText">
-            <summary>The original visible objective text.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.JournalDetailOriginalSnapshot.SummaryText">
-            <summary>The original visible summary text.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler">
             <summary>
@@ -6177,8 +6352,8 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler">
             <summary>
-                Handles the ToDoList quest addon runtime inside the standalone
-                quest-handler model.
+                Handles the ToDoList quest addon runtime using only QuestManager,
+                canonical quest data, and persisted quest plates.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
@@ -6210,17 +6385,141 @@
                 being written into the native UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.RegisterToDoTooltip(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Int32,System.Int32,System.UInt32,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.RefreshToDoList">
             <summary>
-                Registers a hover tooltip for a specific ToDoList text node.
+                Refreshes the ToDoList runtime from canonical quest data and the DB.
             </summary>
-            <param name="todoList">The live addon window.</param>
-            <param name="indexI">The outer node index.</param>
-            <param name="indexJ">The inner node index.</param>
-            <param name="nodeId">The backing node identifier.</param>
-            <param name="originalText">The original visible text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryGetVisibleToDoList(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Tries to resolve the live ToDoList addon when it is visible.
+            </summary>
+            <param name="todoList">The live addon pointer.</param>
+            <returns>True when the visible addon was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CollectVisibleToDoQuests(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Collects the currently visible quest rows and objective rows from the
+                ToDoList addon.
+            </summary>
+            <param name="todoList">The live ToDoList addon.</param>
+            <returns>The visible quest rows grouped with their objective rows.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.GetQuestObjectives(System.UInt32,System.Int32,System.Collections.Generic.List{Echoglossian.ToDoItem},System.Collections.Generic.List{Echoglossian.ToDoItem})">
+            <summary>
+                Gets the contiguous objective block that belongs to a quest row.
+            </summary>
+            <param name="currentObjectiveNode">The current node identifier.</param>
+            <param name="objectiveIndex">The current objective index.</param>
+            <param name="objectiveRows">The full objective list.</param>
+            <param name="questObjectives">The objectives collected for this quest.</param>
+            <returns>The collected quest objectives.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryResolveVisibleQuestEntries(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest,System.Collections.Generic.List{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry}@,System.String@)">
+            <summary>
+                Resolves the visible quest row and its objective rows entirely from
+                canonical quest data and persisted quest plates.
+            </summary>
+            <param name="visibleQuest">The visible quest row and grouped objectives.</param>
+            <param name="runtimeEntries">The resolved runtime entries.</param>
+            <param name="blockingQuestLabel">
+                The quest label to use if this visible quest blocks activation.
+            </param>
+            <returns>
+                <c>true</c> when every required translated payload is already stored
+                in the DB.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateQuestRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String)">
+            <summary>
+                Creates the runtime payload for one visible quest-name row.
+            </summary>
+            <param name="questRow">The visible quest row.</param>
+            <param name="progressKey">The stable quest progress key.</param>
+            <param name="originalText">The resolved original quest text.</param>
+            <param name="translatedText">The translated quest text.</param>
+            <returns>The runtime entry.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateObjectiveRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String)">
+            <summary>
+                Creates the runtime payload for one visible objective row.
+            </summary>
+            <param name="objectiveRow">The visible objective row.</param>
+            <param name="progressKey">The stable quest progress key.</param>
+            <param name="originalText">The resolved original objective text.</param>
+            <param name="translatedText">The translated objective text.</param>
+            <returns>The runtime entry.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.BuildToDoRuntimeEntryKey(System.String,System.Int32,System.Int32,System.UInt32)">
+            <summary>
+                Builds the stable runtime key for a ToDoList row.
+            </summary>
+            <param name="progressKey">The quest progress key.</param>
+            <param name="indexI">The outer row index.</param>
+            <param name="indexJ">The inner row index.</param>
+            <param name="nodeId">The backing node id.</param>
+            <returns>The stable runtime key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ResolveOriginalToDoText(Echoglossian.ToDoItem)">
+            <summary>
+                Resolves the original visible text for a ToDoList row, even if the
+                addon currently shows translated text from a previously applied mode.
+            </summary>
+            <param name="todoItem">The visible ToDoList row.</param>
+            <returns>The original source text for that row.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ShouldTrackObjectiveRow(System.String)">
+            <summary>
+                Gets whether a visible objective row should be backed by canonical
+                TODO data.
+            </summary>
+            <param name="objectiveText">The visible objective text.</param>
+            <returns><c>true</c> when the row should map to canonical TODO data.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ApplyToDoListPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Applies the current ToDoList presentation mode using only the local
+                runtime entries resolved from the DB.
+            </summary>
+            <param name="todoList">The live ToDoList addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.RestoreToDoListOriginals(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Restores the original ToDoList text for all rows currently tracked in
+                the local runtime state.
+            </summary>
+            <param name="todoList">The live ToDoList addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.GetToDoTranslatedDisplayText(System.String)">
+            <summary>
+                Normalizes translated ToDoList text before it is written into the
+                native UI.
+            </summary>
             <param name="translatedText">The translated text.</param>
-            <param name="progressKey">Optional stable quest-progress key.</param>
+            <returns>The translated text as it should be displayed natively.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.RefreshToDoListHoverTargets(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Refreshes hover targets for the currently visible ToDoList rows.
+            </summary>
+            <param name="todoList">The live ToDoList addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.RegisterToDoTooltip(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry)">
+            <summary>
+                Registers the hover tooltip for one resolved ToDoList runtime row.
+            </summary>
+            <param name="todoList">The live ToDoList addon.</param>
+            <param name="runtimeEntry">The runtime entry to register.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryGetLiveToDoTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Int32,System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Tries to resolve the live ToDoList text node for one tracked row.
+            </summary>
+            <param name="todoList">The live ToDoList addon.</param>
+            <param name="indexI">The outer row index.</param>
+            <param name="indexJ">The inner text-node index.</param>
+            <param name="textNode">The resolved text node.</param>
+            <returns><c>true</c> when the live text node was resolved.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryGetToDoHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Int32,System.Int32,System.Numerics.Vector2@,System.Numerics.Vector2@)">
             <summary>
@@ -6234,105 +6533,107 @@
             <param name="bottomRight">The resolved bottom-right screen coordinate.</param>
             <returns>True when usable hover bounds were resolved.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.RememberToDoHoverEntry(System.String,System.Int32,System.Int32,System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.NotifyToDoListWaitingForQuestData(System.Collections.Generic.IReadOnlyCollection{System.String})">
             <summary>
-                Remembers the latest tooltip payload for one ToDoList row so it can
-                be refreshed during draw without recomputing translations.
+                Emits a notification while the ToDoList is waiting for all visible
+                quest data to exist in the DB.
             </summary>
-            <param name="key">The stable hover key.</param>
-            <param name="indexI">The outer row index.</param>
-            <param name="indexJ">The inner text-node index.</param>
-            <param name="nodeId">The backing node identifier.</param>
-            <param name="originalText">The current original text.</param>
-            <param name="translatedText">The current translated text.</param>
+            <param name="blockingQuestLabels">The visible quest labels still waiting.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TranslateToDoList">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ClearToDoListWaitingState">
             <summary>
-                Scans the live ToDoList addon and queues translations for visible quest
-                rows.
+                Clears the debounced ToDoList waiting-notification state.
             </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.GetQuestObjectives(System.UInt32,System.Int32,System.Collections.Generic.List{Echoglossian.ToDoItem},System.Collections.Generic.List{Echoglossian.ToDoItem})">
-            <summary>
-                Gets the contiguous objective block that belongs to a quest row.
-            </summary>
-            <param name="currentObjectiveNode">The current node identifier.</param>
-            <param name="objectiveIndex">The current objective index.</param>
-            <param name="objectivesToTranslate">The full objective list.</param>
-            <param name="questObjectives">The objectives collected for this quest.</param>
-            <returns>The collected quest objectives.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TranslateTodoItems(System.Collections.Generic.List{Echoglossian.ToDoItem},System.Collections.Generic.List{Echoglossian.ToDoItem},System.Collections.Generic.List{Echoglossian.ToDoItem},FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
-            <summary>
-                Applies translations to quest names and objectives for the current
-                ToDoList scan.
-            </summary>
-            <param name="questNamesToTranslate">The quest name rows.</param>
-            <param name="objectivesToTranslate">The normal objective rows.</param>
-            <param name="levelQuestObjectivesToTranslate">The level-quest objective rows.</param>
-            <param name="todoList">The live addon window.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.OnToDoListEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Handles ToDoList refresh events.
+                Handles ToDoList update events.
             </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
+            <param name="type">The lifecycle event.</param>
+            <param name="args">The lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.OnToDoListHoverRefreshEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.OnToDoListPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Refreshes ToDoList hover targets every draw using the most recently
-                resolved row payloads without queueing new translations.
+                Handles ToDoList draw events so the addon can retry activation after
+                the background prefetch finishes and react immediately to mode
+                switches.
             </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
+            <param name="type">The lifecycle event.</param>
+            <param name="args">The lifecycle arguments.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.OnToDoListCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Clears ToDoList hover registrations when the addon closes.
+                Clears the ToDoList runtime state when the addon closes.
             </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
+            <param name="type">The lifecycle event.</param>
+            <param name="args">The lifecycle arguments.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry">
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest">
             <summary>
-                Captures the latest tooltip payload for one visible ToDoList row.
+                Represents one visible ToDoList quest row and the objective rows
+                grouped under it.
             </summary>
-            <param name="Key">The stable hover key.</param>
-            <param name="IndexI">The outer row index.</param>
-            <param name="IndexJ">The inner text-node index.</param>
-            <param name="NodeId">The backing node identifier.</param>
-            <param name="OriginalText">The current original text.</param>
-            <param name="TranslatedText">The current translated text.</param>
+            <param name="QuestRow">The visible quest row.</param>
+            <param name="Objectives">The grouped objective rows.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry.#ctor(System.String,System.Int32,System.Int32,System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest.#ctor(Echoglossian.ToDoItem,System.Collections.Generic.IReadOnlyList{Echoglossian.ToDoItem})">
             <summary>
-                Captures the latest tooltip payload for one visible ToDoList row.
+                Represents one visible ToDoList quest row and the objective rows
+                grouped under it.
             </summary>
-            <param name="Key">The stable hover key.</param>
+            <param name="QuestRow">The visible quest row.</param>
+            <param name="Objectives">The grouped objective rows.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest.QuestRow">
+            <summary>The visible quest row.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest.Objectives">
+            <summary>The grouped objective rows.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry">
+            <summary>
+                Represents one resolved ToDoList runtime row.
+            </summary>
+            <param name="Key">The stable runtime key.</param>
+            <param name="ProgressKey">The stable quest progress key.</param>
             <param name="IndexI">The outer row index.</param>
-            <param name="IndexJ">The inner text-node index.</param>
-            <param name="NodeId">The backing node identifier.</param>
-            <param name="OriginalText">The current original text.</param>
-            <param name="TranslatedText">The current translated text.</param>
+            <param name="IndexJ">The inner row index.</param>
+            <param name="NodeId">The backing node id.</param>
+            <param name="OriginalText">The original source text.</param>
+            <param name="TranslatedText">The translated text from the DB.</param>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry.Key">
-            <summary>The stable hover key.</summary>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.Int32,System.UInt32,System.String,System.String)">
+            <summary>
+                Represents one resolved ToDoList runtime row.
+            </summary>
+            <param name="Key">The stable runtime key.</param>
+            <param name="ProgressKey">The stable quest progress key.</param>
+            <param name="IndexI">The outer row index.</param>
+            <param name="IndexJ">The inner row index.</param>
+            <param name="NodeId">The backing node id.</param>
+            <param name="OriginalText">The original source text.</param>
+            <param name="TranslatedText">The translated text from the DB.</param>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry.IndexI">
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.Key">
+            <summary>The stable runtime key.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.ProgressKey">
+            <summary>The stable quest progress key.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.IndexI">
             <summary>The outer row index.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry.IndexJ">
-            <summary>The inner text-node index.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.IndexJ">
+            <summary>The inner row index.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry.NodeId">
-            <summary>The backing node identifier.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.NodeId">
+            <summary>The backing node id.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry.OriginalText">
-            <summary>The current original text.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.OriginalText">
+            <summary>The original source text.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoHoverEntry.TranslatedText">
-            <summary>The current translated text.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.TranslatedText">
+            <summary>The translated text from the DB.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
             <summary>
@@ -9428,6 +9729,16 @@
             <param name="currentSequenceEntry">The current SEQ entry.</param>
             <returns>True when the current SEQ entry could be resolved.</returns>
         </member>
+        <member name="M:Echoglossian.QuestCanonicalData.GetSummaryEntriesBeforeCurrentSequence">
+            <summary>
+                Gets the canonical SEQ entries that belong to phases completed
+                before the current live quest sequence.
+            </summary>
+            <returns>
+                The ordered SEQ entries whose text should populate the JournalDetail
+                summary block for the active quest phase.
+            </returns>
+        </member>
         <member name="M:Echoglossian.QuestCanonicalData.EnumerateSummaryRowKeysByText(System.String)">
             <summary>
                 Enumerates canonical summary row keys whose source text matches the
@@ -11014,6 +11325,11 @@
               Looks up a localized string similar to Translate quest name, description and objectives (WIP).
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateJournalDetailToggle">
+            <summary>
+              Looks up a localized string similar to Translate JournalDetail.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateNpcNamesToggle">
             <summary>
               Looks up a localized string similar to Translate NPCs names in dialogue boxes.
@@ -11132,6 +11448,11 @@
         <member name="P:Echoglossian.Properties.Resources.AcceptedQuestPrefetchCompletedNotification">
             <summary>
               Looks up a localized string similar to Background quest pre-translation finished for {0} accepted quests..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToDoListAwaitingQuestDataNotification">
+            <summary>
+              Looks up a localized string similar to ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslation">

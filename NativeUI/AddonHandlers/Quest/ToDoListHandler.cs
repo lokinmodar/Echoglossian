@@ -3,13 +3,11 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.Cache;
-
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
-///     Handles the ToDoList quest addon runtime inside the standalone
-///     quest-handler model.
+///     Handles the ToDoList quest addon runtime using only QuestManager,
+///     canonical quest data, and persisted quest plates.
 /// </summary>
 internal sealed class ToDoListHandler : QuestAddonHandlerBase
 {
@@ -19,7 +17,23 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
 
   private const string ToDoListHoverPrefix = "ToDoList-";
 
-  private readonly Dictionary<string, ToDoHoverEntry> toDoHoverEntries = [];
+  private static readonly TimeSpan ToDoListRetryInterval =
+      TimeSpan.FromSeconds(2);
+
+  private static readonly TimeSpan ToDoListWaitingNotificationCooldown =
+      TimeSpan.FromSeconds(15);
+
+  private readonly Dictionary<string, ToDoRuntimeEntry> toDoRuntimeEntries = [];
+
+  private bool currentToDoListDataReady;
+
+  private JournalTranslationDisplayMode? lastAppliedDisplayMode;
+
+  private DateTime nextToDoListRetryUtc = DateTime.MinValue;
+
+  private string toDoListWaitingSignature = string.Empty;
+
+  private DateTime toDoListWaitingNotificationUtc = DateTime.MinValue;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="ToDoListHandler" /> class.
@@ -30,7 +44,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PostRequestedUpdate, this.OnToDoListEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnToDoListEvent);
-    this.RegisterHandler(AddonEvent.PreDraw, this.OnToDoListHoverRefreshEvent);
+    this.RegisterHandler(AddonEvent.PreDraw, this.OnToDoListPreDrawEvent);
     this.RegisterHandler(AddonEvent.PreHide, this.OnToDoListCleanupEvent);
     this.RegisterHandler(AddonEvent.PreFinalize, this.OnToDoListCleanupEvent);
   }
@@ -68,91 +82,685 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
           this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
 
   /// <summary>
-  ///     Registers a hover tooltip for a specific ToDoList text node.
+  ///     Refreshes the ToDoList runtime from canonical quest data and the DB.
   /// </summary>
-  /// <param name="todoList">The live addon window.</param>
-  /// <param name="indexI">The outer node index.</param>
-  /// <param name="indexJ">The inner node index.</param>
-  /// <param name="nodeId">The backing node identifier.</param>
-  /// <param name="originalText">The original visible text.</param>
-  /// <param name="translatedText">The translated text.</param>
-  /// <param name="progressKey">Optional stable quest-progress key.</param>
-  private unsafe void RegisterToDoTooltip(
-      AtkUnitBase* todoList,
+  private unsafe void RefreshToDoList()
+  {
+    if (!TryGetVisibleToDoList(out var todoList))
+    {
+      return;
+    }
+
+    if (!this.Config.TranslateToDoList ||
+        this.DisableTranslationAccordingToState())
+    {
+      this.RestoreToDoListOriginals(todoList);
+      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+      this.currentToDoListDataReady = false;
+      this.lastAppliedDisplayMode = null;
+      return;
+    }
+
+    var visibleQuests = this.CollectVisibleToDoQuests(todoList);
+    var runtimeEntries = new Dictionary<string, ToDoRuntimeEntry>(
+        StringComparer.Ordinal);
+    HashSet<string> blockingQuestLabels = new(StringComparer.Ordinal);
+
+    foreach (var visibleQuest in visibleQuests)
+    {
+      if (!this.TryResolveVisibleQuestEntries(
+              visibleQuest,
+              out var resolvedEntries,
+              out var blockingQuestLabel))
+      {
+        blockingQuestLabels.Add(blockingQuestLabel);
+      }
+
+      foreach (var resolvedEntry in resolvedEntries)
+      {
+        runtimeEntries[resolvedEntry.Key] = resolvedEntry;
+      }
+    }
+
+    this.toDoRuntimeEntries.Clear();
+    foreach (var (entryKey, entryValue) in runtimeEntries)
+    {
+      this.toDoRuntimeEntries[entryKey] = entryValue;
+    }
+
+    if (blockingQuestLabels.Count != 0)
+    {
+      this.currentToDoListDataReady = false;
+      this.nextToDoListRetryUtc = DateTime.UtcNow + ToDoListRetryInterval;
+      this.RestoreToDoListOriginals(todoList);
+      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+      this.lastAppliedDisplayMode = null;
+      this.NotifyToDoListWaitingForQuestData(blockingQuestLabels);
+      return;
+    }
+
+    this.currentToDoListDataReady = true;
+    this.nextToDoListRetryUtc = DateTime.MinValue;
+    this.ClearToDoListWaitingState();
+    this.ApplyToDoListPresentation(todoList);
+  }
+
+  /// <summary>
+  ///     Tries to resolve the live ToDoList addon when it is visible.
+  /// </summary>
+  /// <param name="todoList">The live addon pointer.</param>
+  /// <returns>True when the visible addon was resolved.</returns>
+  private static unsafe bool TryGetVisibleToDoList(out AtkUnitBase* todoList)
+  {
+    todoList = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+        ToDoListAddonName);
+    return todoList != null && todoList->IsVisible;
+  }
+
+  /// <summary>
+  ///     Collects the currently visible quest rows and objective rows from the
+  ///     ToDoList addon.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  /// <returns>The visible quest rows grouped with their objective rows.</returns>
+  private unsafe List<ToDoVisibleQuest> CollectVisibleToDoQuests(
+      AtkUnitBase* todoList)
+  {
+    List<ToDoItem> questNameRows = [];
+    List<ToDoItem> objectiveRows = [];
+    List<ToDoItem> levelQuestObjectiveRows = [];
+
+    for (var i = 0; i < todoList->UldManager.NodeListCount; i++)
+    {
+      var outerNode = todoList->UldManager.NodeList[i];
+      if (outerNode == null || !outerNode->IsVisible())
+      {
+        continue;
+      }
+
+      if (outerNode->Type == NodeType.Collision ||
+          outerNode->Type == NodeType.Res)
+      {
+        continue;
+      }
+
+      var nodeId = outerNode->NodeId;
+      if (nodeId == 8 || nodeId == 9)
+      {
+        continue;
+      }
+
+      var componentNode = outerNode->GetAsAtkComponentNode();
+      if (componentNode == null || componentNode->Component == null)
+      {
+        continue;
+      }
+
+      for (var j = 0; j < componentNode->Component->UldManager.NodeListCount; j++)
+      {
+        var childNode = componentNode->Component->UldManager.NodeList[j];
+        if (childNode == null ||
+            !childNode->IsVisible() ||
+            childNode->Type != NodeType.Text)
+        {
+          continue;
+        }
+
+        var childNodeId = childNode->NodeId;
+        var originalStep = childNode->GetAsAtkTextNode()->NodeText;
+        if (originalStep.IsEmpty)
+        {
+          continue;
+        }
+
+        var originalStepText = MemoryHelper.ReadSeStringAsString(
+            out _,
+            (nint)originalStep.StringPtr.Value);
+        if (string.IsNullOrWhiteSpace(originalStepText))
+        {
+          continue;
+        }
+
+        if (IsValidTimeFormat(originalStepText))
+        {
+          continue;
+        }
+
+        if (nodeId == 4 && childNodeId == 8)
+        {
+          continue;
+        }
+
+        var todoItem = new ToDoItem(
+            originalStepText,
+            i,
+            j,
+            nodeId);
+
+        if (nodeId > 60000 ||
+            (nodeId == 4 && childNodeId == 3) ||
+            (nodeId == 6 && childNodeId == 2))
+        {
+          questNameRows.Add(todoItem);
+        }
+        else if (nodeId == 4 || nodeId == 5)
+        {
+          levelQuestObjectiveRows.Add(todoItem);
+        }
+        else
+        {
+          objectiveRows.Add(todoItem);
+        }
+      }
+    }
+
+    objectiveRows.Reverse();
+
+    List<ToDoVisibleQuest> visibleQuests = [];
+    var objectiveIndex = 0;
+    foreach (var questNameRow in questNameRows)
+    {
+      List<ToDoItem> questObjectives = [];
+      if (objectiveIndex < objectiveRows.Count)
+      {
+        var currentObjective = objectiveRows[objectiveIndex];
+        questObjectives.Add(currentObjective);
+        questObjectives = this.GetQuestObjectives(
+            currentObjective.NodeId,
+            objectiveIndex,
+            objectiveRows,
+            questObjectives);
+      }
+
+      objectiveIndex += questObjectives.Count;
+      if (questNameRow.NodeId == 4)
+      {
+        questObjectives.AddRange(levelQuestObjectiveRows);
+      }
+
+      visibleQuests.Add(
+          new ToDoVisibleQuest(
+              questNameRow,
+              questObjectives));
+    }
+
+    return visibleQuests;
+  }
+
+  /// <summary>
+  ///     Gets the contiguous objective block that belongs to a quest row.
+  /// </summary>
+  /// <param name="currentObjectiveNode">The current node identifier.</param>
+  /// <param name="objectiveIndex">The current objective index.</param>
+  /// <param name="objectiveRows">The full objective list.</param>
+  /// <param name="questObjectives">The objectives collected for this quest.</param>
+  /// <returns>The collected quest objectives.</returns>
+  private List<ToDoItem> GetQuestObjectives(
+      uint currentObjectiveNode,
+      int objectiveIndex,
+      List<ToDoItem> objectiveRows,
+      List<ToDoItem> questObjectives)
+  {
+    var currentIndex = objectiveIndex + 1;
+    if (currentIndex >= objectiveRows.Count)
+    {
+      return questObjectives;
+    }
+
+    var objective = objectiveRows[currentIndex];
+    if (Math.Abs((long)currentObjectiveNode - objective.NodeId) > 1)
+    {
+      return questObjectives;
+    }
+
+    questObjectives.Add(objective);
+    return this.GetQuestObjectives(
+        objective.NodeId,
+        currentIndex,
+        objectiveRows,
+        questObjectives);
+  }
+
+  /// <summary>
+  ///     Resolves the visible quest row and its objective rows entirely from
+  ///     canonical quest data and persisted quest plates.
+  /// </summary>
+  /// <param name="visibleQuest">The visible quest row and grouped objectives.</param>
+  /// <param name="runtimeEntries">The resolved runtime entries.</param>
+  /// <param name="blockingQuestLabel">
+  ///     The quest label to use if this visible quest blocks activation.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when every required translated payload is already stored
+  ///     in the DB.
+  /// </returns>
+  private bool TryResolveVisibleQuestEntries(
+      ToDoVisibleQuest visibleQuest,
+      out List<ToDoRuntimeEntry> runtimeEntries,
+      out string blockingQuestLabel)
+  {
+    runtimeEntries = [];
+
+    var originalQuestText = this.ResolveOriginalToDoText(visibleQuest.QuestRow);
+    blockingQuestLabel = originalQuestText;
+
+    if (!QuestTodoProgressResolver.TryResolveQuestTodoProgress(
+            originalQuestText,
+            out var todoProgressSnapshot))
+    {
+      runtimeEntries.Add(
+          this.CreateQuestRuntimeEntry(
+              visibleQuest.QuestRow,
+              progressKey: string.Empty,
+              originalQuestText,
+              originalQuestText));
+
+      foreach (var objectiveRow in visibleQuest.Objectives)
+      {
+        var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
+        runtimeEntries.Add(
+            this.CreateObjectiveRuntimeEntry(
+                objectiveRow,
+                progressKey: string.Empty,
+                originalObjectiveText,
+                originalObjectiveText));
+      }
+
+      return false;
+    }
+
+    var questCanonicalData = QuestCanonicalData.Create(
+        todoProgressSnapshot.QuestProgress,
+        GetGameVersion());
+    var questPlate = questCanonicalData.ToQuestPlate(
+        ClientStateInterface.ClientLanguage.Humanize(),
+        LangDict[LanguageInt].Code,
+        this.Config.ChosenTransEngine,
+        DateTime.Now);
+    var foundQuestPlate = this.FindQuestPlate(questPlate);
+    if (foundQuestPlate == null ||
+        string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestName))
+    {
+      runtimeEntries.Add(
+          this.CreateQuestRuntimeEntry(
+              visibleQuest.QuestRow,
+              todoProgressSnapshot.CacheKey,
+              originalQuestText,
+              originalQuestText));
+
+      foreach (var objectiveRow in visibleQuest.Objectives)
+      {
+        var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
+        runtimeEntries.Add(
+            this.CreateObjectiveRuntimeEntry(
+                objectiveRow,
+                todoProgressSnapshot.CacheKey,
+                originalObjectiveText,
+                originalObjectiveText));
+      }
+
+      return false;
+    }
+
+    runtimeEntries.Add(
+        this.CreateQuestRuntimeEntry(
+            visibleQuest.QuestRow,
+            todoProgressSnapshot.CacheKey,
+            originalQuestText,
+            foundQuestPlate.TranslatedQuestName));
+
+    var canonicalObjectiveRows = todoProgressSnapshot.QuestProgress.QuestSteps
+        .Where(step => !string.IsNullOrWhiteSpace(step.Text))
+        .ToArray();
+    var trackedObjectiveRows = visibleQuest.Objectives
+        .Where(item => this.ShouldTrackObjectiveRow(this.ResolveOriginalToDoText(item)))
+        .ToArray();
+    if (trackedObjectiveRows.Length > canonicalObjectiveRows.Length)
+    {
+      foreach (var objectiveRow in visibleQuest.Objectives)
+      {
+        var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
+        runtimeEntries.Add(
+            this.CreateObjectiveRuntimeEntry(
+                objectiveRow,
+                todoProgressSnapshot.CacheKey,
+                originalObjectiveText,
+                originalObjectiveText));
+      }
+
+      return false;
+    }
+
+    var trackedObjectiveIndex = 0;
+    foreach (var objectiveRow in visibleQuest.Objectives)
+    {
+      var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
+      if (!this.ShouldTrackObjectiveRow(originalObjectiveText))
+      {
+        runtimeEntries.Add(
+            this.CreateObjectiveRuntimeEntry(
+                objectiveRow,
+                todoProgressSnapshot.CacheKey,
+                originalObjectiveText,
+                originalObjectiveText));
+        continue;
+      }
+
+      var canonicalObjectiveRow = canonicalObjectiveRows[trackedObjectiveIndex++];
+      if (!foundQuestPlate.TryGetTranslatedObjectiveText(
+              canonicalObjectiveRow.KeyText,
+              canonicalObjectiveRow.Text,
+              out var translatedObjectiveText) ||
+          string.IsNullOrWhiteSpace(translatedObjectiveText))
+      {
+        runtimeEntries.Add(
+            this.CreateObjectiveRuntimeEntry(
+                objectiveRow,
+                todoProgressSnapshot.CacheKey,
+                originalObjectiveText,
+                originalObjectiveText));
+        return false;
+      }
+
+      runtimeEntries.Add(
+          this.CreateObjectiveRuntimeEntry(
+              objectiveRow,
+              todoProgressSnapshot.CacheKey,
+              originalObjectiveText,
+              translatedObjectiveText));
+    }
+
+    return true;
+  }
+
+  /// <summary>
+  ///     Creates the runtime payload for one visible quest-name row.
+  /// </summary>
+  /// <param name="questRow">The visible quest row.</param>
+  /// <param name="progressKey">The stable quest progress key.</param>
+  /// <param name="originalText">The resolved original quest text.</param>
+  /// <param name="translatedText">The translated quest text.</param>
+  /// <returns>The runtime entry.</returns>
+  private ToDoRuntimeEntry CreateQuestRuntimeEntry(
+      ToDoItem questRow,
+      string progressKey,
+      string originalText,
+      string translatedText)
+  {
+    return new ToDoRuntimeEntry(
+        this.BuildToDoRuntimeEntryKey(
+            progressKey,
+            questRow.IndexI,
+            questRow.IndexJ,
+            questRow.NodeId),
+        progressKey,
+        questRow.IndexI,
+        questRow.IndexJ,
+        questRow.NodeId,
+        originalText,
+        translatedText);
+  }
+
+  /// <summary>
+  ///     Creates the runtime payload for one visible objective row.
+  /// </summary>
+  /// <param name="objectiveRow">The visible objective row.</param>
+  /// <param name="progressKey">The stable quest progress key.</param>
+  /// <param name="originalText">The resolved original objective text.</param>
+  /// <param name="translatedText">The translated objective text.</param>
+  /// <returns>The runtime entry.</returns>
+  private ToDoRuntimeEntry CreateObjectiveRuntimeEntry(
+      ToDoItem objectiveRow,
+      string progressKey,
+      string originalText,
+      string translatedText)
+  {
+    return new ToDoRuntimeEntry(
+        this.BuildToDoRuntimeEntryKey(
+            progressKey,
+            objectiveRow.IndexI,
+            objectiveRow.IndexJ,
+            objectiveRow.NodeId),
+        progressKey,
+        objectiveRow.IndexI,
+        objectiveRow.IndexJ,
+        objectiveRow.NodeId,
+        originalText,
+        translatedText);
+  }
+
+  /// <summary>
+  ///     Builds the stable runtime key for a ToDoList row.
+  /// </summary>
+  /// <param name="progressKey">The quest progress key.</param>
+  /// <param name="indexI">The outer row index.</param>
+  /// <param name="indexJ">The inner row index.</param>
+  /// <param name="nodeId">The backing node id.</param>
+  /// <returns>The stable runtime key.</returns>
+  private string BuildToDoRuntimeEntryKey(
+      string progressKey,
       int indexI,
       int indexJ,
-      uint nodeId,
-      string originalText,
-      string translatedText,
-      string? progressKey = null)
+      uint nodeId)
+  {
+    var effectiveProgressKey = string.IsNullOrWhiteSpace(progressKey)
+        ? "pending"
+        : progressKey;
+    return $"{ToDoListHoverPrefix}{effectiveProgressKey}-{indexI}-{indexJ}-{nodeId}";
+  }
+
+  /// <summary>
+  ///     Resolves the original visible text for a ToDoList row, even if the
+  ///     addon currently shows translated text from a previously applied mode.
+  /// </summary>
+  /// <param name="todoItem">The visible ToDoList row.</param>
+  /// <returns>The original source text for that row.</returns>
+  private string ResolveOriginalToDoText(ToDoItem todoItem)
+  {
+    var previousEntry = this.toDoRuntimeEntries.Values.FirstOrDefault(entry =>
+        entry.IndexI == todoItem.IndexI &&
+        entry.IndexJ == todoItem.IndexJ &&
+        entry.NodeId == todoItem.NodeId);
+    if (previousEntry != null &&
+        !string.IsNullOrWhiteSpace(previousEntry.OriginalText))
+    {
+      return previousEntry.OriginalText;
+    }
+
+    return todoItem.Text;
+  }
+
+  /// <summary>
+  ///     Gets whether a visible objective row should be backed by canonical
+  ///     TODO data.
+  /// </summary>
+  /// <param name="objectiveText">The visible objective text.</param>
+  /// <returns><c>true</c> when the row should map to canonical TODO data.</returns>
+  private bool ShouldTrackObjectiveRow(string objectiveText)
+  {
+    return !string.IsNullOrWhiteSpace(objectiveText) &&
+           !string.Equals(objectiveText, EmptyObjective, StringComparison.Ordinal) &&
+           !IsValidTimeFormat(objectiveText);
+  }
+
+  /// <summary>
+  ///     Applies the current ToDoList presentation mode using only the local
+  ///     runtime entries resolved from the DB.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  private unsafe void ApplyToDoListPresentation(AtkUnitBase* todoList)
+  {
+    if (!this.currentToDoListDataReady)
+    {
+      this.RestoreToDoListOriginals(todoList);
+      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+      this.lastAppliedDisplayMode = null;
+      return;
+    }
+
+    foreach (var runtimeEntry in this.toDoRuntimeEntries.Values)
+    {
+      if (!TryGetLiveToDoTextNode(
+              todoList,
+              runtimeEntry.IndexI,
+              runtimeEntry.IndexJ,
+              out var textNode))
+      {
+        continue;
+      }
+
+      var displayText = this.ToDoListWritesNativeTranslation
+          ? this.GetToDoTranslatedDisplayText(runtimeEntry.TranslatedText)
+          : runtimeEntry.OriginalText;
+      textNode->SetText(displayText ?? string.Empty);
+    }
+
+    if (this.ToDoListUsesHoverTooltips)
+    {
+      this.RefreshToDoListHoverTargets(todoList);
+    }
+    else
+    {
+      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+    }
+
+    this.lastAppliedDisplayMode = this.Config.ToDoListTranslationDisplayMode;
+  }
+
+  /// <summary>
+  ///     Restores the original ToDoList text for all rows currently tracked in
+  ///     the local runtime state.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  private unsafe void RestoreToDoListOriginals(AtkUnitBase* todoList)
+  {
+    foreach (var runtimeEntry in this.toDoRuntimeEntries.Values)
+    {
+      if (!TryGetLiveToDoTextNode(
+              todoList,
+              runtimeEntry.IndexI,
+              runtimeEntry.IndexJ,
+              out var textNode))
+      {
+        continue;
+      }
+
+      textNode->SetText(runtimeEntry.OriginalText ?? string.Empty);
+    }
+
+    this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+  }
+
+  /// <summary>
+  ///     Normalizes translated ToDoList text before it is written into the
+  ///     native UI.
+  /// </summary>
+  /// <param name="translatedText">The translated text.</param>
+  /// <returns>The translated text as it should be displayed natively.</returns>
+  private string GetToDoTranslatedDisplayText(string translatedText)
+  {
+    if (!this.ToDoListShouldRemoveDiacritics)
+    {
+      return translatedText;
+    }
+
+    return this.NormalizeQuestText(translatedText ?? string.Empty);
+  }
+
+  /// <summary>
+  ///     Refreshes hover targets for the currently visible ToDoList rows.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  private unsafe void RefreshToDoListHoverTargets(AtkUnitBase* todoList)
+  {
+    if (!this.currentToDoListDataReady || !this.ToDoListUsesHoverTooltips)
+    {
+      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+      return;
+    }
+
+    foreach (var runtimeEntry in this.toDoRuntimeEntries.Values)
+    {
+      this.RegisterToDoTooltip(todoList, runtimeEntry);
+    }
+  }
+
+  /// <summary>
+  ///     Registers the hover tooltip for one resolved ToDoList runtime row.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  /// <param name="runtimeEntry">The runtime entry to register.</param>
+  private unsafe void RegisterToDoTooltip(
+      AtkUnitBase* todoList,
+      ToDoRuntimeEntry runtimeEntry)
   {
     if (!this.ToDoListUsesHoverTooltips)
     {
       return;
     }
 
-    var hoverKey = progressKey == null
-        ? $"ToDoList-{indexI}-{indexJ}-{nodeId}"
-        : $"ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}";
-
-    this.RememberToDoHoverEntry(
-        hoverKey,
-        indexI,
-        indexJ,
-        nodeId,
-        originalText,
-        translatedText);
+    var translatedPayloadReady =
+        !string.IsNullOrWhiteSpace(runtimeEntry.TranslatedText);
+    if (!translatedPayloadReady)
+    {
+      this.RemoveHoverTooltipsByPrefix(runtimeEntry.Key);
+      return;
+    }
 
     if (this.TryGetToDoHoverBounds(
             todoList,
-            indexI,
-            indexJ,
+            runtimeEntry.IndexI,
+            runtimeEntry.IndexJ,
             out var topLeft,
             out var bottomRight))
     {
       this.RegisterTranslatedHoverTooltip(
-          hoverKey,
+          runtimeEntry.Key,
           topLeft,
           bottomRight,
-          originalText,
-          translatedText,
-          swapEnabled: this.ToDoListHoverShowsOriginal,
+          runtimeEntry.OriginalText,
+          runtimeEntry.TranslatedText,
+          translatedPayloadReady,
+          this.ToDoListHoverShowsOriginal,
           forceEnabled: true);
       return;
     }
 
-    var textNode = todoList->UldManager.NodeList[indexI]
-        ->GetAsAtkComponentNode()->Component->UldManager.NodeList[indexJ]
-        ->GetAsAtkTextNode();
+    if (!TryGetLiveToDoTextNode(
+            todoList,
+            runtimeEntry.IndexI,
+            runtimeEntry.IndexJ,
+            out var textNode))
+    {
+      return;
+    }
+
     this.RegisterTranslatedHoverTooltip(
-        hoverKey,
+        runtimeEntry.Key,
         textNode,
-        originalText,
-        translatedText,
-        swapEnabled: this.ToDoListHoverShowsOriginal,
+        runtimeEntry.OriginalText,
+        runtimeEntry.TranslatedText,
+        translatedPayloadReady,
+        this.ToDoListHoverShowsOriginal,
         forceEnabled: true,
         denseHitbox: true);
   }
 
   /// <summary>
-  ///     Tries to resolve a practical hover rectangle for a ToDoList row by
-  ///     combining the full row node bounds with the inner text node bounds.
+  ///     Tries to resolve the live ToDoList text node for one tracked row.
   /// </summary>
   /// <param name="todoList">The live ToDoList addon.</param>
   /// <param name="indexI">The outer row index.</param>
   /// <param name="indexJ">The inner text-node index.</param>
-  /// <param name="topLeft">The resolved top-left screen coordinate.</param>
-  /// <param name="bottomRight">The resolved bottom-right screen coordinate.</param>
-  /// <returns>True when usable hover bounds were resolved.</returns>
-  private unsafe bool TryGetToDoHoverBounds(
+  /// <param name="textNode">The resolved text node.</param>
+  /// <returns><c>true</c> when the live text node was resolved.</returns>
+  private static unsafe bool TryGetLiveToDoTextNode(
       AtkUnitBase* todoList,
       int indexI,
       int indexJ,
-      out Vector2 topLeft,
-      out Vector2 bottomRight)
+      out AtkTextNode* textNode)
   {
-    topLeft = default;
-    bottomRight = default;
+    textNode = null;
 
     if (todoList == null ||
         indexI < 0 ||
@@ -177,17 +785,47 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     }
 
     var childNode = rowComponentNode->Component->UldManager.NodeList[indexJ];
-    if (childNode == null || !childNode->IsVisible() || childNode->Type != NodeType.Text)
+    if (childNode == null ||
+        !childNode->IsVisible() ||
+        childNode->Type != NodeType.Text)
     {
       return false;
     }
 
-    var textNode = childNode->GetAsAtkTextNode();
-    if (textNode == null)
+    textNode = childNode->GetAsAtkTextNode();
+    return textNode != null;
+  }
+
+  /// <summary>
+  ///     Tries to resolve a practical hover rectangle for a ToDoList row by
+  ///     combining the full row node bounds with the inner text node bounds.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  /// <param name="indexI">The outer row index.</param>
+  /// <param name="indexJ">The inner text-node index.</param>
+  /// <param name="topLeft">The resolved top-left screen coordinate.</param>
+  /// <param name="bottomRight">The resolved bottom-right screen coordinate.</param>
+  /// <returns>True when usable hover bounds were resolved.</returns>
+  private unsafe bool TryGetToDoHoverBounds(
+      AtkUnitBase* todoList,
+      int indexI,
+      int indexJ,
+      out Vector2 topLeft,
+      out Vector2 bottomRight)
+  {
+    topLeft = default;
+    bottomRight = default;
+
+    if (!TryGetLiveToDoTextNode(
+            todoList,
+            indexI,
+            indexJ,
+            out var textNode))
     {
       return false;
     }
 
+    var rowNode = todoList->UldManager.NodeList[indexI];
     var left = Math.Min(rowNode->ScreenX, textNode->ScreenX);
     var top = Math.Min(rowNode->ScreenY, textNode->ScreenY);
     var right = Math.Max(
@@ -207,699 +845,150 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
-  ///     Remembers the latest tooltip payload for one ToDoList row so it can
-  ///     be refreshed during draw without recomputing translations.
+  ///     Emits a notification while the ToDoList is waiting for all visible
+  ///     quest data to exist in the DB.
   /// </summary>
-  /// <param name="key">The stable hover key.</param>
-  /// <param name="indexI">The outer row index.</param>
-  /// <param name="indexJ">The inner text-node index.</param>
-  /// <param name="nodeId">The backing node identifier.</param>
-  /// <param name="originalText">The current original text.</param>
-  /// <param name="translatedText">The current translated text.</param>
-  private void RememberToDoHoverEntry(
-      string key,
-      int indexI,
-      int indexJ,
-      uint nodeId,
-      string originalText,
-      string translatedText)
+  /// <param name="blockingQuestLabels">The visible quest labels still waiting.</param>
+  private void NotifyToDoListWaitingForQuestData(
+      IReadOnlyCollection<string> blockingQuestLabels)
   {
-    this.toDoHoverEntries[key] = new ToDoHoverEntry(
-        key,
-        indexI,
-        indexJ,
-        nodeId,
-        originalText ?? string.Empty,
-        translatedText ?? string.Empty);
-  }
-
-  /// <summary>
-  ///     Scans the live ToDoList addon and queues translations for visible quest
-  ///     rows.
-  /// </summary>
-  private unsafe void TranslateToDoList()
-  {
-    if (!this.Config.TranslateToDoList)
+    if (blockingQuestLabels.Count == 0)
     {
       return;
     }
 
-    var atkStage = AtkStage.Instance();
-    var todoList = atkStage->RaptureAtkUnitManager->GetAddonByName(
-        ToDoListAddonName);
-    if (todoList == null || !todoList->IsVisible)
+    var waitingSignature = string.Join(
+        "|",
+        blockingQuestLabels.OrderBy(label => label, StringComparer.Ordinal));
+    var now = DateTime.UtcNow;
+    if (string.Equals(
+            this.toDoListWaitingSignature,
+            waitingSignature,
+            StringComparison.Ordinal) &&
+        now - this.toDoListWaitingNotificationUtc <
+        ToDoListWaitingNotificationCooldown)
     {
       return;
     }
 
-    List<ToDoItem> questNamesToTranslate = [];
-    List<ToDoItem> objectivesToTranslate = [];
-    List<ToDoItem> levelQuestObjectivesToTranslate = [];
-    for (var i = 0; i < todoList->UldManager.NodeListCount; i++)
+    this.toDoListWaitingSignature = waitingSignature;
+    this.toDoListWaitingNotificationUtc = now;
+
+    NotificationManager.AddNotification(new Notification
     {
-      if (!todoList->UldManager.NodeList[i]->IsVisible())
-      {
-        continue;
-      }
-
-      if (todoList->UldManager.NodeList[i]->Type == NodeType.Collision ||
-          todoList->UldManager.NodeList[i]->Type == NodeType.Res)
-      {
-        continue;
-      }
-
-      var nodeID = todoList->UldManager.NodeList[i]->NodeId;
-
-      if (nodeID == 8 || nodeID == 9)
-      {
-        continue;
-      }
-
-      var component = todoList->UldManager.NodeList[i]->GetAsAtkComponentNode();
-      for (var j = 0;
-           j < component->Component->UldManager.NodeListCount;
-           j++)
-      {
-        if (!component->Component->UldManager.NodeList[j]->IsVisible())
-        {
-          continue;
-        }
-
-        if (component->Component->UldManager.NodeList[j]->Type != NodeType.Text)
-        {
-          continue;
-        }
-
-        var childrenNodeID = component->Component->UldManager.NodeList[j]->NodeId;
-        var originalStep = component->Component->UldManager.NodeList[j]
-            ->GetAsAtkTextNode()->NodeText;
-        if (originalStep.IsEmpty)
-        {
-          continue;
-        }
-
-        if (IsValidTimeFormat(
-                MemoryHelper.ReadSeStringAsString(
-                    out _,
-                    (nint)originalStep.StringPtr.Value)))
-        {
-          continue;
-        }
-
-        if (nodeID == 4 && childrenNodeID == 8)
-        {
-          continue;
-        }
-
-        var originalStepText = MemoryHelper.ReadSeStringAsString(
-            out _,
-            (nint)originalStep.StringPtr.Value);
-
-        if (nodeID > 60000 || (nodeID == 4 && childrenNodeID == 3) ||
-            (nodeID == 6 && childrenNodeID == 2))
-        {
-          questNamesToTranslate.Add(
-              new ToDoItem(
-                  originalStepText,
-                  i,
-                  j,
-                  nodeID));
-        }
-        else if (nodeID == 4 || nodeID == 5)
-        {
-          levelQuestObjectivesToTranslate.Add(
-              new ToDoItem(
-                  originalStepText,
-                  i,
-                  j,
-                  nodeID));
-        }
-        else
-        {
-          objectivesToTranslate.Add(
-              new ToDoItem(
-                  originalStepText,
-                  i,
-                  j,
-                  nodeID));
-        }
-      }
-    }
-
-    if (questNamesToTranslate.Count == 0)
-    {
-      return;
-    }
-
-    objectivesToTranslate.Reverse();
-    this.TranslateTodoItems(
-        questNamesToTranslate,
-        objectivesToTranslate,
-        levelQuestObjectivesToTranslate,
-        todoList);
+      Title = Resources.Name,
+      Content = string.Format(
+          CultureInfo.CurrentCulture,
+          Resources.ToDoListAwaitingQuestDataNotification,
+          blockingQuestLabels.Count),
+      Icon = FontAwesomeIcon.Book.ToNotificationIcon(),
+      Type = NotificationType.Info,
+    });
   }
 
   /// <summary>
-  ///     Gets the contiguous objective block that belongs to a quest row.
+  ///     Clears the debounced ToDoList waiting-notification state.
   /// </summary>
-  /// <param name="currentObjectiveNode">The current node identifier.</param>
-  /// <param name="objectiveIndex">The current objective index.</param>
-  /// <param name="objectivesToTranslate">The full objective list.</param>
-  /// <param name="questObjectives">The objectives collected for this quest.</param>
-  /// <returns>The collected quest objectives.</returns>
-  private List<ToDoItem> GetQuestObjectives(
-      uint currentObjectiveNode,
-      int objectiveIndex,
-      List<ToDoItem> objectivesToTranslate,
-      List<ToDoItem> questObjectives)
+  private void ClearToDoListWaitingState()
   {
-    var currentIndex = objectiveIndex + 1;
-    if (currentIndex >= objectivesToTranslate.Count)
-    {
-      return questObjectives;
-    }
-
-    var objective = objectivesToTranslate[currentIndex];
-
-    if (Math.Abs(currentObjectiveNode - objective.NodeId) > 1)
-    {
-      return questObjectives;
-    }
-
-    questObjectives.Add(objective);
-    return this.GetQuestObjectives(
-        objective.NodeId,
-        currentIndex,
-        objectivesToTranslate,
-        questObjectives);
+    this.toDoListWaitingSignature = string.Empty;
+    this.toDoListWaitingNotificationUtc = DateTime.MinValue;
   }
 
   /// <summary>
-  ///     Applies translations to quest names and objectives for the current
-  ///     ToDoList scan.
+  ///     Handles ToDoList update events.
   /// </summary>
-  /// <param name="questNamesToTranslate">The quest name rows.</param>
-  /// <param name="objectivesToTranslate">The normal objective rows.</param>
-  /// <param name="levelQuestObjectivesToTranslate">The level-quest objective rows.</param>
-  /// <param name="todoList">The live addon window.</param>
-  private unsafe void TranslateTodoItems(
-      List<ToDoItem> questNamesToTranslate,
-      List<ToDoItem> objectivesToTranslate,
-      List<ToDoItem> levelQuestObjectivesToTranslate,
-      AtkUnitBase* todoList)
-  {
-    try
-    {
-      var objectiveIndex = 0;
-      foreach (var quest in questNamesToTranslate)
-      {
-        List<ToDoItem> objectives = [];
-        if (objectiveIndex < objectivesToTranslate.Count)
-        {
-          var currentObjective = objectivesToTranslate[objectiveIndex];
-          objectives.Add(currentObjective);
-          objectives = this.GetQuestObjectives(
-              currentObjective.NodeId,
-              objectiveIndex,
-              objectivesToTranslate,
-              objectives);
-        }
-
-        objectiveIndex += objectives.Count;
-        if (quest.NodeId == 4)
-        {
-          objectives.AddRange(levelQuestObjectivesToTranslate);
-        }
-
-        QuestTodoProgressSnapshot? questTodoProgressSnapshot = null;
-        if (QuestTodoProgressResolver.TryResolveQuestTodoProgress(
-                quest.Text,
-                out var resolvedTodoProgressSnapshot))
-        {
-          questTodoProgressSnapshot = resolvedTodoProgressSnapshot;
-        }
-
-        var questTodoProgressKey = questTodoProgressSnapshot?.CacheKey ?? quest.Text;
-
-        var effectiveQuestName = quest.Text;
-        if (questTodoProgressSnapshot == null &&
-            QuestUiTranslationCache.TryGetAppliedSnapshot(
-                quest.Text,
-                out var reverseNameSnapshot) &&
-            !string.Equals(
-                reverseNameSnapshot.OriginalText,
-                quest.Text,
-                StringComparison.Ordinal))
-        {
-          effectiveQuestName = reverseNameSnapshot.OriginalText;
-          if (QuestTodoProgressResolver.TryResolveQuestTodoProgress(
-                  effectiveQuestName,
-                  out var recoveredTodoSnapshot))
-          {
-            questTodoProgressSnapshot = recoveredTodoSnapshot;
-            questTodoProgressKey = recoveredTodoSnapshot.CacheKey;
-          }
-        }
-
-        var questPlate = this.CreateQuestPlate(
-            effectiveQuestName,
-            string.Empty);
-        var foundQuestPlate = this.FindQuestPlateByName(questPlate);
-
-        if (QuestUiTranslationCache.TryGetAppliedSnapshot(
-                questTodoProgressKey,
-                out _) &&
-            foundQuestPlate == null)
-        {
-          continue;
-        }
-
-        if (foundQuestPlate != null)
-        {
-          var foundTranslatedQuestName = foundQuestPlate.TranslatedQuestName;
-          if (this.ToDoListShouldRemoveDiacritics)
-          {
-            foundTranslatedQuestName = this.NormalizeQuestText(
-                foundTranslatedQuestName ?? string.Empty);
-          }
-
-          if (this.ToDoListWritesNativeTranslation)
-          {
-            todoList->UldManager.NodeList[quest.IndexI]->
-                    GetAsAtkComponentNode()->Component->UldManager
-                .NodeList[quest.IndexJ]->GetAsAtkTextNode()
-                ->SetText(foundTranslatedQuestName);
-          }
-
-          this.RegisterToDoTooltip(
-              todoList,
-              quest.IndexI,
-              quest.IndexJ,
-              quest.NodeId,
-              quest.Text,
-              foundTranslatedQuestName,
-              questTodoProgressKey);
-
-          var snapshotSteps = questTodoProgressSnapshot?.QuestProgress.QuestSteps;
-          var objIdx = 0;
-          List<string> translatedStoredObjectives = [];
-          var hasPendingFoundObjectives = false;
-          foreach (var objective in objectives)
-          {
-            var stepText = snapshotSteps != null &&
-                           objIdx < snapshotSteps.Count
-                ? snapshotSteps[objIdx].Text
-                : objective.Text;
-            var stepKey = snapshotSteps != null &&
-                          objIdx < snapshotSteps.Count
-                ? snapshotSteps[objIdx].KeyText
-                : objective.Text;
-            objIdx++;
-
-            if (objective.Text == EmptyObjective)
-            {
-              translatedStoredObjectives.Add(EmptyObjective);
-              continue;
-            }
-
-            if (IsValidTimeFormat(objective.Text))
-            {
-              continue;
-            }
-
-            string? storedObjectiveText = null;
-            if (foundQuestPlate.TranslatedObjectives.TryGetValue(
-                    stepKey,
-                    out var byKey))
-            {
-              storedObjectiveText = byKey;
-            }
-            else if (foundQuestPlate.Objectives.TryGetValue(
-                         stepText,
-                         out var byLegacy))
-            {
-              storedObjectiveText = byLegacy;
-            }
-
-            if (storedObjectiveText != null)
-            {
-              translatedStoredObjectives.Add(storedObjectiveText);
-
-              if (this.ToDoListShouldRemoveDiacritics)
-              {
-                storedObjectiveText = this.NormalizeQuestText(
-                    storedObjectiveText ?? string.Empty);
-              }
-
-              if (this.ToDoListWritesNativeTranslation)
-              {
-                todoList->UldManager.NodeList[objective.IndexI]
-                        ->GetAsAtkComponentNode()->Component->UldManager
-                    .NodeList[objective.IndexJ]->GetAsAtkTextNode()
-                    ->SetText(storedObjectiveText);
-              }
-              this.RegisterToDoTooltip(
-                  todoList,
-                  objective.IndexI,
-                  objective.IndexJ,
-                  objective.NodeId,
-                  objective.Text,
-                  storedObjectiveText,
-                  questTodoProgressKey);
-              continue;
-            }
-
-            var objectiveCacheKey =
-                $"ToDoListObjective|{questTodoProgressKey}|{stepKey}";
-            if (!this.TryGetQueuedTranslation(
-                    objectiveCacheKey,
-                    out var translatedQuestObjective))
-            {
-              this.QueueTranslation(
-                  objectiveCacheKey,
-                  () => this.Translate(stepText),
-                  translatedObjectiveText =>
-                  {
-                    var questPlateToUpdate = foundQuestPlate.Clone();
-                    questPlateToUpdate.TranslatedObjectives[stepKey] =
-                        translatedObjectiveText;
-                    questPlateToUpdate.Objectives[stepText] = translatedObjectiveText;
-                    questPlateToUpdate.UpdatedDate = DateTime.Now;
-                    this.UpdateQuestPlate(questPlateToUpdate);
-                  });
-              hasPendingFoundObjectives = true;
-              continue;
-            }
-
-            foundQuestPlate.TranslatedObjectives.TryAdd(
-                stepKey,
-                translatedQuestObjective);
-            foundQuestPlate.Objectives.TryAdd(
-                stepText,
-                translatedQuestObjective);
-            translatedStoredObjectives.Add(translatedQuestObjective);
-            this.UpdateQuestPlate(foundQuestPlate);
-
-            if (this.ToDoListShouldRemoveDiacritics)
-            {
-              translatedQuestObjective = this.NormalizeQuestText(
-                  translatedQuestObjective ?? string.Empty);
-            }
-
-            if (this.ToDoListWritesNativeTranslation)
-            {
-              todoList->UldManager.NodeList[objective.IndexI]
-                      ->GetAsAtkComponentNode()->Component->UldManager
-                  .NodeList[objective.IndexJ]->GetAsAtkTextNode()
-                  ->SetText(translatedQuestObjective);
-            }
-            this.RegisterToDoTooltip(
-                todoList,
-                objective.IndexI,
-                objective.IndexJ,
-                objective.NodeId,
-                objective.Text,
-                translatedQuestObjective,
-                questTodoProgressKey);
-          }
-
-          if (hasPendingFoundObjectives)
-          {
-            continue;
-          }
-
-          QuestUiTranslationCache.Remember(
-              questTodoProgressKey,
-              questTodoProgressKey);
-
-          continue;
-        }
-
-        var questNameCacheKey =
-            $"ToDoListQuest|{questTodoProgressKey}|{effectiveQuestName}";
-        if (!this.TryGetQueuedTranslation(
-                questNameCacheKey,
-                out var translatedNameText))
-        {
-          this.QueueTranslation(
-              questNameCacheKey,
-              () => this.Translate(effectiveQuestName),
-              translatedQuestName =>
-              {
-                var translatedQuestPlate = this.CreateTranslatedQuestPlate(
-                    effectiveQuestName,
-                    string.Empty,
-                    translatedQuestName,
-                    string.Empty,
-                    string.Empty);
-
-                this.InsertQuestPlate(translatedQuestPlate);
-              });
-          continue;
-        }
-
-        var storedTranslatedNameText = translatedNameText;
-        var translatedQuestPlate = this.CreateTranslatedQuestPlate(
-            effectiveQuestName,
-            string.Empty,
-            storedTranslatedNameText,
-            string.Empty,
-            string.Empty);
-
-        if (this.ToDoListShouldRemoveDiacritics)
-        {
-          translatedNameText = this.NormalizeQuestText(
-              translatedNameText ?? string.Empty);
-        }
-
-        if (this.ToDoListWritesNativeTranslation)
-        {
-          todoList->UldManager.NodeList[quest.IndexI]->
-                  GetAsAtkComponentNode()->Component->UldManager
-              .NodeList[quest.IndexJ]->GetAsAtkTextNode()->SetText(
-                  translatedNameText);
-        }
-        this.RegisterToDoTooltip(
-            todoList,
-            quest.IndexI,
-            quest.IndexJ,
-            quest.NodeId,
-            quest.Text,
-            translatedNameText,
-            questTodoProgressKey);
-
-        QuestUiTranslationCache.Remember(
-            effectiveQuestName,
-            storedTranslatedNameText);
-
-        var newSnapshotSteps = questTodoProgressSnapshot?.QuestProgress.QuestSteps;
-        var newObjIdx = 0;
-        List<string> translatedObjectives = [];
-        var hasPendingNewObjectives = false;
-        foreach (var objective in objectives)
-        {
-          var newStepText = newSnapshotSteps != null &&
-                            newObjIdx < newSnapshotSteps.Count
-              ? newSnapshotSteps[newObjIdx].Text
-              : objective.Text;
-          var newStepKey = newSnapshotSteps != null &&
-                           newObjIdx < newSnapshotSteps.Count
-              ? newSnapshotSteps[newObjIdx].KeyText
-              : objective.Text;
-          newObjIdx++;
-
-          if (objective.Text == EmptyObjective)
-          {
-            translatedObjectives.Add(EmptyObjective);
-            continue;
-          }
-
-          if (IsValidTimeFormat(objective.Text))
-          {
-            continue;
-          }
-
-          var objectiveCacheKey =
-              $"ToDoListObjective|{questTodoProgressKey}|{newStepKey}";
-          if (!this.TryGetQueuedTranslation(
-                  objectiveCacheKey,
-                  out var translatedObjectiveText))
-          {
-            this.QueueTranslation(
-                objectiveCacheKey,
-                () => this.Translate(newStepText),
-                translatedQuestObjective =>
-                {
-                  var existingQuestPlate = this.FindQuestPlateByName(
-                      this.CreateQuestPlate(
-                          effectiveQuestName,
-                          string.Empty));
-                  if (existingQuestPlate == null)
-                  {
-                    existingQuestPlate = this.CreateTranslatedQuestPlate(
-                        effectiveQuestName,
-                        string.Empty,
-                        storedTranslatedNameText,
-                        string.Empty,
-                        string.Empty);
-                  }
-
-                  existingQuestPlate.TranslatedObjectives.TryAdd(
-                      newStepKey,
-                      translatedQuestObjective);
-                  existingQuestPlate.Objectives.TryAdd(
-                      newStepText,
-                      translatedQuestObjective);
-                  if (existingQuestPlate.Id == 0)
-                  {
-                    this.InsertQuestPlate(existingQuestPlate);
-                  }
-                  else
-                  {
-                    this.UpdateQuestPlate(existingQuestPlate);
-                  }
-                });
-            hasPendingNewObjectives = true;
-            continue;
-          }
-
-          translatedObjectives.Add(translatedObjectiveText);
-          translatedQuestPlate.TranslatedObjectives.TryAdd(
-              newStepKey,
-              translatedObjectiveText);
-          translatedQuestPlate.Objectives.TryAdd(
-              newStepText,
-              translatedObjectiveText);
-
-          if (this.ToDoListShouldRemoveDiacritics)
-          {
-            translatedObjectiveText = this.NormalizeQuestText(
-                translatedObjectiveText ?? string.Empty);
-          }
-
-          if (this.ToDoListWritesNativeTranslation)
-          {
-            todoList->UldManager.NodeList[objective.IndexI]
-                    ->GetAsAtkComponentNode()->Component->UldManager
-                .NodeList[objective.IndexJ]->GetAsAtkTextNode()
-                ->SetText(translatedObjectiveText);
-          }
-          this.RegisterToDoTooltip(
-              todoList,
-              objective.IndexI,
-              objective.IndexJ,
-              objective.NodeId,
-              objective.Text,
-              translatedObjectiveText,
-              questTodoProgressKey);
-        }
-
-        this.InsertQuestPlate(translatedQuestPlate);
-
-        if (hasPendingNewObjectives)
-        {
-          continue;
-        }
-
-        QuestUiTranslationCache.Remember(
-            questTodoProgressKey,
-            questTodoProgressKey);
-      }
-    }
-    catch (Exception e)
-    {
-      PluginLog.Error("Error translating todo items:", e);
-    }
-  }
-
-  /// <summary>
-  ///     Handles ToDoList refresh events.
-  /// </summary>
-  /// <param name="type">The addon lifecycle event.</param>
-  /// <param name="args">The addon lifecycle arguments.</param>
+  /// <param name="type">The lifecycle event.</param>
+  /// <param name="args">The lifecycle arguments.</param>
   private unsafe void OnToDoListEvent(AddonEvent type, AddonArgs args)
   {
-    if (this.DisableTranslationAccordingToState())
-    {
-      return;
-    }
-
-    this.TranslateToDoList();
+    this.RefreshToDoList();
   }
 
   /// <summary>
-  ///     Refreshes ToDoList hover targets every draw using the most recently
-  ///     resolved row payloads without queueing new translations.
+  ///     Handles ToDoList draw events so the addon can retry activation after
+  ///     the background prefetch finishes and react immediately to mode
+  ///     switches.
   /// </summary>
-  /// <param name="type">The addon lifecycle event.</param>
-  /// <param name="args">The addon lifecycle arguments.</param>
-  private unsafe void OnToDoListHoverRefreshEvent(AddonEvent type, AddonArgs args)
+  /// <param name="type">The lifecycle event.</param>
+  /// <param name="args">The lifecycle arguments.</param>
+  private unsafe void OnToDoListPreDrawEvent(AddonEvent type, AddonArgs args)
   {
-    if (!this.Config.TranslateToDoList || !this.ToDoListUsesHoverTooltips)
+    if (!TryGetVisibleToDoList(out var todoList))
     {
       return;
     }
 
-    if (this.toDoHoverEntries.Count == 0)
+    if (!this.Config.TranslateToDoList ||
+        this.DisableTranslationAccordingToState())
     {
+      this.RestoreToDoListOriginals(todoList);
+      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+      this.currentToDoListDataReady = false;
+      this.lastAppliedDisplayMode = null;
       return;
     }
 
-    var todoList = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
-        ToDoListAddonName);
-    if (todoList == null || !todoList->IsVisible)
+    if (!this.currentToDoListDataReady)
     {
-      return;
-    }
-
-    foreach (var hoverEntry in this.toDoHoverEntries.Values.ToList())
-    {
-      if (!this.TryGetToDoHoverBounds(
-              todoList,
-              hoverEntry.IndexI,
-              hoverEntry.IndexJ,
-              out var topLeft,
-              out var bottomRight))
+      if (DateTime.UtcNow >= this.nextToDoListRetryUtc)
       {
-        continue;
+        this.RefreshToDoList();
       }
 
-      this.RegisterTranslatedHoverTooltip(
-          hoverEntry.Key,
-          topLeft,
-          bottomRight,
-          hoverEntry.OriginalText,
-          hoverEntry.TranslatedText,
-          swapEnabled: this.ToDoListHoverShowsOriginal,
-          forceEnabled: true);
+      return;
+    }
+
+    if (this.lastAppliedDisplayMode != this.Config.ToDoListTranslationDisplayMode)
+    {
+      this.ApplyToDoListPresentation(todoList);
+      return;
+    }
+
+    if (this.ToDoListUsesHoverTooltips)
+    {
+      this.RefreshToDoListHoverTargets(todoList);
     }
   }
 
   /// <summary>
-  ///     Clears ToDoList hover registrations when the addon closes.
+  ///     Clears the ToDoList runtime state when the addon closes.
   /// </summary>
-  /// <param name="type">The addon lifecycle event.</param>
-  /// <param name="args">The addon lifecycle arguments.</param>
+  /// <param name="type">The lifecycle event.</param>
+  /// <param name="args">The lifecycle arguments.</param>
   private void OnToDoListCleanupEvent(AddonEvent type, AddonArgs args)
   {
-    if (string.Equals(args.AddonName, ToDoListAddonName, StringComparison.Ordinal))
-    {
-      this.toDoHoverEntries.Clear();
-      this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
-    }
+    this.toDoRuntimeEntries.Clear();
+    this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+    this.currentToDoListDataReady = false;
+    this.lastAppliedDisplayMode = null;
+    this.nextToDoListRetryUtc = DateTime.MinValue;
+    this.ClearToDoListWaitingState();
   }
 
   /// <summary>
-  ///     Captures the latest tooltip payload for one visible ToDoList row.
+  ///     Represents one visible ToDoList quest row and the objective rows
+  ///     grouped under it.
   /// </summary>
-  /// <param name="Key">The stable hover key.</param>
+  /// <param name="QuestRow">The visible quest row.</param>
+  /// <param name="Objectives">The grouped objective rows.</param>
+  private sealed record ToDoVisibleQuest(
+      ToDoItem QuestRow,
+      IReadOnlyList<ToDoItem> Objectives);
+
+  /// <summary>
+  ///     Represents one resolved ToDoList runtime row.
+  /// </summary>
+  /// <param name="Key">The stable runtime key.</param>
+  /// <param name="ProgressKey">The stable quest progress key.</param>
   /// <param name="IndexI">The outer row index.</param>
-  /// <param name="IndexJ">The inner text-node index.</param>
-  /// <param name="NodeId">The backing node identifier.</param>
-  /// <param name="OriginalText">The current original text.</param>
-  /// <param name="TranslatedText">The current translated text.</param>
-  private sealed record ToDoHoverEntry(
+  /// <param name="IndexJ">The inner row index.</param>
+  /// <param name="NodeId">The backing node id.</param>
+  /// <param name="OriginalText">The original source text.</param>
+  /// <param name="TranslatedText">The translated text from the DB.</param>
+  private sealed record ToDoRuntimeEntry(
       string Key,
+      string ProgressKey,
       int IndexI,
       int IndexJ,
       uint NodeId,

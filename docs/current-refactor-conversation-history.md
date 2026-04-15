@@ -1475,3 +1475,38 @@ The main active problems are:
   - long translated summaries no longer stack over stale nodes
   - switching back out of native mode fully restores the original summary
     presentation
+
+### 2026-04-15 00:55:00 -03:00 - working tree checkpoint - ToDoList moved to DB-only quest runtime
+
+**What changed**
+
+- `_ToDoList` now resolves visible quest rows through `QuestTodoProgressResolver`
+  and `QuestCanonicalData`, then reads translated quest names and objective
+  rows only from persisted `QuestPlate` rows.
+- The handler no longer queues translation, batches translation, inserts
+  `QuestPlate` rows, or updates `QuestPlate` rows.
+- `_ToDoList` now activates only when every visible quest row already has the
+  required translated payload in the DB.
+- When any visible quest row is still missing stored data, the addon is left
+  untouched, hover targets are removed, and a debounced notification is shown
+  to explain that `_ToDoList` is waiting for quest data.
+- A lightweight `PreDraw` retry path now rechecks readiness every few seconds
+  without performing translation work.
+
+**Why it changed**
+
+- The user explicitly requested that `_ToDoList` stop triggering any local
+  translation path.
+- `_ToDoList` is visible immediately at login, which makes it a risky place to
+  mutate UI while accepted-quest prefetch may still be warming the DB.
+- Treating `_ToDoList` as a strict DB consumer reduces race conditions and
+  keeps addon behavior predictable while the quest-family surfaces are being
+  isolated one by one.
+
+**Next step**
+
+- Validate in game that `_ToDoList`:
+  - stays untouched until all visible quest rows are ready in the DB
+  - shows the waiting notification without spamming
+  - applies native / tooltip / swap modes only after the visible data is
+    complete

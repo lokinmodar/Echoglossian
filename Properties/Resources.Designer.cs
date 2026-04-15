@@ -1940,6 +1940,15 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready..
+        /// </summary>
+        public static string ToDoListAwaitingQuestDataNotification {
+            get {
+                return ResourceManager.GetString("ToDoListAwaitingQuestDataNotification", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native UI translation.
         /// </summary>
         public static string QuestDisplayModeNativeUiTranslation {

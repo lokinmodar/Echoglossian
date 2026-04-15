@@ -373,12 +373,17 @@ args, the handler resolves `AtkUnitBase->AtkValues` from the visible addon.
 ### `_ToDoList` (active quest objective list)
 
 **Trigger events:**
-- `AddonEvent.PostRequestedUpdate` → `ToDoListHandler.OnToDoListEvent` → `TranslateToDoList()`
+- `AddonEvent.PostRequestedUpdate` → `ToDoListHandler.OnToDoListEvent` → `RefreshToDoList()`
 - `AddonEvent.PreRequestedUpdate` → same
+- `AddonEvent.PreDraw` → retry activation / refresh hover targets without any
+  translation work
 
-**Why both Pre and Post:** `PreRequestedUpdate` fires before game updates node text; `PostRequestedUpdate` fires after. Using both catches different game-driven refresh cycles.
+**Why both Pre and Post:** `PreRequestedUpdate` fires before game updates node
+text; `PostRequestedUpdate` fires after. Using both catches different
+game-driven refresh cycles while staying read-only with respect to quest
+translation.
 
-**`TranslateToDoList()` scan phase:**
+**`RefreshToDoList()` scan phase:**
 
 1. Walk `todoList->UldManager.NodeList`. Skip invisible nodes, `Collision`/`Res` type nodes, fate nodes (NodeId 8, 9).
 2. For each visible component node, walk its child `Text` nodes.
@@ -389,27 +394,28 @@ args, the handler resolves `AtkUnitBase->AtkValues` from the visible addon.
    - Otherwise → objective (`objectivesToTranslate`)
 5. Skip if `questNamesToTranslate` is empty after full scan.
 
-**`TranslateTodoItems()` translate phase:**
+**Resolve phase (DB-first, no local translation):**
 
 For each quest name entry:
 
 1. Associate objectives using `GetQuestObjectives` (adjacent NodeId heuristic).
 2. `QuestTodoProgressResolver.TryResolveQuestTodoProgress` → `questTodoProgressKey`.
-3. Build compound cache key `$"{progressKey}|{questName}|{objectives joined}"`.
-4. **Cache check** `QuestUiTranslationCache.TryGetAppliedSnapshot(sanitized key)`:
-   - Hit: if no quest plate can be resolved, `continue`; otherwise reuse the
-     resolved quest-plate path so hover registration and any native refresh
-     still happen without queuing new translations.
-   - Miss: proceed.
-5. `FindQuestPlateByName`.
-6. **DB hit:** write quest name node if `WritesNative`; call `RegisterToDoTooltip` with translated name; iterate objectives:
-   - Objective in `foundQuestPlate.Objectives` → write node if `WritesNative`; `RegisterToDoTooltip`; `continue`.
-   - Objective in queued translations → write + register.
-   - Neither → `QueueTranslation` for objective (persist `UpdateQuestPlate`).
-   - After all objectives resolved → `QuestUiTranslationCache.Remember(questKey, aggregatedResult)`.
-7. **DB miss:** `TryGetQueuedTranslation($"ToDoListQuest|{progressKey}|{questName}")`:
-   - Hit: build `QuestPlate`; write name node if `WritesNative`; `RegisterToDoTooltip`; iterate objectives (same queue/write pattern); `InsertQuestPlate`.
-   - Miss: `QueueTranslation`; `continue`.
+3. Build `QuestCanonicalData` from `QuestManager + live progress`.
+4. Project a canonical `QuestPlate` lookup and resolve it through
+   `FindQuestPlate(...)`.
+5. Require all visible payloads to already exist in the DB:
+   - translated quest name
+   - translated objective rows for every tracked visible objective
+6. If any required payload is missing:
+   - restore original ToDoList text
+   - remove ToDoList hover targets
+   - keep the addon untouched
+   - emit a debounced notification that the ToDoList is waiting for stored
+     quest data
+7. If all visible quest rows are ready:
+   - native mode writes only DB-backed translated text
+   - tooltip modes register only DB-backed hover payloads
+   - no translation is queued or performed from the addon
 
 **`RegisterToDoTooltip`:** inner helper that stores a stable row hover payload and registers it from explicit screen bounds computed as the union of:
 - the full visible row node
@@ -417,7 +423,9 @@ For each quest name entry:
 
 The stable key is `ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}`. A lightweight `PreDraw` pass refreshes those row targets without queueing new translations.
 
-**DB tables used:** `questplates` — `FindQuestPlateByName` (name only); objectives looked up from `foundQuestPlate.Objectives` dict (stored inline in the plate record).
+**DB tables used:** `questplates` — canonical lookup via `FindQuestPlate(...)`;
+objectives are resolved from canonical TODO rows and persisted translated
+objective rows keyed by quest row identity.
 
 ---
 

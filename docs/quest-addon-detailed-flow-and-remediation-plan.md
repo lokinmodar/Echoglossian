@@ -481,55 +481,59 @@ list / todo list.
 - events:
   - `PostRequestedUpdate`
   - `PreRequestedUpdate`
-  - `PreDraw` for hover refresh
+  - `PreDraw` for retry / hover refresh
 - runtime file:
   - `NativeUI/AddonHandlers/Quest/ToDoListHandler.cs`
 - local state:
-  - `toDoHoverEntries`
+  - `toDoRuntimeEntries`
+  - readiness gate / retry timer / debounced waiting notification state
 - DB lookup:
-  - `FindQuestPlateByName(...)`
+  - `FindQuestPlate(...)`
 - progress helper:
   - `QuestTodoProgressResolver`
+- canonical helper:
+  - `QuestCanonicalData`
 
 ### Current status
 
-This is currently the healthiest quest-family surface from a validation
-standpoint.
+This surface is now intentionally stricter than before.
 
 It now:
 
-- keeps row-level hover state
-- refreshes hover in `PreDraw`
-- uses practical hitboxes
-- no longer belongs in the active-problem list
+- never queues translation from the addon
+- never inserts or updates `QuestPlate` rows from the addon
+- uses `QuestManager + canonical quest data + persisted QuestPlate` only
+- activates only when **all visible quest rows** are ready in the DB
+- restores the original addon state and emits a notification when visible data
+  is still missing
+- keeps row-level hover state and practical hitboxes once activated
 
 ### Current weakness
 
-It still resolves quest rows through a partly UI-driven association model:
+It still has one remaining UI-driven inference step:
 
 - scan node tree
 - infer quest/objective grouping
 - join objectives back to a quest row
 
-That means the runtime behavior is good, but the structure is still more
-fragile than it needs to be.
+That means the content source is now correct, but the visible-row association
+is still heuristic.
 
 ### What needs to change
 
-- objective rows should eventually map directly to canonical `TODO` rows by
-  `RowKey`, not by visible objective text
-- when the DB is warm, this surface should use the canonical objective rows as
-  the source of tooltip content
-- the current node scan should become “which row is visible” logic, not “what
-  is the quest content” logic
+- keep the current DB-only rule
+- keep the current all-or-nothing readiness gate
+- eventually make objective row association explicit by canonical row identity
+  instead of visible order inference
+- keep notifications debounced so login-time ToDoList visibility does not spam
+  the user while accepted-quest prefetch is still warming the DB
 
 ### Recommendation
 
-Do not disturb this handler aggressively while other quest addons are still
-less stable.
+The large behavioral correction for `_ToDoList` is now done.
 
-When we return to it, the refactor should be about **removing inference**, not
-about changing the current UX.
+Future changes should focus on **removing visible-row inference** rather than
+reintroducing any local translation path.
 
 ---
 
