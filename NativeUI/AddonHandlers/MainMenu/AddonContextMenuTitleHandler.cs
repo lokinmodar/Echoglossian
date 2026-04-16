@@ -1,18 +1,17 @@
-﻿// <copyright file="AddonContextMenuTitle.cs" company="lokinmodar">
+// <copyright file="AddonContextMenuTitleHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-namespace Echoglossian.NativeUI.AddonHandlers.Character
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
+namespace Echoglossian.NativeUI.AddonHandlers.MainMenu;
+
+/// <summary>
+///     Handles DB-first translation for the addon context menu title.
+/// </summary>
+public class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
 {
-  /// <summary>
-  ///     Handles translation for the "AddonContextMenuTitle" addon using AtkValues and
-  ///     StringArrayData.
-  ///     Lifecycle-safe: extracts and applies values within valid memory scope per
-  ///     frame.
-  /// </summary>
-  public class AddonContextMenuTitleHandler : GenericAddonHandler<GameWindow>
-  {
     /// <summary>
     ///     Initializes a new instance of the <see cref="AddonContextMenuTitleHandler" />
     ///     class.
@@ -22,18 +21,13 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character
     public AddonContextMenuTitleHandler(
         Config config,
         TranslationService translationService)
-      : base(
-        "AddonContextMenuTitle",
-        config,
-        translationService,
-        true,
-        false)
+        : base(
+            addonName: "AddonContextMenuTitle",
+            config: config,
+            translationService: translationService,
+            enabledSelector: static configuration =>
+                configuration.TranslateAddonContextMenuTitle,
+            useAtkValues: true)
     {
-      this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
-      this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);
-      this.RegisterHandler(
-          AddonEvent.PreRequestedUpdate,
-          this.OnPreRequestedUpdate);
     }
-  }
 }

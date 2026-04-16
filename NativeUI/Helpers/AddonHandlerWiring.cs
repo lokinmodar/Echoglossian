@@ -16,24 +16,39 @@ public partial class Echoglossian
 
     this.registeredAddonHandlers =
         [
-            /* (AddonName: "AddonContextMenuTitle",
-                 Handler: new AddonContextMenuTitleHandler(
-                     this.configuration,
-                     TranslationService)),*/
-            /* (AddonName: "OperationGuide",
-                 Handler: new OperationGuideHandler(
-                     this.configuration,
-                     TranslationService)),
-             (AddonName: "Hud",
-                 Handler: new HudWindowHandler(
-                     this.configuration,
-                     TranslationService)),
-             (AddonName: "Hud2",
-                 Handler: new Hud2WindowHandler(
-                     this.configuration,
-                     TranslationService)),
-             */
         ];
+
+    if (this.configuration.TranslateAddonContextMenuTitle)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "AddonContextMenuTitle",
+              Handler: new AddonContextMenuTitleHandler(
+                  this.configuration,
+                  TranslationService)));
+    }
+
+    if (this.configuration.TranslateOperationGuideWindow)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "OperationGuide",
+              Handler: new OperationGuideHandler(
+                  this.configuration,
+                  TranslationService)));
+    }
+
+    if (this.configuration.TranslateHudWindow)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "Hud",
+              Handler: new HudWindowHandler(
+                  this.configuration,
+                  TranslationService)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "Hud2",
+              Handler: new Hud2WindowHandler(
+                  this.configuration,
+                  TranslationService)));
+    }
 
     if (this.configuration.TranslateMainCommandWindow)
     {

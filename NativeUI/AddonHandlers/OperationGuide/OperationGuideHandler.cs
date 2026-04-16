@@ -3,16 +3,15 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-namespace Echoglossian.NativeUI.AddonHandlers.Character
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
+namespace Echoglossian.NativeUI.AddonHandlers.OperationGuide;
+
+/// <summary>
+///     Handles DB-first translation for the operation guide window.
+/// </summary>
+public class OperationGuideHandler : DbFirstGameWindowAddonHandler
 {
-  /// <summary>
-  ///     Handles translation for the "OperationGuide" addon using AtkValues and
-  ///     StringArrayData.
-  ///     Lifecycle-safe: extracts and applies values within valid memory scope per
-  ///     frame.
-  /// </summary>
-  public class OperationGuideHandler : GenericAddonHandler<GameWindow>
-  {
     /// <summary>
     ///     Initializes a new instance of the <see cref="OperationGuideHandler" />
     ///     class.
@@ -22,18 +21,13 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character
     public OperationGuideHandler(
         Config config,
         TranslationService translationService)
-      : base(
-        "OperationGuide",
-        config,
-        translationService,
-        true,
-        false)
+        : base(
+            addonName: "OperationGuide",
+            config: config,
+            translationService: translationService,
+            enabledSelector: static configuration =>
+                configuration.TranslateOperationGuideWindow,
+            useAtkValues: true)
     {
-      this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
-      this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);
-      this.RegisterHandler(
-          AddonEvent.PreRequestedUpdate,
-          this.OnPreRequestedUpdate);
     }
-  }
 }

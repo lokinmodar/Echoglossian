@@ -3,36 +3,31 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Hud;
 
 /// <summary>
-///     Handles translation for the "Hud" addon using AtkValues and
-///     StringArrayData.
-///     Lifecycle-safe: extracts and applies values within valid memory scope per
-///     frame.
+///     Handles DB-first translation for the secondary HUD window.
 /// </summary>
-public class Hud2WindowHandler : GenericAddonHandler<GameWindow>
+public class Hud2WindowHandler : DbFirstGameWindowAddonHandler
 {
-  /// <summary>
-  ///     Initializes a new instance of the <see cref="Hud2WindowHandler" /> class.
-  /// </summary>
-  /// <param name="config">The configuration settings for the plugin.</param>
-  /// <param name="translationService">The service used for translating text.</param>
-  public Hud2WindowHandler(
-      Config config,
-      TranslationService translationService)
-    : base(
-      "Hud2",
-      config,
-      translationService,
-      true,
-      true,
-      StringArrayType.Hud2)
-  {
-    this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
-    this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);
-    this.RegisterHandler(
-        AddonEvent.PreRequestedUpdate,
-        this.OnPreRequestedUpdate);
-  }
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="Hud2WindowHandler" /> class.
+    /// </summary>
+    /// <param name="config">The configuration settings for the plugin.</param>
+    /// <param name="translationService">The service used for translating text.</param>
+    public Hud2WindowHandler(
+        Config config,
+        TranslationService translationService)
+        : base(
+            addonName: "Hud2",
+            config: config,
+            translationService: translationService,
+            enabledSelector: static configuration =>
+                configuration.TranslateHudWindow,
+            useAtkValues: true,
+            stringArrayDataType: StringArrayType.Hud2)
+    {
+    }
 }

@@ -534,6 +534,15 @@
         <member name="F:Echoglossian.Config.TranslateMainCommandWindow">
             <summary>Translate the main command menu.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateHudWindow">
+            <summary>Translate HUD window text surfaces backed by StringArrayData.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateOperationGuideWindow">
+            <summary>Translate the operation guide window.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateAddonContextMenuTitle">
+            <summary>Translate the addon context menu title window.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateClassChangeToast">
             <summary>Translate class/job change toasts.</summary>
         </member>
@@ -4619,38 +4628,6 @@
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.AddonContextMenuTitleHandler">
-            <summary>
-                Handles translation for the "AddonContextMenuTitle" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.AddonContextMenuTitleHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.AddonContextMenuTitleHandler" />
-                class.
-            </summary>
-            <param name="config">The configuration settings for the plugin.</param>
-            <param name="translationService">The service used for translating text.</param>
-        </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.OperationGuideHandler">
-            <summary>
-                Handles translation for the "OperationGuide" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.OperationGuideHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.OperationGuideHandler" />
-                class.
-            </summary>
-            <param name="config">The configuration settings for the plugin.</param>
-            <param name="translationService">The service used for translating text.</param>
-        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler">
             <summary>
                 Provides a DB-first runtime for addon-local surfaces backed by
@@ -5086,10 +5063,7 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler">
             <summary>
-                Handles translation for the "Hud" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
+                Handles DB-first translation for the secondary HUD window.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
@@ -5101,15 +5075,25 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler">
             <summary>
-                Handles translation for the "Hud" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
+                Handles DB-first translation for the main HUD window.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler" /> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler">
+            <summary>
+                Handles DB-first translation for the addon context menu title.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler" />
+                class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
@@ -5123,6 +5107,19 @@
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler" /> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler">
+            <summary>
+                Handles DB-first translation for the operation guide window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler" />
+                class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>

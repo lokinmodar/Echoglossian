@@ -33,6 +33,15 @@ public static class OtherUIElementsSettingsTab
         changed |= ImGui.Checkbox(
             "Translate Main Command",
             ref config.TranslateMainCommandWindow);
+        changed |= ImGui.Checkbox(
+            "Translate HUD Windows",
+            ref config.TranslateHudWindow);
+        changed |= ImGui.Checkbox(
+            "Translate Operation Guide",
+            ref config.TranslateOperationGuideWindow);
+        changed |= ImGui.Checkbox(
+            "Translate Addon Context Menu Title",
+            ref config.TranslateAddonContextMenuTitle);
 
         if (changed)
         {

@@ -1697,3 +1697,38 @@ The main active problems are:
 - After that, decide whether `Hud`/`Hud2` should follow the same `GameWindow`
   runtime directly or whether they need a stronger `StringArrayData` schema
   contract first.
+
+### 2026-04-16 02:05:00 -03:00 - working tree checkpoint - remaining GameWindow surfaces moved toward DB-first runtime
+
+**What changed**
+
+- `Hud` and `Hud2` now use the same `DbFirstGameWindowAddonHandler` runtime
+  that was introduced for `Character*` and `_MainCommand`.
+- `OperationGuide` and `AddonContextMenuTitle` were also moved off the legacy
+  `GenericAddonHandler<GameWindow>` path and onto the same DB-first runtime.
+- New config toggles were added for:
+  - `TranslateHudWindow`
+  - `TranslateOperationGuideWindow`
+  - `TranslateAddonContextMenuTitle`
+- The "Other UI elements" settings tab now exposes those toggles.
+- `ArraysToBlock` now includes `Hud` and `Hud2`, preventing the legacy global
+  `StringArrayDataHandler` from fighting the new DB-first HUD runtime.
+
+**Why it changed**
+
+- After `Character*` and `_MainCommand`, the remaining `GameWindow` surfaces
+  were the clearest next legacy path still mixing translation ownership and
+  presentation timing.
+- `Hud` and `Hud2` are especially important because they are backed by
+  `StringArrayData`, which makes them vulnerable to the same global write
+  contention and flicker problems the refactor is trying to eliminate.
+- Moving the remaining `GameWindow`-style handlers onto one shared DB-first
+  runtime reduces duplication and shrinks the last part of that legacy path.
+
+**Next step**
+
+- Validate that `Hud` and `Hud2` now stay inert until DB data exists and no
+  longer fight the global `StringArrayDataHandler`.
+- Decide whether the next string-array migration wave should target the
+  dedicated HUD schemas or jump straight to the broader non-`GameWindow`
+  `StringArrayData` contracts.

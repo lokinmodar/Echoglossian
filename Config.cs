@@ -507,6 +507,15 @@ public class Config : IPluginConfiguration
   /// <summary>Translate the main command menu.</summary>
   [DefaultValue(false)] public bool TranslateMainCommandWindow = false;
 
+  /// <summary>Translate HUD window text surfaces backed by StringArrayData.</summary>
+  [DefaultValue(false)] public bool TranslateHudWindow = false;
+
+  /// <summary>Translate the operation guide window.</summary>
+  [DefaultValue(false)] public bool TranslateOperationGuideWindow = false;
+
+  /// <summary>Translate the addon context menu title window.</summary>
+  [DefaultValue(false)] public bool TranslateAddonContextMenuTitle = false;
+
   /// <summary>Translate class/job change toasts.</summary>
   [DefaultValue(false)] public bool TranslateClassChangeToast = false;
 
