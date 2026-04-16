@@ -504,6 +504,9 @@ public class Config : IPluginConfiguration
   /// <summary> Translate character window text.</summary>
   [DefaultValue(false)] public bool TranslateCharacterWindow = false;
 
+  /// <summary>Translate the main command menu.</summary>
+  [DefaultValue(false)] public bool TranslateMainCommandWindow = false;
+
   /// <summary>Translate class/job change toasts.</summary>
   [DefaultValue(false)] public bool TranslateClassChangeToast = false;
 

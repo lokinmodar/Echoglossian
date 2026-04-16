@@ -1,39 +1,33 @@
-﻿// <copyright file="CharacterWindowHandler.cs" company="lokinmodar">
+// <copyright file="MainCommandHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-namespace Echoglossian.NativeUI.AddonHandlers.Character
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
+namespace Echoglossian.NativeUI.AddonHandlers.MainMenu;
+
+/// <summary>
+///     Handles DB-first translation for the main command menu.
+/// </summary>
+public class MainCommandHandler : DbFirstGameWindowAddonHandler
 {
-  /// <summary>
-  ///     Handles translation for the "MainCommand" addon using AtkValues and
-  ///     StringArrayData.
-  ///     Lifecycle-safe: extracts and applies values within valid memory scope per
-  ///     frame.
-  /// </summary>
-  public class MainCommandHandler : GenericAddonHandler<GameWindow>
-  {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MainCommandHandler" />
-    ///     class.
+    ///     Initializes a new instance of the
+    ///     <see cref="MainCommandHandler" /> class.
     /// </summary>
     /// <param name="config">The configuration settings for the plugin.</param>
     /// <param name="translationService">The service used for translating text.</param>
     public MainCommandHandler(
         Config config,
         TranslationService translationService)
-      : base(
-        "_MainCommand",
-        config,
-        translationService,
-        true,
-        false)
+        : base(
+            addonName: "_MainCommand",
+            config: config,
+            translationService: translationService,
+            enabledSelector: static configuration =>
+                configuration.TranslateMainCommandWindow,
+            useAtkValues: true)
     {
-      this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
-      this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);
-      this.RegisterHandler(
-          AddonEvent.PreRequestedUpdate,
-          this.OnPreRequestedUpdate);
     }
-  }
 }

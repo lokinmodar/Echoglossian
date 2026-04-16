@@ -1334,67 +1334,10 @@ public partial class Echoglossian
   /// <returns>Status message indicating result.</returns>
   public static string InsertGameWindow(GameWindow gameWindow)
   {
-    using var context = new EchoglossianDbContext(ConfigDirectory);
-
-    try
-    {
-      if (gameWindow is null || string.IsNullOrWhiteSpace(gameWindow.WindowAddonName))
-      {
-        PluginLog.Warning("InsertGameWindow received null or invalid entity.");
-        return "Invalid data.";
-      }
-
-      // Check if identical already exists
-      var exists = context.GameWindow.FirstOrDefault(g =>
-          g.WindowAddonName == gameWindow.WindowAddonName &&
-          g.TranslationLang == gameWindow.TranslationLang &&
-          g.TranslationEngine == gameWindow.TranslationEngine &&
-          g.GameVersion == gameWindow.GameVersion &&
-          g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
-
-      if (exists != null)
-      {
-        PluginLog.Debug("InsertGameWindow: Identical GameWindow already exists.");
-        return "Identical record already exists.";
-      }
-
-      // See if there's one for same combo but different original text — update it
-      var variant = context.GameWindow.FirstOrDefault(g =>
-          g.WindowAddonName == gameWindow.WindowAddonName &&
-          g.TranslationLang == gameWindow.TranslationLang &&
-          g.TranslationEngine == gameWindow.TranslationEngine &&
-          g.GameVersion == gameWindow.GameVersion);
-
-      if (variant != null)
-      {
-        PluginLog.Debug("InsertGameWindow: Updating variant record.");
-        variant.OriginalWindowStrings = gameWindow.OriginalWindowStrings;
-        variant.OriginalWindowStringsLang = gameWindow.OriginalWindowStringsLang;
-        variant.TranslatedWindowStrings = gameWindow.TranslatedWindowStrings;
-        variant.UpdatedDate = DateTime.UtcNow;
-
-        context.GameWindow.Update(variant);
-        context.SaveChanges();
-
-        GameWindowCacheManager.Update(variant);
-        return "Record updated.";
-      }
-
-      // Otherwise, insert new
-      gameWindow.CreatedDate = DateTime.UtcNow;
-      gameWindow.UpdatedDate = DateTime.UtcNow;
-
-      context.GameWindow.Add(gameWindow);
-      context.SaveChanges();
-
-      GameWindowCacheManager.Update(gameWindow);
-      return "New record inserted.";
-    }
-    catch (Exception ex)
-    {
-      PluginLog.Error($"InsertGameWindow exception: {ex}");
-      return $"Error inserting GameWindow: {ex.Message}";
-    }
+    return GameWindowPersistenceHelper.InsertGameWindow(
+        ConfigDirectory,
+        gameWindow,
+        GameWindowCacheManager.Update);
   }
 
   /// <summary>

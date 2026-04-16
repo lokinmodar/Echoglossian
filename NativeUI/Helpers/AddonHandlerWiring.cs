@@ -16,18 +16,10 @@ public partial class Echoglossian
 
     this.registeredAddonHandlers =
         [
-            /* (AddonName: "_MainCommand",
-                 Handler: new MainCommandHandler(
-                     this.configuration,
-                     TranslationService)),
-             (AddonName: "AddonContextMenuTitle",
+            /* (AddonName: "AddonContextMenuTitle",
                  Handler: new AddonContextMenuTitleHandler(
                      this.configuration,
                      TranslationService)),*/
-            (AddonName: "Character",
-                Handler: new CharacterWindowHandler(
-                    this.configuration,
-                    TranslationService)),
             /* (AddonName: "OperationGuide",
                  Handler: new OperationGuideHandler(
                      this.configuration,
@@ -40,23 +32,46 @@ public partial class Echoglossian
                  Handler: new Hud2WindowHandler(
                      this.configuration,
                      TranslationService)),
-             (AddonName: "CharacterClass",
-                 Handler: new CharacterClassSubWindowHandler(
-                     this.configuration,
-                     TranslationService)),
-             (AddonName: "CharacterRepute",
-                 Handler: new CharacterReputeSubWindowHandler(
-                     this.configuration,
-                     TranslationService)),
-             (AddonName: "CharacterProfile",
-                 Handler: new CharacterProfileSubWindowHandler(
-                     this.configuration,
-                     TranslationService)),
-             (AddonName: "CharacterStatus",
-                 Handler: new CharacterStatusSubWindowHandler(
-                     this.configuration,
-                     TranslationService)),*/
+             */
         ];
+
+    if (this.configuration.TranslateMainCommandWindow)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_MainCommand",
+              Handler: new MainCommandHandler(
+                  this.configuration,
+                  TranslationService)));
+    }
+
+    if (this.configuration.TranslateCharacterWindow)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "Character",
+              Handler: new CharacterWindowHandler(
+                  this.configuration,
+                  TranslationService)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "CharacterClass",
+              Handler: new CharacterClassSubWindowHandler(
+                  this.configuration,
+                  TranslationService)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "CharacterRepute",
+              Handler: new CharacterReputeSubWindowHandler(
+                  this.configuration,
+                  TranslationService)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "CharacterProfile",
+              Handler: new CharacterProfileSubWindowHandler(
+                  this.configuration,
+                  TranslationService)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "CharacterStatus",
+              Handler: new CharacterStatusSubWindowHandler(
+                  this.configuration,
+                  TranslationService)));
+    }
 
     if (this.configuration.TranslateTalk)
     {

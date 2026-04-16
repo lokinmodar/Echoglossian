@@ -531,6 +531,9 @@
         <member name="F:Echoglossian.Config.TranslateCharacterWindow">
             <summary> Translate character window text.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateMainCommandWindow">
+            <summary>Translate the main command menu.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateClassChangeToast">
             <summary>Translate class/job change toasts.</summary>
         </member>
@@ -2309,6 +2312,23 @@
             received from AddonLifecycle.
             </summary>
             <param name="addon">The live "_TextGimmickHint" addon.</param>
+        </member>
+        <member name="T:Echoglossian.GameWindowPersistenceHelper">
+            <summary>
+                Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows without requiring the full plugin runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.InsertGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Action{Echoglossian.EFCoreSqlite.Models.GameWindow})">
+            <summary>
+                Inserts or updates a <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row using the DB-first
+                lookup semantics for addon, language, engine, version, and original payload.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
+            <param name="gameWindow">The game window payload to persist.</param>
+            <param name="onPersisted">
+                Optional callback invoked with the updated entity after the DB write succeeds.
+            </param>
+            <returns>A status message describing the result.</returns>
         </member>
         <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
             <summary>
@@ -4575,32 +4595,26 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler">
             <summary>
-                Handles translation for the ""CharacterStatus" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
+                Handles DB-first translation for the CharacterStatus subwindow.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler" />
-                class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler">
             <summary>
-                Handles translation for the "Character" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
+                Handles DB-first translation for the main character window.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler" />
-                class.
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
@@ -4621,22 +4635,6 @@
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.MainCommandHandler">
-            <summary>
-                Handles translation for the "MainCommand" addon using AtkValues and
-                StringArrayData.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.MainCommandHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.MainCommandHandler" />
-                class.
-            </summary>
-            <param name="config">The configuration settings for the plugin.</param>
-            <param name="translationService">The service used for translating text.</param>
-        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.OperationGuideHandler">
             <summary>
                 Handles translation for the "OperationGuide" addon using AtkValues and
@@ -4652,6 +4650,230 @@
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler">
+            <summary>
+                Provides a DB-first runtime for addon-local surfaces backed by
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.Config,System.Boolean},System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler" /> class.
+            </summary>
+            <param name="addonName">The target addon name.</param>
+            <param name="config">The plugin configuration.</param>
+            <param name="translationService">The translation service.</param>
+            <param name="enabledSelector">
+                Resolves whether this addon should be active.
+            </param>
+            <param name="useAtkValues">
+                Indicates whether ATK string values are part of the payload.
+            </param>
+            <param name="stringArrayDataType">
+                The backing <see cref="T:FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType" />, if any.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.GetEventHandlers">
+            <summary>
+                Gets the registered addon lifecycle handlers.
+            </summary>
+            <returns>The handler map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers a local lifecycle handler.
+            </summary>
+            <param name="evt">The lifecycle event.</param>
+            <param name="handler">The event handler.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.OnLifecycleEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles setup/refresh/update events.
+            </summary>
+            <param name="evt">The lifecycle event.</param>
+            <param name="args">The event args.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.OnPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles lightweight retries and config toggles.
+            </summary>
+            <param name="evt">The lifecycle event.</param>
+            <param name="args">The event args.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.OnCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles cleanup when the addon hides or finalizes.
+            </summary>
+            <param name="evt">The lifecycle event.</param>
+            <param name="args">The event args.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RefreshOrQueue">
+            <summary>
+                Performs the DB-first refresh path for the addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryGetVisibleAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Tries to resolve the live addon.
+            </summary>
+            <param name="addon">The addon pointer.</param>
+            <returns>True when the addon is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.CaptureLivePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Captures the current live payload from the addon and its backing
+                string array, if any.
+            </summary>
+            <param name="addon">The live addon.</param>
+            <returns>The captured payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ResolveOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Resolves the original payload to use for DB lookup.
+            </summary>
+            <param name="livePayload">The currently visible payload.</param>
+            <returns>The original payload for DB lookup and restore.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.BuildPayloadKey(System.String)">
+            <summary>
+                Builds a stable in-flight key for one payload.
+            </summary>
+            <param name="originalJson">The serialized original payload.</param>
+            <returns>The stable payload key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryFindGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow@)">
+            <summary>
+                Tries to find a matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> in cache or DB.
+            </summary>
+            <param name="originalJson">The serialized original payload.</param>
+            <param name="gameWindow">The resolved row, if any.</param>
+            <returns>True when a row was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.QueueTranslationIfNeeded(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String)">
+            <summary>
+                Queues background translation and DB save when needed.
+            </summary>
+            <param name="payload">The original payload.</param>
+            <param name="payloadKey">The stable payload key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ApplyPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String)">
+            <summary>
+                Applies a translated payload to the live addon.
+            </summary>
+            <param name="addon">The live addon.</param>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The translated payload.</param>
+            <param name="payloadKey">The stable payload key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RestoreOriginalPayloadIfNeeded">
+            <summary>
+                Restores the original payload if this runtime mutated the addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryParseTranslatedPayload(System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <summary>
+                Parses a translated payload and validates that all required keys are
+                present.
+            </summary>
+            <param name="translatedJson">The translated JSON payload.</param>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The parsed translated payload.</param>
+            <returns>True when the payload is complete enough to apply.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldCaptureText(System.String)">
+            <summary>
+                Determines whether a text value should be captured.
+            </summary>
+            <param name="text">The text to test.</param>
+            <returns>True when the value should be part of the payload.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload">
+            <summary>
+                Represents one DB-first addon payload snapshot.
+            </summary>
+            <param name="AtkValues">The ATK string values.</param>
+            <param name="StringArrayValues">The string-array values.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.#ctor(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.SortedDictionary{System.Int32,System.String})">
+            <summary>
+                Represents one DB-first addon payload snapshot.
+            </summary>
+            <param name="AtkValues">The ATK string values.</param>
+            <param name="StringArrayValues">The string-array values.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.AtkValues">
+            <summary>The ATK string values.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.StringArrayValues">
+            <summary>The string-array values.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.Empty">
+            <summary>
+                Gets an empty payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.IsEmpty">
+            <summary>
+                Gets a value indicating whether the payload is empty.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.Serialize">
+            <summary>
+                Serializes the payload using the stable JSON contract already used by
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows.
+            </summary>
+            <returns>The serialized payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.MatchesTranslated(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether the supplied live payload still matches this
+                translated payload.
+            </summary>
+            <param name="translatedPayload">The translated payload.</param>
+            <returns>True when the visible payload matches the translated state.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.MatchesOriginal(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether the supplied live payload still matches this
+                original payload.
+            </summary>
+            <param name="originalPayload">The original payload.</param>
+            <returns>True when the visible payload matches the original state.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload.MatchesMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.SortedDictionary{System.Int32,System.String})">
+            <summary>
+                Compares two payload maps.
+            </summary>
+            <param name="currentValues">The current visible values.</param>
+            <param name="expectedValues">The expected values.</param>
+            <returns>True when the maps match exactly.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState">
+            <summary>
+                Tracks the currently applied DB-first payload for one addon instance.
+            </summary>
+            <param name="PayloadKey">The stable payload key.</param>
+            <param name="OriginalPayload">The original payload.</param>
+            <param name="TranslatedPayload">The translated payload.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState.#ctor(System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Tracks the currently applied DB-first payload for one addon instance.
+            </summary>
+            <param name="PayloadKey">The stable payload key.</param>
+            <param name="OriginalPayload">The original payload.</param>
+            <param name="TranslatedPayload">The translated payload.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState.PayloadKey">
+            <summary>The stable payload key.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState.OriginalPayload">
+            <summary>The original payload.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState.TranslatedPayload">
+            <summary>The translated payload.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.SyncCutSceneSelectStringOverlayBoundsDelegate">
             <summary>
@@ -4888,6 +5110,19 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler" /> class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler">
+            <summary>
+                Handles DB-first translation for the main command menu.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
             <param name="translationService">The service used for translating text.</param>
@@ -6265,6 +6500,47 @@
                 the DB.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CollectScenarioTreeQuestSlots">
+            <summary>
+                Collects the currently active ScenarioTree quest slots from the
+                native agent state.
+            </summary>
+            <returns>The active ScenarioTree quest slots.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryGetScenarioTreeAgentData(FFXIVClientStructs.FFXIV.Client.UI.Agent.AgentScenarioTree.AgentScenarioTreeData*@)">
+            <summary>
+                Tries to resolve the native ScenarioTree agent data.
+            </summary>
+            <param name="scenarioTreeData">The agent data, if any.</param>
+            <returns>True when the agent data is available.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ResolveMainScenarioQuestRowId(FFXIVClientStructs.FFXIV.Client.UI.Agent.AgentScenarioTree.AgentScenarioTreeData*)">
+            <summary>
+                Resolves the current main-scenario quest row id from the native
+                ScenarioTree agent state.
+            </summary>
+            <param name="scenarioTreeData">The live agent data.</param>
+            <returns>The current main-scenario quest row id, or 0.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ResolveJobScenarioQuestRowId(FFXIVClientStructs.FFXIV.Client.UI.Agent.AgentScenarioTree.AgentScenarioTreeData*)">
+            <summary>
+                Resolves the current job-scenario quest row id from the native
+                ScenarioTree agent state.
+            </summary>
+            <param name="scenarioTreeData">The live agent data.</param>
+            <returns>The current job-scenario quest row id, or 0.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveScenarioTreeTranslatedText(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.QuestCanonicalData,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.String@)">
+            <summary>
+                Tries to resolve the translated ScenarioTree text for one visible slot
+                from the canonical quest payload already persisted in the DB.
+            </summary>
+            <param name="visibleEntry">The visible ScenarioTree slot.</param>
+            <param name="questCanonicalData">The canonical quest payload.</param>
+            <param name="questPlate">The translated quest plate.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>True when the translated text was found in the DB.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CreateScenarioTreeRuntimeEntry(System.Int32,System.String,System.String,System.String)">
             <summary>
                 Creates the runtime payload for one visible ScenarioTree slot.
@@ -6371,20 +6647,45 @@
                 Represents one visible ScenarioTree quest slot.
             </summary>
             <param name="ValueIndex">The addon value index.</param>
+            <param name="QuestRowId">The resolved quest row id from AgentScenarioTree.</param>
             <param name="OriginalText">The original visible text.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.#ctor(System.Int32,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.#ctor(System.Int32,System.UInt32,System.String)">
             <summary>
                 Represents one visible ScenarioTree quest slot.
             </summary>
             <param name="ValueIndex">The addon value index.</param>
+            <param name="QuestRowId">The resolved quest row id from AgentScenarioTree.</param>
             <param name="OriginalText">The original visible text.</param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.ValueIndex">
             <summary>The addon value index.</summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.QuestRowId">
+            <summary>The resolved quest row id from AgentScenarioTree.</summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.OriginalText">
             <summary>The original visible text.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeQuestSlot">
+            <summary>
+                Represents one native ScenarioTree quest slot resolved from the agent.
+            </summary>
+            <param name="ValueIndex">The addon value index that renders the slot.</param>
+            <param name="QuestRowId">The resolved quest row id for that slot.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeQuestSlot.#ctor(System.Int32,System.UInt32)">
+            <summary>
+                Represents one native ScenarioTree quest slot resolved from the agent.
+            </summary>
+            <param name="ValueIndex">The addon value index that renders the slot.</param>
+            <param name="QuestRowId">The resolved quest row id for that slot.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeQuestSlot.ValueIndex">
+            <summary>The addon value index that renders the slot.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeQuestSlot.QuestRowId">
+            <summary>The resolved quest row id for that slot.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry">
             <summary>
@@ -10034,6 +10335,24 @@
                 quest text.
             </summary>
             <param name="questText">The visible quest text or quest name.</param>
+            <param name="snapshot">The resolved live todo snapshot, if any.</param>
+            <returns>True when the quest todo state could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestTodoProgressResolver.TryResolveQuestTodoProgress(System.UInt32,Echoglossian.QuestTodoProgressSnapshot@)">
+            <summary>
+                Tries to resolve the current quest todo snapshot for the supplied
+                quest row id.
+            </summary>
+            <param name="questId">The resolved quest row id.</param>
+            <param name="snapshot">The resolved live todo snapshot, if any.</param>
+            <returns>True when the quest todo state could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestTodoProgressResolver.TryResolveQuestTodoProgress(Echoglossian.QuestProgressSnapshot,Echoglossian.QuestTodoProgressSnapshot@)">
+            <summary>
+                Tries to resolve the current quest todo snapshot for an already
+                resolved quest progress snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
             <param name="snapshot">The resolved live todo snapshot, if any.</param>
             <returns>True when the quest todo state could be resolved.</returns>
         </member>

@@ -30,6 +30,9 @@ public static class OtherUIElementsSettingsTab
         changed |= ImGui.Checkbox(
             Resources.TranslateCharacterWindow,
             ref config.TranslateCharacterWindow);
+        changed |= ImGui.Checkbox(
+            "Translate Main Command",
+            ref config.TranslateMainCommandWindow);
 
         if (changed)
         {

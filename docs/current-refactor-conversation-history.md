@@ -1613,3 +1613,87 @@ The main active problems are:
   - finally reacts in all three modes
   - stays inert only when DB data is genuinely missing
   - restores originals correctly after mode switches
+
+### 2026-04-16 00:20:00 -03:00 - planning checkpoint - StringArrayData DB-first remediation plan written
+
+**What changed**
+
+- Added
+  `docs/string-array-data-db-first-remediation-plan.md`.
+- The new plan defines the replacement architecture for non-quest
+  `StringArrayData` processing, with explicit scope exclusions for:
+  - already-migrated quest-family addons
+  - `ItemTooltips`
+  - `ActionTooltips`
+- The plan records the current failure mode of the legacy implementation:
+  - global extraction
+  - global translation ownership
+  - generic write-back timing
+  - blob-oriented DB rows
+- The plan defines the target direction:
+  - schema per `StringArrayType`
+  - canonical DB payload per semantic surface
+  - background translation outside hot paths
+  - addon-local DB-first application with completeness gates
+
+**Why it changed**
+
+- The user wants the `StringArrayDatas` pipeline rethought completely so that
+  it stops flickering and fighting the game.
+- The repository already had the research needed to support that redesign, but
+  it still needed a concise remediation plan that turns those findings into an
+  implementation sequence.
+- A clear plan is especially important here because the old global
+  `StringArrayDataHandler` and `GenericAddonHandler` paths are structurally
+  wrong in how they combine capture, translation, and apply.
+
+**Next step**
+
+- Pick the first non-quest `StringArrayType` surface to migrate under the new
+  DB-first model.
+- Define its explicit slot schema.
+- Decide whether the existing `stringarraydatas` entity can be evolved
+  additively or whether it needs a stronger canonical payload contract before
+  addon migration begins.
+
+### 2026-04-16 01:25:00 -03:00 - working tree checkpoint - Character and MainCommand moved to DB-first GameWindow runtime
+
+**What changed**
+
+- Introduced a dedicated DB-first addon runtime base for `GameWindow`-backed
+  surfaces in `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`.
+- `Character`, `CharacterClass`, `CharacterProfile`, `CharacterRepute`, and
+  `CharacterStatus` now use that runtime instead of the legacy
+  `GenericAddonHandler<GameWindow>` path.
+- `_MainCommand` now also uses the same DB-first `GameWindow` runtime.
+- `AddonHandlerWiring` now registers `Character*` only when
+  `TranslateCharacterWindow` is enabled, and `_MainCommand` only when the new
+  `TranslateMainCommandWindow` toggle is enabled.
+- The plugin config UI now exposes `Translate Main Command` in the
+  "Other UI elements" tab.
+- `ArraysToBlock` now includes `Character`, which prevents the old global
+  `StringArrayDataHandler` from fighting the new DB-first Character runtime.
+- `InsertGameWindow(...)` now preserves multiple payload variants per
+  addon/language/engine/version instead of overwriting them when the original
+  payload changes.
+
+**Why it changed**
+
+- The first wave of non-quest `StringArrayData` migration needed to start with
+  `Character*` and `MainCommand`, not `Hud`.
+- `GameWindow` already provides the right storage shape for these surfaces, so
+  the critical missing piece was runtime ownership and stable lookup semantics,
+  not a new table.
+- The previous `InsertGameWindow(...)` behavior overwrote different payload
+  variants for the same addon, which would have made DB-first Character
+  windows lose context as the player changed tabs or selections.
+
+**Next step**
+
+- Validate in game that `Character*` and `_MainCommand` now:
+  - leave the addon untouched until DB data exists
+  - apply translated native text without global `StringArrayData` fights
+  - restore original native text cleanly when toggled off
+- After that, decide whether `Hud`/`Hud2` should follow the same `GameWindow`
+  runtime directly or whether they need a stronger `StringArrayData` schema
+  contract first.

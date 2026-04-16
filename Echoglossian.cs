@@ -101,34 +101,22 @@ public partial class Echoglossian : IDalamudPlugin
   /// </summary>
   public static List<string> ArraysToBlock;
 
-  private readonly SemaphoreSlim areaToastTranslationSemaphore;
-  private readonly SemaphoreSlim battleTalkTranslationSemaphore;
   private readonly IDalamudTextureWrap choiceImage;
-  private readonly SemaphoreSlim classChangeToastTranslationSemaphore;
 
   private readonly Config configuration;
 
   private readonly CultureInfo cultureInfo;
   private readonly IDalamudTextureWrap cutsceneChoiceImage;
-  private readonly SemaphoreSlim errorToastTranslationSemaphore;
   private readonly IDalamudTextureWrap logo;
   private readonly QueuedTranslationBroker queuedTranslationBroker;
   private readonly HoverTooltipManager hoverTooltipManager;
-  private readonly SemaphoreSlim nameTranslationSemaphore;
 
   private readonly IDalamudTextureWrap pixImage;
   private readonly IDalamudTextureWrap cryptoImage;
 
   private readonly bool pluginAssetsState;
-  private readonly SemaphoreSlim questToastTranslationSemaphore;
   private readonly QuestToastRuntime questToastRuntime;
-  private readonly SemaphoreSlim senderTranslationSemaphore;
   private readonly IDalamudTextureWrap talkImage;
-  private readonly SemaphoreSlim talkSubtitleTranslationSemaphore;
-  private readonly SemaphoreSlim talkTranslationSemaphore;
-
-  private readonly SemaphoreSlim toastTranslationSemaphore;
-  private readonly SemaphoreSlim wideTextToastTranslationSemaphore;
 
   private AtkTextNodeBufferWrapper atkTextNodeBufferWrapper;
 
@@ -292,26 +280,13 @@ public partial class Echoglossian : IDalamudPlugin
     this.LoadAllErrorToasts();
     this.LoadAllOtherToasts();
 
-    ArraysToBlock = ["ChatLog", "CharaSelect", "PartyList", "NamePlate", "ActionBar", "Inventory", "CharacterItems", "Trade", "PartyMemberList", "LinkShell", "BlackList", "FriendList", "Letter", "SocialList", "EnemyList", "CastBar", "Journal", "RecipeNote", "FlyText", "InventoryRetainer", "MiniTalk", "CommonCurrencies", "ItemSearch", "ArmouryBoard", "FreeCompanyMember", "HousingBlackListSetting", "LegacyItemStorage", "FreeCompanyApplication", "GearSetList", "FreeCompanyRights", "CabinetStore", "CabinetWithdraw", "FreeCompanyActivity", "FreeCompanyExchange", "FreeCompanyStatus", "ContentsFinderConfirm", "FreeCompanyChest", "Buddy", "FreeCompanyAction", "FishingNote", "FishGuide", "GearSetView", "HousingSignBoard", "Housing", "AllianceList", "LookingForGroup", "HousingTravellersNote", "DTR", "RetainerCharacter", "AdventureNoteBook", "HousingChocoboList", "TripleTriad", "LimitBreak", "RaceChocobo", "Currency", "BeginnerChannelMentorList", "BeginnerChannelBeginnerList", "PvPDuelRequest", "JobHud", "PvPTeam", "PvPTeamMember", "PvPTeamResult", "PvPTeamActivity", "ContentMemberList", "CrossWorldLinkShell", "LovmNamePlate", "LovmActionDetail", "LovmResult", "Lovm", "PvPProfile", "Orchestrion", "OrchestrionPlayListSelect", "RetainerTask", "YKWNote", "DeepDungeonNaviMap", "DeepDungeonStatus", "GcArmyExpedition", "GcArmyTraining", "GcArmyCapture", "PvPMKS", "PvPSpectatorList", "LFGRecruiterNameSearch", "Snipe", "Performance", "ContentsReplayPlayer", "SatisfactionSupplyChangeMiragePrism", "SatisfactionSupplyMiragePrism", "Alarm", "Merchant", "MerchantEquipSelect", "EurekaLogosShardList", "RhythmAction", "WorldTranslate", "PVPSimulationHeader2", "PVPSimulationDisplay", "Emj", "WeeklyPuzzle", "MYCInfo", "TeleportTown", "MJIHousingGoods"];
+    ArraysToBlock = ["ChatLog", "CharaSelect", "PartyList", "NamePlate", "ActionBar", "Inventory", "Character", "CharacterItems", "Trade", "PartyMemberList", "LinkShell", "BlackList", "FriendList", "Letter", "SocialList", "EnemyList", "CastBar", "Journal", "RecipeNote", "FlyText", "InventoryRetainer", "MiniTalk", "CommonCurrencies", "ItemSearch", "ArmouryBoard", "FreeCompanyMember", "HousingBlackListSetting", "LegacyItemStorage", "FreeCompanyApplication", "GearSetList", "FreeCompanyRights", "CabinetStore", "CabinetWithdraw", "FreeCompanyActivity", "FreeCompanyExchange", "FreeCompanyStatus", "ContentsFinderConfirm", "FreeCompanyChest", "Buddy", "FreeCompanyAction", "FishingNote", "FishGuide", "GearSetView", "HousingSignBoard", "Housing", "AllianceList", "LookingForGroup", "HousingTravellersNote", "DTR", "RetainerCharacter", "AdventureNoteBook", "HousingChocoboList", "TripleTriad", "LimitBreak", "RaceChocobo", "Currency", "BeginnerChannelMentorList", "BeginnerChannelBeginnerList", "PvPDuelRequest", "JobHud", "PvPTeam", "PvPTeamMember", "PvPTeamResult", "PvPTeamActivity", "ContentMemberList", "CrossWorldLinkShell", "LovmNamePlate", "LovmActionDetail", "LovmResult", "Lovm", "PvPProfile", "Orchestrion", "OrchestrionPlayListSelect", "RetainerTask", "YKWNote", "DeepDungeonNaviMap", "DeepDungeonStatus", "GcArmyExpedition", "GcArmyTraining", "GcArmyCapture", "PvPMKS", "PvPSpectatorList", "LFGRecruiterNameSearch", "Snipe", "Performance", "ContentsReplayPlayer", "SatisfactionSupplyChangeMiragePrism", "SatisfactionSupplyMiragePrism", "Alarm", "Merchant", "MerchantEquipSelect", "EurekaLogosShardList", "RhythmAction", "WorldTranslate", "PVPSimulationHeader2", "PVPSimulationDisplay", "Emj", "WeeklyPuzzle", "MYCInfo", "TeleportTown", "MJIHousingGoods"];
 
     this.StringArrayDataHandler = new StringArrayDataHandler(ArraysToBlock, this.configuration, TranslationService);
 
     GameWindowCacheManager.Preload(ConfigDirectory);
 
     FrameworkInterface.Update += this.Tick;
-
-    this.talkTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.nameTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.battleTalkTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.senderTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.talkSubtitleTranslationSemaphore = new SemaphoreSlim(1, 1);
-
-    this.toastTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.errorToastTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.classChangeToastTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.areaToastTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.wideTextToastTranslationSemaphore = new SemaphoreSlim(1, 1);
-    this.questToastTranslationSemaphore = new SemaphoreSlim(1, 1);
 
     this.questToastRuntime = new QuestToastRuntime(
         this.configuration,
@@ -462,17 +437,6 @@ public partial class Echoglossian : IDalamudPlugin
       this.queuedTranslationBroker.Dispose();
 
       PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
-
-    this.nameTranslationSemaphore?.Dispose();
-    this.talkTranslationSemaphore?.Dispose();
-    this.battleTalkTranslationSemaphore?.Dispose();
-    this.senderTranslationSemaphore?.Dispose();
-    this.talkSubtitleTranslationSemaphore?.Dispose();
-    this.toastTranslationSemaphore?.Dispose();
-    this.errorToastTranslationSemaphore?.Dispose();
-    this.areaToastTranslationSemaphore?.Dispose();
-    this.wideTextToastTranslationSemaphore?.Dispose();
-    this.questToastTranslationSemaphore?.Dispose();
 
     PluginInterface.UiBuilder.Draw -= this.BuildUi;
     PluginInterface.UiBuilder.Draw -= this.DrawDbEditorWindow;

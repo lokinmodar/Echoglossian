@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
 /// <summary>
@@ -11,7 +13,7 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 ///     Lifecycle-safe: extracts and applies values within valid memory scope per
 ///     frame.
 /// </summary>
-public class CharacterProfileSubWindowHandler : GenericAddonHandler<GameWindow>
+public class CharacterProfileSubWindowHandler : DbFirstGameWindowAddonHandler
 {
   /// <summary>
   ///     Initializes a new instance of the
@@ -22,18 +24,14 @@ public class CharacterProfileSubWindowHandler : GenericAddonHandler<GameWindow>
   public CharacterProfileSubWindowHandler(
       Config config,
       TranslationService translationService)
-    : base(
-      "CharacterProfile",
-      config,
-      translationService,
-      true,
-      true,
-      StringArrayType.Character)
-  {
-    this.RegisterHandler(AddonEvent.PreSetup, this.OnPreSetup);
-    this.RegisterHandler(AddonEvent.PreRefresh, this.OnPreRefresh);
-    this.RegisterHandler(
-        AddonEvent.PreRequestedUpdate,
-        this.OnPreRequestedUpdate);
-  }
+      : base(
+          addonName: "CharacterProfile",
+          config: config,
+          translationService: translationService,
+          enabledSelector: static configuration =>
+              configuration.TranslateCharacterWindow,
+          useAtkValues: true,
+          stringArrayDataType: StringArrayType.Character)
+    {
+    }
 }
