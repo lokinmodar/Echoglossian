@@ -1831,10 +1831,14 @@ The main active problems are:
 
 - Added `StringArrayDataPersistenceHelper` as the new canonical persistence
   entry point for `StringArrayDatas`.
+- Added `StringArrayStructuredPayload` and structured-payload tests as the
+  explicit canonical shape for future non-`GameWindow` StringArrayData
+  surfaces.
 - Removed the unused legacy `StringArrayDatas` save/find methods from
   `DbOperations`.
 - Removed the unused `FormatStringArrayDatas(...)` helper from
   `EntitiesHelper`.
+- Removed the now-dead `ArraysToBlock` startup list from `Echoglossian.cs`.
 - Added persistence tests that verify distinct canonical contexts stay separate
   and exact canonical matches update in place.
 

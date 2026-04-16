@@ -627,6 +627,7 @@ The likely long-term win is:
 
 - [StringArrayDatas.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.cs)
 - [StringArrayDataPersistenceHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/StringArrayDataPersistenceHelper.cs)
+- [StringArrayStructuredPayload.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayload.cs)
 - [DbFirstGameWindowAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs)
 - [GenericAddonHandlerHelper.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/GenericAddonHandlerHelper.cs)
 - [structured-text-payload-pipeline.md](/C:/Dante/_dalamud/Echoglossian/docs/structured-text-payload-pipeline.md)

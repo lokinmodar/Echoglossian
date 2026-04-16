@@ -3,8 +3,11 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Globalization;
+
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.NativeUI.Helpers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +19,62 @@ namespace Echoglossian;
 /// </summary>
 public static class StringArrayDataPersistenceHelper
 {
+    /// <summary>
+    ///     Creates a canonical <see cref="StringArrayDatas" /> row from
+    ///     structured payloads.
+    /// </summary>
+    /// <param name="type">The logical string-array type or family.</param>
+    /// <param name="originalLang">The language of the original payload.</param>
+    /// <param name="translationLang">The target translation language.</param>
+    /// <param name="translationEngine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version associated with the payload.</param>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="translatedPayload">The translated canonical payload, if available.</param>
+    /// <returns>The canonical DB row.</returns>
+    public static StringArrayDatas CreateCanonicalRow(
+        string type,
+        string originalLang,
+        string translationLang,
+        int? translationEngine,
+        string? gameVersion,
+        StringArrayStructuredPayload originalPayload,
+        StringArrayStructuredPayload? translatedPayload = null)
+    {
+        ArgumentNullException.ThrowIfNull(originalPayload);
+
+        return new StringArrayDatas(
+            type: type,
+            size: originalPayload.Slots.Count,
+            rawData: null,
+            formattedRawData: null,
+            originalLang: originalLang,
+            originalStrings: JsonConvert.SerializeObject(
+                originalPayload.Slots.ToDictionary(
+                    pair => pair.Key.ToString(CultureInfo.InvariantCulture),
+                    pair => pair.Value.OriginalText)),
+            translationLang: translationLang,
+            translatedStrings: translatedPayload == null
+                ? null
+                : JsonConvert.SerializeObject(
+                    translatedPayload.Slots
+                        .Where(pair => !string.IsNullOrWhiteSpace(pair.Value.TranslatedText))
+                        .ToDictionary(
+                            pair => pair.Key.ToString(CultureInfo.InvariantCulture),
+                            pair => pair.Value.TranslatedText)),
+            translatedStringsWithPayloads: null,
+            translationEngine: translationEngine,
+            gameVersion: gameVersion,
+            createdAt: DateTime.UtcNow,
+            updatedAt: DateTime.UtcNow)
+        {
+            ContextKey = originalPayload.ContextKey,
+            SchemaVersion = originalPayload.SchemaVersion,
+            SourceContentHash = originalPayload.ComputeSourceContentHash(),
+            OriginalStructuredPayload = originalPayload.Serialize(),
+            TranslatedStructuredPayload = translatedPayload?.Serialize(),
+        };
+    }
+
     /// <summary>
     ///     Inserts or updates a <see cref="StringArrayDatas" /> row using the
     ///     canonical lookup scope when available, and a legacy formatted-raw-data

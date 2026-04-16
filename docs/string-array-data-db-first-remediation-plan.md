@@ -176,6 +176,7 @@ not just as a string dump.
 The repo now has a dedicated persistence helper for this direction:
 
 - [StringArrayDataPersistenceHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/StringArrayDataPersistenceHelper.cs)
+- [StringArrayStructuredPayload.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayload.cs)
 
 The long-term `StringArrayDatas` contract should evolve toward something like:
 

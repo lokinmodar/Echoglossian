@@ -1120,11 +1120,6 @@
             The directory where the plugin's configuration files are stored.
             </summary>
         </member>
-        <member name="F:Echoglossian.Echoglossian.ArraysToBlock">
-            <summary>
-            Holds the list of StringArrayData names to block translation for
-            </summary>
-        </member>
         <member name="F:Echoglossian.Echoglossian.config">
             <summary>
             Tggle the configuration UI visibility.
@@ -2298,6 +2293,20 @@
                 Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> rows using the canonical
                 DB-first lookup contract.
             </summary>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.CreateCanonicalRow(System.String,System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Creates a canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> row from
+                structured payloads.
+            </summary>
+            <param name="type">The logical string-array type or family.</param>
+            <param name="originalLang">The language of the original payload.</param>
+            <param name="translationLang">The target translation language.</param>
+            <param name="translationEngine">The translation engine identifier.</param>
+            <param name="gameVersion">The game version associated with the payload.</param>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The translated canonical payload, if available.</param>
+            <returns>The canonical DB row.</returns>
         </member>
         <member name="M:Echoglossian.StringArrayDataPersistenceHelper.InsertStringArrayData(System.String,Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
             <summary>
@@ -9685,6 +9694,83 @@
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Dispose">
             <summary>
                 Releases broker resources and stops the background pump.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload">
+            <summary>
+                Represents one canonical structured payload for a StringArrayData-backed
+                surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload.Type">
+            <summary>
+                Gets or sets the backing string-array type or logical surface family.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload.ContextKey">
+            <summary>
+                Gets or sets the stable semantic context key for this payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload.SchemaVersion">
+            <summary>
+                Gets or sets the schema version used by this payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload.Slots">
+            <summary>
+                Gets the captured slots keyed by their source array index.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload.Serialize">
+            <summary>
+                Serializes the payload using a stable JSON shape.
+            </summary>
+            <returns>The serialized payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload.ComputeSourceContentHash">
+            <summary>
+                Computes the stable source-content hash for the payload using only
+                original source semantics.
+            </summary>
+            <returns>The stable hash string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload.Deserialize(System.String)">
+            <summary>
+                Deserializes a payload from its JSON form.
+            </summary>
+            <param name="serializedPayload">The serialized payload.</param>
+            <returns>The deserialized payload, or <see langword="null" />.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot">
+            <summary>
+                Represents one canonical structured slot inside a StringArrayData-backed
+                payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot.SemanticKey">
+            <summary>
+                Gets or sets the stable semantic key for this slot.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot.OriginalText">
+            <summary>
+                Gets or sets the original text captured from the game.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot.TranslatedText">
+            <summary>
+                Gets or sets the translated text for this slot.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot.IsVisible">
+            <summary>
+                Gets or sets a value indicating whether the slot is user-visible.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot.IsTranslatable">
+            <summary>
+                Gets or sets a value indicating whether the slot is translatable.
             </summary>
         </member>
         <member name="T:Echoglossian.SummaryQuest">
