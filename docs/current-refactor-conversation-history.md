@@ -1834,6 +1834,12 @@ The main active problems are:
 - Added `StringArrayStructuredPayload` and structured-payload tests as the
   explicit canonical shape for future non-`GameWindow` StringArrayData
   surfaces.
+- Added `StringArrayStructuredPayloadResolver` so future DB-first runtimes can
+  materialize original and translated canonical payloads from
+  `stringarraydatas`, including a legacy flat-slot fallback.
+- Added `IStringArrayStructuredSchema` plus
+  `StringArrayStructuredPayloadBuilder` so future surfaces can build canonical
+  payloads from typed slot schemas instead of ad hoc blob parsing.
 - Removed the unused legacy `StringArrayDatas` save/find methods from
   `DbOperations`.
 - Removed the unused `FormatStringArrayDatas(...)` helper from

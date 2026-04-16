@@ -177,6 +177,9 @@ The repo now has a dedicated persistence helper for this direction:
 
 - [StringArrayDataPersistenceHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/StringArrayDataPersistenceHelper.cs)
 - [StringArrayStructuredPayload.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayload.cs)
+- [StringArrayStructuredPayloadResolver.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayloadResolver.cs)
+- [IStringArrayStructuredSchema.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/IStringArrayStructuredSchema.cs)
+- [StringArrayStructuredPayloadBuilder.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayloadBuilder.cs)
 
 The long-term `StringArrayDatas` contract should evolve toward something like:
 
@@ -378,6 +381,12 @@ A possible abstraction shape:
 - `StringArraySchemaPayload`
 - `StringArrayDbFirstRuntime`
 - `StringArrayApplySnapshot`
+
+The repo now has the first concrete pieces of that shape:
+
+- `IStringArrayStructuredSchema`
+- `StringArrayStructuredPayloadBuilder`
+- `StringArrayStructuredPayloadResolver`
 
 Responsibilities:
 
