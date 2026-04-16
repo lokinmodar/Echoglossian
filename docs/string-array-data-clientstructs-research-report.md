@@ -114,6 +114,12 @@ What is weak about it:
 - it does not separate "capture schema" from "write-back schema"
 - it is not yet aligned with the newer DB-first addon approach used in quests
 
+What now exists to replace it:
+
+- canonical `StringArrayDatas` persistence fields
+- `StringArrayDataPersistenceHelper` for strict DB-first lookup/update
+- dead global runtime types removed from the active build
+
 ---
 
 ## Core FFXIVClientStructs Primitives
@@ -620,9 +626,9 @@ The likely long-term win is:
 ### Repository Sources
 
 - [StringArrayDatas.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.cs)
+- [StringArrayDataPersistenceHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/StringArrayDataPersistenceHelper.cs)
 - [DbFirstGameWindowAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs)
 - [GenericAddonHandlerHelper.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/GenericAddonHandlerHelper.cs)
-- [EntitiesHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/EntitiesHelper.cs)
 - [structured-text-payload-pipeline.md](/C:/Dante/_dalamud/Echoglossian/docs/structured-text-payload-pipeline.md)
 
 ### FFXIVClientStructs Sources

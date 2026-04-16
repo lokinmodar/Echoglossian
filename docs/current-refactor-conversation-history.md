@@ -1824,3 +1824,29 @@ The main active problems are:
   of the new canonical persistence fields.
 - Keep `RecommendList`, `ItemTooltips`, and `ActionTooltips` on their separate
   planned tracks until their dedicated approach is ready.
+
+### 2026-04-16 04:05:00 -03:00 - working tree checkpoint - canonical StringArrayData persistence helper introduced
+
+**What changed**
+
+- Added `StringArrayDataPersistenceHelper` as the new canonical persistence
+  entry point for `StringArrayDatas`.
+- Removed the unused legacy `StringArrayDatas` save/find methods from
+  `DbOperations`.
+- Removed the unused `FormatStringArrayDatas(...)` helper from
+  `EntitiesHelper`.
+- Added persistence tests that verify distinct canonical contexts stay separate
+  and exact canonical matches update in place.
+
+**Why it changed**
+
+- The global legacy handler is gone, so leaving blob-oriented orphan
+  persistence APIs behind would only invite future regressions.
+- Future DB-first StringArrayData addons need a strict lookup contract based on
+  `Type + ContextKey + TranslationLang + TranslationEngine + GameVersion + SourceContentHash`,
+  with only a narrow legacy fallback while transition code still exists.
+
+**Next step**
+
+- Start using the canonical helper as the only supported persistence path when
+  the next non-`GameWindow` StringArrayData surface is migrated.

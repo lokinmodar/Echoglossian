@@ -161,36 +161,4 @@ public partial class Echoglossian
         DateTime.Now);
   }
 
-  /// <summary>
-  /// Formats a <see cref="StringArrayDatas" />. for database storage.
-  /// </summary>
-  /// <param name="type"> The type of the string array (e.g., "AtkValue", "StringArray").</param>
-  /// <param name="size"> The size of the string array.</param>
-  /// <param name="rawData"> The raw data byte array.</param>
-  /// <param name="formattedRawData"> The formatted raw data string.</param>
-  /// <param name="originalLang"> The original language code.</param>
-  /// <param name="originalStrings"> The original strings.</param>
-  /// <param name="translationLang"> The translation language code.</param>
-  /// <param name="translatedStrings"> The translated strings.</param>
-  /// <param name="translatedStringsWithPayloads"> The translated strings with payloads.</param>
-  /// <param name="translationEngine"> The translation engine ID.</param>
-  /// <param name="gameVersion"> The game version.</param>
-  /// <returns>A formatted <see cref="StringArrayDatas" /> for database storage.</returns>
-  public static StringArrayDatas FormatStringArrayDatas(string type, int size, byte[] rawData, string formattedRawData, string originalLang, string originalStrings, string translationLang, string translatedStrings, string translatedStringsWithPayloads, int translationEngine, string gameVersion)
-  {
-    return new StringArrayDatas(
-        type,
-        size,
-        rawData,
-        formattedRawData,
-        originalLang,
-        originalStrings,
-        translationLang,
-        translatedStrings,
-        translatedStringsWithPayloads,
-        translationEngine,
-        GetGameVersion(),
-        DateTime.Now,
-        DateTime.Now);
-  }
 }

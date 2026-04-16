@@ -1010,35 +1010,6 @@
             <param name="entity">Entity to insert.</param>
             <returns>Result message.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.InsertOrUpdateStringArrayData(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
-            <summary>
-            Inserts or updates StringArrayDatas in the database.
-            </summary>
-            <param name="stringArrayData">Formatted StringArrayData to be inserted or updated in the database.</param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FindStringArrayDatas(System.Func{Echoglossian.EFCoreSqlite.Models.StringArrayDatas,System.Boolean})">
-            <summary>
-            Finds and returns StringArrayDatas from the database.
-            </summary>
-            <param name="predicate">Predicate to match StringArrayDatas.</param>
-            <returns>List of matching StringArrayDatas.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FindAndReturnStringArrayData(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
-            <summary>
-            Finds and return a StringArrayDatas from the database
-            </summary>
-            <param name="dataToSearch">The StringArrayDatas to search for.</param>
-            <returns>The found StringArrayDatas, or an empty array if not found.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FindStringArrayDatasByTypeAndLang(System.String,System.String)">
-            <summary>
-            Finds and returns StringArrayDatas by type and translation language.
-            </summary>
-            <param name="type">The type of the StringArrayDatas.</param>
-            <param name="translationLang">The translation language of the StringArrayDatas.</param>
-            <returns>A list of matching StringArrayDatas.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.FormatTalkMessage(System.String,System.String)">
             <summary>
                 Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> for the database.
@@ -1081,23 +1052,6 @@
             <param name="translationLang"></param>
             <param name="translationEngine"></param>
             <returns>Returns a formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatStringArrayDatas(System.String,System.Int32,System.Byte[],System.String,System.String,System.String,System.String,System.String,System.String,System.Int32,System.String)">
-            <summary>
-            Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" />. for database storage.
-            </summary>
-            <param name="type"> The type of the string array (e.g., "AtkValue", "StringArray").</param>
-            <param name="size"> The size of the string array.</param>
-            <param name="rawData"> The raw data byte array.</param>
-            <param name="formattedRawData"> The formatted raw data string.</param>
-            <param name="originalLang"> The original language code.</param>
-            <param name="originalStrings"> The original strings.</param>
-            <param name="translationLang"> The translation language code.</param>
-            <param name="translatedStrings"> The translated strings.</param>
-            <param name="translatedStringsWithPayloads"> The translated strings with payloads.</param>
-            <param name="translationEngine"> The translation engine ID.</param>
-            <param name="gameVersion"> The game version.</param>
-            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> for database storage.</returns>
         </member>
         <member name="F:Echoglossian.Echoglossian.SlashCommand">
             <summary>
@@ -2338,6 +2292,70 @@
                 Optional callback invoked with the updated entity after the DB write succeeds.
             </param>
             <returns>A status message describing the result.</returns>
+        </member>
+        <member name="T:Echoglossian.StringArrayDataPersistenceHelper">
+            <summary>
+                Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> rows using the canonical
+                DB-first lookup contract.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.InsertStringArrayData(System.String,Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+                Inserts or updates a <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> row using the
+                canonical lookup scope when available, and a legacy formatted-raw-data
+                fallback during transition.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
+            <param name="stringArrayData">The string-array payload to persist.</param>
+            <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.FindStringArrayData(System.String,Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+                Finds a <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> row using the same canonical
+                lookup contract used by persistence.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
+            <param name="probe">The probe payload that defines the lookup scope.</param>
+            <returns>The matching row, or <see langword="null" /> when not found.</returns>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.IsValidForPersistence(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+                Determines whether the payload contains enough identity to be
+                persisted safely.
+            </summary>
+            <param name="row">The row to validate.</param>
+            <returns>True when the row has a safe persistence identity.</returns>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.BuildLookupQuery(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+                Builds the lookup query for one row.
+            </summary>
+            <param name="context">The active DB context.</param>
+            <param name="row">The row that defines the lookup scope.</param>
+            <returns>The lookup query.</returns>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.HasCanonicalScope(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+                Determines whether the row has the canonical lookup fields populated.
+            </summary>
+            <param name="row">The row to inspect.</param>
+            <returns>True when the canonical lookup scope is available.</returns>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.MergeValues(Echoglossian.EFCoreSqlite.Models.StringArrayDatas,Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+                Merges a newer payload into an existing row without discarding
+                already-populated translated data when the new payload is sparse.
+            </summary>
+            <param name="target">The row already stored in the database.</param>
+            <param name="source">The newer payload.</param>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.FirstNonEmpty(System.String,System.String)">
+            <summary>
+                Returns the first non-empty string, preferring the incoming value.
+            </summary>
+            <param name="preferred">The candidate incoming value.</param>
+            <param name="fallback">The existing value.</param>
+            <returns>The chosen string.</returns>
         </member>
         <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
             <summary>

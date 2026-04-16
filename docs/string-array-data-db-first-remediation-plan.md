@@ -49,7 +49,7 @@ The current code paths are centered around:
   `GenericAddonHandler` design
 - [StringArrayDatas.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.cs)
 - [StringArrayDatas.partial.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.partial.cs)
-- [DbOperations.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/DbOperations.cs)
+- [StringArrayDataPersistenceHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/StringArrayDataPersistenceHelper.cs)
 - [DbFirstGameWindowAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs)
 
 The extraction/translation part is not the main problem.
@@ -172,6 +172,10 @@ Without a schema, we are still treating semantic UI state as a blob.
 
 The DB row should be treated as the canonical payload for one semantic surface,
 not just as a string dump.
+
+The repo now has a dedicated persistence helper for this direction:
+
+- [StringArrayDataPersistenceHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/StringArrayDataPersistenceHelper.cs)
 
 The long-term `StringArrayDatas` contract should evolve toward something like:
 
