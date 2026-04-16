@@ -1840,6 +1840,11 @@ The main active problems are:
 - Added `IStringArrayStructuredSchema` plus
   `StringArrayStructuredPayloadBuilder` so future surfaces can build canonical
   payloads from typed slot schemas instead of ad hoc blob parsing.
+- Added
+  [string-array-runtime-ownership-map.md](/C:/Dante/_dalamud/Echoglossian/docs/string-array-runtime-ownership-map.md)
+  to make explicit which live surfaces currently react through `GameWindow`,
+  which react through `QuestPlate`, and which parts of `stringarraydatas` are
+  infrastructure only for now.
 - Removed the unused legacy `StringArrayDatas` save/find methods from
   `DbOperations`.
 - Removed the unused `FormatStringArrayDatas(...)` helper from
@@ -1860,3 +1865,38 @@ The main active problems are:
 
 - Start using the canonical helper as the only supported persistence path when
   the next non-`GameWindow` StringArrayData surface is migrated.
+
+### 2026-04-16 05:10:00 -03:00 - working tree checkpoint - active StringArrayType windows moved to canonical StringArrayDatas ownership
+
+**What changed**
+
+- Added `StringArrayDataCacheManager` as the addon-runtime cache for canonical
+  `stringarraydatas` rows.
+- Added `DbFirstStructuredStringArrayHelper` so mixed ATK and `StringArrayData`
+  payloads can be:
+  - captured into a canonical structured payload
+  - translated through the existing concatenated translation approach
+  - projected back into live addon maps
+- Updated `DbFirstGameWindowAddonHandler` so surfaces with a
+  `StringArrayType` no longer persist through `gamewindows`.
+- Active `StringArrayType` surfaces now resolve and persist through canonical
+  `stringarraydatas` while still reusing the stable addon lifecycle apply path.
+- Added structured runtime tests to verify canonical payload encoding and
+  projection of translated results back into live maps.
+
+**Why it changed**
+
+- The earlier migration moved several windows to DB-first behavior, but their
+  translated payload owner was still `gamewindows`.
+- That left the repo in an awkward split where canonical `stringarraydatas`
+  existed, but active `StringArrayType` windows were still not truly owned by
+  it.
+- Flipping ownership now aligns runtime behavior with the schema and helper
+  work that had already been put in place.
+
+**Next step**
+
+- Validate the migrated `StringArrayType` windows in-game for stability and
+  lack of flicker.
+- Keep `_MainCommand` on `GameWindow` until it is worth giving it a dedicated
+  canonical shape as well.

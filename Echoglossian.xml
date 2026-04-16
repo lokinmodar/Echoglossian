@@ -141,6 +141,42 @@
         <member name="P:Echoglossian.Cache.QuestUiTranslationSnapshot.LastUpdatedUtc">
             <summary>The time the cached text was last updated.</summary>
         </member>
+        <member name="T:Echoglossian.Cache.StringArrayDataCacheManager">
+            <summary>
+                Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" />
+                rows so DB-first string-array runtimes do not need to query SQLite on
+                every lifecycle event.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.Preload(System.String)">
+            <summary>
+                Loads all canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" /> rows into memory.
+            </summary>
+            <param name="configDir">The plugin configuration directory.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.Update(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+            <summary>
+                Updates or inserts one cached canonical row.
+            </summary>
+            <param name="newRecord">The row to cache.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.TryFindCanonicalMatch(System.String,System.String,System.String,System.Int32,System.String,System.String)">
+            <summary>
+                Attempts to resolve one canonical row from the in-memory cache.
+            </summary>
+            <param name="type">The logical payload type.</param>
+            <param name="contextKey">The semantic surface context.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation engine id.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="sourceContentHash">The stable source payload hash.</param>
+            <returns>The matching cached row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.Clear">
+            <summary>
+                Clears the in-memory cache.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.AiTranslatorPrompt">
             <summary>Generic prompt used by all AI translators when applicable.</summary>
         </member>
@@ -4786,6 +4822,30 @@
             <param name="originalJson">The serialized original payload.</param>
             <returns>The stable payload key.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.BuildPayloadKey(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Builds a stable in-flight key for one canonical structured payload.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <returns>The stable payload key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.BuildStructuredPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Builds the canonical structured payload used by
+                <c>StringArrayDatas</c> lookup and persistence.
+            </summary>
+            <param name="payload">The live payload to encode.</param>
+            <returns>The canonical structured payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryFindStructuredPayload(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload@)">
+            <summary>
+                Tries to find a matching canonical <c>StringArrayDatas</c> row in
+                cache or DB and resolve its translated payload.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns>True when a canonical translated payload was found.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryFindGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow@)">
             <summary>
                 Tries to find a matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> in cache or DB.
@@ -4794,7 +4854,7 @@
             <param name="gameWindow">The resolved row, if any.</param>
             <returns>True when a row was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.QueueTranslationIfNeeded(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.QueueTranslationIfNeeded(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
             <summary>
                 Queues background translation and DB save when needed.
             </summary>
@@ -9600,6 +9660,106 @@
         <member name="M:Echoglossian.NativeUI.Helpers.AtkTextNodeBufferWrapper.FreeBuffer">
             <summary>
                 Frees the previously allocated buffer.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper">
+            <summary>
+                Provides canonical payload helpers for DB-first addon surfaces backed by
+                <c>StringArrayDatas</c> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.BuildCanonicalPayload(System.String,System.String,System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String})">
+            <summary>
+                Builds one canonical structured payload from a mixed addon surface
+                containing ATK values and StringArrayData values.
+            </summary>
+            <param name="type">The logical payload type.</param>
+            <param name="contextKey">The semantic surface context key.</param>
+            <param name="atkValues">The captured ATK value strings.</param>
+            <param name="stringArrayValues">The captured StringArrayData strings.</param>
+            <returns>The canonical payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TryProjectTranslatedPayload(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection@)">
+            <summary>
+                Projects one translated structured payload back into live ATK and
+                StringArrayData maps.
+            </summary>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The translated canonical payload.</param>
+            <param name="projection">The projected live payload maps.</param>
+            <returns>
+                <see langword="true" /> when all translatable slots are present in
+                the translated payload; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslatePayloadAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,System.String,System.String)">
+            <summary>
+                Translates one canonical payload while preserving slot semantics and
+                structure.
+            </summary>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translationService">The translation service.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <returns>The translated canonical payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslateAndPersistAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,System.String,System.String,System.Nullable{System.Int32},System.String,System.String)">
+            <summary>
+                Translates one canonical payload and persists it to the
+                <c>stringarraydatas</c> table.
+            </summary>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translationService">The translation service.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <param name="translationEngine">The translation engine id.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="configDirectory">The plugin configuration directory.</param>
+            <returns>The persisted row snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.EncodeAtkSlot(System.Int32)">
+            <summary>
+                Encodes one ATK slot index into the canonical payload key space.
+            </summary>
+            <param name="atkIndex">The original ATK slot index.</param>
+            <returns>The encoded canonical slot key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TryDecodeAtkSlot(System.Int32,System.Int32@)">
+            <summary>
+                Attempts to decode one canonical slot key back into an ATK index.
+            </summary>
+            <param name="slotKey">The canonical slot key.</param>
+            <param name="atkIndex">The decoded ATK slot index.</param>
+            <returns>
+                <see langword="true" /> when the slot key belongs to ATK values;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection">
+            <summary>
+                Represents one live addon payload projected from a translated canonical
+                string-array row.
+            </summary>
+            <param name="AtkValues">The translated ATK value strings.</param>
+            <param name="StringArrayValues">The translated StringArrayData strings.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection.#ctor(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.SortedDictionary{System.Int32,System.String})">
+            <summary>
+                Represents one live addon payload projected from a translated canonical
+                string-array row.
+            </summary>
+            <param name="AtkValues">The translated ATK value strings.</param>
+            <param name="StringArrayValues">The translated StringArrayData strings.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection.AtkValues">
+            <summary>The translated ATK value strings.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection.StringArrayValues">
+            <summary>The translated StringArrayData strings.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection.Empty">
+            <summary>
+                Gets an empty projection.
             </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper">

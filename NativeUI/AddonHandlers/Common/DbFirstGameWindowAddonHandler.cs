@@ -186,6 +186,40 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         var originalPayload = this.ResolveOriginalPayload(livePayload);
+        if (this.stringArrayDataType is { })
+        {
+            var originalStructuredPayload =
+                this.BuildStructuredPayload(originalPayload);
+            var structuredPayloadKey =
+                this.BuildPayloadKey(originalStructuredPayload);
+
+            if (!this.TryFindStructuredPayload(
+                    originalStructuredPayload,
+                    out var translatedStructuredPayload) ||
+                !DbFirstStructuredStringArrayHelper.TryProjectTranslatedPayload(
+                    originalStructuredPayload,
+                    translatedStructuredPayload,
+                    out var projection))
+            {
+                this.QueueTranslationIfNeeded(
+                    originalPayload,
+                    structuredPayloadKey,
+                    originalStructuredPayload);
+                this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                return;
+            }
+
+            this.ApplyPayload(
+                addon,
+                originalPayload,
+                new DbFirstGameWindowPayload(
+                    projection.AtkValues,
+                    projection.StringArrayValues),
+                structuredPayloadKey);
+            this.nextRetryUtc = DateTime.MinValue;
+            return;
+        }
+
         var originalJson = originalPayload.Serialize();
         var payloadKey = this.BuildPayloadKey(originalJson);
 
@@ -319,6 +353,88 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Builds a stable in-flight key for one canonical structured payload.
+    /// </summary>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <returns>The stable payload key.</returns>
+    private string BuildPayloadKey(StringArrayStructuredPayload originalPayload)
+    {
+        return $"{this.addonName}|{LangDict[LanguageInt].Code}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalPayload.ComputeSourceContentHash()}";
+    }
+
+    /// <summary>
+    ///     Builds the canonical structured payload used by
+    ///     <c>StringArrayDatas</c> lookup and persistence.
+    /// </summary>
+    /// <param name="payload">The live payload to encode.</param>
+    /// <returns>The canonical structured payload.</returns>
+    private StringArrayStructuredPayload BuildStructuredPayload(
+        DbFirstGameWindowPayload payload)
+    {
+        return DbFirstStructuredStringArrayHelper.BuildCanonicalPayload(
+            this.stringArrayDataType!.Value.ToString(),
+            $"addon:{this.addonName}",
+            payload.AtkValues,
+            payload.StringArrayValues);
+    }
+
+    /// <summary>
+    ///     Tries to find a matching canonical <c>StringArrayDatas</c> row in
+    ///     cache or DB and resolve its translated payload.
+    /// </summary>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="translatedPayload">The resolved translated payload.</param>
+    /// <returns>True when a canonical translated payload was found.</returns>
+    private bool TryFindStructuredPayload(
+        StringArrayStructuredPayload originalPayload,
+        out StringArrayStructuredPayload translatedPayload)
+    {
+        var language = LangDict[LanguageInt].Code;
+        var gameVersion = GetGameVersion();
+        var sourceHash = originalPayload.ComputeSourceContentHash();
+
+        var row = StringArrayDataCacheManager.TryFindCanonicalMatch(
+            originalPayload.Type,
+            originalPayload.ContextKey,
+            language,
+            this.config.ChosenTransEngine,
+            gameVersion,
+            sourceHash);
+        if (row == null)
+        {
+            var probe = StringArrayDataPersistenceHelper.CreateCanonicalRow(
+                originalPayload.Type,
+                ClientStateInterface.ClientLanguage.Humanize(),
+                language,
+                this.config.ChosenTransEngine,
+                gameVersion,
+                originalPayload);
+
+            row = StringArrayDataPersistenceHelper.FindStringArrayData(
+                ConfigDirectory,
+                probe);
+            if (row != null)
+            {
+                StringArrayDataCacheManager.Update(row);
+            }
+        }
+
+        if (row == null ||
+            !StringArrayStructuredPayloadResolver.TryResolvePayloads(
+                row,
+                out _,
+                out var resolvedTranslatedPayload) ||
+            resolvedTranslatedPayload == null)
+        {
+            translatedPayload = new StringArrayStructuredPayload();
+            return false;
+        }
+
+        translatedPayload = resolvedTranslatedPayload;
+        return true;
+    }
+
+    /// <summary>
     ///     Tries to find a matching <see cref="GameWindow" /> in cache or DB.
     /// </summary>
     /// <param name="originalJson">The serialized original payload.</param>
@@ -364,32 +480,52 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="payloadKey">The stable payload key.</param>
     private void QueueTranslationIfNeeded(
         DbFirstGameWindowPayload payload,
-        string payloadKey)
+        string payloadKey,
+        StringArrayStructuredPayload? originalStructuredPayload = null)
     {
         if (!InFlightPayloads.TryAdd(payloadKey, 0))
         {
             return;
         }
 
-        _ = Task.Run(() =>
+        Task translationTask;
+        if (originalStructuredPayload != null)
         {
-            try
-            {
-                return GenericAddonHandlerHelper
-                    .PerformTranslationAndSaveAsync<GameWindow>(
-                        this.addonName,
-                        new Dictionary<int, string>(payload.AtkValues),
-                        new Dictionary<int, string>(payload.StringArrayValues),
-                        new Dictionary<int, string>(payload.AtkValues),
-                        new Dictionary<int, string>(payload.StringArrayValues),
-                        this.config,
-                        this.translationService);
-            }
-            finally
-            {
-                InFlightPayloads.TryRemove(payloadKey, out _);
-            }
-        });
+            translationTask = DbFirstStructuredStringArrayHelper
+                .TranslateAndPersistAsync(
+                    originalStructuredPayload,
+                    this.translationService,
+                    ClientStateInterface.ClientLanguage.Humanize(),
+                    LangDict[LanguageInt].Code,
+                    this.config.ChosenTransEngine,
+                    GetGameVersion(),
+                    ConfigDirectory)
+                .ContinueWith(
+                    task =>
+                    {
+                        if (task.Status == TaskStatus.RanToCompletion)
+                        {
+                            StringArrayDataCacheManager.Update(task.Result);
+                        }
+                    },
+                    TaskScheduler.Default);
+        }
+        else
+        {
+            translationTask = GenericAddonHandlerHelper
+                .PerformTranslationAndSaveAsync<GameWindow>(
+                    this.addonName,
+                    new Dictionary<int, string>(payload.AtkValues),
+                    new Dictionary<int, string>(payload.StringArrayValues),
+                    new Dictionary<int, string>(payload.AtkValues),
+                    new Dictionary<int, string>(payload.StringArrayValues),
+                    this.config,
+                    this.translationService);
+        }
+
+        _ = translationTask.ContinueWith(
+            completedTask => InFlightPayloads.TryRemove(payloadKey, out _),
+            TaskScheduler.Default);
     }
 
     /// <summary>

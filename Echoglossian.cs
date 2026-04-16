@@ -276,6 +276,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.LoadAllOtherToasts();
 
     GameWindowCacheManager.Preload(ConfigDirectory);
+    StringArrayDataCacheManager.Preload(ConfigDirectory);
 
     FrameworkInterface.Update += this.Tick;
 
@@ -400,10 +401,12 @@ public partial class Echoglossian : IDalamudPlugin
   protected virtual void Dispose(bool disposing)
   {
     AddonLifecycle.UnLogAddon("CutSceneSelectString");
-    this.hoverTooltipManager.Clear();
-    QuestUiTranslationCache.Clear();
-    QuestHoverTranslationCache.Clear();
-    QuestLuminaResolver.Clear();
+      this.hoverTooltipManager.Clear();
+      QuestUiTranslationCache.Clear();
+      QuestHoverTranslationCache.Clear();
+      StringArrayDataCacheManager.Clear();
+      GameWindowCacheManager.Clear();
+      QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();
     this.ClearAcceptedQuestPrefetchState();
