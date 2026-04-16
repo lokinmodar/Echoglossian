@@ -1732,3 +1732,65 @@ The main active problems are:
 - Decide whether the next string-array migration wave should target the
   dedicated HUD schemas or jump straight to the broader non-`GameWindow`
   `StringArrayData` contracts.
+
+### 2026-04-16 03:05:00 -03:00 - working tree checkpoint - legacy global StringArrayData runtime disabled
+
+**What changed**
+
+- Removed the plugin-startup invocation of the legacy
+  `StringArrayDataHandler.LoadAndTranslateStringArrayDatas()` path.
+- Removed the plugin-level `StringArrayDataHandler` field/property ownership
+  from `Echoglossian.cs`.
+- The plugin now relies only on addon-local DB-first runtimes for migrated
+  `StringArrayData` surfaces instead of performing a global startup scan and
+  broad live write-back.
+
+**Why it changed**
+
+- At this point the migrated `Character*`, `_MainCommand`, `Hud`, `Hud2`,
+  `OperationGuide`, and `AddonContextMenuTitle` surfaces already have local
+  DB-first ownership.
+- The old global `StringArrayDataHandler` was no longer providing the correct
+  presentation model for those addons and could only reintroduce contention,
+  flicker, or incorrect live writes at startup.
+- The user explicitly preferred correctness over preserving broken legacy
+  behavior.
+
+**Next step**
+
+- Keep remaining non-migrated `StringArrayData` surfaces untouched until they
+  receive their own DB-first runtime.
+- Decide whether to fully delete the dead `GenericAddonHandler` /
+  `StringArrayDataHandler` implementation after the next migration wave or keep
+  it temporarily as reference material only.
+
+### 2026-04-16 03:25:00 -03:00 - working tree checkpoint - canonical StringArrayData persistence fields added
+
+**What changed**
+
+- Added additive canonical fields to `stringarraydatas`:
+  - `ContextKey`
+  - `SchemaVersion`
+  - `SourceContentHash`
+  - `OriginalStructuredPayload`
+  - `TranslatedStructuredPayload`
+- Added a new lookup index for the future schema-driven contract:
+  `IX_stringarraydatas_context_lookup`.
+- Added a persistence regression test to prove those canonical fields round-trip
+  through the EF migration schema.
+
+**Why it changed**
+
+- The next `StringArrayData` migration wave needs a stronger DB contract than
+  the current blob-only shape.
+- The user explicitly allowed remodeling `stringarraydatas`, and there is no
+  legacy user data there that needs to be preserved semantically.
+- Adding the canonical fields now lets future addon migrations use the correct
+  persistence shape without another table redesign mid-flight.
+
+**Next step**
+
+- Start the first typed `StringArrayData` schema/runtime that consumes the new
+  canonical fields instead of the legacy blob payload.
+- Keep legacy lookup semantics intact until that first schema-driven consumer
+  is actually wired up.

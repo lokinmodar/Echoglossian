@@ -183,6 +183,17 @@ public class EchoglossianDbContext : DbContext
           s.TranslationEngine
         })
         .HasDatabaseName("IX_stringarraydatas_lookup");
+    modelBuilder.Entity<StringArrayDatas>()
+        .HasIndex(s => new
+        {
+          s.Type,
+          s.ContextKey,
+          s.TranslationLang,
+          s.TranslationEngine,
+          s.GameVersion,
+          s.SourceContentHash
+        })
+        .HasDatabaseName("IX_stringarraydatas_context_lookup");
   }
 
   public override void Dispose()

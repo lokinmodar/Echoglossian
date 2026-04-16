@@ -339,6 +339,22 @@ Once a surface is fully migrated:
 - it should no longer queue translations locally
 - it should no longer use the generic blob apply path
 
+Current repo status:
+
+- the plugin-level startup invocation of the legacy global
+  `StringArrayDataHandler` has been disabled
+- migrated `GameWindow` surfaces now rely solely on their addon-local DB-first
+  runtime
+- `stringarraydatas` now also contains additive canonical fields for the next
+  schema-driven migration wave:
+  - `ContextKey`
+  - `SchemaVersion`
+  - `SourceContentHash`
+  - `OriginalStructuredPayload`
+  - `TranslatedStructuredPayload`
+- remaining non-migrated `StringArrayData` surfaces are intentionally left
+  untouched until they receive a typed runtime of their own
+
 ---
 
 ## Practical Design Recommendation

@@ -2789,6 +2789,20 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestCanonicalRowsColumn.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddCanonicalStringArrayPayloadFields">
+            <summary>
+                Adds canonical structured payload fields to
+                <c>stringarraydatas</c> so future DB-first schema-driven runtimes
+                can persist semantic context without relying on the legacy blob-only
+                contract.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddCanonicalStringArrayPayloadFields.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddCanonicalStringArrayPayloadFields.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
                 Represents a translation entity for action tooltips in the database.
@@ -3888,6 +3902,31 @@
         <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GameVersion">
             <summary>
             Gets or sets the game version this data was captured from.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.ContextKey">
+            <summary>
+            Gets or sets the semantic context key for this string-array surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SchemaVersion">
+            <summary>
+            Gets or sets the schema version used to serialize the structured payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SourceContentHash">
+            <summary>
+            Gets or sets the stable source-content hash for the canonical payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.OriginalStructuredPayload">
+            <summary>
+            Gets or sets the structured original payload for this surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.TranslatedStructuredPayload">
+            <summary>
+            Gets or sets the structured translated payload for this surface.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.CreatedAt">

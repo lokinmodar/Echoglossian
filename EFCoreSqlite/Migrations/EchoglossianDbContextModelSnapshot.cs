@@ -419,6 +419,9 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ContextKey")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FormattedRawData")
                         .HasColumnType("TEXT");
 
@@ -429,6 +432,9 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("OriginalStrings")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalStructuredPayload")
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RawData")
@@ -442,10 +448,19 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<int>("Size")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("SchemaVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceContentHash")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TranslatedStrings")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TranslatedStringsWithPayloads")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedStructuredPayload")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("TranslationEngine")
@@ -464,6 +479,9 @@ namespace Echoglossian.EFCoreSqlite.Migrations
 
                     b.HasIndex("Type", "TranslationLang", "TranslationEngine")
                         .HasDatabaseName("IX_stringarraydatas_lookup");
+
+                    b.HasIndex("Type", "ContextKey", "TranslationLang", "TranslationEngine", "GameVersion", "SourceContentHash")
+                        .HasDatabaseName("IX_stringarraydatas_context_lookup");
 
                     b.ToTable("stringarraydatas");
                 });

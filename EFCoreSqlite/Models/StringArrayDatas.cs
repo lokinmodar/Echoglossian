@@ -107,6 +107,31 @@ public partial class StringArrayDatas
   public string? GameVersion { get; set; }
 
   /// <summary>
+  /// Gets or sets the semantic context key for this string-array surface.
+  /// </summary>
+  public string? ContextKey { get; set; }
+
+  /// <summary>
+  /// Gets or sets the schema version used to serialize the structured payload.
+  /// </summary>
+  public int? SchemaVersion { get; set; }
+
+  /// <summary>
+  /// Gets or sets the stable source-content hash for the canonical payload.
+  /// </summary>
+  public string? SourceContentHash { get; set; }
+
+  /// <summary>
+  /// Gets or sets the structured original payload for this surface.
+  /// </summary>
+  public string? OriginalStructuredPayload { get; set; }
+
+  /// <summary>
+  /// Gets or sets the structured translated payload for this surface.
+  /// </summary>
+  public string? TranslatedStructuredPayload { get; set; }
+
+  /// <summary>
   /// Gets or sets the creation timestamp.
   /// </summary>
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
