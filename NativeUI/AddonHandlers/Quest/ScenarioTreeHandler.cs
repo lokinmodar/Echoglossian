@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using AgentScenarioTree = FFXIVClientStructs.FFXIV.Client.UI.Agent.AgentScenarioTree;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
@@ -17,7 +18,9 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
   private const string ScenarioTreeHoverPrefix = "ScenarioTree-";
 
-  private static readonly int[] ScenarioTreeQuestValueIndices = [7, 2];
+  private const int MainScenarioValueIndex = 7;
+
+  private const int JobScenarioValueIndex = 2;
 
   private static readonly TimeSpan ScenarioTreeRetryInterval =
       TimeSpan.FromSeconds(2);
@@ -99,7 +102,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   private unsafe void RefreshScenarioTree()
   {
-    if (!TryGetVisibleScenarioTree(out _, out var atkValues))
+    if (!TryGetVisibleScenarioTree(out var addon, out var atkValues))
     {
       return;
     }
@@ -163,10 +166,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     this.nextScenarioTreeRetryUtc = DateTime.MinValue;
     this.ClearScenarioTreeWaitingState();
 
-    if (TryGetVisibleScenarioTree(out var addon, out atkValues))
-    {
-      this.ApplyScenarioTreePresentation(addon, atkValues);
-    }
+    this.ApplyScenarioTreePresentation(addon, atkValues);
   }
 
   /// <summary>
@@ -202,17 +202,29 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   {
     List<ScenarioTreeVisibleEntry> visibleEntries = [];
 
-    foreach (var valueIndex in ScenarioTreeQuestValueIndices)
+    foreach (var questSlot in CollectScenarioTreeQuestSlots())
     {
-      if (!TryGetScenarioTreeText(atkValues, valueIndex, out var visibleText))
+      if (!TryGetScenarioTreeText(
+              atkValues,
+              questSlot.ValueIndex,
+              out var visibleText))
       {
         continue;
       }
 
       var originalText = this.ResolveOriginalScenarioTreeText(
-          valueIndex,
+          questSlot.ValueIndex,
           visibleText);
-      visibleEntries.Add(new ScenarioTreeVisibleEntry(valueIndex, originalText));
+      if (string.IsNullOrWhiteSpace(originalText))
+      {
+        continue;
+      }
+
+      visibleEntries.Add(
+          new ScenarioTreeVisibleEntry(
+              questSlot.ValueIndex,
+              questSlot.QuestRowId,
+              originalText));
     }
 
     return visibleEntries;
@@ -239,7 +251,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     blockingQuestLabel = visibleEntry.OriginalText;
 
     if (!QuestTodoProgressResolver.TryResolveQuestTodoProgress(
-            visibleEntry.OriginalText,
+            visibleEntry.QuestRowId,
             out var todoProgressSnapshot))
     {
       runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
@@ -260,7 +272,11 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         DateTime.Now);
     var foundQuestPlate = this.FindQuestPlate(questPlate);
     if (foundQuestPlate == null ||
-        string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestName))
+        !this.TryResolveScenarioTreeTranslatedText(
+            visibleEntry,
+            questCanonicalData,
+            foundQuestPlate,
+            out var translatedText))
     {
       runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
           visibleEntry.ValueIndex,
@@ -274,8 +290,224 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         visibleEntry.ValueIndex,
         todoProgressSnapshot.CacheKey,
         visibleEntry.OriginalText,
-        foundQuestPlate.TranslatedQuestName);
+        translatedText);
     return true;
+  }
+
+  /// <summary>
+  ///     Collects the currently active ScenarioTree quest slots from the
+  ///     native agent state.
+  /// </summary>
+  /// <returns>The active ScenarioTree quest slots.</returns>
+  private static unsafe List<ScenarioTreeQuestSlot> CollectScenarioTreeQuestSlots()
+  {
+    List<ScenarioTreeQuestSlot> questSlots = [];
+
+    if (!TryGetScenarioTreeAgentData(out var scenarioTreeData))
+    {
+      return questSlots;
+    }
+
+    var mainScenarioQuestRowId = ResolveMainScenarioQuestRowId(scenarioTreeData);
+    if (mainScenarioQuestRowId != 0)
+    {
+      questSlots.Add(
+          new ScenarioTreeQuestSlot(
+              MainScenarioValueIndex,
+              mainScenarioQuestRowId));
+    }
+
+    var jobScenarioQuestRowId = ResolveJobScenarioQuestRowId(scenarioTreeData);
+    if (jobScenarioQuestRowId != 0)
+    {
+      questSlots.Add(
+          new ScenarioTreeQuestSlot(
+              JobScenarioValueIndex,
+              jobScenarioQuestRowId));
+    }
+
+    return questSlots;
+  }
+
+  /// <summary>
+  ///     Tries to resolve the native ScenarioTree agent data.
+  /// </summary>
+  /// <param name="scenarioTreeData">The agent data, if any.</param>
+  /// <returns>True when the agent data is available.</returns>
+  private static unsafe bool TryGetScenarioTreeAgentData(
+      out AgentScenarioTree.AgentScenarioTreeData* scenarioTreeData)
+  {
+    scenarioTreeData = null;
+
+    var scenarioTreeAgent = AgentScenarioTree.Instance();
+    if (scenarioTreeAgent == null || scenarioTreeAgent->Data == null)
+    {
+      return false;
+    }
+
+    scenarioTreeData = scenarioTreeAgent->Data;
+    return true;
+  }
+
+  /// <summary>
+  ///     Resolves the current main-scenario quest row id from the native
+  ///     ScenarioTree agent state.
+  /// </summary>
+  /// <param name="scenarioTreeData">The live agent data.</param>
+  /// <returns>The current main-scenario quest row id, or 0.</returns>
+  private static unsafe uint ResolveMainScenarioQuestRowId(
+      AgentScenarioTree.AgentScenarioTreeData* scenarioTreeData)
+  {
+    var mainScenarioQuestIds = (ushort*)((byte*)scenarioTreeData + 0x00);
+    var selectedQuestIndex = Math.Min((int)scenarioTreeData->MSQPathIndex, 2);
+    var selectedQuestId = mainScenarioQuestIds[selectedQuestIndex];
+    if (selectedQuestId == 0)
+    {
+      for (var i = 0; i < 3; i++)
+      {
+        if (mainScenarioQuestIds[i] != 0)
+        {
+          selectedQuestId = mainScenarioQuestIds[i];
+          break;
+        }
+      }
+    }
+
+    if (selectedQuestId == 0)
+    {
+      selectedQuestId = mainScenarioQuestIds[3];
+    }
+
+    return selectedQuestId == 0
+        ? 0
+        : selectedQuestId | 0x10000U;
+  }
+
+  /// <summary>
+  ///     Resolves the current job-scenario quest row id from the native
+  ///     ScenarioTree agent state.
+  /// </summary>
+  /// <param name="scenarioTreeData">The live agent data.</param>
+  /// <returns>The current job-scenario quest row id, or 0.</returns>
+  private static unsafe uint ResolveJobScenarioQuestRowId(
+      AgentScenarioTree.AgentScenarioTreeData* scenarioTreeData)
+  {
+    var jobQuestIds = (ushort*)((byte*)scenarioTreeData + 0x08);
+    var selectedQuestIndex = Math.Min((int)scenarioTreeData->JobQuestIndex, 1);
+    var selectedQuestId = jobQuestIds[selectedQuestIndex];
+    if (selectedQuestId == 0)
+    {
+      for (var i = 0; i < 2; i++)
+      {
+        if (jobQuestIds[i] != 0)
+        {
+          selectedQuestId = jobQuestIds[i];
+          break;
+        }
+      }
+    }
+
+    return selectedQuestId == 0
+        ? 0
+        : selectedQuestId | 0x10000U;
+  }
+
+  /// <summary>
+  ///     Tries to resolve the translated ScenarioTree text for one visible slot
+  ///     from the canonical quest payload already persisted in the DB.
+  /// </summary>
+  /// <param name="visibleEntry">The visible ScenarioTree slot.</param>
+  /// <param name="questCanonicalData">The canonical quest payload.</param>
+  /// <param name="questPlate">The translated quest plate.</param>
+  /// <param name="translatedText">The resolved translated text.</param>
+  /// <returns>True when the translated text was found in the DB.</returns>
+  private bool TryResolveScenarioTreeTranslatedText(
+      ScenarioTreeVisibleEntry visibleEntry,
+      QuestCanonicalData questCanonicalData,
+      QuestPlate questPlate,
+      out string translatedText)
+  {
+    translatedText = string.Empty;
+
+    if (string.Equals(
+            visibleEntry.OriginalText,
+            questCanonicalData.QuestProgressSnapshot.QuestName,
+            StringComparison.Ordinal))
+    {
+      translatedText = questPlate.TranslatedQuestName ?? string.Empty;
+      return !string.IsNullOrWhiteSpace(translatedText);
+    }
+
+    if (string.Equals(
+            visibleEntry.OriginalText,
+            questCanonicalData.CurrentSequenceText,
+            StringComparison.Ordinal))
+    {
+      translatedText = questPlate.TranslatedQuestMessage ?? string.Empty;
+      return !string.IsNullOrWhiteSpace(translatedText);
+    }
+
+    foreach (var objectiveRow in questCanonicalData.QuestProgressSnapshot.QuestSteps)
+    {
+      if (!string.Equals(
+              objectiveRow.Text,
+              visibleEntry.OriginalText,
+              StringComparison.Ordinal))
+      {
+        continue;
+      }
+
+      if (questPlate.TryGetTranslatedObjectiveText(
+              objectiveRow.KeyText,
+              objectiveRow.Text,
+              out translatedText) &&
+          !string.IsNullOrWhiteSpace(translatedText))
+      {
+        return true;
+      }
+    }
+
+    foreach (var summaryRow in questCanonicalData.QuestProgressSnapshot.QuestSeqTexts)
+    {
+      if (!string.Equals(
+              summaryRow.Text,
+              visibleEntry.OriginalText,
+              StringComparison.Ordinal))
+      {
+        continue;
+      }
+
+      if (questPlate.TryGetTranslatedSummaryText(
+              summaryRow.KeyText,
+              summaryRow.Text,
+              out translatedText) &&
+          !string.IsNullOrWhiteSpace(translatedText))
+      {
+        return true;
+      }
+    }
+
+    foreach (var systemRow in questCanonicalData.QuestProgressSnapshot.QuestSystemTexts)
+    {
+      if (!string.Equals(
+              systemRow.Text,
+              visibleEntry.OriginalText,
+              StringComparison.Ordinal))
+      {
+        continue;
+      }
+
+      if (questPlate.TryGetTranslatedSystemText(
+              systemRow.KeyText,
+              systemRow.Text,
+              out translatedText) &&
+          !string.IsNullOrWhiteSpace(translatedText))
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /// <summary>
@@ -616,10 +848,21 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   ///     Represents one visible ScenarioTree quest slot.
   /// </summary>
   /// <param name="ValueIndex">The addon value index.</param>
+  /// <param name="QuestRowId">The resolved quest row id from AgentScenarioTree.</param>
   /// <param name="OriginalText">The original visible text.</param>
   private sealed record ScenarioTreeVisibleEntry(
       int ValueIndex,
+      uint QuestRowId,
       string OriginalText);
+
+  /// <summary>
+  ///     Represents one native ScenarioTree quest slot resolved from the agent.
+  /// </summary>
+  /// <param name="ValueIndex">The addon value index that renders the slot.</param>
+  /// <param name="QuestRowId">The resolved quest row id for that slot.</param>
+  private sealed record ScenarioTreeQuestSlot(
+      int ValueIndex,
+      uint QuestRowId);
 
   /// <summary>
   ///     Represents one resolved ScenarioTree runtime slot.

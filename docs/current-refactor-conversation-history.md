@@ -1545,3 +1545,71 @@ The main active problems are:
   - shows the waiting notification without spamming
   - applies native / tooltip / swap modes only after the visible data is
     complete
+
+### 2026-04-15 02:05:00 -03:00 - working tree checkpoint - StringArrayData / FFXIVClientStructs research report added
+
+**What changed**
+
+- Added
+  `docs/string-array-data-clientstructs-research-report.md`.
+- The new report documents:
+  - how Echoglossian currently uses `StringArrayData`
+  - the relevant `FFXIVClientStructs` primitives for reading and writing array
+    entries
+  - addon and agent hints already exposed by the structs
+  - the risks and benefits of hooking the global string-array write path
+  - a recommended DB-first architecture for future `StringArrayData`,
+    `RecommendList`, `ItemTooltips`, and `ActionTooltips` work
+
+**Why it changed**
+
+- The user wants a concrete technical basis before touching
+  `RecommendList`-family `StringArrayData` processing.
+- Community guidance suggested hooking the global string-array write functions,
+  so the report needed to compare that idea against the DB-first architecture
+  already being established elsewhere in the plugin.
+- `FFXIVClientStructs` already exposes more of this surface than the repo had
+  previously documented, and we need that knowledge captured as reusable
+  memory.
+
+**Next step**
+
+- Validate the `RecommendList` array schema against live data.
+- Decide whether to prototype a capture-only hook on the global
+  `StringArrayData.SetValue*` write path for schema discovery, or to move
+  directly to a typed DB-first `RecommendList` model.
+
+### 2026-04-15 12:35:00 -03:00 - working tree checkpoint - ScenarioTree rebased onto AgentScenarioTree
+
+**What changed**
+
+- `ScenarioTreeHandler` no longer tries to discover visible quest slots by
+  scanning arbitrary visible strings and guessing which ones map to quests.
+- The handler now resolves the live slot identity from `AgentScenarioTree`,
+  using:
+  - the current main-scenario quest id
+  - the current job-quest id
+  - the established addon value indices already used by the old runtime
+- The handler now resolves translated display text from canonical DB payloads
+  by quest id and row content, preferring canonical objective rows and falling
+  back to other canonical sections only when the visible text matches them.
+- `QuestTodoProgressResolver` now has a quest-id overload so addons that
+  already know the quest id do not need to route through name-based lookup.
+
+**Why it changed**
+
+- Runtime investigation plus reference repos showed that `ScenarioTree` has a
+  native agent surface and should not be identified from visible UI text.
+- The previous DB-first attempt was still sourcing identity from visible
+  strings, which is too brittle for this addon and likely explains why all
+  modes stayed inert in game.
+- This brings `ScenarioTree` closer to the intended architecture:
+  agent state for identity, canonical quest data for meaning, DB rows for
+  translated payload, and the addon only as a presentation surface.
+
+**Next step**
+
+- Validate in game that `ScenarioTree`:
+  - finally reacts in all three modes
+  - stays inert only when DB data is genuinely missing
+  - restores originals correctly after mode switches

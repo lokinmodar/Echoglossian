@@ -554,6 +554,10 @@ This surface handles the main scenario tree / quest tracker style entry points.
 - local state:
   - `scenarioTreeRuntimeEntries`
   - readiness gate / retry timer / debounced waiting notification state
+- native identity source:
+  - `AgentScenarioTree`
+  - `CurrentScenarioQuest` / `MainScenarioQuestIds`
+  - `JobQuestIds`
 - DB lookup:
   - `FindQuestPlate(...)`
 - progress helper:
@@ -569,7 +573,8 @@ It now:
 
 - never queues translation from the addon
 - never inserts or updates `QuestPlate` rows from the addon
-- resolves visible quest slots through `QuestManager + QuestCanonicalData`
+- resolves visible quest ids through `AgentScenarioTree`, then resolves the
+  translated payload through `QuestManager + QuestCanonicalData + QuestPlate`
 - activates only when all visible ScenarioTree quest slots already have the
   required translated payload in the DB
 - restores original addon text and emits a notification when DB data is still

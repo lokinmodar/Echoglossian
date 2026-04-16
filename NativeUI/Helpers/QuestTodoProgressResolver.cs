@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Collections.Concurrent;
+using System.Globalization;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Arrays;
 
@@ -45,12 +46,55 @@ internal static class QuestTodoProgressResolver
         // display name to TryResolveQuestProgress(string) would fail because
         // that overload expects a numeric row-id string.
         if (!QuestLuminaResolver.TryResolveQuestId(questText, out var questIdStr) ||
-            !QuestProgressResolver.TryResolveQuestProgress(
+            !uint.TryParse(
                 questIdStr,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var questId))
+        {
+            return false;
+        }
+
+        return TryResolveQuestTodoProgress(questId, out snapshot);
+    }
+
+    /// <summary>
+    ///     Tries to resolve the current quest todo snapshot for the supplied
+    ///     quest row id.
+    /// </summary>
+    /// <param name="questId">The resolved quest row id.</param>
+    /// <param name="snapshot">The resolved live todo snapshot, if any.</param>
+    /// <returns>True when the quest todo state could be resolved.</returns>
+    public static unsafe bool TryResolveQuestTodoProgress(
+        uint questId,
+        out QuestTodoProgressSnapshot snapshot)
+    {
+        snapshot = default;
+
+        if (!QuestProgressResolver.TryResolveQuestProgress(
+                questId.ToString(CultureInfo.InvariantCulture),
                 out var questProgressSnapshot))
         {
             return false;
         }
+
+        return TryResolveQuestTodoProgress(
+            questProgressSnapshot,
+            out snapshot);
+    }
+
+    /// <summary>
+    ///     Tries to resolve the current quest todo snapshot for an already
+    ///     resolved quest progress snapshot.
+    /// </summary>
+    /// <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+    /// <param name="snapshot">The resolved live todo snapshot, if any.</param>
+    /// <returns>True when the quest todo state could be resolved.</returns>
+    private static unsafe bool TryResolveQuestTodoProgress(
+        QuestProgressSnapshot questProgressSnapshot,
+        out QuestTodoProgressSnapshot snapshot)
+    {
+        snapshot = default;
 
         var cacheKey = questProgressSnapshot.CacheKey;
         if (QuestTodoProgressCache.TryGetValue(cacheKey, out snapshot))
