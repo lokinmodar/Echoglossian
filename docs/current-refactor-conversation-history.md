@@ -1794,3 +1794,33 @@ The main active problems are:
   canonical fields instead of the legacy blob payload.
 - Keep legacy lookup semantics intact until that first schema-driven consumer
   is actually wired up.
+
+### 2026-04-16 03:40:00 -03:00 - working tree checkpoint - dead StringArrayData legacy handlers removed from build
+
+**What changed**
+
+- Added a small shared contracts file for the still-used runtime types:
+  - `LocalAddonHandlerDelegate`
+  - `CombinedTranslationData`
+- Deleted the dead legacy runtime files:
+  - `NativeUI/Handlers/GenericAddonHandler.cs`
+  - `NativeUI/Handlers/StringArrayDataHandler.cs`
+- The remaining active code paths now depend only on the shared helper and the
+  DB-first addon runtimes that actually own presentation.
+
+**Why it changed**
+
+- After disabling the plugin-level startup invocation, neither of those legacy
+  handlers had any active consumers left in the build.
+- Keeping them around would only preserve incorrect architecture, stale
+  warnings, and future confusion about which path truly owns StringArrayData
+  application.
+- The user explicitly preferred removing broken legacy instead of preserving it
+  out of inertia.
+
+**Next step**
+
+- Build the first non-`GameWindow` typed `StringArrayData` schema/runtime on top
+  of the new canonical persistence fields.
+- Keep `RecommendList`, `ItemTooltips`, and `ActionTooltips` on their separate
+  planned tracks until their dedicated approach is ready.

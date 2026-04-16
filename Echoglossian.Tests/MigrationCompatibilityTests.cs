@@ -12,7 +12,7 @@ namespace Echoglossian.Tests;
 public class MigrationCompatibilityTests
 {
     private const string PreviousMigration = "20250724225932_fixNewEntity24052025";
-    private const string LatestLookupMigration = "20260403190000_AddTextGimmickHintMessage";
+    private const string LatestLookupMigration = "20260416031500_AddCanonicalStringArrayPayloadFields";
 
     private static readonly string[] TableNames =
     {
@@ -30,6 +30,7 @@ public class MigrationCompatibilityTests
         "IX_battletalkmessages_lookup",
         "IX_gamewindows_lookup",
         "IX_questplates_lookup",
+        "IX_stringarraydatas_context_lookup",
         "IX_stringarraydatas_lookup",
         "IX_talkmessages_lookup",
         "IX_talksubtitlemessages_lookup",
@@ -208,20 +209,37 @@ public class MigrationCompatibilityTests
             createdDate: now,
             updatedDate: now));
 
-        context.StringArrayDatas.Add(new StringArrayDatas(
-            type: "AddonJournalDetail",
-            size: 2,
-            rawData: new byte[] { 1, 2, 3, 4 },
-            formattedRawData: "01020304",
-            originalLang: "en",
-            originalStrings: "[\"Quest\",\"Reward\"]",
-            translationLang: "pt",
-            translatedStrings: "[\"Missao\",\"Recompensa\"]",
-            translatedStringsWithPayloads: "[\"Missao\",\"Recompensa\"]",
-            translationEngine: 1,
-            gameVersion: "7.2",
-            createdAt: now,
-            updatedAt: now));
+        context.Database.ExecuteSqlInterpolated($"""
+            INSERT INTO stringarraydatas (
+                Type,
+                Size,
+                RawData,
+                FormattedRawData,
+                OriginalLang,
+                OriginalStrings,
+                TranslationLang,
+                TranslatedStrings,
+                TranslatedStringsWithPayloads,
+                TranslationEngine,
+                GameVersion,
+                CreatedAt,
+                UpdatedAt
+            ) VALUES (
+                {"AddonJournalDetail"},
+                {2},
+                {new byte[] { 1, 2, 3, 4 }},
+                {"01020304"},
+                {"en"},
+                {"[\"Quest\",\"Reward\"]"},
+                {"pt"},
+                {"[\"Missao\",\"Recompensa\"]"},
+                {"[\"Missao\",\"Recompensa\"]"},
+                {1},
+                {"7.2"},
+                {now},
+                {now}
+            )
+            """);
 
         context.SaveChanges();
     }

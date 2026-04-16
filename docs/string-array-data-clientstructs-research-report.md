@@ -53,12 +53,15 @@ that tries to infer context in a global hook.
 
 ## Current Repo State
 
-The current repository touches `StringArrayData` in two older paths:
+The current repository historically touched `StringArrayData` in two older
+paths. Those paths have since been removed from the live runtime, but they are
+still worth documenting because they explain the architecture we are
+replacing:
 
 ### `StringArrayDataHandler`
 
-File:
-- [NativeUI/Handlers/StringArrayDataHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Handlers/StringArrayDataHandler.cs)
+Legacy path:
+- plugin-level global `StringArrayDataHandler` startup/runtime
 
 What it does today:
 
@@ -89,8 +92,8 @@ What is weak about it:
 
 ### `GenericAddonHandler.OnArrayDataUpdate`
 
-File:
-- [NativeUI/Handlers/GenericAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Handlers/GenericAddonHandler.cs)
+Legacy path:
+- `GenericAddonHandler.OnArrayDataUpdate(...)`
 
 What it does today:
 
@@ -616,11 +619,11 @@ The likely long-term win is:
 
 ### Repository Sources
 
-- [NativeUI/Handlers/StringArrayDataHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Handlers/StringArrayDataHandler.cs)
-- [NativeUI/Handlers/GenericAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Handlers/GenericAddonHandler.cs)
-- [EFCoreSqlite/Models/StringArrayDatas.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.cs)
-- [DBHelpers/EntitiesHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/EntitiesHelper.cs)
-- [docs/structured-text-payload-pipeline.md](/C:/Dante/_dalamud/Echoglossian/docs/structured-text-payload-pipeline.md)
+- [StringArrayDatas.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.cs)
+- [DbFirstGameWindowAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs)
+- [GenericAddonHandlerHelper.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/GenericAddonHandlerHelper.cs)
+- [EntitiesHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/EntitiesHelper.cs)
+- [structured-text-payload-pipeline.md](/C:/Dante/_dalamud/Echoglossian/docs/structured-text-payload-pipeline.md)
 
 ### FFXIVClientStructs Sources
 

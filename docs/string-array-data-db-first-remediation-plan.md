@@ -45,11 +45,12 @@ That design is causing exactly the class of issues we want to avoid:
 
 The current code paths are centered around:
 
-- [StringArrayDataHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Handlers/StringArrayDataHandler.cs)
-- [GenericAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Handlers/GenericAddonHandler.cs)
+- the removed legacy global `StringArrayDataHandler` /
+  `GenericAddonHandler` design
 - [StringArrayDatas.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.cs)
 - [StringArrayDatas.partial.cs](/C:/Dante/_dalamud/Echoglossian/EFCoreSqlite/Models/StringArrayDatas.partial.cs)
 - [DbOperations.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/DbOperations.cs)
+- [DbFirstGameWindowAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs)
 
 The extraction/translation part is not the main problem.
 The application timing and ownership model is.

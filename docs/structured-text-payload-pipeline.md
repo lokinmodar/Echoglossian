@@ -100,7 +100,9 @@ For action tooltips, the source should be:
 
 The repository already shows several useful patterns:
 
-- `StringArrayDataHandler` keeps raw bytes and extracted text together and serializes the translation result in a structured way.
+- the legacy `StringArrayDataHandler` showed that raw bytes and extracted text
+  should be kept together, even though that global runtime has now been
+  removed from the live plugin path.
 - `QuestProgressResolver` keeps quest identity separate from the displayed UI text.
 - `QuestProbeCommandHelpers` and `QuestSheetAcquisitionPipeline` demonstrate how to mount structured quest sheets from stable identifiers.
 - `UiActionTooltipHandler` and the `SeString` helper paths show where tooltip payload inspection already starts.
@@ -205,7 +207,7 @@ The difference is that quests need progression-aware identity, while item and ac
 
 ## Reusable Helpers To Keep In Mind
 
-- `StringArrayDataHandler` for structured batch handling patterns
+- `GenericAddonHandlerHelper` for structured batch translation/save patterns
 - `QuestProgressResolver` for stable quest identity and live progress
 - `QuestProbeCommandHelpers` for quest-sheet inspection
 - `HoverTooltipManager` for hover presentation and wrapping
