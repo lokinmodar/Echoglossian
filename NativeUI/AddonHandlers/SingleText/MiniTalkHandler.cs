@@ -697,7 +697,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   private bool ShouldUseOverlay()
   {
     return this.config.TranslateMiniTalk &&
-           this.config.UseImGuiForMiniTalk;
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+               this.config.MiniTalkTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -710,8 +712,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeText()
   {
-    return !this.config.UseImGuiForMiniTalk ||
-           this.config.SwapTextsUsingImGui;
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+        this.config.MiniTalkTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -724,8 +727,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldSwapTexts()
   {
-    return this.config.UseImGuiForMiniTalk &&
-           this.config.SwapTextsUsingImGui;
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+        this.config.MiniTalkTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>

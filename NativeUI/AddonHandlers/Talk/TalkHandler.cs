@@ -624,10 +624,10 @@ public sealed class TalkHandler : IAddonTranslationHandler
     var resolvedOverlayName = !string.IsNullOrWhiteSpace(translatedName)
         ? translatedName
         : originalName;
-    var overlayName = this.config.SwapTextsUsingImGui
+    var overlayName = this.ShouldSwapTexts()
         ? originalName
         : resolvedOverlayName;
-    var overlayText = this.config.SwapTextsUsingImGui
+    var overlayText = this.ShouldSwapTexts()
         ? originalText
         : translatedText;
 
@@ -805,7 +805,24 @@ public sealed class TalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeTalkText()
   {
-    return !this.config.UseImGuiForTalk || this.config.SwapTextsUsingImGui;
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+        this.config.TalkTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
+  }
+
+  /// <summary>
+  ///     Determines whether the Talk overlay should show the original line while
+  ///     the native addon receives the translation.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when Talk swap mode is active; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool ShouldSwapTexts()
+  {
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+        this.config.TalkTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>

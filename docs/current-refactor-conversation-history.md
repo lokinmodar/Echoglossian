@@ -2084,3 +2084,50 @@ The main active problems are:
 - Validate the action/item tooltip mode dropdown against native-only,
   tooltip-only, and swap behavior.
 - Validate hover-tooltip color settings in quest and DB-first UI surfaces.
+
+### 2026-04-17 02:40:00 -03:00 - working tree checkpoint - overlay-family surfaces gained per-surface mode selectors
+
+**What changed**
+
+- Added dedicated display-mode fields for the remaining overlay-driven
+  surfaces:
+  - `Talk`
+  - `BattleTalk`
+  - `TalkSubtitle`
+  - `MiniTalk`
+  - `CutSceneSelectString`
+  - `TextGimmickHint`
+  - `WideTextToast`
+  - `ErrorToast`
+  - `AreaToast`
+  - `ClassChangeToast`
+  - `QuestToast`
+- Replaced the old overlay checkbox + shared swap checkbox UI in
+  [OverlayTab](/C:/Dante/_dalamud/Echoglossian/PluginUI/Tabs/OverlayTab.cs)
+  with the shared mode dropdown pattern.
+- Migrated the legacy overlay runtimes to use per-surface display modes
+  instead of the shared `SwapTextsUsingImGui` toggle:
+  - overlay enablement
+  - native replacement decisions
+  - swap/original-overlay decisions
+  - overlay font choice when rendering original text in swap mode
+- Added config migration from legacy `UseImGuiFor*` + `SwapTextsUsingImGui`
+  into the new per-surface mode fields.
+
+**Why it changed**
+
+- The new selector would have been misleading if the old global swap flag
+  remained the real owner of runtime behavior.
+- The user explicitly asked for the new selector in all implementations and
+  for overlay-only languages to clamp those selectors correctly.
+- Per-surface modes remove the last major configuration coupling in the old
+  overlay family without forcing a full runtime rewrite.
+
+**Next step**
+
+- Validate in-game that each overlay-family surface obeys its own selector
+  independently.
+- Pay special attention to mixed configurations where one surface is native,
+  another is overlay-only, and another is swap.
+- If runtime issues appear, fix them surface-by-surface rather than reopening
+  the shared global swap model.

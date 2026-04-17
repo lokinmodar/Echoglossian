@@ -216,6 +216,7 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     this.MigrateOverlayStyleSettings();
+    this.MigrateOverlayDisplayModes();
 
     this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
 

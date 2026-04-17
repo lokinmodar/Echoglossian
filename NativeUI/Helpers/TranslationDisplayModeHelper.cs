@@ -47,6 +47,22 @@ internal static class TranslationDisplayModeHelper
     }
 
     /// <summary>
+    ///     Gets whether a display mode should render through an ImGui overlay.
+    /// </summary>
+    /// <param name="displayMode">The configured display mode.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language only supports overlays and custom
+    ///     tooltips.
+    /// </param>
+    /// <returns><c>true</c> when the overlay path should be used.</returns>
+    public static bool UsesOverlayPresentation(
+        JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage = false)
+    {
+        return UsesHoverTooltips(displayMode, overlayOnlyLanguage);
+    }
+
+    /// <summary>
     ///     Gets whether a display mode should write translated text into the
     ///     native addon.
     /// </summary>
@@ -81,5 +97,24 @@ internal static class TranslationDisplayModeHelper
         displayMode = GetEffectiveDisplayMode(displayMode, overlayOnlyLanguage);
         return displayMode ==
                JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips;
+    }
+
+    /// <summary>
+    ///     Gets whether an overlay should show the original text while the
+    ///     native UI receives translated text.
+    /// </summary>
+    /// <param name="displayMode">The configured display mode.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language only supports overlays and custom
+    ///     tooltips.
+    /// </param>
+    /// <returns>
+    ///     <c>true</c> when the overlay should display the original text.
+    /// </returns>
+    public static bool ShowsOriginalOverlayText(
+        JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage = false)
+    {
+        return ShowsOriginalTooltips(displayMode, overlayOnlyLanguage);
     }
 }

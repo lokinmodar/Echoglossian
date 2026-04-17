@@ -26,17 +26,25 @@ internal static class TranslationDisplayModeUiHelper
     /// </summary>
     /// <param name="comboId">The unique ImGui id suffix for this combo.</param>
     /// <param name="displayMode">The display mode to edit.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language forbids native UI mutation.
+    /// </param>
+    /// <param name="label">Optional label override for the combo.</param>
+    /// <param name="description">Optional help text shown below the combo.</param>
+    /// <param name="modeLabels">Optional display labels for the three modes.</param>
     /// <returns><c>true</c> when the selection changed.</returns>
     public static bool DrawDisplayModeCombo(
         string comboId,
         ref JournalTranslationDisplayMode displayMode,
         bool overlayOnlyLanguage = false,
         string? label = null,
-        string? description = null)
+        string? description = null,
+        string[]? modeLabels = null)
     {
         var changed = false;
         label ??= Resources.QuestDisplayModeLabel;
         description ??= Resources.QuestDisplayModeDescription;
+        modeLabels ??= DisplayModes;
 
         if (overlayOnlyLanguage &&
             displayMode != JournalTranslationDisplayMode.TooltipTranslation)
@@ -53,15 +61,15 @@ internal static class TranslationDisplayModeUiHelper
             ImGui.Combo(
                 label,
                 ref modeValue,
-                DisplayModes,
-                DisplayModes.Length);
+                modeLabels,
+                modeLabels.Length);
             ImGui.EndDisabled();
         }
         else if (ImGui.Combo(
                      label,
                      ref modeValue,
-                     DisplayModes,
-                     DisplayModes.Length))
+                     modeLabels,
+                     modeLabels.Length))
         {
             displayMode = (JournalTranslationDisplayMode)modeValue;
             changed = true;

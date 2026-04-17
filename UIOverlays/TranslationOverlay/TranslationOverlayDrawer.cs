@@ -227,7 +227,9 @@ namespace Echoglossian
     private void DrawMiniTalkBubbleOverlays()
     {
       if (!this.configuration.TranslateMiniTalk ||
-          !this.configuration.UseImGuiForMiniTalk)
+          !NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+              this.configuration.MiniTalkTranslationDisplayMode,
+              this.configuration.OverlayOnlyLanguage))
       {
         return;
       }
@@ -567,7 +569,7 @@ namespace Echoglossian
 
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1.0f));
 
-      if (this.configuration.SwapTextsUsingImGui)
+      if (this.ShouldUseGeneralOverlayFont(config))
       {
         UINewFontHandler.GeneralFontHandle.Push();
       }
@@ -636,7 +638,7 @@ namespace Echoglossian
         //     $"contentWidth={textWidth:0.##} windowWidth={width:0.##} overlayPos=({overlay.Position.X:0.##}, {overlay.Position.Y:0.##})");
       }
 
-      if (this.configuration.SwapTextsUsingImGui)
+      if (this.ShouldUseGeneralOverlayFont(config))
       {
         UINewFontHandler.GeneralFontHandle.Pop();
       }
@@ -679,6 +681,39 @@ namespace Echoglossian
           $"size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##}) " +
           $"contentWidth={textWidth:0.##} windowWidth={windowWidth:0.##} " +
           $"overlayPos=({overlay.Position.X:0.##}, {overlay.Position.Y:0.##})");
+    }
+
+    /// <summary>
+    ///     Determines whether the current overlay surface should render using
+    ///     the game's general font because it is showing original text in swap
+    ///     mode.
+    /// </summary>
+    /// <param name="config">The overlay configuration being drawn.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the overlay should use the original-text
+    ///     font path; otherwise, <see langword="false" />.
+    /// </returns>
+    private bool ShouldUseGeneralOverlayFont(TranslationWindowConfig config)
+    {
+      var displayMode = config.DefaultTitle switch
+      {
+        "Talk translation" => this.configuration.TalkTranslationDisplayMode,
+        "BattleTalk translation" => this.configuration.BattleTalkTranslationDisplayMode,
+        "Talk Subtitle translation" => this.configuration.TalkSubtitleTranslationDisplayMode,
+        "MiniTalk translation" => this.configuration.MiniTalkTranslationDisplayMode,
+        "CutSceneSelectString translation" => this.configuration.CutSceneSelectStringTranslationDisplayMode,
+        "Text Gimmick Hint translation" => this.configuration.TextGimmickHintTranslationDisplayMode,
+        "Screen Info toast translation" => this.configuration.WideTextToastTranslationDisplayMode,
+        "Error Toast translation" => this.configuration.ErrorToastTranslationDisplayMode,
+        "Area toast translation" => this.configuration.AreaToastTranslationDisplayMode,
+        "Class/Job toast translation" => this.configuration.ClassChangeToastTranslationDisplayMode,
+        "Quest toast translation" => this.configuration.QuestToastTranslationDisplayMode,
+        _ => JournalTranslationDisplayMode.TooltipTranslation,
+      };
+
+      return NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+          displayMode,
+          this.configuration.OverlayOnlyLanguage);
     }
   }
 }

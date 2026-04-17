@@ -274,7 +274,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
       altTextNode2->SetText(replacementText);
     }
 
-    if (this.config.UseImGuiForTalkSubtitle && this.config.SwapTextsUsingImGui)
+    if (this.ShouldSwapTexts())
     {
       this.PublishOverlay(this.currentOriginalText, translatedText);
     }
@@ -535,7 +535,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
       return;
     }
 
-    var overlayText = this.config.SwapTextsUsingImGui
+    var overlayText = this.ShouldSwapTexts()
         ? originalText
         : translatedText;
 
@@ -553,7 +553,9 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
   private bool ShouldUseOverlay()
   {
     return this.config.TranslateTalkSubtitle &&
-           this.config.UseImGuiForTalkSubtitle;
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+               this.config.TalkSubtitleTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -566,8 +568,24 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeTalkSubtitleText()
   {
-    return !this.config.UseImGuiForTalkSubtitle ||
-           this.config.SwapTextsUsingImGui;
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+        this.config.TalkSubtitleTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
+  }
+
+  /// <summary>
+  ///     Determines whether the TalkSubtitle overlay should show the original
+  ///     text while the native addon receives the translation.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when TalkSubtitle swap mode is active;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  private bool ShouldSwapTexts()
+  {
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+        this.config.TalkSubtitleTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -664,7 +682,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
   /// <param name="originalText">The original TalkSubtitle text.</param>
   private void ClearOverlayForPendingState(string originalText)
   {
-    if (this.config.UseImGuiForTalkSubtitle && this.config.SwapTextsUsingImGui)
+    if (this.ShouldSwapTexts())
     {
       this.updateOverlay(string.Empty, originalText, string.Empty);
       return;

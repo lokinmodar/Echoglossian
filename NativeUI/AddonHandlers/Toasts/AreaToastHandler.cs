@@ -60,7 +60,7 @@ internal sealed class AreaToastHandler : AddonTextToastHandler
           AddonTextNodeResolvers.ResolveAreaTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateAreaToast,
-          cfg => cfg.UseImGuiForAreaToast)
+          cfg => cfg.AreaToastTranslationDisplayMode)
   {
   }
 }

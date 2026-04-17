@@ -572,7 +572,9 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool ShouldUseOverlay()
   {
     return this.config.TranslateTextGimmickHint &&
-           this.config.UseImGuiForTextGimmickHint;
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+               this.config.TextGimmickHintTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -586,9 +588,9 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool ShouldApplyNativeText()
   {
     return this.config.TranslateTextGimmickHint &&
-           !this.config.OverlayOnlyLanguage &&
-           (!this.config.UseImGuiForTextGimmickHint ||
-            this.ShouldSwapTexts());
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+               this.config.TextGimmickHintTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -602,9 +604,9 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool ShouldSwapTexts()
   {
     return this.config.TranslateTextGimmickHint &&
-           !this.config.OverlayOnlyLanguage &&
-           this.config.UseImGuiForTextGimmickHint &&
-           this.config.SwapTextsUsingImGui;
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+               this.config.TextGimmickHintTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>

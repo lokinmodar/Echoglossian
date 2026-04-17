@@ -63,7 +63,7 @@ internal sealed class ClassChangeToastHandler : AddonTextToastHandler
           AddonTextNodeResolvers.ResolveFirstTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateClassChangeToast,
-          cfg => cfg.UseImGuiForClassChangeToast)
+          cfg => cfg.ClassChangeToastTranslationDisplayMode)
   {
   }
 }

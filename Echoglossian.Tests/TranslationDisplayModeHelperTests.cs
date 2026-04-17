@@ -33,12 +33,20 @@ public class TranslationDisplayModeHelperTests
             TranslationDisplayModeHelper.UsesHoverTooltips(
                 JournalTranslationDisplayMode.NativeUiTranslation,
                 overlayOnlyLanguage: true));
+        Assert.True(
+            TranslationDisplayModeHelper.UsesOverlayPresentation(
+                JournalTranslationDisplayMode.NativeUiTranslation,
+                overlayOnlyLanguage: true));
         Assert.False(
             TranslationDisplayModeHelper.WritesNativeTranslation(
                 JournalTranslationDisplayMode.NativeUiTranslation,
                 overlayOnlyLanguage: true));
         Assert.False(
             TranslationDisplayModeHelper.ShowsOriginalTooltips(
+                JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips,
+                overlayOnlyLanguage: true));
+        Assert.False(
+            TranslationDisplayModeHelper.ShowsOriginalOverlayText(
                 JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips,
                 overlayOnlyLanguage: true));
     }
@@ -57,7 +65,13 @@ public class TranslationDisplayModeHelperTests
             TranslationDisplayModeHelper.UsesHoverTooltips(
                 JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips));
         Assert.True(
+            TranslationDisplayModeHelper.UsesOverlayPresentation(
+                JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips));
+        Assert.True(
             TranslationDisplayModeHelper.ShowsOriginalTooltips(
+                JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips));
+        Assert.True(
+            TranslationDisplayModeHelper.ShowsOriginalOverlayText(
                 JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips));
     }
 }

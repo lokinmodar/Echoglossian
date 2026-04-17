@@ -62,7 +62,7 @@ internal sealed class WideTextToastHandler : AddonTextToastHandler
           AddonTextNodeResolvers.ResolveWideTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateWideTextToast,
-          cfg => cfg.UseImGuiForWideTextToast)
+          cfg => cfg.WideTextToastTranslationDisplayMode)
   {
   }
 }

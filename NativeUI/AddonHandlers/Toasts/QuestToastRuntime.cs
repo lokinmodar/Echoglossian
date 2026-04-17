@@ -311,8 +311,9 @@ internal sealed class QuestToastRuntime
   {
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
-           (this.config.OverlayOnlyLanguage ||
-            this.config.UseImGuiForQuestToast);
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+               this.config.QuestToastTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -327,9 +328,9 @@ internal sealed class QuestToastRuntime
   {
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
-           !this.config.OverlayOnlyLanguage &&
-           this.config.UseImGuiForQuestToast &&
-           this.config.SwapTextsUsingImGui;
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+               this.config.QuestToastTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -344,8 +345,9 @@ internal sealed class QuestToastRuntime
   {
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
-           !this.config.OverlayOnlyLanguage &&
-           (!this.config.UseImGuiForQuestToast || this.ShouldSwapTexts());
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+               this.config.QuestToastTranslationDisplayMode,
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>

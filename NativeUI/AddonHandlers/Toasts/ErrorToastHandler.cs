@@ -60,7 +60,7 @@ internal sealed class ErrorToastHandler : AddonTextToastHandler
           AddonTextNodeResolvers.ResolveFirstTextNode,
           normalizeReplacementText,
           cfg => cfg.TranslateErrorToast,
-          cfg => cfg.UseImGuiForErrorToast)
+          cfg => cfg.ErrorToastTranslationDisplayMode)
   {
   }
 }

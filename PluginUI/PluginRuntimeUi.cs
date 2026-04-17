@@ -27,16 +27,34 @@ public partial class Echoglossian
     this.TickActionTooltipPrefetch();
     this.TickItemTooltipPrefetch();
 
-    switch (this.configuration.UseImGuiForTalk ||
-            this.configuration.UseImGuiForBattleTalk ||
+    switch (NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.TalkTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.BattleTalkTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
             this.configuration.OverlayOnlyLanguage ||
-            this.configuration.UseImGuiForMiniTalk ||
-            this.configuration.UseImGuiForCutSceneSelectString ||
-            this.configuration.UseImGuiForWideTextToast ||
-            this.configuration.UseImGuiForErrorToast ||
-            this.configuration.UseImGuiForAreaToast ||
-            this.configuration.UseImGuiForClassChangeToast ||
-            this.configuration.UseImGuiForQuestToast)
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.MiniTalkTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.CutSceneSelectStringTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.WideTextToastTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.ErrorToastTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.AreaToastTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.ClassChangeToastTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.QuestToastTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage))
     {
       case true when !this.FontLoaded || this.FontLoadFailed:
         return;

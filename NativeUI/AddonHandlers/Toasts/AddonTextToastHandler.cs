@@ -37,6 +37,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   private readonly Func<ToastMessage, ToastMessage?> findToastMessage;
   private readonly Func<Config, bool> isTypeEnabled;
   private readonly Func<ToastMessage, Task<string>> insertToastMessageAsync;
+  private readonly Func<Config, JournalTranslationDisplayMode> modeSelector;
   private readonly Func<string, string> normalizeReplacementText;
   private readonly ResolveToastTextNodeDelegate resolveToastTextNode;
   private readonly object stateGate = new();
@@ -44,7 +45,6 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   private readonly TranslationService translationService;
   private readonly Action<string, string, string> updateOverlay;
   private readonly UpdateToastOverlayBoundsDelegate updateOverlayBounds;
-  private readonly Func<Config, bool> useOverlayForType;
 
   private int activeRequestId;
   private string currentOriginalText = string.Empty;
@@ -87,9 +87,9 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   ///     Delegate used to determine whether the concrete toast type is enabled in
   ///     the current config.
   /// </param>
-  /// <param name="useOverlayForType">
-  ///     Delegate used to determine whether the concrete toast type should render
-  ///     through its overlay path instead of native replacement.
+  /// <param name="modeSelector">
+  ///     Delegate used to determine how the concrete toast type should present
+  ///     translated text.
   /// </param>
   protected AddonTextToastHandler(
       Config config,
@@ -104,7 +104,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       ResolveToastTextNodeDelegate resolveToastTextNode,
       Func<string, string> normalizeReplacementText,
       Func<Config, bool> isTypeEnabled,
-      Func<Config, bool> useOverlayForType)
+      Func<Config, JournalTranslationDisplayMode> modeSelector)
   {
     this.config = config;
     this.addonName = addonName;
@@ -118,7 +118,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     this.resolveToastTextNode = resolveToastTextNode;
     this.normalizeReplacementText = normalizeReplacementText;
     this.isTypeEnabled = isTypeEnabled;
-    this.useOverlayForType = useOverlayForType;
+    this.modeSelector = modeSelector;
 
     this.RegisterHandler(AddonEvent.PreUpdate, this.OnPreUpdate);
     this.RegisterHandler(AddonEvent.PostUpdate, this.OnUpdateVisibleAddon);
@@ -739,8 +739,9 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   {
     return this.config.TranslateToast &&
            this.isTypeEnabled(this.config) &&
-           (this.config.OverlayOnlyLanguage ||
-            this.useOverlayForType(this.config));
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+               this.modeSelector(this.config),
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -755,9 +756,9 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   {
     return this.config.TranslateToast &&
            this.isTypeEnabled(this.config) &&
-           !this.config.OverlayOnlyLanguage &&
-           (!this.useOverlayForType(this.config) ||
-            this.ShouldSwapTexts());
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+               this.modeSelector(this.config),
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -773,9 +774,9 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   {
     return this.config.TranslateToast &&
            this.isTypeEnabled(this.config) &&
-           !this.config.OverlayOnlyLanguage &&
-           this.useOverlayForType(this.config) &&
-           this.config.SwapTextsUsingImGui;
+           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+               this.modeSelector(this.config),
+               this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>

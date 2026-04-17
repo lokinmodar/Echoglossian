@@ -162,7 +162,7 @@ public partial class Echoglossian
     // Restore runtime-mutable metadata
     config.FontChangeTime = DateTime.Now.Ticks;
     config.PluginVersion = ResolvePluginVersion() ?? config.PluginVersion;
-    config.Version = 10;
+    config.Version = 13;
 
     // Persist config
     saveCallback?.Invoke();
@@ -333,11 +333,95 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Migrates legacy overlay booleans and the shared swap toggle into
+  ///     per-surface translation display modes.
+  /// </summary>
+  public void MigrateOverlayDisplayModes()
+  {
+    if (this.configuration.Version >= 13)
+    {
+      return;
+    }
+
+    this.configuration.TalkTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForTalk,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.BattleTalkTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForBattleTalk,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.TalkSubtitleTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForTalkSubtitle,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.MiniTalkTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForMiniTalk,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.CutSceneSelectStringTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForCutSceneSelectString,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.WideTextToastTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForWideTextToast,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.ErrorToastTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForErrorToast,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.AreaToastTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForAreaToast,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.ClassChangeToastTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForClassChangeToast,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.TextGimmickHintTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForTextGimmickHint,
+            this.configuration.SwapTextsUsingImGui);
+    this.configuration.QuestToastTranslationDisplayMode =
+        ResolveLegacyOverlayDisplayMode(
+            this.configuration.UseImGuiForQuestToast,
+            this.configuration.SwapTextsUsingImGui);
+
+    this.configuration.Version = 13;
+    SaveConfig(this.configuration);
+  }
+
+  /// <summary>
   ///     Saves the current configuration to the plugin config file.
   /// </summary>
   public static void SaveConfig(Config config)
   {
     PluginInterface.SavePluginConfig(config);
+  }
+
+  /// <summary>
+  ///     Resolves a per-surface translation display mode from the historical
+  ///     overlay boolean plus the shared swap toggle.
+  /// </summary>
+  /// <param name="useOverlay">Whether the surface used its overlay path.</param>
+  /// <param name="swapTexts">
+  ///     Whether the overlay showed the original while native UI received the
+  ///     translation.
+  /// </param>
+  /// <returns>The migrated display mode.</returns>
+  private static JournalTranslationDisplayMode ResolveLegacyOverlayDisplayMode(
+      bool useOverlay,
+      bool swapTexts)
+  {
+    if (!useOverlay)
+    {
+      return JournalTranslationDisplayMode.NativeUiTranslation;
+    }
+
+    return swapTexts
+        ? JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips
+        : JournalTranslationDisplayMode.TooltipTranslation;
   }
 
   /// <summary>

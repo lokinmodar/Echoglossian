@@ -345,6 +345,39 @@
         <member name="F:Echoglossian.Config.JournalResultTranslationDisplayMode">
             <summary>Display mode for JournalResult quest entries.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TalkTranslationDisplayMode">
+            <summary>Display mode for Talk.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.BattleTalkTranslationDisplayMode">
+            <summary>Display mode for BattleTalk.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TalkSubtitleTranslationDisplayMode">
+            <summary>Display mode for TalkSubtitle.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MiniTalkTranslationDisplayMode">
+            <summary>Display mode for MiniTalk.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.CutSceneSelectStringTranslationDisplayMode">
+            <summary>Display mode for CutSceneSelectString.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.WideTextToastTranslationDisplayMode">
+            <summary>Display mode for ScreenInfo/WideText toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ErrorToastTranslationDisplayMode">
+            <summary>Display mode for Error toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AreaToastTranslationDisplayMode">
+            <summary>Display mode for Area toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClassChangeToastTranslationDisplayMode">
+            <summary>Display mode for ClassChange toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TextGimmickHintTranslationDisplayMode">
+            <summary>Display mode for TextGimmickHint toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastTranslationDisplayMode">
+            <summary>Display mode for Quest toasts.</summary>
+        </member>
         <member name="F:Echoglossian.Config.BattleTalkForceShowTitle">
             <summary>Always show the BattleTalk overlay title bar.</summary>
         </member>
@@ -1378,10 +1411,28 @@
                 the per-overlay/per-addon settings introduced for newer configs.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.MigrateOverlayDisplayModes">
+            <summary>
+                Migrates legacy overlay booleans and the shared swap toggle into
+                per-surface translation display modes.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.SaveConfig(Echoglossian.Config)">
             <summary>
                 Saves the current configuration to the plugin config file.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResolveLegacyOverlayDisplayMode(System.Boolean,System.Boolean)">
+            <summary>
+                Resolves a per-surface translation display mode from the historical
+                overlay boolean plus the shared swap toggle.
+            </summary>
+            <param name="useOverlay">Whether the surface used its overlay path.</param>
+            <param name="swapTexts">
+                Whether the overlay showed the original while native UI received the
+                translation.
+            </param>
+            <returns>The migrated display mode.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.DrawText(System.String,System.Drawing.Font,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Size})">
             <summary>
@@ -2719,6 +2770,18 @@
             <summary>
             Logs CutSceneSelectString overlay renders once per content version.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldUseGeneralOverlayFont(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
+            <summary>
+                Determines whether the current overlay surface should render using
+                the game's general font because it is showing original text in swap
+                mode.
+            </summary>
+            <param name="config">The overlay configuration being drawn.</param>
+            <returns>
+                <see langword="true" /> when the overlay should use the original-text
+                font path; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
@@ -8368,6 +8431,16 @@
                 translated native text; otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ShouldSwapTexts">
+            <summary>
+                Determines whether the BattleTalk overlay should show the original text
+                while the native addon receives the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when BattleTalk swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryGetCachedTranslation(System.String,System.String,System.String@,System.String@,System.String@,System.String@)">
             <summary>
                 Returns the active cached translation when it still matches the supplied
@@ -8745,6 +8818,16 @@
                 native text; otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ShouldSwapTexts">
+            <summary>
+                Determines whether the Talk overlay should show the original line while
+                the native addon receives the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when Talk swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@,System.String@,System.String@)">
             <summary>
                 Returns the active resolved Talk translation currently held by the
@@ -8954,6 +9037,16 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ShouldSwapTexts">
+            <summary>
+                Determines whether the TalkSubtitle overlay should show the original
+                text while the native addon receives the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when TalkSubtitle swap mode is active;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.BuildLookupMessage(System.String)">
             <summary>
                 Builds a lookup entity matching the historical TalkSubtitle schema
@@ -9157,7 +9250,7 @@
                 the background to avoid blocking the game UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.#ctor(Echoglossian.Config,System.String,System.String,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,Echoglossian.NativeUI.AddonHandlers.Toasts.ResolveToastTextNodeDelegate,System.Func{System.String,System.String},System.Func{Echoglossian.Config,System.Boolean},System.Func{Echoglossian.Config,System.Boolean})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.#ctor(Echoglossian.Config,System.String,System.String,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.Toasts.UpdateToastOverlayBoundsDelegate,Echoglossian.NativeUI.AddonHandlers.Toasts.ResolveToastTextNodeDelegate,System.Func{System.String,System.String},System.Func{Echoglossian.Config,System.Boolean},System.Func{Echoglossian.Config,Echoglossian.JournalTranslationDisplayMode})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler" />
                 class.
@@ -9191,9 +9284,9 @@
                 Delegate used to determine whether the concrete toast type is enabled in
                 the current config.
             </param>
-            <param name="useOverlayForType">
-                Delegate used to determine whether the concrete toast type should render
-                through its overlay path instead of native replacement.
+            <param name="modeSelector">
+                Delegate used to determine how the concrete toast type should present
+                translated text.
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.GetEventHandlers">
@@ -11029,6 +11122,17 @@
             </param>
             <returns><c>true</c> when hover tooltips should be used.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Gets whether a display mode should render through an ImGui overlay.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language only supports overlays and custom
+                tooltips.
+            </param>
+            <returns><c>true</c> when the overlay path should be used.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether a display mode should write translated text into the
@@ -11052,6 +11156,20 @@
                 tooltips.
             </param>
             <returns><c>true</c> when hover tooltips should show the original text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Gets whether an overlay should show the original text while the
+                native UI receives translated text.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language only supports overlays and custom
+                tooltips.
+            </param>
+            <returns>
+                <c>true</c> when the overlay should display the original text.
+            </returns>
         </member>
         <member name="T:Echoglossian.SummaryQuest">
             <summary>
@@ -11830,6 +11948,29 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawOverlayDisplayModeCombo(Echoglossian.Config,System.String,Echoglossian.JournalTranslationDisplayMode@)">
+            <summary>
+                Draws the shared display-mode selector used by legacy overlay-based
+                surfaces.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="comboId">The unique combo identifier.</param>
+            <param name="displayMode">The display mode to edit.</param>
+            <returns><see langword="true" /> when the selection changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.ShouldDrawOverlaySettings(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Determines whether overlay-specific style controls should be shown
+                for the provided display mode.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language only supports overlay rendering.
+            </param>
+            <returns>
+                <see langword="true" /> when the overlay path is active.
+            </returns>
+        </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawGlobalReplacementDiacriticsSetting(Echoglossian.Config)">
             <summary>
                 Draws the global diacritics-removal toggle used by native replacement
@@ -11848,12 +11989,18 @@
                 surfaces.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationDisplayModeUiHelper.DrawDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@,System.Boolean,System.String,System.String)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationDisplayModeUiHelper.DrawDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@,System.Boolean,System.String,System.String,System.String[])">
             <summary>
                 Draws a shared display-mode combo.
             </summary>
             <param name="comboId">The unique ImGui id suffix for this combo.</param>
             <param name="displayMode">The display mode to edit.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language forbids native UI mutation.
+            </param>
+            <param name="label">Optional label override for the combo.</param>
+            <param name="description">Optional help text shown below the combo.</param>
+            <param name="modeLabels">Optional display labels for the three modes.</param>
             <returns><c>true</c> when the selection changed.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TranslationEnginesTab">

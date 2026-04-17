@@ -380,10 +380,10 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     var resolvedOverlayName = !string.IsNullOrWhiteSpace(translatedName)
         ? translatedName
         : originalName;
-    var overlayName = this.config.SwapTextsUsingImGui
+    var overlayName = this.ShouldSwapTexts()
         ? originalName
         : resolvedOverlayName;
-    var overlayText = this.config.SwapTextsUsingImGui
+    var overlayText = this.ShouldSwapTexts()
         ? originalText
         : translatedText;
 
@@ -567,7 +567,24 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeBattleTalkText()
   {
-    return !this.config.UseImGuiForBattleTalk || this.config.SwapTextsUsingImGui;
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+        this.config.BattleTalkTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
+  }
+
+  /// <summary>
+  ///     Determines whether the BattleTalk overlay should show the original text
+  ///     while the native addon receives the translation.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when BattleTalk swap mode is active; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool ShouldSwapTexts()
+  {
+    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+        this.config.BattleTalkTranslationDisplayMode,
+        this.config.OverlayOnlyLanguage);
   }
 
   /// <summary>
@@ -744,7 +761,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
       string originalName,
       string originalText)
   {
-    if (this.config.UseImGuiForBattleTalk && this.config.SwapTextsUsingImGui)
+    if (this.ShouldSwapTexts())
     {
       this.PublishOverlay(
           originalName,
@@ -861,8 +878,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         return true;
       }
 
-      if (this.config.UseImGuiForBattleTalk &&
-          this.config.SwapTextsUsingImGui)
+      if (this.ShouldSwapTexts())
       {
         if (this.TryMapVisibleSourceToOriginal(
                 visibleName,

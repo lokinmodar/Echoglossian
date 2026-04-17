@@ -41,7 +41,9 @@ public partial class Echoglossian
                 () => TranslationWindowConfig.FromConfigForTalk(this.configuration),
                 isEnabled: () =>
                     this.configuration.TranslateTalk &&
-                    this.configuration.UseImGuiForTalk,
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.TalkTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon("Talk", this.talkOverlay)));
 
@@ -52,7 +54,9 @@ public partial class Echoglossian
                     this.configuration),
                 isEnabled: () =>
                     this.configuration.TranslateBattleTalk &&
-                    this.configuration.UseImGuiForBattleTalk,
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.BattleTalkTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon("_BattleTalk", this.battleTalkOverlay)));
 
@@ -63,7 +67,9 @@ public partial class Echoglossian
                     this.configuration),
                 isEnabled: () =>
                     this.configuration.TranslateTalkSubtitle &&
-                    this.configuration.UseImGuiForTalkSubtitle,
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.TalkSubtitleTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon("TalkSubtitle", this.talkSubtitleOverlay)));
 
@@ -74,7 +80,9 @@ public partial class Echoglossian
                     this.configuration),
                 isEnabled: () =>
                     this.configuration.TranslateCutSceneSelectString &&
-                    this.configuration.UseImGuiForCutSceneSelectString,
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.CutSceneSelectStringTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon(
                         "CutSceneSelectString",
@@ -87,7 +95,9 @@ public partial class Echoglossian
                     this.configuration),
                 isEnabled: () =>
                     this.configuration.TranslateTextGimmickHint &&
-                    this.configuration.UseImGuiForTextGimmickHint,
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.TextGimmickHintTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncToastOverlayToAddon(
                         "_TextGimmickHint",
@@ -101,8 +111,9 @@ public partial class Echoglossian
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateWideTextToast &&
-                    (this.configuration.OverlayOnlyLanguage ||
-                     this.configuration.UseImGuiForWideTextToast),
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.WideTextToastTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncToastOverlayToAddon(
                         "_WideText",
@@ -117,8 +128,9 @@ public partial class Echoglossian
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateErrorToast &&
-                    (this.configuration.OverlayOnlyLanguage ||
-                     this.configuration.UseImGuiForErrorToast),
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.ErrorToastTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncToastOverlayToAddon(
                         "_TextError",
@@ -133,8 +145,9 @@ public partial class Echoglossian
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateAreaToast &&
-                    (this.configuration.OverlayOnlyLanguage ||
-                     this.configuration.UseImGuiForAreaToast),
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.AreaToastTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncToastOverlayToAddon(
                         "_AreaText",
@@ -149,8 +162,9 @@ public partial class Echoglossian
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateClassChangeToast &&
-                    (this.configuration.OverlayOnlyLanguage ||
-                     this.configuration.UseImGuiForClassChangeToast),
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.ClassChangeToastTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncToastOverlayToAddon(
                         "_TextClassChange",
@@ -165,8 +179,9 @@ public partial class Echoglossian
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateQuestToast &&
-                    (this.configuration.OverlayOnlyLanguage ||
-                     this.configuration.UseImGuiForQuestToast),
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.QuestToastTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: this.TrySyncQuestToastOverlayToViewport));
 
         this.registeredOverlays.Add(

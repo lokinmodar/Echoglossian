@@ -11,6 +11,9 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class OverlayTab
 {
+    private const string OverlayModeDescription =
+        "This mode controls how the translated text is presented. Native UI writes directly into the game addon, overlay-only leaves the native addon untouched, and native-with-original-overlay writes translation natively while showing the original in the overlay.";
+
     private static int selectedOverlayTab;
     private static int selectedToastOverlayTab;
 
@@ -35,6 +38,13 @@ public static class OverlayTab
         Resources.ToastOverlayTabClassJobText,
         Resources.ToastOverlayTabTextGimmickHintText,
         Resources.ToastOverlayTabQuestText,
+    };
+
+    private static readonly string[] OverlayDisplayModes =
+    {
+        "Native UI translation",
+        "Overlay translation only",
+        "Native UI translation + original overlay",
     };
 
     /// <summary>
@@ -139,23 +149,18 @@ public static class OverlayTab
             return changed;
         }
 
-        if (config.OverlayOnlyLanguage)
-        {
-            changed |= AssignIfChanged(ref config.UseImGuiForTalk, true);
-            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
-        }
-        else
-        {
-            changed |= ImGui.Checkbox(
-                Resources.OverlayToggleLabel,
-                ref config.UseImGuiForTalk);
-        }
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            "TalkDisplayMode",
+            ref config.TalkTranslationDisplayMode);
 
         changed |= ImGui.Checkbox(
             Resources.TranslateNpcNamesToggle,
             ref config.TranslateTalkNpcNames);
 
-        if (config.UseImGuiForTalk)
+        if (ShouldDrawOverlaySettings(
+                config.TalkTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
         {
             changed |= DrawOverlaySettings(
                 ref config.TalkFontScale,
@@ -165,13 +170,6 @@ public static class OverlayTab
                 Resources.OverlayFontScaleLabel,
                 ref config.TalkForceShowTitle,
                 ref config.FontChangeTime);
-        }
-
-        if (!config.OverlayOnlyLanguage && config.UseImGuiForTalk)
-        {
-            changed |= ImGui.Checkbox(
-                Resources.SwapTranslationTextToggle,
-                ref config.SwapTextsUsingImGui);
         }
 
         return changed;
@@ -201,23 +199,18 @@ public static class OverlayTab
             return changed;
         }
 
-        if (config.OverlayOnlyLanguage)
-        {
-            changed |= AssignIfChanged(ref config.UseImGuiForBattleTalk, true);
-            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
-        }
-        else
-        {
-            changed |= ImGui.Checkbox(
-                Resources.OverlayToggleLabel,
-                ref config.UseImGuiForBattleTalk);
-        }
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            "BattleTalkDisplayMode",
+            ref config.BattleTalkTranslationDisplayMode);
 
         changed |= ImGui.Checkbox(
             Resources.TranslateNpcNamesToggle,
             ref config.TranslateBattleTalkNpcNames);
 
-        if (config.UseImGuiForBattleTalk)
+        if (ShouldDrawOverlaySettings(
+                config.BattleTalkTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
         {
             changed |= DrawOverlaySettings(
                 ref config.BattleTalkFontScale,
@@ -227,13 +220,6 @@ public static class OverlayTab
                 Resources.OverlayFontScaleLabel,
                 ref config.BattleTalkForceShowTitle,
                 ref config.FontChangeTime);
-        }
-
-        if (!config.OverlayOnlyLanguage && config.UseImGuiForBattleTalk)
-        {
-            changed |= ImGui.Checkbox(
-                Resources.SwapTranslationTextToggle,
-                ref config.SwapTextsUsingImGui);
         }
 
         return changed;
@@ -292,7 +278,7 @@ public static class OverlayTab
                     config,
                     Resources.ToastOverlayScreenInfoWideTextSectionTitle,
                     ref config.TranslateWideTextToast,
-                    ref config.UseImGuiForWideTextToast,
+                    ref config.WideTextToastTranslationDisplayMode,
                     ref config.WideTextToastFontScale,
                     ref config.ImGuiWideTextToastWindowWidthMult,
                     ref config.ImGuiWideTextToastWindowPosCorrection,
@@ -305,7 +291,7 @@ public static class OverlayTab
                     config,
                     Resources.ToastOverlayErrorSectionTitle,
                     ref config.TranslateErrorToast,
-                    ref config.UseImGuiForErrorToast,
+                    ref config.ErrorToastTranslationDisplayMode,
                     ref config.ErrorToastFontScale,
                     ref config.ImGuiErrorToastWindowWidthMult,
                     ref config.ImGuiErrorToastWindowPosCorrection,
@@ -318,7 +304,7 @@ public static class OverlayTab
                     config,
                     Resources.ToastOverlayAreaSectionTitle,
                     ref config.TranslateAreaToast,
-                    ref config.UseImGuiForAreaToast,
+                    ref config.AreaToastTranslationDisplayMode,
                     ref config.AreaToastFontScale,
                     ref config.ImGuiAreaToastWindowWidthMult,
                     ref config.ImGuiAreaToastWindowPosCorrection,
@@ -331,7 +317,7 @@ public static class OverlayTab
                     config,
                     Resources.ToastOverlayClassJobChangeSectionTitle,
                     ref config.TranslateClassChangeToast,
-                    ref config.UseImGuiForClassChangeToast,
+                    ref config.ClassChangeToastTranslationDisplayMode,
                     ref config.ClassChangeToastFontScale,
                     ref config.ImGuiClassChangeToastWindowWidthMult,
                     ref config.ImGuiClassChangeToastWindowPosCorrection,
@@ -344,7 +330,7 @@ public static class OverlayTab
                     config,
                     Resources.ToastOverlayTextGimmickHintSectionTitle,
                     ref config.TranslateTextGimmickHint,
-                    ref config.UseImGuiForTextGimmickHint,
+                    ref config.TextGimmickHintTranslationDisplayMode,
                     ref config.TextGimmickHintFontScale,
                     ref config.ImGuiTextGimmickHintWindowWidthMult,
                     ref config.ImGuiTextGimmickHintWindowPosCorrection,
@@ -357,7 +343,7 @@ public static class OverlayTab
                     config,
                     Resources.ToastOverlayQuestSectionTitle,
                     ref config.TranslateQuestToast,
-                    ref config.UseImGuiForQuestToast,
+                    ref config.QuestToastTranslationDisplayMode,
                     ref config.QuestToastFontScale,
                     ref config.ImGuiQuestToastWindowWidthMult,
                     ref config.ImGuiQuestToastWindowPosCorrection,
@@ -418,7 +404,7 @@ public static class OverlayTab
         Config config,
         string sectionTitle,
         ref bool isEnabled,
-        ref bool useOverlay,
+        ref JournalTranslationDisplayMode displayMode,
         ref float fontScale,
         ref float widthMult,
         ref Vector2 positionCorrection,
@@ -440,28 +426,14 @@ public static class OverlayTab
             return changed;
         }
 
-        if (config.OverlayOnlyLanguage)
-        {
-            changed |= AssignIfChanged(ref useOverlay, true);
-            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
-            ImGui.TextWrapped(
-                Resources.OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay);
-        }
-        else
-        {
-            changed |= ImGui.Checkbox(
-                Resources.ToastOverlayUseOverlayForThisToastTypeLabel,
-                ref useOverlay);
-        }
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            sectionTitle,
+            ref displayMode);
 
-        if (!config.OverlayOnlyLanguage && useOverlay)
-        {
-            changed |= ImGui.Checkbox(
-                Resources.SwapTranslationTextToggle,
-                ref config.SwapTextsUsingImGui);
-        }
-
-        if (!useOverlay)
+        if (!ShouldDrawOverlaySettings(
+                displayMode,
+                config.OverlayOnlyLanguage))
         {
             ImGui.Spacing();
             ImGui.TextWrapped(
@@ -504,20 +476,14 @@ public static class OverlayTab
             return changed;
         }
 
-        if (config.OverlayOnlyLanguage)
-        {
-            changed |= AssignIfChanged(
-                ref config.UseImGuiForTalkSubtitle,
-                true);
-        }
-        else
-        {
-            changed |= ImGui.Checkbox(
-                Resources.OverlayToggleLabel,
-                ref config.UseImGuiForTalkSubtitle);
-        }
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            "TalkSubtitleDisplayMode",
+            ref config.TalkSubtitleTranslationDisplayMode);
 
-        if (config.UseImGuiForTalkSubtitle)
+        if (ShouldDrawOverlaySettings(
+                config.TalkSubtitleTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
         {
             changed |= DrawSubtitleOverlaySettings(
                 ref config.TalkSubtitleFontScale,
@@ -560,23 +526,14 @@ public static class OverlayTab
             return changed;
         }
 
-        if (config.OverlayOnlyLanguage)
-        {
-            changed |= AssignIfChanged(
-                ref config.UseImGuiForMiniTalk,
-                true);
-            changed |= AssignIfChanged(
-                ref config.SwapTextsUsingImGui,
-                false);
-        }
-        else
-        {
-            changed |= ImGui.Checkbox(
-                Resources.OverlayToggleLabel,
-                ref config.UseImGuiForMiniTalk);
-        }
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            "MiniTalkDisplayMode",
+            ref config.MiniTalkTranslationDisplayMode);
 
-        if (config.UseImGuiForMiniTalk)
+        if (ShouldDrawOverlaySettings(
+                config.MiniTalkTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
         {
             changed |= DrawToastOverlaySettings(
                 ref config.MiniTalkFontScale,
@@ -585,13 +542,6 @@ public static class OverlayTab
                 ref config.OverlayMiniTalkTextColor,
                 ref config.MiniTalkBackgroundOpacity,
                 ref config.FontChangeTime);
-        }
-
-        if (!config.OverlayOnlyLanguage && config.UseImGuiForMiniTalk)
-        {
-            changed |= ImGui.Checkbox(
-                Resources.SwapTranslationTextToggle,
-                ref config.SwapTextsUsingImGui);
         }
 
         return changed;
@@ -625,21 +575,14 @@ public static class OverlayTab
             return changed;
         }
 
-        if (config.OverlayOnlyLanguage)
-        {
-            changed |= AssignIfChanged(
-                ref config.UseImGuiForCutSceneSelectString,
-                true);
-            changed |= AssignIfChanged(ref config.SwapTextsUsingImGui, false);
-        }
-        else
-        {
-            changed |= ImGui.Checkbox(
-                Resources.OverlayToggleLabel,
-                ref config.UseImGuiForCutSceneSelectString);
-        }
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            "CutSceneSelectStringDisplayMode",
+            ref config.CutSceneSelectStringTranslationDisplayMode);
 
-        if (config.UseImGuiForCutSceneSelectString)
+        if (ShouldDrawOverlaySettings(
+                config.CutSceneSelectStringTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
         {
             changed |= DrawToastOverlaySettings(
                 ref config.CutSceneSelectStringFontScale,
@@ -650,14 +593,6 @@ public static class OverlayTab
                 ref config.FontChangeTime);
             ImGui.TextWrapped(
                 Resources.CutSceneSelectStringOverlayHelpText);
-        }
-
-        if (!config.OverlayOnlyLanguage &&
-            config.UseImGuiForCutSceneSelectString)
-        {
-            changed |= ImGui.Checkbox(
-                Resources.SwapTranslationTextToggle,
-                ref config.SwapTextsUsingImGui);
         }
 
         return changed;
@@ -884,16 +819,45 @@ public static class OverlayTab
         return changed;
     }
 
-    private static bool AssignIfChanged<T>(ref T field, T value)
-        where T : notnull
+    /// <summary>
+    ///     Draws the shared display-mode selector used by legacy overlay-based
+    ///     surfaces.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="comboId">The unique combo identifier.</param>
+    /// <param name="displayMode">The display mode to edit.</param>
+    /// <returns><see langword="true" /> when the selection changed.</returns>
+    private static bool DrawOverlayDisplayModeCombo(
+        Config config,
+        string comboId,
+        ref JournalTranslationDisplayMode displayMode)
     {
-        if (!field.Equals(value))
-        {
-            field = value;
-            return true;
-        }
+        return TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            comboId,
+            ref displayMode,
+            config.OverlayOnlyLanguage,
+            description: OverlayModeDescription,
+            modeLabels: OverlayDisplayModes);
+    }
 
-        return false;
+    /// <summary>
+    ///     Determines whether overlay-specific style controls should be shown
+    ///     for the provided display mode.
+    /// </summary>
+    /// <param name="displayMode">The configured display mode.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language only supports overlay rendering.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the overlay path is active.
+    /// </returns>
+    private static bool ShouldDrawOverlaySettings(
+        JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage)
+    {
+        return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+            displayMode,
+            overlayOnlyLanguage);
     }
 
     /// <summary>
