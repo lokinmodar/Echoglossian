@@ -504,17 +504,42 @@ public class Config : IPluginConfiguration
   /// <summary> Translate character window text.</summary>
   [DefaultValue(false)] public bool TranslateCharacterWindow = false;
 
+  /// <summary>Display mode for Character-family DB-first windows.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode CharacterWindowTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Translate the main command menu.</summary>
   [DefaultValue(false)] public bool TranslateMainCommandWindow = false;
+
+  /// <summary>Display mode for the Main Command window.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode MainCommandWindowTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Translate HUD window text surfaces backed by StringArrayData.</summary>
   [DefaultValue(false)] public bool TranslateHudWindow = false;
 
+  /// <summary>Display mode for HUD DB-first windows.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode HudWindowTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Translate the operation guide window.</summary>
   [DefaultValue(false)] public bool TranslateOperationGuideWindow = false;
 
+  /// <summary>Display mode for the Operation Guide window.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode OperationGuideTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Translate the addon context menu title window.</summary>
   [DefaultValue(false)] public bool TranslateAddonContextMenuTitle = false;
+
+  /// <summary>Display mode for the Addon Context Menu Title window.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode AddonContextMenuTitleTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Translate class/job change toasts.</summary>
   [DefaultValue(false)] public bool TranslateClassChangeToast = false;

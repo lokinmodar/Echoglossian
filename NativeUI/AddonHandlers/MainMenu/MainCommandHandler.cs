@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.NativeUI.AddonHandlers.Common;
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.NativeUI.AddonHandlers.MainMenu;
 
@@ -17,17 +18,22 @@ public class MainCommandHandler : DbFirstGameWindowAddonHandler
     ///     <see cref="MainCommandHandler" /> class.
     /// </summary>
     /// <param name="config">The configuration settings for the plugin.</param>
+    /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
     /// <param name="translationService">The service used for translating text.</param>
     public MainCommandHandler(
         Config config,
+        HoverTooltipManager hoverTooltipManager,
         TranslationService translationService)
         : base(
             addonName: "_MainCommand",
             config: config,
+            hoverTooltipManager: hoverTooltipManager,
             translationService: translationService,
             enabledSelector: static configuration =>
                 configuration.TranslateMainCommandWindow,
-            useAtkValues: true)
+            useAtkValues: true,
+            displayModeSelector: static configuration =>
+                configuration.MainCommandWindowTranslationDisplayMode)
     {
     }
 }

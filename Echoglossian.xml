@@ -633,17 +633,32 @@
         <member name="F:Echoglossian.Config.TranslateCharacterWindow">
             <summary> Translate character window text.</summary>
         </member>
+        <member name="F:Echoglossian.Config.CharacterWindowTranslationDisplayMode">
+            <summary>Display mode for Character-family DB-first windows.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateMainCommandWindow">
             <summary>Translate the main command menu.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.MainCommandWindowTranslationDisplayMode">
+            <summary>Display mode for the Main Command window.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateHudWindow">
             <summary>Translate HUD window text surfaces backed by StringArrayData.</summary>
         </member>
+        <member name="F:Echoglossian.Config.HudWindowTranslationDisplayMode">
+            <summary>Display mode for HUD DB-first windows.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateOperationGuideWindow">
             <summary>Translate the operation guide window.</summary>
         </member>
+        <member name="F:Echoglossian.Config.OperationGuideTranslationDisplayMode">
+            <summary>Display mode for the Operation Guide window.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateAddonContextMenuTitle">
             <summary>Translate the addon context menu title window.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.AddonContextMenuTitleTranslationDisplayMode">
+            <summary>Display mode for the Addon Context Menu Title window.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateClassChangeToast">
             <summary>Translate class/job change toasts.</summary>
@@ -858,6 +873,9 @@
             </summary>
             <summary>
                 A class that contains a dictionary of language information.
+            </summary>
+            <summary>
+                Provides the live DB-first apply/runtime path for action and item tooltips.
             </summary>
             <summary>
                 Provides DB-first background prefetch for canonical action-tooltip payloads.
@@ -1667,6 +1685,183 @@
             </summary>
             <param name="acceptedQuestIds">The accepted quest ids.</param>
             <returns>The stable accepted-quest signature.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateStructuredTooltipUiRuntime">
+            <summary>
+                Updates live action/item tooltip state before tooltip overlays are drawn.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResetStructuredTooltipUiRuntime">
+            <summary>
+                Restores native tooltip state and clears action/item tooltip overlays.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawStructuredTooltipOverlays">
+            <summary>
+                Draws the active action/item tooltip overlays, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateActionTooltipUiRuntime">
+            <summary>
+                Updates the live action-tooltip runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateItemTooltipUiRuntime">
+            <summary>
+                Updates the live item-tooltip runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldRunStructuredTooltipUiRuntime">
+            <summary>
+                Gets whether the DB-first tooltip runtime should execute.
+            </summary>
+            <returns><see langword="true" /> when the runtime should execute.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveTooltipAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@,System.String[])">
+            <summary>
+                Tries to resolve one visible tooltip addon by name.
+            </summary>
+            <param name="addon">The resolved addon, if any.</param>
+            <param name="addonNames">The candidate addon names.</param>
+            <returns><see langword="true" /> when a visible addon was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedActionTooltipPayload(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated action-tooltip payload from canonical storage.
+            </summary>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The translated payload, if any.</param>
+            <returns><see langword="true" /> when a complete translation is available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedItemTooltipPayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated item-tooltip payload from canonical storage.
+            </summary>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The translated payload, if any.</param>
+            <returns><see langword="true" /> when a complete translation is available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyStructuredActionTooltipNative(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Applies translated native text for the action tooltip when safe to do so.
+            </summary>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The translated canonical payload.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyStructuredItemTooltipNative(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Applies translated native text for the item tooltip when safe to do so.
+            </summary>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The translated canonical payload.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyStructuredTooltipNative(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+            <summary>
+                Applies translated native text to the name and description nodes of a tooltip.
+            </summary>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="contentId">The logical content identifier.</param>
+            <param name="originalName">The original name text.</param>
+            <param name="originalDescription">The original description text.</param>
+            <param name="translatedName">The translated name text.</param>
+            <param name="translatedDescription">The translated description text.</param>
+            <param name="runtimeState">The active native-runtime state.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RestoreStructuredTooltipOriginals(Echoglossian.Echoglossian.StructuredTooltipNativeState@,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Restores original tooltip text when the runtime previously mutated native nodes.
+            </summary>
+            <param name="runtimeState">The runtime state to restore.</param>
+            <param name="addon">The current visible tooltip addon, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+            <summary>
+                Tries to resolve tooltip text-node addresses that match the canonical name and description.
+            </summary>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="contentId">The logical content identifier.</param>
+            <param name="originalName">The canonical original name.</param>
+            <param name="originalDescription">The canonical original description.</param>
+            <param name="runtimeState">The resolved node-address map.</param>
+            <returns><see langword="true" /> when at least one relevant node was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReadTooltipTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads one tooltip text node using the same fallback order used elsewhere in the repo.
+            </summary>
+            <param name="textNode">The text node to read.</param>
+            <returns>The resolved text, or <see cref="F:System.String.Empty" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateStructuredTooltipOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String)">
+            <summary>
+                Updates one tooltip overlay from the currently visible tooltip addon.
+            </summary>
+            <param name="overlay">The overlay instance to update.</param>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="text">The tooltip text to render.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawStructuredTooltipOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
+            <summary>
+                Draws one structured tooltip overlay when it has published content.
+            </summary>
+            <param name="overlay">The overlay instance to draw.</param>
+            <param name="config">The overlay configuration.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildTooltipOverlayConfig(System.String)">
+            <summary>
+                Builds the shared overlay configuration used by structured tooltips.
+            </summary>
+            <param name="defaultTitle">The default overlay title.</param>
+            <returns>The overlay configuration.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.NormalizeHoveredItemId(System.UInt32)">
+            <summary>
+                Normalizes hovered item ids so HQ items resolve against the base Item row.
+            </summary>
+            <param name="hoveredItemId">The raw hovered item identifier.</param>
+            <returns>The normalized base item row identifier.</returns>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.StructuredTooltipNativeState">
+            <summary>
+                Captures the minimal mutable state for one structured tooltip instance.
+            </summary>
+            <param name="AddonAddress">The visible tooltip addon address.</param>
+            <param name="ContentId">The logical item/action identifier.</param>
+            <param name="NameNodeAddress">The resolved name-node address.</param>
+            <param name="OriginalNameText">The original name-node text.</param>
+            <param name="DescriptionNodeAddress">The resolved description-node address.</param>
+            <param name="OriginalDescriptionText">The original description-node text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipNativeState.#ctor(System.IntPtr,System.UInt32,System.IntPtr,System.String,System.IntPtr,System.String)">
+            <summary>
+                Captures the minimal mutable state for one structured tooltip instance.
+            </summary>
+            <param name="AddonAddress">The visible tooltip addon address.</param>
+            <param name="ContentId">The logical item/action identifier.</param>
+            <param name="NameNodeAddress">The resolved name-node address.</param>
+            <param name="OriginalNameText">The original name-node text.</param>
+            <param name="DescriptionNodeAddress">The resolved description-node address.</param>
+            <param name="OriginalDescriptionText">The original description-node text.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.AddonAddress">
+            <summary>The visible tooltip addon address.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.ContentId">
+            <summary>The logical item/action identifier.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.NameNodeAddress">
+            <summary>The resolved name-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.OriginalNameText">
+            <summary>The original name-node text.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.DescriptionNodeAddress">
+            <summary>The resolved description-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.OriginalDescriptionText">
+            <summary>The original description-node text.</summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.TickActionTooltipPrefetch">
             <summary>
@@ -5126,12 +5321,13 @@
                 frame.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler">
@@ -5142,12 +5338,13 @@
                 frame.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterProfileSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler">
@@ -5158,12 +5355,13 @@
                 frame.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler">
@@ -5171,12 +5369,13 @@
                 Handles DB-first translation for the CharacterStatus subwindow.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler">
@@ -5184,12 +5383,13 @@
                 Handles DB-first translation for the main character window.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler">
@@ -5198,13 +5398,16 @@
                 <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.Config,System.Boolean},System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.Config,System.Boolean},System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType},System.Func{Echoglossian.Config,Echoglossian.JournalTranslationDisplayMode})">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler" /> class.
             </summary>
             <param name="addonName">The target addon name.</param>
             <param name="config">The plugin configuration.</param>
+            <param name="hoverTooltipManager">
+                The shared hover-tooltip manager used for tooltip and swap modes.
+            </param>
             <param name="translationService">The translation service.</param>
             <param name="enabledSelector">
                 Resolves whether this addon should be active.
@@ -5214,6 +5417,9 @@
             </param>
             <param name="stringArrayDataType">
                 The backing <see cref="T:FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType" />, if any.
+            </param>
+            <param name="displayModeSelector">
+                Resolves the configured display mode for this addon family.
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.GetEventHandlers">
@@ -5323,7 +5529,7 @@
             <param name="payload">The original payload.</param>
             <param name="payloadKey">The stable payload key.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ApplyPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ApplyPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.JournalTranslationDisplayMode)">
             <summary>
                 Applies a translated payload to the live addon.
             </summary>
@@ -5336,6 +5542,45 @@
             <summary>
                 Restores the original payload if this runtime mutated the addon.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RegisterHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Registers hover tooltips for visible text nodes in the addon.
+            </summary>
+            <param name="addon">The live addon.</param>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The translated payload.</param>
+            <param name="displayMode">The active display mode.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the visible text of a live text node.
+            </summary>
+            <param name="textNode">The text node to read.</param>
+            <returns>The visible text, or an empty string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.BuildTooltipTextMap(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Boolean)">
+            <summary>
+                Builds a text map used by hover-tooltip registration.
+            </summary>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The translated payload.</param>
+            <param name="useTranslatedKeys">
+                When set, translated text becomes the dictionary key and original
+                text becomes the value.
+            </param>
+            <returns>The tooltip lookup map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.AppendTooltipTextMap(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Boolean)">
+            <summary>
+                Appends one payload map into a tooltip text lookup.
+            </summary>
+            <param name="map">The lookup under construction.</param>
+            <param name="originalValues">The original values.</param>
+            <param name="translatedValues">The translated values.</param>
+            <param name="useTranslatedKeys">
+                When set, translated text becomes the key.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryParseTranslatedPayload(System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
@@ -5654,11 +5899,12 @@
                 Handles DB-first translation for the secondary HUD window.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.Hud2WindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler">
@@ -5666,11 +5912,12 @@
                 Handles DB-first translation for the main HUD window.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Hud.HudWindowHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler">
@@ -5678,12 +5925,13 @@
                 Handles DB-first translation for the addon context menu title.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler" />
                 class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler">
@@ -5691,12 +5939,13 @@
                 Handles DB-first translation for the main command menu.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler" /> class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler">
@@ -5704,12 +5953,13 @@
                 Handles DB-first translation for the operation guide window.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler" />
                 class.
             </summary>
             <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The service used for translating text.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler">
@@ -10727,6 +10977,34 @@
             <param name="slot">The slot to clone.</param>
             <returns>The cloned slot.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper">
+            <summary>
+                Shared helpers for per-addon translation display modes.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether a display mode should register hover tooltips.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when hover tooltips should be used.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether a display mode should write translated text into the
+                native addon.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when native text should be rewritten.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Gets whether hover tooltips should show the original text rather than
+                the translated text.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <returns><c>true</c> when hover tooltips should show the original text.</returns>
+        </member>
         <member name="T:Echoglossian.SummaryQuest">
             <summary>
             Represents a journal summary quest entry and its translation state.
@@ -11507,6 +11785,20 @@
                 <see langword="true" /> when the toggle value changed; otherwise,
                 <see langword="false" />.
             </returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.TranslationDisplayModeUiHelper">
+            <summary>
+                Renders the shared translation display-mode dropdown used by DB-first UI
+                surfaces.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationDisplayModeUiHelper.DrawDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@)">
+            <summary>
+                Draws a shared display-mode combo.
+            </summary>
+            <param name="comboId">The unique ImGui id suffix for this combo.</param>
+            <param name="displayMode">The display mode to edit.</param>
+            <returns><c>true</c> when the selection changed.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TranslationEnginesTab">
             <summary>

@@ -15,7 +15,7 @@ public partial class Echoglossian
   private static bool QuestModeUsesHoverTooltips(
       JournalTranslationDisplayMode displayMode)
   {
-    return displayMode != JournalTranslationDisplayMode.NativeUiTranslation;
+    return TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
   }
 
   /// <summary>
@@ -27,7 +27,7 @@ public partial class Echoglossian
   private static bool QuestModeWritesNativeTranslation(
       JournalTranslationDisplayMode displayMode)
   {
-    return displayMode != JournalTranslationDisplayMode.TooltipTranslation;
+    return TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
   }
 
   /// <summary>
@@ -39,9 +39,7 @@ public partial class Echoglossian
   private static bool QuestModeShowsOriginalTooltips(
       JournalTranslationDisplayMode displayMode)
   {
-    return displayMode ==
-           JournalTranslationDisplayMode
-               .NativeUiTranslationWithOriginalTooltips;
+    return TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
   }
 
   /// <summary>

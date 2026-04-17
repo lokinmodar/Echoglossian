@@ -52,6 +52,7 @@ public partial class Echoglossian
   {
     if (!this.configuration.PluginAssetsDownloaded)
     {
+      this.ResetStructuredTooltipUiRuntime();
       return;
     }
 
@@ -69,6 +70,8 @@ public partial class Echoglossian
         this.FontLoadFailed = false;
       }
     }
+
+    this.UpdateStructuredTooltipUiRuntime();
 
     if (!this.configuration.Translate)
     {
@@ -106,6 +109,7 @@ public partial class Echoglossian
     }
 
     this.DrawMiniTalkBubbleOverlays();
+    this.DrawStructuredTooltipOverlays();
     var shouldDrawHoverTooltips = this.ShouldDrawHoverTooltips;
 
     if (shouldDrawHoverTooltips)

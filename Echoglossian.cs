@@ -402,6 +402,8 @@ public partial class Echoglossian : IDalamudPlugin
   /// <param name="disposing">Indicates whether the method was called from managed code.</param>
   protected virtual void Dispose(bool disposing)
   {
+    this.ResetStructuredTooltipUiRuntime();
+
     AddonLifecycle.UnLogAddon("CutSceneSelectString");
       this.hoverTooltipManager.Clear();
       QuestUiTranslationCache.Clear();
@@ -439,6 +441,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.errorToastOverlay.Dispose();
     this.chatBubbleOverlay.Dispose();
     this.cutSceneSelectStringOverlay.Dispose();
+    this.actionTooltipOverlay.Dispose();
+    this.itemTooltipOverlay.Dispose();
     this.DisposeMiniTalkBubbleOverlays();
 
     if (disposing && this.registeredAddonHandlers != null)

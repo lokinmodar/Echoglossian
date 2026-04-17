@@ -24,6 +24,7 @@ public partial class Echoglossian
           (AddonName: "AddonContextMenuTitle",
               Handler: new AddonContextMenuTitleHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
     }
 
@@ -33,6 +34,7 @@ public partial class Echoglossian
           (AddonName: "OperationGuide",
               Handler: new OperationGuideHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
     }
 
@@ -42,11 +44,13 @@ public partial class Echoglossian
           (AddonName: "Hud",
               Handler: new HudWindowHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
       this.registeredAddonHandlers.Add(
           (AddonName: "Hud2",
               Handler: new Hud2WindowHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
     }
 
@@ -56,6 +60,7 @@ public partial class Echoglossian
           (AddonName: "_MainCommand",
               Handler: new MainCommandHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
     }
 
@@ -65,26 +70,31 @@ public partial class Echoglossian
           (AddonName: "Character",
               Handler: new CharacterWindowHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
       this.registeredAddonHandlers.Add(
           (AddonName: "CharacterClass",
               Handler: new CharacterClassSubWindowHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
       this.registeredAddonHandlers.Add(
           (AddonName: "CharacterRepute",
               Handler: new CharacterReputeSubWindowHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
       this.registeredAddonHandlers.Add(
           (AddonName: "CharacterProfile",
               Handler: new CharacterProfileSubWindowHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
       this.registeredAddonHandlers.Add(
           (AddonName: "CharacterStatus",
               Handler: new CharacterStatusSubWindowHandler(
                   this.configuration,
+                  this.hoverTooltipManager,
                   TranslationService)));
     }
 

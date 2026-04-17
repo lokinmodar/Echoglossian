@@ -11,6 +11,11 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class OtherUIElementsSettingsTab
 {
+    private const string TranslateMainCommandLabel = "Translate Main Command";
+    private const string TranslateHudWindowsLabel = "Translate HUD Windows";
+    private const string TranslateOperationGuideLabel = "Translate Operation Guide";
+    private const string TranslateAddonContextMenuTitleLabel = "Translate Addon Context Menu Title";
+
     public static bool Draw(Config config)
     {
         var changed = false;
@@ -30,18 +35,41 @@ public static class OtherUIElementsSettingsTab
         changed |= ImGui.Checkbox(
             Resources.TranslateCharacterWindow,
             ref config.TranslateCharacterWindow);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            nameof(config.CharacterWindowTranslationDisplayMode),
+            ref config.CharacterWindowTranslationDisplayMode);
+
+        ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            "Translate Main Command",
+            TranslateMainCommandLabel,
             ref config.TranslateMainCommandWindow);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            nameof(config.MainCommandWindowTranslationDisplayMode),
+            ref config.MainCommandWindowTranslationDisplayMode);
+
+        ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            "Translate HUD Windows",
+            TranslateHudWindowsLabel,
             ref config.TranslateHudWindow);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            nameof(config.HudWindowTranslationDisplayMode),
+            ref config.HudWindowTranslationDisplayMode);
+
+        ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            "Translate Operation Guide",
+            TranslateOperationGuideLabel,
             ref config.TranslateOperationGuideWindow);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            nameof(config.OperationGuideTranslationDisplayMode),
+            ref config.OperationGuideTranslationDisplayMode);
+
+        ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            "Translate Addon Context Menu Title",
+            TranslateAddonContextMenuTitleLabel,
             ref config.TranslateAddonContextMenuTitle);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            nameof(config.AddonContextMenuTitleTranslationDisplayMode),
+            ref config.AddonContextMenuTitleTranslationDisplayMode);
 
         if (changed)
         {

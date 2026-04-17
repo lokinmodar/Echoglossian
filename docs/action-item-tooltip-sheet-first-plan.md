@@ -110,11 +110,23 @@ The new prefetch flow is:
 4. translate only missing fields through the shared broker
 5. persist translated canonical payload back into the same DB row
 
-The tooltip addon apply step should later do only this:
+The tooltip addon apply step now does this:
 
 1. identify the current action or item id
 2. read the canonical row from the DB
-3. apply the configured mode from stored translated/original payloads
+3. require a complete translated canonical payload before touching the live tooltip
+4. apply the configured mode from stored translated/original payloads
+
+The current live runtime is DB-first:
+
+- if the translated canonical payload is missing or incomplete, the live
+  tooltip stays untouched
+- in native-only mode, the tooltip name/description nodes are rewritten from
+  the translated payload
+- in ImGui mode, native tooltip text is restored/or left untouched and the
+  translated tooltip is rendered in Echoglossian overlay
+- in swap mode, native tooltip text is rewritten to translated content while
+  the overlay shows the canonical original payload
 
 ## Presentation Mode Rule
 

@@ -10,13 +10,6 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class JournalTab
 {
-    private static readonly string[] QuestDisplayModes =
-    [
-        Resources.QuestDisplayModeNativeUiTranslation,
-        Resources.QuestDisplayModeTooltipTranslationOnly,
-        Resources.QuestDisplayModeNativeUiTranslationWithOriginalTooltips,
-    ];
-
     /// <summary>
     ///     Draws the Journal settings tab.
     /// </summary>
@@ -136,21 +129,8 @@ public static class JournalTab
         string comboId,
         ref JournalTranslationDisplayMode displayMode)
     {
-        var changed = false;
-        var modeValue = (int)displayMode;
-        ImGui.PushID(comboId);
-        if (ImGui.Combo(
-                Resources.QuestDisplayModeLabel,
-                ref modeValue,
-                QuestDisplayModes,
-                QuestDisplayModes.Length))
-        {
-            displayMode = (JournalTranslationDisplayMode)modeValue;
-            changed = true;
-        }
-
-        ImGui.TextWrapped(Resources.QuestDisplayModeDescription);
-        ImGui.PopID();
-        return changed;
+        return TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            comboId,
+            ref displayMode);
     }
 }

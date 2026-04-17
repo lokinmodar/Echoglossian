@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Handlers;
 using Echoglossian.NativeUI.Helpers;
 using Lumina.Text.ReadOnly;
@@ -32,12 +33,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
     private readonly string addonName;
     private readonly Config config;
+    private readonly HoverTooltipManager hoverTooltipManager;
     private readonly TranslationService translationService;
     private readonly bool useAtkValues;
     private readonly StringArrayType? stringArrayDataType;
     private readonly Func<Config, bool> enabledSelector;
+    private readonly Func<Config, JournalTranslationDisplayMode> displayModeSelector;
     private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>>
         eventHandlers = [];
+    private readonly string hoverTooltipKeyPrefix;
 
     private DbFirstGameWindowRuntimeState? runtimeState;
 
@@ -49,6 +53,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// </summary>
     /// <param name="addonName">The target addon name.</param>
     /// <param name="config">The plugin configuration.</param>
+    /// <param name="hoverTooltipManager">
+    ///     The shared hover-tooltip manager used for tooltip and swap modes.
+    /// </param>
     /// <param name="translationService">The translation service.</param>
     /// <param name="enabledSelector">
     ///     Resolves whether this addon should be active.
@@ -59,20 +66,30 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="stringArrayDataType">
     ///     The backing <see cref="StringArrayType" />, if any.
     /// </param>
+    /// <param name="displayModeSelector">
+    ///     Resolves the configured display mode for this addon family.
+    /// </param>
     protected DbFirstGameWindowAddonHandler(
         string addonName,
         Config config,
+        HoverTooltipManager hoverTooltipManager,
         TranslationService translationService,
         Func<Config, bool> enabledSelector,
         bool useAtkValues,
-        StringArrayType? stringArrayDataType = null)
+        StringArrayType? stringArrayDataType = null,
+        Func<Config, JournalTranslationDisplayMode>? displayModeSelector = null)
     {
         this.addonName = addonName;
         this.config = config;
+        this.hoverTooltipManager = hoverTooltipManager;
         this.translationService = translationService;
         this.enabledSelector = enabledSelector;
         this.useAtkValues = useAtkValues;
         this.stringArrayDataType = stringArrayDataType;
+        this.displayModeSelector =
+            displayModeSelector ??
+            (static _ => JournalTranslationDisplayMode.NativeUiTranslation);
+        this.hoverTooltipKeyPrefix = $"{addonName}-DbFirst-";
 
         this.RegisterHandler(AddonEvent.PreSetup, this.OnLifecycleEvent);
         this.RegisterHandler(AddonEvent.PreRefresh, this.OnLifecycleEvent);
@@ -140,6 +157,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (!this.enabledSelector(this.config))
         {
             this.RestoreOriginalPayloadIfNeeded();
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             return;
         }
 
@@ -159,6 +177,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     protected virtual void OnCleanupEvent(AddonEvent evt, AddonArgs args)
     {
         this.RestoreOriginalPayloadIfNeeded();
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
         this.runtimeState = null;
         this.nextRetryUtc = DateTime.MinValue;
     }
@@ -171,6 +190,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (!this.enabledSelector(this.config))
         {
             this.RestoreOriginalPayloadIfNeeded();
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             return;
         }
 
@@ -179,9 +199,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
+        var displayMode = this.displayModeSelector(this.config);
+        if (!TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
+        {
+            this.RestoreOriginalPayloadIfNeeded();
+        }
+
         var livePayload = this.CaptureLivePayload(addon);
         if (livePayload.IsEmpty)
         {
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             return;
         }
 
@@ -205,6 +232,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     originalPayload,
                     structuredPayloadKey,
                     originalStructuredPayload);
+                this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
                 this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
                 return;
             }
@@ -215,7 +243,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 new DbFirstGameWindowPayload(
                     projection.AtkValues,
                     projection.StringArrayValues),
-                structuredPayloadKey);
+                structuredPayloadKey,
+                displayMode);
             this.nextRetryUtc = DateTime.MinValue;
             return;
         }
@@ -230,11 +259,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 out var translatedPayload))
         {
             this.QueueTranslationIfNeeded(originalPayload, payloadKey);
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
             return;
         }
 
-        this.ApplyPayload(addon, originalPayload, translatedPayload, payloadKey);
+        this.ApplyPayload(
+            addon,
+            originalPayload,
+            translatedPayload,
+            payloadKey,
+            displayMode);
         this.nextRetryUtc = DateTime.MinValue;
     }
 
@@ -539,9 +574,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         AtkUnitBase* addon,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
-        string payloadKey)
+        string payloadKey,
+        JournalTranslationDisplayMode displayMode)
     {
-        if (this.useAtkValues && addon->AtkValues != null)
+        if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode) &&
+            this.useAtkValues &&
+            addon->AtkValues != null)
         {
             foreach (var (index, translatedText) in translatedPayload.AtkValues)
             {
@@ -574,7 +612,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        if (this.stringArrayDataType is { } arrayType)
+        if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode) &&
+            this.stringArrayDataType is { } arrayType)
         {
             var stringArrayData = AtkStage.Instance()->GetStringArrayData(
                 arrayType);
@@ -607,10 +646,30 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        this.runtimeState = new DbFirstGameWindowRuntimeState(
-            payloadKey,
-            originalPayload,
-            translatedPayload);
+        if (TranslationDisplayModeHelper.UsesHoverTooltips(displayMode))
+        {
+            this.RegisterHoverTooltips(
+                addon,
+                originalPayload,
+                translatedPayload,
+                displayMode);
+        }
+        else
+        {
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+        }
+
+        if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
+        {
+            this.runtimeState = new DbFirstGameWindowRuntimeState(
+                payloadKey,
+                originalPayload,
+                translatedPayload);
+        }
+        else
+        {
+            this.runtimeState = null;
+        }
     }
 
     /// <summary>
@@ -675,6 +734,159 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         this.runtimeState = null;
+    }
+
+    /// <summary>
+    ///     Registers hover tooltips for visible text nodes in the addon.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    private void RegisterHoverTooltips(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        JournalTranslationDisplayMode displayMode)
+    {
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+
+        var textNodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon);
+        if (textNodeAddresses.Count == 0)
+        {
+            return;
+        }
+
+        var originalToTranslated = BuildTooltipTextMap(
+            originalPayload,
+            translatedPayload,
+            useTranslatedKeys: false);
+        var translatedToOriginal = BuildTooltipTextMap(
+            originalPayload,
+            translatedPayload,
+            useTranslatedKeys: true);
+        var showOriginalTooltips =
+            TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
+
+        for (var i = 0; i < textNodeAddresses.Count; i++)
+        {
+            var textNode = (AtkTextNode*)textNodeAddresses[i];
+            if (textNode == null || !textNode->IsVisible())
+            {
+                continue;
+            }
+
+            var visibleText = this.ReadTextNode(textNode);
+            if (!ShouldCaptureText(visibleText))
+            {
+                continue;
+            }
+
+            string? tooltipBody;
+            if (showOriginalTooltips)
+            {
+                translatedToOriginal.TryGetValue(visibleText, out tooltipBody);
+            }
+            else
+            {
+                originalToTranslated.TryGetValue(visibleText, out tooltipBody);
+            }
+
+            if (string.IsNullOrWhiteSpace(tooltipBody))
+            {
+                continue;
+            }
+
+            var width = Math.Max(1f, textNode->GetWidth());
+            var height = Math.Max(1f, textNode->GetHeight());
+            this.hoverTooltipManager.Register(
+                $"{this.hoverTooltipKeyPrefix}{i}",
+                new Vector2(textNode->ScreenX - 12f, textNode->ScreenY - 8f),
+                new Vector2(
+                    textNode->ScreenX + width + 12f,
+                    textNode->ScreenY + height + 8f),
+                string.Empty,
+                tooltipBody,
+                true);
+        }
+    }
+
+    /// <summary>
+    ///     Reads the visible text of a live text node.
+    /// </summary>
+    /// <param name="textNode">The text node to read.</param>
+    /// <returns>The visible text, or an empty string.</returns>
+    private string ReadTextNode(AtkTextNode* textNode)
+    {
+        if (textNode == null)
+        {
+            return string.Empty;
+        }
+
+        return MemoryHelper.ReadSeStringAsString(
+            out _,
+            (nint)textNode->NodeText.StringPtr.Value);
+    }
+
+    /// <summary>
+    ///     Builds a text map used by hover-tooltip registration.
+    /// </summary>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="useTranslatedKeys">
+    ///     When set, translated text becomes the dictionary key and original
+    ///     text becomes the value.
+    /// </param>
+    /// <returns>The tooltip lookup map.</returns>
+    private static Dictionary<string, string> BuildTooltipTextMap(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        bool useTranslatedKeys)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        AppendTooltipTextMap(
+            map,
+            originalPayload.AtkValues,
+            translatedPayload.AtkValues,
+            useTranslatedKeys);
+        AppendTooltipTextMap(
+            map,
+            originalPayload.StringArrayValues,
+            translatedPayload.StringArrayValues,
+            useTranslatedKeys);
+
+        return map;
+    }
+
+    /// <summary>
+    ///     Appends one payload map into a tooltip text lookup.
+    /// </summary>
+    /// <param name="map">The lookup under construction.</param>
+    /// <param name="originalValues">The original values.</param>
+    /// <param name="translatedValues">The translated values.</param>
+    /// <param name="useTranslatedKeys">
+    ///     When set, translated text becomes the key.
+    /// </param>
+    private static void AppendTooltipTextMap(
+        IDictionary<string, string> map,
+        IReadOnlyDictionary<int, string> originalValues,
+        IReadOnlyDictionary<int, string> translatedValues,
+        bool useTranslatedKeys)
+    {
+        foreach (var (index, originalText) in originalValues)
+        {
+            if (!translatedValues.TryGetValue(index, out var translatedText) ||
+                !ShouldCaptureText(originalText) ||
+                !ShouldCaptureText(translatedText))
+            {
+                continue;
+            }
+
+            var key = useTranslatedKeys ? translatedText : originalText;
+            var value = useTranslatedKeys ? originalText : translatedText;
+            map.TryAdd(key, value);
+        }
     }
 
     /// <summary>

@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.NativeUI.AddonHandlers.Common;
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
@@ -20,18 +21,23 @@ public class CharacterReputeSubWindowHandler : DbFirstGameWindowAddonHandler
   ///     <see cref="CharacterReputeSubWindowHandler" /> class.
   /// </summary>
   /// <param name="config">The configuration settings for the plugin.</param>
+  /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
   /// <param name="translationService">The service used for translating text.</param>
   public CharacterReputeSubWindowHandler(
       Config config,
+      HoverTooltipManager hoverTooltipManager,
       TranslationService translationService)
       : base(
           addonName: "CharacterRepute",
           config: config,
+          hoverTooltipManager: hoverTooltipManager,
           translationService: translationService,
           enabledSelector: static configuration =>
               configuration.TranslateCharacterWindow,
           useAtkValues: true,
-          stringArrayDataType: StringArrayType.Character)
+          stringArrayDataType: StringArrayType.Character,
+          displayModeSelector: static configuration =>
+              configuration.CharacterWindowTranslationDisplayMode)
     {
     }
 }

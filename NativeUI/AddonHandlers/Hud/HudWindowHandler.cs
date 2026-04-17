@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.NativeUI.AddonHandlers.Common;
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Hud;
 
@@ -16,18 +17,23 @@ public class HudWindowHandler : DbFirstGameWindowAddonHandler
     ///     Initializes a new instance of the <see cref="HudWindowHandler" /> class.
     /// </summary>
     /// <param name="config">The configuration settings for the plugin.</param>
+    /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
     /// <param name="translationService">The service used for translating text.</param>
     public HudWindowHandler(
         Config config,
+        HoverTooltipManager hoverTooltipManager,
         TranslationService translationService)
         : base(
             addonName: "Hud",
             config: config,
+            hoverTooltipManager: hoverTooltipManager,
             translationService: translationService,
             enabledSelector: static configuration =>
                 configuration.TranslateHudWindow,
             useAtkValues: true,
-            stringArrayDataType: StringArrayType.Hud)
+            stringArrayDataType: StringArrayType.Hud,
+            displayModeSelector: static configuration =>
+                configuration.HudWindowTranslationDisplayMode)
     {
     }
 }

@@ -1975,3 +1975,84 @@ The main active problems are:
 - Keep `ScenarioTree` as an explicit follow-up bug after the current
   checkpoint.
 - Implement the action/item tooltip apply path with the new overlay/swap rules.
+
+### 2026-04-17 01:20:00 -03:00 - working tree checkpoint - action and item tooltip apply path wired into live DB-first runtime
+
+**What changed**
+
+- Added `ActionItemTooltipUiRuntime` as the live apply/runtime path for
+  `ActionDetail` and `ItemDetail`.
+- The runtime now:
+  - resolves the hovered action/item id from `IGameGui`
+  - resolves the visible tooltip addon
+  - rebuilds the canonical original payload from sheets
+  - reads the translated canonical payload from the DB
+  - refuses to mutate native UI or show overlay when the translated payload is
+    incomplete
+  - applies translated native name/description in native and swap modes
+  - shows translated overlay text in ImGui mode
+  - shows original overlay text in swap mode
+- `BuildUi()` now updates the tooltip runtime every frame and draws tooltip
+  overlays through the existing overlay drawer.
+- Tooltip native state and overlays are now restored/cleared on plugin unload
+  and when the runtime is disabled.
+
+**Why it changed**
+
+- The repo already had the canonical prefetch/storage path for action and item
+  tooltips, but the live UI was not actually consuming it.
+- Without the apply path, the DB-first model was only half-finished and there
+  was still no production behavior to validate in-game.
+- Wiring the runtime through the existing overlay and node-resolution helpers
+  keeps this narrow and avoids creating a second tooltip pipeline.
+
+**Next step**
+
+- Validate `ActionDetail` and `ItemDetail` in-game for:
+  - native-only mode
+  - ImGui-only mode
+  - swap mode
+- If the exact node matching is too narrow for some tooltip variants, widen the
+  node discovery without leaving the DB-first contract.
+
+### 2026-04-17 01:55:00 -03:00 - working tree checkpoint - DB-first StringArray/GameWindow surfaces gained per-addon display modes
+
+**What changed**
+
+- Added per-addon display-mode config for the DB-first window family:
+  - `Character*`
+  - `_MainCommand`
+  - `Hud` / `Hud2`
+  - `OperationGuide`
+  - `AddonContextMenuTitle`
+- Added a shared dropdown UI helper so these surfaces now expose the same
+  native/tooltip/swap selector pattern already used by the quest family.
+- Rebases the shared `DbFirstGameWindowAddonHandler` onto the display mode:
+  - native-only writes translated text into the addon
+  - tooltip-only leaves the addon untouched and registers Echoglossian hover
+    tooltips for visible text nodes
+  - native-with-original-tooltips writes translated text natively and shows the
+    original text in hover tooltips
+- The hover path is forced by mode and no longer depends on the global
+  quest-tooltip toggle.
+
+**Why it changed**
+
+- The DB-first `StringArrayData`/`GameWindow` surfaces were already active, but
+  they still behaved as native-write-only windows with no per-addon mode
+  control.
+- The user asked for these surfaces to be configurable in the same way as the
+  quest-family addons and explicitly preferred hover tooltips for these windows
+  in tooltip or swap modes.
+- Doing this in the shared runtime avoids duplicating mode logic across every
+  handler.
+
+**Next step**
+
+- Build and validate the DB-first window family end-to-end:
+  - native-only
+  - tooltip-only
+  - native-with-original-tooltips
+- Then decide whether the same dropdown pattern should be extended further to
+  older overlay-heavy families, or kept scoped to the DB-first surfaces that
+  now share one runtime.
