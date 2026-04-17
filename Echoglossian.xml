@@ -4,6 +4,39 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
+        <member name="T:Echoglossian.Cache.ActionTooltipCacheManager">
+            <summary>
+                Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.Preload(System.String)">
+            <summary>
+                Loads all canonical action-tooltip rows into memory.
+            </summary>
+            <param name="configDir">The plugin configuration directory.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.Update(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Updates or inserts one cached action-tooltip row.
+            </summary>
+            <param name="newRecord">The row to cache.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
+            <summary>
+                Tries to find one canonical action-tooltip row in memory.
+            </summary>
+            <param name="actionId">The action row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="sourceContentHash">The stable source-content hash.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.Clear">
+            <summary>
+                Clears the in-memory cache.
+            </summary>
+        </member>
         <member name="T:Echoglossian.Cache.GameWindowCacheManager">
             <summary>
                 Manages an in-memory cache of <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> records to reduce redundant DB access.
@@ -43,6 +76,39 @@
             <param name="version">The game version string to match (nullable allowed).</param>
             <param name="originalJson">The serialized original content to match.</param>
             <returns>A matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> if found; otherwise, <see langword="null"/>.</returns>
+        </member>
+        <member name="T:Echoglossian.Cache.ItemTooltipCacheManager">
+            <summary>
+                Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.Preload(System.String)">
+            <summary>
+                Loads all canonical item-tooltip rows into memory.
+            </summary>
+            <param name="configDir">The plugin configuration directory.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.Update(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Updates or inserts one cached item-tooltip row.
+            </summary>
+            <param name="newRecord">The row to cache.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.TryFindCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
+            <summary>
+                Tries to find one canonical item-tooltip row in memory.
+            </summary>
+            <param name="itemId">The item row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="sourceContentHash">The stable source-content hash.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.Clear">
+            <summary>
+                Clears the in-memory cache.
+            </summary>
         </member>
         <member name="T:Echoglossian.Cache.QuestHoverTranslationCache">
             <summary>
@@ -766,6 +832,9 @@
         </member>
         <member name="T:Echoglossian.Echoglossian">
             <summary>
+                Provides DB and cache operations for canonical action/item tooltip rows.
+            </summary>
+            <summary>
              Defines operations for managing and retrieving translation data
             </summary>
             <summary>
@@ -791,6 +860,12 @@
                 A class that contains a dictionary of language information.
             </summary>
             <summary>
+                Provides DB-first background prefetch for canonical action-tooltip payloads.
+            </summary>
+            <summary>
+                Provides DB-first background prefetch for canonical item-tooltip payloads.
+            </summary>
+            <summary>
                 Handles the quest probe command used to inspect the complete quest data
                 shape from Lumina, the live quest progress resolver, and the current
                 QuestPlate database rows.
@@ -801,6 +876,34 @@
             <summary>
                 Manages the registration and configuration of translation overlays.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindActionTooltip(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Finds one canonical action-tooltip row using cache-first lookup.
+            </summary>
+            <param name="probe">The probe row that defines the lookup scope.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertActionTooltip(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Inserts or updates one canonical action-tooltip row and refreshes cache state.
+            </summary>
+            <param name="row">The row to persist.</param>
+            <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindItemTooltip(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Finds one canonical item-tooltip row using cache-first lookup.
+            </summary>
+            <param name="probe">The probe row that defines the lookup scope.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertItemTooltip(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Inserts or updates one canonical item-tooltip row and refreshes cache state.
+            </summary>
+            <param name="row">The row to persist.</param>
+            <returns>A status message describing the result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateOrUseDb">
             <summary>
@@ -1565,6 +1668,81 @@
             <param name="acceptedQuestIds">The accepted quest ids.</param>
             <returns>The stable accepted-quest signature.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickActionTooltipPrefetch">
+            <summary>
+                Ticks the action-tooltip prefetch runtime so the current class/job actions
+                are translated into canonical storage ahead of tooltip use.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ClearActionTooltipPrefetchState">
+            <summary>
+                Clears the action-tooltip prefetch runtime state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchActionTooltip(System.UInt32,System.Byte)">
+            <summary>
+                Prefetches one canonical action-tooltip payload and any missing translations.
+            </summary>
+            <param name="actionId">The action row identifier.</param>
+            <param name="currentClassJobId">The current class-job identifier.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchActionTooltipName(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Prefetches the translated action name when it is not yet persisted.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="existingRow">The currently persisted row, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchActionTooltipDescription(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Prefetches the translated action description when it is not yet persisted.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="existingRow">The currently persisted row, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyActionTooltipTranslation(System.UInt32,System.UInt32,System.String,System.String)">
+            <summary>
+                Applies one resolved action-tooltip translation into canonical storage.
+            </summary>
+            <param name="actionId">The action row identifier.</param>
+            <param name="currentClassJobId">The current class-job identifier.</param>
+            <param name="translatedName">The translated name, if any.</param>
+            <param name="translatedDescription">The translated description, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobActionIds(System.Byte,System.String,System.Collections.Generic.List{System.UInt32}@)">
+            <summary>
+                Tries to collect the current class/job action ids from canonical sheets.
+            </summary>
+            <param name="currentClassJobId">The current class-job identifier.</param>
+            <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
+            <param name="actionIds">The collected action ids.</param>
+            <returns>True when action ids were collected successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildActionTooltipCanonicalPayload(System.UInt32,System.Byte,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one canonical action-tooltip payload from sheets.
+            </summary>
+            <param name="actionId">The action row identifier.</param>
+            <param name="currentClassJobId">The current class-job identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryGetCurrentClassJobInfo(System.Byte@,System.String@)">
+            <summary>
+                Tries to resolve the current class/job id and abbreviation.
+            </summary>
+            <param name="currentClassJobId">The current class/job id.</param>
+            <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
+            <returns>True when the current class/job was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DoesActionCategoryMatchCurrentJob(System.Object,System.String)">
+            <summary>
+                Determines whether an action class-job-category includes the current job.
+            </summary>
+            <param name="classJobCategory">The action class-job-category row.</param>
+            <param name="abbreviation">The current class/job abbreviation.</param>
+            <returns>True when the category contains the current job.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
             <summary>
             Handles the registration of addon handlers.
@@ -1683,6 +1861,66 @@
             </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickItemTooltipPrefetch">
+            <summary>
+                Ticks the item-tooltip prefetch runtime so current inventory surfaces
+                are translated into canonical storage ahead of tooltip use.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ClearItemTooltipPrefetchState">
+            <summary>
+                Clears the item-tooltip prefetch runtime state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldPrefetchStructuredTooltips">
+            <summary>
+                Gets whether structured action/item tooltips should be prefetched.
+            </summary>
+            <returns>True when the background prefetch should run.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchItemTooltip(System.UInt32)">
+            <summary>
+                Prefetches one canonical item-tooltip payload and any missing translations.
+            </summary>
+            <param name="itemId">The item row identifier.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchItemTooltipName(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Prefetches the translated item name when it is not yet persisted.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="existingRow">The currently persisted row, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchItemTooltipDescription(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Prefetches the translated item description when it is not yet persisted.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="existingRow">The currently persisted row, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyItemTooltipTranslation(System.UInt32,System.String,System.String)">
+            <summary>
+                Applies one resolved item-tooltip translation into canonical storage.
+            </summary>
+            <param name="itemId">The item row identifier.</param>
+            <param name="translatedName">The translated name, if any.</param>
+            <param name="translatedDescription">The translated description, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCollectTrackedItemIds(System.Collections.Generic.List{System.UInt32}@)">
+            <summary>
+                Tries to collect tracked item ids from inventory, armory, equipment, and hotbars.
+            </summary>
+            <param name="itemIds">The collected item ids.</param>
+            <returns>True when item ids were collected successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildItemTooltipCanonicalPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one canonical item-tooltip payload from the item sheet.
+            </summary>
+            <param name="itemId">The item row identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestAddonHandlerDependencies">
             <summary>
@@ -2307,6 +2545,62 @@
             </summary>
             <param name="addon">The live "_TextGimmickHint" addon.</param>
         </member>
+        <member name="T:Echoglossian.ActionTooltipPersistenceHelper">
+            <summary>
+                Persists canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.CreateCanonicalRow(System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Creates one canonical action-tooltip row from source payloads.
+            </summary>
+            <param name="originalLang">The language of the original payload.</param>
+            <param name="translationLang">The target translation language.</param>
+            <param name="translationEngine">The translation-engine identifier.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The translated canonical payload, if any.</param>
+            <returns>The canonical DB row.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.InsertActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.Action{Echoglossian.EFCoreSqlite.Models.ActionTooltip})">
+            <summary>
+                Inserts or updates one canonical action-tooltip row.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="actionTooltip">The row to persist.</param>
+            <param name="onPersisted">Optional callback invoked after the DB write succeeds.</param>
+            <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FindActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Finds one canonical action-tooltip row using the same lookup scope as persistence.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="probe">The probe row that defines the lookup scope.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.IsValidForPersistence(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Determines whether a row contains enough identity to be persisted safely.
+            </summary>
+            <param name="row">The row to validate.</param>
+            <returns>True when the row has a safe persistence identity.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.MergeValues(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Merges a newer payload into an existing row without discarding already-translated fields.
+            </summary>
+            <param name="target">The existing stored row.</param>
+            <param name="source">The incoming row.</param>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FirstNonEmpty(System.String,System.String)">
+            <summary>
+                Returns the first non-empty string, preferring the incoming value.
+            </summary>
+            <param name="preferred">The candidate incoming value.</param>
+            <param name="fallback">The existing value.</param>
+            <returns>The chosen string.</returns>
+        </member>
         <member name="T:Echoglossian.GameWindowPersistenceHelper">
             <summary>
                 Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows without requiring the full plugin runtime.
@@ -2323,6 +2617,62 @@
                 Optional callback invoked with the updated entity after the DB write succeeds.
             </param>
             <returns>A status message describing the result.</returns>
+        </member>
+        <member name="T:Echoglossian.ItemTooltipPersistenceHelper">
+            <summary>
+                Persists canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.CreateCanonicalRow(System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Creates one canonical item-tooltip row from source payloads.
+            </summary>
+            <param name="originalLang">The language of the original payload.</param>
+            <param name="translationLang">The target translation language.</param>
+            <param name="translationEngine">The translation-engine identifier.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The translated canonical payload, if any.</param>
+            <returns>The canonical DB row.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.InsertItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip,System.Action{Echoglossian.EFCoreSqlite.Models.ItemTooltip})">
+            <summary>
+                Inserts or updates one canonical item-tooltip row.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="itemTooltip">The row to persist.</param>
+            <param name="onPersisted">Optional callback invoked after the DB write succeeds.</param>
+            <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FindItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Finds one canonical item-tooltip row using the same lookup scope as persistence.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="probe">The probe row that defines the lookup scope.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.IsValidForPersistence(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Determines whether a row contains enough identity to be persisted safely.
+            </summary>
+            <param name="row">The row to validate.</param>
+            <returns>True when the row has a safe persistence identity.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.MergeValues(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Merges a newer payload into an existing row without discarding already-translated fields.
+            </summary>
+            <param name="target">The existing stored row.</param>
+            <param name="source">The incoming row.</param>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FirstNonEmpty(System.String,System.String)">
+            <summary>
+                Returns the first non-empty string, preferring the incoming value.
+            </summary>
+            <param name="preferred">The candidate incoming value.</param>
+            <param name="fallback">The existing value.</param>
+            <returns>The chosen string.</returns>
         </member>
         <member name="T:Echoglossian.StringArrayDataPersistenceHelper">
             <summary>
@@ -2866,68 +3216,128 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddCanonicalStringArrayPayloadFields.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.RemodelActionAndItemTooltipTables">
+            <summary>
+                Rebuilds action and item tooltip tables around canonical DB-first payloads.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.RemodelActionAndItemTooltipTables.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.RemodelActionAndItemTooltipTables.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
-                Represents a translation entity for action tooltips in the database.
+                Represents one canonical DB-first action tooltip payload.
             </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.Id">
             <summary>
-                Partial implementation of <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> to support generic
-                translation access via <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+                Gets or sets the primary key.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ActionId">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> class.
+                Gets or sets the action row identifier.
             </summary>
-            <param name="originalActionTooltip">The original action tooltip text.</param>
-            <param name="originalActionTooltipLang">
-                The language of the original action
-                tooltip.
-            </param>
-            <param name="translatedActionTooltip">The translated action tooltip text.</param>
-            <param name="translationLang">The language of the translated action tooltip.</param>
-            <param name="translationEngine">The translation engine used.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="createdDate">The date the tooltip was created.</param>
-            <param name="updatedDate">The date the tooltip was last updated.</param>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetOriginalText">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.IconId">
+            <summary>
+                Gets or sets the action icon identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetOriginalText(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ActionCategoryId">
+            <summary>
+                Gets or sets the action-category row identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetOriginalLang">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ClassJobId">
+            <summary>
+                Gets or sets the owning class-job row identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetOriginalLang(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ClassJobCategoryId">
+            <summary>
+                Gets or sets the class-job-category row identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetTranslatedText">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ActionName">
+            <summary>
+                Gets or sets the canonical original action name.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetTranslatedText(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ActionDescription">
+            <summary>
+                Gets or sets the canonical original action description.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetTranslationLang">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.OriginalTooltipText">
+            <summary>
+                Gets or sets the fully assembled original tooltip text.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetTranslationEngine">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.OriginalLang">
+            <summary>
+                Gets or sets the language of the original source payload.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetTranslationEngine(System.Int32)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.TranslatedActionName">
+            <summary>
+                Gets or sets the translated action name.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetEntityKey(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.TranslatedActionDescription">
+            <summary>
+                Gets or sets the translated action description.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetGameVersion">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.TranslatedTooltipText">
+            <summary>
+                Gets or sets the fully assembled translated tooltip text.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SetGameVersion(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.TranslationLang">
+            <summary>
+                Gets or sets the target translation language.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GetEntityKey">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.TranslationEngine">
+            <summary>
+                Gets or sets the translation-engine identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.GameVersion">
+            <summary>
+                Gets or sets the game version associated with the source payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.SourceContentHash">
+            <summary>
+                Gets or sets the stable source-content hash.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.CanonicalPayloadAsText">
+            <summary>
+                Gets or sets the serialized canonical payload, including translated fields when available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.CreatedDate">
+            <summary>
+                Gets or sets the row creation time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.UpdatedDate">
+            <summary>
+                Gets or sets the row update time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.RowVersion">
+            <summary>
+                Gets or sets the optimistic-concurrency token.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ToString">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage">
@@ -3282,63 +3692,115 @@
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip">
             <summary>
-                Partial implementation of <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> to support generic
-                translation access via <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+                Represents one canonical DB-first item tooltip payload.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.Id">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> class.
+                Gets or sets the primary key.
             </summary>
-            <param name="originalItemTooltip">The original item tooltip text.</param>
-            <param name="originalItemTooltipLang">
-                The language of the original item
-                tooltip.
-            </param>
-            <param name="translatedItemTooltip">The translated item tooltip text.</param>
-            <param name="translationLang">The language of the translated item tooltip.</param>
-            <param name="translationEngine">The translation engine used.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="createdDate">The date the item tooltip was created.</param>
-            <param name="updatedDate">The date the item tooltip was last updated.</param>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetOriginalText">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.ItemId">
+            <summary>
+                Gets or sets the item row identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetOriginalText(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.IconId">
+            <summary>
+                Gets or sets the item icon identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetOriginalLang">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.ItemActionId">
+            <summary>
+                Gets or sets the item-action row identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetOriginalLang(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.ItemUiCategoryId">
+            <summary>
+                Gets or sets the item-ui-category row identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetTranslatedText">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.ClassJobCategoryId">
+            <summary>
+                Gets or sets the class-job-category row identifier.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetTranslatedText(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.ItemName">
+            <summary>
+                Gets or sets the canonical original item name.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetTranslationLang">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.ItemDescription">
+            <summary>
+                Gets or sets the canonical original item description.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetTranslationEngine">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.OriginalTooltipText">
+            <summary>
+                Gets or sets the fully assembled original tooltip text.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetTranslationEngine(System.Int32)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.OriginalLang">
+            <summary>
+                Gets or sets the language of the original source payload.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetEntityKey(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.TranslatedItemName">
+            <summary>
+                Gets or sets the translated item name.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetGameVersion">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.TranslatedItemDescription">
+            <summary>
+                Gets or sets the translated item description.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SetGameVersion(System.String)">
-            <inheritdoc />
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.TranslatedTooltipText">
+            <summary>
+                Gets or sets the fully assembled translated tooltip text.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GetEntityKey">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.TranslationLang">
+            <summary>
+                Gets or sets the target translation language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.TranslationEngine">
+            <summary>
+                Gets or sets the translation-engine identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.GameVersion">
+            <summary>
+                Gets or sets the game version associated with the source payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.SourceContentHash">
+            <summary>
+                Gets or sets the stable source-content hash.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.CanonicalPayloadAsText">
+            <summary>
+                Gets or sets the serialized canonical payload, including translated fields when available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.CreatedDate">
+            <summary>
+                Gets or sets the row creation time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.UpdatedDate">
+            <summary>
+                Gets or sets the row update time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ItemTooltip.RowVersion">
+            <summary>
+                Gets or sets the optimistic-concurrency token.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ItemTooltip.ToString">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate">
@@ -9304,6 +9766,105 @@
             <param name="evt">The addon event being handled.</param>
             <param name="args">The arguments associated with the addon event.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload">
+            <summary>
+                Represents one canonical action-tooltip payload resolved from game data.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.SchemaVersion">
+            <summary>
+                Gets or sets the payload schema version.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.ActionId">
+            <summary>
+                Gets or sets the action row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.IconId">
+            <summary>
+                Gets or sets the action icon identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.ActionCategoryId">
+            <summary>
+                Gets or sets the action-category row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.ClassJobId">
+            <summary>
+                Gets or sets the class-job row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.ClassJobCategoryId">
+            <summary>
+                Gets or sets the class-job-category row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Name">
+            <summary>
+                Gets or sets the original action name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Description">
+            <summary>
+                Gets or sets the original action description.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.TranslatedName">
+            <summary>
+                Gets or sets the translated action name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.TranslatedDescription">
+            <summary>
+                Gets or sets the translated action description.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.HasCompleteTranslation">
+            <summary>
+                Gets whether the canonical payload has every translated field required for UI usage.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Serialize">
+            <summary>
+                Serializes the payload using a stable JSON shape.
+            </summary>
+            <returns>The serialized payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.ComputeSourceContentHash">
+            <summary>
+                Computes a stable source-content hash using only original source semantics.
+            </summary>
+            <returns>The stable source hash.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.BuildOriginalTooltipText">
+            <summary>
+                Builds the fully assembled original tooltip text.
+            </summary>
+            <returns>The original tooltip text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.BuildTranslatedTooltipText">
+            <summary>
+                Builds the fully assembled translated tooltip text when complete.
+            </summary>
+            <returns>The translated tooltip text, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Deserialize(System.String)">
+            <summary>
+                Deserializes a canonical action-tooltip payload.
+            </summary>
+            <param name="serializedPayload">The serialized payload.</param>
+            <returns>The deserialized payload, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.BuildTooltipText(System.String,System.String)">
+            <summary>
+                Builds one tooltip text block from title and body.
+            </summary>
+            <param name="title">The title line.</param>
+            <param name="body">The body text.</param>
+            <returns>The combined tooltip text.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar">
             <summary>
                 Utility for registering and unregistering addon translation handlers.
@@ -9866,6 +10427,105 @@
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.StringArrayStructuredSlotDescription.IsTranslatable">
             <summary>Whether the slot should be translated.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload">
+            <summary>
+                Represents one canonical item-tooltip payload resolved from game data.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.SchemaVersion">
+            <summary>
+                Gets or sets the payload schema version.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.ItemId">
+            <summary>
+                Gets or sets the item row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.IconId">
+            <summary>
+                Gets or sets the item icon identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.ItemActionId">
+            <summary>
+                Gets or sets the item-action row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.ItemUiCategoryId">
+            <summary>
+                Gets or sets the item-ui-category row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.ClassJobCategoryId">
+            <summary>
+                Gets or sets the class-job-category row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.Name">
+            <summary>
+                Gets or sets the original item name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.Description">
+            <summary>
+                Gets or sets the original item description.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.TranslatedName">
+            <summary>
+                Gets or sets the translated item name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.TranslatedDescription">
+            <summary>
+                Gets or sets the translated item description.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.HasCompleteTranslation">
+            <summary>
+                Gets whether the payload has every translated field required for UI usage.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.Serialize">
+            <summary>
+                Serializes the payload using a stable JSON shape.
+            </summary>
+            <returns>The serialized payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.ComputeSourceContentHash">
+            <summary>
+                Computes a stable source-content hash using only original source semantics.
+            </summary>
+            <returns>The stable source hash.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.BuildOriginalTooltipText">
+            <summary>
+                Builds the fully assembled original tooltip text.
+            </summary>
+            <returns>The original tooltip text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.BuildTranslatedTooltipText">
+            <summary>
+                Builds the fully assembled translated tooltip text when complete.
+            </summary>
+            <returns>The translated tooltip text, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.Deserialize(System.String)">
+            <summary>
+                Deserializes a canonical item-tooltip payload.
+            </summary>
+            <param name="serializedPayload">The serialized payload.</param>
+            <returns>The deserialized payload, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.BuildTooltipText(System.String,System.String)">
+            <summary>
+                Builds one tooltip text block from title and body.
+            </summary>
+            <param name="title">The title line.</param>
+            <param name="body">The body text.</param>
+            <returns>The combined tooltip text.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker">
             <summary>

@@ -189,6 +189,22 @@ the active `StringArrayType` surfaces listed above.
 - it does not currently run a generic runtime that watches all
   `StringArrayData` mutations and automatically saves/applies every change
 - it does not currently own `_MainCommand`
+- it does not yet expose the full plugin configuration UI needed to control all
+  migrated `StringArrayData` surfaces cleanly
+
+### Presentation Rule for `StringArrayData` Surfaces
+
+For migrated `StringArrayData` surfaces, non-native presentation should prefer
+Echoglossian tooltips per translated text:
+
+- native-only mode: translated text may be applied directly into the addon
+- ImGui mode: keep the native addon untouched and use Echoglossian tooltips for
+  each translated text block
+- swap mode: keep the translated text in the addon and use Echoglossian
+  tooltips to show the original text for each translated block
+
+This rule should guide future migrations so we do not reintroduce direct
+array-write contention just to support overlay-like presentation.
 
 ## 6. Dormant or Intentionally Quiet Surfaces
 

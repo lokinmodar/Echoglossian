@@ -1900,3 +1900,78 @@ The main active problems are:
   lack of flicker.
 - Keep `_MainCommand` on `GameWindow` until it is worth giving it a dedicated
   canonical shape as well.
+
+### 2026-04-16 23:59:00 -03:00 - working tree checkpoint - action and item tooltips moved onto canonical sheet-first persistence
+
+**What changed**
+
+- Replaced the old shallow `ActionTooltip` and `ItemTooltip` entities with
+  canonical DB-first rows that store identity, metadata, original text,
+  translated text, source hash, and serialized canonical payloads.
+- Added `ActionTooltipCanonicalPayload` and `ItemTooltipCanonicalPayload` as
+  explicit canonical shapes for tooltip source data.
+- Added DB/cache helpers for canonical action and item tooltip lookup and save.
+- Added background prefetch runtimes that:
+  - collect all player actions for the current class/job
+  - collect all tracked items from inventory, armory, equipped gear, and
+    hotbars
+  - resolve tooltip source data from sheets
+  - persist original payloads
+  - fill translated fields through the shared translation broker
+- Action descriptions now come from `ActionTransient.Description`, not from the
+  live tooltip surface.
+- Added a schema migration that rebuilds `actiontooltips` and `itemtooltips`
+  around the new canonical payload model.
+- Added persistence tests covering distinct-source preservation and in-place
+  updates for exact canonical matches.
+- Added
+  [action-item-tooltip-sheet-first-plan.md](/C:/Dante/_dalamud/Echoglossian/docs/action-item-tooltip-sheet-first-plan.md)
+  to document canonical data sources and the intended runtime shape.
+
+**Why it changed**
+
+- `ActionTooltip` and `ItemTooltip` had no useful legacy data to preserve, so
+  keeping the old shallow schema would only push the same design problems into
+  the new runtime.
+- The canonical quest flow has already shown that a sheet-first + DB-first
+  approach is the stable path.
+- `ActionTransient` is required to get the correct action description source,
+  and `Item` is sufficient for item name/description/metadata.
+
+**Next step**
+
+- Wire the actual tooltip apply path so live action and item tooltips consume
+  the canonical DB rows instead of translating on the hot path.
+
+### 2026-04-17 00:35:00 -03:00 - working tree checkpoint - post-test follow-up after latest stringarray and quest validation
+
+**What changed**
+
+- Recorded the user-tested status of the latest addon work:
+  - `JournalDetail`: OK
+  - `_ToDoList`: OK
+  - `ScenarioTree`: KO, still not responding to mode changes in-game
+- Recorded the presentation rule for the next tooltip wave:
+  - `ActionTooltip` and `ItemTooltip` should render through Echoglossian
+    overlay in ImGui mode
+  - `ActionTooltip` and `ItemTooltip` should show translated native content and
+    original overlay content in swap mode
+  - `StringArrayData` surfaces should prefer Echoglossian tooltips per text in
+    ImGui and swap modes rather than broad native rewrites
+- Recorded that the plugin still needs dedicated configuration UI coverage for
+  the migrated `StringArrayData` surfaces.
+
+**Why it changed**
+
+- The runtime architecture is converging, but the user test pass revealed that
+  `ScenarioTree` is still not healthy and that the next tooltip phase needs a
+  precise presentation contract before implementation starts.
+- The migrated `StringArrayData` work also needs matching config UI so the new
+  ownership model is visible and controllable in-game.
+
+**Next step**
+
+- Commit the current canonical action/item tooltip foundation.
+- Keep `ScenarioTree` as an explicit follow-up bug after the current
+  checkpoint.
+- Implement the action/item tooltip apply path with the new overlay/swap rules.

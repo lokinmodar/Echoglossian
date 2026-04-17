@@ -6,68 +6,122 @@
 namespace Echoglossian.EFCoreSqlite.Models;
 
 /// <summary>
-///     Represents a translation entity for action tooltips in the database.
+///     Represents one canonical DB-first action tooltip payload.
 /// </summary>
 [Table("actiontooltips")]
-public partial class ActionTooltip
+public class ActionTooltip
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ActionTooltip" /> class.
+    ///     Gets or sets the primary key.
     /// </summary>
-    /// <param name="originalActionTooltip">The original action tooltip text.</param>
-    /// <param name="originalActionTooltipLang">
-    ///     The language of the original action
-    ///     tooltip.
-    /// </param>
-    /// <param name="translatedActionTooltip">The translated action tooltip text.</param>
-    /// <param name="translationLang">The language of the translated action tooltip.</param>
-    /// <param name="translationEngine">The translation engine used.</param>
-    /// <param name="gameVersion">The game version.</param>
-    /// <param name="createdDate">The date the tooltip was created.</param>
-    /// <param name="updatedDate">The date the tooltip was last updated.</param>
-    public ActionTooltip(
-        string? originalActionTooltip,
-        string? originalActionTooltipLang,
-        string? translatedActionTooltip,
-        string? translationLang,
-        int? translationEngine,
-        string? gameVersion,
-        DateTime? createdDate,
-        DateTime? updatedDate)
-    {
-        this.OriginalActionTooltip = originalActionTooltip;
-        this.OriginalActionTooltipLang = originalActionTooltipLang;
-        this.TranslatedActionTooltip = translatedActionTooltip;
-        this.TranslationLang = translationLang;
-        this.TranslationEngine = translationEngine;
-        this.GameVersion = gameVersion;
-        this.CreatedDate = createdDate;
-        this.UpdatedDate = updatedDate;
-    }
+    [Key]
+    public int Id { get; set; }
 
-    [Key] public int Id { get; set; }
+    /// <summary>
+    ///     Gets or sets the action row identifier.
+    /// </summary>
+    public uint ActionId { get; set; }
 
-    public string? OriginalActionTooltip { get; set; }
+    /// <summary>
+    ///     Gets or sets the action icon identifier.
+    /// </summary>
+    public uint IconId { get; set; }
 
-    public string? OriginalActionTooltipLang { get; set; }
+    /// <summary>
+    ///     Gets or sets the action-category row identifier.
+    /// </summary>
+    public uint ActionCategoryId { get; set; }
 
-    public string? TranslatedActionTooltip { get; set; }
+    /// <summary>
+    ///     Gets or sets the owning class-job row identifier.
+    /// </summary>
+    public uint ClassJobId { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the class-job-category row identifier.
+    /// </summary>
+    public uint ClassJobCategoryId { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the canonical original action name.
+    /// </summary>
+    public string? ActionName { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the canonical original action description.
+    /// </summary>
+    public string? ActionDescription { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the fully assembled original tooltip text.
+    /// </summary>
+    public string? OriginalTooltipText { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the language of the original source payload.
+    /// </summary>
+    public string? OriginalLang { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the translated action name.
+    /// </summary>
+    public string? TranslatedActionName { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the translated action description.
+    /// </summary>
+    public string? TranslatedActionDescription { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the fully assembled translated tooltip text.
+    /// </summary>
+    public string? TranslatedTooltipText { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the target translation language.
+    /// </summary>
     public string? TranslationLang { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the translation-engine identifier.
+    /// </summary>
     public int? TranslationEngine { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the game version associated with the source payload.
+    /// </summary>
     public string? GameVersion { get; set; }
 
-    public DateTime? CreatedDate { get; set; }
+    /// <summary>
+    ///     Gets or sets the stable source-content hash.
+    /// </summary>
+    public string? SourceContentHash { get; set; }
 
-    public DateTime? UpdatedDate { get; set; }
+    /// <summary>
+    ///     Gets or sets the serialized canonical payload, including translated fields when available.
+    /// </summary>
+    public string? CanonicalPayloadAsText { get; set; }
 
-    [Timestamp] public byte[]? RowVersion { get; set; }
+    /// <summary>
+    ///     Gets or sets the row creation time in UTC.
+    /// </summary>
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-    public override string? ToString()
+    /// <summary>
+    ///     Gets or sets the row update time in UTC.
+    /// </summary>
+    public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    ///     Gets or sets the optimistic-concurrency token.
+    /// </summary>
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString()
     {
         return
-            $"Id: {this.Id}, OriginalActionTooltip: {this.OriginalActionTooltip}, OriginalActionTooltipLang: {this.OriginalActionTooltipLang}, TranslatedActionTooltip: {this.TranslatedActionTooltip}, TranslationLang: {this.TranslationLang}, TranslationEngine: {this.TranslationEngine}, GameVersion: {this.GameVersion}, CreatedDate: {this.CreatedDate}, UpdatedDate: {this.UpdatedDate}";
+            $"ActionId={this.ActionId}, ActionName={this.ActionName}, TranslationLang={this.TranslationLang}, TranslationEngine={this.TranslationEngine}, GameVersion={this.GameVersion}, SourceContentHash={this.SourceContentHash}";
     }
 }

@@ -79,7 +79,27 @@ public class EchoglossianDbContext : DbContext
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     modelBuilder.Entity<ActionTooltip>().ToTable("actiontooltips");
+    modelBuilder.Entity<ActionTooltip>()
+        .HasIndex(t => new
+        {
+          t.ActionId,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_actiontooltips_lookup");
     modelBuilder.Entity<ItemTooltip>().ToTable("itemtooltips");
+    modelBuilder.Entity<ItemTooltip>()
+        .HasIndex(t => new
+        {
+          t.ItemId,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_itemtooltips_lookup");
     modelBuilder.Entity<SelectString>().ToTable("selectstrings");
     modelBuilder.Entity<SelectString>()
         .HasIndex(s => new

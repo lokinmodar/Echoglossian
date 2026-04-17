@@ -277,6 +277,8 @@ public partial class Echoglossian : IDalamudPlugin
 
     GameWindowCacheManager.Preload(ConfigDirectory);
     StringArrayDataCacheManager.Preload(ConfigDirectory);
+    ActionTooltipCacheManager.Preload(ConfigDirectory);
+    ItemTooltipCacheManager.Preload(ConfigDirectory);
 
     FrameworkInterface.Update += this.Tick;
 
@@ -406,6 +408,8 @@ public partial class Echoglossian : IDalamudPlugin
       QuestHoverTranslationCache.Clear();
       StringArrayDataCacheManager.Clear();
       GameWindowCacheManager.Clear();
+      ActionTooltipCacheManager.Clear();
+      ItemTooltipCacheManager.Clear();
       QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();

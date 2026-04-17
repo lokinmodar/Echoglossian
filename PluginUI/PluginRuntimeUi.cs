@@ -24,6 +24,8 @@ public partial class Echoglossian
     }
 
     this.TickAcceptedQuestPrefetch();
+    this.TickActionTooltipPrefetch();
+    this.TickItemTooltipPrefetch();
 
     switch (this.configuration.UseImGuiForTalk ||
             this.configuration.UseImGuiForBattleTalk ||
