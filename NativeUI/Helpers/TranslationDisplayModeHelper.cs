@@ -11,12 +11,38 @@ namespace Echoglossian.NativeUI.Helpers;
 internal static class TranslationDisplayModeHelper
 {
     /// <summary>
+    ///     Resolves the effective display mode after applying language
+    ///     limitations that forbid native UI mutation.
+    /// </summary>
+    /// <param name="displayMode">The configured display mode.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language only supports overlays and custom
+    ///     tooltips.
+    /// </param>
+    /// <returns>The effective runtime display mode.</returns>
+    public static JournalTranslationDisplayMode GetEffectiveDisplayMode(
+        JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage)
+    {
+        return overlayOnlyLanguage
+            ? JournalTranslationDisplayMode.TooltipTranslation
+            : displayMode;
+    }
+
+    /// <summary>
     ///     Gets whether a display mode should register hover tooltips.
     /// </summary>
     /// <param name="displayMode">The configured display mode.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language only supports overlays and custom
+    ///     tooltips.
+    /// </param>
     /// <returns><c>true</c> when hover tooltips should be used.</returns>
-    public static bool UsesHoverTooltips(JournalTranslationDisplayMode displayMode)
+    public static bool UsesHoverTooltips(
+        JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage = false)
     {
+        displayMode = GetEffectiveDisplayMode(displayMode, overlayOnlyLanguage);
         return displayMode != JournalTranslationDisplayMode.NativeUiTranslation;
     }
 
@@ -25,9 +51,16 @@ internal static class TranslationDisplayModeHelper
     ///     native addon.
     /// </summary>
     /// <param name="displayMode">The configured display mode.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language only supports overlays and custom
+    ///     tooltips.
+    /// </param>
     /// <returns><c>true</c> when native text should be rewritten.</returns>
-    public static bool WritesNativeTranslation(JournalTranslationDisplayMode displayMode)
+    public static bool WritesNativeTranslation(
+        JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage = false)
     {
+        displayMode = GetEffectiveDisplayMode(displayMode, overlayOnlyLanguage);
         return displayMode != JournalTranslationDisplayMode.TooltipTranslation;
     }
 
@@ -36,9 +69,16 @@ internal static class TranslationDisplayModeHelper
     ///     the translated text.
     /// </summary>
     /// <param name="displayMode">The configured display mode.</param>
+    /// <param name="overlayOnlyLanguage">
+    ///     Whether the selected language only supports overlays and custom
+    ///     tooltips.
+    /// </param>
     /// <returns><c>true</c> when hover tooltips should show the original text.</returns>
-    public static bool ShowsOriginalTooltips(JournalTranslationDisplayMode displayMode)
+    public static bool ShowsOriginalTooltips(
+        JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage = false)
     {
+        displayMode = GetEffectiveDisplayMode(displayMode, overlayOnlyLanguage);
         return displayMode ==
                JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips;
     }

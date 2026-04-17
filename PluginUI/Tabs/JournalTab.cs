@@ -10,6 +10,23 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class JournalTab
 {
+    private const string ActionAndItemTooltipSectionLabel =
+        "Action and item tooltips";
+    private const string ActionAndItemTooltipDisplayModeLabel =
+        "Tooltip display mode";
+    private const string ActionAndItemTooltipDisplayModeDescription =
+        "This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.";
+    private const string HoverTooltipAppearanceSectionLabel =
+        "Hover tooltip appearance";
+    private const string HoverTooltipTextColorLabel =
+        "Tooltip text color";
+    private const string HoverTooltipBackgroundColorLabel =
+        "Tooltip background color";
+    private const string HoverTooltipBackgroundOpacityLabel =
+        "Tooltip background opacity";
+    private const string HoverTooltipAppearanceDescription =
+        "These colors apply to Echoglossian hover tooltips used by quest and DB-first UI surfaces.";
+
     /// <summary>
     ///     Draws the Journal settings tab.
     /// </summary>
@@ -23,31 +40,39 @@ public static class JournalTab
         if (config.Translate)
         {
             changed |= DrawJournalSection(config);
+            changed |= DrawTooltipSection(config);
             changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateJournalDetailToggle,
                 ref config.TranslateJournalDetail,
                 ref config.JournalDetailTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateJournalAcceptToggle,
                 ref config.TranslateJournalAccept,
                 ref config.JournalAcceptTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateJournalResultToggle,
                 ref config.TranslateJournalResult,
                 ref config.JournalResultTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateToDoListToggle,
                 ref config.TranslateToDoList,
                 ref config.ToDoListTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateScenarioTreeToggle,
                 ref config.TranslateScenarioTree,
                 ref config.ScenarioTreeTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateRecommendListToggle,
                 ref config.TranslateRecommendList,
                 ref config.RecommendListTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateAreaMapToggle,
                 ref config.TranslateAreaMap,
                 ref config.AreaMapTranslationDisplayMode);
@@ -86,11 +111,64 @@ public static class JournalTab
 
         changed |= DrawQuestDisplayModeCombo(
             nameof(config.JournalTranslationDisplayMode),
-            ref config.JournalTranslationDisplayMode);
+            ref config.JournalTranslationDisplayMode,
+            config.OverlayOnlyLanguage,
+            Resources.JournalQuestDisplayModeLabel,
+            Resources.JournalQuestDisplayModeDescription);
 
         changed |= ImGui.Checkbox(
             Resources.JournalGlobalHoverTooltipsLabel,
             ref config.TranslateTooltips);
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the action/item tooltip mode and the shared hover-tooltip
+    ///     appearance settings.
+    /// </summary>
+    /// <param name="config">The current plugin configuration.</param>
+    /// <returns><c>true</c> when a setting changed.</returns>
+    private static bool DrawTooltipSection(Config config)
+    {
+        var changed = false;
+
+        ImGui.Spacing();
+        ImGui.TextUnformatted(ActionAndItemTooltipSectionLabel);
+        ImGui.Separator();
+
+        changed |= DrawQuestDisplayModeCombo(
+            nameof(config.TooltipTranslationDisplayMode),
+            ref config.TooltipTranslationDisplayMode,
+            config.OverlayOnlyLanguage,
+            ActionAndItemTooltipDisplayModeLabel,
+            ActionAndItemTooltipDisplayModeDescription);
+
+        ImGui.Spacing();
+        ImGui.TextUnformatted(HoverTooltipAppearanceSectionLabel);
+        ImGui.Separator();
+        ImGui.TextWrapped(HoverTooltipAppearanceDescription);
+
+        ImGui.Text(HoverTooltipTextColorLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            $"{HoverTooltipTextColorLabel}##Color",
+            ref config.HoverTooltipTextColor,
+            ImGuiColorEditFlags.NoInputs);
+
+        ImGui.Text(HoverTooltipBackgroundColorLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            $"{HoverTooltipBackgroundColorLabel}##Color",
+            ref config.HoverTooltipBackgroundColor,
+            ImGuiColorEditFlags.NoInputs);
+
+        changed |= ImGui.SliderFloat(
+            HoverTooltipBackgroundOpacityLabel,
+            ref config.HoverTooltipBackgroundOpacity,
+            0f,
+            1f,
+            "%.2f");
 
         return changed;
     }
@@ -104,6 +182,7 @@ public static class JournalTab
     /// <param name="displayMode">The configured display mode for the family.</param>
     /// <returns><c>true</c> when a setting changed.</returns>
     private static bool DrawQuestFamilySection(
+        Config config,
         string sectionLabel,
         ref bool enabled,
         ref JournalTranslationDisplayMode displayMode)
@@ -114,7 +193,10 @@ public static class JournalTab
         ImGui.Separator();
 
         changed |= ImGui.Checkbox(sectionLabel, ref enabled);
-        changed |= DrawQuestDisplayModeCombo(sectionLabel, ref displayMode);
+        changed |= DrawQuestDisplayModeCombo(
+            sectionLabel,
+            ref displayMode,
+            config.OverlayOnlyLanguage);
 
         return changed;
     }
@@ -127,10 +209,16 @@ public static class JournalTab
     /// <returns><c>true</c> when the combo selection changed.</returns>
     private static bool DrawQuestDisplayModeCombo(
         string comboId,
-        ref JournalTranslationDisplayMode displayMode)
+        ref JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage,
+        string? label = null,
+        string? description = null)
     {
         return TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             comboId,
-            ref displayMode);
+            ref displayMode,
+            overlayOnlyLanguage,
+            label,
+            description);
     }
 }

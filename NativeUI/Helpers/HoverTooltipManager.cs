@@ -18,6 +18,19 @@ public sealed class HoverTooltipManager
     private readonly ConcurrentDictionary<string, HoverTooltipEntry> entries = new();
     private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(30);
     private readonly ConcurrentDictionary<string, DateTime> lastHoverLogUtc = new();
+    private readonly Config config;
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="HoverTooltipManager" />
+    ///     class.
+    /// </summary>
+    /// <param name="config">
+    ///     The live plugin configuration used to style hover tooltips.
+    /// </param>
+    public HoverTooltipManager(Config config)
+    {
+        this.config = config;
+    }
 
     /// <summary>
     ///     Registers or updates a tooltip target.
@@ -154,7 +167,18 @@ public sealed class HoverTooltipManager
                 $"bounds=({hoveredEntry.TopLeft.X:0.0},{hoveredEntry.TopLeft.Y:0.0})-({hoveredEntry.BottomRight.X:0.0},{hoveredEntry.BottomRight.Y:0.0})");
         }
 
-        ImGui.SetNextWindowBgAlpha(0.95f);
+        var backgroundColor = new Vector4(
+            this.config.HoverTooltipBackgroundColor.X,
+            this.config.HoverTooltipBackgroundColor.Y,
+            this.config.HoverTooltipBackgroundColor.Z,
+            this.config.HoverTooltipBackgroundOpacity);
+        var textColor = new Vector4(
+            this.config.HoverTooltipTextColor.X,
+            this.config.HoverTooltipTextColor.Y,
+            this.config.HoverTooltipTextColor.Z,
+            1f);
+        ImGui.PushStyleColor(ImGuiCol.PopupBg, backgroundColor);
+        ImGui.PushStyleColor(ImGuiCol.Text, textColor);
         ImGui.BeginTooltip();
         try
         {
@@ -172,6 +196,7 @@ public sealed class HoverTooltipManager
         finally
         {
             ImGui.EndTooltip();
+            ImGui.PopStyleColor(2);
         }
     }
 

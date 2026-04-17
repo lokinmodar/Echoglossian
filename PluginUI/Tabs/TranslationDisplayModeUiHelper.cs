@@ -18,9 +18,8 @@ internal static class TranslationDisplayModeUiHelper
         Resources.QuestDisplayModeNativeUiTranslationWithOriginalTooltips,
     ];
 
-    private const string GenericDisplayModeLabel = "Display mode";
-    private const string GenericDisplayModeDescription =
-        "This mode controls how this translated UI is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips.";
+    private const string OverlayOnlyLanguageModeDescription =
+        "The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.";
 
     /// <summary>
     ///     Draws a shared display-mode combo.
@@ -30,22 +29,50 @@ internal static class TranslationDisplayModeUiHelper
     /// <returns><c>true</c> when the selection changed.</returns>
     public static bool DrawDisplayModeCombo(
         string comboId,
-        ref JournalTranslationDisplayMode displayMode)
+        ref JournalTranslationDisplayMode displayMode,
+        bool overlayOnlyLanguage = false,
+        string? label = null,
+        string? description = null)
     {
         var changed = false;
+        label ??= Resources.QuestDisplayModeLabel;
+        description ??= Resources.QuestDisplayModeDescription;
+
+        if (overlayOnlyLanguage &&
+            displayMode != JournalTranslationDisplayMode.TooltipTranslation)
+        {
+            displayMode = JournalTranslationDisplayMode.TooltipTranslation;
+            changed = true;
+        }
+
         var modeValue = (int)displayMode;
         ImGui.PushID(comboId);
-        if (ImGui.Combo(
-                GenericDisplayModeLabel,
+        if (overlayOnlyLanguage)
+        {
+            ImGui.BeginDisabled();
+            ImGui.Combo(
+                label,
                 ref modeValue,
                 DisplayModes,
-                DisplayModes.Length))
+                DisplayModes.Length);
+            ImGui.EndDisabled();
+        }
+        else if (ImGui.Combo(
+                     label,
+                     ref modeValue,
+                     DisplayModes,
+                     DisplayModes.Length))
         {
             displayMode = (JournalTranslationDisplayMode)modeValue;
             changed = true;
         }
 
-        ImGui.TextWrapped(GenericDisplayModeDescription);
+        ImGui.TextWrapped(description);
+        if (overlayOnlyLanguage)
+        {
+            ImGui.TextWrapped(OverlayOnlyLanguageModeDescription);
+        }
+
         ImGui.PopID();
         return changed;
     }

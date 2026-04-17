@@ -268,7 +268,7 @@ public partial class Echoglossian : IDalamudPlugin
         Sanitizer);
 
     this.queuedTranslationBroker = new QueuedTranslationBroker();
-    this.hoverTooltipManager = new HoverTooltipManager();
+    this.hoverTooltipManager = new HoverTooltipManager(this.configuration);
 
     this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 

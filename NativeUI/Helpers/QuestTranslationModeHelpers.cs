@@ -13,9 +13,12 @@ public partial class Echoglossian
   /// <param name="displayMode">The configured display mode.</param>
   /// <returns><c>true</c> when hover tooltips should be rendered.</returns>
   private static bool QuestModeUsesHoverTooltips(
-      JournalTranslationDisplayMode displayMode)
+      JournalTranslationDisplayMode displayMode,
+      bool overlayOnlyLanguage)
   {
-    return TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
+    return TranslationDisplayModeHelper.UsesHoverTooltips(
+        displayMode,
+        overlayOnlyLanguage);
   }
 
   /// <summary>
@@ -25,9 +28,12 @@ public partial class Echoglossian
   /// <param name="displayMode">The configured display mode.</param>
   /// <returns><c>true</c> when the native addon should receive translated text.</returns>
   private static bool QuestModeWritesNativeTranslation(
-      JournalTranslationDisplayMode displayMode)
+      JournalTranslationDisplayMode displayMode,
+      bool overlayOnlyLanguage)
   {
-    return TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
+    return TranslationDisplayModeHelper.WritesNativeTranslation(
+        displayMode,
+        overlayOnlyLanguage);
   }
 
   /// <summary>
@@ -37,9 +43,12 @@ public partial class Echoglossian
   /// <param name="displayMode">The configured display mode.</param>
   /// <returns><c>true</c> when hover tooltips should show the original text.</returns>
   private static bool QuestModeShowsOriginalTooltips(
-      JournalTranslationDisplayMode displayMode)
+      JournalTranslationDisplayMode displayMode,
+      bool overlayOnlyLanguage)
   {
-    return TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
+    return TranslationDisplayModeHelper.ShowsOriginalTooltips(
+        displayMode,
+        overlayOnlyLanguage);
   }
 
   /// <summary>
@@ -48,13 +57,16 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.JournalTranslationDisplayMode);
+          this.configuration.JournalTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the Journal family should use hover tooltips.
   /// </summary>
   private bool JournalUsesHoverTooltips =>
-      QuestModeUsesHoverTooltips(this.configuration.JournalTranslationDisplayMode);
+      QuestModeUsesHoverTooltips(
+          this.configuration.JournalTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the Journal family hover tooltips should show the
@@ -62,7 +74,8 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.JournalTranslationDisplayMode);
+          this.configuration.JournalTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalDetail family should write translated text
@@ -70,14 +83,16 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalDetailWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.JournalDetailTranslationDisplayMode);
+          this.configuration.JournalDetailTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalDetail family should use hover tooltips.
   /// </summary>
   private bool JournalDetailUsesHoverTooltips =>
       QuestModeUsesHoverTooltips(
-          this.configuration.JournalDetailTranslationDisplayMode);
+          this.configuration.JournalDetailTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalDetail family hover tooltips should show the
@@ -85,14 +100,16 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalDetailHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.JournalDetailTranslationDisplayMode);
+          this.configuration.JournalDetailTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ToDoList family should use hover tooltips.
   /// </summary>
   private bool ToDoListUsesHoverTooltips =>
       QuestModeUsesHoverTooltips(
-          this.configuration.ToDoListTranslationDisplayMode);
+          this.configuration.ToDoListTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ToDoList family should write translated text into the
@@ -100,7 +117,8 @@ public partial class Echoglossian
   /// </summary>
   private bool ToDoListWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.ToDoListTranslationDisplayMode);
+          this.configuration.ToDoListTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ToDoList family hover tooltips should show the
@@ -108,14 +126,16 @@ public partial class Echoglossian
   /// </summary>
   private bool ToDoListHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.ToDoListTranslationDisplayMode);
+          this.configuration.ToDoListTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ScenarioTree family should use hover tooltips.
   /// </summary>
   private bool ScenarioTreeUsesHoverTooltips =>
       QuestModeUsesHoverTooltips(
-          this.configuration.ScenarioTreeTranslationDisplayMode);
+          this.configuration.ScenarioTreeTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ScenarioTree family should write translated text into
@@ -123,7 +143,8 @@ public partial class Echoglossian
   /// </summary>
   private bool ScenarioTreeWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.ScenarioTreeTranslationDisplayMode);
+          this.configuration.ScenarioTreeTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ScenarioTree family hover tooltips should show the
@@ -131,14 +152,16 @@ public partial class Echoglossian
   /// </summary>
   private bool ScenarioTreeHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.ScenarioTreeTranslationDisplayMode);
+          this.configuration.ScenarioTreeTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the RecommendList family should use hover tooltips.
   /// </summary>
   private bool RecommendListUsesHoverTooltips =>
       QuestModeUsesHoverTooltips(
-          this.configuration.RecommendListTranslationDisplayMode);
+          this.configuration.RecommendListTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the RecommendList family should write translated text
@@ -146,7 +169,8 @@ public partial class Echoglossian
   /// </summary>
   private bool RecommendListWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.RecommendListTranslationDisplayMode);
+          this.configuration.RecommendListTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the RecommendList family hover tooltips should show the
@@ -154,14 +178,16 @@ public partial class Echoglossian
   /// </summary>
   private bool RecommendListHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.RecommendListTranslationDisplayMode);
+          this.configuration.RecommendListTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the AreaMap family should use hover tooltips.
   /// </summary>
   private bool AreaMapUsesHoverTooltips =>
       QuestModeUsesHoverTooltips(
-          this.configuration.AreaMapTranslationDisplayMode);
+          this.configuration.AreaMapTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the AreaMap family should write translated text into the
@@ -169,7 +195,8 @@ public partial class Echoglossian
   /// </summary>
   private bool AreaMapWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.AreaMapTranslationDisplayMode);
+          this.configuration.AreaMapTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the AreaMap family hover tooltips should show the
@@ -177,14 +204,16 @@ public partial class Echoglossian
   /// </summary>
   private bool AreaMapHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.AreaMapTranslationDisplayMode);
+          this.configuration.AreaMapTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalAccept family should use hover tooltips.
   /// </summary>
   private bool JournalAcceptUsesHoverTooltips =>
       QuestModeUsesHoverTooltips(
-          this.configuration.JournalAcceptTranslationDisplayMode);
+          this.configuration.JournalAcceptTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalAccept family should write translated text
@@ -192,7 +221,8 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalAcceptWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.JournalAcceptTranslationDisplayMode);
+          this.configuration.JournalAcceptTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalAccept family hover tooltips should show the
@@ -200,14 +230,16 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalAcceptHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.JournalAcceptTranslationDisplayMode);
+          this.configuration.JournalAcceptTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalResult family should use hover tooltips.
   /// </summary>
   private bool JournalResultUsesHoverTooltips =>
       QuestModeUsesHoverTooltips(
-          this.configuration.JournalResultTranslationDisplayMode);
+          this.configuration.JournalResultTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalResult family should write translated text
@@ -215,7 +247,8 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalResultWritesNativeTranslation =>
       QuestModeWritesNativeTranslation(
-          this.configuration.JournalResultTranslationDisplayMode);
+          this.configuration.JournalResultTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalResult family hover tooltips should show the
@@ -223,7 +256,8 @@ public partial class Echoglossian
   /// </summary>
   private bool JournalResultHoverShowsOriginal =>
       QuestModeShowsOriginalTooltips(
-          this.configuration.JournalResultTranslationDisplayMode);
+          this.configuration.JournalResultTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the Journal family should strip diacritics from translated

@@ -741,6 +741,21 @@
         <member name="F:Echoglossian.Config.TranslateTooltips">
             <summary>Translate UI tooltips.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TooltipTranslationDisplayMode">
+            <summary>
+                Display mode for action and item tooltips managed by the DB-first
+                tooltip runtime.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.HoverTooltipTextColor">
+            <summary>Text color used by Echoglossian hover tooltips.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.HoverTooltipBackgroundColor">
+            <summary>Background color used by Echoglossian hover tooltips.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.HoverTooltipBackgroundOpacity">
+            <summary>Background opacity used by Echoglossian hover tooltips.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateWideTextToast">
             <summary>Translate wide-format toast messages.</summary>
         </member>
@@ -2219,14 +2234,14 @@
             <param name="questRow">The Lumina quest row.</param>
             <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.QuestModeUsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.Echoglossian.QuestModeUsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether a quest-like display mode should show hover tooltips.
             </summary>
             <param name="displayMode">The configured display mode.</param>
             <returns><c>true</c> when hover tooltips should be rendered.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.QuestModeWritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.Echoglossian.QuestModeWritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether a quest-like display mode should write translated text
                 into the native addon.
@@ -2234,7 +2249,7 @@
             <param name="displayMode">The configured display mode.</param>
             <returns><c>true</c> when the native addon should receive translated text.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.QuestModeShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.Echoglossian.QuestModeShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether a quest-like display mode should show the original text
                 in hover tooltips.
@@ -10597,6 +10612,15 @@
                 Tracks hover rectangles and draws DelvUI-style tooltips on the cursor.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.#ctor(Echoglossian.Config)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.HoverTooltipManager" />
+                class.
+            </summary>
+            <param name="config">
+                The live plugin configuration used to style hover tooltips.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Register(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean)">
             <summary>
                 Registers or updates a tooltip target.
@@ -10982,27 +11006,51 @@
                 Shared helpers for per-addon translation display modes.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.GetEffectiveDisplayMode(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Resolves the effective display mode after applying language
+                limitations that forbid native UI mutation.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language only supports overlays and custom
+                tooltips.
+            </param>
+            <returns>The effective runtime display mode.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether a display mode should register hover tooltips.
             </summary>
             <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language only supports overlays and custom
+                tooltips.
+            </param>
             <returns><c>true</c> when hover tooltips should be used.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether a display mode should write translated text into the
                 native addon.
             </summary>
             <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language only supports overlays and custom
+                tooltips.
+            </param>
             <returns><c>true</c> when native text should be rewritten.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether hover tooltips should show the original text rather than
                 the translated text.
             </summary>
             <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language only supports overlays and custom
+                tooltips.
+            </param>
             <returns><c>true</c> when hover tooltips should show the original text.</returns>
         </member>
         <member name="T:Echoglossian.SummaryQuest">
@@ -11680,7 +11728,15 @@
             <param name="config">The current plugin configuration.</param>
             <returns><c>true</c> when a setting changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestFamilySection(System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawTooltipSection(Echoglossian.Config)">
+            <summary>
+                Draws the action/item tooltip mode and the shared hover-tooltip
+                appearance settings.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <returns><c>true</c> when a setting changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestFamilySection(Echoglossian.Config,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@)">
             <summary>
                 Draws a quest family settings section with an enable toggle and
                 display mode combo.
@@ -11690,7 +11746,7 @@
             <param name="displayMode">The configured display mode for the family.</param>
             <returns><c>true</c> when a setting changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@,System.Boolean,System.String,System.String)">
             <summary>
                 Draws the generic quest display mode combo and description text.
             </summary>
@@ -11792,7 +11848,7 @@
                 surfaces.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationDisplayModeUiHelper.DrawDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationDisplayModeUiHelper.DrawDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@,System.Boolean,System.String,System.String)">
             <summary>
                 Draws a shared display-mode combo.
             </summary>

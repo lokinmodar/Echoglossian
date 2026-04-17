@@ -199,7 +199,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
-        var displayMode = this.displayModeSelector(this.config);
+        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
+            this.displayModeSelector(this.config),
+            this.config.OverlayOnlyLanguage);
         if (!TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
         {
             this.RestoreOriginalPayloadIfNeeded();

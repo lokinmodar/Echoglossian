@@ -341,4 +341,8 @@
     <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Echoglossian.Tests" />
+  </ItemGroup>
+
 </Project>

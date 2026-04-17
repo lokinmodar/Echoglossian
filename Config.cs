@@ -630,6 +630,25 @@ public class Config : IPluginConfiguration
   /// <summary>Translate UI tooltips.</summary>
   [DefaultValue(false)] public bool TranslateTooltips = false;
 
+  /// <summary>
+  ///     Display mode for action and item tooltips managed by the DB-first
+  ///     tooltip runtime.
+  /// </summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode TooltipTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Text color used by Echoglossian hover tooltips.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 HoverTooltipTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Background color used by Echoglossian hover tooltips.</summary>
+  [DefaultValue(typeof(Vector3), "0.08, 0.08, 0.08")]
+  public Vector3 HoverTooltipBackgroundColor = new(0.08f, 0.08f, 0.08f);
+
+  /// <summary>Background opacity used by Echoglossian hover tooltips.</summary>
+  [DefaultValue(0.95f)] public float HoverTooltipBackgroundOpacity = 0.95f;
+
   /// <summary>Translate wide-format toast messages.</summary>
   [DefaultValue(false)] public bool TranslateWideTextToast = false;
 

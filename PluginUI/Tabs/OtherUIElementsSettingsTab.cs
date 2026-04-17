@@ -37,7 +37,8 @@ public static class OtherUIElementsSettingsTab
             ref config.TranslateCharacterWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.CharacterWindowTranslationDisplayMode),
-            ref config.CharacterWindowTranslationDisplayMode);
+            ref config.CharacterWindowTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
@@ -45,7 +46,8 @@ public static class OtherUIElementsSettingsTab
             ref config.TranslateMainCommandWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.MainCommandWindowTranslationDisplayMode),
-            ref config.MainCommandWindowTranslationDisplayMode);
+            ref config.MainCommandWindowTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
@@ -53,7 +55,8 @@ public static class OtherUIElementsSettingsTab
             ref config.TranslateHudWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.HudWindowTranslationDisplayMode),
-            ref config.HudWindowTranslationDisplayMode);
+            ref config.HudWindowTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
@@ -61,7 +64,8 @@ public static class OtherUIElementsSettingsTab
             ref config.TranslateOperationGuideWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.OperationGuideTranslationDisplayMode),
-            ref config.OperationGuideTranslationDisplayMode);
+            ref config.OperationGuideTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
@@ -69,7 +73,8 @@ public static class OtherUIElementsSettingsTab
             ref config.TranslateAddonContextMenuTitle);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.AddonContextMenuTitleTranslationDisplayMode),
-            ref config.AddonContextMenuTitleTranslationDisplayMode);
+            ref config.AddonContextMenuTitleTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
 
         if (changed)
         {

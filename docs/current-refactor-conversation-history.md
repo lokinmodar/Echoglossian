@@ -2056,3 +2056,31 @@ The main active problems are:
 - Then decide whether the same dropdown pattern should be extended further to
   older overlay-heavy families, or kept scoped to the DB-first surfaces that
   now share one runtime.
+
+### 2026-04-17 - Uncommitted working-tree checkpoint - display-mode clamping and hover tooltip styling
+
+**What changed**
+
+- Added a shared effective-mode rule so `OverlayOnlyLanguage` now collapses
+  quest-family surfaces, DB-first window surfaces, and action/item tooltips
+  into tooltip-only behavior instead of allowing native-write modes to linger
+  in config.
+- Extended the config UI with a dedicated action/item tooltip display-mode
+  dropdown.
+- Added configurable hover-tooltip text color, background color, and background
+  opacity.
+- Switched the hover-tooltip manager to read those colors from config instead
+  of using hardcoded styling.
+
+**Why it changed**
+
+- The user wanted native-font-limited languages to react consistently in both
+  UI and runtime, rather than relying on the dropdown selection alone.
+- The user also wanted global style control for Echoglossian-owned tooltips.
+
+**Next step**
+
+- Validate the new dropdown behavior in-game for overlay-only languages.
+- Validate the action/item tooltip mode dropdown against native-only,
+  tooltip-only, and swap behavior.
+- Validate hover-tooltip color settings in quest and DB-first UI surfaces.

@@ -123,9 +123,13 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var useOverlayOnly = this.configuration.OverlayOnlyLanguage;
+        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
+            this.configuration.TooltipTranslationDisplayMode,
+            this.configuration.OverlayOnlyLanguage);
+        var useOverlayOnly =
+            !TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
         var useSwapOverlay =
-            !useOverlayOnly && this.configuration.SwapTextsUsingImGui;
+            TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
 
         if (useOverlayOnly)
         {
@@ -204,9 +208,13 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var useOverlayOnly = this.configuration.OverlayOnlyLanguage;
+        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
+            this.configuration.TooltipTranslationDisplayMode,
+            this.configuration.OverlayOnlyLanguage);
+        var useOverlayOnly =
+            !TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
         var useSwapOverlay =
-            !useOverlayOnly && this.configuration.SwapTextsUsingImGui;
+            TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
 
         if (useOverlayOnly)
         {
