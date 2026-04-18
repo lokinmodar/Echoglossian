@@ -63,10 +63,14 @@ public unsafe partial class Echoglossian
     {
         this.DrawStructuredTooltipOverlay(
             this.actionTooltipOverlay,
-            this.BuildTooltipOverlayConfig("Action tooltip translation"));
+            this.BuildTooltipOverlayConfig(
+                TranslationOverlaySurfaceId.ActionTooltip,
+                Resources.OverlayWindowTitleActionTooltipTranslation));
         this.DrawStructuredTooltipOverlay(
             this.itemTooltipOverlay,
-            this.BuildTooltipOverlayConfig("Item tooltip translation"));
+            this.BuildTooltipOverlayConfig(
+                TranslationOverlaySurfaceId.ItemTooltip,
+                Resources.OverlayWindowTitleItemTooltipTranslation));
     }
 
     /// <summary>
@@ -660,11 +664,15 @@ public unsafe partial class Echoglossian
     /// <summary>
     ///     Builds the shared overlay configuration used by structured tooltips.
     /// </summary>
+    /// <param name="surfaceId">The stable overlay surface identifier.</param>
     /// <param name="defaultTitle">The default overlay title.</param>
     /// <returns>The overlay configuration.</returns>
-    private TranslationWindowConfig BuildTooltipOverlayConfig(string defaultTitle)
+    private TranslationWindowConfig BuildTooltipOverlayConfig(
+        TranslationOverlaySurfaceId surfaceId,
+        string defaultTitle)
     {
         return new TranslationWindowConfig(
+            SurfaceId: surfaceId,
             DefaultTitle: defaultTitle,
             FontScale: 1.0f,
             WidthMultiplier: 1.0f,

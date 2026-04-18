@@ -5,7 +5,57 @@
 
 namespace Echoglossian.UIOverlays.TranslationOverlay;
 
+/// <summary>
+///     Identifies one overlay surface using a stable internal key that does not
+///     depend on localized titles.
+/// </summary>
+internal enum TranslationOverlaySurfaceId
+{
+    /// <summary>Talk overlay.</summary>
+    Talk,
+
+    /// <summary>BattleTalk overlay.</summary>
+    BattleTalk,
+
+    /// <summary>TalkSubtitle overlay.</summary>
+    TalkSubtitle,
+
+    /// <summary>MiniTalk overlay.</summary>
+    MiniTalk,
+
+    /// <summary>CutSceneSelectString overlay.</summary>
+    CutSceneSelectString,
+
+    /// <summary>Text Gimmick Hint overlay.</summary>
+    TextGimmickHint,
+
+    /// <summary>Screen Info (_WideText) toast overlay.</summary>
+    WideTextToast,
+
+    /// <summary>Error toast overlay.</summary>
+    ErrorToast,
+
+    /// <summary>Area toast overlay.</summary>
+    AreaToast,
+
+    /// <summary>Class / Job change toast overlay.</summary>
+    ClassChangeToast,
+
+    /// <summary>Quest toast overlay.</summary>
+    QuestToast,
+
+    /// <summary>Chat bubble overlay.</summary>
+    ChatBubble,
+
+    /// <summary>Action tooltip overlay.</summary>
+    ActionTooltip,
+
+    /// <summary>Item tooltip overlay.</summary>
+    ItemTooltip,
+}
+
 internal record TranslationWindowConfig(
+    TranslationOverlaySurfaceId SurfaceId,
     string DefaultTitle,
     float FontScale,
     float WidthMultiplier,
@@ -31,7 +81,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForTalk(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Talk translation",
+        SurfaceId: TranslationOverlaySurfaceId.Talk,
+        DefaultTitle: Resources.OverlayWindowTitleTalkTranslation,
         FontScale: config.TalkFontScale,
         WidthMultiplier: config.ImGuiTalkWindowWidthMult,
         HeightMultiplier: config.ImGuiTalkWindowHeightMult,
@@ -49,7 +100,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForBattleTalk(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "BattleTalk translation",
+        SurfaceId: TranslationOverlaySurfaceId.BattleTalk,
+        DefaultTitle: Resources.OverlayWindowTitleBattleTalkTranslation,
         FontScale: config.BattleTalkFontScale,
         WidthMultiplier: config.ImGuiBattleTalkWindowWidthMult,
         HeightMultiplier: config.ImGuiBattleTalkWindowHeightMult,
@@ -71,7 +123,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigTalkSubtitle(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Talk Subtitle translation",
+        SurfaceId: TranslationOverlaySurfaceId.TalkSubtitle,
+        DefaultTitle: Resources.OverlayWindowTitleTalkSubtitleTranslation,
         FontScale: config.TalkSubtitleFontScale,
         WidthMultiplier: config.ImGuiTalkSubtitleWindowWidthMult,
         HeightMultiplier: config.ImGuiTalkSubtitleWindowHeightMult,
@@ -88,7 +141,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForMiniTalk(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "MiniTalk translation",
+        SurfaceId: TranslationOverlaySurfaceId.MiniTalk,
+        DefaultTitle: Resources.OverlayWindowTitleMiniTalkTranslation,
         FontScale: config.MiniTalkFontScale,
         WidthMultiplier: config.ImGuiMiniTalkWindowWidthMult,
         HeightMultiplier: 1.0f,
@@ -109,7 +163,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForCutSceneSelectString(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "CutSceneSelectString translation",
+        SurfaceId: TranslationOverlaySurfaceId.CutSceneSelectString,
+        DefaultTitle: Resources.OverlayWindowTitleCutSceneSelectStringTranslation,
         FontScale: config.CutSceneSelectStringFontScale,
         WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
         HeightMultiplier: 1.5f,
@@ -130,7 +185,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForTextGimmickHint(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Text Gimmick Hint translation",
+        SurfaceId: TranslationOverlaySurfaceId.TextGimmickHint,
+        DefaultTitle: Resources.OverlayWindowTitleTextGimmickHintTranslation,
         FontScale: config.TextGimmickHintFontScale,
         WidthMultiplier: config.ImGuiTextGimmickHintWindowWidthMult,
         HeightMultiplier: config.ImGuiTextGimmickHintWindowHeightMult,
@@ -163,7 +219,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForWideTextToast(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Screen Info toast translation",
+        SurfaceId: TranslationOverlaySurfaceId.WideTextToast,
+        DefaultTitle: Resources.OverlayWindowTitleWideTextToastTranslation,
         FontScale: config.WideTextToastFontScale,
         WidthMultiplier: config.ImGuiWideTextToastWindowWidthMult,
         HeightMultiplier: 2.0f,
@@ -183,7 +240,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForErrorToast(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Error Toast translation",
+        SurfaceId: TranslationOverlaySurfaceId.ErrorToast,
+        DefaultTitle: Resources.OverlayWindowTitleErrorToastTranslation,
         FontScale: config.ErrorToastFontScale,
         WidthMultiplier: config.ImGuiErrorToastWindowWidthMult,
         HeightMultiplier: 2.0f,
@@ -205,7 +263,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForAreaToast(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Area toast translation",
+        SurfaceId: TranslationOverlaySurfaceId.AreaToast,
+        DefaultTitle: Resources.OverlayWindowTitleAreaToastTranslation,
         FontScale: config.AreaToastFontScale,
         WidthMultiplier: config.ImGuiAreaToastWindowWidthMult,
         HeightMultiplier: 2.0f,
@@ -228,7 +287,8 @@ internal record TranslationWindowConfig(
       Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Class/Job toast translation",
+        SurfaceId: TranslationOverlaySurfaceId.ClassChangeToast,
+        DefaultTitle: Resources.OverlayWindowTitleClassJobToastTranslation,
         FontScale: config.ClassChangeToastFontScale,
         WidthMultiplier: config.ImGuiClassChangeToastWindowWidthMult,
         HeightMultiplier: 2.0f,
@@ -250,7 +310,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForQuestToast(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "Quest toast translation",
+        SurfaceId: TranslationOverlaySurfaceId.QuestToast,
+        DefaultTitle: Resources.OverlayWindowTitleQuestToastTranslation,
         FontScale: config.QuestToastFontScale,
         WidthMultiplier: config.ImGuiQuestToastWindowWidthMult,
         HeightMultiplier: 2.0f,
@@ -270,7 +331,8 @@ internal record TranslationWindowConfig(
   public static TranslationWindowConfig FromConfigForChatBubble(Config config)
   {
     return new TranslationWindowConfig(
-        DefaultTitle: "ChatBubble translation",
+        SurfaceId: TranslationOverlaySurfaceId.ChatBubble,
+        DefaultTitle: Resources.OverlayWindowTitleChatBubbleTranslation,
         FontScale: config.TalkFontScale,
         WidthMultiplier: 1.0f,
         HeightMultiplier: 1.5f,

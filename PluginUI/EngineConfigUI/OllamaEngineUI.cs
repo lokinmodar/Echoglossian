@@ -19,14 +19,14 @@ public static class OllamaEngineUI
 
         bool isEndpointInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
-            "Ollama API Endpoint",
+            Resources.APIEndpoint,
             ref config.OllamaUrl,
             300,
             out isEndpointInvalid);
 
         var previous = config.UseLiveOllamaModelList;
         if (ImGui.Checkbox(
-                "Fetch Ollama models from Docker",
+                Resources.FetchLiveModels,
                 ref config.UseLiveOllamaModelList))
         {
             changed = true;
@@ -46,7 +46,7 @@ public static class OllamaEngineUI
         {
             ImGui.TextColored(
                 new Vector4(1f, 0.4f, 0.4f, 1f),
-                "Could not fetch models. Is Ollama running locally?");
+                Resources.CouldNotFetchOllamaModels);
         }
 
         var models = config.UseLiveOllamaModelList
@@ -54,14 +54,14 @@ public static class OllamaEngineUI
             : OllamaTextModelDefaults.PredefinedModels;
 
         changed |= ModelDropdownUI.Draw(
-            "Model",
+            Resources.Model,
             ref config.OllamaModel,
             models,
             "Ollama",
             OllamaModelManager.GetTooltips());
 
         var temp = config.OllamaTemperature;
-        if (ImGui.SliderFloat("Temperature", ref temp, 0.1f, 1.0f, "%.1f"))
+        if (ImGui.SliderFloat(Resources.Temperature, ref temp, 0.1f, 1.0f, "%.1f"))
         {
             config.OllamaTemperature = temp;
             changed = true;

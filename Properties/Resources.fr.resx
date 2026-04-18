@@ -648,4 +648,97 @@
   <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
     <value>La pré-traduction en arrière-plan est terminée pour {0} quêtes acceptées.</value>
   </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Ce mode contrôle la manière dont le texte traduit est présenté. L’interface native écrit directement dans l’addon du jeu, le mode overlay uniquement laisse l’addon natif intact, et le mode natif avec overlay original écrit la traduction nativement tout en affichant l’original dans l’overlay.</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Traduction par overlay uniquement</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Traduction UI native + overlay original</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>La langue sélectionnée n’est pas prise en charge par la police native du jeu, cette surface est donc limitée aux overlays et tooltips personnalisés d’Echoglossian.</value>
+  </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Infobulles d’actions et d’objets</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Mode d’affichage des infobulles</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Ce mode contrôle les infobulles d’actions et d’objets. L’UI native écrit l’infobulle traduite directement dans l’infobulle du jeu, le mode infobulle uniquement laisse l’infobulle native intacte et utilise les overlays d’Echoglossian, et le mode natif avec infobulles originales écrit la traduction nativement tout en affichant l’original dans notre overlay.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Apparence des infobulles au survol</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Couleur du texte de l’infobulle</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Couleur de fond de l’infobulle</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Opacité du fond de l’infobulle</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Ces couleurs s’appliquent aux infobulles Echoglossian utilisées par les quêtes et les surfaces UI DB-first.</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Traduire Main Command</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Traduire les fenêtres HUD</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Traduire Operation Guide</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Traduire le titre du menu contextuel de l’addon</value>
+  </data>
+  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
+    <value>Traduction Talk</value>
+  </data>
+  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
+    <value>Traduction BattleTalk</value>
+  </data>
+  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
+    <value>Traduction Talk Subtitle</value>
+  </data>
+  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
+    <value>Traduction MiniTalk</value>
+  </data>
+  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
+    <value>Traduction CutSceneSelectString</value>
+  </data>
+  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
+    <value>Traduction Text Gimmick Hint</value>
+  </data>
+  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
+    <value>Traduction toast Screen Info</value>
+  </data>
+  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
+    <value>Traduction Error Toast</value>
+  </data>
+  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
+    <value>Traduction Area toast</value>
+  </data>
+  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
+    <value>Traduction toast Class/Job</value>
+  </data>
+  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
+    <value>Traduction Quest toast</value>
+  </data>
+  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
+    <value>Traduction ChatBubble</value>
+  </data>
+  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
+    <value>Traduction Action tooltip</value>
+  </data>
+  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
+    <value>Traduction Item tooltip</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Impossible de récupérer les modèles. Ollama est-il lancé localement ?</value>
+  </data>
 </root>

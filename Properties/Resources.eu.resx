@@ -648,4 +648,97 @@
   <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
     <value>Atzeko planoko aurreitzulpena amaitu da onartutako {0} egitekoentzat.</value>
   </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Modu honek itzulitako testua nola aurkezten den kontrolatzen du. Native UI-k zuzenean idazten du jokoaren addon-ean, overlay-soilik moduak jatorrizko addon-a ukitu gabe uzten du, eta jatorrizko-overlayarekin native moduak itzulpena natiboki idazten du, jatorrizkoa overlayan erakutsiz.</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Overlay bidezko itzulpena soilik</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI itzulpena + jatorrizko overlaya</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>Hautatutako hizkuntzak ez du jokoaren jatorrizko letra-tipoa onartzen; beraz, azalera hau Echoglossian overlay eta tooltip pertsonalizatuetara mugatzen da.</value>
+  </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Ekintza eta item tooltipak</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Tooltip bistaratzeko modua</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Modu honek ekintza eta item tooltipak kontrolatzen ditu. Native UI-k itzulitako tooltipa zuzenean jokoaren tooltipean idazten du, tooltip-soilik moduak jatorrizko tooltipa ukitu gabe uzten du eta Echoglossian overlayak erabiltzen ditu, eta native-jatorrizko-tooltips moduak itzulpena natiboki idazten du jatorrizkoa gure overlayan erakutsiz.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Hover tooltipen itxura</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Tooltip testuaren kolorea</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Tooltip atzeko planoaren kolorea</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Tooltip atzeko planoaren opakutasuna</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Kolore hauek quest eta DB-first UI gainazalek erabiltzen dituzten Echoglossian hover tooltipetan aplikatzen dira.</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Main Command itzuli</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>HUD leihoak itzuli</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Operation Guide itzuli</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Addon testuinguru-menuko titulua itzuli</value>
+  </data>
+  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
+    <value>Talk itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
+    <value>BattleTalk itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
+    <value>Talk Subtitle itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
+    <value>MiniTalk itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
+    <value>CutSceneSelectString itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
+    <value>Text Gimmick Hint itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
+    <value>Screen Info toast itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
+    <value>Error Toast itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
+    <value>Area toast itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
+    <value>Class/Job toast itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
+    <value>Quest toast itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
+    <value>ChatBubble itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
+    <value>Action tooltip itzulpena</value>
+  </data>
+  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
+    <value>Item tooltip itzulpena</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Ezin izan dira modeloak eskuratu. Ollama lokalean martxan al dago?</value>
+  </data>
 </root>

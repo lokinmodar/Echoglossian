@@ -18,9 +18,6 @@ internal static class TranslationDisplayModeUiHelper
         Resources.QuestDisplayModeNativeUiTranslationWithOriginalTooltips,
     ];
 
-    private const string OverlayOnlyLanguageModeDescription =
-        "The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.";
-
     /// <summary>
     ///     Draws a shared display-mode combo.
     /// </summary>
@@ -78,7 +75,7 @@ internal static class TranslationDisplayModeUiHelper
         ImGui.TextWrapped(description);
         if (overlayOnlyLanguage)
         {
-            ImGui.TextWrapped(OverlayOnlyLanguageModeDescription);
+            ImGui.TextWrapped(Resources.OverlayOnlyLanguageModeDescription);
         }
 
         ImGui.PopID();

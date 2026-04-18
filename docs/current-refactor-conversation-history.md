@@ -2131,3 +2131,54 @@ The main active problems are:
   another is overlay-only, and another is swap.
 - If runtime issues appear, fix them surface-by-surface rather than reopening
   the shared global swap model.
+
+## 2026-04-17 23:59:44 -03:00 - Resources extraction follow-up
+
+**What changed**
+
+- Removed the abandoned `LocalizedResources` detour and kept resource access
+  on the standard `Resources.SomeString` path expected by the project.
+- Extracted the new user-facing strings introduced by the mode-selector and
+  tooltip/overlay work into `Resources.resx` and all configured localized
+  `Resources.*.resx` files:
+  - overlay display mode labels/descriptions
+  - action/item tooltip section labels
+  - hover tooltip appearance labels
+  - DB-first UI surface toggle labels
+  - overlay window titles for translated surfaces
+- Reworked
+  [TranslationWindowConfig](/C:/Dante/_dalamud/Echoglossian/UIOverlays/TranslationOverlay/TranslationWindowConfig.cs)
+  and
+  [TranslationOverlayDrawer](/C:/Dante/_dalamud/Echoglossian/UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs)
+  so overlay logic keys off a stable `SurfaceId` instead of matching hardcoded
+  English window titles.
+- Cleaned a small follow-up pass in
+  [OpenRouterEngineUI](/C:/Dante/_dalamud/Echoglossian/PluginUI/EngineConfigUI/OpenRouterEngineUI.cs)
+  and
+  [OllamaEngineUI](/C:/Dante/_dalamud/Echoglossian/PluginUI/EngineConfigUI/OllamaEngineUI.cs)
+  to reuse existing `Resources` labels and extract the remaining
+  user-facing Ollama fetch error.
+- Updated
+  [Resources.Designer.cs](/C:/Dante/_dalamud/Echoglossian/Properties/Resources.Designer.cs)
+  so the new keys compile correctly in the current CLI environment.
+
+**Why it changed**
+
+- The user explicitly called out that `Resources.SomeString` is the correct
+  access pattern and that an extra localization helper was unnecessary.
+- New mode selector work had introduced several fresh hardcoded labels and
+  titles that would otherwise remain untranslated.
+- Overlay logic was still coupling runtime decisions to English titles, which
+  would become brittle once those titles were localized.
+- The local CLI build does not have the MAT design-time generation step
+  available, so the strongly typed designer had to be brought in sync
+  manually for validation.
+
+**Next step**
+
+- Keep using `Resources.*` directly for future UI/resource extraction work.
+- When the user can test again, verify that the affected config tabs and
+  overlay titles render localized strings correctly.
+- If more hardcoded user-facing labels show up in untouched engine/config
+  panels, extract them incrementally rather than introducing another helper
+  layer.

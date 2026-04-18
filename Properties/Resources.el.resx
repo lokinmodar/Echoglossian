@@ -648,4 +648,97 @@
   <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
     <value>Η προμετάφραση στο παρασκήνιο ολοκληρώθηκε για {0} αποδεκτές αποστολές.</value>
   </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Αυτή η λειτουργία ελέγχει πώς παρουσιάζεται το μεταφρασμένο κείμενο. Το Native UI γράφει απευθείας στο addon του παιχνιδιού, η λειτουργία μόνο overlay αφήνει το native addon ανέπαφο και η λειτουργία native με αρχικό overlay γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στο overlay.</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Μετάφραση μόνο σε overlay</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Μετάφραση Native UI + αρχικό overlay</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>Η επιλεγμένη γλώσσα δεν υποστηρίζει την εγγενή γραμματοσειρά του παιχνιδιού, οπότε αυτή η επιφάνεια περιορίζεται σε overlays και προσαρμοσμένα tooltips του Echoglossian.</value>
+  </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Tooltips ενεργειών και αντικειμένων</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Λειτουργία εμφάνισης tooltip</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Αυτή η λειτουργία ελέγχει τα tooltips ενεργειών και αντικειμένων. Το Native UI γράφει το μεταφρασμένο tooltip απευθείας στο tooltip του παιχνιδιού, η λειτουργία μόνο tooltip αφήνει το native tooltip ανέπαφο και χρησιμοποιεί overlays του Echoglossian, και η λειτουργία native με αρχικά tooltips γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στο δικό μας overlay.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Εμφάνιση hover tooltips</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Χρώμα κειμένου tooltip</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Χρώμα φόντου tooltip</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Αδιαφάνεια φόντου tooltip</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Αυτά τα χρώματα εφαρμόζονται στα hover tooltips του Echoglossian που χρησιμοποιούνται από quests και επιφάνειες DB-first UI.</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Μετάφραση Main Command</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Μετάφραση παραθύρων HUD</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Μετάφραση Operation Guide</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Μετάφραση τίτλου μενού περιβάλλοντος addon</value>
+  </data>
+  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
+    <value>Μετάφραση Talk</value>
+  </data>
+  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
+    <value>Μετάφραση BattleTalk</value>
+  </data>
+  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
+    <value>Μετάφραση Talk Subtitle</value>
+  </data>
+  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
+    <value>Μετάφραση MiniTalk</value>
+  </data>
+  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
+    <value>Μετάφραση CutSceneSelectString</value>
+  </data>
+  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
+    <value>Μετάφραση Text Gimmick Hint</value>
+  </data>
+  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
+    <value>Μετάφραση toast Screen Info</value>
+  </data>
+  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
+    <value>Μετάφραση Error Toast</value>
+  </data>
+  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
+    <value>Μετάφραση Area toast</value>
+  </data>
+  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
+    <value>Μετάφραση Class/Job toast</value>
+  </data>
+  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
+    <value>Μετάφραση Quest toast</value>
+  </data>
+  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
+    <value>Μετάφραση ChatBubble</value>
+  </data>
+  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
+    <value>Μετάφραση Action tooltip</value>
+  </data>
+  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
+    <value>Μετάφραση Item tooltip</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Δεν ήταν δυνατή η λήψη των μοντέλων. Εκτελείται το Ollama τοπικά;</value>
+  </data>
 </root>

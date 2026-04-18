@@ -23,21 +23,21 @@ public static class OpenRouterEngineUI
 
         bool isApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
-            "API Key",
+            Resources.APIKey,
             ref config.OpenRouterApiKey,
             300,
             out isApiKeyInvalid);
 
         bool isBaseUrlInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
-            "Model Endpoint",
+            Resources.ModelEndpoint,
             ref config.OpenRouterBaseUrl,
             400,
             out isBaseUrlInvalid);
 
         // Live model list toggle
         var newToggle = config.UseLiveOpenRouterModelList;
-        if (ImGui.Checkbox("Use Live Model List", ref newToggle))
+        if (ImGui.Checkbox(Resources.FetchLiveModels, ref newToggle))
         {
             config.UseLiveOpenRouterModelList = newToggle;
             changed = true;
@@ -61,13 +61,13 @@ public static class OpenRouterEngineUI
 
         // Dropdown model selection
         changed |= ModelDropdownUI.Draw(
-            "LLM Model",
+            Resources.LLMModel,
             ref config.OpenRouterModel,
             models,
             "OpenRouter");
 
         var temp = config.OpenRouterTemperature;
-        if (ImGui.SliderFloat("Temperature", ref temp, 0.1f, 1.0f, "%.1f"))
+        if (ImGui.SliderFloat(Resources.Temperature, ref temp, 0.1f, 1.0f, "%.1f"))
         {
             config.OpenRouterTemperature = temp;
             changed = true;

@@ -621,7 +621,7 @@ namespace Echoglossian
 
       overlay.ImGuiSize = ImGui.GetWindowSize();
       this.TraceOverlayRenderOnce(config, overlay, windowLabel, renderedWindowPos, textWidth, width);
-      if (config.DefaultTitle.StartsWith("Screen Info", StringComparison.OrdinalIgnoreCase))
+      if (config.SurfaceId == TranslationOverlaySurfaceId.WideTextToast)
       {
         // PluginLog.Debug(
         //     $"Rendered toast overlay '{windowLabel}' at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##})");
@@ -629,8 +629,7 @@ namespace Echoglossian
       ImGui.PopStyleColor(1);
       ImGui.End();
 
-      if (config.DefaultTitle.Contains("toast", StringComparison.OrdinalIgnoreCase) ||
-          config.DefaultTitle.Contains("gimmick hint", StringComparison.OrdinalIgnoreCase))
+      if (this.IsToastLikeOverlaySurface(config.SurfaceId))
       {
         // PluginLog.Debug(
         //     $"Rendered overlay '{windowLabel}' at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) " +
@@ -659,7 +658,7 @@ namespace Echoglossian
         float textWidth,
         float windowWidth)
     {
-      if (!config.DefaultTitle.Contains("CutSceneSelectString", StringComparison.OrdinalIgnoreCase))
+      if (config.SurfaceId != TranslationOverlaySurfaceId.CutSceneSelectString)
       {
         return;
       }
@@ -695,25 +694,44 @@ namespace Echoglossian
     /// </returns>
     private bool ShouldUseGeneralOverlayFont(TranslationWindowConfig config)
     {
-      var displayMode = config.DefaultTitle switch
+      var displayMode = config.SurfaceId switch
       {
-        "Talk translation" => this.configuration.TalkTranslationDisplayMode,
-        "BattleTalk translation" => this.configuration.BattleTalkTranslationDisplayMode,
-        "Talk Subtitle translation" => this.configuration.TalkSubtitleTranslationDisplayMode,
-        "MiniTalk translation" => this.configuration.MiniTalkTranslationDisplayMode,
-        "CutSceneSelectString translation" => this.configuration.CutSceneSelectStringTranslationDisplayMode,
-        "Text Gimmick Hint translation" => this.configuration.TextGimmickHintTranslationDisplayMode,
-        "Screen Info toast translation" => this.configuration.WideTextToastTranslationDisplayMode,
-        "Error Toast translation" => this.configuration.ErrorToastTranslationDisplayMode,
-        "Area toast translation" => this.configuration.AreaToastTranslationDisplayMode,
-        "Class/Job toast translation" => this.configuration.ClassChangeToastTranslationDisplayMode,
-        "Quest toast translation" => this.configuration.QuestToastTranslationDisplayMode,
+        TranslationOverlaySurfaceId.Talk => this.configuration.TalkTranslationDisplayMode,
+        TranslationOverlaySurfaceId.BattleTalk => this.configuration.BattleTalkTranslationDisplayMode,
+        TranslationOverlaySurfaceId.TalkSubtitle => this.configuration.TalkSubtitleTranslationDisplayMode,
+        TranslationOverlaySurfaceId.MiniTalk => this.configuration.MiniTalkTranslationDisplayMode,
+        TranslationOverlaySurfaceId.CutSceneSelectString => this.configuration.CutSceneSelectStringTranslationDisplayMode,
+        TranslationOverlaySurfaceId.TextGimmickHint => this.configuration.TextGimmickHintTranslationDisplayMode,
+        TranslationOverlaySurfaceId.WideTextToast => this.configuration.WideTextToastTranslationDisplayMode,
+        TranslationOverlaySurfaceId.ErrorToast => this.configuration.ErrorToastTranslationDisplayMode,
+        TranslationOverlaySurfaceId.AreaToast => this.configuration.AreaToastTranslationDisplayMode,
+        TranslationOverlaySurfaceId.ClassChangeToast => this.configuration.ClassChangeToastTranslationDisplayMode,
+        TranslationOverlaySurfaceId.QuestToast => this.configuration.QuestToastTranslationDisplayMode,
         _ => JournalTranslationDisplayMode.TooltipTranslation,
       };
 
       return NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
           displayMode,
           this.configuration.OverlayOnlyLanguage);
+    }
+
+    /// <summary>
+    ///     Gets whether the specified surface behaves like one of the toast-style
+    ///     overlays for diagnostics and layout tracing.
+    /// </summary>
+    /// <param name="surfaceId">The overlay surface identifier.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the overlay belongs to the toast/gimmick
+    ///     family; otherwise, <see langword="false" />.
+    /// </returns>
+    private bool IsToastLikeOverlaySurface(TranslationOverlaySurfaceId surfaceId)
+    {
+      return surfaceId is TranslationOverlaySurfaceId.TextGimmickHint
+          or TranslationOverlaySurfaceId.WideTextToast
+          or TranslationOverlaySurfaceId.ErrorToast
+          or TranslationOverlaySurfaceId.AreaToast
+          or TranslationOverlaySurfaceId.ClassChangeToast
+          or TranslationOverlaySurfaceId.QuestToast;
     }
   }
 }

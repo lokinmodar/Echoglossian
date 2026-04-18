@@ -10,23 +10,6 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class JournalTab
 {
-    private const string ActionAndItemTooltipSectionLabel =
-        "Action and item tooltips";
-    private const string ActionAndItemTooltipDisplayModeLabel =
-        "Tooltip display mode";
-    private const string ActionAndItemTooltipDisplayModeDescription =
-        "This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.";
-    private const string HoverTooltipAppearanceSectionLabel =
-        "Hover tooltip appearance";
-    private const string HoverTooltipTextColorLabel =
-        "Tooltip text color";
-    private const string HoverTooltipBackgroundColorLabel =
-        "Tooltip background color";
-    private const string HoverTooltipBackgroundOpacityLabel =
-        "Tooltip background opacity";
-    private const string HoverTooltipAppearanceDescription =
-        "These colors apply to Echoglossian hover tooltips used by quest and DB-first UI surfaces.";
-
     /// <summary>
     ///     Draws the Journal settings tab.
     /// </summary>
@@ -134,37 +117,39 @@ public static class JournalTab
         var changed = false;
 
         ImGui.Spacing();
-        ImGui.TextUnformatted(ActionAndItemTooltipSectionLabel);
+        ImGui.TextUnformatted(Resources.ActionAndItemTooltipsSectionLabel);
         ImGui.Separator();
 
         changed |= DrawQuestDisplayModeCombo(
             nameof(config.TooltipTranslationDisplayMode),
             ref config.TooltipTranslationDisplayMode,
             config.OverlayOnlyLanguage,
-            ActionAndItemTooltipDisplayModeLabel,
-            ActionAndItemTooltipDisplayModeDescription);
+            Resources.ActionAndItemTooltipsDisplayModeLabel,
+            Resources.ActionAndItemTooltipsDisplayModeDescription);
 
         ImGui.Spacing();
-        ImGui.TextUnformatted(HoverTooltipAppearanceSectionLabel);
+        ImGui.TextUnformatted(Resources.HoverTooltipAppearanceSectionLabel);
         ImGui.Separator();
-        ImGui.TextWrapped(HoverTooltipAppearanceDescription);
+        ImGui.TextWrapped(Resources.HoverTooltipAppearanceDescription);
 
-        ImGui.Text(HoverTooltipTextColorLabel);
+        var textColorLabel = Resources.HoverTooltipTextColorLabel;
+        ImGui.Text(textColorLabel);
         ImGui.SameLine();
         changed |= ImGui.ColorEdit3(
-            $"{HoverTooltipTextColorLabel}##Color",
+            $"{textColorLabel}##Color",
             ref config.HoverTooltipTextColor,
             ImGuiColorEditFlags.NoInputs);
 
-        ImGui.Text(HoverTooltipBackgroundColorLabel);
+        var backgroundColorLabel = Resources.HoverTooltipBackgroundColorLabel;
+        ImGui.Text(backgroundColorLabel);
         ImGui.SameLine();
         changed |= ImGui.ColorEdit3(
-            $"{HoverTooltipBackgroundColorLabel}##Color",
+            $"{backgroundColorLabel}##Color",
             ref config.HoverTooltipBackgroundColor,
             ImGuiColorEditFlags.NoInputs);
 
         changed |= ImGui.SliderFloat(
-            HoverTooltipBackgroundOpacityLabel,
+            Resources.HoverTooltipBackgroundOpacityLabel,
             ref config.HoverTooltipBackgroundOpacity,
             0f,
             1f,

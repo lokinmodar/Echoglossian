@@ -11,11 +11,6 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class OtherUIElementsSettingsTab
 {
-    private const string TranslateMainCommandLabel = "Translate Main Command";
-    private const string TranslateHudWindowsLabel = "Translate HUD Windows";
-    private const string TranslateOperationGuideLabel = "Translate Operation Guide";
-    private const string TranslateAddonContextMenuTitleLabel = "Translate Addon Context Menu Title";
-
     public static bool Draw(Config config)
     {
         var changed = false;
@@ -42,7 +37,7 @@ public static class OtherUIElementsSettingsTab
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            TranslateMainCommandLabel,
+            Resources.TranslateMainCommandWindow,
             ref config.TranslateMainCommandWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.MainCommandWindowTranslationDisplayMode),
@@ -51,7 +46,7 @@ public static class OtherUIElementsSettingsTab
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            TranslateHudWindowsLabel,
+            Resources.TranslateHudWindows,
             ref config.TranslateHudWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.HudWindowTranslationDisplayMode),
@@ -60,7 +55,7 @@ public static class OtherUIElementsSettingsTab
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            TranslateOperationGuideLabel,
+            Resources.TranslateOperationGuideWindow,
             ref config.TranslateOperationGuideWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.OperationGuideTranslationDisplayMode),
@@ -69,7 +64,7 @@ public static class OtherUIElementsSettingsTab
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
-            TranslateAddonContextMenuTitleLabel,
+            Resources.TranslateAddonContextMenuTitleWindow,
             ref config.TranslateAddonContextMenuTitle);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.AddonContextMenuTitleTranslationDisplayMode),

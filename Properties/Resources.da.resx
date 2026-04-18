@@ -620,4 +620,97 @@
   <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
     <value>Baggrundsforoversættelsen er afsluttet for {0} accepterede quests.</value>
   </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Denne tilstand styrer, hvordan den oversatte tekst vises. Native UI skriver direkte i spillets addon, kun overlay lader den native addon være urørt, og native-med-original-overlay skriver oversættelsen nativer, mens originalen vises i overlayet.</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Kun overlay-oversættelse</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI-oversættelse + originalt overlay</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>Det valgte sprog understøtter ikke spillets native skrifttype, så denne flade er begrænset til Echoglossian-overlays og brugerdefinerede tooltips.</value>
+  </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Handling- og item-tooltips</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Tooltip-visningstilstand</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Denne tilstand styrer handlings- og item-tooltips. Native UI skriver den oversatte tooltip direkte i spillets tooltip, kun-tooltip lader den native tooltip være urørt og bruger Echoglossian-overlays, og native-med-original-tooltips skriver oversættelsen nativer, mens originalen vises i vores overlay.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Udseende for hover-tooltips</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Tooltip-tekstfarve</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Tooltip-baggrundsfarve</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Tooltip-baggrundens opacitet</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Disse farver gælder for Echoglossian hover-tooltips brugt af quest- og DB-first UI-flader.</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Oversæt hovedkommando</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Oversæt HUD-vinduer</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Oversæt operationsguide</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Oversæt titel på addon-kontekstmenu</value>
+  </data>
+  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
+    <value>Talk-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
+    <value>BattleTalk-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
+    <value>Talk Subtitle-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
+    <value>MiniTalk-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
+    <value>CutSceneSelectString-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
+    <value>Text Gimmick Hint-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
+    <value>Screen Info-toast-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
+    <value>Error Toast-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
+    <value>Area toast-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
+    <value>Class/Job toast-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
+    <value>Quest toast-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
+    <value>ChatBubble-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
+    <value>Action-tooltip-oversættelse</value>
+  </data>
+  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
+    <value>Item-tooltip-oversættelse</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Kunne ikke hente modeller. Kører Ollama lokalt?</value>
+  </data>
 </root>

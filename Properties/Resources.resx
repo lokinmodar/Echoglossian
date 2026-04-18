@@ -901,4 +901,97 @@
   <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
     <value>Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</value>
   </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>This mode controls how the translated text is presented. Native UI writes directly into the game addon, overlay-only leaves the native addon untouched, and native-with-original-overlay writes translation natively while showing the original in the overlay.</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Overlay translation only</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI translation + original overlay</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.</value>
+  </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Action and item tooltips</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Tooltip display mode</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Hover tooltip appearance</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Tooltip text color</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Tooltip background color</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Tooltip background opacity</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>These colors apply to Echoglossian hover tooltips used by quest and DB-first UI surfaces.</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Translate Main Command</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Translate HUD Windows</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Translate Operation Guide</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Translate Addon Context Menu Title</value>
+  </data>
+  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
+    <value>Talk translation</value>
+  </data>
+  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
+    <value>BattleTalk translation</value>
+  </data>
+  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
+    <value>Talk Subtitle translation</value>
+  </data>
+  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
+    <value>MiniTalk translation</value>
+  </data>
+  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
+    <value>CutSceneSelectString translation</value>
+  </data>
+  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
+    <value>Text Gimmick Hint translation</value>
+  </data>
+  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
+    <value>Screen Info toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
+    <value>Error Toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
+    <value>Area toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
+    <value>Class/Job toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
+    <value>Quest toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
+    <value>ChatBubble translation</value>
+  </data>
+  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
+    <value>Action tooltip translation</value>
+  </data>
+  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
+    <value>Item tooltip translation</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Could not fetch models. Is Ollama running locally?</value>
+  </data>
 </root>

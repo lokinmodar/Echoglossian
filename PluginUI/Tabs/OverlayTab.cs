@@ -11,9 +11,6 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class OverlayTab
 {
-    private const string OverlayModeDescription =
-        "This mode controls how the translated text is presented. Native UI writes directly into the game addon, overlay-only leaves the native addon untouched, and native-with-original-overlay writes translation natively while showing the original in the overlay.";
-
     private static int selectedOverlayTab;
     private static int selectedToastOverlayTab;
 
@@ -42,9 +39,9 @@ public static class OverlayTab
 
     private static readonly string[] OverlayDisplayModes =
     {
-        "Native UI translation",
-        "Overlay translation only",
-        "Native UI translation + original overlay",
+        Resources.QuestDisplayModeNativeUiTranslation,
+        Resources.OverlayDisplayModeOverlayTranslationOnly,
+        Resources.OverlayDisplayModeNativeUiTranslationWithOriginalOverlay,
     };
 
     /// <summary>
@@ -836,7 +833,7 @@ public static class OverlayTab
             comboId,
             ref displayMode,
             config.OverlayOnlyLanguage,
-            description: OverlayModeDescription,
+            description: Resources.OverlayDisplayModeDescription,
             modeLabels: OverlayDisplayModes);
     }
 
