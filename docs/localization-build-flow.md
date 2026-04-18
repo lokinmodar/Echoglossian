@@ -57,6 +57,36 @@ dotnet build Echoglossian.sln -c Debug --no-restore
 4. Commit the updated `.resx` files and the generated
    `Properties/Resources.Designer.cs`.
 
+## Local Plogon-Like Verification
+
+The closest local verification path is:
+
+```powershell
+.\scripts\test-plogon-like-build.ps1
+```
+
+That script mirrors the important parts of the official Dalamud pipeline:
+
+- uses the same style of `dotnet build`
+- sets `-p:DalamudLibPath=...`
+- sets `-p:IsPlogonBuild=True`
+- uses the .NET SDK container image `mcr.microsoft.com/dotnet/sdk:10.0.101`
+
+By default it expects:
+
+- Docker installed and available on `PATH`
+- Dalamud assemblies at
+  `C:\Users\lokin\AppData\Roaming\XIVLauncher\addon\Hooks\dev`
+
+If Docker is temporarily unavailable, the script also supports a fallback:
+
+```powershell
+.\scripts\test-plogon-like-build.ps1 -UseLocalBuild
+```
+
+This fallback is less faithful than the containerized path, but still uses the
+same critical MSBuild properties and is useful for quick validation.
+
 ## Why This Flow Exists
 
 - It keeps the plugin compatible with the official Dalamud plugin build
