@@ -267,7 +267,7 @@ public static class DbFirstStructuredStringArrayHelper
     /// <param name="gameVersion">The game version.</param>
     /// <param name="configDirectory">The plugin configuration directory.</param>
     /// <returns>The persisted row snapshot.</returns>
-    public static async Task<StringArrayDatas> TranslateAndPersistAsync(
+    public static async Task<StringArrayDatas?> TranslateAndPersistAsync(
         StringArrayStructuredPayload originalPayload,
         TranslationService translationService,
         string sourceLanguage,
@@ -285,6 +285,11 @@ public static class DbFirstStructuredStringArrayHelper
             translationService,
             sourceLanguage,
             targetLanguage);
+        if (!HasCompleteTranslatedPayload(originalPayload, translatedPayload))
+        {
+            return null;
+        }
+
         var row = StringArrayDataPersistenceHelper.CreateCanonicalRow(
             originalPayload.Type,
             sourceLanguage,
@@ -363,6 +368,27 @@ public static class DbFirstStructuredStringArrayHelper
         {
             translatedMap[parts[index]] = parts[index + 1];
         }
+    }
+
+    private static bool HasCompleteTranslatedPayload(
+        StringArrayStructuredPayload originalPayload,
+        StringArrayStructuredPayload translatedPayload)
+    {
+        foreach (var pair in originalPayload.Slots)
+        {
+            if (!pair.Value.IsTranslatable)
+            {
+                continue;
+            }
+
+            if (!translatedPayload.Slots.TryGetValue(pair.Key, out var translatedSlot) ||
+                string.IsNullOrWhiteSpace(translatedSlot.TranslatedText))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

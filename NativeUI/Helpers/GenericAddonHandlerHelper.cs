@@ -26,7 +26,7 @@ public static class GenericAddonHandlerHelper
   /// <param name="config">The plugin configuration.</param>
   /// <param name="service">The translation service instance.</param>
   /// <returns> </returns>
-  public static async Task PerformTranslationAndSaveAsync<T>(
+  public static async Task<bool> PerformTranslationAndSaveAsync<T>(
       string addonName,
       Dictionary<int, string> atkValues,
       Dictionary<int, string> stringArray,
@@ -88,6 +88,17 @@ public static class GenericAddonHandlerHelper
         }
       }
 
+      if (!HasCompleteTranslationCoverage(
+              updatedAtk,
+              updatedArray,
+              originalAtkSnapshot,
+              originalArraySnapshot))
+      {
+        PluginLog.Debug(
+            $"[{addonName}] [Async] Skipping persistence because the translated payload is empty or incomplete.");
+        return false;
+      }
+
       var entity = new T();
       PluginLog.Debug($"[{addonName}] [Async] Creating entity of type {entityType.Name}...");
 
@@ -146,20 +157,25 @@ public static class GenericAddonHandlerHelper
       {
         if (entity.GetGameVersion() is null && entity is not IMultiTextEntity)
         {
-          entity.SetGameVersion(GetGameVersion());
+          var gameVersion = GetGameVersion();
+          if (!string.IsNullOrWhiteSpace(gameVersion))
+          {
+            entity.SetGameVersion(gameVersion);
+          }
         }
 
         await InsertEntity(entity);
       }
 
       PluginLog.Debug($"[{addonName}] [Async] Translation saved successfully.");
+      return true;
     }
     catch (Exception ex)
     {
       PluginLog.Error($"[{addonName}] [Async] Error during translation: {ex}");
+      return false;
     }
   }
-
 
   private static async Task TranslateAndMergeAsync(
       TranslationService service,
@@ -183,5 +199,34 @@ public static class GenericAddonHandlerHelper
       result[key] = val;
     }
   }
-}
 
+  private static bool HasCompleteTranslationCoverage(
+      IReadOnlyDictionary<int, string> translatedAtkValues,
+      IReadOnlyDictionary<int, string> translatedStringArrayValues,
+      IReadOnlyDictionary<int, string> originalAtkSnapshot,
+      IReadOnlyDictionary<int, string> originalArraySnapshot)
+  {
+    if (translatedAtkValues.Count == 0 && translatedStringArrayValues.Count == 0)
+    {
+      return false;
+    }
+
+    foreach (var key in originalAtkSnapshot.Keys)
+    {
+      if (!translatedAtkValues.ContainsKey(key))
+      {
+        return false;
+      }
+    }
+
+    foreach (var key in originalArraySnapshot.Keys)
+    {
+      if (!translatedStringArrayValues.ContainsKey(key))
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}

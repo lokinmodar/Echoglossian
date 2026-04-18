@@ -28,8 +28,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
     private static readonly ConcurrentDictionary<string, byte>
         InFlightPayloads = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, DateTime>
+        FailedPayloadRetryUtc = new(StringComparer.Ordinal);
 
     private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan FailureRetryInterval =
+        TimeSpan.FromSeconds(30);
 
     private readonly string addonName;
     private readonly Config config;
@@ -44,6 +48,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private readonly string hoverTooltipKeyPrefix;
 
     private DbFirstGameWindowRuntimeState? runtimeState;
+    private bool lastOriginalRecoveryWasUnstableTranslatedState;
 
     private DateTime nextRetryUtc = DateTime.MinValue;
 
@@ -230,6 +235,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     translatedStructuredPayload,
                     out var projection))
             {
+                if (this.lastOriginalRecoveryWasUnstableTranslatedState)
+                {
+                    this.hoverTooltipManager.RemoveByPrefix(
+                        this.hoverTooltipKeyPrefix);
+                    this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                    return;
+                }
+
+                if (TryGetFailedPayloadRetryUtc(
+                        structuredPayloadKey,
+                        out var failedRetryUtc))
+                {
+                    this.hoverTooltipManager.RemoveByPrefix(
+                        this.hoverTooltipKeyPrefix);
+                    this.nextRetryUtc = failedRetryUtc;
+                    return;
+                }
+
                 this.QueueTranslationIfNeeded(
                     originalPayload,
                     structuredPayloadKey,
@@ -247,6 +270,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     projection.StringArrayValues),
                 structuredPayloadKey,
                 displayMode);
+            ClearFailedPayloadRetry(structuredPayloadKey);
             this.nextRetryUtc = DateTime.MinValue;
             return;
         }
@@ -260,6 +284,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 originalPayload,
                 out var translatedPayload))
         {
+            if (TryGetFailedPayloadRetryUtc(payloadKey, out var failedRetryUtc))
+            {
+                this.hoverTooltipManager.RemoveByPrefix(
+                    this.hoverTooltipKeyPrefix);
+                this.nextRetryUtc = failedRetryUtc;
+                return;
+            }
+
             this.QueueTranslationIfNeeded(originalPayload, payloadKey);
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
@@ -272,6 +304,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             translatedPayload,
             payloadKey,
             displayMode);
+        ClearFailedPayloadRetry(payloadKey);
         this.nextRetryUtc = DateTime.MinValue;
     }
 
@@ -360,6 +393,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private DbFirstGameWindowPayload ResolveOriginalPayload(
         DbFirstGameWindowPayload livePayload)
     {
+        this.lastOriginalRecoveryWasUnstableTranslatedState = false;
+
         if (this.runtimeState == null)
         {
             return this.TryRecoverOriginalPayloadFromPersistedRows(
@@ -555,10 +590,19 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         translatedProjection.StringArrayValues)));
         }
 
-        return DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
-            livePayload,
-            candidates,
-            out originalPayload);
+        if (DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
+                livePayload,
+                candidates,
+                out originalPayload))
+        {
+            return true;
+        }
+
+        this.lastOriginalRecoveryWasUnstableTranslatedState =
+            DbFirstPayloadRecoveryHelper.HasTranslatedSlotEvidence(
+                livePayload,
+                candidates);
+        return false;
     }
 
     /// <summary>
@@ -598,10 +642,19 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     rowTranslatedPayload));
         }
 
-        return DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
-            livePayload,
-            candidates,
-            out originalPayload);
+        if (DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
+                livePayload,
+                candidates,
+                out originalPayload))
+        {
+            return true;
+        }
+
+        this.lastOriginalRecoveryWasUnstableTranslatedState =
+            DbFirstPayloadRecoveryHelper.HasTranslatedSlotEvidence(
+                livePayload,
+                candidates);
+        return false;
     }
 
     /// <summary>
@@ -673,10 +726,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 .ContinueWith(
                     task =>
                     {
-                        if (task.Status == TaskStatus.RanToCompletion)
+                        if (task.Status == TaskStatus.RanToCompletion &&
+                            task.Result != null)
                         {
                             StringArrayDataCacheManager.Update(task.Result);
+                            ClearFailedPayloadRetry(payloadKey);
+                            return;
                         }
+
+                        MarkFailedPayloadRetry(payloadKey);
                     },
                     TaskScheduler.Default);
         }
@@ -690,12 +748,75 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     new Dictionary<int, string>(payload.AtkValues),
                     new Dictionary<int, string>(payload.StringArrayValues),
                     this.config,
-                    this.translationService);
+                    this.translationService)
+                .ContinueWith(
+                    task =>
+                    {
+                        if (task.Status == TaskStatus.RanToCompletion &&
+                            task.Result)
+                        {
+                            ClearFailedPayloadRetry(payloadKey);
+                            return;
+                        }
+
+                        MarkFailedPayloadRetry(payloadKey);
+                    },
+                    TaskScheduler.Default);
         }
 
         _ = translationTask.ContinueWith(
             completedTask => InFlightPayloads.TryRemove(payloadKey, out _),
             TaskScheduler.Default);
+    }
+
+    /// <summary>
+    ///     Tries to resolve the next retry instant for one payload that
+    ///     recently failed translation or persistence.
+    /// </summary>
+    /// <param name="payloadKey">The stable payload key.</param>
+    /// <param name="retryUtc">The next retry instant.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the payload is still cooling down.
+    /// </returns>
+    private static bool TryGetFailedPayloadRetryUtc(
+        string payloadKey,
+        out DateTime retryUtc)
+    {
+        retryUtc = DateTime.MinValue;
+
+        if (!FailedPayloadRetryUtc.TryGetValue(payloadKey, out retryUtc))
+        {
+            return false;
+        }
+
+        if (retryUtc > DateTime.UtcNow)
+        {
+            return true;
+        }
+
+        FailedPayloadRetryUtc.TryRemove(payloadKey, out _);
+        retryUtc = DateTime.MinValue;
+        return false;
+    }
+
+    /// <summary>
+    ///     Marks one payload as temporarily failed so the runtime does not
+    ///     hammer the translator or DB every refresh.
+    /// </summary>
+    /// <param name="payloadKey">The stable payload key.</param>
+    private static void MarkFailedPayloadRetry(string payloadKey)
+    {
+        FailedPayloadRetryUtc[payloadKey] =
+            DateTime.UtcNow + FailureRetryInterval;
+    }
+
+    /// <summary>
+    ///     Clears any outstanding failure cooldown for one payload key.
+    /// </summary>
+    /// <param name="payloadKey">The stable payload key.</param>
+    private static void ClearFailedPayloadRetry(string payloadKey)
+    {
+        FailedPayloadRetryUtc.TryRemove(payloadKey, out _);
     }
 
     /// <summary>

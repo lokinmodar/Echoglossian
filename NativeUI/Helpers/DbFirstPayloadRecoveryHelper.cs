@@ -82,6 +82,42 @@ internal static class DbFirstPayloadRecoveryHelper
     }
 
     /// <summary>
+    ///     Determines whether the live payload contains clear evidence that at
+    ///     least one visible slot is already showing translated text from one
+    ///     of the persisted candidates.
+    /// </summary>
+    /// <param name="livePayload">The currently visible live payload.</param>
+    /// <param name="candidates">
+    ///     The candidate original/translated payload pairs for the same addon
+    ///     scope.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when at least one live slot matches a
+    ///     translated candidate value while differing from its original value.
+    /// </returns>
+    public static bool HasTranslatedSlotEvidence(
+        DbFirstGameWindowPayload livePayload,
+        IReadOnlyList<DbFirstPayloadRecoveryCandidate> candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (MapHasTranslatedSlotEvidence(
+                    livePayload.AtkValues,
+                    candidate.OriginalPayload.AtkValues,
+                    candidate.TranslatedPayload.AtkValues) ||
+                MapHasTranslatedSlotEvidence(
+                    livePayload.StringArrayValues,
+                    candidate.OriginalPayload.StringArrayValues,
+                    candidate.TranslatedPayload.StringArrayValues))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     Scores one candidate against the currently visible live payload.
     /// </summary>
     /// <param name="livePayload">The currently visible payload.</param>
@@ -136,8 +172,13 @@ internal static class DbFirstPayloadRecoveryHelper
     {
         score = 0;
 
-        if (liveValues.Count != originalValues.Count ||
-            liveValues.Count != translatedValues.Count)
+        if (liveValues.Count == 0)
+        {
+            return true;
+        }
+
+        if (liveValues.Count > originalValues.Count ||
+            liveValues.Count > translatedValues.Count)
         {
             return false;
         }
@@ -153,14 +194,54 @@ internal static class DbFirstPayloadRecoveryHelper
             if (string.Equals(liveText, translatedText, StringComparison.Ordinal) ||
                 string.Equals(liveText, originalText, StringComparison.Ordinal))
             {
-                score++;
+                score += 2;
                 continue;
             }
 
             return false;
         }
 
-        return true;
+        if (liveValues.Count == originalValues.Count &&
+            liveValues.Count == translatedValues.Count)
+        {
+            score += liveValues.Count;
+        }
+
+        return score > 0;
+    }
+
+    /// <summary>
+    ///     Determines whether one live payload map already contains translated
+    ///     text from a candidate.
+    /// </summary>
+    /// <param name="liveValues">The currently visible values.</param>
+    /// <param name="originalValues">The persisted original values.</param>
+    /// <param name="translatedValues">The persisted translated values.</param>
+    /// <returns>
+    ///     <see langword="true" /> when at least one slot matches a translated
+    ///     candidate value but not the corresponding original value.
+    /// </returns>
+    private static bool MapHasTranslatedSlotEvidence(
+        IReadOnlyDictionary<int, string> liveValues,
+        IReadOnlyDictionary<int, string> originalValues,
+        IReadOnlyDictionary<int, string> translatedValues)
+    {
+        foreach (var (index, liveText) in liveValues)
+        {
+            if (!originalValues.TryGetValue(index, out var originalText) ||
+                !translatedValues.TryGetValue(index, out var translatedText))
+            {
+                continue;
+            }
+
+            if (string.Equals(liveText, translatedText, StringComparison.Ordinal) &&
+                !string.Equals(liveText, originalText, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

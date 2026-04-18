@@ -105,6 +105,58 @@ public class DbFirstPayloadRecoveryHelperTests
     }
 
     /// <summary>
+    ///     Ensures recovery still succeeds when the live payload is only a
+    ///     subset of the persisted candidate, which happens when the game
+    ///     temporarily repaints only part of a string-array-backed surface.
+    /// </summary>
+    [Fact]
+    public void TryRecoverOriginalPayload_RecoversOriginal_WhenLiveMatchesSubsetOfCandidate()
+    {
+        var original = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [1] = "Profile",
+                [2] = "Titles Acquired",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Grand Company",
+                [1] = "Frontline",
+            });
+        var translated = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [1] = "Perfil",
+                [2] = "Titulos Obtidos",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Grande Companhia",
+                [1] = "Linha de Frente",
+            });
+        var partialLivePayload = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [1] = "Perfil",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Grand Company",
+            });
+
+        var resolved = DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
+            partialLivePayload,
+            new[]
+            {
+                new DbFirstPayloadRecoveryCandidate(original, translated),
+            },
+            out var recoveredOriginal);
+
+        Assert.True(resolved);
+        Assert.Equal(original, recoveredOriginal);
+    }
+
+    /// <summary>
     ///     Ensures ambiguous candidates do not recover the wrong original
     ///     payload.
     /// </summary>
@@ -147,6 +199,53 @@ public class DbFirstPayloadRecoveryHelperTests
             out _);
 
         Assert.False(resolved);
+    }
+
+    /// <summary>
+    ///     Ensures translated-slot evidence is detected even when full payload
+    ///     recovery is not possible.
+    /// </summary>
+    [Fact]
+    public void HasTranslatedSlotEvidence_ReturnsTrue_WhenLiveContainsTranslatedSlot()
+    {
+        var livePayload = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [1] = "Perfil",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Grand Company",
+            });
+        var original = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [1] = "Profile",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Grand Company",
+                [1] = "Frontline",
+            });
+        var translated = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [1] = "Perfil",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Grande Companhia",
+                [1] = "Linha de Frente",
+            });
+
+        var hasEvidence = DbFirstPayloadRecoveryHelper.HasTranslatedSlotEvidence(
+            livePayload,
+            new[]
+            {
+                new DbFirstPayloadRecoveryCandidate(original, translated),
+            });
+
+        Assert.True(hasEvidence);
     }
 
     /// <summary>
