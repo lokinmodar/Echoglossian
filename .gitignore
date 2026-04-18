@@ -350,3 +350,4 @@ docs/refactor-timeline-and-flow-analysis.md
 AGENTS.md
 /.agents
 /docs/current-refactor-conversation-history.md
+/.plogon-local-build
