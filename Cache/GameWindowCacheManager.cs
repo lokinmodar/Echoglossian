@@ -137,11 +137,39 @@ public static class GameWindowCacheManager
         (g.GameVersion == null || g.GameVersion == version) &&
         g.OriginalWindowStrings == originalJson);
 
-    if (match is not null)
+    return match;
+  }
+
+  /// <summary>
+  ///     Returns cached candidates for one addon lookup scope so runtimes can
+  ///     recover original payloads from already-translated live UI.
+  /// </summary>
+  /// <param name="addonName">The addon name to match.</param>
+  /// <param name="lang">The translation language code to match.</param>
+  /// <param name="engine">The translation engine ID to match.</param>
+  /// <param name="version">The game version string to match.</param>
+  /// <returns>The matching cached rows.</returns>
+  public static IReadOnlyList<GameWindow> GetCandidates(
+      string addonName,
+      string lang,
+      int engine,
+      string? version)
+  {
+    if (string.IsNullOrWhiteSpace(addonName) || string.IsNullOrWhiteSpace(lang))
     {
-      PluginLog.Debug($"[GameWindowCacheManager.TryFindMatch] Match found for {addonName}.");
+      return [];
     }
 
-    return match;
+    if (!Cache.TryGetValue(addonName, out var list) || list is null || list.Count == 0)
+    {
+      return [];
+    }
+
+    return list
+        .Where(g =>
+            g.TranslationLang == lang &&
+            g.TranslationEngine == engine &&
+            (g.GameVersion == null || g.GameVersion == version))
+        .ToList();
   }
 }

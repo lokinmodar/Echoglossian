@@ -55,6 +55,29 @@ The current code paths are centered around:
 The extraction/translation part is not the main problem.
 The application timing and ownership model is.
 
+## Current Validation Snapshot
+
+After the recent DB-first migration wave, the repo now has a much clearer split
+between healthy and unhealthy paths:
+
+- `gamewindows` is repopulating cleanly for `_MainCommand` and
+  `AddonContextMenuTitle`
+- `stringarraydatas` is still vulnerable to promoting already-visible localized
+  text to `Original*` for the `Character*` family
+
+This matters because the contaminated `OriginalStrings` then become part of the
+lookup hash and retranslation input, which causes:
+
+- repeated translation attempts for mixed PT/EN payloads
+- `GoogleTranslator` 404s for large `kNN|...` blobs
+- UI flicker when the game resets the arrays and the plugin tries to react
+  again
+
+The current failure mode is therefore not "the DB-first model is wrong." The
+failure mode is that canonical capture for some `StringArrayData` surfaces is
+still being derived from a live UI state that may already be partially
+translated or otherwise localized.
+
 ---
 
 ## Root Causes
@@ -113,6 +136,23 @@ That creates the classic bad loop:
 - plugin rewrites
 
 Even if each individual write is "correct", the timing model is unstable.
+
+### 5. Canonical recovery is still incomplete for `Character*`
+
+The repo now contains recovery helpers intended to map a translated or mixed
+live payload back to a known canonical original row before capture proceeds.
+
+That mitigation already improved the `GameWindow` path, but the `Character*`
+`StringArrayData` path still shows incomplete recovery in practice. The current
+evidence is:
+
+- `gamewindows` rows are clean after a DB reset
+- `stringarraydatas` rows for `Character`, `CharacterClass`, and
+  `CharacterRepute` still contain PT-BR text in `OriginalStrings`
+
+So the next remediation step is to keep tightening original recovery for the
+string-array-backed `Character*` windows until capture is blocked whenever the
+runtime cannot confidently re-anchor to a canonical original payload.
 
 ---
 
@@ -218,6 +258,18 @@ Every consuming addon must own its own runtime state:
 - local cache of original values
 - local cache of last-applied translated values
 - local readiness gate
+
+## Investigation Tooling
+
+To keep DB inspection repeatable, the repo now includes a reusable read-only
+SQLite inspection flow:
+
+- [inspect-eglo-db.ps1](/C:/Dante/_dalamud/Echoglossian/scripts/inspect-eglo-db.ps1)
+- [DbInspector.csproj](/C:/Dante/_dalamud/Echoglossian/scripts/db-inspector/DbInspector.csproj)
+- [Program.cs](/C:/Dante/_dalamud/Echoglossian/scripts/db-inspector/Program.cs)
+
+Use it instead of rebuilding one-off ad hoc queries every time we need to
+compare logs against persisted state.
 - local restore logic
 - local tooltip logic if relevant
 

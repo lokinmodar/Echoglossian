@@ -23,7 +23,6 @@ public static class JournalTab
         if (config.Translate)
         {
             changed |= DrawJournalSection(config);
-            changed |= DrawTooltipSection(config);
             changed |= DrawQuestFamilySection(
                 config,
                 Resources.TranslateJournalDetailToggle,
@@ -102,58 +101,6 @@ public static class JournalTab
         changed |= ImGui.Checkbox(
             Resources.JournalGlobalHoverTooltipsLabel,
             ref config.TranslateTooltips);
-
-        return changed;
-    }
-
-    /// <summary>
-    ///     Draws the action/item tooltip mode and the shared hover-tooltip
-    ///     appearance settings.
-    /// </summary>
-    /// <param name="config">The current plugin configuration.</param>
-    /// <returns><c>true</c> when a setting changed.</returns>
-    private static bool DrawTooltipSection(Config config)
-    {
-        var changed = false;
-
-        ImGui.Spacing();
-        ImGui.TextUnformatted(Resources.ActionAndItemTooltipsSectionLabel);
-        ImGui.Separator();
-
-        changed |= DrawQuestDisplayModeCombo(
-            nameof(config.TooltipTranslationDisplayMode),
-            ref config.TooltipTranslationDisplayMode,
-            config.OverlayOnlyLanguage,
-            Resources.ActionAndItemTooltipsDisplayModeLabel,
-            Resources.ActionAndItemTooltipsDisplayModeDescription);
-
-        ImGui.Spacing();
-        ImGui.TextUnformatted(Resources.HoverTooltipAppearanceSectionLabel);
-        ImGui.Separator();
-        ImGui.TextWrapped(Resources.HoverTooltipAppearanceDescription);
-
-        var textColorLabel = Resources.HoverTooltipTextColorLabel;
-        ImGui.Text(textColorLabel);
-        ImGui.SameLine();
-        changed |= ImGui.ColorEdit3(
-            $"{textColorLabel}##Color",
-            ref config.HoverTooltipTextColor,
-            ImGuiColorEditFlags.NoInputs);
-
-        var backgroundColorLabel = Resources.HoverTooltipBackgroundColorLabel;
-        ImGui.Text(backgroundColorLabel);
-        ImGui.SameLine();
-        changed |= ImGui.ColorEdit3(
-            $"{backgroundColorLabel}##Color",
-            ref config.HoverTooltipBackgroundColor,
-            ImGuiColorEditFlags.NoInputs);
-
-        changed |= ImGui.SliderFloat(
-            Resources.HoverTooltipBackgroundOpacityLabel,
-            ref config.HoverTooltipBackgroundOpacity,
-            0f,
-            1f,
-            "%.2f");
 
         return changed;
     }

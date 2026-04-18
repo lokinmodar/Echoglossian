@@ -166,8 +166,7 @@ internal static unsafe class AddonStructureProbe
       return true;
     }
 
-    var manager = RaptureAtkUnitManager.Instance();
-    if (manager == null)
+    if (!global::Echoglossian.FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
     {
       return false;
     }

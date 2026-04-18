@@ -124,6 +124,44 @@ public static class StringArrayDataCacheManager
     }
 
     /// <summary>
+    ///     Returns cached candidates for one canonical lookup scope so runtimes
+    ///     can recover original payloads from already-translated live UI.
+    /// </summary>
+    /// <param name="type">The logical payload type.</param>
+    /// <param name="contextKey">The semantic surface context.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine id.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <returns>The matching cached rows.</returns>
+    public static IReadOnlyList<StringArrayDatas> GetCandidates(
+        string type,
+        string contextKey,
+        string lang,
+        int engine,
+        string? gameVersion)
+    {
+        if (string.IsNullOrWhiteSpace(type) ||
+            string.IsNullOrWhiteSpace(contextKey) ||
+            string.IsNullOrWhiteSpace(lang))
+        {
+            return [];
+        }
+
+        if (!Cache.TryGetValue(type, out var rows) || rows.Count == 0)
+        {
+            return [];
+        }
+
+        return rows
+            .Where(row =>
+                row.ContextKey == contextKey &&
+                row.TranslationLang == lang &&
+                row.TranslationEngine == engine &&
+                row.GameVersion == gameVersion)
+            .ToList();
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()

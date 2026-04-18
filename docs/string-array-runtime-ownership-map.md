@@ -31,6 +31,25 @@ So the short answer is:
 - `_MainCommand` remains on `gamewindows` because it does not use the same
   `StringArrayType` runtime path
 
+## Current Validation Snapshot
+
+The most recent manual validation cycle produced an important split:
+
+- `_MainCommand` and `AddonContextMenuTitle` now repopulate `gamewindows` with
+  clean English originals and PT-BR translations after a DB reset
+- the `Character*` family still contaminates `stringarraydatas` by persisting
+  already-visible PT-BR strings as `OriginalStrings`
+
+That means the ownership model is directionally right, but the original payload
+recovery step for the `Character*` string-array surfaces is still incomplete.
+
+In the same validation window:
+
+- `ScenarioTree` had no useful runtime signal
+- `AreaMap` had no useful runtime signal
+- `ActionTooltip` and `ItemTooltip` were already prefetching into their own
+  tables, but still need broader in-game validation of apply behavior
+
 ## Runtime Families
 
 ## 1. Active DB-First Canonical `StringArrayDatas` Runtime
@@ -96,6 +115,18 @@ That means:
 
 This is automatic enough for the migrated windows, but it is not a global
 watcher on every native setter call.
+
+### Current caveat for `Character*`
+
+For the `Character*` surfaces specifically, "reacts automatically" currently
+also means "can react to contaminated live payloads." Until original recovery is
+made stricter, these windows may still:
+
+- send mixed PT/EN `kNN|...` payloads to translation
+- create `stringarraydatas` rows whose `OriginalStrings` are not truly
+  canonical
+- flicker when the game repaints and the addon-local runtime tries to chase the
+  new state
 
 ## 2. Active DB-First `GameWindow` Runtime
 
@@ -191,6 +222,8 @@ the active `StringArrayType` surfaces listed above.
 - it does not currently own `_MainCommand`
 - it does not yet expose the full plugin configuration UI needed to control all
   migrated `StringArrayData` surfaces cleanly
+- it does not yet guarantee canonical-original capture for all `Character*`
+  runtime mutations
 
 ### Presentation Rule for `StringArrayData` Surfaces
 

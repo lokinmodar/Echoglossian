@@ -67,7 +67,21 @@ public unsafe partial class AddonObserver : IDisposable
   {
     this._visibleUnits.Clear();
 
-    foreach (var atkUnitBase in RaptureAtkUnitManager.Instance()->AllLoadedUnitsList.Entries)
+    if (!global::Echoglossian.FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
+    {
+      var closedAddonNames = this._nameCache.Values.ToArray();
+      this._removedUnits.Clear();
+      this._nameCache.Clear();
+
+      foreach (var addonName in closedAddonNames)
+      {
+        this.AddonClose?.Invoke(addonName);
+      }
+
+      return;
+    }
+
+    foreach (var atkUnitBase in manager->AllLoadedUnitsList.Entries)
     {
       if (atkUnitBase.Value != null && atkUnitBase.Value->IsReady && atkUnitBase.Value->IsVisible)
       {

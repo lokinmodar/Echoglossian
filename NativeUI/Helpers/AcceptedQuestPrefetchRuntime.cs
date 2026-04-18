@@ -911,8 +911,17 @@ public partial class Echoglossian
         : $"{questId}:{questName}";
     var content =
         $"phase={phase}{Environment.NewLine}quest={questLabel}{Environment.NewLine}detail={detail ?? string.Empty}";
-    PluginLog.Information(
-        $"[AcceptedQuestPrefetch] phase={phase} quest='{questLabel}' detail='{detail ?? string.Empty}'");
+    var logLine =
+        $"[AcceptedQuestPrefetch] phase={phase} quest='{questLabel}' detail='{detail ?? string.Empty}'";
+    if (string.Equals(phase, "resolve-failed", StringComparison.Ordinal))
+    {
+      PluginLog.Warning(logLine);
+    }
+    else
+    {
+      PluginLog.Debug(logLine);
+    }
+
     DiagnosticFileEmitter.Emit(
         "accepted-quest-prefetch-activity",
         questLabel,

@@ -362,7 +362,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     {
         if (this.runtimeState == null)
         {
-            return livePayload;
+            return this.TryRecoverOriginalPayloadFromPersistedRows(
+                livePayload,
+                out var recoveredPayload)
+                ? recoveredPayload
+                : livePayload;
         }
 
         if (livePayload.MatchesTranslated(this.runtimeState.TranslatedPayload))
@@ -376,7 +380,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         this.runtimeState = null;
-        return livePayload;
+        return this.TryRecoverOriginalPayloadFromPersistedRows(
+            livePayload,
+            out var persistedRecoveredPayload)
+            ? persistedRecoveredPayload
+            : livePayload;
     }
 
     /// <summary>
@@ -469,6 +477,131 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         translatedPayload = resolvedTranslatedPayload;
         return true;
+    }
+
+    /// <summary>
+    ///     Tries to recover the canonical original payload from persisted rows
+    ///     when the live UI is already showing translated or mixed text.
+    /// </summary>
+    /// <param name="livePayload">The currently visible live payload.</param>
+    /// <param name="originalPayload">The recovered original payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a unique persisted candidate matches
+    ///     the live payload.
+    /// </returns>
+    private bool TryRecoverOriginalPayloadFromPersistedRows(
+        DbFirstGameWindowPayload livePayload,
+        out DbFirstGameWindowPayload originalPayload)
+    {
+        if (this.stringArrayDataType is { })
+        {
+            return this.TryRecoverStructuredOriginalPayload(
+                livePayload,
+                out originalPayload);
+        }
+
+        return this.TryRecoverGameWindowOriginalPayload(
+            livePayload,
+            out originalPayload);
+    }
+
+    /// <summary>
+    ///     Tries to recover one canonical original payload from persisted
+    ///     <c>StringArrayDatas</c> rows.
+    /// </summary>
+    /// <param name="livePayload">The currently visible live payload.</param>
+    /// <param name="originalPayload">The recovered original payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a unique persisted candidate matches
+    ///     the live payload.
+    /// </returns>
+    private bool TryRecoverStructuredOriginalPayload(
+        DbFirstGameWindowPayload livePayload,
+        out DbFirstGameWindowPayload originalPayload)
+    {
+        var scopeProbe = this.BuildStructuredPayload(livePayload);
+        var candidates = new List<DbFirstPayloadRecoveryCandidate>();
+        foreach (var row in StringArrayDataCacheManager.GetCandidates(
+                     scopeProbe.Type,
+                     scopeProbe.ContextKey,
+                     LangDict[LanguageInt].Code,
+                     this.config.ChosenTransEngine,
+                     GetGameVersion()))
+        {
+            if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
+                    row,
+                    out var resolvedOriginalPayload,
+                    out var resolvedTranslatedPayload) ||
+                resolvedOriginalPayload == null ||
+                resolvedTranslatedPayload == null ||
+                !DbFirstStructuredStringArrayHelper.TryProjectTranslatedPayload(
+                    resolvedOriginalPayload,
+                    resolvedTranslatedPayload,
+                    out var translatedProjection))
+            {
+                continue;
+            }
+
+            var originalProjection =
+                DbFirstStructuredStringArrayHelper.ProjectOriginalPayload(
+                    resolvedOriginalPayload);
+            candidates.Add(
+                new DbFirstPayloadRecoveryCandidate(
+                    new DbFirstGameWindowPayload(
+                        originalProjection.AtkValues,
+                        originalProjection.StringArrayValues),
+                    new DbFirstGameWindowPayload(
+                        translatedProjection.AtkValues,
+                        translatedProjection.StringArrayValues)));
+        }
+
+        return DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
+            livePayload,
+            candidates,
+            out originalPayload);
+    }
+
+    /// <summary>
+    ///     Tries to recover one canonical original payload from persisted
+    ///     <see cref="GameWindow" /> rows.
+    /// </summary>
+    /// <param name="livePayload">The currently visible live payload.</param>
+    /// <param name="originalPayload">The recovered original payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a unique persisted candidate matches
+    ///     the live payload.
+    /// </returns>
+    private bool TryRecoverGameWindowOriginalPayload(
+        DbFirstGameWindowPayload livePayload,
+        out DbFirstGameWindowPayload originalPayload)
+    {
+        var candidates = new List<DbFirstPayloadRecoveryCandidate>();
+        foreach (var row in GameWindowCacheManager.GetCandidates(
+                     this.addonName,
+                     LangDict[LanguageInt].Code,
+                     this.config.ChosenTransEngine,
+                     GetGameVersion()))
+        {
+            if (!TryParseSerializedPayload(
+                    row.OriginalWindowStrings,
+                    out var rowOriginalPayload) ||
+                !TryParseSerializedPayload(
+                    row.TranslatedWindowStrings,
+                    out var rowTranslatedPayload))
+            {
+                continue;
+            }
+
+            candidates.Add(
+                new DbFirstPayloadRecoveryCandidate(
+                    rowOriginalPayload,
+                    rowTranslatedPayload));
+        }
+
+        return DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
+            livePayload,
+            candidates,
+            out originalPayload);
     }
 
     /// <summary>
@@ -959,6 +1092,62 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             PluginLog.Error(
                 $"[DbFirstGameWindowAddonHandler] Failed to parse translated payload: {ex}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///     Parses a serialized payload without requiring an external original
+    ///     reference.
+    /// </summary>
+    /// <param name="serializedPayload">The serialized payload JSON.</param>
+    /// <param name="payload">The parsed payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the payload could be parsed.
+    /// </returns>
+    private static bool TryParseSerializedPayload(
+        string? serializedPayload,
+        out DbFirstGameWindowPayload payload)
+    {
+        payload = DbFirstGameWindowPayload.Empty;
+
+        if (string.IsNullOrWhiteSpace(serializedPayload))
+        {
+            return false;
+        }
+
+        try
+        {
+            var combinedData =
+                JsonConvert.DeserializeObject<CombinedTranslationData>(
+                    serializedPayload);
+            if (combinedData == null)
+            {
+                return false;
+            }
+
+            var atkValues =
+                combinedData.AtkValues != null
+                    ? new SortedDictionary<int, string>(
+                        combinedData.AtkValues,
+                        Comparer<int>.Default)
+                    : new SortedDictionary<int, string>();
+            var stringArrayValues =
+                combinedData.StringArrayData != null
+                    ? new SortedDictionary<int, string>(
+                        combinedData.StringArrayData,
+                        Comparer<int>.Default)
+                    : new SortedDictionary<int, string>();
+
+            payload = new DbFirstGameWindowPayload(
+                atkValues,
+                stringArrayValues);
+            return !payload.IsEmpty;
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Error(
+                $"[DbFirstGameWindowAddonHandler] Failed to parse serialized payload: {ex}");
             return false;
         }
     }

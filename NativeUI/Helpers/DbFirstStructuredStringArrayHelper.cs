@@ -134,6 +134,37 @@ public static class DbFirstStructuredStringArrayHelper
     }
 
     /// <summary>
+    ///     Projects one original structured payload back into live ATK and
+    ///     StringArrayData maps.
+    /// </summary>
+    /// <param name="originalPayload">The original canonical payload.</param>
+    /// <returns>The projected original payload maps.</returns>
+    public static DbFirstStructuredStringArrayProjection ProjectOriginalPayload(
+        StringArrayStructuredPayload originalPayload)
+    {
+        ArgumentNullException.ThrowIfNull(originalPayload);
+
+        var atkValues = new SortedDictionary<int, string>();
+        var stringArrayValues = new SortedDictionary<int, string>();
+
+        foreach (var pair in originalPayload.Slots)
+        {
+            var finalText = pair.Value.OriginalText ?? string.Empty;
+            if (TryDecodeAtkSlot(pair.Key, out var atkIndex))
+            {
+                atkValues[atkIndex] = finalText;
+                continue;
+            }
+
+            stringArrayValues[pair.Key] = finalText;
+        }
+
+        return new DbFirstStructuredStringArrayProjection(
+            atkValues,
+            stringArrayValues);
+    }
+
+    /// <summary>
     ///     Translates one canonical payload while preserving slot semantics and
     ///     structure.
     /// </summary>

@@ -58,6 +58,20 @@
       StronglyTypedFileName="Properties\Resources.Designer.cs"
       PublicClass="true" />
   </Target>
+  <Target Name="RemoveDalamudProvidedAssembliesFromOutput" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)Dalamud*.dll" />
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)FFXIVClientStructs.dll" />
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)InteropGenerator.Runtime.dll" />
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)Lumina.dll" />
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)Lumina.Excel.dll" />
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)Newtonsoft.Json.dll" />
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)Serilog.dll" />
+      <DalamudProvidedAssemblyOutput Include="$(OutputPath)Microsoft.Extensions.ObjectPool.dll" />
+    </ItemGroup>
+
+    <Delete Files="@(DalamudProvidedAssemblyOutput)" TreatErrorsAsWarnings="true" />
+  </Target>
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 

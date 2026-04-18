@@ -264,11 +264,16 @@ namespace Echoglossian
         TranslationOverlay overlay,
         int index = 1)
     {
+      if (!FrameworkAccessGuard.IsClientReadyForFrameworkAccess())
+      {
+        this.ClearOverlay(overlay);
+        return false;
+      }
+
       var addonPtr = GameGuiInterface.GetAddonByName(addonName, index);
       if (addonPtr.Address == IntPtr.Zero)
       {
-        var manager = RaptureAtkUnitManager.Instance();
-        if (manager != null)
+        if (FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
         {
           foreach (var unit in manager->AllLoadedUnitsList.Entries)
           {
@@ -367,6 +372,11 @@ namespace Echoglossian
       addon = null;
       resolvedIndex = index;
 
+      if (!FrameworkAccessGuard.IsClientReadyForFrameworkAccess())
+      {
+        return false;
+      }
+
       var addonPtr = GameGuiInterface.GetAddonByName(addonName, index);
       if (addonPtr.Address != IntPtr.Zero)
       {
@@ -375,8 +385,7 @@ namespace Echoglossian
         return true;
       }
 
-      var manager = RaptureAtkUnitManager.Instance();
-      if (manager == null)
+      if (!FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
       {
         return false;
       }

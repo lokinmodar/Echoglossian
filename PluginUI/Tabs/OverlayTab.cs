@@ -23,6 +23,7 @@ public static class OverlayTab
         Resources.OverlayTabMiniTalkText,
         Resources.OverlayTabCutSceneSelectStringText,
         Resources.ConfigTab4Name,
+        Resources.ActionAndItemTooltipsSectionLabel,
         Resources.OtherUIElementsTabTitle,
     };
 
@@ -101,6 +102,9 @@ public static class OverlayTab
                 changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
                 break;
             case 7:
+                changed |= TooltipTab.Draw(config);
+                break;
+            case 8:
                 changed |= OtherUIElementsSettingsTab.Draw(config);
                 break;
         }

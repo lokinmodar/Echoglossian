@@ -706,9 +706,12 @@ public partial class Echoglossian
   /// <returns>The information of which instance the player is in.</returns>
   public unsafe Tuple<bool, int> IsInInstance()
   {
-    var icDirector = EventFramework.Instance() != null
-        ? EventFramework.Instance()->GetInstanceContentDirector()
-        : null;
+    if (!FrameworkAccessGuard.TryGetEventFramework(out var eventFramework))
+    {
+      return new Tuple<bool, int>(false, 0);
+    }
+
+    var icDirector = eventFramework->GetInstanceContentDirector();
 
     var isInstanceContent =
         icDirector != null && icDirector->InstanceContentType != 0;
@@ -721,7 +724,7 @@ public partial class Echoglossian
 
     return new Tuple<bool, int>(
         isInstanceContent,
-        (int)icDirector->InstanceContentType);
+        icDirector != null ? (int)icDirector->InstanceContentType : 0);
   }
 
   /// <summary>
