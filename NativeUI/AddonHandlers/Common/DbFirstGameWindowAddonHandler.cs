@@ -975,6 +975,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return true;
         }
 
+        if (GameWindowCacheManager.IsPreloaded)
+        {
+            return false;
+        }
+
         gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
             window.WindowAddonName == this.addonName &&
             RuntimeLanguageHelper.LanguagesMatch(

@@ -253,7 +253,6 @@ public static class StringArrayDataPersistenceHelper
             source.TranslatedStringsWithPayloads,
             target.TranslatedStringsWithPayloads);
         target.TranslationEngine = source.TranslationEngine ?? target.TranslationEngine;
-        target.GameVersion = FirstNonEmpty(source.GameVersion, target.GameVersion);
         target.ContextKey = FirstNonEmpty(source.ContextKey, target.ContextKey);
         target.SchemaVersion = source.SchemaVersion ?? target.SchemaVersion;
         target.SourceContentHash = FirstNonEmpty(

@@ -15,6 +15,8 @@ namespace Echoglossian.Cache;
 /// </summary>
 public static class GameWindowCacheManager
 {
+  private static bool isPreloaded;
+
   private static readonly Dictionary<string, GameWindow> ExactCache =
       new(StringComparer.Ordinal);
   private static readonly Dictionary<string, List<GameWindow>> ScopeCache =
@@ -26,6 +28,12 @@ public static class GameWindowCacheManager
   /// </summary>
   private static readonly Dictionary<string, List<GameWindow>> Cache =
       new(StringComparer.Ordinal);
+
+  /// <summary>
+  ///     Gets a value indicating whether the cache has been preloaded from the
+  ///     database for the current runtime session.
+  /// </summary>
+  public static bool IsPreloaded => isPreloaded;
 
   /// <summary>
   ///     Loads all GameWindow records from the database into memory.
@@ -54,10 +62,12 @@ public static class GameWindowCacheManager
         IndexRecord(record);
       }
 
+      isPreloaded = true;
       PluginLog.Debug($"[GameWindowCacheManager] Loaded {all.Count} records into {Cache.Count} addon buckets.");
     }
     catch (Exception ex)
     {
+      isPreloaded = false;
       PluginLog.Error($"[GameWindowCacheManager] Failed to preload cache: {ex}");
     }
   }
@@ -104,6 +114,7 @@ public static class GameWindowCacheManager
     Cache.Clear();
     ExactCache.Clear();
     ScopeCache.Clear();
+    isPreloaded = false;
     PluginLog.Debug("[GameWindowCacheManager] Cleared GameWindow cache.");
   }
 
