@@ -167,6 +167,41 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether one visible text node should participate in the
+    ///     canonical payload for this addon.
+    /// </summary>
+    /// <param name="textNode">The live text node.</param>
+    /// <param name="visibleText">The currently visible text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the text node is stable enough to
+    ///     capture and later reapply; otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldCaptureTextNode(
+        AtkTextNode* textNode,
+        string visibleText)
+    {
+        return true;
+    }
+
+    /// <summary>
+    ///     Determines whether this handler should write translated
+    ///     <c>StringArrayData</c> values back into the live addon when the
+    ///     backing array is subscribed by the given number of addons.
+    /// </summary>
+    /// <param name="subscribedAddonsCount">
+    ///     The runtime subscriber count reported by the backing array.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when native writes/restores are safe for the
+    ///     backing string array; otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldWriteStringArrayValues(
+        byte subscribedAddonsCount)
+    {
+        return true;
+    }
+
+    /// <summary>
     ///     Determines whether this handler may reuse a compatible persisted
     ///     payload when no exact original-payload match is available.
     /// </summary>
@@ -177,6 +212,27 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     protected virtual bool ShouldReuseCompatiblePayloads()
     {
         return true;
+    }
+
+    /// <summary>
+    ///     Tries to register addon-specific hover targets when the default
+    ///     visible-text-node path is not the right surface for this addon.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    /// <returns>
+    ///     <see langword="true" /> when custom hover targets were registered
+    ///     and the default text-node path should be skipped.
+    /// </returns>
+    private protected virtual bool TryRegisterCustomHoverTooltips(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        JournalTranslationDisplayMode displayMode)
+    {
+        return false;
     }
 
     /// <summary>
@@ -231,6 +287,40 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
         this.runtimeState = null;
         this.nextRetryUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    ///     Registers one translated hover target using explicit bounds.
+    /// </summary>
+    /// <param name="keySuffix">The stable per-target key suffix.</param>
+    /// <param name="topLeft">The top-left screen coordinate.</param>
+    /// <param name="bottomRight">The bottom-right screen coordinate.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    private protected void RegisterTranslatedHoverTooltip(
+        string keySuffix,
+        Vector2 topLeft,
+        Vector2 bottomRight,
+        string originalText,
+        string translatedText,
+        JournalTranslationDisplayMode displayMode)
+    {
+        var showOriginalTooltips =
+            TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
+        var tooltipBody = showOriginalTooltips ? originalText : translatedText;
+        if (!ShouldCaptureText(tooltipBody))
+        {
+            return;
+        }
+
+        this.hoverTooltipManager.Register(
+            $"{this.hoverTooltipKeyPrefix}{keySuffix}",
+            topLeft,
+            bottomRight,
+            string.Empty,
+            tooltipBody,
+            true);
     }
 
     /// <summary>
@@ -494,6 +584,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
             var visibleText = this.ReadTextNode(textNode);
             if (!ShouldCaptureText(visibleText))
+            {
+                continue;
+            }
+
+            if (!this.ShouldCaptureTextNode(textNode, visibleText))
             {
                 continue;
             }
@@ -865,6 +960,35 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Tries to resolve one exact persisted <see cref="GameWindow" />
+    ///     payload pair for the provided original payload.
+    /// </summary>
+    /// <param name="originalPayload">
+    ///     The original-facing payload currently visible in the addon flow.
+    /// </param>
+    /// <param name="translatedPayload">
+    ///     Receives the translated payload when one persisted exact match
+    ///     exists.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact persisted payload was found
+    ///     and parsed successfully; otherwise <see langword="false" />.
+    /// </returns>
+    private protected bool TryResolveExactPersistedGameWindowPayload(
+        DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload translatedPayload)
+    {
+        translatedPayload = DbFirstGameWindowPayload.Empty;
+
+        var originalJson = originalPayload.Serialize();
+        return this.TryFindGameWindow(originalJson, out var gameWindow) &&
+               TryParseTranslatedPayload(
+                   gameWindow?.TranslatedWindowStrings,
+                   originalPayload,
+                   out translatedPayload);
+    }
+
+    /// <summary>
     ///     Tries to resolve one compatible persisted <see cref="GameWindow" />
     ///     candidate when an exact original-payload match is not available.
     /// </summary>
@@ -1133,7 +1257,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             var stringArrayData = AtkStage.Instance()->GetStringArrayData(
                 arrayType);
-            if (stringArrayData != null && stringArrayData->StringArray != null)
+            if (stringArrayData != null &&
+                stringArrayData->StringArray != null &&
+                this.ShouldWriteStringArrayValues(
+                    stringArrayData->SubscribedAddonsCount))
             {
                 foreach (var (index, translatedText) in translatedPayload
                              .StringArrayValues)
@@ -1238,7 +1365,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             var stringArrayData = AtkStage.Instance()->GetStringArrayData(
                 arrayType);
-            if (stringArrayData != null && stringArrayData->StringArray != null)
+            if (stringArrayData != null &&
+                stringArrayData->StringArray != null &&
+                this.ShouldWriteStringArrayValues(
+                    stringArrayData->SubscribedAddonsCount))
             {
                 foreach (var (index, originalText) in this.runtimeState
                              .OriginalPayload.StringArrayValues)
@@ -1273,6 +1403,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         JournalTranslationDisplayMode displayMode)
     {
         this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+
+        if (this.TryRegisterCustomHoverTooltips(
+                addon,
+                originalPayload,
+                translatedPayload,
+                displayMode))
+        {
+            return;
+        }
 
         var textNodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon);
         if (textNodeAddresses.Count == 0)

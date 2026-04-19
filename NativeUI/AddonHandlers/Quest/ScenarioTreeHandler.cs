@@ -832,7 +832,10 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   {
     visibleText = string.Empty;
 
-    if (atkValues[valueIndex].Type != ValueType.String ||
+    if (atkValues[valueIndex].Type is not
+        (ValueType.String or
+         ValueType.String8 or
+         ValueType.ManagedString) ||
         atkValues[valueIndex].String == null)
     {
       return false;

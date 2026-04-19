@@ -108,7 +108,11 @@ internal static class DbFirstPayloadRecoveryHelper
                 MapHasTranslatedSlotEvidence(
                     livePayload.StringArrayValues,
                     candidate.OriginalPayload.StringArrayValues,
-                    candidate.TranslatedPayload.StringArrayValues))
+                    candidate.TranslatedPayload.StringArrayValues) ||
+                MapHasTranslatedSlotEvidence(
+                    livePayload.TextNodes,
+                    candidate.OriginalPayload.TextNodes,
+                    candidate.TranslatedPayload.TextNodes))
             {
                 return true;
             }
@@ -215,12 +219,17 @@ internal static class DbFirstPayloadRecoveryHelper
                 livePayload.StringArrayValues,
                 candidate.OriginalPayload.StringArrayValues,
                 candidate.TranslatedPayload.StringArrayValues,
-                out var stringArrayScore))
+                out var stringArrayScore) ||
+            !TryScoreMap(
+                livePayload.TextNodes,
+                candidate.OriginalPayload.TextNodes,
+                candidate.TranslatedPayload.TextNodes,
+                out var textNodeScore))
         {
             return false;
         }
 
-        score = atkScore + stringArrayScore;
+        score = atkScore + stringArrayScore + textNodeScore;
         return score > 0;
     }
 
@@ -317,6 +326,40 @@ internal static class DbFirstPayloadRecoveryHelper
     }
 
     /// <summary>
+    ///     Determines whether one live text-node map already contains
+    ///     translated text from a candidate.
+    /// </summary>
+    /// <param name="liveValues">The currently visible values.</param>
+    /// <param name="originalValues">The persisted original values.</param>
+    /// <param name="translatedValues">The persisted translated values.</param>
+    /// <returns>
+    ///     <see langword="true" /> when at least one slot matches a translated
+    ///     candidate value but not the corresponding original value.
+    /// </returns>
+    private static bool MapHasTranslatedSlotEvidence(
+        IReadOnlyDictionary<string, string> liveValues,
+        IReadOnlyDictionary<string, string> originalValues,
+        IReadOnlyDictionary<string, string> translatedValues)
+    {
+        foreach (var (index, liveText) in liveValues)
+        {
+            if (!originalValues.TryGetValue(index, out var originalText) ||
+                !translatedValues.TryGetValue(index, out var translatedText))
+            {
+                continue;
+            }
+
+            if (string.Equals(liveText, translatedText, StringComparison.Ordinal) &&
+                !string.Equals(liveText, originalText, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     Scores compatibility between one visible original-facing payload and
     ///     one persisted original payload.
     /// </summary>
@@ -341,12 +384,16 @@ internal static class DbFirstPayloadRecoveryHelper
             !TryScoreOriginalCompatibilityMap(
                 livePayload.StringArrayValues,
                 candidateOriginalPayload.StringArrayValues,
-                out var stringArrayScore))
+                out var stringArrayScore) ||
+            !TryScoreOriginalCompatibilityMap(
+                livePayload.TextNodes,
+                candidateOriginalPayload.TextNodes,
+                out var textNodeScore))
         {
             return false;
         }
 
-        score = atkScore + stringArrayScore;
+        score = atkScore + stringArrayScore + textNodeScore;
         return score > 0;
     }
 
@@ -392,6 +439,113 @@ internal static class DbFirstPayloadRecoveryHelper
         }
 
         if (liveValues.Count == candidateOriginalValues.Count)
+        {
+            score += liveValues.Count;
+        }
+
+        return score > 0;
+    }
+
+    /// <summary>
+    ///     Scores compatibility between one visible original-facing text-node
+    ///     payload map and one persisted original payload map.
+    /// </summary>
+    /// <param name="liveValues">The currently visible values.</param>
+    /// <param name="candidateOriginalValues">
+    ///     The persisted original candidate values.
+    /// </param>
+    /// <param name="score">The resulting compatibility score.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the visible values are a compatible
+    ///     subset of the candidate original values.
+    /// </returns>
+    private static bool TryScoreOriginalCompatibilityMap(
+        IReadOnlyDictionary<string, string> liveValues,
+        IReadOnlyDictionary<string, string> candidateOriginalValues,
+        out int score)
+    {
+        score = 0;
+
+        if (liveValues.Count == 0)
+        {
+            return true;
+        }
+
+        if (liveValues.Count > candidateOriginalValues.Count)
+        {
+            return false;
+        }
+
+        foreach (var (index, liveText) in liveValues)
+        {
+            if (!candidateOriginalValues.TryGetValue(index, out var originalText) ||
+                !string.Equals(liveText, originalText, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            score += 2;
+        }
+
+        if (liveValues.Count == candidateOriginalValues.Count)
+        {
+            score += liveValues.Count;
+        }
+
+        return score > 0;
+    }
+
+    /// <summary>
+    ///     Scores one text-node payload map against the candidate
+    ///     original/translated map pair.
+    /// </summary>
+    /// <param name="liveValues">The currently visible values.</param>
+    /// <param name="originalValues">The persisted original values.</param>
+    /// <param name="translatedValues">The persisted translated values.</param>
+    /// <param name="score">The resulting match score.</param>
+    /// <returns>
+    ///     <see langword="true" /> when every live slot matches either the
+    ///     original or translated slot of the candidate.
+    /// </returns>
+    private static bool TryScoreMap(
+        IReadOnlyDictionary<string, string> liveValues,
+        IReadOnlyDictionary<string, string> originalValues,
+        IReadOnlyDictionary<string, string> translatedValues,
+        out int score)
+    {
+        score = 0;
+
+        if (liveValues.Count == 0)
+        {
+            return true;
+        }
+
+        if (liveValues.Count > originalValues.Count ||
+            liveValues.Count > translatedValues.Count)
+        {
+            return false;
+        }
+
+        foreach (var (index, liveText) in liveValues)
+        {
+            if (!originalValues.TryGetValue(index, out var originalText) ||
+                !translatedValues.TryGetValue(index, out var translatedText))
+            {
+                return false;
+            }
+
+            if (string.Equals(liveText, translatedText, StringComparison.Ordinal) ||
+                string.Equals(liveText, originalText, StringComparison.Ordinal))
+            {
+                score += 2;
+                continue;
+            }
+
+            return false;
+        }
+
+        if (liveValues.Count == originalValues.Count &&
+            liveValues.Count == translatedValues.Count)
         {
             score += liveValues.Count;
         }

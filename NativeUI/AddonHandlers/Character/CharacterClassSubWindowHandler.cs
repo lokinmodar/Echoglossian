@@ -3,18 +3,18 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
 /// <summary>
-///     Handles translation for the "CharacterClass" addon using AtkValues and
-///     StringArrayData.
+///     Handles translation for the "CharacterClass" addon using visible text
+///     nodes only.
 ///     Lifecycle-safe: extracts and applies values within valid memory scope per
 ///     frame.
 /// </summary>
-public class CharacterClassSubWindowHandler : DbFirstGameWindowAddonHandler
+public class CharacterClassSubWindowHandler
+    : CharacterTextNodeWindowHandlerBase
 {
   /// <summary>
   ///     Initializes a new instance of the
@@ -31,20 +31,7 @@ public class CharacterClassSubWindowHandler : DbFirstGameWindowAddonHandler
           addonName: "CharacterClass",
           config: config,
           hoverTooltipManager: hoverTooltipManager,
-          translationService: translationService,
-          enabledSelector: static configuration =>
-              configuration.TranslateCharacterWindow,
-          useAtkValues: true,
-          stringArrayDataType: StringArrayType.Character,
-          displayModeSelector: static configuration =>
-              configuration.CharacterWindowTranslationDisplayMode)
+          translationService: translationService)
     {
-    }
-
-    /// <inheritdoc />
-    protected override bool ShouldCaptureStringArrayValues(
-        byte subscribedAddonsCount)
-    {
-        return subscribedAddonsCount <= 1;
     }
 }

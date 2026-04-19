@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
@@ -11,7 +10,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 /// <summary>
 ///     Handles DB-first translation for the CharacterStatus subwindow.
 /// </summary>
-public class CharacterStatusSubWindowHandler : DbFirstGameWindowAddonHandler
+public class CharacterStatusSubWindowHandler
+    : CharacterTextNodeWindowHandlerBase
 {
     /// <summary>
     ///     Initializes a new instance of the
@@ -28,13 +28,7 @@ public class CharacterStatusSubWindowHandler : DbFirstGameWindowAddonHandler
             addonName: "CharacterStatus",
             config: config,
             hoverTooltipManager: hoverTooltipManager,
-            translationService: translationService,
-            enabledSelector: static configuration =>
-                configuration.TranslateCharacterWindow,
-            useAtkValues: true,
-            stringArrayDataType: StringArrayType.Character,
-            displayModeSelector: static configuration =>
-                configuration.CharacterWindowTranslationDisplayMode)
+            translationService: translationService)
     {
     }
 }

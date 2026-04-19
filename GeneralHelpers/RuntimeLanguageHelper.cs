@@ -12,6 +12,17 @@ namespace Echoglossian;
 /// </summary>
 public static class RuntimeLanguageHelper
 {
+    private static readonly IReadOnlyDictionary<string, string> LanguageCodeAliases =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["zh"] = "zh-CN",
+            ["pt"] = "pt-BR",
+            ["he"] = "iw",
+            ["nb"] = "no",
+            ["fil"] = "tl",
+            ["jv"] = "jw",
+        };
+
     /// <summary>
     ///     Gets the current native client language as a normalized language
     ///     code.
@@ -96,7 +107,9 @@ public static class RuntimeLanguageHelper
             "japanese" => "ja",
             "日本語" => "ja",
             "ja" => "ja",
-            _ => Echoglossian.NormalizeLanguageCode(trimmed),
+            _ => LanguageCodeAliases.TryGetValue(trimmed, out var normalizedCode)
+                ? normalizedCode
+                : trimmed,
         };
     }
 }

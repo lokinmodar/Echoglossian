@@ -55,6 +55,42 @@ public class DbFirstPayloadRecoveryHelperTests
     }
 
     /// <summary>
+    ///     Ensures a fully translated live text-node payload recovers the
+    ///     persisted original payload.
+    /// </summary>
+    [Fact]
+    public void TryRecoverOriginalPayload_RecoversOriginal_WhenLiveTextNodesMatchTranslated()
+    {
+        var original = CreatePayload(
+            atkValues: new Dictionary<int, string>(),
+            stringArrayValues: new Dictionary<int, string>(),
+            textNodes: new Dictionary<string, string>
+            {
+                ["2:0"] = "Attributes",
+                ["3:0"] = "Character",
+            });
+        var translated = CreatePayload(
+            atkValues: new Dictionary<int, string>(),
+            stringArrayValues: new Dictionary<int, string>(),
+            textNodes: new Dictionary<string, string>
+            {
+                ["2:0"] = "Atributos",
+                ["3:0"] = "Personagem",
+            });
+
+        var resolved = DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
+            translated,
+            new[]
+            {
+                new DbFirstPayloadRecoveryCandidate(original, translated),
+            },
+            out var recoveredOriginal);
+
+        Assert.True(resolved);
+        Assert.Equal(original, recoveredOriginal);
+    }
+
+    /// <summary>
     ///     Ensures a mixed live payload still recovers the persisted original
     ///     payload when every slot matches either original or translated text.
     /// </summary>
@@ -249,6 +285,46 @@ public class DbFirstPayloadRecoveryHelperTests
     }
 
     /// <summary>
+    ///     Ensures translated-slot evidence is detected for text-node payloads.
+    /// </summary>
+    [Fact]
+    public void HasTranslatedSlotEvidence_ReturnsTrue_WhenLiveContainsTranslatedTextNode()
+    {
+        var livePayload = CreatePayload(
+            atkValues: new Dictionary<int, string>(),
+            stringArrayValues: new Dictionary<int, string>(),
+            textNodes: new Dictionary<string, string>
+            {
+                ["2:0"] = "Atributos",
+            });
+        var original = CreatePayload(
+            atkValues: new Dictionary<int, string>(),
+            stringArrayValues: new Dictionary<int, string>(),
+            textNodes: new Dictionary<string, string>
+            {
+                ["2:0"] = "Attributes",
+                ["3:0"] = "Character",
+            });
+        var translated = CreatePayload(
+            atkValues: new Dictionary<int, string>(),
+            stringArrayValues: new Dictionary<int, string>(),
+            textNodes: new Dictionary<string, string>
+            {
+                ["2:0"] = "Atributos",
+                ["3:0"] = "Personagem",
+            });
+
+        var hasEvidence = DbFirstPayloadRecoveryHelper.HasTranslatedSlotEvidence(
+            livePayload,
+            new[]
+            {
+                new DbFirstPayloadRecoveryCandidate(original, translated),
+            });
+
+        Assert.True(hasEvidence);
+    }
+
+    /// <summary>
     ///     Ensures compatible persisted candidates can still be reused when
     ///     the currently visible original-facing payload is only a subset of
     ///     the persisted original payload.
@@ -374,18 +450,18 @@ public class DbFirstPayloadRecoveryHelperTests
 
         var projectedPayload = supersetPayload.ProjectToShape(referencePayload);
 
-        Assert.Equal(
-            CreatePayload(
-                atkValues: new Dictionary<int, string>
-                {
-                    [3] = "Personagem",
-                    [4] = "Dever",
-                },
-                stringArrayValues: new Dictionary<int, string>
-                {
-                    [0] = "Categoria",
-                }),
-            projectedPayload);
+        var expectedPayload = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Personagem",
+                [4] = "Dever",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Categoria",
+            });
+
+        Assert.Equal(expectedPayload.Serialize(), projectedPayload.Serialize());
     }
 
     /// <summary>
@@ -396,11 +472,14 @@ public class DbFirstPayloadRecoveryHelperTests
     /// <returns>The payload.</returns>
     private static DbFirstGameWindowPayload CreatePayload(
         IDictionary<int, string> atkValues,
-        IDictionary<int, string> stringArrayValues)
+        IDictionary<int, string> stringArrayValues,
+        IDictionary<string, string>? textNodes = null)
     {
         return new DbFirstGameWindowPayload(
             new SortedDictionary<int, string>(atkValues),
             new SortedDictionary<int, string>(stringArrayValues),
-            new SortedDictionary<string, string>(StringComparer.Ordinal));
+            new SortedDictionary<string, string>(
+                textNodes ?? new Dictionary<string, string>(),
+                StringComparer.Ordinal));
     }
 }
