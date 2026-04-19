@@ -28,7 +28,8 @@ public class CharacterStatusSubWindowHandler
             addonName: "CharacterStatus",
             config: config,
             hoverTooltipManager: hoverTooltipManager,
-            translationService: translationService)
+            translationService: translationService,
+            stringArrayType: StringArrayType.Character)
     {
     }
 }

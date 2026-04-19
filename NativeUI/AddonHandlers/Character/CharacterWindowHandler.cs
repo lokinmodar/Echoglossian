@@ -27,7 +27,8 @@ public class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
             addonName: "Character",
             config: config,
             hoverTooltipManager: hoverTooltipManager,
-            translationService: translationService)
+            translationService: translationService,
+            stringArrayType: StringArrayType.Character)
     {
     }
 }

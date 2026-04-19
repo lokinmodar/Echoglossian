@@ -128,6 +128,28 @@ public static class StringArrayStructuredPayloadResolver
                         ? existingSlot.SemanticKey
                         : pair.Value.SemanticKey;
             }
+
+            foreach (var pair in structuredTranslated.TextNodes)
+            {
+                if (!translatedPayload.TextNodes.TryGetValue(
+                        pair.Key,
+                        out var existingTextNode))
+                {
+                    translatedPayload.TextNodes[pair.Key] = CloneSlot(pair.Value);
+                    continue;
+                }
+
+                existingTextNode.TranslatedText =
+                    string.IsNullOrWhiteSpace(pair.Value.TranslatedText)
+                        ? existingTextNode.TranslatedText
+                        : pair.Value.TranslatedText;
+                existingTextNode.IsVisible = pair.Value.IsVisible;
+                existingTextNode.IsTranslatable = pair.Value.IsTranslatable;
+                existingTextNode.SemanticKey =
+                    string.IsNullOrWhiteSpace(pair.Value.SemanticKey)
+                        ? existingTextNode.SemanticKey
+                        : pair.Value.SemanticKey;
+            }
         }
 
         var translatedStrings = ParseSlotMap(row.TranslatedStrings);
@@ -229,6 +251,11 @@ public static class StringArrayStructuredPayloadResolver
         foreach (var pair in payload.Slots)
         {
             clone.Slots[pair.Key] = CloneSlot(pair.Value);
+        }
+
+        foreach (var pair in payload.TextNodes)
+        {
+            clone.TextNodes[pair.Key] = CloneSlot(pair.Value);
         }
 
         return clone;

@@ -47,6 +47,29 @@ public class DbFirstStructuredStringArrayHelperTests
     }
 
     /// <summary>
+    ///     Ensures stable visible text-node entries are also encoded into the
+    ///     canonical structured payload when present.
+    /// </summary>
+    [Fact]
+    public void BuildCanonicalPayload_EncodesTextNodes()
+    {
+        var payload = DbFirstStructuredStringArrayHelper.BuildCanonicalPayload(
+            "Character",
+            "addon:Character",
+            new Dictionary<int, string>(),
+            new Dictionary<int, string>(),
+            new Dictionary<string, string>
+            {
+                ["17:0"] = "Attributes",
+                ["42:0"] = "Profile",
+            });
+
+        Assert.Equal("Attributes", payload.TextNodes["17:0"].OriginalText);
+        Assert.Equal("textnode:17:0", payload.TextNodes["17:0"].SemanticKey);
+        Assert.Equal("Profile", payload.TextNodes["42:0"].OriginalText);
+    }
+
+    /// <summary>
     ///     Ensures translated canonical slots project back to the live addon
     ///     maps using the original ATK and StringArrayData indices.
     /// </summary>
@@ -77,6 +100,45 @@ public class DbFirstStructuredStringArrayHelperTests
         Assert.True(projected);
         Assert.Equal("Perfil", projection.AtkValues[0]);
         Assert.Equal("Reputacao", projection.StringArrayValues[10]);
+    }
+
+    /// <summary>
+    ///     Ensures translated text-node payloads project back using their
+    ///     stable node keys.
+    /// </summary>
+    [Fact]
+    public void TryProjectTranslatedPayload_RestoresTextNodes()
+    {
+        var originalPayload = DbFirstStructuredStringArrayHelper
+            .BuildCanonicalPayload(
+                "Character",
+                "addon:Character",
+                new Dictionary<int, string>(),
+                new Dictionary<int, string>(),
+                new Dictionary<string, string>
+                {
+                    ["17:0"] = "Attributes",
+                });
+        var translatedPayload = DbFirstStructuredStringArrayHelper
+            .BuildCanonicalPayload(
+                "Character",
+                "addon:Character",
+                new Dictionary<int, string>(),
+                new Dictionary<int, string>(),
+                new Dictionary<string, string>
+                {
+                    ["17:0"] = "Attributes",
+                });
+        translatedPayload.TextNodes["17:0"].TranslatedText = "Atributos";
+
+        var projected = DbFirstStructuredStringArrayHelper
+            .TryProjectTranslatedPayload(
+                originalPayload,
+                translatedPayload,
+                out var projection);
+
+        Assert.True(projected);
+        Assert.Equal("Atributos", projection.TextNodes["17:0"]);
     }
 
     /// <summary>

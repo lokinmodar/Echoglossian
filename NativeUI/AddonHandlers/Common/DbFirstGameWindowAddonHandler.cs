@@ -232,6 +232,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether this handler should keep polling on
+    ///     <see cref="AddonEvent.PreDraw" /> after a native translation has
+    ///     already been applied successfully.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> when continuous pre-draw polling is still
+    ///     useful for this addon; otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldRefreshAppliedStateOnPreDraw()
+    {
+        return true;
+    }
+
+    /// <summary>
     ///     Tries to register addon-specific hover targets when the default
     ///     visible-text-node path is not the right surface for this addon.
     /// </summary>
@@ -273,6 +287,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             this.RestoreOriginalPayloadIfNeeded();
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+            return;
+        }
+
+        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
+            this.displayModeSelector(this.config),
+            this.config.OverlayOnlyLanguage);
+        if (this.runtimeState != null &&
+            !TranslationDisplayModeHelper.UsesHoverTooltips(displayMode) &&
+            !this.ShouldRefreshAppliedStateOnPreDraw())
+        {
             return;
         }
 
@@ -437,9 +461,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 new DbFirstGameWindowPayload(
                     projection.AtkValues,
                     projection.StringArrayValues,
-                    new SortedDictionary<string, string>(
-                        originalPayload.TextNodes,
-                        StringComparer.Ordinal)),
+                    projection.TextNodes),
                 structuredPayloadKey,
                 displayMode);
             ClearFailedPayloadRetry(structuredPayloadKey);
@@ -711,7 +733,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.stringArrayDataType!.Value.ToString(),
             $"addon:{this.addonName}",
             payload.AtkValues,
-            payload.StringArrayValues);
+            payload.StringArrayValues,
+            payload.TextNodes);
     }
 
     /// <summary>
@@ -845,11 +868,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             var originalCandidatePayload = new DbFirstGameWindowPayload(
                 originalProjection.AtkValues,
                 originalProjection.StringArrayValues,
-                new SortedDictionary<string, string>(StringComparer.Ordinal));
+                originalProjection.TextNodes);
             var translatedCandidatePayload = new DbFirstGameWindowPayload(
                 translatedProjection.AtkValues,
                 translatedProjection.StringArrayValues,
-                new SortedDictionary<string, string>(StringComparer.Ordinal));
+                translatedProjection.TextNodes);
             if (!IsUsableRecoveryCandidate(
                     row.OriginalLang,
                     row.TranslationLang,

@@ -31,7 +31,8 @@ public static class DbFirstStructuredStringArrayHelper
         string type,
         string contextKey,
         IReadOnlyDictionary<int, string> atkValues,
-        IReadOnlyDictionary<int, string> stringArrayValues)
+        IReadOnlyDictionary<int, string> stringArrayValues,
+        IReadOnlyDictionary<string, string>? textNodes = null)
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(contextKey);
@@ -70,6 +71,20 @@ public static class DbFirstStructuredStringArrayHelper
             };
         }
 
+        if (textNodes != null)
+        {
+            foreach (var pair in textNodes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                payload.TextNodes[pair.Key] = new StringArrayStructuredSlot
+                {
+                    SemanticKey = $"textnode:{pair.Key}",
+                    OriginalText = pair.Value,
+                    IsVisible = true,
+                    IsTranslatable = !string.IsNullOrWhiteSpace(pair.Value),
+                };
+            }
+        }
+
         return payload;
     }
 
@@ -94,6 +109,7 @@ public static class DbFirstStructuredStringArrayHelper
 
         var atkValues = new SortedDictionary<int, string>();
         var stringArrayValues = new SortedDictionary<int, string>();
+        var textNodes = new SortedDictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var pair in originalPayload.Slots)
         {
@@ -127,9 +143,38 @@ public static class DbFirstStructuredStringArrayHelper
             stringArrayValues[pair.Key] = finalText ?? string.Empty;
         }
 
+        foreach (var pair in originalPayload.TextNodes)
+        {
+            if (!translatedPayload.TextNodes.TryGetValue(
+                    pair.Key,
+                    out var translatedTextNode))
+            {
+                if (pair.Value.IsTranslatable)
+                {
+                    projection = DbFirstStructuredStringArrayProjection.Empty;
+                    return false;
+                }
+
+                translatedTextNode = pair.Value;
+            }
+
+            var finalText = pair.Value.IsTranslatable
+                ? translatedTextNode.TranslatedText
+                : pair.Value.OriginalText;
+            if (pair.Value.IsTranslatable &&
+                string.IsNullOrWhiteSpace(finalText))
+            {
+                projection = DbFirstStructuredStringArrayProjection.Empty;
+                return false;
+            }
+
+            textNodes[pair.Key] = finalText ?? string.Empty;
+        }
+
         projection = new DbFirstStructuredStringArrayProjection(
             atkValues,
-            stringArrayValues);
+            stringArrayValues,
+            textNodes);
         return true;
     }
 
@@ -146,6 +191,7 @@ public static class DbFirstStructuredStringArrayHelper
 
         var atkValues = new SortedDictionary<int, string>();
         var stringArrayValues = new SortedDictionary<int, string>();
+        var textNodes = new SortedDictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var pair in originalPayload.Slots)
         {
@@ -159,9 +205,15 @@ public static class DbFirstStructuredStringArrayHelper
             stringArrayValues[pair.Key] = finalText;
         }
 
+        foreach (var pair in originalPayload.TextNodes)
+        {
+            textNodes[pair.Key] = pair.Value.OriginalText ?? string.Empty;
+        }
+
         return new DbFirstStructuredStringArrayProjection(
             atkValues,
-            stringArrayValues);
+            stringArrayValues,
+            textNodes);
     }
 
     /// <summary>
@@ -198,7 +250,12 @@ public static class DbFirstStructuredStringArrayHelper
                 pair.Value.IsTranslatable &&
                 !string.IsNullOrWhiteSpace(pair.Value.OriginalText))
             .ToList();
-        if (slotTexts.Count == 0)
+        var textNodeTexts = originalPayload.TextNodes
+            .Where(pair =>
+                pair.Value.IsTranslatable &&
+                !string.IsNullOrWhiteSpace(pair.Value.OriginalText))
+            .ToList();
+        if (slotTexts.Count == 0 && textNodeTexts.Count == 0)
         {
             return translatedPayload;
         }
@@ -209,6 +266,30 @@ public static class DbFirstStructuredStringArrayHelper
         foreach (var pair in slotTexts)
         {
             var encodedKey = EncodeTranslationKey(pair.Key);
+            var encodedEntry = $"{encodedKey}|{pair.Value.OriginalText}";
+
+            if (builder.Length + encodedEntry.Length + 1 > MaxChunkLength)
+            {
+                await TranslateAndMergeChunkAsync(
+                    translationService,
+                    builder.ToString(),
+                    translatedMap,
+                    sourceLanguage,
+                    targetLanguage);
+                builder.Clear();
+            }
+
+            if (builder.Length > 0)
+            {
+                builder.Append('|');
+            }
+
+            builder.Append(encodedEntry);
+        }
+
+        foreach (var pair in textNodeTexts)
+        {
+            var encodedKey = EncodeTextNodeTranslationKey(pair.Key);
             var encodedEntry = $"{encodedKey}|{pair.Value.OriginalText}";
 
             if (builder.Length + encodedEntry.Length + 1 > MaxChunkLength)
@@ -250,6 +331,18 @@ public static class DbFirstStructuredStringArrayHelper
             }
 
             translatedPayload.Slots[pair.Key].TranslatedText = translatedText;
+        }
+
+        foreach (var pair in textNodeTexts)
+        {
+            var encodedKey = EncodeTextNodeTranslationKey(pair.Key);
+            if (!translatedMap.TryGetValue(encodedKey, out var translatedText) ||
+                string.IsNullOrWhiteSpace(translatedText))
+            {
+                continue;
+            }
+
+            translatedPayload.TextNodes[pair.Key].TranslatedText = translatedText;
         }
 
         return translatedPayload;
@@ -342,6 +435,11 @@ public static class DbFirstStructuredStringArrayHelper
         return $"k{slotKey.ToString(CultureInfo.InvariantCulture)}";
     }
 
+    private static string EncodeTextNodeTranslationKey(string textNodeKey)
+    {
+        return $"t{textNodeKey}";
+    }
+
     private static async Task TranslateAndMergeChunkAsync(
         TranslationService translationService,
         string chunk,
@@ -388,6 +486,22 @@ public static class DbFirstStructuredStringArrayHelper
             }
         }
 
+        foreach (var pair in originalPayload.TextNodes)
+        {
+            if (!pair.Value.IsTranslatable)
+            {
+                continue;
+            }
+
+            if (!translatedPayload.TextNodes.TryGetValue(
+                    pair.Key,
+                    out var translatedTextNode) ||
+                string.IsNullOrWhiteSpace(translatedTextNode.TranslatedText))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 }
@@ -398,13 +512,18 @@ public static class DbFirstStructuredStringArrayHelper
 /// </summary>
 /// <param name="AtkValues">The translated ATK value strings.</param>
 /// <param name="StringArrayValues">The translated StringArrayData strings.</param>
+/// <param name="TextNodes">The translated visible text-node strings.</param>
 public sealed record DbFirstStructuredStringArrayProjection(
     SortedDictionary<int, string> AtkValues,
-    SortedDictionary<int, string> StringArrayValues)
+    SortedDictionary<int, string> StringArrayValues,
+    SortedDictionary<string, string> TextNodes)
 {
     /// <summary>
     ///     Gets an empty projection.
     /// </summary>
     public static DbFirstStructuredStringArrayProjection Empty =>
-        new(new SortedDictionary<int, string>(), new SortedDictionary<int, string>());
+        new(
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
 }

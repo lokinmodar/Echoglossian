@@ -35,6 +35,12 @@ public sealed class StringArrayStructuredPayload
     public SortedDictionary<int, StringArrayStructuredSlot> Slots { get; } = [];
 
     /// <summary>
+    ///     Gets the captured visible text nodes keyed by their stable node key.
+    /// </summary>
+    public SortedDictionary<string, StringArrayStructuredSlot> TextNodes { get; } =
+        new(StringComparer.Ordinal);
+
+    /// <summary>
     ///     Serializes the payload using a stable JSON shape.
     /// </summary>
     /// <returns>The serialized payload.</returns>
@@ -61,6 +67,16 @@ public sealed class StringArrayStructuredPayload
         {
             builder.Append('|')
                 .Append(index)
+                .Append(':')
+                .Append(slot.SemanticKey)
+                .Append(':')
+                .Append(slot.OriginalText);
+        }
+
+        foreach (var (key, slot) in this.TextNodes)
+        {
+            builder.Append('|')
+                .Append(key)
                 .Append(':')
                 .Append(slot.SemanticKey)
                 .Append(':')

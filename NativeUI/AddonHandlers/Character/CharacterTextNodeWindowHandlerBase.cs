@@ -27,7 +27,8 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         string addonName,
         Config config,
         HoverTooltipManager hoverTooltipManager,
-        TranslationService translationService)
+        TranslationService translationService,
+        StringArrayType? stringArrayType = null)
         : base(
             addonName: addonName,
             config: config,
@@ -37,6 +38,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 configuration.TranslateCharacterWindow,
             useAtkValues: false,
             useTextNodes: true,
+            stringArrayDataType: stringArrayType,
             displayModeSelector: static configuration =>
                 configuration.CharacterWindowTranslationDisplayMode)
     {
@@ -50,5 +52,11 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         return textNode != null &&
                textNode->TextId != 0 &&
                !string.IsNullOrWhiteSpace(visibleText);
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldRefreshAppliedStateOnPreDraw()
+    {
+        return false;
     }
 }
