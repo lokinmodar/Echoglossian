@@ -259,6 +259,27 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Tries to resolve a translated payload from one addon-specific
+    ///     canonical source other than persisted <see cref="GameWindow" />
+    ///     rows.
+    /// </summary>
+    /// <param name="originalPayload">The visible original-facing payload.</param>
+    /// <param name="translatedPayload">
+    ///     Receives the translated payload when resolution succeeds.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when a translated payload was resolved;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool TryResolveSupplementalTranslatedPayload(
+        DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload translatedPayload)
+    {
+        translatedPayload = DbFirstGameWindowPayload.Empty;
+        return false;
+    }
+
+    /// <summary>
     ///     Determines whether a named addon is currently visible.
     /// </summary>
     /// <param name="addonName">The addon name to probe.</param>
@@ -528,6 +549,27 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     compatiblePayloadKey,
                     displayMode);
                 ClearFailedPayloadRetry(compatiblePayloadKey);
+                this.nextRetryUtc = DateTime.MinValue;
+                return;
+            }
+
+            if (this.TryResolveSupplementalTranslatedPayload(
+                    originalPayload,
+                    out var supplementalTranslatedPayload))
+            {
+                supplementalTranslatedPayload =
+                    supplementalTranslatedPayload.ProjectToShape(
+                        originalPayload);
+                this.PersistResolvedGameWindowPayload(
+                    originalPayload,
+                    supplementalTranslatedPayload);
+                this.ApplyPayload(
+                    addon,
+                    originalPayload,
+                    supplementalTranslatedPayload,
+                    payloadKey,
+                    displayMode);
+                ClearFailedPayloadRetry(payloadKey);
                 this.nextRetryUtc = DateTime.MinValue;
                 return;
             }
@@ -934,6 +976,34 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 livePayload,
                 candidates);
         return false;
+    }
+
+    /// <summary>
+    ///     Persists one resolved original/translated payload pair as a
+    ///     canonical <see cref="GameWindow" /> row and refreshes cache state.
+    /// </summary>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    private void PersistResolvedGameWindowPayload(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        var row = new GameWindow(
+            this.addonName,
+            originalPayload.Serialize(),
+            ClientStateInterface.ClientLanguage.Humanize(),
+            translatedPayload.Serialize(),
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            GetGameVersion(),
+            createdDate: null,
+            updatedDate: null);
+
+        _ = GameWindowPersistenceHelper.InsertGameWindow(
+            ConfigDirectory,
+            row,
+            GameWindowCacheManager.Update);
     }
 
     /// <summary>

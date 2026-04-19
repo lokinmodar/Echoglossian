@@ -14,6 +14,8 @@ namespace Echoglossian.Cache;
 public static class ActionTooltipCacheManager
 {
     private static readonly Dictionary<uint, List<ActionTooltip>> Cache = [];
+    private static readonly Dictionary<string, Dictionary<string, string>>
+        TextLookupCache = new(StringComparer.Ordinal);
 
     /// <summary>
     ///     Loads all canonical action-tooltip rows into memory.
@@ -40,6 +42,8 @@ public static class ActionTooltipCacheManager
 
                 rows.Add(row);
             }
+
+            TextLookupCache.Clear();
         }
         catch (Exception ex)
         {
@@ -79,6 +83,7 @@ public static class ActionTooltipCacheManager
         }
 
         rows.Add(newRecord);
+        TextLookupCache.Clear();
     }
 
     /// <summary>
@@ -119,10 +124,180 @@ public static class ActionTooltipCacheManager
     }
 
     /// <summary>
+    ///     Tries to resolve one translated action text by exact original text
+    ///     from the canonical action-tooltip cache.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <param name="translatedText">The resolved translated text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact translated text was found in
+    ///     canonical action-tooltip storage; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindTranslatedText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(lang) ||
+            string.IsNullOrWhiteSpace(originalText))
+        {
+            return false;
+        }
+
+        if (TryFindTranslatedTextInScope(
+                lang,
+                engine,
+                gameVersion,
+                originalText,
+                out translatedText))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion))
+        {
+            return TryFindTranslatedTextInScope(
+                lang,
+                engine,
+                version: null,
+                originalText,
+                out translatedText);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()
     {
         Cache.Clear();
+        TextLookupCache.Clear();
+    }
+
+    /// <summary>
+    ///     Tries to resolve one translated action text from one cached scope.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="version">The exact stored game version scope.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a translated text was found in this
+    ///     exact scope; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryFindTranslatedTextInScope(
+        string lang,
+        int engine,
+        string? version,
+        string originalText,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+
+        var scopeKey = BuildTextLookupScopeKey(lang, engine, version);
+        if (!TextLookupCache.TryGetValue(scopeKey, out var lookup))
+        {
+            lookup = BuildTextLookup(lang, engine, version);
+            TextLookupCache[scopeKey] = lookup;
+        }
+
+        var found = lookup.TryGetValue(originalText, out var resolvedText);
+        translatedText = resolvedText ?? string.Empty;
+        return found;
+    }
+
+    /// <summary>
+    ///     Builds one translated-text lookup for a single action-tooltip cache
+    ///     scope.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="version">The exact stored game version scope.</param>
+    /// <returns>The translated-text lookup map.</returns>
+    private static Dictionary<string, string> BuildTextLookup(
+        string lang,
+        int engine,
+        string? version)
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var row in Cache.Values.SelectMany(static rows => rows))
+        {
+            if (!RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) ||
+                row.TranslationEngine != engine ||
+                !string.Equals(
+                    row.GameVersion,
+                    version,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            TryAddLookupValue(
+                lookup,
+                row.ActionName,
+                row.TranslatedActionName);
+            TryAddLookupValue(
+                lookup,
+                row.ActionDescription,
+                row.TranslatedActionDescription);
+            TryAddLookupValue(
+                lookup,
+                row.OriginalTooltipText,
+                row.TranslatedTooltipText);
+        }
+
+        return lookup;
+    }
+
+    /// <summary>
+    ///     Adds one translated-text lookup entry when both texts are usable.
+    /// </summary>
+    /// <param name="lookup">The lookup map to update.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <param name="translatedText">The translated text.</param>
+    private static void TryAddLookupValue(
+        IDictionary<string, string> lookup,
+        string? originalText,
+        string? translatedText)
+    {
+        if (string.IsNullOrWhiteSpace(originalText) ||
+            string.IsNullOrWhiteSpace(translatedText) ||
+            string.Equals(
+                originalText,
+                translatedText,
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        lookup.TryAdd(originalText, translatedText);
+    }
+
+    /// <summary>
+    ///     Builds one stable scope key for translated-text lookups.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="version">The exact stored game version scope.</param>
+    /// <returns>The stable scope key.</returns>
+    private static string BuildTextLookupScopeKey(
+        string lang,
+        int engine,
+        string? version)
+    {
+        return $"{lang}|{engine}|{version ?? string.Empty}";
     }
 }

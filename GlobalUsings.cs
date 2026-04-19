@@ -60,6 +60,7 @@ global using Echoglossian.Helpers;
 global using Echoglossian.ImageGeneration;
 global using Echoglossian.LanguagesHandling;
 global using Echoglossian.NativeUI.AddonHandlers.Character;
+global using Echoglossian.NativeUI.AddonHandlers.Actions;
 global using Echoglossian.NativeUI.AddonHandlers.MainMenu;
 global using Echoglossian.NativeUI.AddonHandlers.Hud;
 global using Echoglossian.NativeUI.AddonHandlers.OperationGuide;

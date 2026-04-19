@@ -2488,6 +2488,15 @@ namespace Echoglossian.Properties {
         /// <summary>
         ///   Looks up a localized string.
         /// </summary>
+        public static string TranslateActionsWindow {
+            get {
+                return ResourceManager.GetString("TranslateActionsWindow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
         public static string TranslateHudWindows {
             get {
                 return ResourceManager.GetString("TranslateHudWindows", resourceCulture);

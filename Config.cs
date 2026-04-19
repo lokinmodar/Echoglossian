@@ -572,6 +572,14 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode MainCommandWindowTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Translate the Actions window.</summary>
+  [DefaultValue(false)] public bool TranslateActionsWindow = false;
+
+  /// <summary>Display mode for the Actions window.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode ActionsWindowTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Translate HUD window text surfaces backed by StringArrayData.</summary>
   [DefaultValue(false)] public bool TranslateHudWindow = false;
 

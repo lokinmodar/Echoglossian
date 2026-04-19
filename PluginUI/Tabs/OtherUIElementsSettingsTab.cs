@@ -46,6 +46,15 @@ public static class OtherUIElementsSettingsTab
 
         ImGui.Spacing();
         changed |= ImGui.Checkbox(
+            Resources.TranslateActionsWindow,
+            ref config.TranslateActionsWindow);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            nameof(config.ActionsWindowTranslationDisplayMode),
+            ref config.ActionsWindowTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
+
+        ImGui.Spacing();
+        changed |= ImGui.Checkbox(
             Resources.TranslateHudWindows,
             ref config.TranslateHudWindow);
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
