@@ -74,7 +74,9 @@ public static class StringArrayDataCacheManager
             row.ContextKey == newRecord.ContextKey &&
             row.TranslationLang == newRecord.TranslationLang &&
             row.TranslationEngine == newRecord.TranslationEngine &&
-            row.GameVersion == newRecord.GameVersion &&
+            GameVersionLookupHelper.MatchesStoredVersion(
+                row.GameVersion,
+                newRecord.GameVersion) &&
             row.SourceContentHash == newRecord.SourceContentHash);
         if (existing != null)
         {
@@ -119,7 +121,9 @@ public static class StringArrayDataCacheManager
             row.ContextKey == contextKey &&
             row.TranslationLang == lang &&
             row.TranslationEngine == engine &&
-            row.GameVersion == gameVersion &&
+            GameVersionLookupHelper.MatchesStoredVersion(
+                row.GameVersion,
+                gameVersion) &&
             row.SourceContentHash == sourceContentHash);
     }
 
@@ -157,7 +161,9 @@ public static class StringArrayDataCacheManager
                 row.ContextKey == contextKey &&
                 row.TranslationLang == lang &&
                 row.TranslationEngine == engine &&
-                row.GameVersion == gameVersion)
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    row.GameVersion,
+                    gameVersion))
             .ToList();
     }
 

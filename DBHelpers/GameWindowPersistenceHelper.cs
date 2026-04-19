@@ -45,7 +45,9 @@ public static class GameWindowPersistenceHelper
                         g.TranslationLang,
                         gameWindow.TranslationLang) &&
                     g.TranslationEngine == gameWindow.TranslationEngine &&
-                    g.GameVersion == gameWindow.GameVersion &&
+                    GameVersionLookupHelper.MatchesStoredVersion(
+                        g.GameVersion,
+                        gameWindow.GameVersion) &&
                     g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
 
             if (existing != null)

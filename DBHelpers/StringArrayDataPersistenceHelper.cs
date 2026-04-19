@@ -182,6 +182,9 @@ public static class StringArrayDataPersistenceHelper
         EchoglossianDbContext context,
         StringArrayDatas row)
     {
+        var hasRequestedGameVersion =
+            GameVersionLookupHelper.HasRequestedVersion(row.GameVersion);
+
         if (HasCanonicalScope(row))
         {
             return context.StringArrayDatas.Where(existing =>
@@ -189,7 +192,10 @@ public static class StringArrayDataPersistenceHelper
                 existing.ContextKey == row.ContextKey &&
                 existing.TranslationLang == row.TranslationLang &&
                 existing.TranslationEngine == row.TranslationEngine &&
-                existing.GameVersion == row.GameVersion &&
+                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (existing.GameVersion == null ||
+                   existing.GameVersion == row.GameVersion))) &&
                 existing.SourceContentHash == row.SourceContentHash);
         }
 
@@ -197,7 +203,10 @@ public static class StringArrayDataPersistenceHelper
             existing.Type == row.Type &&
             existing.TranslationLang == row.TranslationLang &&
             existing.TranslationEngine == row.TranslationEngine &&
-            existing.GameVersion == row.GameVersion &&
+            ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+             (hasRequestedGameVersion &&
+              (existing.GameVersion == null ||
+               existing.GameVersion == row.GameVersion))) &&
             existing.FormattedRawData == row.FormattedRawData);
     }
 

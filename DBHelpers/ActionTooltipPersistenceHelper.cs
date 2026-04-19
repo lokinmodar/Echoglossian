@@ -79,11 +79,18 @@ public static class ActionTooltipPersistenceHelper
                 return "Invalid data.";
             }
 
+            var hasRequestedGameVersion =
+                GameVersionLookupHelper.HasRequestedVersion(
+                    actionTooltip.GameVersion);
+
             var existing = context.ActionTooltip.FirstOrDefault(row =>
                 row.ActionId == actionTooltip.ActionId &&
                 row.TranslationLang == actionTooltip.TranslationLang &&
                 row.TranslationEngine == actionTooltip.TranslationEngine &&
-                row.GameVersion == actionTooltip.GameVersion &&
+                ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (row.GameVersion == null ||
+                   row.GameVersion == actionTooltip.GameVersion))) &&
                 row.SourceContentHash == actionTooltip.SourceContentHash);
             if (existing != null)
             {
@@ -131,13 +138,19 @@ public static class ActionTooltipPersistenceHelper
                 return null;
             }
 
+            var hasRequestedGameVersion =
+                GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion);
+
             return context.ActionTooltip
                 .AsNoTracking()
                 .FirstOrDefault(row =>
                     row.ActionId == probe.ActionId &&
                     row.TranslationLang == probe.TranslationLang &&
                     row.TranslationEngine == probe.TranslationEngine &&
-                    row.GameVersion == probe.GameVersion &&
+                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (row.GameVersion == null ||
+                       row.GameVersion == probe.GameVersion))) &&
                     row.SourceContentHash == probe.SourceContentHash);
         }
         catch

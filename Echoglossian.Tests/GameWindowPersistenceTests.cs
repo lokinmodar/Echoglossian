@@ -208,6 +208,62 @@ public class GameWindowPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures a version-agnostic row is reused when the runtime now
+    ///     provides a concrete game version for the same logical payload.
+    /// </summary>
+    [Fact]
+    public void InsertGameWindow_ReusesVersionAgnosticRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalJson = "{\"atkValues\":{\"1\":\"Main Command\"}}";
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "_MainCommand",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"1\":\"Comando Principal\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: null,
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "_MainCommand",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"1\":\"Comandos\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.GameWindow);
+
+            Assert.Null(row.GameVersion);
+            Assert.Equal(
+                "{\"atkValues\":{\"1\":\"Comandos\"}}",
+                row.TranslatedWindowStrings);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Deletes a temporary test directory when possible.
     /// </summary>
     /// <param name="path">The path to delete.</param>

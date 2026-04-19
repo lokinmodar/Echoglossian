@@ -189,6 +189,56 @@ public class StringArrayDataPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures a version-agnostic canonical row is reused when the runtime
+    ///     later supplies a concrete game version for the same payload.
+    /// </summary>
+    [Fact]
+    public void InsertStringArrayData_ReusesVersionAgnosticCanonicalMatch()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var original = CreateCanonicalRow(
+                type: "MainCommand",
+                contextKey: "MainCommand:Root",
+                sourceHash: "hash-root",
+                translatedPayload: "{\"slots\":{\"0\":\"Menu Principal\"}}");
+            original.GameVersion = null;
+
+            var updated = CreateCanonicalRow(
+                type: "MainCommand",
+                contextKey: "MainCommand:Root",
+                sourceHash: "hash-root",
+                translatedPayload: "{\"slots\":{\"0\":\"Comando Principal\"}}");
+
+            StringArrayDataPersistenceHelper.InsertStringArrayData(configDir, original);
+            StringArrayDataPersistenceHelper.InsertStringArrayData(configDir, updated);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.StringArrayDatas);
+
+            Assert.Null(row.GameVersion);
+            Assert.Equal(
+                "{\"slots\":{\"0\":\"Comando Principal\"}}",
+                row.TranslatedStructuredPayload);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Creates a canonical string-array row for persistence tests.
     /// </summary>
     /// <param name="type">The string-array type.</param>

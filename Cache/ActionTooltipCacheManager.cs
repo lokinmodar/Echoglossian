@@ -69,7 +69,9 @@ public static class ActionTooltipCacheManager
             row.ActionId == newRecord.ActionId &&
             row.TranslationLang == newRecord.TranslationLang &&
             row.TranslationEngine == newRecord.TranslationEngine &&
-            row.GameVersion == newRecord.GameVersion &&
+            GameVersionLookupHelper.MatchesStoredVersion(
+                row.GameVersion,
+                newRecord.GameVersion) &&
             row.SourceContentHash == newRecord.SourceContentHash);
         if (existing != null)
         {
@@ -110,7 +112,9 @@ public static class ActionTooltipCacheManager
         return rows.FirstOrDefault(row =>
             row.TranslationLang == lang &&
             row.TranslationEngine == engine &&
-            row.GameVersion == gameVersion &&
+            GameVersionLookupHelper.MatchesStoredVersion(
+                row.GameVersion,
+                gameVersion) &&
             row.SourceContentHash == sourceContentHash);
     }
 

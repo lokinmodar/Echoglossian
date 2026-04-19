@@ -80,7 +80,9 @@ public static class GameWindowCacheManager
             g.TranslationLang,
             newRecord.TranslationLang) &&
         g.TranslationEngine == newRecord.TranslationEngine &&
-        g.GameVersion == newRecord.GameVersion &&
+        GameVersionLookupHelper.MatchesStoredVersion(
+            g.GameVersion,
+            newRecord.GameVersion) &&
         g.OriginalWindowStrings == newRecord.OriginalWindowStrings);
 
     if (existing != null)
@@ -122,10 +124,22 @@ public static class GameWindowCacheManager
       return null;
     }
 
-    ExactCache.TryGetValue(
-        BuildExactKey(addonName, lang, engine, version, originalJson),
-        out var match);
-    return match;
+    if (ExactCache.TryGetValue(
+            BuildExactKey(addonName, lang, engine, version, originalJson),
+            out var exactMatch))
+    {
+      return exactMatch;
+    }
+
+    if (!string.IsNullOrWhiteSpace(version) &&
+        ExactCache.TryGetValue(
+            BuildExactKey(addonName, lang, engine, version: null, originalJson),
+            out var versionAgnosticMatch))
+    {
+      return versionAgnosticMatch;
+    }
+
+    return null;
   }
 
   /// <summary>
@@ -148,11 +162,39 @@ public static class GameWindowCacheManager
       return [];
     }
 
-    return ScopeCache.TryGetValue(
-               BuildScopeKey(addonName, lang, engine, version),
-               out var rows)
-        ? rows
-        : [];
+    var exactRows = ScopeCache.TryGetValue(
+        BuildScopeKey(addonName, lang, engine, version),
+        out var scopedRows)
+        ? scopedRows
+        : null;
+
+    if (string.IsNullOrWhiteSpace(version))
+    {
+      return exactRows ?? [];
+    }
+
+    var versionAgnosticRows = ScopeCache.TryGetValue(
+        BuildScopeKey(addonName, lang, engine, version: null),
+        out var fallbackRows)
+        ? fallbackRows
+        : null;
+
+    if (exactRows == null || exactRows.Count == 0)
+    {
+      return versionAgnosticRows ?? [];
+    }
+
+    if (versionAgnosticRows == null || versionAgnosticRows.Count == 0)
+    {
+      return exactRows;
+    }
+
+    var mergedRows = exactRows
+        .Concat(versionAgnosticRows)
+        .GroupBy(row => row.Id)
+        .Select(group => group.First())
+        .ToList();
+    return mergedRows;
   }
 
   private static List<GameWindow> GetAddonBucket(string addonName)
