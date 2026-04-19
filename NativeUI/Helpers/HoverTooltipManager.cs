@@ -13,11 +13,9 @@ namespace Echoglossian.NativeUI.Helpers;
 public sealed class HoverTooltipManager
 {
     private const int TooltipWrapLimit = 80;
-    private static readonly TimeSpan HoverLogCooldown = TimeSpan.FromSeconds(1);
 
     private readonly ConcurrentDictionary<string, HoverTooltipEntry> entries = new();
     private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(30);
-    private readonly ConcurrentDictionary<string, DateTime> lastHoverLogUtc = new();
     private readonly Config config;
 
     /// <summary>
@@ -51,22 +49,6 @@ public sealed class HoverTooltipManager
             enabled,
             DateTime.UtcNow);
 
-        if (this.entries.TryGetValue(key, out var existingEntry))
-        {
-            if (!this.IsSameVisualEntry(existingEntry, newEntry))
-            {
-                PluginLog.Debug(
-                    $"[HoverTooltip] register key='{key}' bounds=({topLeft.X:0.0},{topLeft.Y:0.0})-({bottomRight.X:0.0},{bottomRight.Y:0.0}) " +
-                    $"enabled={enabled}");
-            }
-        }
-        else
-        {
-            PluginLog.Debug(
-                $"[HoverTooltip] register key='{key}' bounds=({topLeft.X:0.0},{topLeft.Y:0.0})-({bottomRight.X:0.0},{bottomRight.Y:0.0}) " +
-                $"enabled={enabled}");
-        }
-
         this.entries[key] = newEntry;
     }
 
@@ -76,7 +58,6 @@ public sealed class HoverTooltipManager
     public void Remove(string key)
     {
         this.entries.TryRemove(key, out _);
-        this.lastHoverLogUtc.TryRemove(key, out _);
     }
 
     /// <summary>
@@ -93,7 +74,6 @@ public sealed class HoverTooltipManager
             }
 
             this.entries.TryRemove(key, out _);
-            this.lastHoverLogUtc.TryRemove(key, out _);
         }
     }
 
@@ -103,7 +83,6 @@ public sealed class HoverTooltipManager
     public void Clear()
     {
         this.entries.Clear();
-        this.lastHoverLogUtc.Clear();
     }
 
     /// <summary>
@@ -160,13 +139,6 @@ public sealed class HoverTooltipManager
             LastUpdatedUtc = DateTime.UtcNow,
         };
 
-        if (this.ShouldLogHover(hoveredKey))
-        {
-            PluginLog.Debug(
-                $"[HoverTooltip] hover key='{hoveredKey}' mouse=({mousePosition.X:0.0},{mousePosition.Y:0.0}) " +
-                $"bounds=({hoveredEntry.TopLeft.X:0.0},{hoveredEntry.TopLeft.Y:0.0})-({hoveredEntry.BottomRight.X:0.0},{hoveredEntry.BottomRight.Y:0.0})");
-        }
-
         var backgroundColor = new Vector4(
             this.config.HoverTooltipBackgroundColor.X,
             this.config.HoverTooltipBackgroundColor.Y,
@@ -218,30 +190,6 @@ public sealed class HoverTooltipManager
 
             this.entries.TryRemove(key, out _);
         }
-    }
-
-    private bool ShouldLogHover(string key)
-    {
-        var now = DateTime.UtcNow;
-        if (this.lastHoverLogUtc.TryGetValue(key, out var lastLoggedUtc) &&
-            now - lastLoggedUtc < HoverLogCooldown)
-        {
-            return false;
-        }
-
-        this.lastHoverLogUtc[key] = now;
-        return true;
-    }
-
-    private bool IsSameVisualEntry(
-        HoverTooltipEntry existingEntry,
-        HoverTooltipEntry newEntry)
-    {
-        return existingEntry.TopLeft == newEntry.TopLeft &&
-               existingEntry.BottomRight == newEntry.BottomRight &&
-               existingEntry.Title == newEntry.Title &&
-               existingEntry.Body == newEntry.Body &&
-               existingEntry.Enabled == newEntry.Enabled;
     }
 
     private static string WrapTooltipText(string text)

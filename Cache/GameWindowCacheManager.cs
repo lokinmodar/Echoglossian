@@ -15,11 +15,17 @@ namespace Echoglossian.Cache;
 /// </summary>
 public static class GameWindowCacheManager
 {
+  private static readonly Dictionary<string, GameWindow> ExactCache =
+      new(StringComparer.Ordinal);
+  private static readonly Dictionary<string, List<GameWindow>> ScopeCache =
+      new(StringComparer.Ordinal);
+
   /// <summary>
   ///     In-memory cache for GameWindow entries, grouped by addon name.
   ///     Each key maps to a list of all entries for that addon.
   /// </summary>
-  private static readonly Dictionary<string, List<GameWindow>> Cache = new();
+  private static readonly Dictionary<string, List<GameWindow>> Cache =
+      new(StringComparer.Ordinal);
 
   /// <summary>
   ///     Loads all GameWindow records from the database into memory.
@@ -35,6 +41,8 @@ public static class GameWindowCacheManager
       var all = context.GameWindow.AsNoTracking().ToList();
 
       Cache.Clear();
+      ExactCache.Clear();
+      ScopeCache.Clear();
 
       foreach (var record in all)
       {
@@ -43,15 +51,7 @@ public static class GameWindowCacheManager
           continue;
         }
 
-        var addonKey = record.WindowAddonName;
-
-        if (!Cache.TryGetValue(addonKey, out var list))
-        {
-          list = new List<GameWindow>();
-          Cache[addonKey] = list;
-        }
-
-        list.Add(record);
+        IndexRecord(record);
       }
 
       PluginLog.Debug($"[GameWindowCacheManager] Loaded {all.Count} records into {Cache.Count} addon buckets.");
@@ -75,16 +75,7 @@ public static class GameWindowCacheManager
       return;
     }
 
-    var addonKey = newRecord.WindowAddonName;
-
-    if (!Cache.TryGetValue(addonKey, out var list))
-    {
-      list = new List<GameWindow>();
-      Cache[addonKey] = list;
-    }
-
-    // Remove existing duplicate (same lang + engine + version + original strings)
-    var existing = list.FirstOrDefault(g =>
+    var existing = GetAddonBucket(newRecord.WindowAddonName).FirstOrDefault(g =>
         RuntimeLanguageHelper.LanguagesMatch(
             g.TranslationLang,
             newRecord.TranslationLang) &&
@@ -94,12 +85,13 @@ public static class GameWindowCacheManager
 
     if (existing != null)
     {
-      list.Remove(existing);
+      RemoveIndexedRecord(existing);
       PluginLog.Debug("[GameWindowCacheManager.Update] Replacing duplicate GameWindow in cache.");
     }
 
-    list.Add(newRecord);
-    PluginLog.Debug($"[GameWindowCacheManager.Update] Cached GameWindow for addon: {addonKey} (now {list.Count} entries).");
+    IndexRecord(newRecord);
+    PluginLog.Debug(
+        $"[GameWindowCacheManager.Update] Cached GameWindow for addon: {newRecord.WindowAddonName} (now {GetAddonBucket(newRecord.WindowAddonName).Count} entries).");
   }
 
   /// <summary>
@@ -108,6 +100,8 @@ public static class GameWindowCacheManager
   public static void Clear()
   {
     Cache.Clear();
+    ExactCache.Clear();
+    ScopeCache.Clear();
     PluginLog.Debug("[GameWindowCacheManager] Cleared GameWindow cache.");
   }
 
@@ -128,17 +122,9 @@ public static class GameWindowCacheManager
       return null;
     }
 
-    if (!Cache.TryGetValue(addonName, out var list) || list is null || list.Count == 0)
-    {
-      return null;
-    }
-
-    var match = list.FirstOrDefault(g =>
-        RuntimeLanguageHelper.LanguagesMatch(g.TranslationLang, lang) &&
-        g.TranslationEngine == engine &&
-        (g.GameVersion == null || g.GameVersion == version) &&
-        g.OriginalWindowStrings == originalJson);
-
+    ExactCache.TryGetValue(
+        BuildExactKey(addonName, lang, engine, version, originalJson),
+        out var match);
     return match;
   }
 
@@ -162,16 +148,113 @@ public static class GameWindowCacheManager
       return [];
     }
 
-    if (!Cache.TryGetValue(addonName, out var list) || list is null || list.Count == 0)
+    return ScopeCache.TryGetValue(
+               BuildScopeKey(addonName, lang, engine, version),
+               out var rows)
+        ? rows
+        : [];
+  }
+
+  private static List<GameWindow> GetAddonBucket(string addonName)
+  {
+    if (!Cache.TryGetValue(addonName, out var list))
     {
-      return [];
+      list = [];
+      Cache[addonName] = list;
     }
 
-    return list
-        .Where(g =>
-            RuntimeLanguageHelper.LanguagesMatch(g.TranslationLang, lang) &&
-            g.TranslationEngine == engine &&
-            (g.GameVersion == null || g.GameVersion == version))
-        .ToList();
+    return list;
+  }
+
+  private static List<GameWindow> GetScopeBucket(
+      string addonName,
+      string lang,
+      int engine,
+      string? version)
+  {
+    var scopeKey = BuildScopeKey(addonName, lang, engine, version);
+    if (!ScopeCache.TryGetValue(scopeKey, out var list))
+    {
+      list = [];
+      ScopeCache[scopeKey] = list;
+    }
+
+    return list;
+  }
+
+  private static void IndexRecord(GameWindow record)
+  {
+    var addonName = record.WindowAddonName!;
+    var translationEngine = record.TranslationEngine ?? 0;
+    var addonBucket = GetAddonBucket(addonName);
+    addonBucket.Add(record);
+
+    var normalizedLanguage =
+        RuntimeLanguageHelper.NormalizeLanguage(record.TranslationLang);
+    GetScopeBucket(
+        addonName,
+        normalizedLanguage,
+        translationEngine,
+        record.GameVersion).Add(record);
+
+    ExactCache[BuildExactKey(
+        addonName,
+        normalizedLanguage,
+        translationEngine,
+        record.GameVersion,
+        record.OriginalWindowStrings ?? string.Empty)] = record;
+  }
+
+  private static void RemoveIndexedRecord(GameWindow record)
+  {
+    var addonName = record.WindowAddonName!;
+    var translationEngine = record.TranslationEngine ?? 0;
+    GetAddonBucket(addonName).Remove(record);
+
+    var normalizedLanguage =
+        RuntimeLanguageHelper.NormalizeLanguage(record.TranslationLang);
+    var scopeBucket = GetScopeBucket(
+        addonName,
+        normalizedLanguage,
+        translationEngine,
+        record.GameVersion);
+    scopeBucket.Remove(record);
+    if (scopeBucket.Count == 0)
+    {
+      ScopeCache.Remove(
+          BuildScopeKey(
+              addonName,
+              normalizedLanguage,
+              translationEngine,
+              record.GameVersion));
+    }
+
+    ExactCache.Remove(
+        BuildExactKey(
+            addonName,
+            normalizedLanguage,
+            translationEngine,
+            record.GameVersion,
+            record.OriginalWindowStrings ?? string.Empty));
+  }
+
+  private static string BuildScopeKey(
+      string addonName,
+      string? lang,
+      int engine,
+      string? version)
+  {
+    var normalizedLanguage = RuntimeLanguageHelper.NormalizeLanguage(lang);
+    return $"{addonName}|{normalizedLanguage}|{engine}|{version ?? string.Empty}";
+  }
+
+  private static string BuildExactKey(
+      string addonName,
+      string? lang,
+      int engine,
+      string? version,
+      string originalJson)
+  {
+    return $"{BuildScopeKey(addonName, lang, engine, version)}|{originalJson}";
   }
 }

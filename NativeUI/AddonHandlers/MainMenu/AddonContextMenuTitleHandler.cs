@@ -48,4 +48,16 @@ public class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
     {
         return false;
     }
+
+    /// <summary>
+    ///     The context-menu title addon reuses the same visible text nodes
+    ///     across multiple submenu contexts, so stale translated values from
+    ///     the previous context must be restored before capturing a new
+    ///     original-facing payload.
+    /// </summary>
+    /// <returns>Always <see langword="true" />.</returns>
+    protected override bool ShouldRestoreStaleTranslatedTextNodesOnPayloadChange()
+    {
+        return true;
+    }
 }

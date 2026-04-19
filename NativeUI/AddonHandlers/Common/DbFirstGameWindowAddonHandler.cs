@@ -30,6 +30,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         InFlightPayloads = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, DateTime>
         FailedPayloadRetryUtc = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, DbFirstGameWindowPayload>
+        ParsedPayloadCache = new(StringComparer.Ordinal);
 
     private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan FailureRetryInterval =
@@ -215,6 +217,21 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether this handler should selectively restore stale
+    ///     translated text-node values from the previously applied runtime
+    ///     state before capturing a new payload for the same live addon.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> when stale translated text-node cleanup is
+    ///     safe and desirable for this addon; otherwise
+    ///     <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldRestoreStaleTranslatedTextNodesOnPayloadChange()
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Tries to register addon-specific hover targets when the default
     ///     visible-text-node path is not the right surface for this addon.
     /// </summary>
@@ -353,6 +370,22 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             return;
+        }
+
+        if (this.useTextNodes &&
+            this.runtimeState != null &&
+            this.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange() &&
+            !livePayload.MatchesTranslated(this.runtimeState.TranslatedPayload) &&
+            !livePayload.MatchesOriginal(this.runtimeState.OriginalPayload) &&
+            this.TryRestoreStaleTranslatedTextNodes(addon, livePayload))
+        {
+            livePayload = this.CaptureLivePayload(addon);
+            if (livePayload.IsEmpty)
+            {
+                this.hoverTooltipManager.RemoveByPrefix(
+                    this.hoverTooltipKeyPrefix);
+                return;
+            }
         }
 
         var originalPayload = this.ResolveOriginalPayload(livePayload);
@@ -1553,6 +1586,82 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Restores only the text nodes that are still showing translated text
+    ///     from the previously applied runtime state after the game has
+    ///     already started populating a new context into the same addon.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="livePayload">
+    ///     The payload captured immediately before the cleanup attempt.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when at least one stale translated node was
+    ///     restored to its original text; otherwise <see langword="false" />.
+    /// </returns>
+    private bool TryRestoreStaleTranslatedTextNodes(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload livePayload)
+    {
+        if (this.runtimeState == null ||
+            this.runtimeState.OriginalPayload.TextNodes.Count == 0 ||
+            this.runtimeState.TranslatedPayload.TextNodes.Count == 0)
+        {
+            return false;
+        }
+
+        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
+            addon);
+        if (nodeAddresses.Count == 0)
+        {
+            return false;
+        }
+
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+        var restoredAny = false;
+
+        foreach (var nodeAddress in nodeAddresses)
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null || !textNode->IsVisible())
+            {
+                continue;
+            }
+
+            var nodeId = textNode->AtkResNode.NodeId;
+            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
+            ordinalsByNodeId[nodeId] = ordinal + 1;
+
+            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            if (!livePayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var currentText) ||
+                !this.runtimeState.OriginalPayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var previousOriginalText) ||
+                !this.runtimeState.TranslatedPayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var previousTranslatedText) ||
+                !string.Equals(
+                    currentText,
+                    previousTranslatedText,
+                    StringComparison.Ordinal) ||
+                string.Equals(
+                    currentText,
+                    previousOriginalText,
+                    StringComparison.Ordinal) ||
+                !ShouldCaptureText(previousOriginalText))
+            {
+                continue;
+            }
+
+            textNode->SetText(previousOriginalText);
+            restoredAny = true;
+        }
+
+        return restoredAny;
+    }
+
+    /// <summary>
     ///     Builds one stable text-node key from a node id and duplicate
     ///     ordinal in tree order.
     /// </summary>
@@ -1675,77 +1784,39 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     {
         translatedPayload = DbFirstGameWindowPayload.Empty;
 
-        if (string.IsNullOrWhiteSpace(translatedJson))
+        if (!TryParseSerializedPayload(
+                translatedJson,
+                out var parsedPayload))
         {
             return false;
         }
 
-        try
+        foreach (var key in originalPayload.AtkValues.Keys)
         {
-            var combinedData =
-                JsonConvert.DeserializeObject<CombinedTranslationData>(
-                    translatedJson);
-            if (combinedData == null)
+            if (!parsedPayload.AtkValues.ContainsKey(key))
             {
                 return false;
             }
-
-            var translatedAtkValues =
-                combinedData.AtkValues != null
-                    ? new SortedDictionary<int, string>(
-                        combinedData.AtkValues,
-                        Comparer<int>.Default)
-                    : new SortedDictionary<int, string>();
-            var translatedStringArrayValues =
-                combinedData.StringArrayData != null
-                    ? new SortedDictionary<int, string>(
-                        combinedData.StringArrayData,
-                        Comparer<int>.Default)
-                    : new SortedDictionary<int, string>();
-            var translatedTextNodes =
-                combinedData.TextNodes != null
-                    ? new SortedDictionary<string, string>(
-                        combinedData.TextNodes,
-                        StringComparer.Ordinal)
-                    : new SortedDictionary<string, string>(
-                        StringComparer.Ordinal);
-
-            foreach (var key in originalPayload.AtkValues.Keys)
-            {
-                if (!translatedAtkValues.ContainsKey(key))
-                {
-                    return false;
-                }
-            }
-
-            foreach (var key in originalPayload.StringArrayValues.Keys)
-            {
-                if (!translatedStringArrayValues.ContainsKey(key))
-                {
-                    return false;
-                }
-            }
-
-            foreach (var key in originalPayload.TextNodes.Keys)
-            {
-                if (!translatedTextNodes.ContainsKey(key))
-                {
-                    return false;
-                }
-            }
-
-            translatedPayload = new DbFirstGameWindowPayload(
-                translatedAtkValues,
-                translatedStringArrayValues,
-                translatedTextNodes);
-            return true;
         }
-        catch (Exception ex)
+
+        foreach (var key in originalPayload.StringArrayValues.Keys)
         {
-            PluginLog.Error(
-                $"[DbFirstGameWindowAddonHandler] Failed to parse translated payload: {ex}");
-            return false;
+            if (!parsedPayload.StringArrayValues.ContainsKey(key))
+            {
+                return false;
+            }
         }
+
+        foreach (var key in originalPayload.TextNodes.Keys)
+        {
+            if (!parsedPayload.TextNodes.ContainsKey(key))
+            {
+                return false;
+            }
+        }
+
+        translatedPayload = parsedPayload.ProjectToShape(originalPayload);
+        return true;
     }
 
     /// <summary>
@@ -1768,6 +1839,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return false;
         }
 
+        if (ParsedPayloadCache.TryGetValue(serializedPayload, out payload))
+        {
+            return !payload.IsEmpty;
+        }
+
         try
         {
             var combinedData =
@@ -1778,31 +1854,30 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 return false;
             }
 
-            var atkValues =
+            payload = new DbFirstGameWindowPayload(
                 combinedData.AtkValues != null
                     ? new SortedDictionary<int, string>(
                         combinedData.AtkValues,
                         Comparer<int>.Default)
-                    : new SortedDictionary<int, string>();
-            var stringArrayValues =
+                    : new SortedDictionary<int, string>(),
                 combinedData.StringArrayData != null
                     ? new SortedDictionary<int, string>(
                         combinedData.StringArrayData,
                         Comparer<int>.Default)
-                    : new SortedDictionary<int, string>();
-            var textNodes =
+                    : new SortedDictionary<int, string>(),
                 combinedData.TextNodes != null
                     ? new SortedDictionary<string, string>(
                         combinedData.TextNodes,
                         StringComparer.Ordinal)
                     : new SortedDictionary<string, string>(
-                        StringComparer.Ordinal);
+                        StringComparer.Ordinal));
+            if (payload.IsEmpty)
+            {
+                return false;
+            }
 
-            payload = new DbFirstGameWindowPayload(
-                atkValues,
-                stringArrayValues,
-                textNodes);
-            return !payload.IsEmpty;
+            ParsedPayloadCache[serializedPayload] = payload;
+            return true;
         }
         catch (Exception ex)
         {

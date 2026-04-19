@@ -13,6 +13,8 @@ public partial class Echoglossian
 {
   private const int AcceptedQuestPrefetchQuestsPerTick = 2;
 
+  private const bool AcceptedQuestPrefetchEmitDalamudLog = false;
+
   private static readonly TimeSpan AcceptedQuestPrefetchTickInterval =
       TimeSpan.FromSeconds(2);
 
@@ -893,8 +895,8 @@ public partial class Echoglossian
   }
 
   /// <summary>
-  /// Emits a concise accepted-quest prefetch activity event to both the Dalamud
-  /// log and a purpose-named disk file.
+  /// Emits a concise accepted-quest prefetch activity event to the accepted
+  /// quest diagnostic file and, when enabled, to the Dalamud log.
   /// </summary>
   /// <param name="phase">The lifecycle phase being logged.</param>
   /// <param name="questId">The quest id.</param>
@@ -913,11 +915,12 @@ public partial class Echoglossian
         $"phase={phase}{Environment.NewLine}quest={questLabel}{Environment.NewLine}detail={detail ?? string.Empty}";
     var logLine =
         $"[AcceptedQuestPrefetch] phase={phase} quest='{questLabel}' detail='{detail ?? string.Empty}'";
-    if (string.Equals(phase, "resolve-failed", StringComparison.Ordinal))
+    if (AcceptedQuestPrefetchEmitDalamudLog &&
+        string.Equals(phase, "resolve-failed", StringComparison.Ordinal))
     {
       PluginLog.Warning(logLine);
     }
-    else
+    else if (AcceptedQuestPrefetchEmitDalamudLog)
     {
       PluginLog.Debug(logLine);
     }
