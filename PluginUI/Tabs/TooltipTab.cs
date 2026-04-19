@@ -28,6 +28,21 @@ public static class TooltipTab
         ImGui.TextUnformatted(Resources.ActionAndItemTooltipsSectionLabel);
         ImGui.Separator();
 
+        changed |= ImGui.Checkbox(
+            Resources.JournalGlobalHoverTooltipsLabel,
+            ref config.TranslateTooltips);
+
+        if (!config.TranslateTooltips)
+        {
+            if (changed)
+            {
+                FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
+                Echoglossian.SaveConfig(config);
+            }
+
+            return changed;
+        }
+
         changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
             nameof(config.TooltipTranslationDisplayMode),
             ref config.TooltipTranslationDisplayMode,

@@ -459,6 +459,18 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Outros elementos da interface do usuário</value>
   </data>
+  <data name="QuestWindowsTabTitle" xml:space="preserve">
+    <value>Janelas de missão</value>
+  </data>
+  <data name="TooltipTabTitle" xml:space="preserve">
+    <value>Tooltips</value>
+  </data>
+  <data name="SelectionDialogsTabTitle" xml:space="preserve">
+    <value>Diálogos de seleção</value>
+  </data>
+  <data name="GameWindowsTabTitle" xml:space="preserve">
+    <value>Janelas do jogo</value>
+  </data>
   <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
     <value>Tem certeza de que deseja redefinir todas as configurações para o padrão?</value>
   </data>

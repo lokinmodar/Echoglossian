@@ -625,6 +625,18 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Other UI elements</value>
   </data>
+  <data name="QuestWindowsTabTitle" xml:space="preserve">
+    <value>Quest windows</value>
+  </data>
+  <data name="TooltipTabTitle" xml:space="preserve">
+    <value>Tooltips</value>
+  </data>
+  <data name="SelectionDialogsTabTitle" xml:space="preserve">
+    <value>Selection dialogs</value>
+  </data>
+  <data name="GameWindowsTabTitle" xml:space="preserve">
+    <value>Game windows</value>
+  </data>
   <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
     <value>Are you sure you want to reset all settings to default?</value>
   </data>

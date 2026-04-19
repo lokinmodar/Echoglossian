@@ -23,8 +23,10 @@ public static class OverlayTab
         Resources.OverlayTabMiniTalkText,
         Resources.OverlayTabCutSceneSelectStringText,
         Resources.ConfigTab4Name,
-        Resources.ActionAndItemTooltipsSectionLabel,
-        Resources.OtherUIElementsTabTitle,
+        Resources.QuestWindowsTabTitle,
+        Resources.TooltipTabTitle,
+        Resources.SelectionDialogsTabTitle,
+        Resources.GameWindowsTabTitle,
     };
 
     private static readonly string[] ToastOverlayTabs =
@@ -63,7 +65,7 @@ public static class OverlayTab
             return false;
         }
 
-        ImGui.BeginChild("overlay_tab_left", new Vector2(150, 0), true);
+        ImGui.BeginChild("overlay_tab_left", new Vector2(185, 0), true);
         for (var i = 0; i < OverlayTabs.Length; i++)
         {
             if (ImGui.Selectable(OverlayTabs[i], selectedOverlayTab == i))
@@ -102,10 +104,16 @@ public static class OverlayTab
                 changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
                 break;
             case 7:
-                changed |= TooltipTab.Draw(config);
+                changed |= QuestWindowsTab.Draw(config);
                 break;
             case 8:
-                changed |= OtherUIElementsSettingsTab.Draw(config);
+                changed |= TooltipTab.Draw(config);
+                break;
+            case 9:
+                changed |= SelectionDialogsTab.Draw(config);
+                break;
+            case 10:
+                changed |= GameWindowsTab.Draw(config);
                 break;
         }
 

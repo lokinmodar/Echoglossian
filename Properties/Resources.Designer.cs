@@ -1009,6 +1009,42 @@ namespace Echoglossian.Properties {
                 return ResourceManager.GetString("OtherUIElementsTabTitle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string QuestWindowsTabTitle {
+            get {
+                return ResourceManager.GetString("QuestWindowsTabTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string TooltipTabTitle {
+            get {
+                return ResourceManager.GetString("TooltipTabTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string SelectionDialogsTabTitle {
+            get {
+                return ResourceManager.GetString("SelectionDialogsTabTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string GameWindowsTabTitle {
+            get {
+                return ResourceManager.GetString("GameWindowsTabTitle", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Please adjust position if your overlay is not centered relative to the game&apos;s UI text box..

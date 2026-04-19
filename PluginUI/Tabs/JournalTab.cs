@@ -30,16 +30,6 @@ public static class JournalTab
                 ref config.JournalDetailTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
                 config,
-                Resources.TranslateJournalAcceptToggle,
-                ref config.TranslateJournalAccept,
-                ref config.JournalAcceptTranslationDisplayMode);
-            changed |= DrawQuestFamilySection(
-                config,
-                Resources.TranslateJournalResultToggle,
-                ref config.TranslateJournalResult,
-                ref config.JournalResultTranslationDisplayMode);
-            changed |= DrawQuestFamilySection(
-                config,
                 Resources.TranslateToDoListToggle,
                 ref config.TranslateToDoList,
                 ref config.ToDoListTranslationDisplayMode);
@@ -48,16 +38,6 @@ public static class JournalTab
                 Resources.TranslateScenarioTreeToggle,
                 ref config.TranslateScenarioTree,
                 ref config.ScenarioTreeTranslationDisplayMode);
-            changed |= DrawQuestFamilySection(
-                config,
-                Resources.TranslateRecommendListToggle,
-                ref config.TranslateRecommendList,
-                ref config.RecommendListTranslationDisplayMode);
-            changed |= DrawQuestFamilySection(
-                config,
-                Resources.TranslateAreaMapToggle,
-                ref config.TranslateAreaMap,
-                ref config.AreaMapTranslationDisplayMode);
         }
 
         if (langToRemoveDiacritics)
@@ -97,10 +77,6 @@ public static class JournalTab
             config.OverlayOnlyLanguage,
             Resources.JournalQuestDisplayModeLabel,
             Resources.JournalQuestDisplayModeDescription);
-
-        changed |= ImGui.Checkbox(
-            Resources.JournalGlobalHoverTooltipsLabel,
-            ref config.TranslateTooltips);
 
         return changed;
     }
