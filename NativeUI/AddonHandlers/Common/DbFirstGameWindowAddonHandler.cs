@@ -204,6 +204,19 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether string-array writes for this addon should request
+    ///     subscribed-addon updates immediately after the value changes.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> when native writes should request updates;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldRequestStringArrayUpdates()
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Determines whether this handler may reuse a compatible persisted
     ///     payload when no exact original-payload match is available.
     /// </summary>
@@ -243,6 +256,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     protected virtual bool ShouldRefreshAppliedStateOnPreDraw()
     {
         return true;
+    }
+
+    /// <summary>
+    ///     Determines whether a named addon is currently visible.
+    /// </summary>
+    /// <param name="addonName">The addon name to probe.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the addon exists and is visible;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    protected bool IsAddonVisible(string addonName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(addonName);
+
+        var addon = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+            addonName,
+            1);
+        return addon != null && addon->IsVisible;
     }
 
     /// <summary>
@@ -1342,10 +1373,21 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         continue;
                     }
 
-                    stringArrayData->SetValue(
-                        index,
-                        translatedText,
-                        suppressUpdates: true);
+                    if (this.ShouldRequestStringArrayUpdates())
+                    {
+                        stringArrayData->SetValueAndUpdate(
+                            index,
+                            translatedText,
+                            readBeforeWrite: false,
+                            managed: true);
+                    }
+                    else
+                    {
+                        stringArrayData->SetValue(
+                            index,
+                            translatedText,
+                            suppressUpdates: true);
+                    }
                 }
             }
         }
@@ -1439,10 +1481,21 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         continue;
                     }
 
-                    stringArrayData->SetValue(
-                        index,
-                        originalText,
-                        suppressUpdates: true);
+                    if (this.ShouldRequestStringArrayUpdates())
+                    {
+                        stringArrayData->SetValueAndUpdate(
+                            index,
+                            originalText,
+                            readBeforeWrite: false,
+                            managed: true);
+                    }
+                    else
+                    {
+                        stringArrayData->SetValue(
+                            index,
+                            originalText,
+                            suppressUpdates: true);
+                    }
                 }
             }
         }

@@ -32,4 +32,10 @@ public class CharacterStatusSubWindowHandler
             stringArrayType: StringArrayType.Character)
     {
     }
+
+    /// <inheritdoc />
+    protected override bool ShouldRequestStringArrayUpdates()
+    {
+        return true;
+    }
 }

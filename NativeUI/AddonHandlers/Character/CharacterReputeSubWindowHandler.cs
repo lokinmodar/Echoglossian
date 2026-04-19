@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.NativeUI.Helpers;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
@@ -13,25 +14,34 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 ///     Lifecycle-safe: extracts and applies values within valid memory scope per
 ///     frame.
 /// </summary>
-public class CharacterReputeSubWindowHandler
+public unsafe class CharacterReputeSubWindowHandler
     : CharacterTextNodeWindowHandlerBase
 {
-  /// <summary>
-  ///     Initializes a new instance of the
-  ///     <see cref="CharacterReputeSubWindowHandler" /> class.
-  /// </summary>
-  /// <param name="config">The configuration settings for the plugin.</param>
-  /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
-  /// <param name="translationService">The service used for translating text.</param>
-  public CharacterReputeSubWindowHandler(
-      Config config,
-      HoverTooltipManager hoverTooltipManager,
-      TranslationService translationService)
-      : base(
-          addonName: "CharacterRepute",
-          config: config,
-          hoverTooltipManager: hoverTooltipManager,
-          translationService: translationService)
+    /// <summary>
+    ///     Initializes a new instance of the
+    ///     <see cref="CharacterReputeSubWindowHandler" /> class.
+    /// </summary>
+    /// <param name="config">The configuration settings for the plugin.</param>
+    /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
+    /// <param name="translationService">The service used for translating text.</param>
+    public CharacterReputeSubWindowHandler(
+        Config config,
+        HoverTooltipManager hoverTooltipManager,
+        TranslationService translationService)
+        : base(
+            addonName: "CharacterRepute",
+            config: config,
+            hoverTooltipManager: hoverTooltipManager,
+            translationService: translationService)
     {
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldCaptureTextNode(
+        AtkTextNode* textNode,
+        string visibleText)
+    {
+        return textNode != null &&
+               !string.IsNullOrWhiteSpace(visibleText);
     }
 }

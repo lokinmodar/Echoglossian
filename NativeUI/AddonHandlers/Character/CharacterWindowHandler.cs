@@ -31,4 +31,39 @@ public class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
             stringArrayType: StringArrayType.Character)
     {
     }
+
+    /// <inheritdoc />
+    protected override bool ShouldCaptureStringArrayValues(
+        byte subscribedAddonsCount)
+    {
+        return !this.AreDynamicCharacterSubwindowsVisible();
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldWriteStringArrayValues(
+        byte subscribedAddonsCount)
+    {
+        return !this.AreDynamicCharacterSubwindowsVisible();
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldRequestStringArrayUpdates()
+    {
+        return true;
+    }
+
+    /// <summary>
+    ///     Determines whether one Character-family tab addon that owns its own
+    ///     visible text-node surface is currently visible.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> when a dynamic Character-family subwindow is
+    ///     visible; otherwise <see langword="false" />.
+    /// </returns>
+    private bool AreDynamicCharacterSubwindowsVisible()
+    {
+        return this.IsAddonVisible("CharacterClass") ||
+               this.IsAddonVisible("CharacterProfile") ||
+               this.IsAddonVisible("CharacterRepute");
+    }
 }
