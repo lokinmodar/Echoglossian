@@ -1,4 +1,4 @@
-// <copyright file="ActionTooltipPrefetchRuntime.cs" company="lokinmodar">
+// <copyright file="ActionDetailPrefetchRuntime.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -13,40 +13,41 @@ using ClassJobSheet = Lumina.Excel.Sheets.ClassJob;
 namespace Echoglossian;
 
 /// <summary>
-///     Provides DB-first background prefetch for canonical action-tooltip payloads.
+///     Provides DB-first background prefetch for canonical ActionDetail
+///     payloads.
 /// </summary>
 public unsafe partial class Echoglossian
 {
-    private const int ActionTooltipPrefetchActionsPerTick = 6;
+    private const int ActionDetailPrefetchActionsPerTick = 6;
 
-    private static readonly TimeSpan ActionTooltipPrefetchTickInterval =
+    private static readonly TimeSpan ActionDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
 
     private static readonly Dictionary<Type, Dictionary<string, PropertyInfo?>> ActionClassJobCategoryPropertyCache =
         [];
 
-    private readonly List<uint> actionTooltipPrefetchQueue = [];
+    private readonly List<uint> actionDetailPrefetchQueue = [];
 
-    private string actionTooltipPrefetchSignature = string.Empty;
+    private string actionDetailPrefetchSignature = string.Empty;
 
-    private DateTime actionTooltipPrefetchLastTickUtc = DateTime.MinValue;
+    private DateTime actionDetailPrefetchLastTickUtc = DateTime.MinValue;
 
-    private int actionTooltipPrefetchQueueIndex;
+    private int actionDetailPrefetchQueueIndex;
 
     /// <summary>
     ///     Ticks the action-tooltip prefetch runtime so the current class/job actions
     ///     are translated into canonical storage ahead of tooltip use.
     /// </summary>
-    private void TickActionTooltipPrefetch()
+    private void TickActionDetailPrefetch()
     {
         if (!this.ShouldPrefetchStructuredTooltips() ||
-            DateTime.UtcNow - this.actionTooltipPrefetchLastTickUtc <
-            ActionTooltipPrefetchTickInterval)
+            DateTime.UtcNow - this.actionDetailPrefetchLastTickUtc <
+            ActionDetailPrefetchTickInterval)
         {
             return;
         }
 
-        this.actionTooltipPrefetchLastTickUtc = DateTime.UtcNow;
+        this.actionDetailPrefetchLastTickUtc = DateTime.UtcNow;
 
         if (!TryGetCurrentClassJobInfo(
                 out var currentClassJobId,
@@ -56,37 +57,37 @@ public unsafe partial class Echoglossian
                 currentClassJobAbbreviation,
                 out var actionIds))
         {
-            this.ClearActionTooltipPrefetchState();
+            this.ClearActionDetailPrefetchState();
             return;
         }
 
         var signature =
             $"{currentClassJobId}|{string.Join(',', actionIds)}";
         if (!string.Equals(
-                this.actionTooltipPrefetchSignature,
+                this.actionDetailPrefetchSignature,
                 signature,
                 StringComparison.Ordinal))
         {
-            this.actionTooltipPrefetchSignature = signature;
-            this.actionTooltipPrefetchQueue.Clear();
-            this.actionTooltipPrefetchQueue.AddRange(actionIds);
-            this.actionTooltipPrefetchQueueIndex = 0;
+            this.actionDetailPrefetchSignature = signature;
+            this.actionDetailPrefetchQueue.Clear();
+            this.actionDetailPrefetchQueue.AddRange(actionIds);
+            this.actionDetailPrefetchQueueIndex = 0;
         }
 
-        if (this.actionTooltipPrefetchQueueIndex >=
-            this.actionTooltipPrefetchQueue.Count)
+        if (this.actionDetailPrefetchQueueIndex >=
+            this.actionDetailPrefetchQueue.Count)
         {
             return;
         }
 
         var processedCount = 0;
-        while (processedCount < ActionTooltipPrefetchActionsPerTick &&
-               this.actionTooltipPrefetchQueueIndex <
-               this.actionTooltipPrefetchQueue.Count)
+        while (processedCount < ActionDetailPrefetchActionsPerTick &&
+               this.actionDetailPrefetchQueueIndex <
+               this.actionDetailPrefetchQueue.Count)
         {
             var actionId =
-                this.actionTooltipPrefetchQueue[this.actionTooltipPrefetchQueueIndex++];
-            this.PrefetchActionTooltip(actionId, currentClassJobId);
+                this.actionDetailPrefetchQueue[this.actionDetailPrefetchQueueIndex++];
+            this.PrefetchActionDetail(actionId, currentClassJobId);
             processedCount++;
         }
     }
@@ -94,12 +95,12 @@ public unsafe partial class Echoglossian
     /// <summary>
     ///     Clears the action-tooltip prefetch runtime state.
     /// </summary>
-    private void ClearActionTooltipPrefetchState()
+    private void ClearActionDetailPrefetchState()
     {
-        this.actionTooltipPrefetchQueue.Clear();
-        this.actionTooltipPrefetchQueueIndex = 0;
-        this.actionTooltipPrefetchSignature = string.Empty;
-        this.actionTooltipPrefetchLastTickUtc = DateTime.MinValue;
+        this.actionDetailPrefetchQueue.Clear();
+        this.actionDetailPrefetchQueueIndex = 0;
+        this.actionDetailPrefetchSignature = string.Empty;
+        this.actionDetailPrefetchLastTickUtc = DateTime.MinValue;
     }
 
     /// <summary>
@@ -107,7 +108,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="actionId">The action row identifier.</param>
     /// <param name="currentClassJobId">The current class-job identifier.</param>
-    private void PrefetchActionTooltip(uint actionId, byte currentClassJobId)
+    private void PrefetchActionDetail(uint actionId, byte currentClassJobId)
     {
         if (!TryBuildActionTooltipCanonicalPayload(
                 actionId,
@@ -126,8 +127,8 @@ public unsafe partial class Echoglossian
         var existingRow = this.FindActionTooltip(originalRow) ?? originalRow;
         this.InsertActionTooltip(originalRow);
 
-        this.PrefetchActionTooltipName(originalPayload, existingRow);
-        this.PrefetchActionTooltipDescription(originalPayload, existingRow);
+        this.PrefetchActionDetailName(originalPayload, existingRow);
+        this.PrefetchActionDetailDescription(originalPayload, existingRow);
     }
 
     /// <summary>
@@ -135,7 +136,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
-    private void PrefetchActionTooltipName(
+    private void PrefetchActionDetailName(
         ActionTooltipCanonicalPayload originalPayload,
         ActionTooltip existingRow)
     {
@@ -146,12 +147,12 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ActionTooltipPrefetch|{originalPayload.ActionId}|Name|{originalPayload.Name}";
+            $"ActionDetailPrefetch|{originalPayload.ActionId}|Name|{originalPayload.Name}";
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedName))
         {
-            this.ApplyActionTooltipTranslation(
+            this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
                 translatedName: cachedTranslatedName);
@@ -164,7 +165,7 @@ public unsafe partial class Echoglossian
                 originalPayload.Name,
                 ClientStateInterface.ClientLanguage.Humanize(),
                 LangDict[LanguageInt].Code),
-            translatedName => this.ApplyActionTooltipTranslation(
+            translatedName => this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
                 translatedName: translatedName));
@@ -175,7 +176,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
-    private void PrefetchActionTooltipDescription(
+    private void PrefetchActionDetailDescription(
         ActionTooltipCanonicalPayload originalPayload,
         ActionTooltip existingRow)
     {
@@ -186,12 +187,12 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ActionTooltipPrefetch|{originalPayload.ActionId}|Description|{originalPayload.Description}";
+            $"ActionDetailPrefetch|{originalPayload.ActionId}|Description|{originalPayload.Description}";
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedDescription))
         {
-            this.ApplyActionTooltipTranslation(
+            this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
                 translatedDescription: cachedTranslatedDescription);
@@ -204,7 +205,7 @@ public unsafe partial class Echoglossian
                 originalPayload.Description,
                 ClientStateInterface.ClientLanguage.Humanize(),
                 LangDict[LanguageInt].Code),
-            translatedDescription => this.ApplyActionTooltipTranslation(
+            translatedDescription => this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
                 translatedDescription: translatedDescription));
@@ -217,7 +218,7 @@ public unsafe partial class Echoglossian
     /// <param name="currentClassJobId">The current class-job identifier.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
-    private void ApplyActionTooltipTranslation(
+    private void ApplyActionDetailTranslation(
         uint actionId,
         uint currentClassJobId,
         string? translatedName = null,

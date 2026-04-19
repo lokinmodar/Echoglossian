@@ -28,8 +28,8 @@ So the short answer is:
   every native array mutation
 - the active `StringArrayType` surfaces now persist through canonical
   `stringarraydatas`
-- `_MainCommand` remains on `gamewindows` because it does not use the same
-  `StringArrayType` runtime path
+- `_MainCommand` remains on `gamewindows`, but now captures and applies
+  translated payload through visible text nodes instead of `AtkValues`
 
 ## Current Validation Snapshot
 
@@ -137,17 +137,36 @@ but they do not use the canonical `StringArrayDatas` runtime path.
 ### Active surfaces
 
 - `_MainCommand`
+- `AddonContextMenuTitle`
 
 ### Persistence backend
 
-This surface currently uses the `gamewindows` table.
+These surfaces currently use the `gamewindows` table.
 
 ### Why it is separate
 
-`_MainCommand` does not flow through the same `StringArrayType` ownership model
-used by the migrated `Character*` / `Hud*` / `OperationGuide` /
-`AddonContextMenuTitle` surfaces, so it remains on the old but still valid
-`GameWindow` path for now.
+`_MainCommand` and `AddonContextMenuTitle` do not flow through the same
+`StringArrayType` ownership model used by the migrated `Character*` / `Hud*` /
+`OperationGuide` surfaces.
+
+They now use a hybrid `GameWindow` path where:
+
+- capture is based on visible `AtkTextNode`s
+- persistence is still `gamewindows`
+- native apply/restoration is also done through those text nodes
+
+This keeps them out of the fragile `AtkValues` path that was causing:
+
+- `_MainCommand` to fail to apply visible translations
+- `AddonContextMenuTitle` to place translated values in the wrong nodes for
+  reused submenu contexts
+
+For `AddonContextMenuTitle`, compatible payload reuse is intentionally disabled:
+
+- exact payload matches are allowed
+- "compatible superset" reuse is not
+
+because the addon reuses the same visible slots for different submenu contexts.
 
 ## 3. Active DB-First Quest Runtime
 

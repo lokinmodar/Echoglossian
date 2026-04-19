@@ -85,7 +85,9 @@ public static class GameWindowCacheManager
 
     // Remove existing duplicate (same lang + engine + version + original strings)
     var existing = list.FirstOrDefault(g =>
-        g.TranslationLang == newRecord.TranslationLang &&
+        RuntimeLanguageHelper.LanguagesMatch(
+            g.TranslationLang,
+            newRecord.TranslationLang) &&
         g.TranslationEngine == newRecord.TranslationEngine &&
         g.GameVersion == newRecord.GameVersion &&
         g.OriginalWindowStrings == newRecord.OriginalWindowStrings);
@@ -132,7 +134,7 @@ public static class GameWindowCacheManager
     }
 
     var match = list.FirstOrDefault(g =>
-        g.TranslationLang == lang &&
+        RuntimeLanguageHelper.LanguagesMatch(g.TranslationLang, lang) &&
         g.TranslationEngine == engine &&
         (g.GameVersion == null || g.GameVersion == version) &&
         g.OriginalWindowStrings == originalJson);
@@ -167,7 +169,7 @@ public static class GameWindowCacheManager
 
     return list
         .Where(g =>
-            g.TranslationLang == lang &&
+            RuntimeLanguageHelper.LanguagesMatch(g.TranslationLang, lang) &&
             g.TranslationEngine == engine &&
             (g.GameVersion == null || g.GameVersion == version))
         .ToList();

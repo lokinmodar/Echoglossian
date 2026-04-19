@@ -47,11 +47,11 @@ internal enum TranslationOverlaySurfaceId
     /// <summary>Chat bubble overlay.</summary>
     ChatBubble,
 
-    /// <summary>Action tooltip overlay.</summary>
-    ActionTooltip,
+    /// <summary>ActionDetail overlay.</summary>
+    ActionDetail,
 
-    /// <summary>Item tooltip overlay.</summary>
-    ItemTooltip,
+    /// <summary>ItemDetail overlay.</summary>
+    ItemDetail,
 }
 
 internal record TranslationWindowConfig(

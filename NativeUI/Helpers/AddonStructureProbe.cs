@@ -91,11 +91,12 @@ internal static unsafe class AddonStructureProbe
       IsVisible = addon->IsVisible,
       NodeListCount = (int)addon->UldManager.NodeListCount,
       CollisionNodeListCount = (int)addon->CollisionNodeListCount,
+      AddonId = addon->Id,
     };
 
     var visitedNodes = new HashSet<nint>();
     pluginLog.Information(
-        $"[AddonProbe] Starting probe addon='{snapshot.AddonName}' index={index} trigger='{trigger ?? "manual"}' ptr=0x{(ulong)(nint)addon:X} visible={snapshot.IsVisible} root=0x{(ulong)snapshot.RootNodeAddress:X} nodeList={snapshot.NodeListCount} collisionList={snapshot.CollisionNodeListCount}");
+        $"[AddonProbe] Starting probe addon='{snapshot.AddonName}' index={index} trigger='{trigger ?? "manual"}' ptr=0x{(ulong)(nint)addon:X} addonId={snapshot.AddonId} visible={snapshot.IsVisible} root=0x{(ulong)snapshot.RootNodeAddress:X} nodeList={snapshot.NodeListCount} collisionList={snapshot.CollisionNodeListCount}");
 
     if (addon->UldManager.RootNode != null)
     {
@@ -130,10 +131,15 @@ internal static unsafe class AddonStructureProbe
         maxNodes,
         visitedNodes);
 
+    CaptureStringArraySubscriptions(
+        pluginLog,
+        snapshot,
+        addon);
+
     LatestSnapshots[GetSnapshotKey(snapshot.AddonName, snapshot.Index)] = snapshot;
 
     pluginLog.Information(
-        $"[AddonProbe] Summary addon='{snapshot.AddonName}' index={index} nodes={snapshot.NodeCount} textNodes={snapshot.TextNodeCount} visibleTextNodes={snapshot.VisibleTextNodeCount} componentNodes={snapshot.ComponentNodeCount} bestAnchor='{snapshot.BestTextAnchorPath ?? "<none>"}' bestText='{NormalizeForLog(snapshot.BestTextAnchorText) ?? "<none>"}'");
+        $"[AddonProbe] Summary addon='{snapshot.AddonName}' index={index} nodes={snapshot.NodeCount} textNodes={snapshot.TextNodeCount} sheetTextNodes={snapshot.SheetTextNodeCount} visibleTextNodes={snapshot.VisibleTextNodeCount} componentNodes={snapshot.ComponentNodeCount} stringArrays={snapshot.StringArraySubscriptionCount} bestAnchor='{snapshot.BestTextAnchorPath ?? "<none>"}' bestText='{NormalizeForLog(snapshot.BestTextAnchorText) ?? "<none>"}'");
 
     return true;
   }
@@ -332,10 +338,16 @@ internal static unsafe class AddonStructureProbe
       return;
     }
 
-    var text = ReadNodeText(node);
+    var textNode = TryGetTextNode(node);
+    var text = ReadNodeText(textNode);
     if (node->Type == NodeType.Text)
     {
       snapshot.TextNodeCount++;
+      if (textNode != null && textNode->TextId != 0)
+      {
+        snapshot.SheetTextNodeCount++;
+      }
+
       if (node->IsVisible() && !string.IsNullOrWhiteSpace(text))
       {
         snapshot.VisibleTextNodeCount++;
@@ -347,7 +359,7 @@ internal static unsafe class AddonStructureProbe
       snapshot.ComponentNodeCount++;
     }
 
-    var nodeDescription = DescribeNode(node, text);
+    var nodeDescription = DescribeNode(node, textNode, text);
     pluginLog.Debug(
         $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} depth={depth} path={path} {nodeDescription}");
 
@@ -424,32 +436,203 @@ internal static unsafe class AddonStructureProbe
   }
 
   /// <summary>
-  /// Reads the visible text from a node when the node is text-based.
+  /// Attempts to cast a node to an <see cref="AtkTextNode" />.
   /// </summary>
   /// <param name="node">The node being inspected.</param>
-  /// <returns>The text value or <see langword="null" /> when unavailable.</returns>
-  private static string? ReadNodeText(AtkResNode* node)
+  /// <returns>The text-node pointer when available; otherwise <see langword="null" />.</returns>
+  private static AtkTextNode* TryGetTextNode(AtkResNode* node)
   {
     if (node == null || node->Type != NodeType.Text)
     {
       return null;
     }
 
-    var textNode = (AtkTextNode*)node;
+    return (AtkTextNode*)node;
+  }
+
+  /// <summary>
+  /// Reads the visible text from a text node when available.
+  /// </summary>
+  /// <param name="textNode">The text node being inspected.</param>
+  /// <returns>The text value or <see langword="null" /> when unavailable.</returns>
+  private static string? ReadNodeText(AtkTextNode* textNode)
+  {
+    if (textNode == null)
+    {
+      return null;
+    }
+
     return textNode->NodeText.IsEmpty ? string.Empty : textNode->NodeText.ToString();
+  }
+
+  /// <summary>
+  /// Captures all live <see cref="StringArrayData" /> entries whose subscriber
+  /// list currently includes the probed addon's runtime identifier.
+  /// </summary>
+  /// <param name="pluginLog">The plugin log used for output.</param>
+  /// <param name="snapshot">The probe snapshot being populated.</param>
+  /// <param name="addon">The probed addon pointer.</param>
+  private static void CaptureStringArraySubscriptions(
+      IPluginLog pluginLog,
+      AddonStructureProbeSnapshot snapshot,
+      AtkUnitBase* addon)
+  {
+    var raptureAtkModule = RaptureAtkModule.Instance();
+    if (raptureAtkModule == null)
+    {
+      return;
+    }
+
+    var arrayHolder = raptureAtkModule->AtkArrayDataHolder;
+    var addonNamesById = BuildLoadedAddonNamesById();
+    for (var arrayIndex = 0; arrayIndex < arrayHolder.StringArrayCount; arrayIndex++)
+    {
+      var stringArrayData = arrayHolder.StringArrays[arrayIndex];
+      if (stringArrayData == null ||
+          stringArrayData->StringArray == null ||
+          stringArrayData->Size <= 0 ||
+          stringArrayData->SubscribedAddonsCount <= 0)
+      {
+        continue;
+      }
+
+      if (!stringArrayData->SubscribedAddons.Contains((byte)addon->Id))
+      {
+        continue;
+      }
+
+      var subscriberIds = ReadSubscriberIds(stringArrayData->SubscribedAddons, stringArrayData->SubscribedAddonsCount);
+      var subscriptionSummary =
+          $"stringArrayIndex={arrayIndex} size={stringArrayData->Size} subscribers=[{string.Join(", ", subscriberIds)}] subscriberNames=[{ResolveSubscriberNames(subscriberIds, addonNamesById)}]";
+      snapshot.StringArraySubscriptions.Add(subscriptionSummary);
+      snapshot.StringArraySubscriptionCount++;
+      pluginLog.Information(
+          $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} addonId={snapshot.AddonId} {subscriptionSummary}");
+    }
+  }
+
+  /// <summary>
+  /// Builds a best-effort map of loaded addon names keyed by the byte-sized
+  /// identifier used by <see cref="AtkArrayData.SubscribedAddons" />.
+  /// </summary>
+  /// <returns>A map from subscriber id to one or more loaded addon names.</returns>
+  private static Dictionary<byte, HashSet<string>> BuildLoadedAddonNamesById()
+  {
+    var namesById = new Dictionary<byte, HashSet<string>>();
+    if (!global::Echoglossian.FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
+    {
+      return namesById;
+    }
+
+    foreach (var unit in manager->AllLoadedUnitsList.Entries)
+    {
+      var unitPtr = unit.Value;
+      if (unitPtr == null || !unitPtr->IsReady)
+      {
+        continue;
+      }
+
+      var unitId = (byte)unitPtr->Id;
+      if (!namesById.TryGetValue(unitId, out var names))
+      {
+        names = new HashSet<string>(StringComparer.Ordinal);
+        namesById[unitId] = names;
+      }
+
+      var name = string.IsNullOrWhiteSpace(unitPtr->NameString)
+          ? $"<unnamed:{unitPtr->Id}>"
+          : unitPtr->NameString;
+      names.Add(name);
+    }
+
+    return namesById;
+  }
+
+  /// <summary>
+  /// Reads the live subscriber id list from a string-array subscriber span.
+  /// </summary>
+  /// <param name="subscribedAddons">The runtime subscriber id span.</param>
+  /// <param name="count">How many subscriber ids are currently active.</param>
+  /// <returns>A compact array of subscriber ids.</returns>
+  private static byte[] ReadSubscriberIds(
+      Span<byte> subscribedAddons,
+      byte count)
+  {
+    var subscriberIds = new byte[count];
+    for (var index = 0; index < count; index++)
+    {
+      subscriberIds[index] = subscribedAddons[index];
+    }
+
+    return subscriberIds;
+  }
+
+  /// <summary>
+  /// Checks whether a subscriber list contains the requested runtime addon id.
+  /// </summary>
+  /// <param name="subscriberIds">The active subscriber ids.</param>
+  /// <param name="subscriberId">The addon id to search for.</param>
+  /// <returns><see langword="true" /> when the id was present.</returns>
+  private static bool ContainsSubscriberId(
+      byte[] subscriberIds,
+      byte subscriberId)
+  {
+    foreach (var candidate in subscriberIds)
+    {
+      if (candidate == subscriberId)
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  /// Resolves the human-readable addon names for a list of subscriber ids.
+  /// </summary>
+  /// <param name="subscriberIds">The active subscriber ids.</param>
+  /// <param name="addonNamesById">The best-effort loaded-addon map.</param>
+  /// <returns>A log-friendly subscriber-name string.</returns>
+  private static string ResolveSubscriberNames(
+      byte[] subscriberIds,
+      IReadOnlyDictionary<byte, HashSet<string>> addonNamesById)
+  {
+    var names = new List<string>();
+    foreach (var subscriberId in subscriberIds)
+    {
+      if (addonNamesById.TryGetValue(subscriberId, out var subscriberNames) &&
+          subscriberNames.Count > 0)
+      {
+        names.Add($"{subscriberId}:{string.Join("/", subscriberNames.OrderBy(static x => x, StringComparer.Ordinal))}");
+      }
+      else
+      {
+        names.Add($"{subscriberId}:<unknown>");
+      }
+    }
+
+    return string.Join(", ", names);
   }
 
   /// <summary>
   /// Builds a concise textual description of a node for the debug log.
   /// </summary>
   /// <param name="node">The node being described.</param>
+  /// <param name="textNode">Optional typed text node.</param>
   /// <param name="text">Optional text contents for text nodes.</param>
   /// <returns>A log-friendly node description.</returns>
-  private static string DescribeNode(AtkResNode* node, string? text)
+  private static string DescribeNode(
+      AtkResNode* node,
+      AtkTextNode* textNode,
+      string? text)
   {
     var shortText = NormalizeForLog(text, 120) ?? "<empty>";
+    var textMetadata = textNode == null
+        ? string.Empty
+        : $" textId={textNode->TextId}";
     return
-        $"addr=0x{(ulong)(nint)node:X} type={node->Type} nodeId={node->NodeId} visible={node->IsVisible()} x={node->X} y={node->Y} width={node->Width} height={node->Height} scale=({node->ScaleX},{node->ScaleY}) depth={node->Depth} flags={node->NodeFlags} drawFlags={node->DrawFlags} text='{shortText}'";
+        $"addr=0x{(ulong)(nint)node:X} type={node->Type} nodeId={node->NodeId} visible={node->IsVisible()} x={node->X} y={node->Y} width={node->Width} height={node->Height} scale=({node->ScaleX},{node->ScaleY}) depth={node->Depth} flags={node->NodeFlags} drawFlags={node->DrawFlags}{textMetadata} text='{shortText}'";
   }
 
   /// <summary>
@@ -674,6 +857,12 @@ internal static unsafe class AddonStructureProbe
     public int VisibleTextNodeCount { get; set; }
 
     /// <summary>
+    /// Gets or sets the number of text nodes that still carry a non-zero
+    /// runtime text identifier.
+    /// </summary>
+    public int SheetTextNodeCount { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of component nodes encountered.
     /// </summary>
     public int ComponentNodeCount { get; set; }
@@ -687,6 +876,22 @@ internal static unsafe class AddonStructureProbe
     /// Gets or sets the addon collision-node-list count.
     /// </summary>
     public int CollisionNodeListCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the runtime addon id used for array subscriptions.
+    /// </summary>
+    public ushort AddonId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of matching string-array subscriptions observed
+    /// during the probe.
+    /// </summary>
+    public int StringArraySubscriptionCount { get; set; }
+
+    /// <summary>
+    /// Gets the captured string-array subscription summaries.
+    /// </summary>
+    public List<string> StringArraySubscriptions { get; } = [];
 
     /// <summary>
     /// Gets or sets the path of the first visible text node that looked like a

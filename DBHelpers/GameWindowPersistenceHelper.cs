@@ -37,12 +37,16 @@ public static class GameWindowPersistenceHelper
                 return "Invalid data.";
             }
 
-            var existing = context.GameWindow.FirstOrDefault(g =>
-                g.WindowAddonName == gameWindow.WindowAddonName &&
-                g.TranslationLang == gameWindow.TranslationLang &&
-                g.TranslationEngine == gameWindow.TranslationEngine &&
-                g.GameVersion == gameWindow.GameVersion &&
-                g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
+            var existing = context.GameWindow
+                .AsEnumerable()
+                .FirstOrDefault(g =>
+                    g.WindowAddonName == gameWindow.WindowAddonName &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        g.TranslationLang,
+                        gameWindow.TranslationLang) &&
+                    g.TranslationEngine == gameWindow.TranslationEngine &&
+                    g.GameVersion == gameWindow.GameVersion &&
+                    g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
 
             if (existing != null)
             {

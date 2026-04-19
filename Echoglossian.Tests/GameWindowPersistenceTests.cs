@@ -148,6 +148,66 @@ public class GameWindowPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures normalized language aliases reuse the same row instead of
+    ///     inserting duplicates for the same effective translation target.
+    /// </summary>
+    [Fact]
+    public void InsertGameWindow_TreatsNormalizedLanguageAliasesAsOneRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalJson = "{\"atkValues\":{\"1\":\"Main Command\"}}";
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "_MainCommand",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"1\":\"Comando Principal\"}}",
+                translationLang: "pt",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "_MainCommand",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"1\":\"Comandos\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var rows = validationContext.GameWindow
+                .Where(window =>
+                    window.WindowAddonName == "_MainCommand" &&
+                    window.OriginalWindowStrings == originalJson)
+                .ToList();
+
+            var row = Assert.Single(rows);
+            Assert.Equal(
+                "{\"atkValues\":{\"1\":\"Comandos\"}}",
+                row.TranslatedWindowStrings);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Deletes a temporary test directory when possible.
     /// </summary>
     /// <param name="path">The path to delete.</param>

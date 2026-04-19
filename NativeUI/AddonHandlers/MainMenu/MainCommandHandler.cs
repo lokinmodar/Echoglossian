@@ -31,7 +31,8 @@ public class MainCommandHandler : DbFirstGameWindowAddonHandler
             translationService: translationService,
             enabledSelector: static configuration =>
                 configuration.TranslateMainCommandWindow,
-            useAtkValues: true,
+            useAtkValues: false,
+            useTextNodes: true,
             displayModeSelector: static configuration =>
                 configuration.MainCommandWindowTranslationDisplayMode)
     {

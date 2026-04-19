@@ -20,7 +20,7 @@ namespace Echoglossian.NativeUI.AddonHandlers.Common;
 ///     <see cref="GameWindow" /> rows.
 /// </summary>
 public abstract unsafe class DbFirstGameWindowAddonHandler
-    : IAddonTranslationHandler
+    : IAddonTranslationHandler, IPluginUnloadAwareAddonHandler
 {
     private static readonly Regex NumericLikePattern = new(
         @"^\s*([€£$¥]?\s*\d+([.,]\d+)?\s*[%€£$¥]?\s*|(\d+/\d+))\s*$",
@@ -40,6 +40,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private readonly HoverTooltipManager hoverTooltipManager;
     private readonly TranslationService translationService;
     private readonly bool useAtkValues;
+    private readonly bool useTextNodes;
     private readonly StringArrayType? stringArrayDataType;
     private readonly Func<Config, bool> enabledSelector;
     private readonly Func<Config, JournalTranslationDisplayMode> displayModeSelector;
@@ -68,6 +69,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="useAtkValues">
     ///     Indicates whether ATK string values are part of the payload.
     /// </param>
+    /// <param name="useTextNodes">
+    ///     Indicates whether visible text nodes are part of the payload.
+    /// </param>
     /// <param name="stringArrayDataType">
     ///     The backing <see cref="StringArrayType" />, if any.
     /// </param>
@@ -81,6 +85,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         TranslationService translationService,
         Func<Config, bool> enabledSelector,
         bool useAtkValues,
+        bool useTextNodes = false,
         StringArrayType? stringArrayDataType = null,
         Func<Config, JournalTranslationDisplayMode>? displayModeSelector = null)
     {
@@ -90,6 +95,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         this.translationService = translationService;
         this.enabledSelector = enabledSelector;
         this.useAtkValues = useAtkValues;
+        this.useTextNodes = useTextNodes;
         this.stringArrayDataType = stringArrayDataType;
         this.displayModeSelector =
             displayModeSelector ??
@@ -143,6 +149,37 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether this handler should capture live
+    ///     <c>StringArrayData</c> values for canonical lookup and persistence
+    ///     when the backing array is subscribed by the given number of addons.
+    /// </summary>
+    /// <param name="subscribedAddonsCount">
+    ///     The runtime subscriber count reported by the backing array.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the live string-array values are safe
+    ///     to capture for this addon; otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldCaptureStringArrayValues(
+        byte subscribedAddonsCount)
+    {
+        return true;
+    }
+
+    /// <summary>
+    ///     Determines whether this handler may reuse a compatible persisted
+    ///     payload when no exact original-payload match is available.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> when compatible payload reuse is safe for
+    ///     this addon; otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldReuseCompatiblePayloads()
+    {
+        return true;
+    }
+
+    /// <summary>
     ///     Handles setup/refresh/update events.
     /// </summary>
     /// <param name="evt">The lifecycle event.</param>
@@ -180,6 +217,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="evt">The lifecycle event.</param>
     /// <param name="args">The event args.</param>
     protected virtual void OnCleanupEvent(AddonEvent evt, AddonArgs args)
+    {
+        this.RestoreOriginalPayloadIfNeeded();
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+        this.runtimeState = null;
+        this.nextRetryUtc = DateTime.MinValue;
+    }
+
+    /// <inheritdoc />
+    public void OnPluginUnload()
     {
         this.RestoreOriginalPayloadIfNeeded();
         this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
@@ -267,7 +313,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 originalPayload,
                 new DbFirstGameWindowPayload(
                     projection.AtkValues,
-                    projection.StringArrayValues),
+                    projection.StringArrayValues,
+                    new SortedDictionary<string, string>(
+                        originalPayload.TextNodes,
+                        StringComparer.Ordinal)),
                 structuredPayloadKey,
                 displayMode);
             ClearFailedPayloadRetry(structuredPayloadKey);
@@ -284,6 +333,29 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 originalPayload,
                 out var translatedPayload))
         {
+            if (this.ShouldReuseCompatiblePayloads() &&
+                this.TryResolveCompatibleGameWindowPayload(
+                    originalPayload,
+                    out var compatibleOriginalPayload,
+                    out var compatibleTranslatedPayload))
+            {
+                compatibleOriginalPayload =
+                    compatibleOriginalPayload.ProjectToShape(originalPayload);
+                compatibleTranslatedPayload =
+                    compatibleTranslatedPayload.ProjectToShape(originalPayload);
+                var compatiblePayloadKey = this.BuildPayloadKey(
+                    compatibleOriginalPayload.Serialize());
+                this.ApplyPayload(
+                    addon,
+                    compatibleOriginalPayload,
+                    compatibleTranslatedPayload,
+                    compatiblePayloadKey,
+                    displayMode);
+                ClearFailedPayloadRetry(compatiblePayloadKey);
+                this.nextRetryUtc = DateTime.MinValue;
+                return;
+            }
+
             if (TryGetFailedPayloadRetryUtc(payloadKey, out var failedRetryUtc))
             {
                 this.hoverTooltipManager.RemoveByPrefix(
@@ -330,6 +402,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     {
         SortedDictionary<int, string> atkValues = new();
         SortedDictionary<int, string> stringArrayValues = new();
+        SortedDictionary<string, string> textNodes =
+            new(StringComparer.Ordinal);
 
         if (this.useAtkValues)
         {
@@ -365,7 +439,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 arrayType);
             if (stringArrayData != null &&
                 stringArrayData->StringArray != null &&
-                stringArrayData->Size > 0)
+                stringArrayData->Size > 0 &&
+                this.ShouldCaptureStringArrayValues(
+                    stringArrayData->SubscribedAddonsCount))
             {
                 for (var index = 0; index < stringArrayData->Size; index++)
                 {
@@ -382,7 +458,53 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        return new DbFirstGameWindowPayload(atkValues, stringArrayValues);
+        if (this.useTextNodes)
+        {
+            textNodes = this.CaptureVisibleTextNodes(addon);
+        }
+
+        return new DbFirstGameWindowPayload(
+            atkValues,
+            stringArrayValues,
+            textNodes);
+    }
+
+    /// <summary>
+    ///     Captures the currently visible text nodes in stable tree order using
+    ///     a per-node key derived from node id and duplicate ordinal.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <returns>The captured text-node map.</returns>
+    private SortedDictionary<string, string> CaptureVisibleTextNodes(
+        AtkUnitBase* addon)
+    {
+        var capturedNodes = new SortedDictionary<string, string>(
+            StringComparer.Ordinal);
+        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
+            addon);
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+
+        foreach (var nodeAddress in nodeAddresses)
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null || !textNode->IsVisible())
+            {
+                continue;
+            }
+
+            var visibleText = this.ReadTextNode(textNode);
+            if (!ShouldCaptureText(visibleText))
+            {
+                continue;
+            }
+
+            var nodeId = textNode->AtkResNode.NodeId;
+            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
+            ordinalsByNodeId[nodeId] = ordinal + 1;
+            capturedNodes[BuildTextNodeKey(nodeId, ordinal)] = visibleText;
+        }
+
+        return capturedNodes;
     }
 
     /// <summary>
@@ -429,7 +551,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <returns>The stable payload key.</returns>
     private string BuildPayloadKey(string originalJson)
     {
-        return $"{this.addonName}|{LangDict[LanguageInt].Code}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalJson}";
+        var targetLanguageCode =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang);
+        return $"{this.addonName}|{targetLanguageCode}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalJson}";
     }
 
     /// <summary>
@@ -439,7 +564,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <returns>The stable payload key.</returns>
     private string BuildPayloadKey(StringArrayStructuredPayload originalPayload)
     {
-        return $"{this.addonName}|{LangDict[LanguageInt].Code}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalPayload.ComputeSourceContentHash()}";
+        var targetLanguageCode =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang);
+        return $"{this.addonName}|{targetLanguageCode}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalPayload.ComputeSourceContentHash()}";
     }
 
     /// <summary>
@@ -469,7 +597,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         StringArrayStructuredPayload originalPayload,
         out StringArrayStructuredPayload translatedPayload)
     {
-        var language = LangDict[LanguageInt].Code;
+        var language = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+            this.config.Lang);
         var gameVersion = GetGameVersion();
         var sourceHash = originalPayload.ComputeSourceContentHash();
 
@@ -555,11 +684,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         out DbFirstGameWindowPayload originalPayload)
     {
         var scopeProbe = this.BuildStructuredPayload(livePayload);
+        var sourceLanguageCode =
+            RuntimeLanguageHelper.GetCurrentGameLanguageCode();
+        var targetLanguageCode =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
         foreach (var row in StringArrayDataCacheManager.GetCandidates(
                      scopeProbe.Type,
                      scopeProbe.ContextKey,
-                     LangDict[LanguageInt].Code,
+                     targetLanguageCode,
                      this.config.ChosenTransEngine,
                      GetGameVersion()))
         {
@@ -580,14 +714,29 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             var originalProjection =
                 DbFirstStructuredStringArrayHelper.ProjectOriginalPayload(
                     resolvedOriginalPayload);
+            var originalCandidatePayload = new DbFirstGameWindowPayload(
+                originalProjection.AtkValues,
+                originalProjection.StringArrayValues,
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+            var translatedCandidatePayload = new DbFirstGameWindowPayload(
+                translatedProjection.AtkValues,
+                translatedProjection.StringArrayValues,
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+            if (!IsUsableRecoveryCandidate(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    originalCandidatePayload,
+                    translatedCandidatePayload,
+                    sourceLanguageCode,
+                    targetLanguageCode))
+            {
+                continue;
+            }
+
             candidates.Add(
                 new DbFirstPayloadRecoveryCandidate(
-                    new DbFirstGameWindowPayload(
-                        originalProjection.AtkValues,
-                        originalProjection.StringArrayValues),
-                    new DbFirstGameWindowPayload(
-                        translatedProjection.AtkValues,
-                        translatedProjection.StringArrayValues)));
+                    originalCandidatePayload,
+                    translatedCandidatePayload));
         }
 
         if (DbFirstPayloadRecoveryHelper.TryRecoverOriginalPayload(
@@ -619,10 +768,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
+        var sourceLanguageCode =
+            RuntimeLanguageHelper.GetCurrentGameLanguageCode();
+        var targetLanguageCode =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.addonName,
-                     LangDict[LanguageInt].Code,
+                     targetLanguageCode,
                      this.config.ChosenTransEngine,
                      GetGameVersion()))
         {
@@ -632,6 +786,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 !TryParseSerializedPayload(
                     row.TranslatedWindowStrings,
                     out var rowTranslatedPayload))
+            {
+                continue;
+            }
+
+            if (!IsUsableRecoveryCandidate(
+                    row.OriginalWindowStringsLang,
+                    row.TranslationLang,
+                    rowOriginalPayload,
+                    rowTranslatedPayload,
+                    sourceLanguageCode,
+                    targetLanguageCode))
             {
                 continue;
             }
@@ -667,7 +832,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         string originalJson,
         out GameWindow? gameWindow)
     {
-        var language = LangDict[LanguageInt].Code;
+        var language = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+            this.config.Lang);
         var gameVersion = GetGameVersion();
 
         gameWindow = GameWindowCacheManager.TryFindMatch(
@@ -683,7 +849,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
             window.WindowAddonName == this.addonName &&
-            window.TranslationLang == language &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                window.TranslationLang,
+                language) &&
             window.TranslationEngine == this.config.ChosenTransEngine &&
             (window.GameVersion == null || window.GameVersion == gameVersion) &&
             window.OriginalWindowStrings == originalJson);
@@ -694,6 +862,84 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Tries to resolve one compatible persisted <see cref="GameWindow" />
+    ///     candidate when an exact original-payload match is not available.
+    /// </summary>
+    /// <param name="originalPayload">
+    ///     The currently visible original-facing payload.
+    /// </param>
+    /// <param name="resolvedOriginalPayload">
+    ///     The original payload of the compatible persisted candidate.
+    /// </param>
+    /// <param name="resolvedTranslatedPayload">
+    ///     The translated payload of the compatible persisted candidate.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when one unique compatible candidate was
+    ///     found.
+    /// </returns>
+    private bool TryResolveCompatibleGameWindowPayload(
+        DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload resolvedOriginalPayload,
+        out DbFirstGameWindowPayload resolvedTranslatedPayload)
+    {
+        resolvedOriginalPayload = DbFirstGameWindowPayload.Empty;
+        resolvedTranslatedPayload = DbFirstGameWindowPayload.Empty;
+
+        var sourceLanguageCode =
+            RuntimeLanguageHelper.GetCurrentGameLanguageCode();
+        var targetLanguageCode =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang);
+        var candidates = new List<DbFirstPayloadRecoveryCandidate>();
+
+        foreach (var row in GameWindowCacheManager.GetCandidates(
+                     this.addonName,
+                     targetLanguageCode,
+                     this.config.ChosenTransEngine,
+                     GetGameVersion()))
+        {
+            if (!TryParseSerializedPayload(
+                    row.OriginalWindowStrings,
+                    out var rowOriginalPayload) ||
+                !TryParseSerializedPayload(
+                    row.TranslatedWindowStrings,
+                    out var rowTranslatedPayload))
+            {
+                continue;
+            }
+
+            if (!IsUsableRecoveryCandidate(
+                    row.OriginalWindowStringsLang,
+                    row.TranslationLang,
+                    rowOriginalPayload,
+                    rowTranslatedPayload,
+                    sourceLanguageCode,
+                    targetLanguageCode))
+            {
+                continue;
+            }
+
+            candidates.Add(
+                new DbFirstPayloadRecoveryCandidate(
+                    rowOriginalPayload,
+                    rowTranslatedPayload));
+        }
+
+        if (!DbFirstPayloadRecoveryHelper.TryResolveCompatibleCandidate(
+                originalPayload,
+                candidates,
+                out var compatibleCandidate))
+        {
+            return false;
+        }
+
+        resolvedOriginalPayload = compatibleCandidate.OriginalPayload;
+        resolvedTranslatedPayload = compatibleCandidate.TranslatedPayload;
+        return true;
     }
 
     /// <summary>
@@ -719,7 +965,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     originalStructuredPayload,
                     this.translationService,
                     ClientStateInterface.ClientLanguage.Humanize(),
-                    LangDict[LanguageInt].Code,
+                    RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                        this.config.Lang),
                     this.config.ChosenTransEngine,
                     GetGameVersion(),
                     ConfigDirectory)
@@ -745,8 +992,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     this.addonName,
                     new Dictionary<int, string>(payload.AtkValues),
                     new Dictionary<int, string>(payload.StringArrayValues),
+                    new Dictionary<string, string>(
+                        payload.TextNodes,
+                        StringComparer.Ordinal),
                     new Dictionary<int, string>(payload.AtkValues),
                     new Dictionary<int, string>(payload.StringArrayValues),
+                    new Dictionary<string, string>(
+                        payload.TextNodes,
+                        StringComparer.Ordinal),
                     this.config,
                     this.translationService)
                 .ContinueWith(
@@ -869,6 +1122,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode) &&
+            this.useTextNodes &&
+            translatedPayload.TextNodes.Count > 0)
+        {
+            this.ApplyTranslatedTextNodes(addon, translatedPayload.TextNodes);
+        }
+
+        if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode) &&
             this.stringArrayDataType is { } arrayType)
         {
             var stringArrayData = AtkStage.Instance()->GetStringArrayData(
@@ -965,6 +1225,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 currentValue.SetManagedString(originalText);
             }
+        }
+
+        if (this.useTextNodes && this.runtimeState.OriginalPayload.TextNodes.Count > 0)
+        {
+            this.ApplyTranslatedTextNodes(
+                addon,
+                this.runtimeState.OriginalPayload.TextNodes);
         }
 
         if (this.stringArrayDataType is { } arrayType)
@@ -1079,9 +1346,83 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return string.Empty;
         }
 
-        return MemoryHelper.ReadSeStringAsString(
-            out _,
-            (nint)textNode->NodeText.StringPtr.Value);
+        try
+        {
+            var directText = textNode->NodeText.ToString();
+            if (!string.IsNullOrWhiteSpace(directText))
+            {
+                return directText;
+            }
+        }
+        catch
+        {
+            // Fall through to the legacy buffer read.
+        }
+
+        try
+        {
+            return MemoryHelper.ReadSeStringAsString(
+                       out _,
+                       (nint)textNode->NodeText.StringPtr.Value) ??
+                   string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    ///     Applies translated text to visible text nodes by stable node key.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="translatedTextNodes">The translated text-node payload.</param>
+    private void ApplyTranslatedTextNodes(
+        AtkUnitBase* addon,
+        IReadOnlyDictionary<string, string> translatedTextNodes)
+    {
+        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
+            addon);
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+
+        foreach (var nodeAddress in nodeAddresses)
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null || !textNode->IsVisible())
+            {
+                continue;
+            }
+
+            var nodeId = textNode->AtkResNode.NodeId;
+            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
+            ordinalsByNodeId[nodeId] = ordinal + 1;
+
+            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            if (!translatedTextNodes.TryGetValue(textNodeKey, out var translatedText) ||
+                !ShouldCaptureText(translatedText))
+            {
+                continue;
+            }
+
+            if (this.ReadTextNode(textNode) == translatedText)
+            {
+                continue;
+            }
+
+            textNode->SetText(translatedText);
+        }
+    }
+
+    /// <summary>
+    ///     Builds one stable text-node key from a node id and duplicate
+    ///     ordinal in tree order.
+    /// </summary>
+    /// <param name="nodeId">The text node id.</param>
+    /// <param name="ordinal">The zero-based ordinal for this node id.</param>
+    /// <returns>The stable text-node key.</returns>
+    private static string BuildTextNodeKey(uint nodeId, int ordinal)
+    {
+        return $"{nodeId}:{ordinal}";
     }
 
     /// <summary>
@@ -1110,6 +1451,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             map,
             originalPayload.StringArrayValues,
             translatedPayload.StringArrayValues,
+            useTranslatedKeys);
+        AppendTooltipTextMap(
+            map,
+            originalPayload.TextNodes,
+            translatedPayload.TextNodes,
             useTranslatedKeys);
 
         return map;
@@ -1142,6 +1488,36 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             var key = useTranslatedKeys ? translatedText : originalText;
             var value = useTranslatedKeys ? originalText : translatedText;
             map.TryAdd(key, value);
+        }
+    }
+
+    /// <summary>
+    ///     Appends one text-node payload map into a tooltip text lookup.
+    /// </summary>
+    /// <param name="map">The lookup under construction.</param>
+    /// <param name="originalValues">The original values.</param>
+    /// <param name="translatedValues">The translated values.</param>
+    /// <param name="useTranslatedKeys">
+    ///     When set, translated text becomes the key.
+    /// </param>
+    private static void AppendTooltipTextMap(
+        IDictionary<string, string> map,
+        IReadOnlyDictionary<string, string> originalValues,
+        IReadOnlyDictionary<string, string> translatedValues,
+        bool useTranslatedKeys)
+    {
+        foreach (var (key, originalText) in originalValues)
+        {
+            if (!translatedValues.TryGetValue(key, out var translatedText) ||
+                !ShouldCaptureText(originalText) ||
+                !ShouldCaptureText(translatedText))
+            {
+                continue;
+            }
+
+            var lookupKey = useTranslatedKeys ? translatedText : originalText;
+            var value = useTranslatedKeys ? originalText : translatedText;
+            map.TryAdd(lookupKey, value);
         }
     }
 
@@ -1187,6 +1563,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         combinedData.StringArrayData,
                         Comparer<int>.Default)
                     : new SortedDictionary<int, string>();
+            var translatedTextNodes =
+                combinedData.TextNodes != null
+                    ? new SortedDictionary<string, string>(
+                        combinedData.TextNodes,
+                        StringComparer.Ordinal)
+                    : new SortedDictionary<string, string>(
+                        StringComparer.Ordinal);
 
             foreach (var key in originalPayload.AtkValues.Keys)
             {
@@ -1204,9 +1587,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 }
             }
 
+            foreach (var key in originalPayload.TextNodes.Keys)
+            {
+                if (!translatedTextNodes.ContainsKey(key))
+                {
+                    return false;
+                }
+            }
+
             translatedPayload = new DbFirstGameWindowPayload(
                 translatedAtkValues,
-                translatedStringArrayValues);
+                translatedStringArrayValues,
+                translatedTextNodes);
             return true;
         }
         catch (Exception ex)
@@ -1259,10 +1651,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         combinedData.StringArrayData,
                         Comparer<int>.Default)
                     : new SortedDictionary<int, string>();
+            var textNodes =
+                combinedData.TextNodes != null
+                    ? new SortedDictionary<string, string>(
+                        combinedData.TextNodes,
+                        StringComparer.Ordinal)
+                    : new SortedDictionary<string, string>(
+                        StringComparer.Ordinal);
 
             payload = new DbFirstGameWindowPayload(
                 atkValues,
-                stringArrayValues);
+                stringArrayValues,
+                textNodes);
             return !payload.IsEmpty;
         }
         catch (Exception ex)
@@ -1284,6 +1684,54 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                !text.All(char.IsPunctuation) &&
                !NumericLikePattern.IsMatch(text);
     }
+
+    /// <summary>
+    ///     Determines whether one persisted candidate is safe to use for
+    ///     recovery in the current source-language and target-language scope.
+    /// </summary>
+    /// <param name="originalLanguage">The row's stored original language.</param>
+    /// <param name="translationLanguage">The row's stored translation language.</param>
+    /// <param name="originalPayload">The persisted original payload.</param>
+    /// <param name="translatedPayload">The persisted translated payload.</param>
+    /// <param name="sourceLanguageCode">The current game language code.</param>
+    /// <param name="targetLanguageCode">The configured target language code.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the candidate matches the runtime
+    ///     language pair and carries a meaningful translated state.
+    /// </returns>
+    private static bool IsUsableRecoveryCandidate(
+        string? originalLanguage,
+        string? translationLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        string sourceLanguageCode,
+        string targetLanguageCode)
+    {
+        if (!RuntimeLanguageHelper.LanguagesMatch(
+                translationLanguage,
+                targetLanguageCode))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(originalLanguage) &&
+            !RuntimeLanguageHelper.LanguagesMatch(
+                originalLanguage,
+                sourceLanguageCode))
+        {
+            return false;
+        }
+
+        if (!RuntimeLanguageHelper.LanguagesMatch(
+                sourceLanguageCode,
+                targetLanguageCode) &&
+            originalPayload.StructurallyEquals(translatedPayload))
+        {
+            return false;
+        }
+
+        return true;
+    }
 }
 
 /// <summary>
@@ -1291,20 +1739,28 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 /// </summary>
 /// <param name="AtkValues">The ATK string values.</param>
 /// <param name="StringArrayValues">The string-array values.</param>
+/// <param name="TextNodes">The visible text-node values.</param>
 internal readonly record struct DbFirstGameWindowPayload(
     SortedDictionary<int, string> AtkValues,
-    SortedDictionary<int, string> StringArrayValues)
+    SortedDictionary<int, string> StringArrayValues,
+    SortedDictionary<string, string> TextNodes)
 {
     /// <summary>
     ///     Gets an empty payload.
     /// </summary>
     public static DbFirstGameWindowPayload Empty =>
-        new(new SortedDictionary<int, string>(), new SortedDictionary<int, string>());
+        new(
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
 
     /// <summary>
     ///     Gets a value indicating whether the payload is empty.
     /// </summary>
-    public bool IsEmpty => this.AtkValues.Count == 0 && this.StringArrayValues.Count == 0;
+    public bool IsEmpty =>
+        this.AtkValues.Count == 0 &&
+        this.StringArrayValues.Count == 0 &&
+        this.TextNodes.Count == 0;
 
     /// <summary>
     ///     Serializes the payload using the stable JSON contract already used by
@@ -1321,6 +1777,10 @@ internal readonly record struct DbFirstGameWindowPayload(
                     this.StringArrayValues.Count > 0
                         ? this.StringArrayValues
                         : null,
+                textNodes =
+                    this.TextNodes.Count > 0
+                        ? this.TextNodes
+                        : null,
             });
     }
 
@@ -1333,7 +1793,8 @@ internal readonly record struct DbFirstGameWindowPayload(
     public bool MatchesTranslated(DbFirstGameWindowPayload translatedPayload)
     {
         return MatchesMap(this.AtkValues, translatedPayload.AtkValues) &&
-               MatchesMap(this.StringArrayValues, translatedPayload.StringArrayValues);
+               MatchesMap(this.StringArrayValues, translatedPayload.StringArrayValues) &&
+               MatchesMap(this.TextNodes, translatedPayload.TextNodes);
     }
 
     /// <summary>
@@ -1345,7 +1806,46 @@ internal readonly record struct DbFirstGameWindowPayload(
     public bool MatchesOriginal(DbFirstGameWindowPayload originalPayload)
     {
         return MatchesMap(this.AtkValues, originalPayload.AtkValues) &&
-               MatchesMap(this.StringArrayValues, originalPayload.StringArrayValues);
+               MatchesMap(this.StringArrayValues, originalPayload.StringArrayValues) &&
+               MatchesMap(this.TextNodes, originalPayload.TextNodes);
+    }
+
+    /// <summary>
+    ///     Determines whether two payload snapshots contain exactly the same
+    ///     visible values.
+    /// </summary>
+    /// <param name="otherPayload">The payload to compare against.</param>
+    /// <returns>
+    ///     <see langword="true" /> when both payloads contain the same ATK and
+    ///     string-array values.
+    /// </returns>
+    public bool StructurallyEquals(DbFirstGameWindowPayload otherPayload)
+    {
+        return MatchesMap(this.AtkValues, otherPayload.AtkValues) &&
+               MatchesMap(this.StringArrayValues, otherPayload.StringArrayValues) &&
+               MatchesMap(this.TextNodes, otherPayload.TextNodes);
+    }
+
+    /// <summary>
+    ///     Projects this payload to the same ATK and string-array key shape as
+    ///     one reference payload so compatible supersets do not write extra
+    ///     slots into a reused addon context.
+    /// </summary>
+    /// <param name="referencePayload">
+    ///     The payload whose visible key set should be preserved.
+    /// </param>
+    /// <returns>The projected payload.</returns>
+    public DbFirstGameWindowPayload ProjectToShape(
+        DbFirstGameWindowPayload referencePayload)
+    {
+        return new DbFirstGameWindowPayload(
+            ProjectMap(this.AtkValues, referencePayload.AtkValues.Keys),
+            ProjectMap(
+                this.StringArrayValues,
+                referencePayload.StringArrayValues.Keys),
+            ProjectMap(
+                this.TextNodes,
+                referencePayload.TextNodes.Keys));
     }
 
     /// <summary>
@@ -1376,6 +1876,83 @@ internal readonly record struct DbFirstGameWindowPayload(
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     Compares two text-node payload maps.
+    /// </summary>
+    /// <param name="currentValues">The current visible values.</param>
+    /// <param name="expectedValues">The expected values.</param>
+    /// <returns>True when the maps match exactly.</returns>
+    private static bool MatchesMap(
+        SortedDictionary<string, string> currentValues,
+        SortedDictionary<string, string> expectedValues)
+    {
+        if (currentValues.Count != expectedValues.Count)
+        {
+            return false;
+        }
+
+        foreach (var (index, expectedText) in expectedValues)
+        {
+            if (!currentValues.TryGetValue(index, out var currentText) ||
+                !string.Equals(
+                    currentText,
+                    expectedText,
+                    StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Projects one payload map down to a requested set of keys.
+    /// </summary>
+    /// <param name="sourceValues">The source values to project.</param>
+    /// <param name="keys">The keys to keep.</param>
+    /// <returns>The projected map.</returns>
+    private static SortedDictionary<int, string> ProjectMap(
+        SortedDictionary<int, string> sourceValues,
+        IEnumerable<int> keys)
+    {
+        var projected = new SortedDictionary<int, string>();
+
+        foreach (var key in keys)
+        {
+            if (sourceValues.TryGetValue(key, out var value))
+            {
+                projected[key] = value;
+            }
+        }
+
+        return projected;
+    }
+
+    /// <summary>
+    ///     Projects one text-node payload map down to a requested set of keys.
+    /// </summary>
+    /// <param name="sourceValues">The source values to project.</param>
+    /// <param name="keys">The keys to keep.</param>
+    /// <returns>The projected map.</returns>
+    private static SortedDictionary<string, string> ProjectMap(
+        SortedDictionary<string, string> sourceValues,
+        IEnumerable<string> keys)
+    {
+        var projected = new SortedDictionary<string, string>(
+            StringComparer.Ordinal);
+
+        foreach (var key in keys)
+        {
+            if (sourceValues.TryGetValue(key, out var value))
+            {
+                projected[key] = value;
+            }
+        }
+
+        return projected;
     }
 }
 

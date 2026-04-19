@@ -20,4 +20,9 @@ public class CombinedTranslationData
     ///     Gets or sets the translated string-array payload by slot index.
     /// </summary>
     public Dictionary<int, string>? StringArrayData { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the translated text-node payload by stable node key.
+    /// </summary>
+    public Dictionary<string, string>? TextNodes { get; set; }
 }

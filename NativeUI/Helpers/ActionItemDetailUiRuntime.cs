@@ -1,4 +1,4 @@
-// <copyright file="ActionItemTooltipUiRuntime.cs" company="lokinmodar">
+// <copyright file="ActionItemDetailUiRuntime.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -10,23 +10,24 @@ using Echoglossian.UIOverlays.TranslationOverlay;
 namespace Echoglossian;
 
 /// <summary>
-///     Provides the live DB-first apply/runtime path for action and item tooltips.
+///     Provides the live DB-first apply/runtime path for the ActionDetail and
+///     ItemDetail addons.
 /// </summary>
 public unsafe partial class Echoglossian
 {
-    private readonly TranslationOverlay actionTooltipOverlay = new();
-    private readonly TranslationOverlay itemTooltipOverlay = new();
+    private readonly TranslationOverlay actionDetailOverlay = new();
+    private readonly TranslationOverlay itemDetailOverlay = new();
 
-    private StructuredTooltipNativeState? currentActionTooltipState;
-    private StructuredTooltipNativeState? currentItemTooltipState;
+    private StructuredTooltipNativeState? currentActionDetailState;
+    private StructuredTooltipNativeState? currentItemDetailState;
 
     /// <summary>
     ///     Updates live action/item tooltip state before tooltip overlays are drawn.
     /// </summary>
     private void UpdateStructuredTooltipUiRuntime()
     {
-        this.UpdateActionTooltipUiRuntime();
-        this.UpdateItemTooltipUiRuntime();
+        this.UpdateActionDetailUiRuntime();
+        this.UpdateItemDetailUiRuntime();
     }
 
     /// <summary>
@@ -36,24 +37,24 @@ public unsafe partial class Echoglossian
     {
         if (this.TryResolveTooltipAddon(out var actionAddon, "ActionDetail", "_ActionDetail"))
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentActionTooltipState, actionAddon);
+            this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, actionAddon);
         }
         else
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentActionTooltipState, null);
+            this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, null);
         }
 
         if (this.TryResolveTooltipAddon(out var itemAddon, "ItemDetail", "_ItemDetail"))
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentItemTooltipState, itemAddon);
+            this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, itemAddon);
         }
         else
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentItemTooltipState, null);
+            this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, null);
         }
 
-        this.ClearOverlay(this.actionTooltipOverlay, clearText: true);
-        this.ClearOverlay(this.itemTooltipOverlay, clearText: true);
+        this.ClearOverlay(this.actionDetailOverlay, clearText: true);
+        this.ClearOverlay(this.itemDetailOverlay, clearText: true);
     }
 
     /// <summary>
@@ -62,21 +63,21 @@ public unsafe partial class Echoglossian
     private void DrawStructuredTooltipOverlays()
     {
         this.DrawStructuredTooltipOverlay(
-            this.actionTooltipOverlay,
+            this.actionDetailOverlay,
             this.BuildTooltipOverlayConfig(
-                TranslationOverlaySurfaceId.ActionTooltip,
+                TranslationOverlaySurfaceId.ActionDetail,
                 Resources.OverlayWindowTitleActionTooltipTranslation));
         this.DrawStructuredTooltipOverlay(
-            this.itemTooltipOverlay,
+            this.itemDetailOverlay,
             this.BuildTooltipOverlayConfig(
-                TranslationOverlaySurfaceId.ItemTooltip,
+                TranslationOverlaySurfaceId.ItemDetail,
                 Resources.OverlayWindowTitleItemTooltipTranslation));
     }
 
     /// <summary>
     ///     Updates the live action-tooltip runtime.
     /// </summary>
-    private void UpdateActionTooltipUiRuntime()
+    private void UpdateActionDetailUiRuntime()
     {
         if (!this.ShouldRunStructuredTooltipUiRuntime())
         {
@@ -93,14 +94,14 @@ public unsafe partial class Echoglossian
         {
             if (this.TryResolveTooltipAddon(out var restoreAddon, "ActionDetail", "_ActionDetail"))
             {
-                this.RestoreStructuredTooltipOriginals(ref this.currentActionTooltipState, restoreAddon);
+                this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, restoreAddon);
             }
             else
             {
-                this.RestoreStructuredTooltipOriginals(ref this.currentActionTooltipState, null);
+                this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, null);
             }
 
-            this.ClearOverlay(this.actionTooltipOverlay, clearText: true);
+            this.ClearOverlay(this.actionDetailOverlay, clearText: true);
             return;
         }
 
@@ -109,8 +110,8 @@ public unsafe partial class Echoglossian
                 "ActionDetail",
                 "_ActionDetail"))
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentActionTooltipState, null);
-            this.ClearOverlay(this.actionTooltipOverlay, clearText: true);
+            this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, null);
+            this.ClearOverlay(this.actionDetailOverlay, clearText: true);
             return;
         }
 
@@ -122,8 +123,8 @@ public unsafe partial class Echoglossian
                 originalPayload,
                 out var translatedPayload))
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentActionTooltipState, addon);
-            this.ClearOverlay(this.actionTooltipOverlay, clearText: true);
+            this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
+            this.ClearOverlay(this.actionDetailOverlay, clearText: true);
             return;
         }
 
@@ -137,7 +138,7 @@ public unsafe partial class Echoglossian
 
         if (useOverlayOnly)
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentActionTooltipState, addon);
+            this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
         }
         else
         {
@@ -153,20 +154,20 @@ public unsafe partial class Echoglossian
                 ? translatedPayload.BuildTranslatedTooltipText()
                 : originalPayload.BuildOriginalTooltipText();
             this.UpdateStructuredTooltipOverlay(
-                this.actionTooltipOverlay,
+                this.actionDetailOverlay,
                 addon,
                 overlayText);
         }
         else
         {
-            this.ClearOverlay(this.actionTooltipOverlay, clearText: true);
+            this.ClearOverlay(this.actionDetailOverlay, clearText: true);
         }
     }
 
     /// <summary>
     ///     Updates the live item-tooltip runtime.
     /// </summary>
-    private void UpdateItemTooltipUiRuntime()
+    private void UpdateItemDetailUiRuntime()
     {
         if (!this.ShouldRunStructuredTooltipUiRuntime())
         {
@@ -179,14 +180,14 @@ public unsafe partial class Echoglossian
         {
             if (this.TryResolveTooltipAddon(out var restoreAddon, "ItemDetail", "_ItemDetail"))
             {
-                this.RestoreStructuredTooltipOriginals(ref this.currentItemTooltipState, restoreAddon);
+                this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, restoreAddon);
             }
             else
             {
-                this.RestoreStructuredTooltipOriginals(ref this.currentItemTooltipState, null);
+                this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, null);
             }
 
-            this.ClearOverlay(this.itemTooltipOverlay, clearText: true);
+            this.ClearOverlay(this.itemDetailOverlay, clearText: true);
             return;
         }
 
@@ -195,8 +196,8 @@ public unsafe partial class Echoglossian
                 "ItemDetail",
                 "_ItemDetail"))
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentItemTooltipState, null);
-            this.ClearOverlay(this.itemTooltipOverlay, clearText: true);
+            this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, null);
+            this.ClearOverlay(this.itemDetailOverlay, clearText: true);
             return;
         }
 
@@ -207,8 +208,8 @@ public unsafe partial class Echoglossian
                 originalPayload,
                 out var translatedPayload))
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentItemTooltipState, addon);
-            this.ClearOverlay(this.itemTooltipOverlay, clearText: true);
+            this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, addon);
+            this.ClearOverlay(this.itemDetailOverlay, clearText: true);
             return;
         }
 
@@ -222,7 +223,7 @@ public unsafe partial class Echoglossian
 
         if (useOverlayOnly)
         {
-            this.RestoreStructuredTooltipOriginals(ref this.currentItemTooltipState, addon);
+            this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, addon);
         }
         else
         {
@@ -238,13 +239,13 @@ public unsafe partial class Echoglossian
                 ? translatedPayload.BuildTranslatedTooltipText()
                 : originalPayload.BuildOriginalTooltipText();
             this.UpdateStructuredTooltipOverlay(
-                this.itemTooltipOverlay,
+                this.itemDetailOverlay,
                 addon,
                 overlayText);
         }
         else
         {
-            this.ClearOverlay(this.itemTooltipOverlay, clearText: true);
+            this.ClearOverlay(this.itemDetailOverlay, clearText: true);
         }
     }
 
@@ -373,7 +374,7 @@ public unsafe partial class Echoglossian
             originalPayload.Description,
             translatedPayload.TranslatedName ?? originalPayload.Name,
             translatedPayload.TranslatedDescription ?? originalPayload.Description,
-            ref this.currentActionTooltipState);
+            ref this.currentActionDetailState);
     }
 
     /// <summary>
@@ -394,7 +395,7 @@ public unsafe partial class Echoglossian
             originalPayload.Description,
             translatedPayload.TranslatedName ?? originalPayload.Name,
             translatedPayload.TranslatedDescription ?? originalPayload.Description,
-            ref this.currentItemTooltipState);
+            ref this.currentItemDetailState);
     }
 
     /// <summary>

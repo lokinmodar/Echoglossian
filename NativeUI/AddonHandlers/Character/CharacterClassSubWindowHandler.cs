@@ -40,4 +40,11 @@ public class CharacterClassSubWindowHandler : DbFirstGameWindowAddonHandler
               configuration.CharacterWindowTranslationDisplayMode)
     {
     }
+
+    /// <inheritdoc />
+    protected override bool ShouldCaptureStringArrayValues(
+        byte subscribedAddonsCount)
+    {
+        return subscribedAddonsCount <= 1;
+    }
 }

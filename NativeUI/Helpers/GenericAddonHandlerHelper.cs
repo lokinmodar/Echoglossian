@@ -21,8 +21,10 @@ public static class GenericAddonHandlerHelper
   /// <param name="addonName">The name of the addon.</param>
   /// <param name="atkValues">The filtered AtkValues to translate.</param>
   /// <param name="stringArray">The filtered StringArrayData to translate.</param>
+  /// <param name="textNodes">The filtered visible text nodes to translate.</param>
   /// <param name="originalAtkSnapshot">The original snapshot of AtkValues before translation.</param>
   /// <param name="originalArraySnapshot">The original snapshot of StringArrayData before translation.</param>
+  /// <param name="originalTextNodeSnapshot">The original snapshot of text nodes before translation.</param>
   /// <param name="config">The plugin configuration.</param>
   /// <param name="service">The translation service instance.</param>
   /// <returns> </returns>
@@ -30,8 +32,10 @@ public static class GenericAddonHandlerHelper
       string addonName,
       Dictionary<int, string> atkValues,
       Dictionary<int, string> stringArray,
+      Dictionary<string, string> textNodes,
       Dictionary<int, string> originalAtkSnapshot,
       Dictionary<int, string> originalArraySnapshot,
+      Dictionary<string, string> originalTextNodeSnapshot,
       Config config,
       TranslationService service)
       where T : class, IGenericEntity, new()
@@ -43,11 +47,13 @@ public static class GenericAddonHandlerHelper
     try
     {
       var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
-      var targetLang = LangDict[config.Lang].Code;
+      var targetLang = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+          config.Lang);
 
       var allPairs = new List<string>();
       allPairs.AddRange(atkValues.Select(kvp => $"a{kvp.Key}|{kvp.Value}"));
       allPairs.AddRange(stringArray.Select(kvp => $"s{kvp.Key}|{kvp.Value}"));
+      allPairs.AddRange(textNodes.Select(kvp => $"t{kvp.Key}|{kvp.Value}"));
 
       var builder = new StringBuilder();
       var translatedMap = new Dictionary<string, string>();
@@ -75,6 +81,8 @@ public static class GenericAddonHandlerHelper
 
       var updatedAtk = new Dictionary<int, string>();
       var updatedArray = new Dictionary<int, string>();
+      var updatedTextNodes = new Dictionary<string, string>(
+          StringComparer.Ordinal);
 
       foreach (var (key, val) in translatedMap)
       {
@@ -86,13 +94,39 @@ public static class GenericAddonHandlerHelper
         {
           updatedArray[s] = val;
         }
+        else if (key.StartsWith('t'))
+        {
+          updatedTextNodes[key[1..]] = val;
+        }
       }
 
       if (!HasCompleteTranslationCoverage(
               updatedAtk,
               updatedArray,
+              updatedTextNodes,
               originalAtkSnapshot,
-              originalArraySnapshot))
+              originalArraySnapshot,
+              originalTextNodeSnapshot))
+      {
+        await TranslateMissingEntriesIndividuallyAsync(
+            service,
+            updatedAtk,
+            updatedArray,
+            updatedTextNodes,
+            originalAtkSnapshot,
+            originalArraySnapshot,
+            originalTextNodeSnapshot,
+            sourceLang,
+            targetLang);
+      }
+
+      if (!HasCompleteTranslationCoverage(
+              updatedAtk,
+              updatedArray,
+              updatedTextNodes,
+              originalAtkSnapshot,
+              originalArraySnapshot,
+              originalTextNodeSnapshot))
       {
         PluginLog.Debug(
             $"[{addonName}] [Async] Skipping persistence because the translated payload is empty or incomplete.");
@@ -129,12 +163,16 @@ public static class GenericAddonHandlerHelper
         {
           atkValues = updatedAtk.Count > 0 ? updatedAtk : null,
           stringArrayData = updatedArray.Count > 0 ? updatedArray : null,
+          textNodes = updatedTextNodes.Count > 0 ? updatedTextNodes : null,
         });
 
         var originalJson = JsonConvert.SerializeObject(new
         {
           atkValues = originalAtkSnapshot.Count > 0 ? originalAtkSnapshot : null,
           stringArrayData = originalArraySnapshot.Count > 0 ? originalArraySnapshot : null,
+          textNodes = originalTextNodeSnapshot.Count > 0
+              ? originalTextNodeSnapshot
+              : null,
         });
 
         entity.SetOriginalText(originalJson);
@@ -203,10 +241,14 @@ public static class GenericAddonHandlerHelper
   private static bool HasCompleteTranslationCoverage(
       IReadOnlyDictionary<int, string> translatedAtkValues,
       IReadOnlyDictionary<int, string> translatedStringArrayValues,
+      IReadOnlyDictionary<string, string> translatedTextNodes,
       IReadOnlyDictionary<int, string> originalAtkSnapshot,
-      IReadOnlyDictionary<int, string> originalArraySnapshot)
+      IReadOnlyDictionary<int, string> originalArraySnapshot,
+      IReadOnlyDictionary<string, string> originalTextNodeSnapshot)
   {
-    if (translatedAtkValues.Count == 0 && translatedStringArrayValues.Count == 0)
+    if (translatedAtkValues.Count == 0 &&
+        translatedStringArrayValues.Count == 0 &&
+        translatedTextNodes.Count == 0)
     {
       return false;
     }
@@ -227,6 +269,97 @@ public static class GenericAddonHandlerHelper
       }
     }
 
+    foreach (var key in originalTextNodeSnapshot.Keys)
+    {
+      if (!translatedTextNodes.ContainsKey(key))
+      {
+        return false;
+      }
+    }
+
     return true;
+  }
+
+  /// <summary>
+  ///     Translates any entries that were missing from the batched response one
+  ///     by one so sparse parser failures do not discard an otherwise valid
+  ///     payload.
+  /// </summary>
+  /// <param name="service">The translation service.</param>
+  /// <param name="translatedAtkValues">The translated ATK values map to fill.</param>
+  /// <param name="translatedStringArrayValues">
+  ///     The translated StringArrayData map to fill.
+  /// </param>
+  /// <param name="originalAtkSnapshot">The original ATK snapshot.</param>
+  /// <param name="originalArraySnapshot">The original StringArrayData snapshot.</param>
+  /// <param name="sourceLanguage">The source language.</param>
+  /// <param name="targetLanguage">The target language.</param>
+  private static async Task TranslateMissingEntriesIndividuallyAsync(
+      TranslationService service,
+      IDictionary<int, string> translatedAtkValues,
+      IDictionary<int, string> translatedStringArrayValues,
+      IDictionary<string, string> translatedTextNodes,
+      IReadOnlyDictionary<int, string> originalAtkSnapshot,
+      IReadOnlyDictionary<int, string> originalArraySnapshot,
+      IReadOnlyDictionary<string, string> originalTextNodeSnapshot,
+      string sourceLanguage,
+      string targetLanguage)
+  {
+    foreach (var (index, originalText) in originalAtkSnapshot)
+    {
+      if (translatedAtkValues.ContainsKey(index))
+      {
+        continue;
+      }
+
+      var translatedText = await service.TranslateAsync(
+          originalText,
+          sourceLanguage,
+          targetLanguage);
+      if (string.IsNullOrWhiteSpace(translatedText))
+      {
+        continue;
+      }
+
+      translatedAtkValues[index] = translatedText;
+    }
+
+    foreach (var (index, originalText) in originalArraySnapshot)
+    {
+      if (translatedStringArrayValues.ContainsKey(index))
+      {
+        continue;
+      }
+
+      var translatedText = await service.TranslateAsync(
+          originalText,
+          sourceLanguage,
+          targetLanguage);
+      if (string.IsNullOrWhiteSpace(translatedText))
+      {
+        continue;
+      }
+
+      translatedStringArrayValues[index] = translatedText;
+    }
+
+    foreach (var (key, originalText) in originalTextNodeSnapshot)
+    {
+      if (translatedTextNodes.ContainsKey(key))
+      {
+        continue;
+      }
+
+      var translatedText = await service.TranslateAsync(
+          originalText,
+          sourceLanguage,
+          targetLanguage);
+      if (string.IsNullOrWhiteSpace(translatedText))
+      {
+        continue;
+      }
+
+      translatedTextNodes[key] = translatedText;
+    }
   }
 }

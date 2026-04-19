@@ -249,6 +249,146 @@ public class DbFirstPayloadRecoveryHelperTests
     }
 
     /// <summary>
+    ///     Ensures compatible persisted candidates can still be reused when
+    ///     the currently visible original-facing payload is only a subset of
+    ///     the persisted original payload.
+    /// </summary>
+    [Fact]
+    public void TryResolveCompatibleCandidate_ResolvesUniqueSupersetOriginal()
+    {
+        var liveOriginalPayload = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Character",
+                [4] = "Duty",
+            },
+            stringArrayValues: new Dictionary<int, string>());
+        var candidateOriginal = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Character",
+                [4] = "Duty",
+                [5] = "Logs",
+            },
+            stringArrayValues: new Dictionary<int, string>());
+        var candidateTranslated = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Personagem",
+                [4] = "Dever",
+                [5] = "Registros",
+            },
+            stringArrayValues: new Dictionary<int, string>());
+
+        var resolved = DbFirstPayloadRecoveryHelper.TryResolveCompatibleCandidate(
+            liveOriginalPayload,
+            new[]
+            {
+                new DbFirstPayloadRecoveryCandidate(
+                    candidateOriginal,
+                    candidateTranslated),
+            },
+            out var resolvedCandidate);
+
+        Assert.True(resolved);
+        Assert.Equal(candidateOriginal, resolvedCandidate.OriginalPayload);
+        Assert.Equal(candidateTranslated, resolvedCandidate.TranslatedPayload);
+    }
+
+    /// <summary>
+    ///     Ensures ambiguous compatible candidates do not resolve to the wrong
+    ///     persisted row.
+    /// </summary>
+    [Fact]
+    public void TryResolveCompatibleCandidate_ReturnsFalse_WhenCompatibleCandidatesAreAmbiguous()
+    {
+        var liveOriginalPayload = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Character",
+            },
+            stringArrayValues: new Dictionary<int, string>());
+        var firstOriginal = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Character",
+                [4] = "Duty",
+            },
+            stringArrayValues: new Dictionary<int, string>());
+        var secondOriginal = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Character",
+                [5] = "Logs",
+            },
+            stringArrayValues: new Dictionary<int, string>());
+        var translated = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Personagem",
+            },
+            stringArrayValues: new Dictionary<int, string>());
+
+        var resolved = DbFirstPayloadRecoveryHelper.TryResolveCompatibleCandidate(
+            liveOriginalPayload,
+            new[]
+            {
+                new DbFirstPayloadRecoveryCandidate(firstOriginal, translated),
+                new DbFirstPayloadRecoveryCandidate(secondOriginal, translated),
+            },
+            out _);
+
+        Assert.False(resolved);
+    }
+
+    /// <summary>
+    ///     Ensures compatible superset payloads are projected back to the live
+    ///     shape before apply so reused addons do not receive translated text
+    ///     for slots that are not part of the current context.
+    /// </summary>
+    [Fact]
+    public void ProjectToShape_KeepsOnlyReferenceKeys()
+    {
+        var referencePayload = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Character",
+                [4] = "Duty",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Category",
+            });
+        var supersetPayload = CreatePayload(
+            atkValues: new Dictionary<int, string>
+            {
+                [3] = "Personagem",
+                [4] = "Dever",
+                [5] = "Registros",
+            },
+            stringArrayValues: new Dictionary<int, string>
+            {
+                [0] = "Categoria",
+                [1] = "Extra",
+            });
+
+        var projectedPayload = supersetPayload.ProjectToShape(referencePayload);
+
+        Assert.Equal(
+            CreatePayload(
+                atkValues: new Dictionary<int, string>
+                {
+                    [3] = "Personagem",
+                    [4] = "Dever",
+                },
+                stringArrayValues: new Dictionary<int, string>
+                {
+                    [0] = "Categoria",
+                }),
+            projectedPayload);
+    }
+
+    /// <summary>
     ///     Creates one payload for test usage.
     /// </summary>
     /// <param name="atkValues">The ATK values.</param>
@@ -260,6 +400,7 @@ public class DbFirstPayloadRecoveryHelperTests
     {
         return new DbFirstGameWindowPayload(
             new SortedDictionary<int, string>(atkValues),
-            new SortedDictionary<int, string>(stringArrayValues));
+            new SortedDictionary<int, string>(stringArrayValues),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
     }
 }

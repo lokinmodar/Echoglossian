@@ -29,6 +29,9 @@ When started, the probe watches the requested addon for a short period and logs:
 - live node structure
 - component roots
 - likely text nodes and anchor candidates
+- text-node `TextId` values when the live node is still sheet-backed
+- matching `StringArrayData` subscriptions for the probed addon's runtime id
+- raw subscriber ids plus best-effort addon-name resolution for those arrays
 
 When `stop` or `cancel` is passed, the active watch is stopped if one exists.
 
@@ -39,6 +42,8 @@ Use this command when you want to:
 - understand why a tooltip or overlay trigger is missing
 - inspect the real addon structure instead of guessing from behavior
 - confirm which node should be used as an anchor
+- confirm whether a shared `StringArrayData` surface is currently subscribed by
+  the addon
 - watch a live addon while testing in-game
 
 ## Notes

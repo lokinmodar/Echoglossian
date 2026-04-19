@@ -1,4 +1,4 @@
-// <copyright file="ItemTooltipPrefetchRuntime.cs" company="lokinmodar">
+// <copyright file="ItemDetailPrefetchRuntime.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -11,13 +11,14 @@ using ItemSheet = Lumina.Excel.Sheets.Item;
 namespace Echoglossian;
 
 /// <summary>
-///     Provides DB-first background prefetch for canonical item-tooltip payloads.
+///     Provides DB-first background prefetch for canonical ItemDetail
+///     payloads.
 /// </summary>
 public unsafe partial class Echoglossian
 {
-    private const int ItemTooltipPrefetchItemsPerTick = 10;
+    private const int ItemDetailPrefetchItemsPerTick = 10;
 
-    private static readonly TimeSpan ItemTooltipPrefetchTickInterval =
+    private static readonly TimeSpan ItemDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
 
     private static readonly InventoryType[] PrefetchInventoryTypes =
@@ -42,61 +43,61 @@ public unsafe partial class Echoglossian
         InventoryType.ArmorySoulCrystal,
     ];
 
-    private readonly List<uint> itemTooltipPrefetchQueue = [];
+    private readonly List<uint> itemDetailPrefetchQueue = [];
 
-    private string itemTooltipPrefetchSignature = string.Empty;
+    private string itemDetailPrefetchSignature = string.Empty;
 
-    private DateTime itemTooltipPrefetchLastTickUtc = DateTime.MinValue;
+    private DateTime itemDetailPrefetchLastTickUtc = DateTime.MinValue;
 
-    private int itemTooltipPrefetchQueueIndex;
+    private int itemDetailPrefetchQueueIndex;
 
     /// <summary>
     ///     Ticks the item-tooltip prefetch runtime so current inventory surfaces
     ///     are translated into canonical storage ahead of tooltip use.
     /// </summary>
-    private void TickItemTooltipPrefetch()
+    private void TickItemDetailPrefetch()
     {
         if (!this.ShouldPrefetchStructuredTooltips() ||
-            DateTime.UtcNow - this.itemTooltipPrefetchLastTickUtc <
-            ItemTooltipPrefetchTickInterval)
+            DateTime.UtcNow - this.itemDetailPrefetchLastTickUtc <
+            ItemDetailPrefetchTickInterval)
         {
             return;
         }
 
-        this.itemTooltipPrefetchLastTickUtc = DateTime.UtcNow;
+        this.itemDetailPrefetchLastTickUtc = DateTime.UtcNow;
 
         if (!TryCollectTrackedItemIds(out var itemIds))
         {
-            this.ClearItemTooltipPrefetchState();
+            this.ClearItemDetailPrefetchState();
             return;
         }
 
         var signature = string.Join(',', itemIds);
         if (!string.Equals(
-                this.itemTooltipPrefetchSignature,
+                this.itemDetailPrefetchSignature,
                 signature,
                 StringComparison.Ordinal))
         {
-            this.itemTooltipPrefetchSignature = signature;
-            this.itemTooltipPrefetchQueue.Clear();
-            this.itemTooltipPrefetchQueue.AddRange(itemIds);
-            this.itemTooltipPrefetchQueueIndex = 0;
+            this.itemDetailPrefetchSignature = signature;
+            this.itemDetailPrefetchQueue.Clear();
+            this.itemDetailPrefetchQueue.AddRange(itemIds);
+            this.itemDetailPrefetchQueueIndex = 0;
         }
 
-        if (this.itemTooltipPrefetchQueueIndex >=
-            this.itemTooltipPrefetchQueue.Count)
+        if (this.itemDetailPrefetchQueueIndex >=
+            this.itemDetailPrefetchQueue.Count)
         {
             return;
         }
 
         var processedCount = 0;
-        while (processedCount < ItemTooltipPrefetchItemsPerTick &&
-               this.itemTooltipPrefetchQueueIndex <
-               this.itemTooltipPrefetchQueue.Count)
+        while (processedCount < ItemDetailPrefetchItemsPerTick &&
+               this.itemDetailPrefetchQueueIndex <
+               this.itemDetailPrefetchQueue.Count)
         {
             var itemId =
-                this.itemTooltipPrefetchQueue[this.itemTooltipPrefetchQueueIndex++];
-            this.PrefetchItemTooltip(itemId);
+                this.itemDetailPrefetchQueue[this.itemDetailPrefetchQueueIndex++];
+            this.PrefetchItemDetail(itemId);
             processedCount++;
         }
     }
@@ -104,12 +105,12 @@ public unsafe partial class Echoglossian
     /// <summary>
     ///     Clears the item-tooltip prefetch runtime state.
     /// </summary>
-    private void ClearItemTooltipPrefetchState()
+    private void ClearItemDetailPrefetchState()
     {
-        this.itemTooltipPrefetchQueue.Clear();
-        this.itemTooltipPrefetchQueueIndex = 0;
-        this.itemTooltipPrefetchSignature = string.Empty;
-        this.itemTooltipPrefetchLastTickUtc = DateTime.MinValue;
+        this.itemDetailPrefetchQueue.Clear();
+        this.itemDetailPrefetchQueueIndex = 0;
+        this.itemDetailPrefetchSignature = string.Empty;
+        this.itemDetailPrefetchLastTickUtc = DateTime.MinValue;
     }
 
     /// <summary>
@@ -127,7 +128,7 @@ public unsafe partial class Echoglossian
     ///     Prefetches one canonical item-tooltip payload and any missing translations.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
-    private void PrefetchItemTooltip(uint itemId)
+    private void PrefetchItemDetail(uint itemId)
     {
         if (!TryBuildItemTooltipCanonicalPayload(itemId, out var originalPayload))
         {
@@ -143,8 +144,8 @@ public unsafe partial class Echoglossian
         var existingRow = this.FindItemTooltip(originalRow) ?? originalRow;
         this.InsertItemTooltip(originalRow);
 
-        this.PrefetchItemTooltipName(originalPayload, existingRow);
-        this.PrefetchItemTooltipDescription(originalPayload, existingRow);
+        this.PrefetchItemDetailName(originalPayload, existingRow);
+        this.PrefetchItemDetailDescription(originalPayload, existingRow);
     }
 
     /// <summary>
@@ -152,7 +153,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
-    private void PrefetchItemTooltipName(
+    private void PrefetchItemDetailName(
         ItemTooltipCanonicalPayload originalPayload,
         ItemTooltip existingRow)
     {
@@ -163,12 +164,12 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ItemTooltipPrefetch|{originalPayload.ItemId}|Name|{originalPayload.Name}";
+            $"ItemDetailPrefetch|{originalPayload.ItemId}|Name|{originalPayload.Name}";
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedName))
         {
-            this.ApplyItemTooltipTranslation(
+            this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
                 translatedName: cachedTranslatedName);
             return;
@@ -180,7 +181,7 @@ public unsafe partial class Echoglossian
                 originalPayload.Name,
                 ClientStateInterface.ClientLanguage.Humanize(),
                 LangDict[LanguageInt].Code),
-            translatedName => this.ApplyItemTooltipTranslation(
+            translatedName => this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
                 translatedName: translatedName));
     }
@@ -190,7 +191,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
-    private void PrefetchItemTooltipDescription(
+    private void PrefetchItemDetailDescription(
         ItemTooltipCanonicalPayload originalPayload,
         ItemTooltip existingRow)
     {
@@ -201,12 +202,12 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ItemTooltipPrefetch|{originalPayload.ItemId}|Description|{originalPayload.Description}";
+            $"ItemDetailPrefetch|{originalPayload.ItemId}|Description|{originalPayload.Description}";
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedDescription))
         {
-            this.ApplyItemTooltipTranslation(
+            this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
                 translatedDescription: cachedTranslatedDescription);
             return;
@@ -218,7 +219,7 @@ public unsafe partial class Echoglossian
                 originalPayload.Description,
                 ClientStateInterface.ClientLanguage.Humanize(),
                 LangDict[LanguageInt].Code),
-            translatedDescription => this.ApplyItemTooltipTranslation(
+            translatedDescription => this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
                 translatedDescription: translatedDescription));
     }
@@ -229,7 +230,7 @@ public unsafe partial class Echoglossian
     /// <param name="itemId">The item row identifier.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
-    private void ApplyItemTooltipTranslation(
+    private void ApplyItemDetailTranslation(
         uint itemId,
         string? translatedName = null,
         string? translatedDescription = null)

@@ -31,9 +31,21 @@ public class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
             translationService: translationService,
             enabledSelector: static configuration =>
                 configuration.TranslateAddonContextMenuTitle,
-            useAtkValues: true,
+            useAtkValues: false,
+            useTextNodes: true,
             displayModeSelector: static configuration =>
                 configuration.AddonContextMenuTitleTranslationDisplayMode)
     {
+    }
+
+    /// <summary>
+    ///     The context-menu title addon reuses the same ATK value slots for
+    ///     different submenu contexts, so compatible supersets are not stable
+    ///     enough to reuse safely.
+    /// </summary>
+    /// <returns>Always <see langword="false" />.</returns>
+    protected override bool ShouldReuseCompatiblePayloads()
+    {
+        return false;
     }
 }

@@ -1,4 +1,4 @@
-﻿// <copyright file="UiTooltipHandlers.cs" company="lokinmodar">
+// <copyright file="UiActionDetailHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -7,7 +7,7 @@ namespace Echoglossian
 {
   public partial class Echoglossian
   {
-    /*private void TooltipsOnActionTooltip(ActionTooltip actionTooltip, HoveredAction action)
+    /*private void TooltipsOnActionDetail(ActionTooltip actionTooltip, HoveredAction action)
     {
       Dalamud.Game.Text.SeStringHandling.SeString tooltipDescription = actionTooltip[ActionTooltipString.Description];
 #if DEBUG

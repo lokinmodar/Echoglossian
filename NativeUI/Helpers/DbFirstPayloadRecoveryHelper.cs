@@ -118,6 +118,78 @@ internal static class DbFirstPayloadRecoveryHelper
     }
 
     /// <summary>
+    ///     Tries to resolve one persisted candidate whose original payload is
+    ///     structurally compatible with the currently visible original-facing
+    ///     payload.
+    /// </summary>
+    /// <param name="liveOriginalPayload">
+    ///     The currently visible payload, after any recovery of translated live
+    ///     state back to an original-facing payload.
+    /// </param>
+    /// <param name="candidates">
+    ///     The candidate original/translated payload pairs for the same addon
+    ///     scope.
+    /// </param>
+    /// <param name="resolvedCandidate">
+    ///     The best compatible candidate when one unique match exists.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when one unique compatible candidate is
+    ///     found; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryResolveCompatibleCandidate(
+        DbFirstGameWindowPayload liveOriginalPayload,
+        IReadOnlyList<DbFirstPayloadRecoveryCandidate> candidates,
+        out DbFirstPayloadRecoveryCandidate resolvedCandidate)
+    {
+        resolvedCandidate = default;
+
+        var bestScore = -1;
+        string? bestSignature = null;
+        DbFirstPayloadRecoveryCandidate? bestCandidate = null;
+        var ambiguous = false;
+
+        foreach (var candidate in candidates)
+        {
+            if (!TryScoreOriginalCompatibility(
+                    liveOriginalPayload,
+                    candidate.OriginalPayload,
+                    out var candidateScore))
+            {
+                continue;
+            }
+
+            var candidateSignature = candidate.OriginalPayload.Serialize();
+            if (candidateScore > bestScore)
+            {
+                bestScore = candidateScore;
+                bestSignature = candidateSignature;
+                bestCandidate = candidate;
+                ambiguous = false;
+                continue;
+            }
+
+            if (candidateScore == bestScore &&
+                bestSignature != null &&
+                !string.Equals(
+                    bestSignature,
+                    candidateSignature,
+                    StringComparison.Ordinal))
+            {
+                ambiguous = true;
+            }
+        }
+
+        if (bestCandidate == null || ambiguous)
+        {
+            return false;
+        }
+
+        resolvedCandidate = bestCandidate.Value;
+        return true;
+    }
+
+    /// <summary>
     ///     Scores one candidate against the currently visible live payload.
     /// </summary>
     /// <param name="livePayload">The currently visible payload.</param>
@@ -242,6 +314,89 @@ internal static class DbFirstPayloadRecoveryHelper
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Scores compatibility between one visible original-facing payload and
+    ///     one persisted original payload.
+    /// </summary>
+    /// <param name="livePayload">The currently visible original-facing payload.</param>
+    /// <param name="candidateOriginalPayload">The persisted original payload.</param>
+    /// <param name="score">The resulting compatibility score.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the visible payload is a compatible
+    ///     subset of the candidate original payload.
+    /// </returns>
+    private static bool TryScoreOriginalCompatibility(
+        DbFirstGameWindowPayload livePayload,
+        DbFirstGameWindowPayload candidateOriginalPayload,
+        out int score)
+    {
+        score = 0;
+
+        if (!TryScoreOriginalCompatibilityMap(
+                livePayload.AtkValues,
+                candidateOriginalPayload.AtkValues,
+                out var atkScore) ||
+            !TryScoreOriginalCompatibilityMap(
+                livePayload.StringArrayValues,
+                candidateOriginalPayload.StringArrayValues,
+                out var stringArrayScore))
+        {
+            return false;
+        }
+
+        score = atkScore + stringArrayScore;
+        return score > 0;
+    }
+
+    /// <summary>
+    ///     Scores compatibility between one visible original-facing payload map
+    ///     and one persisted original payload map.
+    /// </summary>
+    /// <param name="liveValues">The currently visible values.</param>
+    /// <param name="candidateOriginalValues">
+    ///     The persisted original candidate values.
+    /// </param>
+    /// <param name="score">The resulting compatibility score.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the visible values are a compatible
+    ///     subset of the candidate original values.
+    /// </returns>
+    private static bool TryScoreOriginalCompatibilityMap(
+        IReadOnlyDictionary<int, string> liveValues,
+        IReadOnlyDictionary<int, string> candidateOriginalValues,
+        out int score)
+    {
+        score = 0;
+
+        if (liveValues.Count == 0)
+        {
+            return true;
+        }
+
+        if (liveValues.Count > candidateOriginalValues.Count)
+        {
+            return false;
+        }
+
+        foreach (var (index, liveText) in liveValues)
+        {
+            if (!candidateOriginalValues.TryGetValue(index, out var originalText) ||
+                !string.Equals(liveText, originalText, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            score += 2;
+        }
+
+        if (liveValues.Count == candidateOriginalValues.Count)
+        {
+            score += liveValues.Count;
+        }
+
+        return score > 0;
     }
 }
 

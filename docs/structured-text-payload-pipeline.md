@@ -18,6 +18,8 @@ Echoglossian already touches several text families:
 - `ActionTooltip`
 - `StringArrayData`
 - addon text nodes that expose `SeString` or `ReadOnlySeString`
+- addon text nodes that are more stable than `AtkValues` for reused addon
+  contexts such as `_MainCommand` and `AddonContextMenuTitle`
 
 These surfaces can contain:
 
@@ -105,7 +107,9 @@ The repository already shows several useful patterns:
   removed from the live plugin path.
 - `QuestProgressResolver` keeps quest identity separate from the displayed UI text.
 - `QuestProbeCommandHelpers` and `QuestSheetAcquisitionPipeline` demonstrate how to mount structured quest sheets from stable identifiers.
-- `UiActionTooltipHandler` and the `SeString` helper paths show where tooltip payload inspection already starts.
+- `UiActionDetailHandler` and the `SeString` helper paths show where tooltip payload inspection already starts.
+- the DB-first `GameWindow` runtime now supports a `textNodes` payload branch for
+  surfaces where visible `AtkTextNode`s are more stable than `AtkValues`
 - `HoverTooltipManager` keeps hover presentation separate from content capture.
 
 These are the building blocks we should reuse rather than inventing parallel pipelines.
@@ -204,6 +208,8 @@ The difference is that quests need progression-aware identity, while item and ac
 - Do not depend on UI text as the sole long-term source of quest content.
 - Do not create a second translation queue just for payload-aware text.
 - Do not mutate native addon nodes when the active mode is tooltip-only.
+- Do not assume `AtkValue` slot index is a stable identity when one addon
+  reuses the same slots for different runtime contexts.
 
 ## Reusable Helpers To Keep In Mind
 
