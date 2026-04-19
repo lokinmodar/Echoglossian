@@ -69,9 +69,10 @@ public class MicrosoftTranslator : ITranslator
 
     string fixedInputText = Echoglossian.FixText(text);
 
-    string requestUrl = $"{this.endpoint}/translate?api-version=3.0" +
-                        $"&from={sourceLanguage}&to={targetLanguage}" +
-                        $"&category=general&profanityAction=NoAction&textType=plain";
+    string requestUrl = BuildRequestUrl(
+        this.endpoint,
+        sourceLanguage,
+        targetLanguage);
 
     var requestBody = new[]
     {
@@ -142,5 +143,15 @@ public class MicrosoftTranslator : ITranslator
     }
 
     return string.Empty;
+  }
+
+  internal static string BuildRequestUrl(
+      string endpoint,
+      string sourceLanguage,
+      string targetLanguage)
+  {
+    return $"{endpoint}/translate?api-version=3.0" +
+           $"&from={sourceLanguage}&to={targetLanguage}" +
+           "&category=general&profanityAction=NoAction&textType=plain";
   }
 }

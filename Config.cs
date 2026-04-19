@@ -9,6 +9,8 @@ using Dalamud.Configuration;
 
 using Echoglossian.Translators.LibreTranslate;
 
+using Newtonsoft.Json;
+
 namespace Echoglossian;
 
 public enum JournalTranslationDisplayMode
@@ -572,12 +574,14 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode MainCommandWindowTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
-  /// <summary>Translate the Actions window.</summary>
-  [DefaultValue(false)] public bool TranslateActionsWindow = false;
+  /// <summary>Translate the ActionMenu window.</summary>
+  [JsonProperty("TranslateActionsWindow")]
+  [DefaultValue(false)] public bool TranslateActionMenuWindow = false;
 
-  /// <summary>Display mode for the Actions window.</summary>
+  /// <summary>Display mode for the ActionMenu window.</summary>
+  [JsonProperty("ActionsWindowTranslationDisplayMode")]
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
-  public JournalTranslationDisplayMode ActionsWindowTranslationDisplayMode =
+  public JournalTranslationDisplayMode ActionMenuWindowTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Translate HUD window text surfaces backed by StringArrayData.</summary>

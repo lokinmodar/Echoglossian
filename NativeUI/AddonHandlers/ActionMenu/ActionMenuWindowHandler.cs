@@ -1,4 +1,4 @@
-// <copyright file="ActionsWindowHandler.cs" company="lokinmodar">
+// <copyright file="ActionMenuWindowHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -8,39 +8,39 @@ using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
-namespace Echoglossian.NativeUI.AddonHandlers.Actions;
+namespace Echoglossian.NativeUI.AddonHandlers.ActionMenu;
 
 /// <summary>
-///     Handles DB-first translation for the <c>Actions</c> addon while
+///     Handles DB-first translation for the <c>ActionMenu</c> addon while
 ///     reusing canonical action-name and description translations that already
 ///     exist in <c>ActionTooltip</c> storage.
 /// </summary>
-public unsafe class ActionsWindowHandler : DbFirstGameWindowAddonHandler
+public unsafe class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 {
     private readonly Config config;
 
     /// <summary>
-    ///     Initializes a new instance of the
-    ///     <see cref="ActionsWindowHandler" /> class.
+///     Initializes a new instance of the
+    ///     <see cref="ActionMenuWindowHandler" /> class.
     /// </summary>
     /// <param name="config">The plugin configuration.</param>
     /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
     /// <param name="translationService">The shared translation service.</param>
-    public ActionsWindowHandler(
+    public ActionMenuWindowHandler(
         Config config,
         HoverTooltipManager hoverTooltipManager,
         TranslationService translationService)
         : base(
-            addonName: "Actions",
+            addonName: "ActionMenu",
             config: config,
             hoverTooltipManager: hoverTooltipManager,
             translationService: translationService,
             enabledSelector: static configuration =>
-                configuration.TranslateActionsWindow,
+                configuration.TranslateActionMenuWindow,
             useAtkValues: true,
             useTextNodes: true,
             displayModeSelector: static configuration =>
-                configuration.ActionsWindowTranslationDisplayMode)
+                configuration.ActionMenuWindowTranslationDisplayMode)
     {
         this.config = config;
     }

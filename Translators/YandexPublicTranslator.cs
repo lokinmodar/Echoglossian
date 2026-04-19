@@ -83,9 +83,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         string fromLang,
         string toLang)
     {
-        var langPair = string.IsNullOrEmpty(fromLang)
-            ? YandexHotPatch(toLang)
-            : $"{YandexHotPatch(fromLang)}-{YandexHotPatch(toLang)}";
+        var langPair = BuildLanguagePair(fromLang, toLang);
 
         var query = $"?ucid={this.GetOrUpdateUcid():N}&srv=android&format=text";
 
@@ -130,7 +128,14 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         return result.Text[0];
     }
 
-    private static string YandexHotPatch(string lang)
+    internal static string BuildLanguagePair(string? fromLang, string toLang)
+    {
+        return string.IsNullOrEmpty(fromLang)
+            ? YandexHotPatch(toLang)
+            : $"{YandexHotPatch(fromLang)}-{YandexHotPatch(toLang)}";
+    }
+
+    internal static string YandexHotPatch(string lang)
     {
         return lang switch
         {
@@ -148,7 +153,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         };
     }
 
-    private static string ReversePatch(string lang)
+    internal static string ReversePatch(string lang)
     {
         return lang switch
         {

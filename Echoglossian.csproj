@@ -79,7 +79,6 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="NativeUI\AddonHandlers\ActionMenu\**" />
     <Compile Remove="scripts\**" />
   </ItemGroup>
   <ItemGroup>
@@ -359,7 +358,6 @@
   <ItemGroup>
     <Compile Remove="Echoglossian.Tests\**" />
     <EmbeddedResource Remove="Echoglossian.Tests\**" />
-    <EmbeddedResource Remove="NativeUI\AddonHandlers\ActionMenu\**" />
     <None Remove="Echoglossian.Tests\**" />
   </ItemGroup>
 

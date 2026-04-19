@@ -64,11 +64,11 @@ public partial class Echoglossian
                   TranslationService)));
     }
 
-    if (this.configuration.TranslateActionsWindow)
+    if (this.configuration.TranslateActionMenuWindow)
     {
       this.registeredAddonHandlers.Add(
-          (AddonName: "Actions",
-              Handler: new ActionsWindowHandler(
+          (AddonName: "ActionMenu",
+              Handler: new ActionMenuWindowHandler(
                   this.configuration,
                   this.hoverTooltipManager,
                   TranslationService)));

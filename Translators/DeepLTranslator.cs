@@ -132,8 +132,8 @@ public class DeepLTranslator : ITranslator
     {
       var translation = this.deeplClient?.TranslateTextAsync(
           text,
-          this.FormatSourceLanguage(sourceLanguage),
-          this.FormatTargetLanguage(targetLanguage)).Result;
+          FormatSourceLanguageCode(sourceLanguage),
+          FormatTargetLanguageCode(targetLanguage)).Result;
       this.pluginLog.Debug($"FinalTranslatedText: {translation?.Text}");
       return translation?.Text;
     }
@@ -171,8 +171,8 @@ public class DeepLTranslator : ITranslator
 
       var translation = await this.deeplClient.TranslateTextAsync(
           text,
-          this.FormatSourceLanguage(sourceLanguage),
-          this.FormatTargetLanguage(targetLanguage));
+          FormatSourceLanguageCode(sourceLanguage),
+          FormatTargetLanguageCode(targetLanguage));
       this.pluginLog.Debug($"FinalTranslatedText: {translation.Text}");
       return translation.Text;
     }
@@ -247,9 +247,9 @@ public class DeepLTranslator : ITranslator
           lang = new
           {
             target_lang =
-                      this.FormatFreeTargetLanguage(targetLanguage),
+                      FormatFreeTargetLanguageCode(targetLanguage),
             source_lang_user_selected =
-                      this.FormatSourceLanguage(sourceLanguage),
+                      FormatSourceLanguageCode(sourceLanguage),
           },
           commonJobParams = new
           {
@@ -335,7 +335,7 @@ public class DeepLTranslator : ITranslator
   /// </summary>
   /// <param name="source">Source language.</param>
   /// <returns>Returns the formatted source language.</returns>
-  private string FormatSourceLanguage(string source)
+  internal static string FormatSourceLanguageCode(string source)
   {
     switch (source)
     {
@@ -357,7 +357,7 @@ public class DeepLTranslator : ITranslator
   /// </summary>
   /// <param name="source">Target language.</param>
   /// <returns>Returns the formatted target language.</returns>
-  private string FormatTargetLanguage(string source)
+  internal static string FormatTargetLanguageCode(string source)
   {
     switch (source)
     {
@@ -383,7 +383,7 @@ public class DeepLTranslator : ITranslator
   /// </summary>
   /// <param name="source">Target language.</param>
   /// <returns>Returns the formatted target language.</returns>
-  private string FormatFreeTargetLanguage(string source)
+  internal static string FormatFreeTargetLanguageCode(string source)
   {
     switch (source)
     {

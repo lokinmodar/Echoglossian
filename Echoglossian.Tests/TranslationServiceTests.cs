@@ -1,0 +1,154 @@
+// <copyright file="TranslationServiceTests.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using Echoglossian.Translators;
+
+using Xunit;
+
+namespace Echoglossian.Tests;
+
+/// <summary>
+///     Covers the shared translation-service pipeline independently from any live engine implementation.
+/// </summary>
+public class TranslationServiceTests
+{
+    /// <summary>
+    ///     Ensures the service sanitizes text before passing it to the translator.
+    /// </summary>
+    [Fact]
+    public void Translate_UsesSanitizedText()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "translated",
+        };
+
+        var service = new TranslationService(
+            text => $"clean:{text}",
+            translator);
+
+        var result = service.Translate("raw", "en", "pt");
+
+        Assert.Equal("translated", result);
+        Assert.Equal("clean:raw", translator.LastSyncText);
+    }
+
+    /// <summary>
+    ///     Ensures the service preserves leading ellipsis while translating the remaining text.
+    /// </summary>
+    [Fact]
+    public void Translate_PreservesLeadingEllipsis()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "traduzido",
+        };
+
+        var service = new TranslationService(
+            text => text,
+            translator);
+
+        var result = service.Translate("...hello", "en", "pt");
+
+        Assert.Equal("...traduzido", result);
+        Assert.Equal("hello", translator.LastSyncText);
+    }
+
+    /// <summary>
+    ///     Ensures the service short-circuits sentinel text without invoking the translator.
+    /// </summary>
+    [Fact]
+    public void Translate_DoesNotTranslateSentinelQuestionMarks()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "should-not-be-used",
+        };
+
+        var service = new TranslationService(
+            text => text,
+            translator);
+
+        var result = service.Translate("???", "en", "pt");
+
+        Assert.Equal("???", result);
+        Assert.Equal(0, translator.SyncCalls);
+    }
+
+    /// <summary>
+    ///     Ensures the async path uses the translator asynchronously and preserves ellipsis behavior.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Fact]
+    public async Task TranslateAsync_UsesAsyncTranslator()
+    {
+        var translator = new RecordingTranslator
+        {
+            AsyncResult = "assinc",
+        };
+
+        var service = new TranslationService(
+            text => text,
+            translator);
+
+        var result = await service.TranslateAsync("...hello", "en", "pt");
+
+        Assert.Equal("...assinc", result);
+        Assert.Equal("hello", translator.LastAsyncText);
+        Assert.Equal(1, translator.AsyncCalls);
+    }
+
+    /// <summary>
+    ///     Minimal fake translator for pipeline tests.
+    /// </summary>
+    private sealed class RecordingTranslator : ITranslator
+    {
+        /// <summary>
+        ///     Gets or sets the synchronous result.
+        /// </summary>
+        public string? SyncResult { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the asynchronous result.
+        /// </summary>
+        public string? AsyncResult { get; set; }
+
+        /// <summary>
+        ///     Gets the number of sync calls.
+        /// </summary>
+        public int SyncCalls { get; private set; }
+
+        /// <summary>
+        ///     Gets the number of async calls.
+        /// </summary>
+        public int AsyncCalls { get; private set; }
+
+        /// <summary>
+        ///     Gets the last sync text.
+        /// </summary>
+        public string? LastSyncText { get; private set; }
+
+        /// <summary>
+        ///     Gets the last async text.
+        /// </summary>
+        public string? LastAsyncText { get; private set; }
+
+        /// <inheritdoc/>
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            this.SyncCalls++;
+            this.LastSyncText = text;
+            return this.SyncResult;
+        }
+
+        /// <inheritdoc/>
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+        {
+            this.AsyncCalls++;
+            this.LastAsyncText = text;
+            return Task.FromResult(this.AsyncResult);
+        }
+    }
+}

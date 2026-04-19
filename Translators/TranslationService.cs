@@ -10,8 +10,9 @@ namespace Echoglossian.Translators;
 /// </summary>
 public class TranslationService
 {
-  private readonly Sanitizer sanitizer;
-  private readonly ITranslator translator;
+  private readonly Action<string>? debugLog;
+  private readonly Func<string, string> sanitizeText;
+  private readonly ITranslator translator = null!;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="TranslationService" /> class.
@@ -27,69 +28,34 @@ public class TranslationService
       IPluginLog pluginLog,
       Sanitizer sanitizer)
   {
-    this.sanitizer = sanitizer;
+    this.debugLog = message => pluginLog.Debug(message);
+    this.sanitizeText = sanitizer.Sanitize;
     var chosenEngine = (Echoglossian.TransEngines)config.ChosenTransEngine;
 
-    switch (chosenEngine)
+    if (chosenEngine == Echoglossian.TransEngines.All)
     {
-      case Echoglossian.TransEngines.Google: // validated!
-        this.translator = new GoogleTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.Deepl:
-        this.translator = new DeepLTranslator(
-            pluginLog,
-            config.DeeplTranslatorUsingApiKey,
-            config.DeeplTranslatorApiKey);
-        break;
-      case Echoglossian.TransEngines.ChatGPT: // validated!
-        this.translator = new ChatGPTTranslator(
-            pluginLog,
-            config.ChatGPTBaseUrl,
-            config.ChatGptApiKey,
-            config.OpenAILlmModel,
-            config.ChatGptTemperature);
-        break;
-      case Echoglossian.TransEngines.YandexCloud:
-        this.translator = new YandexTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.GTranslate:
-        this.translator = new GTranslateTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.Amazon:
-        this.translator =
-            new AmazonTranslateTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.Microsoft:
-        this.translator = new MicrosoftTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.Gemini:
-        this.translator = new GeminiTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.DeepSeek:
-        this.translator = new DeepSeekTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.Ollama:
-        this.translator = new OllamaTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.LibreTranslate:
-        this.translator =
-            new LibreTranslateTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.YandexPublic:
-        this.translator = new YandexPublicTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.OpenRouter:
-        this.translator = new OpenRouterTranslator(pluginLog, config);
-        break;
-      case TransEngines.LmStudio:
-        this.translator = new LmStudioTranslator(pluginLog, config);
-        break;
-      case Echoglossian.TransEngines.All:
-        break;
-      default:
-        throw new NotSupportedException(
-            $"Translation engine {chosenEngine} is not supported.");
+      return;
     }
+
+    this.translator = TranslatorFactory.Create(
+        chosenEngine,
+        config,
+        pluginLog);
+  }
+
+  /// <summary>
+  ///     Initializes a new instance of the <see cref="TranslationService" /> class
+  ///     with test-friendly dependencies.
+  /// </summary>
+  /// <param name="sanitizeText">The sanitizer delegate to apply before translation.</param>
+  /// <param name="translator">The translator implementation to use.</param>
+  internal TranslationService(
+      Func<string, string> sanitizeText,
+      ITranslator translator)
+  {
+    this.debugLog = null;
+    this.sanitizeText = sanitizeText;
+    this.translator = translator;
   }
 
   /// <summary>
@@ -105,7 +71,7 @@ public class TranslationService
       string sourceLanguage,
       string targetLanguage)
   {
-    PluginLog.Debug(
+    this.debugLog?.Invoke(
         $"TranslationService: Translate called with text: {text}, sourceLanguage: {sourceLanguage}, targetLanguage: {targetLanguage}");
 
     var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
@@ -192,7 +158,7 @@ public class TranslationService
       return (string.Empty, false);
     }
 
-    var sanitizedString = this.sanitizer.Sanitize(text);
+    var sanitizedString = this.sanitizeText(text);
     if (string.IsNullOrEmpty(sanitizedString))
     {
       return (string.Empty, false);

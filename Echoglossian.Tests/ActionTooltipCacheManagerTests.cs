@@ -12,7 +12,7 @@ namespace Echoglossian.Tests;
 
 /// <summary>
 ///     Covers cache-first action-tooltip text lookup behavior used by the
-///     <c>Actions</c> window bootstrap path.
+///     <c>ActionMenu</c> window bootstrap path.
 /// </summary>
 public class ActionTooltipCacheManagerTests
 {

@@ -952,8 +952,8 @@
   <data name="TranslateMainCommandWindow" xml:space="preserve">
     <value>Translate Main Command</value>
   </data>
-  <data name="TranslateActionsWindow" xml:space="preserve">
-    <value>Translate Actions Window</value>
+  <data name="TranslateActionMenuWindow" xml:space="preserve">
+    <value>Translate ActionMenu Window</value>
   </data>
   <data name="TranslateHudWindows" xml:space="preserve">
     <value>Translate HUD Windows</value>

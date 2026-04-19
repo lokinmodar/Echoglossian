@@ -148,8 +148,7 @@ public class GoogleTranslator : ITranslator
         string targetLanguage)
     {
         var (url, headers, _) = this.translateEndpoints[0];
-        url =
-            $"{url}?hl=en&sl={sourceLanguage}&tl={targetLanguage}&q={Uri.EscapeDataString(FixText(text))}";
+        url = BuildV0Url(url, text, sourceLanguage, targetLanguage);
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.TryAddWithoutValidation(
@@ -167,8 +166,7 @@ public class GoogleTranslator : ITranslator
         string targetLanguage)
     {
         var (url, headers, _) = this.translateEndpoints[0];
-        url =
-            $"{url}?hl=en&sl={sourceLanguage}&tl={targetLanguage}&q={Uri.EscapeDataString(FixText(text))}";
+        url = BuildV0Url(url, text, sourceLanguage, targetLanguage);
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.TryAddWithoutValidation(
@@ -226,8 +224,12 @@ public class GoogleTranslator : ITranslator
     {
         var (url, headers, queryParams) = this.translateEndpoints[2];
         var parsedText = FixText(text);
-        var endpoint =
-            $"{url}?language={targetLanguage}&key={queryParams["key"]}&term={Uri.EscapeDataString(parsedText)}&strategy={queryParams["strategy"]}";
+        var endpoint = BuildV2Url(
+            url,
+            parsedText,
+            targetLanguage,
+            queryParams["key"],
+            queryParams["strategy"]);
 
         var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
         foreach (var header in headers)
@@ -293,5 +295,26 @@ public class GoogleTranslator : ITranslator
         }
 
         return preview[..maxLength] + "...";
+    }
+
+    internal static string BuildV0Url(
+        string baseUrl,
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
+    {
+        return
+            $"{baseUrl}?hl=en&sl={sourceLanguage}&tl={targetLanguage}&q={Uri.EscapeDataString(FixText(text))}";
+    }
+
+    internal static string BuildV2Url(
+        string baseUrl,
+        string parsedText,
+        string targetLanguage,
+        string apiKey,
+        string strategy)
+    {
+        return
+            $"{baseUrl}?language={targetLanguage}&key={apiKey}&term={Uri.EscapeDataString(parsedText)}&strategy={strategy}";
     }
 }

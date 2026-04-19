@@ -103,7 +103,7 @@ public class LibreTranslateTranslator : ITranslator
     /// </summary>
     /// <param name="config"></param>
     /// <returns></returns>
-    private static string DetermineEndpoint(Config config)
+    internal static string DetermineEndpoint(Config config)
     {
         return config.LibreTranslateInstanceType switch
         {
