@@ -4,13 +4,14 @@
 // </copyright>
 
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.NativeUI.AddonHandlers.Common;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
 /// <summary>
 ///     Handles DB-first translation for the main character window.
 /// </summary>
-public class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
+public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
 {
     /// <summary>
     ///     Initializes a new instance of the
@@ -28,8 +29,18 @@ public class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
             config: config,
             hoverTooltipManager: hoverTooltipManager,
             translationService: translationService,
-            stringArrayType: StringArrayType.Character)
+            stringArrayType: StringArrayType.Character,
+            useAtkValues: true)
     {
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldCaptureTextNode(
+        AtkTextNode* textNode,
+        string visibleText)
+    {
+        return base.ShouldCaptureTextNode(textNode, visibleText) ||
+               this.CanCaptureSupplementalCharacterText(visibleText);
     }
 
     /// <inheritdoc />
@@ -47,9 +58,27 @@ public class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     }
 
     /// <inheritdoc />
+    protected override bool ShouldReuseCompatiblePayloads()
+    {
+        return false;
+    }
+
+    /// <inheritdoc />
     protected override bool ShouldRequestStringArrayUpdates()
     {
         return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryApplyCustomTextNodePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload sourcePayload,
+        DbFirstGameWindowPayload targetPayload)
+    {
+        return this.ApplyVisibleTextNodesByValue(
+            addon,
+            sourcePayload,
+            targetPayload);
     }
 
     /// <summary>
@@ -63,6 +92,7 @@ public class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     private bool AreDynamicCharacterSubwindowsVisible()
     {
         return this.IsAddonVisible("CharacterClass") ||
+               this.IsAddonVisible("CharacterStatus") ||
                this.IsAddonVisible("CharacterProfile") ||
                this.IsAddonVisible("CharacterRepute");
     }

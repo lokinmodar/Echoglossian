@@ -4,13 +4,14 @@
 // </copyright>
 
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.NativeUI.AddonHandlers.Common;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
 /// <summary>
 ///     Handles DB-first translation for the CharacterStatus subwindow.
 /// </summary>
-public class CharacterStatusSubWindowHandler
+public unsafe class CharacterStatusSubWindowHandler
     : CharacterTextNodeWindowHandlerBase
 {
     /// <summary>
@@ -29,13 +30,41 @@ public class CharacterStatusSubWindowHandler
             config: config,
             hoverTooltipManager: hoverTooltipManager,
             translationService: translationService,
-            stringArrayType: StringArrayType.Character)
+            stringArrayType: StringArrayType.Character,
+            useAtkValues: true)
     {
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldCaptureTextNode(
+        AtkTextNode* textNode,
+        string visibleText)
+    {
+        return base.ShouldCaptureTextNode(textNode, visibleText) ||
+               this.CanCaptureSupplementalCharacterText(visibleText);
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldReuseCompatiblePayloads()
+    {
+        return false;
     }
 
     /// <inheritdoc />
     protected override bool ShouldRequestStringArrayUpdates()
     {
         return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryApplyCustomTextNodePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload sourcePayload,
+        DbFirstGameWindowPayload targetPayload)
+    {
+        return this.ApplyVisibleTextNodesByValue(
+            addon,
+            sourcePayload,
+            targetPayload);
     }
 }

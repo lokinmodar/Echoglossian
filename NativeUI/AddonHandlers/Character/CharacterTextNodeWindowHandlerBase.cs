@@ -26,12 +26,17 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
     /// <param name="config">The configuration settings for the plugin.</param>
     /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
     /// <param name="translationService">The service used for translating text.</param>
+    /// <param name="useAtkValues">
+    ///     When set, the handler also captures and applies live ATK-value text
+    ///     alongside text nodes.
+    /// </param>
     protected CharacterTextNodeWindowHandlerBase(
         string addonName,
         Config config,
         HoverTooltipManager hoverTooltipManager,
         TranslationService translationService,
-        StringArrayType? stringArrayType = null)
+        StringArrayType? stringArrayType = null,
+        bool useAtkValues = false)
         : base(
             addonName: addonName,
             config: config,
@@ -39,7 +44,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             translationService: translationService,
             enabledSelector: static configuration =>
                 configuration.TranslateCharacterWindow,
-            useAtkValues: false,
+            useAtkValues: useAtkValues,
             useTextNodes: true,
             stringArrayDataType: stringArrayType,
             displayModeSelector: static configuration =>
@@ -222,35 +227,38 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         var targetLanguage =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
-        var candidates = StringArrayDataCacheManager.GetCandidates(
-            type: StringArrayType.Character.ToString(),
-            contextKey: "addon:Character",
-            lang: targetLanguage,
-            engine: this.config.ChosenTransEngine,
-            gameVersion: GetGameVersion());
-
-        foreach (var row in candidates)
+        foreach (var contextKey in this.GetCharacterStructuredContextKeys())
         {
-            if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
-                    row,
-                    out var originalStructuredPayload,
-                    out var translatedStructuredPayload) ||
-                originalStructuredPayload == null ||
-                translatedStructuredPayload == null)
-            {
-                continue;
-            }
+            var candidates = StringArrayDataCacheManager.GetCandidates(
+                type: StringArrayType.Character.ToString(),
+                contextKey: contextKey,
+                lang: targetLanguage,
+                engine: this.config.ChosenTransEngine,
+                gameVersion: GetGameVersion());
 
-            CharacterCanonicalPayloadHelper.AppendLookupEntries(
-                originalStructuredPayload.Slots.Values,
-                originalLookup,
-                translatedLookup,
-                knownTexts);
-            CharacterCanonicalPayloadHelper.AppendLookupEntries(
-                originalStructuredPayload.TextNodes.Values,
-                originalLookup,
-                translatedLookup,
-                knownTexts);
+            foreach (var row in candidates)
+            {
+                if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
+                        row,
+                        out var originalStructuredPayload,
+                        out var translatedStructuredPayload) ||
+                    originalStructuredPayload == null ||
+                    translatedStructuredPayload == null)
+                {
+                    continue;
+                }
+
+                CharacterCanonicalPayloadHelper.AppendLookupEntries(
+                    originalStructuredPayload.Slots.Values,
+                    originalLookup,
+                    translatedLookup,
+                    knownTexts);
+                CharacterCanonicalPayloadHelper.AppendLookupEntries(
+                    originalStructuredPayload.TextNodes.Values,
+                    originalLookup,
+                    translatedLookup,
+                    knownTexts);
+            }
         }
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
@@ -293,5 +301,24 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         }
 
         return translatedLookup.Count > 0;
+    }
+
+    /// <summary>
+    ///     Gets the Character-family structured payload context keys that may
+    ///     contribute canonical original and translated text pairs for the
+    ///     current addon.
+    /// </summary>
+    /// <returns>
+    ///     One sequence of context keys to consult in the shared
+    ///     <see cref="StringArrayDataCacheManager" /> cache.
+    /// </returns>
+    private IEnumerable<string> GetCharacterStructuredContextKeys()
+    {
+        var contextKeys = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "addon:Character",
+        };
+        contextKeys.Add($"addon:{this.AddonName}");
+        return contextKeys;
     }
 }
