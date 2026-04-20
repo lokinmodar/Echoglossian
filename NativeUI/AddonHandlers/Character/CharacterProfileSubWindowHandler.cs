@@ -4,7 +4,6 @@
 // </copyright>
 
 using Echoglossian.NativeUI.Helpers;
-using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
@@ -41,7 +40,7 @@ public unsafe class CharacterProfileSubWindowHandler
         AtkTextNode* textNode,
         string visibleText)
     {
-        return textNode != null &&
-               !string.IsNullOrWhiteSpace(visibleText);
+        return base.ShouldCaptureTextNode(textNode, visibleText) ||
+               this.CanCaptureSupplementalCharacterText(visibleText);
     }
 }

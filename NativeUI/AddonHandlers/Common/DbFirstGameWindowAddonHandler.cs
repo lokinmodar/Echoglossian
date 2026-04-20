@@ -56,6 +56,29 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private DateTime nextRetryUtc = DateTime.MinValue;
 
     /// <summary>
+    ///     Clears the shared DB-first in-memory session caches so one fresh
+    ///     plugin load never inherits stale payload parse results, in-flight
+    ///     work markers, or failed-payload cooldowns from an earlier session.
+    /// </summary>
+    public static void ClearSessionCaches()
+    {
+        InFlightPayloads.Clear();
+        FailedPayloadRetryUtc.Clear();
+        ParsedPayloadCache.Clear();
+    }
+
+    /// <summary>
+    ///     Gets the target addon name handled by this runtime.
+    /// </summary>
+    private protected string AddonName => this.addonName;
+
+    /// <summary>
+    ///     Gets the active plugin configuration for derived handlers that need
+    ///     narrow addon-local policy decisions.
+    /// </summary>
+    private protected Config HandlerConfig => this.config;
+
+    /// <summary>
     ///     Initializes a new instance of the
     ///     <see cref="DbFirstGameWindowAddonHandler" /> class.
     /// </summary>
@@ -186,6 +209,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Normalizes the captured text-node payload before it participates in
+    ///     persistence, matching, and native apply.
+    /// </summary>
+    /// <param name="capturedTextNodes">The freshly captured text-node payload.</param>
+    /// <returns>
+    ///     The normalized payload to persist and reuse for this addon.
+    /// </returns>
+    protected virtual SortedDictionary<string, string> NormalizeCapturedTextNodes(
+        SortedDictionary<string, string> capturedTextNodes)
+    {
+        return capturedTextNodes;
+    }
+
+    /// <summary>
     ///     Determines whether this handler should write translated
     ///     <c>StringArrayData</c> values back into the live addon when the
     ///     backing array is subscribed by the given number of addons.
@@ -230,6 +267,46 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether one newly resolved payload pair should be
+    ///     persisted as a fresh <see cref="GameWindow" /> row when no exact
+    ///     persisted row already exists.
+    /// </summary>
+    /// <param name="originalPayload">
+    ///     The original-facing payload currently visible in the addon.
+    /// </param>
+    /// <param name="translatedPayload">
+    ///     The translated payload resolved for the current live state.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the payload is ready for persistence;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldPersistNewGameWindowPayload(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return true;
+    }
+
+    /// <summary>
+    ///     Determines whether one newly observed payload should be sent to the
+    ///     remote translation path when no exact persisted row or supplemental
+    ///     translated payload exists yet.
+    /// </summary>
+    /// <param name="originalPayload">
+    ///     The original-facing payload currently visible in the addon.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when background translation may be queued;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldQueueNewGameWindowTranslation(
+        DbFirstGameWindowPayload originalPayload)
+    {
+        return true;
+    }
+
+    /// <summary>
     ///     Determines whether this handler should selectively restore stale
     ///     translated text-node values from the previously applied runtime
     ///     state before capturing a new payload for the same live addon.
@@ -259,6 +336,31 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Tries to apply one text-node payload using addon-local matching
+    ///     semantics instead of the default stable-key path.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="sourcePayload">
+    ///     The payload describing the currently visible text values that should
+    ///     be rewritten.
+    /// </param>
+    /// <param name="targetPayload">
+    ///     The payload describing the desired post-apply text values.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the addon handled text-node apply
+    ///     itself; otherwise <see langword="false" /> to fall back to the
+    ///     stable-key path.
+    /// </returns>
+    private protected virtual bool TryApplyCustomTextNodePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload sourcePayload,
+        DbFirstGameWindowPayload targetPayload)
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Tries to resolve a translated payload from one addon-specific
     ///     canonical source other than persisted <see cref="GameWindow" />
     ///     rows.
@@ -276,6 +378,27 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         out DbFirstGameWindowPayload translatedPayload)
     {
         translatedPayload = DbFirstGameWindowPayload.Empty;
+        return false;
+    }
+
+    /// <summary>
+    ///     Tries to recover one canonical original payload from one addon-
+    ///     specific source other than persisted rows when the live UI is
+    ///     already showing translated text.
+    /// </summary>
+    /// <param name="livePayload">The currently visible live payload.</param>
+    /// <param name="originalPayload">
+    ///     Receives the recovered original payload.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when one canonical original payload was
+    ///     resolved; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool TryResolveSupplementalOriginalPayload(
+        DbFirstGameWindowPayload livePayload,
+        out DbFirstGameWindowPayload originalPayload)
+    {
+        originalPayload = DbFirstGameWindowPayload.Empty;
         return false;
     }
 
@@ -560,9 +683,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 supplementalTranslatedPayload =
                     supplementalTranslatedPayload.ProjectToShape(
                         originalPayload);
-                this.PersistResolvedGameWindowPayload(
-                    originalPayload,
-                    supplementalTranslatedPayload);
+                if (this.ShouldPersistNewGameWindowPayload(
+                        originalPayload,
+                        supplementalTranslatedPayload))
+                {
+                    this.PersistResolvedGameWindowPayload(
+                        originalPayload,
+                        supplementalTranslatedPayload);
+                }
+
                 this.ApplyPayload(
                     addon,
                     originalPayload,
@@ -571,6 +700,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     displayMode);
                 ClearFailedPayloadRetry(payloadKey);
                 this.nextRetryUtc = DateTime.MinValue;
+                return;
+            }
+
+            if (!this.ShouldQueueNewGameWindowTranslation(originalPayload))
+            {
+                this.hoverTooltipManager.RemoveByPrefix(
+                    this.hoverTooltipKeyPrefix);
+                this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
                 return;
             }
 
@@ -705,7 +842,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         foreach (var nodeAddress in nodeAddresses)
         {
             var textNode = (AtkTextNode*)nodeAddress;
-            if (textNode == null || !textNode->IsVisible())
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
             {
                 continue;
             }
@@ -727,7 +865,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             capturedNodes[BuildTextNodeKey(nodeId, ordinal)] = visibleText;
         }
 
-        return capturedNodes;
+        return this.NormalizeCapturedTextNodes(capturedNodes);
     }
 
     /// <summary>
@@ -742,10 +880,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         if (this.runtimeState == null)
         {
-            return this.TryRecoverOriginalPayloadFromPersistedRows(
+            if (this.TryRecoverOriginalPayloadFromPersistedRows(
+                    livePayload,
+                    out var recoveredPayload))
+            {
+                return recoveredPayload;
+            }
+
+            return this.TryResolveSupplementalOriginalPayload(
                 livePayload,
-                out var recoveredPayload)
-                ? recoveredPayload
+                out var supplementalOriginalPayload)
+                ? supplementalOriginalPayload
                 : livePayload;
         }
 
@@ -760,10 +905,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         this.runtimeState = null;
-        return this.TryRecoverOriginalPayloadFromPersistedRows(
+        if (this.TryRecoverOriginalPayloadFromPersistedRows(
+                livePayload,
+                out var persistedRecoveredPayload))
+        {
+            return persistedRecoveredPayload;
+        }
+
+        return this.TryResolveSupplementalOriginalPayload(
             livePayload,
-            out var persistedRecoveredPayload)
-            ? persistedRecoveredPayload
+            out var finalSupplementalOriginalPayload)
+            ? finalSupplementalOriginalPayload
             : livePayload;
     }
 
@@ -1411,7 +1563,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.useTextNodes &&
             translatedPayload.TextNodes.Count > 0)
         {
-            this.ApplyTranslatedTextNodes(addon, translatedPayload.TextNodes);
+            if (!this.TryApplyCustomTextNodePayload(
+                    addon,
+                    originalPayload,
+                    translatedPayload))
+            {
+                this.ApplyTranslatedTextNodes(addon, translatedPayload.TextNodes);
+            }
         }
 
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode) &&
@@ -1529,9 +1687,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         if (this.useTextNodes && this.runtimeState.OriginalPayload.TextNodes.Count > 0)
         {
-            this.ApplyTranslatedTextNodes(
-                addon,
-                this.runtimeState.OriginalPayload.TextNodes);
+            if (!this.TryApplyCustomTextNodePayload(
+                    addon,
+                    this.runtimeState.TranslatedPayload,
+                    this.runtimeState.OriginalPayload))
+            {
+                this.ApplyTranslatedTextNodes(
+                    addon,
+                    this.runtimeState.OriginalPayload.TextNodes);
+            }
         }
 
         if (this.stringArrayDataType is { } arrayType)
@@ -1617,7 +1781,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         for (var i = 0; i < textNodeAddresses.Count; i++)
         {
             var textNode = (AtkTextNode*)textNodeAddresses[i];
-            if (textNode == null || !textNode->IsVisible())
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
             {
                 continue;
             }
@@ -1662,7 +1827,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// </summary>
     /// <param name="textNode">The text node to read.</param>
     /// <returns>The visible text, or an empty string.</returns>
-    private string ReadTextNode(AtkTextNode* textNode)
+    private protected string ReadTextNode(AtkTextNode* textNode)
     {
         if (textNode == null)
         {
@@ -1696,6 +1861,29 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether one node is effectively visible after accounting
+    ///     for the visibility of its ancestor chain.
+    /// </summary>
+    /// <param name="node">The node to inspect.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the node and all ancestor nodes are
+    ///     visible; otherwise <see langword="false" />.
+    /// </returns>
+    private protected bool IsEffectivelyVisible(
+        AtkResNode* node)
+    {
+        for (var currentNode = node; currentNode != null; currentNode = currentNode->ParentNode)
+        {
+            if (!currentNode->IsVisible())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Applies translated text to visible text nodes by stable node key.
     /// </summary>
     /// <param name="addon">The live addon.</param>
@@ -1711,7 +1899,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         foreach (var nodeAddress in nodeAddresses)
         {
             var textNode = (AtkTextNode*)nodeAddress;
-            if (textNode == null || !textNode->IsVisible())
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
             {
                 continue;
             }
@@ -1773,7 +1962,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         foreach (var nodeAddress in nodeAddresses)
         {
             var textNode = (AtkTextNode*)nodeAddress;
-            if (textNode == null || !textNode->IsVisible())
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
             {
                 continue;
             }
@@ -1979,7 +2169,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <returns>
     ///     <see langword="true" /> when the payload could be parsed.
     /// </returns>
-    private static bool TryParseSerializedPayload(
+    private protected static bool TryParseSerializedPayload(
         string? serializedPayload,
         out DbFirstGameWindowPayload payload)
     {

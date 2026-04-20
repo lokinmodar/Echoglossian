@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian;
@@ -276,6 +277,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.LoadAllErrorToasts();
     this.LoadAllOtherToasts();
 
+    DbFirstGameWindowAddonHandler.ClearSessionCaches();
     GameWindowCacheManager.Preload(ConfigDirectory);
     StringArrayDataCacheManager.Preload(ConfigDirectory);
     ActionTooltipCacheManager.Preload(ConfigDirectory);
@@ -424,6 +426,7 @@ public partial class Echoglossian : IDalamudPlugin
       GameWindowCacheManager.Clear();
       ActionTooltipCacheManager.Clear();
       ItemTooltipCacheManager.Clear();
+      DbFirstGameWindowAddonHandler.ClearSessionCaches();
       QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();

@@ -5,6 +5,7 @@
 
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.Cache;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Character;
 
@@ -15,6 +16,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 public abstract unsafe class CharacterTextNodeWindowHandlerBase
     : DbFirstGameWindowAddonHandler
 {
+    private readonly Config config;
+
     /// <summary>
     ///     Initializes a new instance of the
     ///     <see cref="CharacterTextNodeWindowHandlerBase" /> class.
@@ -42,6 +45,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             displayModeSelector: static configuration =>
                 configuration.CharacterWindowTranslationDisplayMode)
     {
+        this.config = config;
     }
 
     /// <inheritdoc />
@@ -54,9 +58,240 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                !string.IsNullOrWhiteSpace(visibleText);
     }
 
+    /// <summary>
+    ///     Determines whether the visible text can be resolved through the
+    ///     canonical shared Character string-array payload.
+    /// </summary>
+    /// <param name="visibleText">The currently visible text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the text belongs to the shared
+    ///     Character lookup surface; otherwise <see langword="false" />.
+    /// </returns>
+    protected bool CanCaptureSupplementalCharacterText(string visibleText)
+    {
+        if (string.IsNullOrWhiteSpace(visibleText) ||
+            !this.TryBuildCharacterLookups(
+                out _,
+                out _,
+                out var knownTexts))
+        {
+            return false;
+        }
+
+        return knownTexts.Contains(visibleText);
+    }
+
     /// <inheritdoc />
     protected override bool ShouldRefreshAppliedStateOnPreDraw()
     {
         return false;
+    }
+
+    /// <summary>
+    ///     Applies one text-node payload by matching current visible text
+    ///     values rather than unstable node ordinals.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="sourcePayload">
+    ///     The payload describing the currently visible source-facing text.
+    /// </param>
+    /// <param name="targetPayload">
+    ///     The payload describing the desired target-facing text.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when at least one text-node mapping was
+    ///     available for value-based apply; otherwise <see langword="false" />.
+    /// </returns>
+    private protected bool ApplyVisibleTextNodesByValue(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload sourcePayload,
+        DbFirstGameWindowPayload targetPayload)
+    {
+        var valueMap = CharacterCanonicalPayloadHelper.BuildValueMap(
+            sourcePayload.TextNodes,
+            targetPayload.TextNodes);
+        if (valueMap.Count == 0)
+        {
+            return false;
+        }
+
+        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
+            addon);
+        foreach (var nodeAddress in nodeAddresses)
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null)
+            {
+                continue;
+            }
+
+            var currentNode = (AtkResNode*)textNode;
+            if (!this.IsEffectivelyVisible(currentNode))
+            {
+                continue;
+            }
+
+            var currentText = this.ReadTextNode(textNode);
+            if (!valueMap.TryGetValue(currentText, out var targetText) ||
+                string.Equals(
+                    currentText,
+                    targetText,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            textNode->SetText(targetText);
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryResolveSupplementalOriginalPayload(
+        DbFirstGameWindowPayload livePayload,
+        out DbFirstGameWindowPayload originalPayload)
+    {
+        originalPayload = DbFirstGameWindowPayload.Empty;
+
+        if (!this.TryBuildCharacterLookups(
+                out var originalLookup,
+                out _,
+                out _))
+        {
+            return false;
+        }
+
+        return CharacterCanonicalPayloadHelper.TryCanonicalizePayload(
+            livePayload,
+            originalLookup,
+            out originalPayload);
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryResolveSupplementalTranslatedPayload(
+        DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload translatedPayload)
+    {
+        translatedPayload = DbFirstGameWindowPayload.Empty;
+
+        if (!this.TryBuildCharacterLookups(
+                out _,
+                out var translatedLookup,
+                out _))
+        {
+            return false;
+        }
+
+        return CharacterCanonicalPayloadHelper.TryTranslatePayload(
+            originalPayload,
+            translatedLookup,
+            out translatedPayload);
+    }
+
+    /// <summary>
+    ///     Builds one exact original-text to translated-text lookup from the
+    ///     canonical shared Character string-array payload already cached in
+    ///     memory.
+    /// </summary>
+    /// <param name="originalLookup">
+    ///     Receives the lookup that maps any known visible text back to the
+    ///     canonical original text.
+    /// </param>
+    /// <param name="translatedLookup">
+    ///     Receives the lookup that maps any known visible text to the
+    ///     canonical translated text.
+    /// </param>
+    /// <param name="knownTexts">
+    ///     Receives the set of known original and translated texts so capture
+    ///     shape remains stable in both states.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when one canonical Character payload could
+    ///     be resolved from cache; otherwise <see langword="false" />.
+    /// </returns>
+    private bool TryBuildCharacterLookups(
+        out Dictionary<string, string> originalLookup,
+        out Dictionary<string, string> translatedLookup,
+        out HashSet<string> knownTexts)
+    {
+        originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        knownTexts = new HashSet<string>(StringComparer.Ordinal);
+
+        var targetLanguage =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang);
+        var candidates = StringArrayDataCacheManager.GetCandidates(
+            type: StringArrayType.Character.ToString(),
+            contextKey: "addon:Character",
+            lang: targetLanguage,
+            engine: this.config.ChosenTransEngine,
+            gameVersion: GetGameVersion());
+
+        foreach (var row in candidates)
+        {
+            if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
+                    row,
+                    out var originalStructuredPayload,
+                    out var translatedStructuredPayload) ||
+                originalStructuredPayload == null ||
+                translatedStructuredPayload == null)
+            {
+                continue;
+            }
+
+            CharacterCanonicalPayloadHelper.AppendLookupEntries(
+                originalStructuredPayload.Slots.Values,
+                originalLookup,
+                translatedLookup,
+                knownTexts);
+            CharacterCanonicalPayloadHelper.AppendLookupEntries(
+                originalStructuredPayload.TextNodes.Values,
+                originalLookup,
+                translatedLookup,
+                knownTexts);
+        }
+
+        foreach (var row in GameWindowCacheManager.GetCandidates(
+                     this.AddonName,
+                     targetLanguage,
+                     this.config.ChosenTransEngine,
+                     GetGameVersion()).OrderBy(candidate => candidate.Id))
+        {
+            if (!TryParseSerializedPayload(
+                    row.OriginalWindowStrings,
+                    out var rowOriginalPayload) ||
+                !TryParseSerializedPayload(
+                    row.TranslatedWindowStrings,
+                    out var rowTranslatedPayload))
+            {
+                continue;
+            }
+
+            CharacterCanonicalPayloadHelper.AppendLookupEntries(
+                rowOriginalPayload.AtkValues,
+                rowTranslatedPayload.AtkValues,
+                originalLookup,
+                translatedLookup,
+                knownTexts,
+                requireDifference: true);
+            CharacterCanonicalPayloadHelper.AppendLookupEntries(
+                rowOriginalPayload.StringArrayValues,
+                rowTranslatedPayload.StringArrayValues,
+                originalLookup,
+                translatedLookup,
+                knownTexts,
+                requireDifference: true);
+            CharacterCanonicalPayloadHelper.AppendLookupEntries(
+                rowOriginalPayload.TextNodes,
+                rowTranslatedPayload.TextNodes,
+                originalLookup,
+                translatedLookup,
+                knownTexts,
+                requireDifference: true);
+        }
+
+        return translatedLookup.Count > 0;
     }
 }
