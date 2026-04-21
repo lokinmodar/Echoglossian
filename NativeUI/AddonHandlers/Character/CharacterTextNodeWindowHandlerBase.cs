@@ -244,11 +244,13 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         foreach (var contextKey in this.GetCharacterStructuredContextKeys())
         {
             var candidates = StringArrayDataCacheManager.GetCandidates(
-                type: StringArrayType.Character.ToString(),
-                contextKey: contextKey,
-                lang: targetLanguage,
-                engine: this.config.ChosenTransEngine,
-                gameVersion: GetGameVersion());
+                    type: StringArrayType.Character.ToString(),
+                    contextKey: contextKey,
+                    lang: targetLanguage,
+                    engine: this.config.ChosenTransEngine,
+                    gameVersion: GetGameVersion())
+                .OrderBy(row => row.Id)
+                .ToList();
 
             foreach (var row in candidates)
             {
@@ -334,11 +336,15 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
     /// </returns>
     private IEnumerable<string> GetCharacterStructuredContextKeys()
     {
-        var contextKeys = new HashSet<string>(StringComparer.Ordinal)
+        yield return "addon:Character";
+
+        var specificContextKey = $"addon:{this.AddonName}";
+        if (!string.Equals(
+                specificContextKey,
+                "addon:Character",
+                StringComparison.Ordinal))
         {
-            "addon:Character",
-        };
-        contextKeys.Add($"addon:{this.AddonName}");
-        return contextKeys;
+            yield return specificContextKey;
+        }
     }
 }

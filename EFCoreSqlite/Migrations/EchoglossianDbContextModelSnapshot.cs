@@ -598,6 +598,59 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("stringarraydatas");
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TranslationFailure", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FailureCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FirstSeenOrigin")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastSeenOrigin")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("SourceLanguage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceTextHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetLanguage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceTextHash", "SourceLanguage", "TargetLanguage", "TranslationEngine", "SourceText")
+                        .IsUnique()
+                        .HasDatabaseName("IX_translationfailures_lookup");
+
+                    b.ToTable("translationfailures", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TalkMessage", b =>
                 {
                     b.Property<int>("Id")

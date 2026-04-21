@@ -181,6 +181,7 @@ public static class ActionTooltipCacheManager
     {
         Cache.Clear();
         TextLookupCache.Clear();
+        PluginLog.Debug("[ActionTooltipCacheManager] Cleared action-tooltip cache.");
     }
 
     /// <summary>

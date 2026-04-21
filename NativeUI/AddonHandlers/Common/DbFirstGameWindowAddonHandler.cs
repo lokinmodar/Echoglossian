@@ -71,6 +71,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         InFlightPayloads.Clear();
         FailedPayloadRetryUtc.Clear();
         ParsedPayloadCache.Clear();
+        PluginLog.Debug("[DbFirstGameWindowAddonHandler] Cleared DB-first session caches.");
     }
 
     /// <summary>

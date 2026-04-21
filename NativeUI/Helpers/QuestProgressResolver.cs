@@ -29,6 +29,7 @@ internal static class QuestProgressResolver
     public static void Clear()
     {
         QuestProgressCache.Clear();
+        PluginLog.Debug("[QuestProgressResolver] Cleared quest progress cache.");
     }
 
     /// <summary>

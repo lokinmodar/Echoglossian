@@ -173,5 +173,6 @@ public static class StringArrayDataCacheManager
     public static void Clear()
     {
         Cache.Clear();
+        PluginLog.Debug("[StringArrayDataCacheManager] Cleared StringArrayData cache.");
     }
 }

@@ -64,6 +64,12 @@ public class EchoglossianDbContext : DbContext
   public DbSet<StringArrayDatas> StringArrayDatas { get; set; }
 
   /// <summary>
+  ///     Gets or sets exact translation failures that should not be retried for
+  ///     the same source/target language pair and engine.
+  /// </summary>
+  public DbSet<TranslationFailure> TranslationFailures { get; set; }
+
+  /// <summary>
   ///     Gets or sets the translated string array records.   Configures the database context options.
   /// </summary>
   /// <param name="optionsBuilder"></param>
@@ -195,6 +201,18 @@ public class EchoglossianDbContext : DbContext
         .HasDatabaseName("IX_questplates_questid_lookup");
     modelBuilder.Entity<NpcNames>().ToTable("npcnames");
     modelBuilder.Entity<LocationName>().ToTable("locationnames");
+    modelBuilder.Entity<TranslationFailure>().ToTable("translationfailures");
+    modelBuilder.Entity<TranslationFailure>()
+        .HasIndex(t => new
+        {
+          t.SourceTextHash,
+          t.SourceLanguage,
+          t.TargetLanguage,
+          t.TranslationEngine,
+          t.SourceText
+        })
+        .IsUnique()
+        .HasDatabaseName("IX_translationfailures_lookup");
     modelBuilder.Entity<StringArrayDatas>()
         .HasIndex(s => new
         {

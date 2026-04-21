@@ -101,6 +101,162 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures the service skips exact requests already known to fail for
+    ///     the same source and target language pair plus engine.
+    /// </summary>
+    [Fact]
+    public void Translate_SkipsKnownFailedRequest_ForExactTextAndLanguagePair()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "should-not-be-used",
+        };
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 8,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+                text == "hello" &&
+                source == "en" &&
+                target == "pt-BR" &&
+                engine == 8);
+
+        var result = service.Translate("hello", "English", "pt");
+
+        Assert.Equal(string.Empty, result);
+        Assert.Equal(0, translator.SyncCalls);
+    }
+
+    /// <summary>
+    ///     Ensures the exact-failure gate still honors the source and target
+    ///     languages instead of suppressing unrelated requests.
+    /// </summary>
+    [Fact]
+    public void Translate_DoesNotSkipKnownFailedRequest_ForDifferentTargetLanguage()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "traduzido",
+        };
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 8,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+                text == "hello" &&
+                source == "en" &&
+                target == "pt-BR" &&
+                engine == 8);
+
+        var result = service.Translate("hello", "English", "de");
+
+        Assert.Equal("traduzido", result);
+        Assert.Equal(1, translator.SyncCalls);
+    }
+
+    /// <summary>
+    ///     Ensures an empty synchronous result is recorded as an exact known
+    ///     failure.
+    /// </summary>
+    [Fact]
+    public void Translate_RecordsEmptyResultAsKnownFailure()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = string.Empty,
+        };
+        string? recordedText = null;
+        string? recordedSource = null;
+        string? recordedTarget = null;
+        int? recordedEngine = null;
+        string? recordedReason = null;
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 11,
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedText = text;
+                recordedSource = source;
+                recordedTarget = target;
+                recordedEngine = engine;
+                recordedReason = reason;
+            });
+
+        var result = service.Translate("hello", "English", "pt");
+
+        Assert.Equal(string.Empty, result);
+        Assert.Equal("hello", recordedText);
+        Assert.Equal("en", recordedSource);
+        Assert.Equal("pt-BR", recordedTarget);
+        Assert.Equal(11, recordedEngine);
+        Assert.Equal("empty-result", recordedReason);
+    }
+
+    /// <summary>
+    ///     Ensures an empty asynchronous result is recorded as an exact known
+    ///     failure.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Fact]
+    public async Task TranslateAsync_RecordsEmptyResultAsKnownFailure()
+    {
+        var translator = new RecordingTranslator
+        {
+            AsyncResult = string.Empty,
+        };
+        string? recordedText = null;
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 5,
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedText = text;
+            });
+
+        var result = await service.TranslateAsync("...hello", "en", "pt-BR");
+
+        Assert.Equal("...", result);
+        Assert.Equal("hello", recordedText);
+    }
+
+    /// <summary>
+    ///     Ensures a failed translation records the explicit origin context
+    ///     when one is provided by the caller.
+    /// </summary>
+    [Fact]
+    public void Translate_RecordsExplicitOriginContext()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = string.Empty,
+        };
+        string? recordedOrigin = null;
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 11,
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedOrigin = origin;
+            });
+
+        _ = service.Translate(
+            "hello",
+            "en",
+            "pt-BR",
+            originContext: "ActionDetailPrefetch.Name");
+
+        Assert.Equal("ActionDetailPrefetch.Name", recordedOrigin);
+    }
+
+    /// <summary>
     ///     Minimal fake translator for pipeline tests.
     /// </summary>
     private sealed class RecordingTranslator : ITranslator

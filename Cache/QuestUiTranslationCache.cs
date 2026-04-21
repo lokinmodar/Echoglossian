@@ -53,6 +53,7 @@ public static class QuestUiTranslationCache
   public static void Clear()
   {
     Cache.Clear();
+    PluginLog.Debug("[QuestUiTranslationCache] Cleared quest UI translation cache.");
   }
 }
 

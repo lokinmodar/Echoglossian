@@ -124,5 +124,6 @@ public static class ItemTooltipCacheManager
     public static void Clear()
     {
         Cache.Clear();
+        PluginLog.Debug("[ItemTooltipCacheManager] Cleared item-tooltip cache.");
     }
 }
