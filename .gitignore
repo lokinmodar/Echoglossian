@@ -351,3 +351,7 @@ AGENTS.md
 /.agents
 /docs/current-refactor-conversation-history.md
 /.plogon-local-build
+/.codex_character_tail.txt
+/.codex_characterstatus_tail.txt
+/.codex_lastlog_slice.txt
+/.codex_lastlog_tail.txt

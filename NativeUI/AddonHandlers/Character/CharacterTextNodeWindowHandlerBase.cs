@@ -164,13 +164,18 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 out _,
                 out _))
         {
+            this.EmitCharacterStatusModeDetail(
+                "Supplemental original payload lookup build failed.");
             return false;
         }
 
-        return CharacterCanonicalPayloadHelper.TryCanonicalizePayload(
+        var resolved = CharacterCanonicalPayloadHelper.TryCanonicalizePayload(
             livePayload,
             originalLookup,
             out originalPayload);
+        this.EmitCharacterStatusModeDetail(
+            $"Supplemental original payload result={resolved}; originalLookup={originalLookup.Count}, atkValues={livePayload.AtkValues.Count}, stringArrayValues={livePayload.StringArrayValues.Count}, textNodes={livePayload.TextNodes.Count}");
+        return resolved;
     }
 
     /// <inheritdoc />
@@ -185,13 +190,18 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 out var translatedLookup,
                 out _))
         {
+            this.EmitCharacterStatusModeDetail(
+                "Supplemental translated payload lookup build failed.");
             return false;
         }
 
-        return CharacterCanonicalPayloadHelper.TryTranslatePayload(
+        var resolved = CharacterCanonicalPayloadHelper.TryTranslatePayload(
             originalPayload,
             translatedLookup,
             out translatedPayload);
+        this.EmitCharacterStatusModeDetail(
+            $"Supplemental translated payload result={resolved}; translatedLookup={translatedLookup.Count}, atkValues={originalPayload.AtkValues.Count}, stringArrayValues={originalPayload.StringArrayValues.Count}, textNodes={originalPayload.TextNodes.Count}");
+        return resolved;
     }
 
     /// <summary>
@@ -223,6 +233,10 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
         translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
         knownTexts = new HashSet<string>(StringComparer.Ordinal);
+        var structuredRowsScanned = 0;
+        var structuredRowsResolved = 0;
+        var gameWindowRowsScanned = 0;
+        var gameWindowRowsResolved = 0;
 
         var targetLanguage =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
@@ -238,6 +252,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
 
             foreach (var row in candidates)
             {
+                structuredRowsScanned++;
                 if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
                         row,
                         out var originalStructuredPayload,
@@ -248,6 +263,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                     continue;
                 }
 
+                structuredRowsResolved++;
                 CharacterCanonicalPayloadHelper.AppendLookupEntries(
                     originalStructuredPayload.Slots.Values,
                     originalLookup,
@@ -267,6 +283,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                      this.config.ChosenTransEngine,
                      GetGameVersion()).OrderBy(candidate => candidate.Id))
         {
+            gameWindowRowsScanned++;
             if (!TryParseSerializedPayload(
                     row.OriginalWindowStrings,
                     out var rowOriginalPayload) ||
@@ -277,6 +294,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 continue;
             }
 
+            gameWindowRowsResolved++;
             CharacterCanonicalPayloadHelper.AppendLookupEntries(
                 rowOriginalPayload.AtkValues,
                 rowTranslatedPayload.AtkValues,
@@ -300,6 +318,8 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 requireDifference: true);
         }
 
+        this.EmitCharacterStatusModeDetail(
+            $"Character lookup build structuredScanned={structuredRowsScanned}, structuredResolved={structuredRowsResolved}, gameWindowScanned={gameWindowRowsScanned}, gameWindowResolved={gameWindowRowsResolved}, originalLookup={originalLookup.Count}, translatedLookup={translatedLookup.Count}, knownTexts={knownTexts.Count}");
         return translatedLookup.Count > 0;
     }
 

@@ -78,6 +78,27 @@ public sealed class HoverTooltipManager
     }
 
     /// <summary>
+    ///     Refreshes the lifetime of tooltip targets whose keys start with the
+    ///     specified prefix without rebuilding their geometry or text.
+    /// </summary>
+    /// <param name="prefix">The key prefix to refresh.</param>
+    public void TouchByPrefix(string prefix)
+    {
+        foreach (var (key, entry) in this.entries)
+        {
+            if (!key.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            this.entries[key] = entry with
+            {
+                LastUpdatedUtc = DateTime.UtcNow,
+            };
+        }
+    }
+
+    /// <summary>
     ///     Clears all registered targets.
     /// </summary>
     public void Clear()
