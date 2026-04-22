@@ -36,6 +36,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan FailureRetryInterval =
         TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan DeferredCleanupGraceInterval =
+        TimeSpan.FromSeconds(2);
 
     private readonly string addonName;
     private readonly Config config;
@@ -58,6 +60,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private string? lastCharacterStatusDebugSignature;
     private DateTime characterStatusDebugDetailUtc = DateTime.MinValue;
     private string? lastCharacterStatusDebugDetailSignature;
+    private bool deferredCleanupPending;
+    private AddonEvent deferredCleanupEvent;
+    private DateTime deferredCleanupUtc = DateTime.MinValue;
 
     private DateTime nextRetryUtc = DateTime.MinValue;
 
@@ -343,6 +348,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Performs addon-local follow-up work after one original payload has
+    ///     been restored into the live native surface.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="translatedPayload">
+    ///     The translated payload that was visible before restoration.
+    /// </param>
+    /// <param name="originalPayload">
+    ///     The original payload that has just been restored.
+    /// </param>
+    private protected virtual void AfterRestorePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload translatedPayload,
+        DbFirstGameWindowPayload originalPayload)
+    {
+    }
+
+    /// <summary>
     ///     Tries to apply one text-node payload using addon-local matching
     ///     semantics instead of the default stable-key path.
     /// </summary>
@@ -410,6 +433,49 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Tries to project one cached resolved payload pair onto the current
+    ///     live payload shape when an exact mode-switch reapply match fails.
+    /// </summary>
+    /// <param name="livePayload">The currently visible live payload.</param>
+    /// <param name="runtimeState">The last resolved runtime state.</param>
+    /// <param name="originalPayload">
+    ///     Receives the projected original payload when projection succeeds.
+    /// </param>
+    /// <param name="translatedPayload">
+    ///     Receives the projected translated payload when projection succeeds.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the addon wants to reuse one projected
+    ///     payload pair for mode-switch reapply; otherwise
+    ///     <see langword="false" />.
+    /// </returns>
+    private protected virtual bool TryResolveProjectedModeSwitchPayloads(
+        DbFirstGameWindowPayload livePayload,
+        DbFirstGameWindowRuntimeState runtimeState,
+        out DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload translatedPayload)
+    {
+        originalPayload = DbFirstGameWindowPayload.Empty;
+        translatedPayload = DbFirstGameWindowPayload.Empty;
+        return false;
+    }
+
+    /// <summary>
+    ///     Determines whether cleanup should be deferred when one cleanup
+    ///     lifecycle event fires but the addon is still visibly present.
+    /// </summary>
+    /// <param name="evt">The cleanup event being handled.</param>
+    /// <returns>
+    ///     <see langword="true" /> when cleanup should be deferred for this
+    ///     addon; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldDeferCleanupWhileVisible(
+        AddonEvent evt)
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Determines whether a named addon is currently visible.
     /// </summary>
     /// <param name="addonName">The addon name to probe.</param>
@@ -455,6 +521,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="args">The event args.</param>
     protected virtual void OnLifecycleEvent(AddonEvent evt, AddonArgs args)
     {
+        this.TryFinalizeDeferredCleanup();
         this.RefreshOrQueue();
     }
 
@@ -465,6 +532,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="args">The event args.</param>
     protected virtual void OnPreDrawEvent(AddonEvent evt, AddonArgs args)
     {
+        this.TryFinalizeDeferredCleanup();
+
         if (!this.enabledSelector(this.config))
         {
             if (this.ShouldEmitCharacterStatusModeDebug())
@@ -475,6 +544,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
             this.RestoreOriginalPayloadIfNeeded();
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+            if (this.ShouldEmitCharacterStatusModeDebug())
+            {
+                this.EmitCharacterStatusModeInfo(
+                    "PreDraw disabled path clearing resolved state.");
+            }
+
             this.lastResolvedState = null;
             this.lastAppliedDisplayMode = null;
             return;
@@ -505,32 +580,57 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.TryGetVisibleAddon(out var visibleAddon))
         {
             var livePayload = this.CaptureLivePayload(visibleAddon);
+            var matchesOriginal = false;
+            var matchesTranslated = false;
+            var usedProjectedPayloads = false;
+            var originalPayload = DbFirstGameWindowPayload.Empty;
+            var translatedPayload = DbFirstGameWindowPayload.Empty;
             if (!livePayload.IsEmpty &&
                 (livePayload.MatchesOriginal(
                      this.lastResolvedState.OriginalPayload) ||
                  livePayload.MatchesTranslated(
                      this.lastResolvedState.TranslatedPayload)))
             {
+                matchesOriginal = livePayload.MatchesOriginal(
+                    this.lastResolvedState.OriginalPayload);
+                matchesTranslated = livePayload.MatchesTranslated(
+                    this.lastResolvedState.TranslatedPayload);
+                originalPayload = this.lastResolvedState.OriginalPayload;
+                translatedPayload = this.lastResolvedState.TranslatedPayload;
+            }
+            else if (!livePayload.IsEmpty &&
+                     this.TryResolveProjectedModeSwitchPayloads(
+                         livePayload,
+                         this.lastResolvedState,
+                         out originalPayload,
+                         out translatedPayload))
+            {
+                usedProjectedPayloads = true;
+            }
+
+            if (!originalPayload.IsEmpty && !translatedPayload.IsEmpty)
+            {
                 if (this.ShouldEmitCharacterStatusModeDebug())
                 {
-                    var matchesOriginal = livePayload.MatchesOriginal(
-                        this.lastResolvedState.OriginalPayload);
-                    var matchesTranslated = livePayload.MatchesTranslated(
-                        this.lastResolvedState.TranslatedPayload);
                     this.EmitCharacterStatusModeInfo(
-                        $"PreDraw reapplying cached payload for mode {displayMode}; matchesOriginal={matchesOriginal}, matchesTranslated={matchesTranslated}");
+                        usedProjectedPayloads
+                            ? $"PreDraw reapplying projected cached payload for mode {displayMode}; matchesOriginal={matchesOriginal}, matchesTranslated={matchesTranslated}"
+                            : $"PreDraw reapplying cached payload for mode {displayMode}; matchesOriginal={matchesOriginal}, matchesTranslated={matchesTranslated}");
                 }
 
                 if (!TranslationDisplayModeHelper.WritesNativeTranslation(
                         displayMode))
                 {
-                    this.RestoreOriginalPayloadIfNeeded();
+                    this.RestorePayloadIfNeeded(
+                        visibleAddon,
+                        translatedPayload,
+                        originalPayload);
                 }
 
                 this.ApplyPayload(
                     visibleAddon,
-                    this.lastResolvedState.OriginalPayload,
-                    this.lastResolvedState.TranslatedPayload,
+                    originalPayload,
+                    translatedPayload,
                     this.lastResolvedState.PayloadKey,
                     displayMode);
                 this.nextRetryUtc = DateTime.MinValue;
@@ -539,9 +639,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
             if (this.ShouldEmitCharacterStatusModeDebug())
             {
-                var matchesOriginal = livePayload.MatchesOriginal(
+                matchesOriginal = livePayload.MatchesOriginal(
                     this.lastResolvedState.OriginalPayload);
-                var matchesTranslated = livePayload.MatchesTranslated(
+                matchesTranslated = livePayload.MatchesTranslated(
                     this.lastResolvedState.TranslatedPayload);
                 this.EmitCharacterStatusModeInfo(
                     $"PreDraw could not reapply cached payload for mode {displayMode}; livePayloadEmpty={livePayload.IsEmpty}, matchesOriginal={matchesOriginal}, matchesTranslated={matchesTranslated}");
@@ -586,23 +686,40 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="args">The event args.</param>
     protected virtual void OnCleanupEvent(AddonEvent evt, AddonArgs args)
     {
-        this.RestoreOriginalPayloadIfNeeded();
-        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-        this.runtimeState = null;
-        this.lastResolvedState = null;
-        this.lastAppliedDisplayMode = null;
-        this.nextRetryUtc = DateTime.MinValue;
+        if (this.ShouldDeferCleanupWhileVisible(evt))
+        {
+            var addonStillVisible = this.TryGetVisibleAddon(out _);
+            this.deferredCleanupPending = true;
+            this.deferredCleanupEvent = evt;
+            this.deferredCleanupUtc = DateTime.UtcNow;
+            if (this.ShouldEmitCharacterStatusModeDebug())
+            {
+                this.EmitCharacterStatusModeInfo(
+                    $"Cleanup deferred on event {evt}; addonStillVisible={addonStillVisible}, runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}, lastAppliedDisplayMode={this.lastAppliedDisplayMode?.ToString() ?? "null"}");
+            }
+
+            return;
+        }
+
+        if (this.ShouldEmitCharacterStatusModeDebug())
+        {
+            this.EmitCharacterStatusModeInfo(
+                $"Cleanup clearing state for event {evt}; runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}, lastAppliedDisplayMode={this.lastAppliedDisplayMode?.ToString() ?? "null"}");
+        }
+
+        this.ClearResolvedState();
     }
 
     /// <inheritdoc />
     public void OnPluginUnload()
     {
-        this.RestoreOriginalPayloadIfNeeded();
-        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-        this.runtimeState = null;
-        this.lastResolvedState = null;
-        this.lastAppliedDisplayMode = null;
-        this.nextRetryUtc = DateTime.MinValue;
+        if (this.ShouldEmitCharacterStatusModeDebug())
+        {
+            this.EmitCharacterStatusModeInfo(
+                $"Plugin unload clearing state; runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}, lastAppliedDisplayMode={this.lastAppliedDisplayMode?.ToString() ?? "null"}");
+        }
+
+        this.ClearResolvedState();
     }
 
     /// <summary>
@@ -648,6 +765,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             this.RestoreOriginalPayloadIfNeeded();
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+            if (this.ShouldEmitCharacterStatusModeDebug())
+            {
+                this.EmitCharacterStatusModeInfo(
+                    "RefreshOrQueue disabled path clearing resolved state.");
+            }
+
             this.lastResolvedState = null;
             this.lastAppliedDisplayMode = null;
             return;
@@ -891,6 +1014,76 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             displayMode);
         ClearFailedPayloadRetry(payloadKey);
         this.nextRetryUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    ///     Finalizes one deferred cleanup when the grace window expires or
+    ///     cancels it when the addon remains visibly alive across the transient
+    ///     lifecycle blip.
+    /// </summary>
+    private void TryFinalizeDeferredCleanup()
+    {
+        if (!this.deferredCleanupPending)
+        {
+            return;
+        }
+
+        var age = DateTime.UtcNow - this.deferredCleanupUtc;
+        if (this.TryGetVisibleAddon(out _))
+        {
+            if (age <= DeferredCleanupGraceInterval)
+            {
+                if (this.ShouldEmitCharacterStatusModeDebug())
+                {
+                    this.EmitCharacterStatusModeInfo(
+                        $"Deferred cleanup canceled after transient {this.deferredCleanupEvent}; addon remained visible for {age.TotalMilliseconds:0} ms.");
+                }
+
+                this.deferredCleanupPending = false;
+                this.deferredCleanupEvent = default;
+                this.deferredCleanupUtc = DateTime.MinValue;
+                return;
+            }
+
+            if (this.ShouldEmitCharacterStatusModeDebug())
+            {
+                this.EmitCharacterStatusModeInfo(
+                    $"Deferred cleanup from {this.deferredCleanupEvent} expired after {age.TotalMilliseconds:0} ms; clearing stale state before continuing.");
+            }
+
+            this.ClearResolvedState();
+            return;
+        }
+
+        if (age <= DeferredCleanupGraceInterval)
+        {
+            return;
+        }
+
+        if (this.ShouldEmitCharacterStatusModeDebug())
+        {
+            this.EmitCharacterStatusModeInfo(
+                $"Deferred cleanup from {this.deferredCleanupEvent} expired while addon remained hidden for {age.TotalMilliseconds:0} ms; clearing stale state.");
+        }
+
+        this.ClearResolvedState();
+    }
+
+    /// <summary>
+    ///     Clears all resolved runtime state and hover registrations for this
+    ///     addon handler.
+    /// </summary>
+    private void ClearResolvedState()
+    {
+        this.RestoreOriginalPayloadIfNeeded();
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+        this.runtimeState = null;
+        this.lastResolvedState = null;
+        this.lastAppliedDisplayMode = null;
+        this.nextRetryUtc = DateTime.MinValue;
+        this.deferredCleanupPending = false;
+        this.deferredCleanupEvent = default;
+        this.deferredCleanupUtc = DateTime.MinValue;
     }
 
     /// <summary>
@@ -1827,10 +2020,28 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
+        this.RestorePayloadIfNeeded(
+            addon,
+            this.runtimeState.TranslatedPayload,
+            this.runtimeState.OriginalPayload);
+        this.runtimeState = null;
+    }
+
+    /// <summary>
+    ///     Restores one native payload pair back to the original text for the
+    ///     current live addon shape.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="translatedPayload">The translated payload currently represented in native UI.</param>
+    /// <param name="originalPayload">The original payload to restore.</param>
+    private void RestorePayloadIfNeeded(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload translatedPayload,
+        DbFirstGameWindowPayload originalPayload)
+    {
         if (this.useAtkValues && addon->AtkValues != null)
         {
-            foreach (var (index, originalText) in this.runtimeState.OriginalPayload
-                         .AtkValues)
+            foreach (var (index, originalText) in originalPayload.AtkValues)
             {
                 if ((uint)index >= addon->AtkValuesCount)
                 {
@@ -1850,16 +2061,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        if (this.useTextNodes && this.runtimeState.OriginalPayload.TextNodes.Count > 0)
+        if (this.useTextNodes && originalPayload.TextNodes.Count > 0)
         {
             if (!this.TryApplyCustomTextNodePayload(
                     addon,
-                    this.runtimeState.TranslatedPayload,
-                    this.runtimeState.OriginalPayload))
+                    translatedPayload,
+                    originalPayload))
             {
                 this.ApplyTranslatedTextNodes(
                     addon,
-                    this.runtimeState.OriginalPayload.TextNodes);
+                    originalPayload.TextNodes);
             }
         }
 
@@ -1872,8 +2083,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 this.ShouldWriteStringArrayValues(
                     stringArrayData->SubscribedAddonsCount))
             {
-                foreach (var (index, originalText) in this.runtimeState
-                             .OriginalPayload.StringArrayValues)
+                foreach (var (index, originalText) in originalPayload
+                             .StringArrayValues)
                 {
                     if ((uint)index >= stringArrayData->Size)
                     {
@@ -1899,7 +2110,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        this.runtimeState = null;
+        this.AfterRestorePayload(
+            addon,
+            translatedPayload,
+            originalPayload);
     }
 
     /// <summary>

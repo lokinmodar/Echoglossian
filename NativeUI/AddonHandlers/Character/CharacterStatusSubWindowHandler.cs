@@ -69,6 +69,13 @@ public unsafe class CharacterStatusSubWindowHandler
     }
 
     /// <inheritdoc />
+    private protected override bool ShouldDeferCleanupWhileVisible(
+        AddonEvent evt)
+    {
+        return true;
+    }
+
+    /// <inheritdoc />
     private protected override bool TryApplyCustomTextNodePayload(
         AtkUnitBase* addon,
         DbFirstGameWindowPayload sourcePayload,
@@ -128,6 +135,29 @@ public unsafe class CharacterStatusSubWindowHandler
         }
 
         return false;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryResolveProjectedModeSwitchPayloads(
+        DbFirstGameWindowPayload livePayload,
+        DbFirstGameWindowRuntimeState runtimeState,
+        out DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload translatedPayload)
+    {
+        originalPayload = runtimeState.OriginalPayload.ProjectToShape(
+            livePayload);
+        translatedPayload = runtimeState.TranslatedPayload.ProjectToShape(
+            livePayload);
+        if (!this.HasExpectedCharacterStatusCoverage(
+                originalPayload,
+                translatedPayload))
+        {
+            originalPayload = DbFirstGameWindowPayload.Empty;
+            translatedPayload = DbFirstGameWindowPayload.Empty;
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
