@@ -248,6 +248,138 @@ public class CharacterCanonicalPayloadHelperTests
     }
 
     /// <summary>
+    ///     Ensures value-based apply can rewrite visible text nodes using text
+    ///     sourced from ATK values and string-array values, not only from
+    ///     explicit text-node payload entries.
+    /// </summary>
+    [Fact]
+    public void BuildValueMap_FromPayloads_IncludesAtkAndStringArrayTexts()
+    {
+        var sourcePayload = new DbFirstGameWindowPayload(
+            AtkValues: new SortedDictionary<int, string>
+            {
+                [4] = "Strength",
+            },
+            StringArrayValues: new SortedDictionary<int, string>
+            {
+                [11] = "Critical Hit",
+            },
+            TextNodes: new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["1:0"] = "Attributes",
+            });
+        var targetPayload = new DbFirstGameWindowPayload(
+            AtkValues: new SortedDictionary<int, string>
+            {
+                [4] = "Força",
+            },
+            StringArrayValues: new SortedDictionary<int, string>
+            {
+                [11] = "Acerto Crítico",
+            },
+            TextNodes: new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["1:0"] = "Atributos",
+            });
+
+        var valueMap = CharacterCanonicalPayloadHelper.BuildValueMap(
+            sourcePayload,
+            targetPayload);
+
+        Assert.Equal("Força", valueMap["Strength"]);
+        Assert.Equal("Acerto Crítico", valueMap["Critical Hit"]);
+        Assert.Equal("Atributos", valueMap["Attributes"]);
+    }
+
+    /// <summary>
+    ///     Ensures canonical fallback can still translate one visible text not
+    ///     present in the active payload pair when the shared Character lookup
+    ///     already knows the exact original/translated pair.
+    /// </summary>
+    [Fact]
+    public void TryResolveCanonicalFallbackTarget_MapsMissingCharacterRootText()
+    {
+        var directValueMap = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Strength"] = "Força",
+            ["Attributes"] = "Atributos",
+        };
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Strength"] = "Strength",
+            ["Força"] = "Strength",
+            ["Attributes"] = "Attributes",
+            ["Atributos"] = "Attributes",
+            ["Gear Set"] = "Gear Set",
+            ["Conjunto de Equipamentos"] = "Gear Set",
+        };
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Strength"] = "Força",
+            ["Força"] = "Força",
+            ["Attributes"] = "Atributos",
+            ["Atributos"] = "Atributos",
+            ["Gear Set"] = "Conjunto de Equipamentos",
+            ["Conjunto de Equipamentos"] = "Conjunto de Equipamentos",
+        };
+
+        var resolved =
+            CharacterCanonicalPayloadHelper.TryResolveCanonicalFallbackTarget(
+                "Gear Set",
+                directValueMap,
+                originalLookup,
+                translatedLookup,
+                out var targetText);
+
+        Assert.True(resolved);
+        Assert.Equal("Conjunto de Equipamentos", targetText);
+    }
+
+    /// <summary>
+    ///     Ensures canonical fallback can still restore one translated visible
+    ///     text back to its original form when the active payload pair is
+    ///     missing that exact label.
+    /// </summary>
+    [Fact]
+    public void TryResolveCanonicalFallbackTarget_RestoresMissingCharacterRootText()
+    {
+        var directValueMap = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Força"] = "Strength",
+            ["Atributos"] = "Attributes",
+        };
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Strength"] = "Strength",
+            ["Força"] = "Strength",
+            ["Attributes"] = "Attributes",
+            ["Atributos"] = "Attributes",
+            ["Gear Set"] = "Gear Set",
+            ["Conjunto de Equipamentos"] = "Gear Set",
+        };
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Strength"] = "Força",
+            ["Força"] = "Força",
+            ["Attributes"] = "Atributos",
+            ["Atributos"] = "Atributos",
+            ["Gear Set"] = "Conjunto de Equipamentos",
+            ["Conjunto de Equipamentos"] = "Conjunto de Equipamentos",
+        };
+
+        var resolved =
+            CharacterCanonicalPayloadHelper.TryResolveCanonicalFallbackTarget(
+                "Conjunto de Equipamentos",
+                directValueMap,
+                originalLookup,
+                translatedLookup,
+                out var targetText);
+
+        Assert.True(resolved);
+        Assert.Equal("Gear Set", targetText);
+    }
+
+    /// <summary>
     ///     Ensures unseen-text counting deduplicates repeated values and
     ///     ignores already known text.
     /// </summary>

@@ -56,10 +56,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private DbFirstGameWindowRuntimeState? lastResolvedState;
     private JournalTranslationDisplayMode? lastAppliedDisplayMode;
     private bool lastOriginalRecoveryWasUnstableTranslatedState;
-    private DateTime characterStatusDebugHeartbeatUtc = DateTime.MinValue;
-    private string? lastCharacterStatusDebugSignature;
-    private DateTime characterStatusDebugDetailUtc = DateTime.MinValue;
-    private string? lastCharacterStatusDebugDetailSignature;
     private bool deferredCleanupPending;
     private AddonEvent deferredCleanupEvent;
     private DateTime deferredCleanupUtc = DateTime.MinValue;
@@ -536,20 +532,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         if (!this.enabledSelector(this.config))
         {
-            if (this.ShouldEmitCharacterStatusModeDebug())
-            {
-                this.EmitCharacterStatusModeInfo(
-                    "PreDraw skipped because handler is disabled.");
-            }
-
             this.RestoreOriginalPayloadIfNeeded();
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-            if (this.ShouldEmitCharacterStatusModeDebug())
-            {
-                this.EmitCharacterStatusModeInfo(
-                    "PreDraw disabled path clearing resolved state.");
-            }
-
             this.lastResolvedState = null;
             this.lastAppliedDisplayMode = null;
             return;
@@ -561,19 +545,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         var usesHoverTooltips =
             TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
 
-        if (this.ShouldEmitCharacterStatusModeDebug())
-        {
-            this.EmitCharacterStatusPreDrawHeartbeat(displayMode);
-        }
-
-        if (this.ShouldEmitCharacterStatusModeDebug() &&
-            this.lastAppliedDisplayMode != null &&
-            this.lastAppliedDisplayMode != displayMode)
-        {
-            this.EmitCharacterStatusModeInfo(
-                $"PreDraw detected mode change {this.lastAppliedDisplayMode} -> {displayMode}; runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}");
-        }
-
         if (this.lastResolvedState != null &&
             this.lastAppliedDisplayMode != null &&
             this.lastAppliedDisplayMode != displayMode &&
@@ -582,7 +553,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             var livePayload = this.CaptureLivePayload(visibleAddon);
             var matchesOriginal = false;
             var matchesTranslated = false;
-            var usedProjectedPayloads = false;
             var originalPayload = DbFirstGameWindowPayload.Empty;
             var translatedPayload = DbFirstGameWindowPayload.Empty;
             if (!livePayload.IsEmpty &&
@@ -605,19 +575,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                          out originalPayload,
                          out translatedPayload))
             {
-                usedProjectedPayloads = true;
             }
 
             if (!originalPayload.IsEmpty && !translatedPayload.IsEmpty)
             {
-                if (this.ShouldEmitCharacterStatusModeDebug())
-                {
-                    this.EmitCharacterStatusModeInfo(
-                        usedProjectedPayloads
-                            ? $"PreDraw reapplying projected cached payload for mode {displayMode}; matchesOriginal={matchesOriginal}, matchesTranslated={matchesTranslated}"
-                            : $"PreDraw reapplying cached payload for mode {displayMode}; matchesOriginal={matchesOriginal}, matchesTranslated={matchesTranslated}");
-                }
-
                 if (!TranslationDisplayModeHelper.WritesNativeTranslation(
                         displayMode))
                 {
@@ -635,16 +596,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     displayMode);
                 this.nextRetryUtc = DateTime.MinValue;
                 return;
-            }
-
-            if (this.ShouldEmitCharacterStatusModeDebug())
-            {
-                matchesOriginal = livePayload.MatchesOriginal(
-                    this.lastResolvedState.OriginalPayload);
-                matchesTranslated = livePayload.MatchesTranslated(
-                    this.lastResolvedState.TranslatedPayload);
-                this.EmitCharacterStatusModeInfo(
-                    $"PreDraw could not reapply cached payload for mode {displayMode}; livePayloadEmpty={livePayload.IsEmpty}, matchesOriginal={matchesOriginal}, matchesTranslated={matchesTranslated}");
             }
         }
 
@@ -688,37 +639,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     {
         if (this.ShouldDeferCleanupWhileVisible(evt))
         {
-            var addonStillVisible = this.TryGetVisibleAddon(out _);
             this.deferredCleanupPending = true;
             this.deferredCleanupEvent = evt;
             this.deferredCleanupUtc = DateTime.UtcNow;
-            if (this.ShouldEmitCharacterStatusModeDebug())
-            {
-                this.EmitCharacterStatusModeInfo(
-                    $"Cleanup deferred on event {evt}; addonStillVisible={addonStillVisible}, runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}, lastAppliedDisplayMode={this.lastAppliedDisplayMode?.ToString() ?? "null"}");
-            }
-
             return;
-        }
-
-        if (this.ShouldEmitCharacterStatusModeDebug())
-        {
-            this.EmitCharacterStatusModeInfo(
-                $"Cleanup clearing state for event {evt}; runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}, lastAppliedDisplayMode={this.lastAppliedDisplayMode?.ToString() ?? "null"}");
         }
 
         this.ClearResolvedState();
     }
 
     /// <inheritdoc />
-    public void OnPluginUnload()
+    public virtual void OnPluginUnload()
     {
-        if (this.ShouldEmitCharacterStatusModeDebug())
-        {
-            this.EmitCharacterStatusModeInfo(
-                $"Plugin unload clearing state; runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}, lastAppliedDisplayMode={this.lastAppliedDisplayMode?.ToString() ?? "null"}");
-        }
-
         this.ClearResolvedState();
     }
 
@@ -765,12 +697,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             this.RestoreOriginalPayloadIfNeeded();
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-            if (this.ShouldEmitCharacterStatusModeDebug())
-            {
-                this.EmitCharacterStatusModeInfo(
-                    "RefreshOrQueue disabled path clearing resolved state.");
-            }
-
             this.lastResolvedState = null;
             this.lastAppliedDisplayMode = null;
             return;
@@ -831,12 +757,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                                                translatedStructuredPayload,
                                                out projection);
 
-            if (this.ShouldEmitCharacterStatusModeDebug())
-            {
-                this.EmitCharacterStatusModeDetail(
-                    $"Structured resolution type={originalStructuredPayload.Type}, contextKey={originalStructuredPayload.ContextKey}, slots={originalStructuredPayload.Slots.Count}, textNodes={originalStructuredPayload.TextNodes.Count}, exactMatch={exactStructuredMatch}, projection={exactProjectionMatch}");
-            }
-
             if (!exactStructuredMatch ||
                 !exactProjectionMatch)
             {
@@ -844,11 +764,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     this.TryResolveSupplementalTranslatedPayload(
                         originalPayload,
                         out var supplementalTranslatedPayload);
-                if (this.ShouldEmitCharacterStatusModeDebug())
-                {
-                    this.EmitCharacterStatusModeDetail(
-                        $"Structured fallback result exactMatch={exactStructuredMatch}, projection={exactProjectionMatch}, supplementalResolved={supplementalResolved}, unstableOriginal={this.lastOriginalRecoveryWasUnstableTranslatedState}");
-                }
 
                 if (supplementalResolved)
                 {
@@ -868,12 +783,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 if (this.lastOriginalRecoveryWasUnstableTranslatedState)
                 {
-                    if (this.ShouldEmitCharacterStatusModeDebug())
-                    {
-                        this.EmitCharacterStatusModeDetail(
-                            "Structured branch skipped queue because original recovery came from unstable translated state.");
-                    }
-
                     this.hoverTooltipManager.RemoveByPrefix(
                         this.hoverTooltipKeyPrefix);
                     this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
@@ -884,12 +793,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         structuredPayloadKey,
                         out var failedRetryUtc))
                 {
-                    if (this.ShouldEmitCharacterStatusModeDebug())
-                    {
-                        this.EmitCharacterStatusModeDetail(
-                            $"Structured branch deferred by failed-payload cooldown until {failedRetryUtc:o}.");
-                    }
-
                     this.hoverTooltipManager.RemoveByPrefix(
                         this.hoverTooltipKeyPrefix);
                     this.nextRetryUtc = failedRetryUtc;
@@ -900,12 +803,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     originalPayload,
                     structuredPayloadKey,
                     originalStructuredPayload);
-                if (this.ShouldEmitCharacterStatusModeDebug())
-                {
-                    this.EmitCharacterStatusModeDetail(
-                        "Structured branch queued translation after exact and supplemental resolution misses.");
-                }
-
                 this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
                 this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
                 return;
@@ -1033,22 +930,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             if (age <= DeferredCleanupGraceInterval)
             {
-                if (this.ShouldEmitCharacterStatusModeDebug())
-                {
-                    this.EmitCharacterStatusModeInfo(
-                        $"Deferred cleanup canceled after transient {this.deferredCleanupEvent}; addon remained visible for {age.TotalMilliseconds:0} ms.");
-                }
-
                 this.deferredCleanupPending = false;
                 this.deferredCleanupEvent = default;
                 this.deferredCleanupUtc = DateTime.MinValue;
                 return;
-            }
-
-            if (this.ShouldEmitCharacterStatusModeDebug())
-            {
-                this.EmitCharacterStatusModeInfo(
-                    $"Deferred cleanup from {this.deferredCleanupEvent} expired after {age.TotalMilliseconds:0} ms; clearing stale state before continuing.");
             }
 
             this.ClearResolvedState();
@@ -1058,12 +943,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (age <= DeferredCleanupGraceInterval)
         {
             return;
-        }
-
-        if (this.ShouldEmitCharacterStatusModeDebug())
-        {
-            this.EmitCharacterStatusModeInfo(
-                $"Deferred cleanup from {this.deferredCleanupEvent} expired while addon remained hidden for {age.TotalMilliseconds:0} ms; clearing stale state.");
         }
 
         this.ClearResolvedState();
@@ -2202,11 +2081,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             registeredCount++;
         }
 
-        if (this.ShouldEmitCharacterStatusModeDebug())
-        {
-            this.EmitCharacterStatusModeInfo(
-                $"RegisterHoverTooltips displayMode={displayMode}, showOriginalTooltips={showOriginalTooltips}, textNodes={textNodeAddresses.Count}, originalMap={originalToTranslated.Count}, reverseMap={translatedToOriginal.Count}, registered={registeredCount}");
-        }
     }
 
     /// <summary>
@@ -2435,88 +2309,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             useTranslatedKeys);
 
         return map;
-    }
-
-    /// <summary>
-    ///     Gets whether narrow mode-switch diagnostics should be emitted for the
-    ///     CharacterStatus addon while investigating presentation refresh issues.
-    /// </summary>
-    /// <returns>
-    ///     <see langword="true" /> when CharacterStatus-specific diagnostics
-    ///     should be logged; otherwise <see langword="false" />.
-    /// </returns>
-    private protected bool ShouldEmitCharacterStatusModeDebug()
-    {
-        return string.Equals(
-            this.addonName,
-            "CharacterStatus",
-            StringComparison.Ordinal);
-    }
-
-    /// <summary>
-    ///     Emits one narrow information line for the CharacterStatus
-    ///     mode-switch
-    ///     investigation.
-    /// </summary>
-    /// <param name="message">The debug message to emit.</param>
-    private protected void EmitCharacterStatusModeInfo(string message)
-    {
-        PluginLog.Information(
-            $"[DbFirstGameWindowAddonHandler:{this.addonName}] {message}");
-    }
-
-    /// <summary>
-    ///     Emits one throttled detail line for the CharacterStatus resolution
-    ///     investigation so repeated retries do not flood the log with
-    ///     identical state.
-    /// </summary>
-    /// <param name="message">The debug detail to emit.</param>
-    private protected void EmitCharacterStatusModeDetail(string message)
-    {
-        if (!this.ShouldEmitCharacterStatusModeDebug())
-        {
-            return;
-        }
-
-        if (string.Equals(
-                message,
-                this.lastCharacterStatusDebugDetailSignature,
-                StringComparison.Ordinal) &&
-            DateTime.UtcNow < this.characterStatusDebugDetailUtc)
-        {
-            return;
-        }
-
-        this.lastCharacterStatusDebugDetailSignature = message;
-        this.characterStatusDebugDetailUtc = DateTime.UtcNow.AddSeconds(2);
-        this.EmitCharacterStatusModeInfo(message);
-    }
-
-    /// <summary>
-    ///     Emits one throttled PreDraw heartbeat for the CharacterStatus
-    ///     investigation so the handler can prove that the lifecycle callback
-    ///     is running and which effective mode it sees.
-    /// </summary>
-    /// <param name="displayMode">The effective display mode.</param>
-    private void EmitCharacterStatusPreDrawHeartbeat(
-        JournalTranslationDisplayMode displayMode)
-    {
-        var signature =
-            $"PreDraw heartbeat displayMode={displayMode}, runtimeState={(this.runtimeState != null)}, lastResolvedState={(this.lastResolvedState != null)}, lastAppliedDisplayMode={this.lastAppliedDisplayMode?.ToString() ?? "null"}, usesHover={TranslationDisplayModeHelper.UsesHoverTooltips(displayMode)}, refreshOnPreDraw={this.ShouldRefreshAppliedStateOnPreDraw()}";
-
-        if (string.Equals(
-                signature,
-                this.lastCharacterStatusDebugSignature,
-                StringComparison.Ordinal) &&
-            DateTime.UtcNow < this.characterStatusDebugHeartbeatUtc)
-        {
-            return;
-        }
-
-        this.lastCharacterStatusDebugSignature = signature;
-        this.characterStatusDebugHeartbeatUtc =
-            DateTime.UtcNow.AddSeconds(2);
-        this.EmitCharacterStatusModeInfo(signature);
     }
 
     /// <summary>

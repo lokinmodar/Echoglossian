@@ -2788,6 +2788,24 @@
             <param name="overlay">Overlay to clear.</param>
             <param name="clearText">Whether to clear the translated text.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryEnterOverlaySemaphore(System.Threading.SemaphoreSlim)">
+            <summary>
+            Attempts to enter an overlay semaphore without throwing when the overlay
+            has already been disposed during plugin unload.
+            </summary>
+            <param name="semaphore">The overlay semaphore.</param>
+            <returns>
+            <see langword="true" /> when the semaphore was entered successfully;
+            otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryReleaseOverlaySemaphore(System.Threading.SemaphoreSlim)">
+            <summary>
+            Releases an overlay semaphore without throwing when it has already been
+            disposed during plugin unload.
+            </summary>
+            <param name="semaphore">The overlay semaphore.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.UpdateMiniTalkBubbleOverlayContent(System.IntPtr,System.String,System.String,System.String)">
             <summary>
             Updates or creates the overlay content for a single MiniTalk bubble.
@@ -5960,6 +5978,48 @@
                 desired target-facing values.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.BuildValueMap(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Builds one exact source-text to target-text map from matching
+                payload keys across ATK values, string-array values, and text nodes
+                so dynamic Character-family surfaces can rewrite visible nodes by
+                current text even when the live node is backed by a non-text-node
+                payload source.
+            </summary>
+            <param name="sourcePayload">The source-facing payload.</param>
+            <param name="targetPayload">The target-facing payload.</param>
+            <returns>
+                One exact text map that rewrites source-facing visible values to the
+                desired target-facing values.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.TryResolveCanonicalFallbackTarget(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
+            <summary>
+                Tries to resolve one fallback text transition from the canonical
+                Character-family lookups when the direct payload pair did not carry
+                the exact visible text.
+            </summary>
+            <param name="currentText">The currently visible text.</param>
+            <param name="directValueMap">
+                The direct value map built from the payload pair currently being
+                applied.
+            </param>
+            <param name="originalLookup">
+                The canonical lookup that maps any known value back to its original
+                text.
+            </param>
+            <param name="translatedLookup">
+                The canonical lookup that maps any known value to its translated
+                text.
+            </param>
+            <param name="targetText">
+                Receives the fallback target text when resolution succeeds.
+            </param>
+            <returns>
+                <see langword="true" /> when one fallback target could be resolved;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.CountUnseenTextValues(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
             <summary>
                 Counts how many non-empty source text values are not yet present in
@@ -6030,6 +6090,34 @@
                 When set, only pairs whose original and translated text differ are
                 appended.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.AppendValueMapEntries``1(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{``0,System.String},System.Collections.Generic.IReadOnlyDictionary{``0,System.String})">
+            <summary>
+                Appends one exact source-text to target-text mapping from matching
+                payload keys.
+            </summary>
+            <typeparam name="TKey">The payload key type.</typeparam>
+            <param name="valueMap">The target value map to augment.</param>
+            <param name="sourceValues">The source-facing payload values.</param>
+            <param name="targetValues">The target-facing payload values.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.TryDetermineDirectValueMapDirection(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
+            <summary>
+                Determines whether the direct payload-pair map represents one
+                source-original to target-translated transition or the reverse.
+            </summary>
+            <param name="directValueMap">The direct payload-pair map.</param>
+            <param name="originalLookup">The canonical original lookup.</param>
+            <param name="translatedLookup">The canonical translated lookup.</param>
+            <param name="sourceIsOriginal">
+                Receives <see langword="true" /> when the direct map flows from
+                original to translated text; otherwise <see langword="false" />
+                when it flows from translated to original text.
+            </param>
+            <returns>
+                <see langword="true" /> when one direction could be inferred;
+                otherwise <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler">
             <summary>
@@ -6235,6 +6323,20 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveProjectedModeSwitchPayloads(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.AfterRestorePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.OnPluginUnload">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.OnFrameworkUpdate(Dalamud.Plugin.Services.IFramework)">
+            <summary>
+                Issues one deferred native request update on the next framework tick
+                after tooltip-only restore, avoiding reentrant lifecycle recursion
+                from the <c>PreDraw</c> stack.
+            </summary>
+            <param name="framework">The active framework service.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveCanonicalCharacterStatusPayloadPair(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
                 Tries to resolve one canonical original and translated payload pair
@@ -6402,6 +6504,18 @@
             <returns>
                 <see langword="true" /> when a dynamic Character-family subwindow is
                 visible; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.IsStableCharacterHeaderText(System.String)">
+            <summary>
+                Determines whether one visible text belongs to the stable root
+                header of the Character window and should therefore be captured
+                even when it is not yet part of the canonical lookup.
+            </summary>
+            <param name="visibleText">The currently visible text.</param>
+            <returns>
+                <see langword="true" /> when the text is one stable root-header
+                label; otherwise <see langword="false" />.
             </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler">
@@ -7033,40 +7147,6 @@
                 text becomes the value.
             </param>
             <returns>The tooltip lookup map.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldEmitCharacterStatusModeDebug">
-            <summary>
-                Gets whether narrow mode-switch diagnostics should be emitted for the
-                CharacterStatus addon while investigating presentation refresh issues.
-            </summary>
-            <returns>
-                <see langword="true" /> when CharacterStatus-specific diagnostics
-                should be logged; otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.EmitCharacterStatusModeInfo(System.String)">
-            <summary>
-                Emits one narrow information line for the CharacterStatus
-                mode-switch
-                investigation.
-            </summary>
-            <param name="message">The debug message to emit.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.EmitCharacterStatusModeDetail(System.String)">
-            <summary>
-                Emits one throttled detail line for the CharacterStatus resolution
-                investigation so repeated retries do not flood the log with
-                identical state.
-            </summary>
-            <param name="message">The debug detail to emit.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.EmitCharacterStatusPreDrawHeartbeat(Echoglossian.JournalTranslationDisplayMode)">
-            <summary>
-                Emits one throttled PreDraw heartbeat for the CharacterStatus
-                investigation so the handler can prove that the lifecycle callback
-                is running and which effective mode it sees.
-            </summary>
-            <param name="displayMode">The effective display mode.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.AppendTooltipTextMap(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Boolean)">
             <summary>

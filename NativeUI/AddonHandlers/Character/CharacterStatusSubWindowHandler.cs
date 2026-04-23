@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Plugin.Services;
 using Echoglossian.Cache;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.NativeUI.AddonHandlers.Common;
@@ -26,6 +27,10 @@ public unsafe class CharacterStatusSubWindowHandler
         "Função",
     ];
 
+    private DateTime nextRequestedUpdateUtc = DateTime.MinValue;
+    private bool requestedUpdatePending;
+    private bool requestedUpdateInFlight;
+
     /// <summary>
     ///     Initializes a new instance of the
     ///     <see cref="CharacterStatusSubWindowHandler" /> class.
@@ -45,6 +50,7 @@ public unsafe class CharacterStatusSubWindowHandler
             stringArrayType: StringArrayType.Character,
             useAtkValues: true)
     {
+        Echoglossian.FrameworkInterface.Update += this.OnFrameworkUpdate;
     }
 
     /// <inheritdoc />
@@ -104,8 +110,6 @@ public unsafe class CharacterStatusSubWindowHandler
                 out originalPayload,
                 out _))
         {
-            this.EmitCharacterStatusModeDetail(
-                "CharacterStatus fallback resolved original payload from latest canonical structured row.");
             return true;
         }
 
@@ -129,8 +133,6 @@ public unsafe class CharacterStatusSubWindowHandler
                 out _,
                 out translatedPayload))
         {
-            this.EmitCharacterStatusModeDetail(
-                "CharacterStatus fallback resolved translated payload from latest canonical structured row.");
             return true;
         }
 
@@ -158,6 +160,96 @@ public unsafe class CharacterStatusSubWindowHandler
         }
 
         return true;
+    }
+
+    /// <inheritdoc />
+    private protected override void AfterRestorePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload translatedPayload,
+        DbFirstGameWindowPayload originalPayload)
+    {
+        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
+            this.HandlerConfig.CharacterWindowTranslationDisplayMode,
+            this.HandlerConfig.OverlayOnlyLanguage);
+        if (displayMode != JournalTranslationDisplayMode.TooltipTranslation ||
+            addon == null ||
+            !addon->IsVisible ||
+            addon->Id == 0 ||
+            this.requestedUpdatePending ||
+            this.requestedUpdateInFlight ||
+            DateTime.UtcNow < this.nextRequestedUpdateUtc ||
+            (originalPayload.AtkValues.Count == 0 &&
+             originalPayload.StringArrayValues.Count == 0))
+        {
+            return;
+        }
+
+        this.requestedUpdatePending = true;
+    }
+
+    /// <inheritdoc />
+    public override void OnPluginUnload()
+    {
+        Echoglossian.FrameworkInterface.Update -= this.OnFrameworkUpdate;
+        this.requestedUpdatePending = false;
+        this.requestedUpdateInFlight = false;
+        base.OnPluginUnload();
+    }
+
+    /// <summary>
+    ///     Issues one deferred native request update on the next framework tick
+    ///     after tooltip-only restore, avoiding reentrant lifecycle recursion
+    ///     from the <c>PreDraw</c> stack.
+    /// </summary>
+    /// <param name="framework">The active framework service.</param>
+    private void OnFrameworkUpdate(IFramework framework)
+    {
+        if (!this.requestedUpdatePending || this.requestedUpdateInFlight)
+        {
+            return;
+        }
+
+        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
+            this.HandlerConfig.CharacterWindowTranslationDisplayMode,
+            this.HandlerConfig.OverlayOnlyLanguage);
+        if (displayMode != JournalTranslationDisplayMode.TooltipTranslation)
+        {
+            this.requestedUpdatePending = false;
+            return;
+        }
+
+        var addon = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+            this.AddonName);
+        if (addon == null || !addon->IsVisible || addon->Id == 0 ||
+            !FrameworkAccessGuard.TryGetRaptureAtkUnitManager(
+                out var atkUnitManager))
+        {
+            this.requestedUpdatePending = false;
+            return;
+        }
+
+        var atkStage = AtkStage.Instance();
+        if (atkStage == null)
+        {
+            this.requestedUpdatePending = false;
+            return;
+        }
+
+        this.requestedUpdatePending = false;
+        this.requestedUpdateInFlight = true;
+        try
+        {
+            atkUnitManager->AddonRequestUpdateById(
+                addon->Id,
+                atkStage->GetNumberArrayData(),
+                atkStage->GetStringArrayData(),
+                false);
+            this.nextRequestedUpdateUtc = DateTime.UtcNow.AddMilliseconds(250);
+        }
+        finally
+        {
+            this.requestedUpdateInFlight = false;
+        }
     }
 
     /// <summary>

@@ -6,6 +6,8 @@
 namespace Echoglossian.UIOverlays.TranslationOverlay;
 internal class TranslationOverlay : IDisposable
 {
+  public bool IsDisposed { get; private set; }
+
   public bool Display { get; set; }
 
   public string CurrentText { get; set; } = string.Empty;
@@ -33,6 +35,7 @@ internal class TranslationOverlay : IDisposable
 
   public void Dispose()
   {
+    this.IsDisposed = true;
     this.Semaphore.Dispose();
     this.NameSemaphore.Dispose();
   }

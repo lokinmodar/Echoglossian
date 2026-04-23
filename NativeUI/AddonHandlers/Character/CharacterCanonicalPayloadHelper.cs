@@ -299,6 +299,110 @@ internal static class CharacterCanonicalPayloadHelper
     }
 
     /// <summary>
+    ///     Builds one exact source-text to target-text map from matching
+    ///     payload keys across ATK values, string-array values, and text nodes
+    ///     so dynamic Character-family surfaces can rewrite visible nodes by
+    ///     current text even when the live node is backed by a non-text-node
+    ///     payload source.
+    /// </summary>
+    /// <param name="sourcePayload">The source-facing payload.</param>
+    /// <param name="targetPayload">The target-facing payload.</param>
+    /// <returns>
+    ///     One exact text map that rewrites source-facing visible values to the
+    ///     desired target-facing values.
+    /// </returns>
+    public static Dictionary<string, string> BuildValueMap(
+        DbFirstGameWindowPayload sourcePayload,
+        DbFirstGameWindowPayload targetPayload)
+    {
+        var valueMap = BuildValueMap(
+            sourcePayload.TextNodes,
+            targetPayload.TextNodes);
+
+        AppendValueMapEntries(
+            valueMap,
+            sourcePayload.AtkValues,
+            targetPayload.AtkValues);
+        AppendValueMapEntries(
+            valueMap,
+            sourcePayload.StringArrayValues,
+            targetPayload.StringArrayValues);
+
+        return valueMap;
+    }
+
+    /// <summary>
+    ///     Tries to resolve one fallback text transition from the canonical
+    ///     Character-family lookups when the direct payload pair did not carry
+    ///     the exact visible text.
+    /// </summary>
+    /// <param name="currentText">The currently visible text.</param>
+    /// <param name="directValueMap">
+    ///     The direct value map built from the payload pair currently being
+    ///     applied.
+    /// </param>
+    /// <param name="originalLookup">
+    ///     The canonical lookup that maps any known value back to its original
+    ///     text.
+    /// </param>
+    /// <param name="translatedLookup">
+    ///     The canonical lookup that maps any known value to its translated
+    ///     text.
+    /// </param>
+    /// <param name="targetText">
+    ///     Receives the fallback target text when resolution succeeds.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when one fallback target could be resolved;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryResolveCanonicalFallbackTarget(
+        string currentText,
+        IReadOnlyDictionary<string, string> directValueMap,
+        IReadOnlyDictionary<string, string> originalLookup,
+        IReadOnlyDictionary<string, string> translatedLookup,
+        out string targetText)
+    {
+        targetText = string.Empty;
+        if (string.IsNullOrWhiteSpace(currentText) ||
+            !TryDetermineDirectValueMapDirection(
+                directValueMap,
+                originalLookup,
+                translatedLookup,
+                out var sourceIsOriginal))
+        {
+            return false;
+        }
+
+        if (sourceIsOriginal)
+        {
+            if (!translatedLookup.TryGetValue(currentText, out targetText) ||
+                string.Equals(
+                    currentText,
+                    targetText,
+                    StringComparison.Ordinal))
+            {
+                targetText = string.Empty;
+                return false;
+            }
+
+            return true;
+        }
+
+        if (!originalLookup.TryGetValue(currentText, out targetText) ||
+            string.Equals(
+                currentText,
+                targetText,
+                StringComparison.Ordinal))
+        {
+            targetText = string.Empty;
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Counts how many non-empty source text values are not yet present in
     ///     one known-text set.
     /// </summary>
@@ -483,5 +587,104 @@ internal static class CharacterCanonicalPayloadHelper
 
         originalLookup[translatedText] = originalText;
         translatedLookup[translatedText] = translatedText;
+    }
+
+    /// <summary>
+    ///     Appends one exact source-text to target-text mapping from matching
+    ///     payload keys.
+    /// </summary>
+    /// <typeparam name="TKey">The payload key type.</typeparam>
+    /// <param name="valueMap">The target value map to augment.</param>
+    /// <param name="sourceValues">The source-facing payload values.</param>
+    /// <param name="targetValues">The target-facing payload values.</param>
+    private static void AppendValueMapEntries<TKey>(
+        IDictionary<string, string> valueMap,
+        IReadOnlyDictionary<TKey, string> sourceValues,
+        IReadOnlyDictionary<TKey, string> targetValues)
+        where TKey : notnull
+    {
+        foreach (var (key, sourceText) in sourceValues)
+        {
+            if (!targetValues.TryGetValue(key, out var targetText) ||
+                string.IsNullOrWhiteSpace(sourceText) ||
+                string.IsNullOrWhiteSpace(targetText) ||
+                string.Equals(
+                    sourceText,
+                    targetText,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            valueMap[sourceText] = targetText;
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether the direct payload-pair map represents one
+    ///     source-original to target-translated transition or the reverse.
+    /// </summary>
+    /// <param name="directValueMap">The direct payload-pair map.</param>
+    /// <param name="originalLookup">The canonical original lookup.</param>
+    /// <param name="translatedLookup">The canonical translated lookup.</param>
+    /// <param name="sourceIsOriginal">
+    ///     Receives <see langword="true" /> when the direct map flows from
+    ///     original to translated text; otherwise <see langword="false" />
+    ///     when it flows from translated to original text.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when one direction could be inferred;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryDetermineDirectValueMapDirection(
+        IReadOnlyDictionary<string, string> directValueMap,
+        IReadOnlyDictionary<string, string> originalLookup,
+        IReadOnlyDictionary<string, string> translatedLookup,
+        out bool sourceIsOriginal)
+    {
+        sourceIsOriginal = false;
+
+        foreach (var (sourceText, targetText) in directValueMap)
+        {
+            if (string.Equals(
+                    sourceText,
+                    targetText,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (translatedLookup.TryGetValue(sourceText, out var translated) &&
+                string.Equals(
+                    translated,
+                    targetText,
+                    StringComparison.Ordinal) &&
+                originalLookup.TryGetValue(sourceText, out var original) &&
+                string.Equals(
+                    original,
+                    sourceText,
+                    StringComparison.Ordinal))
+            {
+                sourceIsOriginal = true;
+                return true;
+            }
+
+            if (originalLookup.TryGetValue(sourceText, out original) &&
+                string.Equals(
+                    original,
+                    targetText,
+                    StringComparison.Ordinal) &&
+                translatedLookup.TryGetValue(sourceText, out translated) &&
+                string.Equals(
+                    translated,
+                    sourceText,
+                    StringComparison.Ordinal))
+            {
+                sourceIsOriginal = false;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

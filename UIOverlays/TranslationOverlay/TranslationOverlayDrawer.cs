@@ -25,21 +25,55 @@ namespace Echoglossian
         string translatedText,
         string originalName = "")
     {
+      if (overlay == null || overlay.IsDisposed)
+      {
+        return;
+      }
+
       bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
 
-      overlay.NameSemaphore.Wait();
-      overlay.OriginalName = originalName ?? string.Empty;
-      overlay.CurrentName = translatedName ?? string.Empty;
-      overlay.CurrentNameId++;
+      if (!this.TryEnterOverlaySemaphore(overlay.NameSemaphore))
+      {
+        return;
+      }
 
-      overlay.NameSemaphore.Release();
+      try
+      {
+        if (overlay.IsDisposed)
+        {
+          return;
+        }
 
-      overlay.Semaphore.Wait();
-      overlay.CurrentText =
-          hasValidText ? translatedText : Resources.WaitingForTranslation;
-      overlay.Display = hasValidText;
-      overlay.CurrentTextId++;
-      overlay.Semaphore.Release();
+        overlay.OriginalName = originalName ?? string.Empty;
+        overlay.CurrentName = translatedName ?? string.Empty;
+        overlay.CurrentNameId++;
+      }
+      finally
+      {
+        this.TryReleaseOverlaySemaphore(overlay.NameSemaphore);
+      }
+
+      if (!this.TryEnterOverlaySemaphore(overlay.Semaphore))
+      {
+        return;
+      }
+
+      try
+      {
+        if (overlay.IsDisposed)
+        {
+          return;
+        }
+
+        overlay.CurrentText =
+            hasValidText ? translatedText : Resources.WaitingForTranslation;
+        overlay.Display = hasValidText;
+        overlay.CurrentTextId++;
+      }
+      finally
+      {
+        this.TryReleaseOverlaySemaphore(overlay.Semaphore);
+      }
     }
 
     /// <summary>
@@ -71,15 +105,72 @@ namespace Echoglossian
         TranslationOverlay overlay,
         bool clearText = false)
     {
-      overlay.Semaphore.Wait();
-      overlay.Display = false;
-
-      if (clearText)
+      if (overlay == null ||
+          overlay.IsDisposed ||
+          !this.TryEnterOverlaySemaphore(overlay.Semaphore))
       {
-        overlay.CurrentText = string.Empty;
+        return;
       }
 
-      overlay.Semaphore.Release();
+      try
+      {
+        if (overlay.IsDisposed)
+        {
+          return;
+        }
+
+        overlay.Display = false;
+
+        if (clearText)
+        {
+          overlay.CurrentText = string.Empty;
+        }
+      }
+      finally
+      {
+        this.TryReleaseOverlaySemaphore(overlay.Semaphore);
+      }
+    }
+
+    /// <summary>
+    /// Attempts to enter an overlay semaphore without throwing when the overlay
+    /// has already been disposed during plugin unload.
+    /// </summary>
+    /// <param name="semaphore">The overlay semaphore.</param>
+    /// <returns>
+    /// <see langword="true" /> when the semaphore was entered successfully;
+    /// otherwise, <see langword="false" />.
+    /// </returns>
+    private bool TryEnterOverlaySemaphore(SemaphoreSlim semaphore)
+    {
+      try
+      {
+        semaphore.Wait();
+        return true;
+      }
+      catch (ObjectDisposedException)
+      {
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// Releases an overlay semaphore without throwing when it has already been
+    /// disposed during plugin unload.
+    /// </summary>
+    /// <param name="semaphore">The overlay semaphore.</param>
+    private void TryReleaseOverlaySemaphore(SemaphoreSlim semaphore)
+    {
+      try
+      {
+        semaphore.Release();
+      }
+      catch (ObjectDisposedException)
+      {
+      }
+      catch (SemaphoreFullException)
+      {
+      }
     }
 
     /// <summary>

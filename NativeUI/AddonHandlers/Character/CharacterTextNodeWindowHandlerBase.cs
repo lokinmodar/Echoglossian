@@ -113,13 +113,17 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         DbFirstGameWindowPayload targetPayload)
     {
         var valueMap = CharacterCanonicalPayloadHelper.BuildValueMap(
-            sourcePayload.TextNodes,
-            targetPayload.TextNodes);
+            sourcePayload,
+            targetPayload);
         if (valueMap.Count == 0)
         {
             return false;
         }
 
+        var hasCanonicalLookups = this.TryBuildCharacterLookups(
+            out var originalLookup,
+            out var translatedLookup,
+            out _);
         var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
             addon);
         foreach (var nodeAddress in nodeAddresses)
@@ -137,8 +141,19 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             }
 
             var currentText = this.ReadTextNode(textNode);
-            if (!valueMap.TryGetValue(currentText, out var targetText) ||
-                string.Equals(
+            if (!valueMap.TryGetValue(currentText, out var targetText) &&
+                (!hasCanonicalLookups ||
+                 !CharacterCanonicalPayloadHelper.TryResolveCanonicalFallbackTarget(
+                     currentText,
+                     valueMap,
+                     originalLookup,
+                     translatedLookup,
+                     out targetText)))
+            {
+                continue;
+            }
+
+            if (string.Equals(
                     currentText,
                     targetText,
                     StringComparison.Ordinal))
@@ -164,8 +179,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 out _,
                 out _))
         {
-            this.EmitCharacterStatusModeDetail(
-                "Supplemental original payload lookup build failed.");
             return false;
         }
 
@@ -173,8 +186,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             livePayload,
             originalLookup,
             out originalPayload);
-        this.EmitCharacterStatusModeDetail(
-            $"Supplemental original payload result={resolved}; originalLookup={originalLookup.Count}, atkValues={livePayload.AtkValues.Count}, stringArrayValues={livePayload.StringArrayValues.Count}, textNodes={livePayload.TextNodes.Count}");
         return resolved;
     }
 
@@ -190,8 +201,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 out var translatedLookup,
                 out _))
         {
-            this.EmitCharacterStatusModeDetail(
-                "Supplemental translated payload lookup build failed.");
             return false;
         }
 
@@ -199,8 +208,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             originalPayload,
             translatedLookup,
             out translatedPayload);
-        this.EmitCharacterStatusModeDetail(
-            $"Supplemental translated payload result={resolved}; translatedLookup={translatedLookup.Count}, atkValues={originalPayload.AtkValues.Count}, stringArrayValues={originalPayload.StringArrayValues.Count}, textNodes={originalPayload.TextNodes.Count}");
         return resolved;
     }
 
@@ -320,8 +327,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 requireDifference: true);
         }
 
-        this.EmitCharacterStatusModeDetail(
-            $"Character lookup build structuredScanned={structuredRowsScanned}, structuredResolved={structuredRowsResolved}, gameWindowScanned={gameWindowRowsScanned}, gameWindowResolved={gameWindowRowsResolved}, originalLookup={originalLookup.Count}, translatedLookup={translatedLookup.Count}, knownTexts={knownTexts.Count}");
         return translatedLookup.Count > 0;
     }
 

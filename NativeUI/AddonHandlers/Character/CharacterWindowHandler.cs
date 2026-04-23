@@ -13,6 +13,15 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 /// </summary>
 public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
 {
+    private static readonly HashSet<string> StableHeaderTexts =
+    [
+        "Character",
+        "Attributes",
+        "Profile",
+        "Classes/Jobs",
+        "Reputation",
+    ];
+
     /// <summary>
     ///     Initializes a new instance of the
     ///     <see cref="CharacterWindowHandler" /> class.
@@ -40,7 +49,8 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
         string visibleText)
     {
         return base.ShouldCaptureTextNode(textNode, visibleText) ||
-               this.CanCaptureSupplementalCharacterText(visibleText);
+               this.CanCaptureSupplementalCharacterText(visibleText) ||
+               IsStableCharacterHeaderText(visibleText);
     }
 
     /// <inheritdoc />
@@ -95,5 +105,20 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
                this.IsAddonVisible("CharacterStatus") ||
                this.IsAddonVisible("CharacterProfile") ||
                this.IsAddonVisible("CharacterRepute");
+    }
+
+    /// <summary>
+    ///     Determines whether one visible text belongs to the stable root
+    ///     header of the Character window and should therefore be captured
+    ///     even when it is not yet part of the canonical lookup.
+    /// </summary>
+    /// <param name="visibleText">The currently visible text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the text is one stable root-header
+    ///     label; otherwise <see langword="false" />.
+    /// </returns>
+    internal static bool IsStableCharacterHeaderText(string visibleText)
+    {
+        return StableHeaderTexts.Contains(visibleText);
     }
 }
