@@ -47,6 +47,21 @@
                 canonical action-tooltip storage; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindOriginalText(System.String,System.Int32,System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve one canonical original action text by exact
+                translated text from the cached action-tooltip rows.
+            </summary>
+            <param name="lang">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="translatedText">The translated text to reverse.</param>
+            <param name="originalText">The resolved canonical original text.</param>
+            <returns>
+                <see langword="true" /> when one exact canonical original text was
+                found; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.Clear">
             <summary>
                 Clears the in-memory cache.
@@ -66,6 +81,21 @@
                 exact scope; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindOriginalTextInScope(System.String,System.Int32,System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve one canonical original action text from one cached
+                reverse lookup scope.
+            </summary>
+            <param name="lang">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="version">The exact stored game version scope.</param>
+            <param name="translatedText">The translated text to reverse.</param>
+            <param name="originalText">The resolved original text.</param>
+            <returns>
+                <see langword="true" /> when a canonical original text was found in
+                this exact scope; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.BuildTextLookup(System.String,System.Int32,System.String)">
             <summary>
                 Builds one translated-text lookup for a single action-tooltip cache
@@ -76,12 +106,35 @@
             <param name="version">The exact stored game version scope.</param>
             <returns>The translated-text lookup map.</returns>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.BuildReverseTextLookup(System.String,System.Int32,System.String)">
+            <summary>
+                Builds one reverse translated-text lookup for a single
+                action-tooltip cache scope.
+            </summary>
+            <param name="lang">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="version">The exact stored game version scope.</param>
+            <returns>The reverse translated-text lookup map.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryAddLookupValue(System.Collections.Generic.IDictionary{System.String,System.String},System.String,System.String)">
             <summary>
                 Adds one translated-text lookup entry when both texts are usable.
             </summary>
             <param name="lookup">The lookup map to update.</param>
             <param name="originalText">The original text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryAddReverseLookupValue(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.String,System.String)">
+            <summary>
+                Adds one reverse translated-text lookup entry when the translated
+                text maps uniquely back to a single canonical original text.
+            </summary>
+            <param name="lookup">The reverse lookup map to update.</param>
+            <param name="ambiguousKeys">
+                Tracks translated texts that map to multiple originals and must be
+                excluded from reverse recovery.
+            </param>
+            <param name="originalText">The canonical original text.</param>
             <param name="translatedText">The translated text.</param>
         </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.BuildTextLookupScopeKey(System.String,System.Int32,System.String)">
@@ -128,7 +181,7 @@
                 Clears all cached GameWindow entries.
             </summary>
         </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.TryFindMatch(System.String,System.String,System.Int32,System.String,System.String)">
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.TryFindMatch(System.String,System.String,System.Int32,System.String,System.String,System.Nullable{System.UInt32})">
             <summary>
                 Attempts to find a matching GameWindow entry in the in-memory cache.
             </summary>
@@ -136,10 +189,13 @@
             <param name="lang">The translation language code to match.</param>
             <param name="engine">The translation engine ID to match.</param>
             <param name="version">The game version string to match (nullable allowed).</param>
+            <param name="classJobId">
+                The optional class/job identifier to match for job-sensitive windows.
+            </param>
             <param name="originalJson">The serialized original content to match.</param>
             <returns>A matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> if found; otherwise, <see langword="null"/>.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetCandidates(System.String,System.String,System.Int32,System.String)">
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetCandidates(System.String,System.String,System.Int32,System.String,System.Nullable{System.UInt32})">
             <summary>
                 Returns cached candidates for one addon lookup scope so runtimes can
                 recover original payloads from already-translated live UI.
@@ -148,6 +204,9 @@
             <param name="lang">The translation language code to match.</param>
             <param name="engine">The translation engine ID to match.</param>
             <param name="version">The game version string to match.</param>
+            <param name="classJobId">
+                The optional class/job identifier to match for job-sensitive windows.
+            </param>
             <returns>The matching cached rows.</returns>
         </member>
         <member name="T:Echoglossian.Cache.ItemTooltipCacheManager">
@@ -3043,7 +3102,8 @@
         <member name="M:Echoglossian.GameWindowPersistenceHelper.InsertGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Action{Echoglossian.EFCoreSqlite.Models.GameWindow})">
             <summary>
                 Inserts or updates a <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row using the DB-first
-                lookup semantics for addon, language, engine, version, and original payload.
+                lookup semantics for addon, optional class/job scope, language,
+                engine, version, and original payload.
             </summary>
             <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
             <param name="gameWindow">The game window payload to persist.</param>
@@ -3712,6 +3772,18 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddTranslationFailureOrigins.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddGameWindowClassJobId">
+            <summary>
+                Adds an optional class/job discriminator to persisted GameWindow
+                rows so job-sensitive addons can scope their canonical payloads.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddGameWindowClassJobId.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddGameWindowClassJobId.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
                 Represents one canonical DB-first action tooltip payload.
@@ -3915,7 +3987,7 @@
                 <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> entity.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.UInt32})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> class.
             </summary>
@@ -3931,11 +4003,21 @@
             <param name="gameVersion">The version of the game.</param>
             <param name="createdDate">The date the record was created.</param>
             <param name="updatedDate">The date the record was last updated.</param>
+            <param name="classJobId">
+                The class/job identifier associated with this window payload when the
+                addon content varies by the active job.
+            </param>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.GameWindow.WindowAddonName">
             <summary>
                 Gets or sets the name of the window addon or unique key that identifies
                 this entity context.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.GameWindow.ClassJobId">
+            <summary>
+                Gets or sets the class/job identifier associated with this window
+                payload when the addon content varies by the active job.
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor">
@@ -5804,13 +5886,51 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldReuseCompatiblePayloads">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetPersistedGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetLookupGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
+            <summary>
+                Normalizes one resolved translated payload by merging canonical
+                ActionMenu lookups for the provided class/job scope.
+            </summary>
+            <param name="originalPayload">The original-facing payload.</param>
+            <param name="translatedPayload">The translated payload candidate.</param>
+            <param name="classJobId">The current class/job identifier.</param>
+            <param name="classJobName">The current class/job name.</param>
+            <returns>The normalized translated payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAcceptResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.OnCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
             <summary>
                 Translates one integer-keyed payload map by exact lookup against the
                 canonical action-tooltip cache.
@@ -5824,7 +5944,7 @@
             </param>
             <returns>The translated map.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
             <summary>
                 Translates one text-node payload map by exact lookup against the
                 canonical action-tooltip cache.
@@ -5838,7 +5958,7 @@
             </param>
             <returns>The translated map.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedText(System.String,System.String,System.Int32,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Resolves one translated action text from canonical tooltip storage,
                 falling back to the original text when no exact translation exists.
@@ -5848,6 +5968,546 @@
             <param name="engine">The translation engine identifier.</param>
             <param name="gameVersion">The current game version.</param>
             <returns>The translated text, or the original text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveOriginalText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Resolves one canonical original action-menu text from either the
+                action-tooltip cache or previously persisted ActionMenu rows.
+            </summary>
+            <param name="visibleText">The currently visible text.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">
+                The reverse lookup built from persisted ActionMenu rows.
+            </param>
+            <returns>The canonical original text, or the visible text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Merges one resolved translated payload with canonical
+                action-tooltip or persisted ActionMenu translations so stale or
+                malformed stored rows can be repaired before apply.
+            </summary>
+            <param name="originalPayload">The original-facing payload.</param>
+            <param name="resolvedTranslatedPayload">
+                The resolved translated payload from cache or DB.
+            </param>
+            <param name="targetLanguage">The active target language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">
+                The original-to-translated fallback lookup built from persisted
+                ActionMenu rows.
+            </param>
+            <returns>The merged translated payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAcceptActionMenuResolvedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether one resolved translated ActionMenu payload is
+                complete enough to use immediately or whether the addon should fall
+                back to the async translation path instead.
+            </summary>
+            <param name="originalPayload">The original-facing payload.</param>
+            <param name="translatedPayload">The translated payload candidate.</param>
+            <returns>
+                <see langword="true" /> when the payload is acceptable;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildStablePayloadSignature(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Builds one stable ActionMenu page signature from short, meaningful
+                visible labels while excluding volatile metadata and long
+                descriptive text.
+            </summary>
+            <param name="payload">The payload to summarize.</param>
+            <returns>The stable page signature.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CountMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Counts one payload's distinct short texts that are still not
+                covered by canonical ActionMenu sources.
+            </summary>
+            <param name="payload">The original-facing payload.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">
+                The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
+            </param>
+            <returns>The count of unresolved short texts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.PreserveSourceLevelSeparator(System.String,System.String)">
+            <summary>
+                Preserves the separator that precedes one trailing level token in
+                the source text when the resolved target text carries the same
+                trailing level structure but collapsed spacing.
+            </summary>
+            <param name="sourceText">The source text whose separator should win.</param>
+            <param name="targetText">The resolved target text.</param>
+            <returns>
+                The target text with the source separator restored when applicable;
+                otherwise the original target text.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareTranslatedText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
+            <summary>
+                Tries to resolve one translated text by translating only the
+                visible action name when the source text ends with a trailing level
+                token.
+            </summary>
+            <param name="originalText">The original visible text.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">The persisted fallback lookup.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>
+                <see langword="true" /> when a translated text was resolved;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareOriginalText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
+            <summary>
+                Tries to resolve one canonical original text by reversing only the
+                visible action name when the translated text ends with a trailing
+                level token.
+            </summary>
+            <param name="visibleText">The visible translated text.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">The persisted reverse lookup.</param>
+            <param name="originalText">The resolved canonical original text.</param>
+            <returns>
+                <see langword="true" /> when an original text was resolved;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedBaseText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Resolves one translated text without applying any level-token
+                decomposition.
+            </summary>
+            <param name="originalText">The original text.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">The persisted fallback lookup.</param>
+            <returns>The resolved translated text, or the original text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveOriginalBaseText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Resolves one canonical original text without applying any
+                level-token decomposition.
+            </summary>
+            <param name="visibleText">The translated text.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">The persisted reverse lookup.</param>
+            <returns>The resolved original text, or the visible text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryParseTrailingLevelToken(System.String,System.String@,System.String@,System.String@,System.String@)">
+            <summary>
+                Tries to parse one text into a visible prefix, separator, and
+                trailing level token.
+            </summary>
+            <param name="text">The text to parse.</param>
+            <param name="prefix">The visible text before the level token.</param>
+            <param name="separator">The separator before the level token.</param>
+            <param name="levelLabel">The level label prefix.</param>
+            <param name="levelNumber">The trailing level number.</param>
+            <returns>
+                <see langword="true" /> when the text contains one trailing level
+                token; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeTranslatedLevelToken(System.String,System.String,System.String)">
+            <summary>
+                Normalizes one translated level token for the target language.
+            </summary>
+            <param name="levelLabel">The source level label.</param>
+            <param name="levelNumber">The trailing level number.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <returns>The normalized translated level token.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeOriginalLevelToken(System.String,System.String)">
+            <summary>
+                Normalizes one translated level token back to the canonical English
+                source token.
+            </summary>
+            <param name="levelLabel">The visible translated level label.</param>
+            <param name="levelNumber">The trailing level number.</param>
+            <returns>The canonical English level token.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedLevelSeparator(System.String)">
+            <summary>
+                Normalizes one resolved level separator so malformed payloads that
+                collapsed the separator can still be rewritten into readable text.
+            </summary>
+            <param name="separator">The captured separator.</param>
+            <returns>The separator to use in one rebuilt level-aware label.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeTranslatedIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Merges one integer-keyed translated payload map with canonical
+                translations derived from repo-local sources.
+            </summary>
+            <param name="originalValues">The original values.</param>
+            <param name="resolvedTranslatedValues">The resolved translated values.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">The persisted fallback lookup.</param>
+            <returns>The merged translated map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeTranslatedStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Merges one text-node translated payload map with canonical
+                translations derived from repo-local sources.
+            </summary>
+            <param name="originalValues">The original values.</param>
+            <param name="resolvedTranslatedValues">The resolved translated values.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">The persisted fallback lookup.</param>
+            <returns>The merged translated map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.SelectResolvedTranslatedValue(System.String,System.String,System.String)">
+            <summary>
+                Chooses the best translated value among the currently resolved text
+                and one canonical candidate.
+            </summary>
+            <param name="originalText">The original text.</param>
+            <param name="resolvedText">The resolved translated text.</param>
+            <param name="canonicalText">The canonical translated text.</param>
+            <returns>The translated value to keep.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AccumulateCoverage``1(System.Collections.Generic.IReadOnlyDictionary{``0,System.String},System.Collections.Generic.IReadOnlyDictionary{``0,System.String},System.Func{``0,System.String,System.Boolean},System.Int32@,System.Int32@)">
+            <summary>
+                Accumulates translation coverage metrics for one payload map.
+            </summary>
+            <typeparam name="TKey">The payload key type.</typeparam>
+            <param name="originalValues">The original values.</param>
+            <param name="translatedValues">The translated values.</param>
+            <param name="shouldCount">The predicate that marks content entries.</param>
+            <param name="contentEntryCount">The running content-entry count.</param>
+            <param name="untranslatedContentCount">
+                The running untranslated content-entry count.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ContainsLetters(System.String)">
+            <summary>
+                Gets whether one candidate ActionMenu content text contains letters
+                and therefore should count towards translation coverage.
+            </summary>
+            <param name="text">The text to inspect.</param>
+            <returns>
+                <see langword="true" /> when the text contains letters; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAllowNewPayloadPersistence(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether the current payload is stable and novel enough to
+                justify persisting one new canonical ActionMenu row.
+            </summary>
+            <param name="originalPayload">The current original-facing payload.</param>
+            <returns>
+                <see langword="true" /> when one new row should be persisted;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAllowNewPayloadTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether the current payload is stable and unresolved
+                enough to justify one new remote translation request.
+            </summary>
+            <param name="originalPayload">The current original-facing payload.</param>
+            <returns>
+                <see langword="true" /> when one remote translation may be queued;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasSufficientStableSignatureCoverage(System.String)">
+            <summary>
+                Determines whether one stable ActionMenu page signature contains
+                enough short labels to represent a meaningful page shape.
+            </summary>
+            <param name="stablePayloadSignature">The page signature to inspect.</param>
+            <returns>
+                <see langword="true" /> when the signature covers enough stable
+                entries; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether the current payload still contains any short
+                texts that are not already covered by canonical action or menu
+                sources.
+            </summary>
+            <param name="originalPayload">The current original-facing payload.</param>
+            <returns>
+                <see langword="true" /> when unresolved short texts remain;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
+            <summary>
+                Determines whether the current payload still contains any short
+                texts that are not already covered by canonical action or menu
+                sources for the provided class/job scope.
+            </summary>
+            <param name="originalPayload">The current original-facing payload.</param>
+            <param name="classJobId">The current class/job identifier.</param>
+            <param name="classJobName">The current class/job name.</param>
+            <returns>
+                <see langword="true" /> when unresolved short texts remain;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasPersistedStableSignature(System.String)">
+            <summary>
+                Determines whether one stable ActionMenu page signature already
+                exists in persisted ActionMenu rows for the current scope.
+            </summary>
+            <param name="stablePayloadSignature">The page signature to inspect.</param>
+            <returns>
+                <see langword="true" /> when a persisted row already covers the
+                same stable page shape; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasPersistedStableSignature(System.String,System.Nullable{System.UInt32})">
+            <summary>
+                Determines whether one stable ActionMenu page signature already
+                exists in persisted ActionMenu rows for the provided class/job
+                scope.
+            </summary>
+            <param name="stablePayloadSignature">The page signature to inspect.</param>
+            <param name="classJobId">The current class/job identifier.</param>
+            <returns>
+                <see langword="true" /> when a persisted row already covers the
+                same stable page shape; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.EnumerateStableSignatureTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Enumerates one payload's short, stable texts that define an
+                ActionMenu page shape and should participate in row dedupe.
+            </summary>
+            <param name="payload">The payload to inspect.</param>
+            <returns>The stable short texts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldIncludeStableSignatureText(System.Int32,System.String)">
+            <summary>
+                Determines whether one numeric-keyed ActionMenu value should
+                participate in stable page dedupe.
+            </summary>
+            <param name="key">The numeric payload key.</param>
+            <param name="text">The visible text.</param>
+            <returns>
+                <see langword="true" /> when the text should participate in stable
+                dedupe; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldIncludeStableSignatureText(System.String)">
+            <summary>
+                Determines whether one text should participate in stable ActionMenu
+                page dedupe.
+            </summary>
+            <param name="text">The visible text.</param>
+            <returns>
+                <see langword="true" /> when the text is short and stable enough to
+                represent page identity; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeStableSignatureText(System.String)">
+            <summary>
+                Normalizes one short ActionMenu text for stable page dedupe by
+                collapsing whitespace and trimming noise.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalActionMenuText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Determines whether one ActionMenu text is already covered by either
+                canonical action-tooltip storage or persisted window-chrome
+                lookups.
+            </summary>
+            <param name="text">The text to inspect.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">
+                The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
+            </param>
+            <returns>
+                <see langword="true" /> when the text is already covered by
+                canonical sources; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalizeIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
+            <summary>
+                Canonicalizes one integer-keyed payload map back to original text.
+            </summary>
+            <param name="sourceValues">The currently visible values.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">
+                The reverse lookup built from persisted ActionMenu rows.
+            </param>
+            <param name="changed">
+                Receives whether any canonical original value differs from the live
+                text.
+            </param>
+            <returns>The canonicalized original-facing map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalizeStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
+            <summary>
+                Canonicalizes one text-node payload map back to original text.
+            </summary>
+            <param name="sourceValues">The currently visible values.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="engine">The translation engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="fallbackLookup">
+                The reverse lookup built from persisted ActionMenu rows.
+            </param>
+            <param name="changed">
+                Receives whether any canonical original value differs from the live
+                text.
+            </param>
+            <returns>The canonicalized original-facing map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildPersistedActionMenuLookups(System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Nullable{System.UInt32},System.String)">
+            <summary>
+                Builds forward and reverse lookups from persisted ActionMenu rows so
+                previously translated window chrome can be reused without calling
+                the remote translator again.
+            </summary>
+            <param name="originalLookup">
+                Receives the translated-to-original reverse lookup.
+            </param>
+            <param name="translatedLookup">
+                Receives the original-to-translated forward lookup.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendPersistedWindowLookups(System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.Nullable{System.UInt32},System.String)">
+            <summary>
+                Appends one persisted window's forward and reverse text pairs into
+                the ActionMenu fallback lookups.
+            </summary>
+            <param name="windowTitle">The persisted window title to read.</param>
+            <param name="translatedLookup">The original-to-translated lookup.</param>
+            <param name="originalLookup">The translated-to-original lookup.</param>
+            <param name="ambiguousOriginalKeys">
+                Tracks translated texts that map to multiple originals.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetPayloadClassJobName(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Gets one normalized class or job identifier from the payload when
+                the ActionMenu currently exposes that label.
+            </summary>
+            <param name="payload">The payload to inspect.</param>
+            <returns>The normalized class or job text, if any.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryGetPayloadClassJobName(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String@)">
+            <summary>
+                Tries to resolve one normalized class or job identifier from the
+                payload.
+            </summary>
+            <param name="payload">The payload to inspect.</param>
+            <param name="classJobName">
+                Receives the normalized class or job text.
+            </param>
+            <returns>
+                <see langword="true" /> when one class or job text was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetCurrentClassJobId">
+            <summary>
+                Gets the current class/job identifier from player state when
+                ActionMenu content should be scoped by the active job.
+            </summary>
+            <returns>
+                The current class/job identifier, or <see langword="null" /> when
+                no active job could be resolved.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.PayloadMatchesClassJob(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String)">
+            <summary>
+                Determines whether one persisted ActionMenu row belongs to the same
+                class or job as the current payload by comparing both original and
+                translated class-job labels.
+            </summary>
+            <param name="rowOriginalPayload">The persisted original payload.</param>
+            <param name="rowTranslatedPayload">The persisted translated payload.</param>
+            <param name="expectedClassJobName">
+                The current normalized class or job identifier.
+            </param>
+            <returns>
+                <see langword="true" /> when the row belongs to the same class or
+                job; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+            <summary>
+                Appends one numeric payload map pair into the forward and reverse
+                ActionMenu lookup maps.
+            </summary>
+            <param name="originalValues">The original values.</param>
+            <param name="translatedValues">The translated values.</param>
+            <param name="translatedLookup">The original-to-translated lookup.</param>
+            <param name="originalLookup">The translated-to-original lookup.</param>
+            <param name="ambiguousOriginalKeys">
+                Tracks translated texts that map to multiple originals.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+            <summary>
+                Appends one text-node payload map pair into the forward and reverse
+                ActionMenu lookup maps.
+            </summary>
+            <param name="originalValues">The original values.</param>
+            <param name="translatedValues">The translated values.</param>
+            <param name="translatedLookup">The original-to-translated lookup.</param>
+            <param name="originalLookup">The translated-to-original lookup.</param>
+            <param name="ambiguousOriginalKeys">
+                Tracks translated texts that map to multiple originals.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupEntry(System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+            <summary>
+                Adds one original/translated text pair to the forward and reverse
+                ActionMenu lookup maps.
+            </summary>
+            <param name="originalText">The original text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="translatedLookup">The original-to-translated lookup.</param>
+            <param name="originalLookup">The translated-to-original lookup.</param>
+            <param name="ambiguousOriginalKeys">
+                Tracks translated texts that map to multiple originals.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupPair(System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+            <summary>
+                Adds one original/translated text pair to the forward and reverse
+                ActionMenu lookup maps without additional normalization.
+            </summary>
+            <param name="originalText">The original text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="translatedLookup">The original-to-translated lookup.</param>
+            <param name="originalLookup">The translated-to-original lookup.</param>
+            <param name="ambiguousOriginalKeys">
+                Tracks translated texts that map to multiple originals.
+            </param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper">
             <summary>
@@ -6518,6 +7178,29 @@
                 label; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.AppendStableHeaderFallbackTranslations(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+            <summary>
+                Appends one local fallback translation set for the stable root
+                Character header labels so the window title and tab labels can
+                still translate even when the current DB-first canonical payloads
+                do not include them.
+            </summary>
+            <param name="originalLookup">The translated-to-original lookup.</param>
+            <param name="translatedLookup">The original-to-translated lookup.</param>
+            <param name="knownTexts">The known-text set to extend.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(System.String,System.String@)">
+            <summary>
+                Tries to resolve one local fallback translation for the stable root
+                Character header labels.
+            </summary>
+            <param name="originalText">The original English header text.</param>
+            <param name="translatedText">The translated fallback text.</param>
+            <returns>
+                <see langword="true" /> when a local fallback exists; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler">
             <summary>
                 Provides a DB-first runtime for addon-local surfaces backed by
@@ -6540,6 +7223,12 @@
             <summary>
                 Gets the active plugin configuration for derived handlers that need
                 narrow addon-local policy decisions.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.HandlerTranslationService">
+            <summary>
+                Gets the shared translation service so addon-local async translation
+                hooks can reuse the canonical pipeline without recreating services.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.Config,System.Boolean},System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType},System.Func{Echoglossian.Config,Echoglossian.JournalTranslationDisplayMode})">
@@ -6669,6 +7358,38 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Normalizes one resolved translated payload before it is applied to
+                the live addon surface.
+            </summary>
+            <param name="originalPayload">
+                The original-facing payload currently visible in the addon.
+            </param>
+            <param name="translatedPayload">
+                The translated payload that was resolved from cache, DB, or one
+                addon-local supplemental source.
+            </param>
+            <returns>
+                The translated payload that should be applied for this addon.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldAcceptResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether one resolved translated payload is complete
+                enough to be used for apply/persist in the current addon.
+            </summary>
+            <param name="originalPayload">
+                The original-facing payload currently visible in the addon.
+            </param>
+            <param name="translatedPayload">
+                The translated payload that would be applied.
+            </param>
+            <returns>
+                <see langword="true" /> when the resolved translated payload should
+                be accepted; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether one newly observed payload should be sent to the
@@ -6681,6 +7402,32 @@
             <returns>
                 <see langword="true" /> when background translation may be queued;
                 otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.GetPersistedGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Resolves the persisted class/job discriminator for one canonical
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row when the addon content varies by the
+                active class or job.
+            </summary>
+            <param name="originalPayload">The original payload being persisted.</param>
+            <param name="translatedPayload">The translated payload being persisted.</param>
+            <returns>
+                The class/job identifier to persist for this payload, or
+                <see langword="null" /> when the addon does not require job-aware
+                persistence.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.GetLookupGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Resolves the class/job discriminator that should scope persisted
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> lookups for one live payload.
+            </summary>
+            <param name="payload">The live or original-facing payload.</param>
+            <returns>
+                The class/job identifier that should scope persisted lookup for the
+                payload, or <see langword="null" /> when the addon does not
+                require job-aware lookup.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange">
@@ -6968,6 +7715,29 @@
             <param name="originalPayload">The original payload.</param>
             <param name="translatedPayload">The translated payload.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
+            <summary>
+                Persists one resolved original/translated payload pair as a
+                canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row using an explicit
+                class/job discriminator captured by the caller.
+            </summary>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The translated payload.</param>
+            <param name="classJobId">
+                The class/job identifier to persist with the row.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Translates and persists one non-structured
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> payload.
+            </summary>
+            <param name="originalPayload">The original payload to translate.</param>
+            <returns>
+                A task whose result is <see langword="true" /> when translation
+                completed successfully; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryRecoverGameWindowOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
                 Tries to recover one canonical original payload from persisted
@@ -6980,7 +7750,7 @@
                 the live payload.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryFindGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryFindGameWindow(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.EFCoreSqlite.Models.GameWindow@)">
             <summary>
                 Tries to find a matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> in cache or DB.
             </summary>
@@ -7092,6 +7862,14 @@
                 Reads the visible text of a live text node.
             </summary>
             <param name="textNode">The text node to read.</param>
+            <returns>The visible text, or an empty string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ReadAtkValueText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue@)">
+            <summary>
+                Reads the visible text of one live ATK value when it currently
+                stores a string.
+            </summary>
+            <param name="value">The ATK value to read.</param>
             <returns>The visible text, or an empty string.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.IsEffectivelyVisible(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
@@ -12619,10 +13397,171 @@
                 Gets an empty projection.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper">
+            <summary>
+                Provides a narrow, reusable helper for investigation telemetry that
+                should remain silent unless a caller explicitly opts in.
+            </summary>
+            <remarks>
+                This helper is intentionally small: it only handles per-category
+                throttling keyed by one stable signature and standardized log prefixes.
+                It does not decide which state is worth observing or when diagnostics
+                should be enabled for one feature.
+            </remarks>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.#ctor(System.String,System.TimeSpan)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper" /> class.
+            </summary>
+            <param name="scope">
+                The stable scope name that prefixes emitted log lines.
+            </param>
+            <param name="defaultCooldown">
+                The default suppression interval applied when callers do not supply
+                one explicitly.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.Debug(System.String,System.String,System.String,System.Nullable{System.TimeSpan})">
+            <summary>
+                Emits one throttled debug log line for the specified category.
+            </summary>
+            <param name="category">The logical diagnostic category.</param>
+            <param name="message">The message to log.</param>
+            <param name="signature">
+                The stable signature used for suppression. When omitted, the
+                message itself becomes the signature.
+            </param>
+            <param name="cooldown">
+                The optional suppression interval for repeated identical
+                signatures.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.Information(System.String,System.String,System.String,System.Nullable{System.TimeSpan})">
+            <summary>
+                Emits one throttled information log line for the specified
+                category.
+            </summary>
+            <param name="category">The logical diagnostic category.</param>
+            <param name="message">The message to log.</param>
+            <param name="signature">
+                The stable signature used for suppression. When omitted, the
+                message itself becomes the signature.
+            </param>
+            <param name="cooldown">
+                The optional suppression interval for repeated identical
+                signatures.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.Warning(System.String,System.String,System.String,System.Nullable{System.TimeSpan})">
+            <summary>
+                Emits one throttled warning log line for the specified category.
+            </summary>
+            <param name="category">The logical diagnostic category.</param>
+            <param name="message">The message to log.</param>
+            <param name="signature">
+                The stable signature used for suppression. When omitted, the
+                message itself becomes the signature.
+            </param>
+            <param name="cooldown">
+                The optional suppression interval for repeated identical
+                signatures.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.TryBeginEmit(System.String,System.String,System.DateTime,System.Nullable{System.TimeSpan})">
+            <summary>
+                Determines whether one signature may be emitted now for the
+                specified category and records the new suppression window when it
+                may.
+            </summary>
+            <param name="category">The logical diagnostic category.</param>
+            <param name="signature">The stable signature to compare.</param>
+            <param name="observedAtUtc">The current UTC timestamp.</param>
+            <param name="cooldown">
+                The optional suppression interval for repeated identical
+                signatures.
+            </param>
+            <returns>
+                <see langword="true" /> when the caller may emit the line now;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.Reset(System.String)">
+            <summary>
+                Clears tracked suppression state for one category or for all
+                categories when none is specified.
+            </summary>
+            <param name="category">
+                The optional category to clear. When omitted, all categories are
+                reset.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.Emit(System.String,System.String,System.String,System.Nullable{System.TimeSpan},System.Action{System.String})">
+            <summary>
+                Emits one throttled log line through the provided sink.
+            </summary>
+            <param name="category">The logical diagnostic category.</param>
+            <param name="message">The message to log.</param>
+            <param name="signature">
+                The stable signature used for suppression.
+            </param>
+            <param name="cooldown">
+                The optional suppression interval for repeated identical
+                signatures.
+            </param>
+            <param name="writer">The log sink to use.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.GetEffectiveCooldown(System.Nullable{System.TimeSpan})">
+            <summary>
+                Resolves the effective cooldown for one telemetry emission.
+            </summary>
+            <param name="cooldown">The optional caller-supplied cooldown.</param>
+            <returns>The effective cooldown to apply.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.TelemetryEmissionState">
+            <summary>
+                Stores the last emitted signature and the next allowed timestamp for
+                one diagnostic category.
+            </summary>
+            <param name="Signature">The last emitted signature.</param>
+            <param name="NextAllowedUtc">The next UTC timestamp that may emit it.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.TelemetryEmissionState.#ctor(System.String,System.DateTime)">
+            <summary>
+                Stores the last emitted signature and the next allowed timestamp for
+                one diagnostic category.
+            </summary>
+            <param name="Signature">The last emitted signature.</param>
+            <param name="NextAllowedUtc">The next UTC timestamp that may emit it.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.TelemetryEmissionState.Signature">
+            <summary>The last emitted signature.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.TelemetryEmissionState.NextAllowedUtc">
+            <summary>The next UTC timestamp that may emit it.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper">
             <summary>
                 Helper for performing async translation logic outside unsafe context.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslatePayloadAsync(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.String,Echoglossian.Translators.TranslationService)">
+            <summary>
+            Performs async translation for one DB-first payload without persisting it.
+            </summary>
+            <param name="atkValues">The ATK values to translate.</param>
+            <param name="stringArray">The StringArrayData values to translate.</param>
+            <param name="textNodes">The text-node values to translate.</param>
+            <param name="originalAtkSnapshot">The original ATK snapshot.</param>
+            <param name="originalArraySnapshot">The original StringArray snapshot.</param>
+            <param name="originalTextNodeSnapshot">The original text-node snapshot.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <param name="service">The translation service.</param>
+            <returns>
+            One translated payload when coverage is complete; otherwise
+            <see langword="null" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.PerformTranslationAndSaveAsync``1(System.String,System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.Int32,System.String},System.Collections.Generic.Dictionary{System.String,System.String},Echoglossian.Config,Echoglossian.Translators.TranslationService)">
             <summary>
