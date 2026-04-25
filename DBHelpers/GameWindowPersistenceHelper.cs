@@ -15,7 +15,8 @@ public static class GameWindowPersistenceHelper
 {
     /// <summary>
     ///     Inserts or updates a <see cref="GameWindow" /> row using the DB-first
-    ///     lookup semantics for addon, language, engine, version, and original payload.
+    ///     lookup semantics for addon, optional class/job scope, language,
+    ///     engine, version, and original payload.
     /// </summary>
     /// <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
     /// <param name="gameWindow">The game window payload to persist.</param>
@@ -44,6 +45,7 @@ public static class GameWindowPersistenceHelper
                     RuntimeLanguageHelper.LanguagesMatch(
                         g.TranslationLang,
                         gameWindow.TranslationLang) &&
+                    g.ClassJobId == gameWindow.ClassJobId &&
                     g.TranslationEngine == gameWindow.TranslationEngine &&
                     GameVersionLookupHelper.MatchesStoredVersion(
                         g.GameVersion,

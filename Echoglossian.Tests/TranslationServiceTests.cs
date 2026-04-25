@@ -124,7 +124,7 @@ public class TranslationServiceTests
 
         var result = service.Translate("hello", "English", "pt");
 
-        Assert.Equal(string.Empty, result);
+        Assert.Equal("hello", result);
         Assert.Equal(0, translator.SyncCalls);
     }
 
@@ -188,7 +188,7 @@ public class TranslationServiceTests
 
         var result = service.Translate("hello", "English", "pt");
 
-        Assert.Equal(string.Empty, result);
+        Assert.Equal("hello", result);
         Assert.Equal("hello", recordedText);
         Assert.Equal("en", recordedSource);
         Assert.Equal("pt-BR", recordedTarget);
@@ -221,8 +221,36 @@ public class TranslationServiceTests
 
         var result = await service.TranslateAsync("...hello", "en", "pt-BR");
 
-        Assert.Equal("...", result);
+        Assert.Equal("...hello", result);
         Assert.Equal("hello", recordedText);
+    }
+
+    /// <summary>
+    ///     Ensures a known failed request keeps the sanitized original text
+    ///     instead of collapsing to an empty string.
+    /// </summary>
+    [Fact]
+    public void Translate_KnownFailedRequest_ReturnsSanitizedOriginalText()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "should-not-be-used",
+        };
+
+        var service = new TranslationService(
+            text => $"clean:{text}",
+            translator,
+            translationEngine: 8,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+                text == "clean:hello" &&
+                source == "en" &&
+                target == "pt-BR" &&
+                engine == 8);
+
+        var result = service.Translate("hello", "English", "pt");
+
+        Assert.Equal("clean:hello", result);
+        Assert.Equal(0, translator.SyncCalls);
     }
 
     /// <summary>

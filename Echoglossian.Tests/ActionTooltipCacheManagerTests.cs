@@ -144,4 +144,93 @@ public class ActionTooltipCacheManagerTests
             ActionTooltipCacheManager.Clear();
         }
     }
+
+    /// <summary>
+    ///     Ensures reverse lookup resolves a canonical original text from an
+    ///     exact translated action name.
+    /// </summary>
+    [Fact]
+    public void TryFindOriginalText_ResolvesTranslatedActionName()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 1,
+                ActionId = 16013,
+                ActionName = "Flourish",
+                TranslatedActionName = "Florescer",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-flourish",
+            });
+
+            var found = ActionTooltipCacheManager.TryFindOriginalText(
+                "pt-BR",
+                0,
+                "7.3",
+                "Florescer",
+                out var originalText);
+
+            Assert.True(found);
+            Assert.Equal("Flourish", originalText);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures ambiguous reverse translations are excluded instead of
+    ///     choosing an arbitrary original text.
+    /// </summary>
+    [Fact]
+    public void TryFindOriginalText_ReturnsFalseForAmbiguousReverseLookup()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 1,
+                ActionId = 16013,
+                ActionName = "Flourish",
+                TranslatedActionName = "Florescer",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-flourish",
+            });
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 2,
+                ActionId = 16014,
+                ActionName = "Bloom",
+                TranslatedActionName = "Florescer",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-bloom",
+            });
+
+            var found = ActionTooltipCacheManager.TryFindOriginalText(
+                "pt-BR",
+                0,
+                "7.3",
+                "Florescer",
+                out var originalText);
+
+            Assert.False(found);
+            Assert.Equal(string.Empty, originalText);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
 }

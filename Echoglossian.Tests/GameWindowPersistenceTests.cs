@@ -264,6 +264,131 @@ public class GameWindowPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures the same payload can coexist for different class/job
+    ///     scopes without one row overwriting the other.
+    /// </summary>
+    [Fact]
+    public void InsertGameWindow_PreservesDistinctClassJobScopedVariants()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalJson = "{\"atkValues\":{\"17\":\"Peloton\"}}";
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"17\":\"Pelotão\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow,
+                classJobId: 38));
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"17\":\"Pelotão\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow,
+                classJobId: 19));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var rows = validationContext.GameWindow
+                .Where(window =>
+                    window.WindowAddonName == "ActionMenu" &&
+                    window.OriginalWindowStrings == originalJson)
+                .OrderBy(window => window.ClassJobId)
+                .ToList();
+
+            Assert.Equal(2, rows.Count);
+            Assert.Equal<uint?>(19, rows[0].ClassJobId);
+            Assert.Equal<uint?>(38, rows[1].ClassJobId);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures one class/job-scoped row is updated in place when the
+    ///     payload and class/job id both match.
+    /// </summary>
+    [Fact]
+    public void InsertGameWindow_UpdatesExactClassJobScopedMatch_InPlace()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalJson = "{\"atkValues\":{\"17\":\"Peloton\"}}";
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"17\":\"Pelotão\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow,
+                classJobId: 38));
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"17\":\"Peloton\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow,
+                classJobId: 38));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var rows = validationContext.GameWindow
+                .Where(window =>
+                    window.WindowAddonName == "ActionMenu" &&
+                    window.OriginalWindowStrings == originalJson)
+                .ToList();
+
+            var row = Assert.Single(rows);
+            Assert.Equal<uint?>(38, row.ClassJobId);
+            Assert.Equal(
+                "{\"atkValues\":{\"17\":\"Peloton\"}}",
+                row.TranslatedWindowStrings);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Deletes a temporary test directory when possible.
     /// </summary>
     /// <param name="path">The path to delete.</param>

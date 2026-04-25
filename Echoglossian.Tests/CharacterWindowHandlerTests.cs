@@ -37,4 +37,27 @@ public class CharacterWindowHandlerTests
 
         Assert.Equal(expected, actual);
     }
+
+    /// <summary>
+    ///     Ensures the root Character header labels have local fallback
+    ///     translations so the window title and tab labels remain translatable
+    ///     even when the DB-first canonical rows omit them.
+    /// </summary>
+    [Theory]
+    [InlineData("Character", "Personagem")]
+    [InlineData("Attributes", "Atributos")]
+    [InlineData("Profile", "Perfil")]
+    [InlineData("Classes/Jobs", "Classes/Profissões")]
+    [InlineData("Reputation", "Reputação")]
+    public void TryGetStableHeaderFallbackTranslation_ReturnsExpectedValue(
+        string originalText,
+        string expectedTranslation)
+    {
+        var found = CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(
+            originalText,
+            out var translatedText);
+
+        Assert.True(found);
+        Assert.Equal(expectedTranslation, translatedText);
+    }
 }

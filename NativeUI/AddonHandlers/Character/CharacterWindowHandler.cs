@@ -21,6 +21,16 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
         "Classes/Jobs",
         "Reputation",
     ];
+    private static readonly IReadOnlyDictionary<string, string>
+        StableHeaderFallbackTranslations = new Dictionary<string, string>(
+            StringComparer.Ordinal)
+        {
+            ["Character"] = "Personagem",
+            ["Attributes"] = "Atributos",
+            ["Profile"] = "Perfil",
+            ["Classes/Jobs"] = "Classes/Profissões",
+            ["Reputation"] = "Reputação",
+        };
 
     /// <summary>
     ///     Initializes a new instance of the
@@ -120,5 +130,56 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     internal static bool IsStableCharacterHeaderText(string visibleText)
     {
         return StableHeaderTexts.Contains(visibleText);
+    }
+
+    /// <summary>
+    ///     Appends one local fallback translation set for the stable root
+    ///     Character header labels so the window title and tab labels can
+    ///     still translate even when the current DB-first canonical payloads
+    ///     do not include them.
+    /// </summary>
+    /// <param name="originalLookup">The translated-to-original lookup.</param>
+    /// <param name="translatedLookup">The original-to-translated lookup.</param>
+    /// <param name="knownTexts">The known-text set to extend.</param>
+    internal static void AppendStableHeaderFallbackTranslations(
+        IDictionary<string, string> originalLookup,
+        IDictionary<string, string> translatedLookup,
+        ISet<string> knownTexts)
+    {
+        foreach (var (originalText, translatedText) in
+                 StableHeaderFallbackTranslations)
+        {
+            if (!translatedLookup.ContainsKey(originalText))
+            {
+                translatedLookup[originalText] = translatedText;
+            }
+
+            if (!originalLookup.ContainsKey(translatedText))
+            {
+                originalLookup[translatedText] = originalText;
+            }
+
+            knownTexts.Add(originalText);
+            knownTexts.Add(translatedText);
+        }
+    }
+
+    /// <summary>
+    ///     Tries to resolve one local fallback translation for the stable root
+    ///     Character header labels.
+    /// </summary>
+    /// <param name="originalText">The original English header text.</param>
+    /// <param name="translatedText">The translated fallback text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a local fallback exists; otherwise
+    ///     <see langword="false" />.
+    /// </returns>
+    internal static bool TryGetStableHeaderFallbackTranslation(
+        string originalText,
+        out string translatedText)
+    {
+        return StableHeaderFallbackTranslations.TryGetValue(
+            originalText,
+            out translatedText!);
     }
 }

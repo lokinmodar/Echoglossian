@@ -87,6 +87,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private protected Config HandlerConfig => this.config;
 
     /// <summary>
+    ///     Gets the shared translation service so addon-local async translation
+    ///     hooks can reuse the canonical pipeline without recreating services.
+    /// </summary>
+    private protected TranslationService HandlerTranslationService =>
+        this.translationService;
+
+    /// <summary>
     ///     Initializes a new instance of the
     ///     <see cref="DbFirstGameWindowAddonHandler" /> class.
     /// </summary>
@@ -297,6 +304,48 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Normalizes one resolved translated payload before it is applied to
+    ///     the live addon surface.
+    /// </summary>
+    /// <param name="originalPayload">
+    ///     The original-facing payload currently visible in the addon.
+    /// </param>
+    /// <param name="translatedPayload">
+    ///     The translated payload that was resolved from cache, DB, or one
+    ///     addon-local supplemental source.
+    /// </param>
+    /// <returns>
+    ///     The translated payload that should be applied for this addon.
+    /// </returns>
+    private protected virtual DbFirstGameWindowPayload NormalizeResolvedTranslatedPayload(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return translatedPayload;
+    }
+
+    /// <summary>
+    ///     Determines whether one resolved translated payload is complete
+    ///     enough to be used for apply/persist in the current addon.
+    /// </summary>
+    /// <param name="originalPayload">
+    ///     The original-facing payload currently visible in the addon.
+    /// </param>
+    /// <param name="translatedPayload">
+    ///     The translated payload that would be applied.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the resolved translated payload should
+    ///     be accepted; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldAcceptResolvedTranslatedPayload(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return true;
+    }
+
+    /// <summary>
     ///     Determines whether one newly observed payload should be sent to the
     ///     remote translation path when no exact persisted row or supplemental
     ///     translated payload exists yet.
@@ -312,6 +361,41 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload originalPayload)
     {
         return true;
+    }
+
+    /// <summary>
+    ///     Resolves the persisted class/job discriminator for one canonical
+    ///     <see cref="GameWindow" /> row when the addon content varies by the
+    ///     active class or job.
+    /// </summary>
+    /// <param name="originalPayload">The original payload being persisted.</param>
+    /// <param name="translatedPayload">The translated payload being persisted.</param>
+    /// <returns>
+    ///     The class/job identifier to persist for this payload, or
+    ///     <see langword="null" /> when the addon does not require job-aware
+    ///     persistence.
+    /// </returns>
+    private protected virtual uint? GetPersistedGameWindowClassJobId(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return null;
+    }
+
+    /// <summary>
+    ///     Resolves the class/job discriminator that should scope persisted
+    ///     <see cref="GameWindow" /> lookups for one live payload.
+    /// </summary>
+    /// <param name="payload">The live or original-facing payload.</param>
+    /// <returns>
+    ///     The class/job identifier that should scope persisted lookup for the
+    ///     payload, or <see langword="null" /> when the addon does not
+    ///     require job-aware lookup.
+    /// </returns>
+    private protected virtual uint? GetLookupGameWindowClassJobId(
+        DbFirstGameWindowPayload payload)
+    {
+        return null;
     }
 
     /// <summary>
@@ -825,11 +909,28 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         var originalJson = originalPayload.Serialize();
         var payloadKey = this.BuildPayloadKey(originalJson);
 
-        if (!this.TryFindGameWindow(originalJson, out var gameWindow) ||
-            !TryParseTranslatedPayload(
+        var translatedPayload = DbFirstGameWindowPayload.Empty;
+        var hasExactTranslatedPayload =
+            this.TryFindGameWindow(
+                originalPayload,
+                originalJson,
+                out var gameWindow) &&
+            TryParseTranslatedPayload(
                 gameWindow?.TranslatedWindowStrings,
                 originalPayload,
-                out var translatedPayload))
+                out translatedPayload);
+        if (hasExactTranslatedPayload)
+        {
+            translatedPayload = this.NormalizeResolvedTranslatedPayload(
+                originalPayload,
+                translatedPayload);
+            hasExactTranslatedPayload =
+                this.ShouldAcceptResolvedTranslatedPayload(
+                    originalPayload,
+                    translatedPayload);
+        }
+
+        if (!hasExactTranslatedPayload)
         {
             if (this.ShouldReuseCompatiblePayloads() &&
                 this.TryResolveCompatibleGameWindowPayload(
@@ -841,6 +942,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     compatibleOriginalPayload.ProjectToShape(originalPayload);
                 compatibleTranslatedPayload =
                     compatibleTranslatedPayload.ProjectToShape(originalPayload);
+                compatibleTranslatedPayload =
+                    this.NormalizeResolvedTranslatedPayload(
+                        compatibleOriginalPayload,
+                        compatibleTranslatedPayload);
+                if (!this.ShouldAcceptResolvedTranslatedPayload(
+                        compatibleOriginalPayload,
+                        compatibleTranslatedPayload))
+                {
+                    goto TrySupplementalTranslatedPayload;
+                }
+
                 var compatiblePayloadKey = this.BuildPayloadKey(
                     compatibleOriginalPayload.Serialize());
                 this.ApplyPayload(
@@ -854,6 +966,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 return;
             }
 
+        TrySupplementalTranslatedPayload:
             if (this.TryResolveSupplementalTranslatedPayload(
                     originalPayload,
                     out var supplementalTranslatedPayload))
@@ -861,6 +974,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 supplementalTranslatedPayload =
                     supplementalTranslatedPayload.ProjectToShape(
                         originalPayload);
+                supplementalTranslatedPayload =
+                    this.NormalizeResolvedTranslatedPayload(
+                        originalPayload,
+                        supplementalTranslatedPayload);
+                if (!this.ShouldAcceptResolvedTranslatedPayload(
+                        originalPayload,
+                        supplementalTranslatedPayload))
+                {
+                    goto QueueNewTranslation;
+                }
+
                 if (this.ShouldPersistNewGameWindowPayload(
                         originalPayload,
                         supplementalTranslatedPayload))
@@ -881,6 +1005,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 return;
             }
 
+        QueueNewTranslation:
             if (!this.ShouldQueueNewGameWindowTranslation(originalPayload))
             {
                 this.hoverTooltipManager.RemoveByPrefix(
@@ -1006,9 +1131,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     continue;
                 }
 
-                var text = MemoryHelper.ReadSeStringAsString(
-                    out _,
-                    (nint)value.String.Value);
+                var text = this.ReadAtkValueText(in value);
                 if (!ShouldCaptureText(text))
                 {
                     continue;
@@ -1366,9 +1489,33 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// </summary>
     /// <param name="originalPayload">The original payload.</param>
     /// <param name="translatedPayload">The translated payload.</param>
-    private void PersistResolvedGameWindowPayload(
+    private protected void PersistResolvedGameWindowPayload(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
+    {
+        var classJobId = this.GetPersistedGameWindowClassJobId(
+            originalPayload,
+            translatedPayload);
+        this.PersistResolvedGameWindowPayload(
+            originalPayload,
+            translatedPayload,
+            classJobId);
+    }
+
+    /// <summary>
+    ///     Persists one resolved original/translated payload pair as a
+    ///     canonical <see cref="GameWindow" /> row using an explicit
+    ///     class/job discriminator captured by the caller.
+    /// </summary>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="classJobId">
+    ///     The class/job identifier to persist with the row.
+    /// </param>
+    private protected void PersistResolvedGameWindowPayload(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        uint? classJobId)
     {
         var row = new GameWindow(
             this.addonName,
@@ -1380,12 +1527,41 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.config.ChosenTransEngine,
             GetGameVersion(),
             createdDate: null,
-            updatedDate: null);
+            updatedDate: null,
+            classJobId: classJobId);
 
         _ = GameWindowPersistenceHelper.InsertGameWindow(
             ConfigDirectory,
             row,
             GameWindowCacheManager.Update);
+    }
+
+    /// <summary>
+    ///     Translates and persists one non-structured
+    ///     <see cref="GameWindow" /> payload.
+    /// </summary>
+    /// <param name="originalPayload">The original payload to translate.</param>
+    /// <returns>
+    ///     A task whose result is <see langword="true" /> when translation
+    ///     completed successfully; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual Task<bool> TranslateAndPersistGameWindowPayloadAsync(
+        DbFirstGameWindowPayload originalPayload)
+    {
+        return GenericAddonHandlerHelper.PerformTranslationAndSaveAsync<GameWindow>(
+            this.addonName,
+            new Dictionary<int, string>(originalPayload.AtkValues),
+            new Dictionary<int, string>(originalPayload.StringArrayValues),
+            new Dictionary<string, string>(
+                originalPayload.TextNodes,
+                StringComparer.Ordinal),
+            new Dictionary<int, string>(originalPayload.AtkValues),
+            new Dictionary<int, string>(originalPayload.StringArrayValues),
+            new Dictionary<string, string>(
+                originalPayload.TextNodes,
+                StringComparer.Ordinal),
+            this.config,
+            this.translationService);
     }
 
     /// <summary>
@@ -1407,12 +1583,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var classJobId = this.GetLookupGameWindowClassJobId(livePayload);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.addonName,
                      targetLanguageCode,
                      this.config.ChosenTransEngine,
-                     GetGameVersion()))
+                     GetGameVersion(),
+                     classJobId))
         {
             if (!TryParseSerializedPayload(
                     row.OriginalWindowStrings,
@@ -1463,19 +1641,22 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="gameWindow">The resolved row, if any.</param>
     /// <returns>True when a row was found.</returns>
     private bool TryFindGameWindow(
+        DbFirstGameWindowPayload originalPayload,
         string originalJson,
         out GameWindow? gameWindow)
     {
         var language = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
             this.config.Lang);
         var gameVersion = GetGameVersion();
+        var classJobId = this.GetLookupGameWindowClassJobId(originalPayload);
 
         gameWindow = GameWindowCacheManager.TryFindMatch(
             this.addonName,
             language,
             this.config.ChosenTransEngine,
             gameVersion,
-            originalJson);
+            originalJson,
+            classJobId);
         if (gameWindow != null)
         {
             return true;
@@ -1486,6 +1667,25 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return false;
         }
 
+        if (classJobId.HasValue)
+        {
+            gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
+                window.WindowAddonName == this.addonName &&
+                RuntimeLanguageHelper.LanguagesMatch(
+                    window.TranslationLang,
+                    language) &&
+                window.TranslationEngine == this.config.ChosenTransEngine &&
+                (window.GameVersion == null ||
+                 window.GameVersion == gameVersion) &&
+                window.ClassJobId == classJobId &&
+                window.OriginalWindowStrings == originalJson);
+            if (gameWindow != null)
+            {
+                GameWindowCacheManager.Update(gameWindow);
+                return true;
+            }
+        }
+
         gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
             window.WindowAddonName == this.addonName &&
             RuntimeLanguageHelper.LanguagesMatch(
@@ -1493,6 +1693,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 language) &&
             window.TranslationEngine == this.config.ChosenTransEngine &&
             (window.GameVersion == null || window.GameVersion == gameVersion) &&
+            window.ClassJobId == null &&
             window.OriginalWindowStrings == originalJson);
         if (gameWindow != null)
         {
@@ -1525,7 +1726,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         translatedPayload = DbFirstGameWindowPayload.Empty;
 
         var originalJson = originalPayload.Serialize();
-        return this.TryFindGameWindow(originalJson, out var gameWindow) &&
+        return this.TryFindGameWindow(
+                   originalPayload,
+                   originalJson,
+                   out var gameWindow) &&
                TryParseTranslatedPayload(
                    gameWindow?.TranslatedWindowStrings,
                    originalPayload,
@@ -1562,13 +1766,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var classJobId = this.GetLookupGameWindowClassJobId(originalPayload);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.addonName,
                      targetLanguageCode,
                      this.config.ChosenTransEngine,
-                     GetGameVersion()))
+                     GetGameVersion(),
+                     classJobId))
         {
             if (!TryParseSerializedPayload(
                     row.OriginalWindowStrings,
@@ -1655,21 +1861,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
         else
         {
-            translationTask = GenericAddonHandlerHelper
-                .PerformTranslationAndSaveAsync<GameWindow>(
-                    this.addonName,
-                    new Dictionary<int, string>(payload.AtkValues),
-                    new Dictionary<int, string>(payload.StringArrayValues),
-                    new Dictionary<string, string>(
-                        payload.TextNodes,
-                        StringComparer.Ordinal),
-                    new Dictionary<int, string>(payload.AtkValues),
-                    new Dictionary<int, string>(payload.StringArrayValues),
-                    new Dictionary<string, string>(
-                        payload.TextNodes,
-                        StringComparer.Ordinal),
-                    this.config,
-                    this.translationService)
+            translationTask = this.TranslateAndPersistGameWindowPayloadAsync(
+                    payload)
                 .ContinueWith(
                     task =>
                     {
@@ -1774,9 +1967,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     continue;
                 }
 
-                var currentText = MemoryHelper.ReadSeStringAsString(
-                    out _,
-                    (nint)currentValue.String.Value);
+                var currentText = this.ReadAtkValueText(in currentValue);
                 if (string.Equals(
                         currentText,
                         translatedText,
@@ -2113,6 +2304,34 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return MemoryHelper.ReadSeStringAsString(
                        out _,
                        (nint)textNode->NodeText.StringPtr.Value) ??
+                   string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    ///     Reads the visible text of one live ATK value when it currently
+    ///     stores a string.
+    /// </summary>
+    /// <param name="value">The ATK value to read.</param>
+    /// <returns>The visible text, or an empty string.</returns>
+    private protected string ReadAtkValueText(
+        in AtkValue value)
+    {
+        var stringPointer = (nint)value.String.Value;
+        if (stringPointer == 0)
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return MemoryHelper.ReadSeStringAsString(
+                       out _,
+                       stringPointer) ??
                    string.Empty;
         }
         catch

@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.NativeUI.AddonHandlers.Common;
 
 namespace Echoglossian.NativeUI.Helpers;
 
@@ -13,6 +14,122 @@ namespace Echoglossian.NativeUI.Helpers;
 public static class GenericAddonHandlerHelper
 {
   private const int MaxChunkLength = 4000;
+
+  /// <summary>
+  /// Performs async translation for one DB-first payload without persisting it.
+  /// </summary>
+  /// <param name="atkValues">The ATK values to translate.</param>
+  /// <param name="stringArray">The StringArrayData values to translate.</param>
+  /// <param name="textNodes">The text-node values to translate.</param>
+  /// <param name="originalAtkSnapshot">The original ATK snapshot.</param>
+  /// <param name="originalArraySnapshot">The original StringArray snapshot.</param>
+  /// <param name="originalTextNodeSnapshot">The original text-node snapshot.</param>
+  /// <param name="sourceLanguage">The source language.</param>
+  /// <param name="targetLanguage">The target language.</param>
+  /// <param name="service">The translation service.</param>
+  /// <returns>
+  /// One translated payload when coverage is complete; otherwise
+  /// <see langword="null" />.
+  /// </returns>
+  internal static async Task<DbFirstGameWindowPayload?> TranslatePayloadAsync(
+      IReadOnlyDictionary<int, string> atkValues,
+      IReadOnlyDictionary<int, string> stringArray,
+      IReadOnlyDictionary<string, string> textNodes,
+      IReadOnlyDictionary<int, string> originalAtkSnapshot,
+      IReadOnlyDictionary<int, string> originalArraySnapshot,
+      IReadOnlyDictionary<string, string> originalTextNodeSnapshot,
+      string sourceLanguage,
+      string targetLanguage,
+      TranslationService service)
+  {
+    var allPairs = new List<string>();
+    allPairs.AddRange(atkValues.Select(kvp => $"a{kvp.Key}|{kvp.Value}"));
+    allPairs.AddRange(stringArray.Select(kvp => $"s{kvp.Key}|{kvp.Value}"));
+    allPairs.AddRange(textNodes.Select(kvp => $"t{kvp.Key}|{kvp.Value}"));
+
+    var builder = new StringBuilder();
+    var translatedMap = new Dictionary<string, string>();
+
+    foreach (var pair in allPairs)
+    {
+      if (builder.Length + pair.Length + 1 > MaxChunkLength)
+      {
+        await TranslateAndMergeAsync(service, builder.ToString(), translatedMap, sourceLanguage, targetLanguage);
+        builder.Clear();
+      }
+
+      if (builder.Length > 0)
+      {
+        builder.Append('|');
+      }
+
+      builder.Append(pair);
+    }
+
+    if (builder.Length > 0)
+    {
+      await TranslateAndMergeAsync(service, builder.ToString(), translatedMap, sourceLanguage, targetLanguage);
+    }
+
+    var updatedAtk = new Dictionary<int, string>();
+    var updatedArray = new Dictionary<int, string>();
+    var updatedTextNodes = new Dictionary<string, string>(
+        StringComparer.Ordinal);
+
+    foreach (var (key, val) in translatedMap)
+    {
+      if (key.StartsWith('a') && int.TryParse(key[1..], out var a))
+      {
+        updatedAtk[a] = val;
+      }
+      else if (key.StartsWith('s') && int.TryParse(key[1..], out var s))
+      {
+        updatedArray[s] = val;
+      }
+      else if (key.StartsWith('t'))
+      {
+        updatedTextNodes[key[1..]] = val;
+      }
+    }
+
+    if (!HasCompleteTranslationCoverage(
+            updatedAtk,
+            updatedArray,
+            updatedTextNodes,
+            originalAtkSnapshot,
+            originalArraySnapshot,
+            originalTextNodeSnapshot))
+    {
+      await TranslateMissingEntriesIndividuallyAsync(
+          service,
+          updatedAtk,
+          updatedArray,
+          updatedTextNodes,
+          originalAtkSnapshot,
+          originalArraySnapshot,
+          originalTextNodeSnapshot,
+          sourceLanguage,
+          targetLanguage);
+    }
+
+    if (!HasCompleteTranslationCoverage(
+            updatedAtk,
+            updatedArray,
+            updatedTextNodes,
+            originalAtkSnapshot,
+            originalArraySnapshot,
+            originalTextNodeSnapshot))
+    {
+      return null;
+    }
+
+    return new DbFirstGameWindowPayload(
+        new SortedDictionary<int, string>(updatedAtk),
+        new SortedDictionary<int, string>(updatedArray),
+        new SortedDictionary<string, string>(
+            updatedTextNodes,
+            StringComparer.Ordinal));
+  }
 
   /// <summary>
   /// Performs async translation and saves result to DB. Supports both generic and multi-text entities.
@@ -50,89 +167,24 @@ public static class GenericAddonHandlerHelper
       var targetLang = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
           config.Lang);
 
-      var allPairs = new List<string>();
-      allPairs.AddRange(atkValues.Select(kvp => $"a{kvp.Key}|{kvp.Value}"));
-      allPairs.AddRange(stringArray.Select(kvp => $"s{kvp.Key}|{kvp.Value}"));
-      allPairs.AddRange(textNodes.Select(kvp => $"t{kvp.Key}|{kvp.Value}"));
-
-      var builder = new StringBuilder();
-      var translatedMap = new Dictionary<string, string>();
-
-      foreach (var pair in allPairs)
-      {
-        if (builder.Length + pair.Length + 1 > MaxChunkLength)
-        {
-          await TranslateAndMergeAsync(service, builder.ToString(), translatedMap, sourceLang, targetLang);
-          builder.Clear();
-        }
-
-        if (builder.Length > 0)
-        {
-          builder.Append('|');
-        }
-
-        builder.Append(pair);
-      }
-
-      if (builder.Length > 0)
-      {
-        await TranslateAndMergeAsync(service, builder.ToString(), translatedMap, sourceLang, targetLang);
-      }
-
-      var updatedAtk = new Dictionary<int, string>();
-      var updatedArray = new Dictionary<int, string>();
-      var updatedTextNodes = new Dictionary<string, string>(
-          StringComparer.Ordinal);
-
-      foreach (var (key, val) in translatedMap)
-      {
-        if (key.StartsWith('a') && int.TryParse(key[1..], out var a))
-        {
-          updatedAtk[a] = val;
-        }
-        else if (key.StartsWith('s') && int.TryParse(key[1..], out var s))
-        {
-          updatedArray[s] = val;
-        }
-        else if (key.StartsWith('t'))
-        {
-          updatedTextNodes[key[1..]] = val;
-        }
-      }
-
-      if (!HasCompleteTranslationCoverage(
-              updatedAtk,
-              updatedArray,
-              updatedTextNodes,
-              originalAtkSnapshot,
-              originalArraySnapshot,
-              originalTextNodeSnapshot))
-      {
-        await TranslateMissingEntriesIndividuallyAsync(
-            service,
-            updatedAtk,
-            updatedArray,
-            updatedTextNodes,
-            originalAtkSnapshot,
-            originalArraySnapshot,
-            originalTextNodeSnapshot,
-            sourceLang,
-            targetLang);
-      }
-
-      if (!HasCompleteTranslationCoverage(
-              updatedAtk,
-              updatedArray,
-              updatedTextNodes,
-              originalAtkSnapshot,
-              originalArraySnapshot,
-              originalTextNodeSnapshot))
+      var translatedPayloadResult = await TranslatePayloadAsync(
+          atkValues,
+          stringArray,
+          textNodes,
+          originalAtkSnapshot,
+          originalArraySnapshot,
+          originalTextNodeSnapshot,
+          sourceLang,
+          targetLang,
+          service);
+      if (!translatedPayloadResult.HasValue)
       {
         PluginLog.Debug(
             $"[{addonName}] [Async] Skipping persistence because the translated payload is empty or incomplete.");
         return false;
       }
 
+      var translatedPayload = translatedPayloadResult.Value;
       var entity = new T();
       PluginLog.Debug($"[{addonName}] [Async] Creating entity of type {entityType.Name}...");
 
@@ -140,8 +192,10 @@ public static class GenericAddonHandlerHelper
       {
         PluginLog.Debug($"[{addonName}] [Async] Saving IMultiTextEntity...");
 
-        var messageEntry = updatedAtk.FirstOrDefault(kvp => kvp.Key == 0);
-        var senderEntry = updatedAtk.FirstOrDefault(kvp => kvp.Key == 1);
+        var messageEntry = translatedPayload.AtkValues
+            .FirstOrDefault(kvp => kvp.Key == 0);
+        var senderEntry = translatedPayload.AtkValues
+            .FirstOrDefault(kvp => kvp.Key == 1);
 
         var originalMessage = originalAtkSnapshot.TryGetValue(0, out var origMsg) ? origMsg : messageEntry.Value;
         var originalSender = originalAtkSnapshot.TryGetValue(1, out var origSender) ? origSender : senderEntry.Value;
@@ -159,12 +213,7 @@ public static class GenericAddonHandlerHelper
       {
         PluginLog.Debug($"[{addonName}] [Async] Saving IGenericEntity...");
 
-        var translatedJson = JsonConvert.SerializeObject(new
-        {
-          atkValues = updatedAtk.Count > 0 ? updatedAtk : null,
-          stringArrayData = updatedArray.Count > 0 ? updatedArray : null,
-          textNodes = updatedTextNodes.Count > 0 ? updatedTextNodes : null,
-        });
+        var translatedJson = translatedPayload.Serialize();
 
         var originalJson = JsonConvert.SerializeObject(new
         {

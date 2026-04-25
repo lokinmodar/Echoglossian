@@ -327,6 +327,17 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 requireDifference: true);
         }
 
+        if (string.Equals(
+                this.AddonName,
+                "Character",
+                StringComparison.Ordinal))
+        {
+            CharacterWindowHandler.AppendStableHeaderFallbackTranslations(
+                originalLookup,
+                translatedLookup,
+                knownTexts);
+        }
+
         return translatedLookup.Count > 0;
     }
 

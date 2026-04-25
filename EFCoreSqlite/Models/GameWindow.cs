@@ -26,6 +26,10 @@ public partial class GameWindow
     /// <param name="gameVersion">The version of the game.</param>
     /// <param name="createdDate">The date the record was created.</param>
     /// <param name="updatedDate">The date the record was last updated.</param>
+    /// <param name="classJobId">
+    ///     The class/job identifier associated with this window payload when the
+    ///     addon content varies by the active job.
+    /// </param>
     public GameWindow(
         string? windowAddonName,
         string? originalWindowStrings,
@@ -35,7 +39,8 @@ public partial class GameWindow
         int? translationEngine,
         string? gameVersion,
         DateTime? createdDate,
-        DateTime? updatedDate)
+        DateTime? updatedDate,
+        uint? classJobId = null)
     {
         this.WindowAddonName = windowAddonName;
         this.OriginalWindowStrings = originalWindowStrings;
@@ -44,6 +49,7 @@ public partial class GameWindow
         this.TranslationLang = translationLang;
         this.TranslationEngine = translationEngine;
         this.GameVersion = gameVersion;
+        this.ClassJobId = classJobId;
         this.CreatedDate = createdDate;
         this.UpdatedDate = updatedDate;
     }
@@ -68,6 +74,12 @@ public partial class GameWindow
 
     public string? GameVersion { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the class/job identifier associated with this window
+    ///     payload when the addon content varies by the active job.
+    /// </summary>
+    public uint? ClassJobId { get; set; }
+
     public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
@@ -77,6 +89,6 @@ public partial class GameWindow
     public override string? ToString()
     {
         return
-            $"GameWindow: Id={this.Id}, WindowAddonName={this.WindowAddonName}, OriginalWindowStrings={this.OriginalWindowStrings}, OriginalWindowStringsLang={this.OriginalWindowStringsLang}, TranslatedWindowStrings={this.TranslatedWindowStrings}, TranslationLang={this.TranslationLang}, TranslationEngine={this.TranslationEngine}, GameVersion={this.GameVersion}, CreatedDate={this.CreatedDate}, UpdatedDate={this.UpdatedDate}";
+            $"GameWindow: Id={this.Id}, WindowAddonName={this.WindowAddonName}, OriginalWindowStrings={this.OriginalWindowStrings}, OriginalWindowStringsLang={this.OriginalWindowStringsLang}, TranslatedWindowStrings={this.TranslatedWindowStrings}, TranslationLang={this.TranslationLang}, TranslationEngine={this.TranslationEngine}, GameVersion={this.GameVersion}, ClassJobId={this.ClassJobId}, CreatedDate={this.CreatedDate}, UpdatedDate={this.UpdatedDate}";
     }
 }

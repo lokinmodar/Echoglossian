@@ -154,6 +154,9 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<uint?>("ClassJobId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("GameVersion")
                         .HasColumnType("TEXT");
 
@@ -187,6 +190,9 @@ namespace Echoglossian.EFCoreSqlite.Migrations
 
                     b.HasIndex("WindowAddonName", "TranslationLang", "TranslationEngine", "GameVersion")
                         .HasDatabaseName("IX_gamewindows_lookup");
+
+                    b.HasIndex("WindowAddonName", "ClassJobId", "TranslationLang", "TranslationEngine", "GameVersion")
+                        .HasDatabaseName("IX_gamewindows_classjob_lookup");
 
                     b.ToTable("gamewindows", (string)null);
                 });

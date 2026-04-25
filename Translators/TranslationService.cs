@@ -137,9 +137,7 @@ public class TranslationService
             normalizedSourceLanguage,
             normalizedTargetLanguage))
     {
-      return !string.IsNullOrEmpty(startingEllipsis)
-          ? startingEllipsis
-          : string.Empty;
+      return sanitizedText;
     }
 
     var finalDialogueText = this.translator.Translate(
@@ -153,12 +151,8 @@ public class TranslationService
           normalizedSourceLanguage,
           normalizedTargetLanguage,
           resolvedOriginContext);
-      finalDialogueText = string.Empty;
+      finalDialogueText = sanitizedText;
     }
-
-    finalDialogueText = !string.IsNullOrEmpty(startingEllipsis)
-        ? startingEllipsis + finalDialogueText
-        : finalDialogueText;
     return finalDialogueText;
   }
 
@@ -212,9 +206,7 @@ public class TranslationService
             normalizedSourceLanguage,
             normalizedTargetLanguage))
     {
-      return !string.IsNullOrEmpty(startingEllipsis)
-          ? startingEllipsis
-          : string.Empty;
+      return sanitizedText;
     }
 
     var finalDialogueText = await this.translator.TranslateAsync(
@@ -228,12 +220,8 @@ public class TranslationService
           normalizedSourceLanguage,
           normalizedTargetLanguage,
           resolvedOriginContext);
-      finalDialogueText = string.Empty;
+      finalDialogueText = sanitizedText;
     }
-
-    finalDialogueText = !string.IsNullOrEmpty(startingEllipsis)
-        ? startingEllipsis + finalDialogueText
-        : finalDialogueText;
     return finalDialogueText;
   }
 

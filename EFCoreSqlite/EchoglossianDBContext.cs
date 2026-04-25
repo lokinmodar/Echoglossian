@@ -126,6 +126,16 @@ public class EchoglossianDbContext : DbContext
           g.GameVersion
         })
         .HasDatabaseName("IX_gamewindows_lookup");
+    modelBuilder.Entity<GameWindow>()
+        .HasIndex(g => new
+        {
+          g.WindowAddonName,
+          g.ClassJobId,
+          g.TranslationLang,
+          g.TranslationEngine,
+          g.GameVersion
+        })
+        .HasDatabaseName("IX_gamewindows_classjob_lookup");
     modelBuilder.Entity<TalkSubtitleMessage>()
         .ToTable("talksubtitlemessages");
     modelBuilder.Entity<TalkSubtitleMessage>()

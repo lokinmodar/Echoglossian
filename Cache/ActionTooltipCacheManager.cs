@@ -16,6 +16,8 @@ public static class ActionTooltipCacheManager
     private static readonly Dictionary<uint, List<ActionTooltip>> Cache = [];
     private static readonly Dictionary<string, Dictionary<string, string>>
         TextLookupCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, Dictionary<string, string>>
+        ReverseTextLookupCache = new(StringComparer.Ordinal);
 
     /// <summary>
     ///     Loads all canonical action-tooltip rows into memory.
@@ -44,6 +46,7 @@ public static class ActionTooltipCacheManager
             }
 
             TextLookupCache.Clear();
+            ReverseTextLookupCache.Clear();
         }
         catch (Exception ex)
         {
@@ -84,6 +87,7 @@ public static class ActionTooltipCacheManager
 
         rows.Add(newRecord);
         TextLookupCache.Clear();
+        ReverseTextLookupCache.Clear();
     }
 
     /// <summary>
@@ -175,12 +179,64 @@ public static class ActionTooltipCacheManager
     }
 
     /// <summary>
+    ///     Tries to resolve one canonical original action text by exact
+    ///     translated text from the cached action-tooltip rows.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="translatedText">The translated text to reverse.</param>
+    /// <param name="originalText">The resolved canonical original text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one exact canonical original text was
+    ///     found; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string translatedText,
+        out string originalText)
+    {
+        originalText = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(lang) ||
+            string.IsNullOrWhiteSpace(translatedText))
+        {
+            return false;
+        }
+
+        if (TryFindOriginalTextInScope(
+                lang,
+                engine,
+                gameVersion,
+                translatedText,
+                out originalText))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion))
+        {
+            return TryFindOriginalTextInScope(
+                lang,
+                engine,
+                version: null,
+                translatedText,
+                out originalText);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()
     {
         Cache.Clear();
         TextLookupCache.Clear();
+        ReverseTextLookupCache.Clear();
         PluginLog.Debug("[ActionTooltipCacheManager] Cleared action-tooltip cache.");
     }
 
@@ -214,6 +270,40 @@ public static class ActionTooltipCacheManager
 
         var found = lookup.TryGetValue(originalText, out var resolvedText);
         translatedText = resolvedText ?? string.Empty;
+        return found;
+    }
+
+    /// <summary>
+    ///     Tries to resolve one canonical original action text from one cached
+    ///     reverse lookup scope.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="version">The exact stored game version scope.</param>
+    /// <param name="translatedText">The translated text to reverse.</param>
+    /// <param name="originalText">The resolved original text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a canonical original text was found in
+    ///     this exact scope; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryFindOriginalTextInScope(
+        string lang,
+        int engine,
+        string? version,
+        string translatedText,
+        out string originalText)
+    {
+        originalText = string.Empty;
+
+        var scopeKey = BuildTextLookupScopeKey(lang, engine, version);
+        if (!ReverseTextLookupCache.TryGetValue(scopeKey, out var lookup))
+        {
+            lookup = BuildReverseTextLookup(lang, engine, version);
+            ReverseTextLookupCache[scopeKey] = lookup;
+        }
+
+        var found = lookup.TryGetValue(translatedText, out var resolvedText);
+        originalText = resolvedText ?? string.Empty;
         return found;
     }
 
@@ -264,6 +354,56 @@ public static class ActionTooltipCacheManager
     }
 
     /// <summary>
+    ///     Builds one reverse translated-text lookup for a single
+    ///     action-tooltip cache scope.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="version">The exact stored game version scope.</param>
+    /// <returns>The reverse translated-text lookup map.</returns>
+    private static Dictionary<string, string> BuildReverseTextLookup(
+        string lang,
+        int engine,
+        string? version)
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var ambiguousKeys = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var row in Cache.Values.SelectMany(static rows => rows))
+        {
+            if (!RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) ||
+                row.TranslationEngine != engine ||
+                !string.Equals(
+                    row.GameVersion,
+                    version,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            TryAddReverseLookupValue(
+                lookup,
+                ambiguousKeys,
+                row.ActionName,
+                row.TranslatedActionName);
+            TryAddReverseLookupValue(
+                lookup,
+                ambiguousKeys,
+                row.ActionDescription,
+                row.TranslatedActionDescription);
+            TryAddReverseLookupValue(
+                lookup,
+                ambiguousKeys,
+                row.OriginalTooltipText,
+                row.TranslatedTooltipText);
+        }
+
+        return lookup;
+    }
+
+    /// <summary>
     ///     Adds one translated-text lookup entry when both texts are usable.
     /// </summary>
     /// <param name="lookup">The lookup map to update.</param>
@@ -285,6 +425,51 @@ public static class ActionTooltipCacheManager
         }
 
         lookup.TryAdd(originalText, translatedText);
+    }
+
+    /// <summary>
+    ///     Adds one reverse translated-text lookup entry when the translated
+    ///     text maps uniquely back to a single canonical original text.
+    /// </summary>
+    /// <param name="lookup">The reverse lookup map to update.</param>
+    /// <param name="ambiguousKeys">
+    ///     Tracks translated texts that map to multiple originals and must be
+    ///     excluded from reverse recovery.
+    /// </param>
+    /// <param name="originalText">The canonical original text.</param>
+    /// <param name="translatedText">The translated text.</param>
+    private static void TryAddReverseLookupValue(
+        IDictionary<string, string> lookup,
+        ISet<string> ambiguousKeys,
+        string? originalText,
+        string? translatedText)
+    {
+        if (string.IsNullOrWhiteSpace(originalText) ||
+            string.IsNullOrWhiteSpace(translatedText) ||
+            string.Equals(
+                originalText,
+                translatedText,
+                StringComparison.Ordinal) ||
+            ambiguousKeys.Contains(translatedText))
+        {
+            return;
+        }
+
+        if (lookup.TryGetValue(translatedText, out var existingOriginal))
+        {
+            if (!string.Equals(
+                    existingOriginal,
+                    originalText,
+                    StringComparison.Ordinal))
+            {
+                lookup.Remove(translatedText);
+                ambiguousKeys.Add(translatedText);
+            }
+
+            return;
+        }
+
+        lookup[translatedText] = originalText;
     }
 
     /// <summary>
