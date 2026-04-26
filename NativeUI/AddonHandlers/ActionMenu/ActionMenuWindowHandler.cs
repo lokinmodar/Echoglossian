@@ -8,14 +8,16 @@ using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Echoglossian.NativeUI.AddonHandlers.ActionMenu;
 
 /// <summary>
 ///     Handles DB-first translation for the <c>ActionMenu</c> addon while
-///     reusing canonical action-name and description translations that already
-///     exist in <c>ActionTooltip</c> storage.
+///     reusing canonical action and trait translations that already exist in
+///     structured tooltip storage.
 /// </summary>
 public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 {
@@ -26,6 +28,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private const int MinimumStableSignatureEntryCount = 5;
     private const int MaximumStableSignatureWordCount = 6;
     private const int MaximumStableSignatureCharacterCount = 64;
+    private const int MaximumDiagnosticPreviewEntryCount = 8;
     private const string MainCommandWindowTitle = "_MainCommand";
 
     private static readonly Regex TrailingLevelTokenPattern = new(
@@ -38,6 +41,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         minimumStableDuration: TimeSpan.FromMilliseconds(150));
     private readonly HashSet<string> queuedStablePayloadSignatures = new(
         StringComparer.Ordinal);
+    private readonly DiagnosticTelemetryHelper telemetry = new(
+        "ActionMenuDiag",
+        TimeSpan.FromMilliseconds(400));
 
     /// <summary>
 ///     Initializes a new instance of the
@@ -72,11 +78,37 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    protected override void OnLifecycleEvent(AddonEvent evt, AddonArgs args)
+    {
+        this.LogLifecycleDiagnostic("lifecycle", evt);
+        base.OnLifecycleEvent(evt, args);
+    }
+
+    /// <inheritdoc />
+    protected override void OnPreDrawEvent(AddonEvent evt, AddonArgs args)
+    {
+        this.LogLifecycleDiagnostic("predraw", evt);
+        base.OnPreDrawEvent(evt, args);
+    }
+
+    /// <inheritdoc />
     private protected override bool ShouldPersistNewGameWindowPayload(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
-        return this.ShouldAllowNewPayloadPersistence(originalPayload);
+        var allowPersistence = this.ShouldAllowNewPayloadPersistence(
+            originalPayload);
+        if (allowPersistence)
+        {
+            this.LogPersistencePayloads(
+                "persist-ready",
+                originalPayload,
+                translatedPayload,
+                GetCurrentClassJobId(),
+                GetPayloadClassJobName(originalPayload));
+        }
+
+        return allowPersistence;
     }
 
     /// <inheritdoc />
@@ -122,8 +154,11 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 this.HandlerTranslationService);
         if (!translatedPayloadResult.HasValue)
         {
-            PluginLog.Debug(
-                $"[{this.AddonName}] [Async] Skipping persistence because the translated payload is empty or incomplete.");
+            this.telemetry.Debug(
+                "async-skip",
+                "reason=translated-payload-empty-or-incomplete",
+                signature: "async-skip|translated-empty",
+                cooldown: TimeSpan.FromMilliseconds(1));
             return false;
         }
 
@@ -136,29 +171,68 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 originalPayload,
                 translatedPayload))
         {
-            PluginLog.Debug(
-                $"[{this.AddonName}] [Async] Skipping persistence because the normalized payload was still not acceptable.");
+            this.telemetry.Debug(
+                "async-skip",
+                $"reason=normalized-payload-rejected payloadHash={ComputeDiagnosticHash(originalPayload.Serialize())}",
+                signature: $"async-skip|normalized-rejected|{ComputeDiagnosticHash(originalPayload.Serialize())}",
+                cooldown: TimeSpan.FromMilliseconds(1));
             return true;
         }
 
         var stablePayloadSignature = BuildStablePayloadSignature(
             originalPayload);
-        if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
-            !this.HasSufficientStableSignatureCoverage(
-                stablePayloadSignature) ||
-            this.HasPersistedStableSignature(
+        var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            originalPayload,
+            classJobId,
+            classJobName);
+        var (candidateCount, stableMatchCount) =
+            this.GetPersistedCandidateDiagnostics(
                 stablePayloadSignature,
-                classJobId) ||
-            !this.HasMeaningfulUnseenTexts(
+                classJobId);
+        var sufficientCoverage =
+            !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
+            this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
+        if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
+            !sufficientCoverage ||
+            stableMatchCount > 0 ||
+            unseenCount <= 0)
+        {
+            this.LogGateDecision(
+                "async-gate",
+                stablePayloadSignature,
                 originalPayload,
                 classJobId,
-                classJobName))
-        {
-            PluginLog.Debug(
-                $"[{this.AddonName}] [Async] Skipping persistence because the stable-signature gate rejected the normalized payload.");
+                classJobName,
+                unseenCount,
+                candidateCount,
+                stableMatchCount,
+                stabilityReady: null,
+                queueAdded: null,
+                allow: false,
+                reason:
+                $"gate-rejected emptySignature={string.IsNullOrWhiteSpace(stablePayloadSignature)} coverage={sufficientCoverage} unseen={unseenCount}");
             return true;
         }
 
+        this.LogGateDecision(
+            "async-gate",
+            stablePayloadSignature,
+            originalPayload,
+            classJobId,
+            classJobName,
+            unseenCount,
+            candidateCount,
+            stableMatchCount,
+            stabilityReady: true,
+            queueAdded: null,
+            allow: true,
+            reason: "gate-accepted");
+        this.LogPersistencePayloads(
+            "async-persist-ready",
+            originalPayload,
+            translatedPayload,
+            classJobId,
+            classJobName);
         this.PersistResolvedGameWindowPayload(
             originalPayload,
             translatedPayload,
@@ -224,8 +298,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <inheritdoc />
     protected override void OnCleanupEvent(AddonEvent evt, AddonArgs args)
     {
+        this.LogLifecycleDiagnostic("cleanup", evt);
         base.OnCleanupEvent(evt, args);
         this.newPayloadStabilityTracker.Reset();
+        this.telemetry.Reset();
     }
 
     /// <inheritdoc />
@@ -342,7 +418,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <summary>
     ///     Translates one integer-keyed payload map by exact lookup against the
-    ///     canonical action-tooltip cache.
+    ///     canonical structured-tooltip caches.
     /// </summary>
     /// <param name="sourceValues">The original values.</param>
     /// <param name="targetLanguage">The target translation language.</param>
@@ -386,7 +462,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <summary>
     ///     Translates one text-node payload map by exact lookup against the
-    ///     canonical action-tooltip cache.
+    ///     canonical structured-tooltip caches.
     /// </summary>
     /// <param name="sourceValues">The original values.</param>
     /// <param name="targetLanguage">The target translation language.</param>
@@ -430,7 +506,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
-    ///     Resolves one translated action text from canonical tooltip storage,
+    ///     Resolves one translated action-menu text from canonical tooltip storage,
     ///     falling back to the original text when no exact translation exists.
     /// </summary>
     /// <param name="originalText">The original visible text.</param>
@@ -456,7 +532,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return levelAwareTranslatedText;
         }
 
-        if (ActionTooltipCacheManager.TryFindTranslatedText(
+        if (TryFindTranslatedCanonicalText(
                 targetLanguage,
                 engine,
                 gameVersion,
@@ -504,7 +580,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return levelAwareOriginalText;
         }
 
-        if (ActionTooltipCacheManager.TryFindOriginalText(
+        if (TryFindOriginalCanonicalText(
                 targetLanguage,
                 engine,
                 gameVersion,
@@ -852,7 +928,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        if (ActionTooltipCacheManager.TryFindTranslatedText(
+        if (TryFindTranslatedCanonicalText(
                 targetLanguage,
                 engine,
                 gameVersion,
@@ -887,7 +963,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        if (ActionTooltipCacheManager.TryFindOriginalText(
+        if (TryFindOriginalCanonicalText(
                 targetLanguage,
                 engine,
                 gameVersion,
@@ -1199,17 +1275,60 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload originalPayload)
     {
         var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        var classJobId = GetCurrentClassJobId();
+        var classJobName = GetPayloadClassJobName(originalPayload);
+        var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            originalPayload,
+            classJobId,
+            classJobName);
+        var (candidateCount, stableMatchCount) =
+            this.GetPersistedCandidateDiagnostics(
+                stablePayloadSignature,
+                classJobId);
+        var sufficientCoverage =
+            !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
+            this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
         if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
-            !this.HasSufficientStableSignatureCoverage(stablePayloadSignature) ||
-            this.HasPersistedStableSignature(stablePayloadSignature) ||
-            !this.HasMeaningfulUnseenTexts(originalPayload))
+            !sufficientCoverage ||
+            stableMatchCount > 0 ||
+            unseenCount <= 0)
         {
+            this.LogGateDecision(
+                "persist-gate",
+                stablePayloadSignature,
+                originalPayload,
+                classJobId,
+                classJobName,
+                unseenCount,
+                candidateCount,
+                stableMatchCount,
+                stabilityReady: null,
+                queueAdded: null,
+                allow: false,
+                reason:
+                $"gate-rejected emptySignature={string.IsNullOrWhiteSpace(stablePayloadSignature)} coverage={sufficientCoverage} unseen={unseenCount}");
             return false;
         }
 
-        return this.newPayloadStabilityTracker.Observe(
+        var stabilityReady = this.newPayloadStabilityTracker.Observe(
             stablePayloadSignature,
             DateTime.UtcNow);
+        this.LogGateDecision(
+            "persist-gate",
+            stablePayloadSignature,
+            originalPayload,
+            classJobId,
+            classJobName,
+            unseenCount,
+            candidateCount,
+            stableMatchCount,
+            stabilityReady,
+            queueAdded: null,
+            allow: stabilityReady,
+            reason: stabilityReady
+                ? "stable-payload-ready"
+                : "awaiting-second-stable-observation");
+        return stabilityReady;
     }
 
     /// <summary>
@@ -1225,18 +1344,68 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload originalPayload)
     {
         var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
-        if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
-            !this.HasSufficientStableSignatureCoverage(stablePayloadSignature) ||
-            this.HasPersistedStableSignature(stablePayloadSignature) ||
-            !this.HasMeaningfulUnseenTexts(originalPayload) ||
-            !this.newPayloadStabilityTracker.Observe(
+        var classJobId = GetCurrentClassJobId();
+        var classJobName = GetPayloadClassJobName(originalPayload);
+        var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            originalPayload,
+            classJobId,
+            classJobName);
+        var (candidateCount, stableMatchCount) =
+            this.GetPersistedCandidateDiagnostics(
                 stablePayloadSignature,
-                DateTime.UtcNow))
+                classJobId);
+        var sufficientCoverage =
+            !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
+            this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
+        var stabilityReady =
+            !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
+            sufficientCoverage &&
+            stableMatchCount == 0 &&
+            unseenCount > 0 &&
+            this.newPayloadStabilityTracker.Observe(
+                stablePayloadSignature,
+                DateTime.UtcNow);
+        if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
+            !sufficientCoverage ||
+            stableMatchCount > 0 ||
+            unseenCount <= 0 ||
+            !stabilityReady)
         {
+            this.LogGateDecision(
+                "queue-gate",
+                stablePayloadSignature,
+                originalPayload,
+                classJobId,
+                classJobName,
+                unseenCount,
+                candidateCount,
+                stableMatchCount,
+                stabilityReady,
+                queueAdded: null,
+                allow: false,
+                reason:
+                $"queue-rejected emptySignature={string.IsNullOrWhiteSpace(stablePayloadSignature)} coverage={sufficientCoverage} unseen={unseenCount} stabilityReady={stabilityReady}");
             return false;
         }
 
-        return this.queuedStablePayloadSignatures.Add(stablePayloadSignature);
+        var queueAdded = this.queuedStablePayloadSignatures.Add(
+            stablePayloadSignature);
+        this.LogGateDecision(
+            "queue-gate",
+            stablePayloadSignature,
+            originalPayload,
+            classJobId,
+            classJobName,
+            unseenCount,
+            candidateCount,
+            stableMatchCount,
+            stabilityReady,
+            queueAdded,
+            allow: queueAdded,
+            reason: queueAdded
+                ? "queue-added"
+                : "queue-signature-already-pending");
+        return queueAdded;
     }
 
     /// <summary>
@@ -1293,20 +1462,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         uint? classJobId,
         string? classJobName)
     {
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
-        var gameVersion = GetGameVersion();
-        this.BuildPersistedActionMenuLookups(
-            out _,
-            out var persistedTranslatedLookup,
-            classJobId,
-            classJobName);
-        return CountMeaningfulUnseenTexts(
+        return this.CountMeaningfulUnseenTextsForDiagnostics(
                    originalPayload,
-                   targetLanguage,
-                   this.config.ChosenTransEngine,
-                   gameVersion,
-                   persistedTranslatedLookup) > 0;
+                   classJobId,
+                   classJobName) > 0;
     }
 
     /// <summary>
@@ -1340,8 +1499,61 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string stablePayloadSignature,
         uint? classJobId)
     {
+        return this.GetPersistedCandidateDiagnostics(
+            stablePayloadSignature,
+            classJobId).StableMatchCount > 0;
+    }
+
+    /// <summary>
+    ///     Counts the unresolved short texts for the current ActionMenu payload
+    ///     using the same canonical fallback rules as the persistence gate.
+    /// </summary>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="classJobId">The current class/job identifier.</param>
+    /// <param name="classJobName">The current class/job name.</param>
+    /// <returns>The count of short texts not yet covered by canonical data.</returns>
+    private int CountMeaningfulUnseenTextsForDiagnostics(
+        DbFirstGameWindowPayload originalPayload,
+        uint? classJobId,
+        string? classJobName)
+    {
         var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
             this.config.Lang);
+        var gameVersion = GetGameVersion();
+        this.BuildPersistedActionMenuLookups(
+            out _,
+            out var persistedTranslatedLookup,
+            classJobId,
+            classJobName);
+        return CountMeaningfulUnseenTexts(
+            originalPayload,
+            targetLanguage,
+            this.config.ChosenTransEngine,
+            gameVersion,
+            persistedTranslatedLookup);
+    }
+
+    /// <summary>
+    ///     Counts the currently scoped persisted ActionMenu candidates and the
+    ///     subset whose stable signature matches the supplied payload
+    ///     signature.
+    /// </summary>
+    /// <param name="stablePayloadSignature">The stable signature to compare.</param>
+    /// <param name="classJobId">The class/job scope to inspect.</param>
+    /// <returns>
+    ///     One tuple containing the total candidate count and the matching
+    ///     stable-signature count.
+    /// </returns>
+    private (int CandidateCount, int StableMatchCount)
+        GetPersistedCandidateDiagnostics(
+            string stablePayloadSignature,
+            uint? classJobId)
+    {
+        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+            this.config.Lang);
+        var candidateCount = 0;
+        var stableMatchCount = 0;
+
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
                      targetLanguage,
@@ -1349,7 +1561,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                      GetGameVersion(),
                      classJobId))
         {
-            if (!TryParseSerializedPayload(
+            candidateCount++;
+            if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
+                !TryParseSerializedPayload(
                     row.OriginalWindowStrings,
                     out var rowOriginalPayload))
             {
@@ -1361,11 +1575,193 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                     stablePayloadSignature,
                     StringComparison.Ordinal))
             {
-                return true;
+                stableMatchCount++;
             }
         }
 
-        return false;
+        return (candidateCount, stableMatchCount);
+    }
+
+    /// <summary>
+    ///     Emits one throttled lifecycle diagnostic for the ActionMenu handler.
+    /// </summary>
+    /// <param name="stage">The current lifecycle stage label.</param>
+    /// <param name="evt">The current addon event.</param>
+    private void LogLifecycleDiagnostic(
+        string stage,
+        AddonEvent evt)
+    {
+        this.telemetry.Debug(
+            "event",
+            $"stage={stage} evt={evt} visible={this.IsAddonVisible(this.AddonName)}",
+            signature: $"{stage}|{evt}",
+            cooldown: TimeSpan.FromMilliseconds(150));
+    }
+
+    /// <summary>
+    ///     Emits one compact decision log for the ActionMenu queue or
+    ///     persistence gates.
+    /// </summary>
+    /// <param name="category">The diagnostic category.</param>
+    /// <param name="stablePayloadSignature">The stable payload signature.</param>
+    /// <param name="payload">The payload being evaluated.</param>
+    /// <param name="classJobId">The current class/job identifier.</param>
+    /// <param name="classJobName">The current class/job name.</param>
+    /// <param name="unseenCount">The unresolved short-text count.</param>
+    /// <param name="candidateCount">The scoped persisted candidate count.</param>
+    /// <param name="stableMatchCount">The matching stable-signature count.</param>
+    /// <param name="stabilityReady">
+    ///     The stability-tracker result when applicable.
+    /// </param>
+    /// <param name="queueAdded">The queue-insert result when applicable.</param>
+    /// <param name="allow">Whether the gate allowed the action.</param>
+    /// <param name="reason">The compact gate reason.</param>
+    private void LogGateDecision(
+        string category,
+        string stablePayloadSignature,
+        DbFirstGameWindowPayload payload,
+        uint? classJobId,
+        string? classJobName,
+        int unseenCount,
+        int candidateCount,
+        int stableMatchCount,
+        bool? stabilityReady,
+        bool? queueAdded,
+        bool allow,
+        string reason)
+    {
+        var payloadJson = payload.Serialize();
+        var payloadHash = ComputeDiagnosticHash(payloadJson);
+        var signatureHash = ComputeDiagnosticHash(stablePayloadSignature);
+        var stableEntryCount = CountStableSignatureEntries(
+            stablePayloadSignature);
+        this.telemetry.Debug(
+            category,
+            $"allow={allow} reason={reason} classJobId={FormatOptionalUInt(classJobId)} classJobName={FormatOptionalText(classJobName)} payloadHash={payloadHash} sigHash={signatureHash} sigEntries={stableEntryCount} unseenCount={unseenCount} candidates={candidateCount} stableMatches={stableMatchCount} stabilityReady={FormatOptionalBool(stabilityReady)} queueAdded={FormatOptionalBool(queueAdded)} atk={payload.AtkValues.Count} stringArray={payload.StringArrayValues.Count} textNodes={payload.TextNodes.Count} preview=[{BuildDiagnosticPreview(payload)}]",
+            signature: $"{category}|{payloadHash}|{allow}|{reason}|{stableMatchCount}|{unseenCount}",
+            cooldown: TimeSpan.FromMilliseconds(1));
+    }
+
+    /// <summary>
+    ///     Emits detailed payload diagnostics immediately before one new
+    ///     ActionMenu row is persisted.
+    /// </summary>
+    /// <param name="category">The diagnostic category.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="classJobId">The current class/job identifier.</param>
+    /// <param name="classJobName">The current class/job name.</param>
+    private void LogPersistencePayloads(
+        string category,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        uint? classJobId,
+        string? classJobName)
+    {
+        var originalJson = originalPayload.Serialize();
+        var translatedJson = translatedPayload.Serialize();
+        var stablePayloadSignature = BuildStablePayloadSignature(
+            originalPayload);
+        var originalHash = ComputeDiagnosticHash(originalJson);
+        var translatedHash = ComputeDiagnosticHash(translatedJson);
+        var signatureHash = ComputeDiagnosticHash(stablePayloadSignature);
+        this.telemetry.Information(
+            category,
+            $"classJobId={FormatOptionalUInt(classJobId)} classJobName={FormatOptionalText(classJobName)} originalHash={originalHash} translatedHash={translatedHash} sigHash={signatureHash} sigEntries={CountStableSignatureEntries(stablePayloadSignature)} preview=[{BuildDiagnosticPreview(originalPayload)}]",
+            signature: $"{category}|{originalHash}|{translatedHash}|{signatureHash}",
+            cooldown: TimeSpan.FromMilliseconds(1));
+        this.telemetry.Debug(
+            $"{category}-original-json",
+            originalJson,
+            signature: $"{category}|original|{originalHash}",
+            cooldown: TimeSpan.FromMilliseconds(1));
+        this.telemetry.Debug(
+            $"{category}-translated-json",
+            translatedJson,
+            signature: $"{category}|translated|{translatedHash}",
+            cooldown: TimeSpan.FromMilliseconds(1));
+    }
+
+    /// <summary>
+    ///     Builds one short preview of the stable texts that define the current
+    ///     ActionMenu page.
+    /// </summary>
+    /// <param name="payload">The payload to summarize.</param>
+    /// <returns>The preview string.</returns>
+    private static string BuildDiagnosticPreview(DbFirstGameWindowPayload payload)
+    {
+        var previewEntries = EnumerateStableSignatureTexts(payload)
+            .Take(MaximumDiagnosticPreviewEntryCount)
+            .ToArray();
+        return previewEntries.Length == 0
+            ? "<none>"
+            : string.Join(" | ", previewEntries);
+    }
+
+    /// <summary>
+    ///     Counts the number of stable signature entries contained in one
+    ///     serialized stable payload signature.
+    /// </summary>
+    /// <param name="stablePayloadSignature">The serialized signature.</param>
+    /// <returns>The entry count.</returns>
+    private static int CountStableSignatureEntries(string stablePayloadSignature)
+    {
+        return string.IsNullOrWhiteSpace(stablePayloadSignature)
+            ? 0
+            : stablePayloadSignature.Split(
+                '\u001F',
+                StringSplitOptions.RemoveEmptyEntries).Length;
+    }
+
+    /// <summary>
+    ///     Computes one short diagnostic hash for correlating large payload
+    ///     strings across lifecycle, queue, and persistence logs.
+    /// </summary>
+    /// <param name="value">The value to hash.</param>
+    /// <returns>The short uppercase hexadecimal hash.</returns>
+    private static string ComputeDiagnosticHash(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return "EMPTY";
+        }
+
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+        return Convert.ToHexString(bytes.AsSpan(0, 6));
+    }
+
+    /// <summary>
+    ///     Formats one optional unsigned integer for compact diagnostics.
+    /// </summary>
+    /// <param name="value">The value to format.</param>
+    /// <returns>The formatted text.</returns>
+    private static string FormatOptionalUInt(uint? value)
+    {
+        return value?.ToString() ?? "<none>";
+    }
+
+    /// <summary>
+    ///     Formats one optional text value for compact diagnostics.
+    /// </summary>
+    /// <param name="value">The value to format.</param>
+    /// <returns>The formatted text.</returns>
+    private static string FormatOptionalText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "<none>"
+            : value;
+    }
+
+    /// <summary>
+    ///     Formats one optional boolean for compact diagnostics.
+    /// </summary>
+    /// <param name="value">The value to format.</param>
+    /// <returns>The formatted text.</returns>
+    private static string FormatOptionalBool(bool? value)
+    {
+        return value.HasValue
+            ? value.Value.ToString()
+            : "<n/a>";
     }
 
     /// <summary>
@@ -1474,7 +1870,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <summary>
     ///     Determines whether one ActionMenu text is already covered by either
-    ///     canonical action-tooltip storage or persisted window-chrome
+    ///     canonical structured-tooltip storage or persisted window-chrome
     ///     lookups.
     /// </summary>
     /// <param name="text">The text to inspect.</param>
@@ -1495,13 +1891,95 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        return ActionTooltipCacheManager.TryFindTranslatedText(
+        return TryFindTranslatedCanonicalText(
                    targetLanguage,
                    engine,
                    gameVersion,
                    text,
                    out _) ||
                fallbackLookup.ContainsKey(text);
+    }
+
+    /// <summary>
+    ///     Tries to resolve one translated structured-tooltip text from
+    ///     canonical action or trait storage.
+    /// </summary>
+    /// <param name="targetLanguage">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <param name="translatedText">The resolved translated text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact translated text was found.
+    /// </returns>
+    private static bool TryFindTranslatedCanonicalText(
+        string targetLanguage,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+
+        return ActionTooltipCacheManager.TryFindTranslatedText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   out translatedText) ||
+               TraitCacheManager.TryFindTranslatedText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   out translatedText) ||
+               ReferenceTextCacheRegistry.TryFindTranslatedText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   out translatedText);
+    }
+
+    /// <summary>
+    ///     Tries to resolve one canonical original structured-tooltip text from
+    ///     canonical action or trait storage.
+    /// </summary>
+    /// <param name="targetLanguage">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="visibleText">The translated text to reverse.</param>
+    /// <param name="originalText">The resolved canonical original text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact original text was found.
+    /// </returns>
+    private static bool TryFindOriginalCanonicalText(
+        string targetLanguage,
+        int engine,
+        string? gameVersion,
+        string visibleText,
+        out string originalText)
+    {
+        originalText = string.Empty;
+
+        return ActionTooltipCacheManager.TryFindOriginalText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   visibleText,
+                   out originalText) ||
+               TraitCacheManager.TryFindOriginalText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   visibleText,
+                   out originalText) ||
+               ReferenceTextCacheRegistry.TryFindOriginalText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   visibleText,
+                   out originalText);
     }
 
     /// <summary>

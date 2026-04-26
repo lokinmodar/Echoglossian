@@ -90,6 +90,12 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     }
 
     /// <inheritdoc />
+    protected override bool ShouldRefreshAppliedStateOnPreDraw()
+    {
+        return ShouldContinuouslyRefreshRootCharacterWindow();
+    }
+
+    /// <inheritdoc />
     private protected override bool TryApplyCustomTextNodePayload(
         AtkUnitBase* addon,
         DbFirstGameWindowPayload sourcePayload,
@@ -115,6 +121,22 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
                this.IsAddonVisible("CharacterStatus") ||
                this.IsAddonVisible("CharacterProfile") ||
                this.IsAddonVisible("CharacterRepute");
+    }
+
+    /// <summary>
+    ///     Determines whether the root Character window should keep refreshing
+    ///     on <see cref="AddonEvent.PreDraw" /> after one translation has
+    ///     already been applied.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> because the root Character chrome can
+    ///     populate after the earlier lifecycle events and therefore needs a
+    ///     later retry opportunity to translate the title, tabs, gear-set
+    ///     label, and current job name.
+    /// </returns>
+    internal static bool ShouldContinuouslyRefreshRootCharacterWindow()
+    {
+        return true;
     }
 
     /// <summary>

@@ -25,6 +25,8 @@ public partial class Echoglossian
 
     this.TickAcceptedQuestPrefetch();
     this.TickActionDetailPrefetch();
+    this.TickTraitDetailPrefetch();
+    this.TickReferenceTextPrefetch();
     this.TickItemDetailPrefetch();
 
     switch (NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(

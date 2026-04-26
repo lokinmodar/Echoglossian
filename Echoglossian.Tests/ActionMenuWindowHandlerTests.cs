@@ -8,6 +8,8 @@ using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
 
+using Xunit;
+
 namespace Echoglossian.Tests;
 
 /// <summary>
@@ -112,6 +114,63 @@ public class ActionMenuWindowHandlerTests
         finally
         {
             ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures level-aware trait-name resolution can translate a visible
+    ///     ActionMenu label by reusing the canonical trait cache.
+    /// </summary>
+    [Fact]
+    public void MergeResolvedTranslatedPayload_UsesLevelAwareTraitLookup()
+    {
+        TraitCacheManager.Clear();
+
+        try
+        {
+            TraitCacheManager.Update(new Trait
+            {
+                Id = 1,
+                TraitId = 201,
+                TraitName = "Enhanced Windmill",
+                TranslatedTraitName = "Moinho Aprimorado",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-enhanced-windmill",
+            });
+
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Enhanced Windmill\r\nLv. 15",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+            var resolvedTranslatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Enhanced WindmillLv. 15",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+            var mergedPayload = ActionMenuWindowHandler
+                .MergeResolvedTranslatedPayload(
+                    originalPayload,
+                    resolvedTranslatedPayload,
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(
+                "Moinho Aprimorado\r\nNv. 15",
+                mergedPayload.AtkValues[17]);
+        }
+        finally
+        {
+            TraitCacheManager.Clear();
         }
     }
 

@@ -32,12 +32,31 @@ public partial class Echoglossian
   /// <returns>True if the request was queued, false if one is already in flight.</returns>
   private bool QueueTranslation(
       string key,
-      Func<string> resolver,
+      Func<Task<string>> resolver,
       Action<string>? onResolved = null)
   {
     return this.queuedTranslationBroker.Queue(
         key,
-        () => Task.FromResult(resolver()),
+        resolver,
+        onResolved);
+  }
+
+  /// <summary>
+  ///     Enqueues a synchronous translation request on the shared broker
+  ///     without blocking the broker pump thread.
+  /// </summary>
+  /// <param name="key">Stable translation key.</param>
+  /// <param name="resolver">Function that returns the translated text.</param>
+  /// <param name="onResolved">Optional callback invoked after the text is cached.</param>
+  /// <returns>True if the request was queued, false if one is already in flight.</returns>
+  private bool QueueTranslation(
+      string key,
+      Func<string> resolver,
+      Action<string>? onResolved = null)
+  {
+    return this.QueueTranslation(
+        key,
+        () => Task.Run(resolver),
         onResolved);
   }
 

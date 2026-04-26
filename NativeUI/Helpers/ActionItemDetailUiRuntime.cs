@@ -6,15 +6,20 @@
 using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.UIOverlays.TranslationOverlay;
+using Dalamud.Game.Gui;
 
 namespace Echoglossian;
 
 /// <summary>
 ///     Provides the live DB-first apply/runtime path for the ActionDetail and
-///     ItemDetail addons.
+///     ItemDetail addons, including trait-aware ActionDetail handling.
 /// </summary>
 public unsafe partial class Echoglossian
 {
+    private const uint StructuredTooltipContentKindAction = 1;
+    private const uint StructuredTooltipContentKindTrait = 2;
+    private const uint StructuredTooltipContentKindItem = 3;
+
     private readonly TranslationOverlay actionDetailOverlay = new();
     private readonly TranslationOverlay itemDetailOverlay = new();
 
@@ -87,6 +92,7 @@ public unsafe partial class Echoglossian
 
         var hoveredAction = GameGuiInterface.HoveredAction;
         var hoveredActionId = hoveredAction?.ActionID ?? 0u;
+        var hoveredActionKind = hoveredAction?.ActionKind ?? HoverActionKind.None;
         if (hoveredActionId == 0 ||
             !TryGetCurrentClassJobInfo(
                 out var currentClassJobId,
@@ -115,6 +121,59 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
+            this.configuration.TooltipTranslationDisplayMode,
+            this.configuration.OverlayOnlyLanguage);
+        var useOverlayOnly =
+            !TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
+        var useSwapOverlay =
+            TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
+
+        if (IsTraitHoverActionKind(hoveredActionKind))
+        {
+            if (!TryBuildTraitCanonicalPayload(
+                    hoveredActionId,
+                    currentClassJobId,
+                    out var originalTraitPayload) ||
+                !this.TryFindTranslatedTraitTooltipPayload(
+                    originalTraitPayload,
+                    out var translatedTraitPayload))
+            {
+                this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
+                this.ClearOverlay(this.actionDetailOverlay, clearText: true);
+                return;
+            }
+
+            if (useOverlayOnly)
+            {
+                this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
+            }
+            else
+            {
+                this.ApplyStructuredTraitTooltipNative(
+                    addon,
+                    originalTraitPayload,
+                    translatedTraitPayload);
+            }
+
+            if (useOverlayOnly || useSwapOverlay)
+            {
+                var overlayText = useOverlayOnly
+                    ? translatedTraitPayload.BuildTranslatedTooltipText()
+                    : originalTraitPayload.BuildOriginalTooltipText();
+                this.UpdateStructuredTooltipOverlay(
+                    this.actionDetailOverlay,
+                    addon,
+                    overlayText);
+            }
+            else
+            {
+                this.ClearOverlay(this.actionDetailOverlay, clearText: true);
+            }
+
+            return;
+        }
+
         if (!TryBuildActionTooltipCanonicalPayload(
                 hoveredActionId,
                 currentClassJobId,
@@ -127,14 +186,6 @@ public unsafe partial class Echoglossian
             this.ClearOverlay(this.actionDetailOverlay, clearText: true);
             return;
         }
-
-        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
-            this.configuration.TooltipTranslationDisplayMode,
-            this.configuration.OverlayOnlyLanguage);
-        var useOverlayOnly =
-            !TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
-        var useSwapOverlay =
-            TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
 
         if (useOverlayOnly)
         {
@@ -327,6 +378,36 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Tries to resolve one translated trait payload from canonical storage.
+    /// </summary>
+    /// <param name="originalPayload">The original canonical payload.</param>
+    /// <param name="translatedPayload">The translated payload, if any.</param>
+    /// <returns><see langword="true" /> when a complete translation is available.</returns>
+    private bool TryFindTranslatedTraitTooltipPayload(
+        TraitCanonicalPayload originalPayload,
+        out TraitCanonicalPayload translatedPayload)
+    {
+        translatedPayload = new TraitCanonicalPayload();
+
+        var probe = TraitPersistenceHelper.CreateCanonicalRow(
+            ClientStateInterface.ClientLanguage.Humanize(),
+            LangDict[LanguageInt].Code,
+            this.configuration.ChosenTransEngine,
+            GetGameVersion(),
+            originalPayload);
+        var row = this.FindTrait(probe);
+        var resolvedPayload = TraitCanonicalPayload.Deserialize(
+            row?.CanonicalPayloadAsText);
+        if (resolvedPayload?.HasCompleteTranslation != true)
+        {
+            return false;
+        }
+
+        translatedPayload = resolvedPayload;
+        return true;
+    }
+
+    /// <summary>
     ///     Tries to resolve one translated item-tooltip payload from canonical storage.
     /// </summary>
     /// <param name="originalPayload">The original canonical payload.</param>
@@ -370,6 +451,29 @@ public unsafe partial class Echoglossian
         this.ApplyStructuredTooltipNative(
             addon,
             originalPayload.ActionId,
+            StructuredTooltipContentKindAction,
+            originalPayload.Name,
+            originalPayload.Description,
+            translatedPayload.TranslatedName ?? originalPayload.Name,
+            translatedPayload.TranslatedDescription ?? originalPayload.Description,
+            ref this.currentActionDetailState);
+    }
+
+    /// <summary>
+    ///     Applies translated native text for the trait tooltip when safe to do so.
+    /// </summary>
+    /// <param name="addon">The visible tooltip addon.</param>
+    /// <param name="originalPayload">The original canonical payload.</param>
+    /// <param name="translatedPayload">The translated canonical payload.</param>
+    private void ApplyStructuredTraitTooltipNative(
+        AtkUnitBase* addon,
+        TraitCanonicalPayload originalPayload,
+        TraitCanonicalPayload translatedPayload)
+    {
+        this.ApplyStructuredTooltipNative(
+            addon,
+            originalPayload.TraitId,
+            StructuredTooltipContentKindTrait,
             originalPayload.Name,
             originalPayload.Description,
             translatedPayload.TranslatedName ?? originalPayload.Name,
@@ -391,6 +495,7 @@ public unsafe partial class Echoglossian
         this.ApplyStructuredTooltipNative(
             addon,
             originalPayload.ItemId,
+            StructuredTooltipContentKindItem,
             originalPayload.Name,
             originalPayload.Description,
             translatedPayload.TranslatedName ?? originalPayload.Name,
@@ -411,6 +516,7 @@ public unsafe partial class Echoglossian
     private void ApplyStructuredTooltipNative(
         AtkUnitBase* addon,
         uint contentId,
+        uint contentKind,
         string originalName,
         string originalDescription,
         string translatedName,
@@ -425,7 +531,8 @@ public unsafe partial class Echoglossian
 
         if (runtimeState != null &&
             ((nint)addon != runtimeState.AddonAddress ||
-             runtimeState.ContentId != contentId))
+             runtimeState.ContentId != contentId ||
+             runtimeState.ContentKind != contentKind))
         {
             this.RestoreStructuredTooltipOriginals(ref runtimeState, addon);
         }
@@ -436,6 +543,7 @@ public unsafe partial class Echoglossian
             if (!this.TryResolveTooltipNodeAddresses(
                     addon,
                     contentId,
+                    contentKind,
                     originalName,
                     originalDescription,
                     out var resolvedRuntimeState))
@@ -525,6 +633,7 @@ public unsafe partial class Echoglossian
     private bool TryResolveTooltipNodeAddresses(
         AtkUnitBase* addon,
         uint contentId,
+        uint contentKind,
         string originalName,
         string originalDescription,
         out StructuredTooltipNativeState runtimeState)
@@ -532,6 +641,7 @@ public unsafe partial class Echoglossian
         runtimeState = new StructuredTooltipNativeState(
             (nint)addon,
             contentId,
+            contentKind,
             0,
             originalName,
             0,
@@ -575,6 +685,18 @@ public unsafe partial class Echoglossian
 
         return runtimeState.NameNodeAddress != 0 ||
                runtimeState.DescriptionNodeAddress != 0;
+    }
+
+    /// <summary>
+    ///     Gets whether the hovered ActionDetail payload should use the trait pipeline.
+    /// </summary>
+    /// <param name="hoverActionKind">The hovered action kind.</param>
+    /// <returns><see langword="true" /> when the hover kind represents a trait.</returns>
+    private static bool IsTraitHoverActionKind(HoverActionKind hoverActionKind)
+    {
+        return hoverActionKind is HoverActionKind.Trait or
+               HoverActionKind.PvPSelectTrait or
+               HoverActionKind.MKDTrait;
     }
 
     /// <summary>
@@ -716,6 +838,7 @@ public unsafe partial class Echoglossian
     private sealed record StructuredTooltipNativeState(
         nint AddonAddress,
         uint ContentId,
+        uint ContentKind,
         nint NameNodeAddress,
         string OriginalNameText,
         nint DescriptionNodeAddress,

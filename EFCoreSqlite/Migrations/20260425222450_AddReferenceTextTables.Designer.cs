@@ -3,6 +3,7 @@ using System;
 using Echoglossian.EFCoreSqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Echoglossian.EFCoreSqlite.Migrations
 {
     [DbContext(typeof(EchoglossianDbContext))]
-    partial class EchoglossianDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425222450_AddReferenceTextTables")]
+    partial class AddReferenceTextTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -867,79 +870,6 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("locationnames", (string)null);
-                });
-
-            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.MainCommandText", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CanonicalPayloadAsText")
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint?>("CategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GameVersion")
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint?>("IconId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<uint?>("MainCommandCategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("OriginalDescription")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OriginalLang")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OriginalName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint>("ReferenceId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("BLOB");
-
-                    b.Property<uint?>("SortId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SourceContentHash")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TranslatedDescription")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TranslatedName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("TranslationEngine")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TranslationLang")
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint?>("Unknown0")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReferenceId", "TranslationLang", "TranslationEngine", "GameVersion", "SourceContentHash")
-                        .HasDatabaseName("IX_maincommandtexts_lookup");
-
-                    b.ToTable("maincommandtexts", (string)null);
                 });
 
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.MiniTalkMessage", b =>

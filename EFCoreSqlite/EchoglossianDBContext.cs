@@ -35,6 +35,8 @@ public class EchoglossianDbContext : DbContext
 
   public DbSet<ActionTooltip> ActionTooltip { get; set; }
 
+  public DbSet<Trait> Traits { get; set; }
+
   public DbSet<ItemTooltip> ItemTooltip { get; set; }
 
   public DbSet<SelectString> SelectString { get; set; }
@@ -62,6 +64,66 @@ public class EchoglossianDbContext : DbContext
   ///     Gets or sets the translated string array records.
   /// </summary>
   public DbSet<StringArrayDatas> StringArrayDatas { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical GeneralAction text rows.
+  /// </summary>
+  public DbSet<GeneralActionText> GeneralActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical BuddyAction text rows.
+  /// </summary>
+  public DbSet<BuddyActionText> BuddyActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical CompanyAction text rows.
+  /// </summary>
+  public DbSet<CompanyActionText> CompanyActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical CraftAction text rows.
+  /// </summary>
+  public DbSet<CraftActionText> CraftActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical PetAction text rows.
+  /// </summary>
+  public DbSet<PetActionText> PetActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical EventAction text rows.
+  /// </summary>
+  public DbSet<EventActionText> EventActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical BgcArmyAction text rows.
+  /// </summary>
+  public DbSet<BgcArmyActionText> BgcArmyActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical AozAction text rows.
+  /// </summary>
+  public DbSet<AozActionText> AozActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical PvPAction text rows.
+  /// </summary>
+  public DbSet<PvPActionText> PvPActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical MountAction text rows.
+  /// </summary>
+  public DbSet<MountActionText> MountActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical MainCommand sheet text rows.
+  /// </summary>
+  public DbSet<MainCommandText> MainCommandTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical EurekaMagiaAction text rows.
+  /// </summary>
+  public DbSet<EurekaMagiaActionText> EurekaMagiaActionTexts { get; set; }
 
   /// <summary>
   ///     Gets or sets exact translation failures that should not be retried for
@@ -95,6 +157,17 @@ public class EchoglossianDbContext : DbContext
           t.SourceContentHash
         })
         .HasDatabaseName("IX_actiontooltips_lookup");
+    modelBuilder.Entity<Trait>().ToTable("Traits");
+    modelBuilder.Entity<Trait>()
+        .HasIndex(t => new
+        {
+          t.TraitId,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_traits_lookup");
     modelBuilder.Entity<ItemTooltip>().ToTable("itemtooltips");
     modelBuilder.Entity<ItemTooltip>()
         .HasIndex(t => new
@@ -242,6 +315,80 @@ public class EchoglossianDbContext : DbContext
           s.SourceContentHash
         })
         .HasDatabaseName("IX_stringarraydatas_context_lookup");
+    ConfigureReferenceTextEntity<GeneralActionText>(
+        modelBuilder,
+        "generalactiontexts",
+        "IX_generalactiontexts_lookup");
+    ConfigureReferenceTextEntity<BuddyActionText>(
+        modelBuilder,
+        "buddyactiontexts",
+        "IX_buddyactiontexts_lookup");
+    ConfigureReferenceTextEntity<CompanyActionText>(
+        modelBuilder,
+        "companyactiontexts",
+        "IX_companyactiontexts_lookup");
+    ConfigureReferenceTextEntity<CraftActionText>(
+        modelBuilder,
+        "craftactiontexts",
+        "IX_craftactiontexts_lookup");
+    ConfigureReferenceTextEntity<PetActionText>(
+        modelBuilder,
+        "petactiontexts",
+        "IX_petactiontexts_lookup");
+    ConfigureReferenceTextEntity<EventActionText>(
+        modelBuilder,
+        "eventactiontexts",
+        "IX_eventactiontexts_lookup");
+    ConfigureReferenceTextEntity<BgcArmyActionText>(
+        modelBuilder,
+        "bgcarmyactiontexts",
+        "IX_bgcarmyactiontexts_lookup");
+    ConfigureReferenceTextEntity<AozActionText>(
+        modelBuilder,
+        "aozactiontexts",
+        "IX_aozactiontexts_lookup");
+    ConfigureReferenceTextEntity<PvPActionText>(
+        modelBuilder,
+        "pvpactiontexts",
+        "IX_pvpactiontexts_lookup");
+    ConfigureReferenceTextEntity<MountActionText>(
+        modelBuilder,
+        "mountactiontexts",
+        "IX_mountactiontexts_lookup");
+    ConfigureReferenceTextEntity<MainCommandText>(
+        modelBuilder,
+        "maincommandtexts",
+        "IX_maincommandtexts_lookup");
+    ConfigureReferenceTextEntity<EurekaMagiaActionText>(
+        modelBuilder,
+        "eurekamagiaactiontexts",
+        "IX_eurekamagiaactiontexts_lookup");
+  }
+
+  /// <summary>
+  ///     Configures one reference-text entity table and lookup index.
+  /// </summary>
+  /// <typeparam name="TRow">The concrete row type.</typeparam>
+  /// <param name="modelBuilder">The active model builder.</param>
+  /// <param name="tableName">The physical table name.</param>
+  /// <param name="indexName">The lookup index name.</param>
+  private static void ConfigureReferenceTextEntity<TRow>(
+      ModelBuilder modelBuilder,
+      string tableName,
+      string indexName)
+      where TRow : ReferenceTextRowBase
+  {
+    modelBuilder.Entity<TRow>().ToTable(tableName);
+    modelBuilder.Entity<TRow>()
+        .HasIndex(t => new
+        {
+          t.ReferenceId,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName(indexName);
   }
 
   public override void Dispose()

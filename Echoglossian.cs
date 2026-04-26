@@ -269,7 +269,10 @@ public partial class Echoglossian : IDalamudPlugin
         PluginLog,
         Sanitizer);
 
-    this.queuedTranslationBroker = new QueuedTranslationBroker();
+    this.queuedTranslationBroker = new QueuedTranslationBroker(
+        (TransEngines)this.configuration.ChosenTransEngine,
+        message => PluginLog.Warning(message),
+        message => PluginLog.Error(message));
     this.hoverTooltipManager = new HoverTooltipManager(this.configuration);
 
     this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
@@ -282,6 +285,8 @@ public partial class Echoglossian : IDalamudPlugin
     StringArrayDataCacheManager.Preload(ConfigDirectory);
     TranslationFailureCacheManager.Preload(ConfigDirectory);
     ActionTooltipCacheManager.Preload(ConfigDirectory);
+    TraitCacheManager.Preload(ConfigDirectory);
+    ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
     ItemTooltipCacheManager.Preload(ConfigDirectory);
 
     FrameworkInterface.Update += this.Tick;
@@ -346,6 +351,9 @@ public partial class Echoglossian : IDalamudPlugin
   public static ISeStringEvaluator SeStringEvaluator { get; set; } = null!;
 
   [PluginService] public static IToastGui ToastGuiInterface { get; set; } = null!;
+
+  [PluginService]
+  public static IUnlockState UnlockStateInterface { get; set; } = null!;
 
   [PluginService]
   public static IAddonEventManager EventManager { get; set; } = null!;
@@ -427,12 +435,16 @@ public partial class Echoglossian : IDalamudPlugin
       GameWindowCacheManager.Clear();
       TranslationFailureCacheManager.Clear();
       ActionTooltipCacheManager.Clear();
+      TraitCacheManager.Clear();
+      ReferenceTextCacheRegistry.ClearAll();
       ItemTooltipCacheManager.Clear();
       DbFirstGameWindowAddonHandler.ClearSessionCaches();
       QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();
     this.ClearAcceptedQuestPrefetchState();
+    this.ClearTraitDetailPrefetchState();
+    this.ClearReferenceTextPrefetchState();
 
       this.addonProbeWatch?.Dispose();
       this.addonProbeWatch = null;

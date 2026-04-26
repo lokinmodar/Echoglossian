@@ -60,4 +60,18 @@ public class CharacterWindowHandlerTests
         Assert.True(found);
         Assert.Equal(expectedTranslation, translatedText);
     }
+
+    /// <summary>
+    ///     Ensures the root Character handler keeps refreshing on pre-draw so
+    ///     shell text that settles after the initial lifecycle events can
+    ///     still receive DB-first translation.
+    /// </summary>
+    [Fact]
+    public void ShouldContinuouslyRefreshRootCharacterWindow_ReturnsTrue()
+    {
+        var shouldRefresh =
+            CharacterWindowHandler.ShouldContinuouslyRefreshRootCharacterWindow();
+
+        Assert.True(shouldRefresh);
+    }
 }

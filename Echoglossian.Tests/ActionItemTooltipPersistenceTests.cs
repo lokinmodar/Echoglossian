@@ -427,6 +427,148 @@ public class ActionItemTooltipPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures distinct trait variants for the same trait id are preserved
+    ///     when their source payload hash differs.
+    /// </summary>
+    [Fact]
+    public void InsertTrait_PreservesDistinctSourceHashes()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var firstPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Original description A",
+            };
+            var secondPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Original description B",
+            };
+
+            TraitPersistenceHelper.InsertTrait(
+                configDir,
+                TraitPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    firstPayload));
+            TraitPersistenceHelper.InsertTrait(
+                configDir,
+                TraitPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    secondPayload));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var rows = validationContext.Traits
+                .Where(row => row.TraitId == 201)
+                .ToList();
+
+            Assert.Equal(2, rows.Count);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures an exact trait canonical match updates in place.
+    /// </summary>
+    [Fact]
+    public void InsertTrait_UpdatesExactCanonicalMatch()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Upgrades Windmill.",
+            };
+            var translatedPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Upgrades Windmill.",
+                TranslatedName = "Moinho Aprimorado",
+            };
+            var updatedPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Upgrades Windmill.",
+                TranslatedName = "Moinho Aprimorado",
+                TranslatedDescription = "Aprimora o Moinho.",
+            };
+
+            TraitPersistenceHelper.InsertTrait(
+                configDir,
+                TraitPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload));
+            TraitPersistenceHelper.InsertTrait(
+                configDir,
+                TraitPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    updatedPayload));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.Traits);
+
+            Assert.Equal("Moinho Aprimorado", row.TranslatedTraitName);
+            Assert.Equal("Aprimora o Moinho.", row.TranslatedTraitDescription);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Creates a temporary config directory for persistence tests.
     /// </summary>
     /// <returns>The created directory path.</returns>

@@ -9,7 +9,7 @@ using Echoglossian.EFCoreSqlite.Models;
 namespace Echoglossian;
 
 /// <summary>
-///     Provides DB and cache operations for canonical action/item tooltip rows.
+///     Provides DB and cache operations for canonical action/item/trait tooltip rows.
 /// </summary>
 public partial class Echoglossian
 {
@@ -61,6 +61,56 @@ public partial class Echoglossian
             ConfigDirectory,
             row,
             ActionTooltipCacheManager.Update);
+    }
+
+    /// <summary>
+    ///     Finds one canonical trait row using cache-first lookup.
+    /// </summary>
+    /// <param name="probe">The probe row that defines the lookup scope.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public Trait? FindTrait(Trait probe)
+    {
+        if (probe == null ||
+            probe.TraitId == 0 ||
+            string.IsNullOrWhiteSpace(probe.TranslationLang) ||
+            string.IsNullOrWhiteSpace(probe.SourceContentHash))
+        {
+            return null;
+        }
+
+        var cached = TraitCacheManager.TryFindCanonicalMatch(
+            probe.TraitId,
+            probe.TranslationLang,
+            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            probe.GameVersion,
+            probe.SourceContentHash);
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        var row = TraitPersistenceHelper.FindTrait(
+            ConfigDirectory,
+            probe);
+        if (row != null)
+        {
+            TraitCacheManager.Update(row);
+        }
+
+        return row;
+    }
+
+    /// <summary>
+    ///     Inserts or updates one canonical trait row and refreshes cache state.
+    /// </summary>
+    /// <param name="row">The row to persist.</param>
+    /// <returns>A status message describing the result.</returns>
+    public string InsertTrait(Trait row)
+    {
+        return TraitPersistenceHelper.InsertTrait(
+            ConfigDirectory,
+            row,
+            TraitCacheManager.Update);
     }
 
     /// <summary>
