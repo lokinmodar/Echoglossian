@@ -62,16 +62,15 @@ public class CharacterWindowHandlerTests
     }
 
     /// <summary>
-    ///     Ensures the root Character handler keeps refreshing on pre-draw so
-    ///     shell text that settles after the initial lifecycle events can
-    ///     still receive DB-first translation.
+    ///     Ensures the root Character handler uses a bounded post-lifecycle
+    ///     settling window instead of permanent pre-draw polling.
     /// </summary>
     [Fact]
-    public void ShouldContinuouslyRefreshRootCharacterWindow_ReturnsTrue()
+    public void GetRootCharacterAppliedStateRefreshWindow_ReturnsExpectedDuration()
     {
-        var shouldRefresh =
-            CharacterWindowHandler.ShouldContinuouslyRefreshRootCharacterWindow();
+        var refreshWindow =
+            CharacterWindowHandler.GetRootCharacterAppliedStateRefreshWindow();
 
-        Assert.True(shouldRefresh);
+        Assert.Equal(TimeSpan.FromSeconds(1), refreshWindow);
     }
 }

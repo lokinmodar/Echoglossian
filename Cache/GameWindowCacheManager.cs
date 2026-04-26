@@ -15,6 +15,8 @@ namespace Echoglossian.Cache;
 /// </summary>
 public static class GameWindowCacheManager
 {
+  private const string ActionMenuWindowName = "ActionMenu";
+
   private static bool isPreloaded;
 
   private static readonly Dictionary<string, GameWindow> ExactCache =
@@ -41,12 +43,15 @@ public static class GameWindowCacheManager
   /// <param name="configDir">The plugin's configuration directory path.</param>
   public static void Preload(string configDir)
   {
-    PluginLog.Debug("[GameWindowCacheManager] Preloading GameWindow entries from DB...");
+    global::Echoglossian.Echoglossian.PluginLog?.Debug("[GameWindowCacheManager] Preloading GameWindow entries from DB...");
 
     try
     {
       using var context = new EchoglossianDbContext(configDir);
-      var all = context.GameWindow.AsNoTracking().ToList();
+      var all = context.GameWindow
+          .AsNoTracking()
+          .OrderBy(record => record.Id)
+          .ToList();
 
       Cache.Clear();
       ExactCache.Clear();
@@ -63,12 +68,12 @@ public static class GameWindowCacheManager
       }
 
       isPreloaded = true;
-      PluginLog.Debug($"[GameWindowCacheManager] Loaded {all.Count} records into {Cache.Count} addon buckets.");
+      global::Echoglossian.Echoglossian.PluginLog?.Debug($"[GameWindowCacheManager] Loaded {all.Count} records into {Cache.Count} addon buckets.");
     }
     catch (Exception ex)
     {
       isPreloaded = false;
-      PluginLog.Error($"[GameWindowCacheManager] Failed to preload cache: {ex}");
+      global::Echoglossian.Echoglossian.PluginLog?.Error($"[GameWindowCacheManager] Failed to preload cache: {ex}");
     }
   }
 
@@ -81,29 +86,20 @@ public static class GameWindowCacheManager
   {
     if (newRecord == null || string.IsNullOrWhiteSpace(newRecord.WindowAddonName))
     {
-      PluginLog.Warning("[GameWindowCacheManager.Update] Attempted to update cache with null or invalid record.");
+      global::Echoglossian.Echoglossian.PluginLog?.Warning("[GameWindowCacheManager.Update] Attempted to update cache with null or invalid record.");
       return;
     }
 
-    var existing = GetAddonBucket(newRecord.WindowAddonName).FirstOrDefault(g =>
-        RuntimeLanguageHelper.LanguagesMatch(
-            g.TranslationLang,
-            newRecord.TranslationLang) &&
-        g.ClassJobId == newRecord.ClassJobId &&
-        g.TranslationEngine == newRecord.TranslationEngine &&
-        GameVersionLookupHelper.MatchesStoredVersion(
-            g.GameVersion,
-            newRecord.GameVersion) &&
-        g.OriginalWindowStrings == newRecord.OriginalWindowStrings);
+    var existing = TryFindExistingCacheRow(newRecord);
 
     if (existing != null)
     {
       RemoveIndexedRecord(existing);
-      PluginLog.Debug("[GameWindowCacheManager.Update] Replacing duplicate GameWindow in cache.");
+      global::Echoglossian.Echoglossian.PluginLog?.Debug("[GameWindowCacheManager.Update] Replacing duplicate GameWindow in cache.");
     }
 
     IndexRecord(newRecord);
-    PluginLog.Debug(
+    global::Echoglossian.Echoglossian.PluginLog?.Debug(
         $"[GameWindowCacheManager.Update] Cached GameWindow for addon: {newRecord.WindowAddonName} (now {GetAddonBucket(newRecord.WindowAddonName).Count} entries).");
   }
 
@@ -116,7 +112,7 @@ public static class GameWindowCacheManager
     ExactCache.Clear();
     ScopeCache.Clear();
     isPreloaded = false;
-    PluginLog.Debug("[GameWindowCacheManager] Cleared GameWindow cache.");
+    global::Echoglossian.Echoglossian.PluginLog?.Debug("[GameWindowCacheManager] Cleared GameWindow cache.");
   }
 
   /// <summary>
@@ -141,7 +137,7 @@ public static class GameWindowCacheManager
   {
     if (string.IsNullOrWhiteSpace(addonName) || string.IsNullOrWhiteSpace(lang))
     {
-      PluginLog.Warning("[GameWindowCacheManager.TryFindMatch] Invalid parameters.");
+      global::Echoglossian.Echoglossian.PluginLog?.Warning("[GameWindowCacheManager.TryFindMatch] Invalid parameters.");
       return null;
     }
 
@@ -246,6 +242,11 @@ public static class GameWindowCacheManager
 
     if (string.IsNullOrWhiteSpace(version))
     {
+      if (IsActionMenu(addonName))
+      {
+        return GetPreferredActionMenuCandidates(exactRows, legacyRows);
+      }
+
       return MergeCandidateLists(exactRows, legacyRows);
     }
 
@@ -267,12 +268,37 @@ public static class GameWindowCacheManager
 
     if (exactRows == null || exactRows.Count == 0)
     {
+      if (IsActionMenu(addonName))
+      {
+        return GetPreferredActionMenuCandidates(
+            versionAgnosticRows,
+            legacyRows,
+            legacyVersionAgnosticRows);
+      }
+
       return MergeCandidateLists(versionAgnosticRows, legacyRows, legacyVersionAgnosticRows);
     }
 
     if (versionAgnosticRows == null || versionAgnosticRows.Count == 0)
     {
+      if (IsActionMenu(addonName))
+      {
+        return GetPreferredActionMenuCandidates(
+            exactRows,
+            legacyRows,
+            legacyVersionAgnosticRows);
+      }
+
       return MergeCandidateLists(exactRows, legacyRows, legacyVersionAgnosticRows);
+    }
+
+    if (IsActionMenu(addonName))
+    {
+      return GetPreferredActionMenuCandidates(
+          exactRows,
+          versionAgnosticRows,
+          legacyRows,
+          legacyVersionAgnosticRows);
     }
 
     return MergeCandidateLists(
@@ -280,6 +306,40 @@ public static class GameWindowCacheManager
         versionAgnosticRows,
         legacyRows,
         legacyVersionAgnosticRows);
+  }
+
+  /// <summary>
+  ///     Tries to find an existing cached row that should be replaced by the
+  ///     supplied record.
+  /// </summary>
+  /// <param name="newRecord">The new record.</param>
+  /// <returns>The cached row to replace, or <see langword="null"/>.</returns>
+  private static GameWindow? TryFindExistingCacheRow(GameWindow newRecord)
+  {
+    var addonBucket = GetAddonBucket(newRecord.WindowAddonName!);
+    if (IsActionMenu(newRecord.WindowAddonName))
+    {
+      return addonBucket.FirstOrDefault(g =>
+          RuntimeLanguageHelper.LanguagesMatch(
+              g.TranslationLang,
+              newRecord.TranslationLang) &&
+          g.ClassJobId == newRecord.ClassJobId &&
+          g.TranslationEngine == newRecord.TranslationEngine &&
+          GameVersionLookupHelper.MatchesStoredVersion(
+              g.GameVersion,
+              newRecord.GameVersion));
+    }
+
+    return addonBucket.FirstOrDefault(g =>
+        RuntimeLanguageHelper.LanguagesMatch(
+            g.TranslationLang,
+            newRecord.TranslationLang) &&
+        g.ClassJobId == newRecord.ClassJobId &&
+        g.TranslationEngine == newRecord.TranslationEngine &&
+        GameVersionLookupHelper.MatchesStoredVersion(
+            g.GameVersion,
+            newRecord.GameVersion) &&
+        g.OriginalWindowStrings == newRecord.OriginalWindowStrings);
   }
 
   private static List<GameWindow> GetAddonBucket(string addonName)
@@ -407,5 +467,49 @@ public static class GameWindowCacheManager
         .GroupBy(row => row.Id)
         .Select(group => group.First())
         .ToList();
+  }
+
+  /// <summary>
+  ///     Determines whether the specified addon name belongs to
+  ///     <c>ActionMenu</c>.
+  /// </summary>
+  /// <param name="addonName">The addon name to test.</param>
+  /// <returns>
+  ///     <see langword="true"/> when the addon is <c>ActionMenu</c>;
+  ///     otherwise <see langword="false"/>.
+  /// </returns>
+  private static bool IsActionMenu(string? addonName)
+  {
+    return string.Equals(
+        addonName,
+        ActionMenuWindowName,
+        StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Chooses the preferred ActionMenu candidate set and collapses it to
+  ///     the newest row so recovery and gate checks do not scan historical
+  ///     duplicates from the same lookup scope.
+  /// </summary>
+  /// <param name="candidateSets">The candidate sets in preference order.</param>
+  /// <returns>The preferred collapsed candidate list.</returns>
+  private static IReadOnlyList<GameWindow> GetPreferredActionMenuCandidates(
+      params List<GameWindow>?[] candidateSets)
+  {
+    foreach (var candidateSet in candidateSets)
+    {
+      if (candidateSet == null || candidateSet.Count == 0)
+      {
+        continue;
+      }
+
+      var preferred = candidateSet
+          .OrderByDescending(static row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(static row => row.Id)
+          .First();
+      return [preferred];
+    }
+
+    return [];
   }
 }

@@ -16,6 +16,8 @@ namespace Echoglossian;
 /// </summary>
 public static class GameWindowPersistenceHelper
 {
+    private const string ActionMenuWindowName = "ActionMenu";
+
     private static readonly DiagnosticTelemetryHelper ActionMenuPersistenceTelemetry = new(
         "ActionMenuPersist",
         TimeSpan.FromMilliseconds(250));
@@ -45,22 +47,15 @@ public static class GameWindowPersistenceHelper
                 return "Invalid data.";
             }
 
-            var existing = context.GameWindow
-                .AsEnumerable()
-                .FirstOrDefault(g =>
-                    g.WindowAddonName == gameWindow.WindowAddonName &&
-                    RuntimeLanguageHelper.LanguagesMatch(
-                        g.TranslationLang,
-                        gameWindow.TranslationLang) &&
-                    g.ClassJobId == gameWindow.ClassJobId &&
-                    g.TranslationEngine == gameWindow.TranslationEngine &&
-                    GameVersionLookupHelper.MatchesStoredVersion(
-                        g.GameVersion,
-                        gameWindow.GameVersion) &&
-                    g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
+            var existing = TryFindExistingRow(context, gameWindow);
 
             if (existing != null)
             {
+                if (IsActionMenuScopedUpsert(gameWindow))
+                {
+                    existing.OriginalWindowStrings = gameWindow.OriginalWindowStrings;
+                }
+
                 existing.OriginalWindowStringsLang = gameWindow.OriginalWindowStringsLang;
                 existing.TranslatedWindowStrings = gameWindow.TranslatedWindowStrings;
                 existing.UpdatedDate = DateTime.UtcNow;
@@ -95,6 +90,96 @@ public static class GameWindowPersistenceHelper
         {
             return $"Error inserting GameWindow: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    ///     Tries to find one existing row that should be updated instead of
+    ///     inserting a new row.
+    /// </summary>
+    /// <param name="context">The database context.</param>
+    /// <param name="gameWindow">The candidate row.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    private static GameWindow? TryFindExistingRow(
+        EchoglossianDbContext context,
+        GameWindow gameWindow)
+    {
+        return IsActionMenuScopedUpsert(gameWindow)
+            ? TryFindExistingActionMenuScopeRow(context, gameWindow)
+            : TryFindExistingExactPayloadRow(context, gameWindow);
+    }
+
+    /// <summary>
+    ///     Determines whether one <see cref="GameWindow" /> should use the
+    ///     ActionMenu scoped upsert semantics.
+    /// </summary>
+    /// <param name="gameWindow">The candidate row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the row belongs to
+    ///     <c>ActionMenu</c>; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool IsActionMenuScopedUpsert(GameWindow gameWindow)
+    {
+        return string.Equals(
+            gameWindow.WindowAddonName,
+            ActionMenuWindowName,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Tries to find one exact persisted payload row using the default
+    ///     addon semantics.
+    /// </summary>
+    /// <param name="context">The database context.</param>
+    /// <param name="gameWindow">The candidate row.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    private static GameWindow? TryFindExistingExactPayloadRow(
+        EchoglossianDbContext context,
+        GameWindow gameWindow)
+    {
+        return context.GameWindow
+            .AsEnumerable()
+            .FirstOrDefault(g =>
+                g.WindowAddonName == gameWindow.WindowAddonName &&
+                RuntimeLanguageHelper.LanguagesMatch(
+                    g.TranslationLang,
+                    gameWindow.TranslationLang) &&
+                g.ClassJobId == gameWindow.ClassJobId &&
+                g.TranslationEngine == gameWindow.TranslationEngine &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    g.GameVersion,
+                    gameWindow.GameVersion) &&
+                g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
+    }
+
+    /// <summary>
+    ///     Tries to find one existing ActionMenu row for the same effective
+    ///     lookup scope, regardless of the current payload shape.
+    /// </summary>
+    /// <param name="context">The database context.</param>
+    /// <param name="gameWindow">The candidate ActionMenu row.</param>
+    /// <returns>The matching scoped row, or <see langword="null" />.</returns>
+    private static GameWindow? TryFindExistingActionMenuScopeRow(
+        EchoglossianDbContext context,
+        GameWindow gameWindow)
+    {
+        return context.GameWindow
+            .AsEnumerable()
+            .Where(g =>
+                string.Equals(
+                    g.WindowAddonName,
+                    ActionMenuWindowName,
+                    StringComparison.Ordinal) &&
+                RuntimeLanguageHelper.LanguagesMatch(
+                    g.TranslationLang,
+                    gameWindow.TranslationLang) &&
+                g.ClassJobId == gameWindow.ClassJobId &&
+                g.TranslationEngine == gameWindow.TranslationEngine &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    g.GameVersion,
+                    gameWindow.GameVersion))
+            .OrderByDescending(static g => g.UpdatedDate ?? g.CreatedDate ?? DateTime.MinValue)
+            .ThenByDescending(static g => g.Id)
+            .FirstOrDefault();
     }
 
     /// <summary>

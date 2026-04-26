@@ -77,7 +77,7 @@ public unsafe class CharacterClassSubWindowHandler
     /// <inheritdoc />
     protected override bool ShouldRefreshAppliedStateOnPreDraw()
     {
-        return true;
+        return false;
     }
 
     /// <inheritdoc />

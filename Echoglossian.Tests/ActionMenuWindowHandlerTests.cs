@@ -7,6 +7,7 @@ using Echoglossian.NativeUI.AddonHandlers.ActionMenu;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.Tests.TestDoubles;
 
 using Xunit;
 
@@ -18,6 +19,16 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class ActionMenuWindowHandlerTests
 {
+    /// <summary>
+    ///     Initializes a new instance of the
+    ///     <see cref="ActionMenuWindowHandlerTests" /> class.
+    /// </summary>
+    public ActionMenuWindowHandlerTests()
+    {
+        global::Echoglossian.Echoglossian.PluginLog ??=
+            new NoOpPluginLog();
+    }
+
     /// <summary>
     ///     Ensures a translated action label preserves the original line break
     ///     before the trailing level token.
@@ -284,7 +295,7 @@ public class ActionMenuWindowHandlerTests
 
         Assert.DoesNotContain("Switch View", signature, StringComparison.Ordinal);
         Assert.DoesNotContain("Level 92", signature, StringComparison.Ordinal);
-        Assert.DoesNotContain("Dancer", signature, StringComparison.Ordinal);
+        Assert.Contains("job:Dancer", signature, StringComparison.Ordinal);
         Assert.DoesNotContain(
             "Search for answers",
             signature,
@@ -384,6 +395,94 @@ public class ActionMenuWindowHandlerTests
         {
             ActionTooltipCacheManager.Clear();
         }
+    }
+
+    /// <summary>
+    ///     Ensures the unseen-text counter treats level-tagged ActionMenu
+    ///     labels as canonical when only the base action name exists in cache
+    ///     and the translated name is identical to the original.
+    /// </summary>
+    [Fact]
+    public void CountMeaningfulUnseenTexts_TreatsLevelAwareCanonicalNamesAsKnown()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 2,
+                ActionId = 16002,
+                ActionName = "Canonical Peloton Test",
+                TranslatedActionName = "Canonical Peloton Test",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-canonical-peloton-test",
+            });
+
+            var payload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Canonical Peloton Test\r\nLv. 20",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+            var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+                payload,
+                "pt-BR",
+                0,
+                "7.3",
+                new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(0, unseenCount);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the unseen-text counter recognizes canonical reference-text
+    ///     rows even when the captured ActionMenu chrome text carries embedded
+    ///     control bytes and the canonical row was stored under the generic
+    ///     <c>pt</c> language code.
+    /// </summary>
+    [Fact]
+    public void CountMeaningfulUnseenTexts_UsesNormalizedReferenceTextLookup()
+    {
+        ReferenceTextCacheRegistry.MainCommandTexts.Update(new MainCommandText
+        {
+            Id = 7001,
+            ReferenceId = 7001,
+            TranslationLang = "pt",
+            TranslationEngine = 0,
+            GameVersion = "7.3",
+            SourceContentHash = "hash-maincommand-character-configuration",
+            OriginalName = "Character Configuration",
+            TranslatedName = "Configuracao de Personagem",
+            OriginalDescription = "Opens character configuration.",
+            TranslatedDescription = "Abre a configuracao de personagem.",
+        });
+
+        var payload = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["3:100"] = "Character \u0002\u0010\u0001\u0003Configuration\r",
+            });
+
+        var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+            payload,
+            "pt-BR",
+            0,
+            "7.3",
+            new Dictionary<string, string>(StringComparer.Ordinal));
+
+        Assert.Equal(0, unseenCount);
     }
 
     /// <summary>

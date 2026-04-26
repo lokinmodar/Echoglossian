@@ -1244,14 +1244,42 @@ public unsafe partial class Echoglossian
             return false;
         }
 
-        payload.CategoryId = Convert.ToUInt32(row.Category);
+        payload.CategoryId = row.Category;
         payload.MainCommandCategoryId =
             row.MainCommandCategory.RowId != 0
                 ? row.MainCommandCategory.RowId
                 : null;
-        payload.Unknown0 = Convert.ToUInt32(row.Unknown0);
-        payload.SortId = Convert.ToUInt32(row.SortID);
+        payload.Unknown0 = NormalizeMainCommandUnknown0(row.Unknown0);
+        payload.SortId = NormalizeMainCommandSortId(row.SortID);
         return true;
+    }
+
+    /// <summary>
+    ///     Normalizes the <c>MainCommand.Unknown0</c> metadata value so the
+    ///     runtime only persists meaningful positive values.
+    /// </summary>
+    /// <param name="unknown0">The raw sheet value.</param>
+    /// <returns>
+    ///     The persisted unsigned value, or <see langword="null" /> when the
+    ///     sheet uses its zero sentinel.
+    /// </returns>
+    internal static uint? NormalizeMainCommandUnknown0(byte unknown0)
+    {
+        return unknown0 > 0 ? unknown0 : null;
+    }
+
+    /// <summary>
+    ///     Normalizes the <c>MainCommand.SortID</c> metadata value so negative
+    ///     sheet sentinels do not overflow canonical persistence.
+    /// </summary>
+    /// <param name="sortId">The raw signed sheet value.</param>
+    /// <returns>
+    ///     The persisted unsigned value, or <see langword="null" /> when the
+    ///     sheet exposes a negative sentinel.
+    /// </returns>
+    internal static uint? NormalizeMainCommandSortId(sbyte sortId)
+    {
+        return sortId >= 0 ? (uint)sortId : null;
     }
 
     /// <summary>

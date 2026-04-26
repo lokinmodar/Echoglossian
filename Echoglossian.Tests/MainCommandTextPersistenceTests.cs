@@ -22,6 +22,29 @@ namespace Echoglossian.Tests;
 public class MainCommandTextPersistenceTests
 {
     /// <summary>
+    ///     Ensures negative sheet sentinels do not overflow persisted
+    ///     <c>MainCommand.SortID</c> metadata.
+    /// </summary>
+    [Fact]
+    public void NormalizeMainCommandSortId_ReturnsNullForNegativeSentinel()
+    {
+        Assert.Null(Echoglossian.NormalizeMainCommandSortId(-1));
+        Assert.Equal((uint)0, Echoglossian.NormalizeMainCommandSortId(0));
+        Assert.Equal((uint)40, Echoglossian.NormalizeMainCommandSortId(40));
+    }
+
+    /// <summary>
+    ///     Ensures the runtime only persists positive <c>MainCommand.Unknown0</c>
+    ///     values, matching the client-side usage contract.
+    /// </summary>
+    [Fact]
+    public void NormalizeMainCommandUnknown0_ReturnsNullForZeroSentinel()
+    {
+        Assert.Null(Echoglossian.NormalizeMainCommandUnknown0(0));
+        Assert.Equal((uint)9, Echoglossian.NormalizeMainCommandUnknown0(9));
+    }
+
+    /// <summary>
     ///     Ensures one exact MainCommand canonical match updates in place while
     ///     preserving sheet metadata.
     /// </summary>
@@ -248,6 +271,24 @@ public class MainCommandTextPersistenceTests
                 "Acoes e Caracteristicas",
                 out var originalText));
         Assert.Equal("Actions & Traits", originalText);
+
+        Assert.True(
+            cache.TryFindTranslatedText(
+                "pt-BR",
+                0,
+                "7.3",
+                "Actions & Traits",
+                out var translatedRegionalText));
+        Assert.Equal("Acoes e Caracteristicas", translatedRegionalText);
+
+        Assert.True(
+            cache.TryFindOriginalText(
+                "pt-BR",
+                0,
+                "7.3",
+                "Acoes e Caracteristicas",
+                out var originalRegionalText));
+        Assert.Equal("Actions & Traits", originalRegionalText);
     }
 
     /// <summary>

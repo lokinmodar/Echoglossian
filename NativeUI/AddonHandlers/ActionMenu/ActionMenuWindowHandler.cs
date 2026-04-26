@@ -8,6 +8,7 @@ using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -87,8 +88,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <inheritdoc />
     protected override void OnPreDrawEvent(AddonEvent evt, AddonArgs args)
     {
-        this.LogLifecycleDiagnostic("predraw", evt);
         base.OnPreDrawEvent(evt, args);
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldRefreshAppliedStateOnPreDraw()
+    {
+        return false;
     }
 
     /// <inheritdoc />
@@ -938,7 +944,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return translatedText;
         }
 
-        if (fallbackLookup.TryGetValue(originalText, out translatedText))
+        if (TryFindFallbackLookupValue(
+                fallbackLookup,
+                originalText,
+                out translatedText))
         {
             return translatedText;
         }
@@ -973,7 +982,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return originalText;
         }
 
-        if (fallbackLookup.TryGetValue(visibleText, out originalText))
+        if (TryFindFallbackLookupValue(
+                fallbackLookup,
+                visibleText,
+                out originalText))
         {
             return originalText;
         }
@@ -1591,11 +1603,16 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string stage,
         AddonEvent evt)
     {
+        if (evt == AddonEvent.PreDraw)
+        {
+            return;
+        }
+
         this.telemetry.Debug(
             "event",
             $"stage={stage} evt={evt} visible={this.IsAddonVisible(this.AddonName)}",
             signature: $"{stage}|{evt}",
-            cooldown: TimeSpan.FromMilliseconds(150));
+            cooldown: TimeSpan.FromSeconds(2));
     }
 
     /// <summary>
@@ -1861,11 +1878,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The normalized text.</returns>
     private static string NormalizeStableSignatureText(string text)
     {
-        return string.Join(
-            " ",
-            text.Split(
-                [' ', '\r', '\n', '\t'],
-                StringSplitOptions.RemoveEmptyEntries));
+        return NormalizeCanonicalLookupText(text);
     }
 
     /// <summary>
@@ -1891,13 +1904,124 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        return TryFindTranslatedCanonicalText(
+        if (TryContainsCanonicalOriginalText(
+                targetLanguage,
+                engine,
+                gameVersion,
+                text) ||
+            TryFindTranslatedCanonicalText(
+                targetLanguage,
+                engine,
+                gameVersion,
+                text,
+                out _) ||
+            TryContainsFallbackLookupKey(
+                fallbackLookup,
+                text))
+        {
+            return true;
+        }
+
+        return TryParseTrailingLevelToken(
+                   NormalizeCanonicalLookupText(text),
+                   out var prefix,
+                   out _,
+                   out _,
+                   out _) &&
+               (TryContainsCanonicalOriginalText(
+                    targetLanguage,
+                    engine,
+                    gameVersion,
+                    prefix) ||
+                TryFindTranslatedCanonicalText(
+                    targetLanguage,
+                    engine,
+                    gameVersion,
+                    prefix,
+                    out _) ||
+                TryContainsFallbackLookupKey(
+                    fallbackLookup,
+                    prefix));
+    }
+
+    /// <summary>
+    ///     Determines whether one canonical original ActionMenu-facing text
+    ///     already exists in shared action, trait, or reference-text storage.
+    /// </summary>
+    /// <param name="targetLanguage">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when canonical storage already contains the
+    ///     original text; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryContainsCanonicalOriginalText(
+        string targetLanguage,
+        int engine,
+        string? gameVersion,
+        string originalText)
+    {
+        if (string.IsNullOrWhiteSpace(originalText))
+        {
+            return false;
+        }
+
+        if (ContainsCanonicalOriginalTextCore(
+                targetLanguage,
+                engine,
+                gameVersion,
+                originalText))
+        {
+            return true;
+        }
+
+        var normalizedText = NormalizeCanonicalLookupText(originalText);
+        return !string.Equals(
+                   normalizedText,
+                   originalText,
+                   StringComparison.Ordinal) &&
+               ContainsCanonicalOriginalTextCore(
                    targetLanguage,
                    engine,
                    gameVersion,
-                   text,
-                   out _) ||
-               fallbackLookup.ContainsKey(text);
+                   normalizedText);
+    }
+
+    /// <summary>
+    ///     Determines whether one exact canonical original ActionMenu-facing
+    ///     text exists in shared canonical storage without applying
+    ///     ActionMenu-specific normalization.
+    /// </summary>
+    /// <param name="targetLanguage">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when canonical storage already contains the
+    ///     original text; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool ContainsCanonicalOriginalTextCore(
+        string targetLanguage,
+        int engine,
+        string? gameVersion,
+        string originalText)
+    {
+        return ActionTooltipCacheManager.ContainsOriginalText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               TraitCacheManager.ContainsOriginalText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               ReferenceTextCacheRegistry.ContainsOriginalText(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   originalText);
     }
 
     /// <summary>
@@ -1913,6 +2037,50 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact translated text was found.
     /// </returns>
     private static bool TryFindTranslatedCanonicalText(
+        string targetLanguage,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+
+        if (TryFindTranslatedCanonicalTextCore(
+                targetLanguage,
+                engine,
+                gameVersion,
+                originalText,
+                out translatedText))
+        {
+            return true;
+        }
+
+        var normalizedText = NormalizeCanonicalLookupText(originalText);
+        return !string.Equals(
+                   normalizedText,
+                   originalText,
+                   StringComparison.Ordinal) &&
+               TryFindTranslatedCanonicalTextCore(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   normalizedText,
+                   out translatedText);
+    }
+
+    /// <summary>
+    ///     Tries one exact translated structured-tooltip lookup without any
+    ///     ActionMenu-specific text normalization.
+    /// </summary>
+    /// <param name="targetLanguage">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <param name="translatedText">The resolved translated text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact translated text was found.
+    /// </returns>
+    private static bool TryFindTranslatedCanonicalTextCore(
         string targetLanguage,
         int engine,
         string? gameVersion,
@@ -1954,6 +2122,50 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact original text was found.
     /// </returns>
     private static bool TryFindOriginalCanonicalText(
+        string targetLanguage,
+        int engine,
+        string? gameVersion,
+        string visibleText,
+        out string originalText)
+    {
+        originalText = string.Empty;
+
+        if (TryFindOriginalCanonicalTextCore(
+                targetLanguage,
+                engine,
+                gameVersion,
+                visibleText,
+                out originalText))
+        {
+            return true;
+        }
+
+        var normalizedText = NormalizeCanonicalLookupText(visibleText);
+        return !string.Equals(
+                   normalizedText,
+                   visibleText,
+                   StringComparison.Ordinal) &&
+               TryFindOriginalCanonicalTextCore(
+                   targetLanguage,
+                   engine,
+                   gameVersion,
+                   normalizedText,
+                   out originalText);
+    }
+
+    /// <summary>
+    ///     Tries one exact canonical-original structured-tooltip lookup
+    ///     without any ActionMenu-specific text normalization.
+    /// </summary>
+    /// <param name="targetLanguage">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="visibleText">The translated text to reverse.</param>
+    /// <param name="originalText">The resolved canonical original text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact original text was found.
+    /// </returns>
+    private static bool TryFindOriginalCanonicalTextCore(
         string targetLanguage,
         int engine,
         string? gameVersion,
@@ -2409,7 +2621,8 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <summary>
     ///     Adds one original/translated text pair to the forward and reverse
-    ///     ActionMenu lookup maps without additional normalization.
+    ///     ActionMenu lookup maps together with normalized aliases that strip
+    ///     capture-specific formatting noise.
     /// </summary>
     /// <param name="originalText">The original text.</param>
     /// <param name="translatedText">The translated text.</param>
@@ -2419,6 +2632,53 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tracks translated texts that map to multiple originals.
     /// </param>
     private static void TryAddLookupPair(
+        string? originalText,
+        string? translatedText,
+        IDictionary<string, string> translatedLookup,
+        IDictionary<string, string> originalLookup,
+        ISet<string> ambiguousOriginalKeys)
+    {
+        TryAddLookupPairCore(
+            originalText,
+            translatedText,
+            translatedLookup,
+            originalLookup,
+            ambiguousOriginalKeys);
+
+        var normalizedOriginalText = NormalizeCanonicalLookupText(
+            originalText ?? string.Empty);
+        var normalizedTranslatedText = NormalizeCanonicalLookupText(
+            translatedText ?? string.Empty);
+        if (!string.Equals(
+                normalizedOriginalText,
+                originalText,
+                StringComparison.Ordinal) ||
+            !string.Equals(
+                normalizedTranslatedText,
+                translatedText,
+                StringComparison.Ordinal))
+        {
+            TryAddLookupPairCore(
+                normalizedOriginalText,
+                normalizedTranslatedText,
+                translatedLookup,
+                originalLookup,
+                ambiguousOriginalKeys);
+        }
+    }
+
+    /// <summary>
+    ///     Adds one original/translated text pair to the forward and reverse
+    ///     ActionMenu lookup maps using the supplied text verbatim.
+    /// </summary>
+    /// <param name="originalText">The original text.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <param name="translatedLookup">The original-to-translated lookup.</param>
+    /// <param name="originalLookup">The translated-to-original lookup.</param>
+    /// <param name="ambiguousOriginalKeys">
+    ///     Tracks translated texts that map to multiple originals.
+    /// </param>
+    private static void TryAddLookupPairCore(
         string? originalText,
         string? translatedText,
         IDictionary<string, string> translatedLookup,
@@ -2454,5 +2714,93 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         }
 
         originalLookup[translatedText] = originalText;
+    }
+
+    /// <summary>
+    ///     Tries to find one persisted ActionMenu fallback lookup entry while
+    ///     tolerating formatting noise present in captured UI strings.
+    /// </summary>
+    /// <param name="lookup">The persisted lookup to query.</param>
+    /// <param name="text">The text to resolve.</param>
+    /// <param name="value">The resolved lookup value.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the lookup contains the text;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryFindFallbackLookupValue(
+        IReadOnlyDictionary<string, string> lookup,
+        string text,
+        out string value)
+    {
+        value = string.Empty;
+        if (lookup.TryGetValue(text, out value))
+        {
+            return true;
+        }
+
+        var normalizedText = NormalizeCanonicalLookupText(text);
+        return !string.Equals(
+                   normalizedText,
+                   text,
+                   StringComparison.Ordinal) &&
+               lookup.TryGetValue(
+                   normalizedText,
+                   out value);
+    }
+
+    /// <summary>
+    ///     Gets whether one persisted ActionMenu fallback lookup contains the
+    ///     supplied text after normalizing any capture-specific formatting
+    ///     noise.
+    /// </summary>
+    /// <param name="lookup">The persisted lookup to query.</param>
+    /// <param name="text">The text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the lookup contains the text;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryContainsFallbackLookupKey(
+        IReadOnlyDictionary<string, string> lookup,
+        string text)
+    {
+        return TryFindFallbackLookupValue(
+            lookup,
+            text,
+            out _);
+    }
+
+    /// <summary>
+    ///     Normalizes one ActionMenu lookup text by stripping control-format
+    ///     noise and collapsing whitespace so canonical table lookups can
+    ///     match the visible UI string reliably.
+    /// </summary>
+    /// <param name="text">The text to normalize.</param>
+    /// <returns>The normalized lookup text.</returns>
+    private static string NormalizeCanonicalLookupText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(text.Length);
+        foreach (var character in text)
+        {
+            var category = char.GetUnicodeCategory(character);
+            if (char.IsControl(character) ||
+                category == UnicodeCategory.Format)
+            {
+                builder.Append(' ');
+                continue;
+            }
+
+            builder.Append(character);
+        }
+
+        return string.Join(
+            " ",
+            builder.ToString().Split(
+                [' ', '\r', '\n', '\t'],
+                StringSplitOptions.RemoveEmptyEntries));
     }
 }

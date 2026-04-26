@@ -82,7 +82,7 @@ public unsafe class CharacterReputeSubWindowHandler
     /// <inheritdoc />
     protected override bool ShouldRefreshAppliedStateOnPreDraw()
     {
-        return true;
+        return false;
     }
 
     /// <inheritdoc />

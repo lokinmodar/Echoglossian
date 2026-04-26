@@ -90,7 +90,9 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         var existing = rows.FirstOrDefault(row =>
             row.ReferenceId == newRecord.ReferenceId &&
-            row.TranslationLang == newRecord.TranslationLang &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.TranslationLang,
+                newRecord.TranslationLang) &&
             row.TranslationEngine == newRecord.TranslationEngine &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
@@ -136,7 +138,9 @@ public sealed class ReferenceTextCacheStore<TRow>
         }
 
         return rows.FirstOrDefault(row =>
-            row.TranslationLang == lang &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.TranslationLang,
+                lang) &&
             row.TranslationEngine == engine &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
@@ -246,6 +250,51 @@ public sealed class ReferenceTextCacheStore<TRow>
     }
 
     /// <summary>
+    ///     Determines whether one canonical original text already exists in
+    ///     this cache for the requested scope.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The canonical original text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the original text already exists;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public bool ContainsOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText)
+    {
+        if (string.IsNullOrWhiteSpace(lang) ||
+            string.IsNullOrWhiteSpace(originalText))
+        {
+            return false;
+        }
+
+        if (this.ContainsOriginalTextInScope(
+                lang,
+                engine,
+                gameVersion,
+                originalText))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion))
+        {
+            return this.ContainsOriginalTextInScope(
+                lang,
+                engine,
+                version: null,
+                originalText);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public void Clear()
@@ -253,7 +302,7 @@ public sealed class ReferenceTextCacheStore<TRow>
         this.cache.Clear();
         this.forwardTextLookupCache.Clear();
         this.reverseTextLookupCache.Clear();
-        Echoglossian.PluginLog.Debug(
+        global::Echoglossian.Echoglossian.PluginLog?.Debug(
             $"[{this.cacheName}] Cleared reference-text cache.");
     }
 
@@ -320,6 +369,45 @@ public sealed class ReferenceTextCacheStore<TRow>
     }
 
     /// <summary>
+    ///     Determines whether one exact canonical original text exists in one
+    ///     cache scope.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <param name="originalText">The canonical original text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the original text exists in the
+    ///     requested scope; otherwise <see langword="false" />.
+    /// </returns>
+    private bool ContainsOriginalTextInScope(
+        string lang,
+        int engine,
+        string? version,
+        string originalText)
+    {
+        return this.cache.Values.SelectMany(static rows => rows)
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                string.Equals(
+                    row.GameVersion,
+                    version,
+                    StringComparison.Ordinal))
+            .Any(row =>
+                string.Equals(
+                    row.OriginalName,
+                    originalText,
+                    StringComparison.Ordinal) ||
+                string.Equals(
+                    row.OriginalDescription,
+                    originalText,
+                    StringComparison.Ordinal));
+    }
+
+    /// <summary>
     ///     Builds one forward original-to-translated lookup for one cached
     ///     scope.
     /// </summary>
@@ -336,10 +424,9 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         foreach (var row in this.cache.Values.SelectMany(static rows => rows))
         {
-            if (!string.Equals(
+            if (!RuntimeLanguageHelper.LanguagesMatch(
                     row.TranslationLang,
-                    lang,
-                    StringComparison.Ordinal) ||
+                    lang) ||
                 row.TranslationEngine != engine ||
                 !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
@@ -379,10 +466,9 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         foreach (var row in this.cache.Values.SelectMany(static rows => rows))
         {
-            if (!string.Equals(
+            if (!RuntimeLanguageHelper.LanguagesMatch(
                     row.TranslationLang,
-                    lang,
-                    StringComparison.Ordinal) ||
+                    lang) ||
                 row.TranslationEngine != engine ||
                 !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
@@ -477,6 +563,7 @@ public sealed class ReferenceTextCacheStore<TRow>
         int engine,
         string? version)
     {
-        return $"{lang}\u001F{engine}\u001F{version ?? string.Empty}";
+        return
+            $"{RuntimeLanguageHelper.NormalizeLanguage(lang)}\u001F{engine}\u001F{version ?? string.Empty}";
     }
 }

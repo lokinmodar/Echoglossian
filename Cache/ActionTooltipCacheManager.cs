@@ -230,6 +230,51 @@ public static class ActionTooltipCacheManager
     }
 
     /// <summary>
+    ///     Determines whether one canonical original action text already
+    ///     exists in the cached action-tooltip rows for the requested scope.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The canonical original text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the original text already exists in
+    ///     canonical action-tooltip storage; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool ContainsOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText)
+    {
+        if (string.IsNullOrWhiteSpace(lang) ||
+            string.IsNullOrWhiteSpace(originalText))
+        {
+            return false;
+        }
+
+        if (TryContainsOriginalTextInScope(
+                lang,
+                engine,
+                gameVersion,
+                originalText))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion))
+        {
+            return TryContainsOriginalTextInScope(
+                lang,
+                engine,
+                version: null,
+                originalText);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()
@@ -237,7 +282,8 @@ public static class ActionTooltipCacheManager
         Cache.Clear();
         TextLookupCache.Clear();
         ReverseTextLookupCache.Clear();
-        PluginLog.Debug("[ActionTooltipCacheManager] Cleared action-tooltip cache.");
+        global::Echoglossian.Echoglossian.PluginLog?.Debug(
+            "[ActionTooltipCacheManager] Cleared action-tooltip cache.");
     }
 
     /// <summary>
@@ -305,6 +351,49 @@ public static class ActionTooltipCacheManager
         var found = lookup.TryGetValue(translatedText, out var resolvedText);
         originalText = resolvedText ?? string.Empty;
         return found;
+    }
+
+    /// <summary>
+    ///     Determines whether one exact canonical original action text exists
+    ///     inside one cached action-tooltip scope.
+    /// </summary>
+    /// <param name="lang">The target translation language.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="version">The exact stored game version scope.</param>
+    /// <param name="originalText">The canonical original text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the original text exists in the
+    ///     requested scope; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryContainsOriginalTextInScope(
+        string lang,
+        int engine,
+        string? version,
+        string originalText)
+    {
+        return Cache.Values.SelectMany(static rows => rows)
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                string.Equals(
+                    row.GameVersion,
+                    version,
+                    StringComparison.Ordinal))
+            .Any(row =>
+                string.Equals(
+                    row.ActionName,
+                    originalText,
+                    StringComparison.Ordinal) ||
+                string.Equals(
+                    row.ActionDescription,
+                    originalText,
+                    StringComparison.Ordinal) ||
+                string.Equals(
+                    row.OriginalTooltipText,
+                    originalText,
+                    StringComparison.Ordinal));
     }
 
     /// <summary>

@@ -16,6 +16,9 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 public abstract unsafe class CharacterTextNodeWindowHandlerBase
     : DbFirstGameWindowAddonHandler
 {
+    private static readonly TimeSpan CharacterAppliedStateRefreshWindow =
+        TimeSpan.FromMilliseconds(500);
+
     private readonly Config config;
 
     /// <summary>
@@ -90,6 +93,12 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
     protected override bool ShouldRefreshAppliedStateOnPreDraw()
     {
         return false;
+    }
+
+    /// <inheritdoc />
+    protected override TimeSpan GetAppliedStatePreDrawRefreshWindow()
+    {
+        return CharacterAppliedStateRefreshWindow;
     }
 
     /// <summary>

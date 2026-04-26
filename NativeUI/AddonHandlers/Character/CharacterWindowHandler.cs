@@ -13,6 +13,9 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 /// </summary>
 public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
 {
+    private static readonly TimeSpan RootCharacterAppliedStateRefreshWindow =
+        TimeSpan.FromSeconds(1);
+
     private static readonly HashSet<string> StableHeaderTexts =
     [
         "Character",
@@ -92,7 +95,13 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     /// <inheritdoc />
     protected override bool ShouldRefreshAppliedStateOnPreDraw()
     {
-        return ShouldContinuouslyRefreshRootCharacterWindow();
+        return false;
+    }
+
+    /// <inheritdoc />
+    protected override TimeSpan GetAppliedStatePreDrawRefreshWindow()
+    {
+        return GetRootCharacterAppliedStateRefreshWindow();
     }
 
     /// <inheritdoc />
@@ -124,19 +133,18 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     }
 
     /// <summary>
-    ///     Determines whether the root Character window should keep refreshing
-    ///     on <see cref="AddonEvent.PreDraw" /> after one translation has
-    ///     already been applied.
+    ///     Gets the short post-lifecycle refresh window for the root
+    ///     Character window so late-populating chrome can settle without
+    ///     requiring permanent pre-draw polling.
     /// </summary>
     /// <returns>
-    ///     <see langword="true" /> because the root Character chrome can
-    ///     populate after the earlier lifecycle events and therefore needs a
-    ///     later retry opportunity to translate the title, tabs, gear-set
-    ///     label, and current job name.
+    ///     The time span during which the root Character handler may keep
+    ///     refreshing after lifecycle events to translate the title, tabs,
+    ///     gear-set label, and current job name.
     /// </returns>
-    internal static bool ShouldContinuouslyRefreshRootCharacterWindow()
+    internal static TimeSpan GetRootCharacterAppliedStateRefreshWindow()
     {
-        return true;
+        return RootCharacterAppliedStateRefreshWindow;
     }
 
     /// <summary>

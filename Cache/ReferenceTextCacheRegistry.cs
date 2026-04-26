@@ -341,4 +341,84 @@ public static class ReferenceTextCacheRegistry
                    translatedText,
                    out originalText);
     }
+
+    /// <summary>
+    ///     Determines whether one canonical original text already exists in
+    ///     the specific reference-text caches.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The canonical original text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the original text exists in one of
+    ///     the specific reference-text caches; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool ContainsOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText)
+    {
+        return GeneralActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               BuddyActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               CompanyActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               CraftActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               PetActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               EventActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               BgcArmyActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               AozActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               PvPActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               MountActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               MainCommandTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText) ||
+               EurekaMagiaActionTexts.ContainsOriginalText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText);
+    }
 }

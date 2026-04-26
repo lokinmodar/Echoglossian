@@ -389,6 +389,73 @@ public class GameWindowPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures ActionMenu now updates a single scoped row even when the
+    ///     visible payload changes across categories inside the same window.
+    /// </summary>
+    [Fact]
+    public void InsertGameWindow_ActionMenuCollapsesDistinctPayloads_IntoScopedRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: "{\"atkValues\":{\"17\":\"Peloton\"}}",
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"17\":\"Pelotão\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow,
+                classJobId: 38));
+            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: "{\"atkValues\":{\"17\":\"Cascade\"}}",
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"atkValues\":{\"17\":\"Cascata\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow,
+                classJobId: 38));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var rows = validationContext.GameWindow
+                .Where(window =>
+                    window.WindowAddonName == "ActionMenu" &&
+                    window.ClassJobId == 38 &&
+                    window.TranslationLang == "pt-BR" &&
+                    window.TranslationEngine == 0 &&
+                    window.GameVersion == "7.3")
+                .ToList();
+
+            var row = Assert.Single(rows);
+            Assert.Equal(
+                "{\"atkValues\":{\"17\":\"Cascade\"}}",
+                row.OriginalWindowStrings);
+            Assert.Equal(
+                "{\"atkValues\":{\"17\":\"Cascata\"}}",
+                row.TranslatedWindowStrings);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Deletes a temporary test directory when possible.
     /// </summary>
     /// <param name="path">The path to delete.</param>

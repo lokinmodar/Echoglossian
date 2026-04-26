@@ -59,6 +59,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private bool deferredCleanupPending;
     private AddonEvent deferredCleanupEvent;
     private DateTime deferredCleanupUtc = DateTime.MinValue;
+    private DateTime appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
 
     private DateTime nextRetryUtc = DateTime.MinValue;
 
@@ -428,6 +429,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Gets the additive grace window during which this handler may keep
+    ///     refreshing on <see cref="AddonEvent.PreDraw" /> after one
+    ///     lifecycle event has already requested a refresh.
+    /// </summary>
+    /// <returns>
+    ///     The post-lifecycle pre-draw refresh window. A zero value disables
+    ///     this behavior.
+    /// </returns>
+    protected virtual TimeSpan GetAppliedStatePreDrawRefreshWindow()
+    {
+        return TimeSpan.Zero;
+    }
+
+    /// <summary>
     ///     Performs addon-local follow-up work after one original payload has
     ///     been restored into the live native surface.
     /// </summary>
@@ -602,6 +617,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     protected virtual void OnLifecycleEvent(AddonEvent evt, AddonArgs args)
     {
         this.TryFinalizeDeferredCleanup();
+        this.ArmAppliedStatePreDrawRefreshWindow();
         this.RefreshOrQueue();
     }
 
@@ -628,6 +644,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.config.OverlayOnlyLanguage);
         var usesHoverTooltips =
             TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
+        var shouldContinueAppliedStateRefresh =
+            this.ShouldContinueAppliedStateRefreshOnPreDraw();
 
         if (this.lastResolvedState != null &&
             this.lastAppliedDisplayMode != null &&
@@ -684,7 +702,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         if (this.lastAppliedDisplayMode == displayMode &&
-            !this.ShouldRefreshAppliedStateOnPreDraw())
+            !shouldContinueAppliedStateRefresh)
         {
             if (this.runtimeState != null)
             {
@@ -1088,6 +1106,39 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         this.deferredCleanupPending = false;
         this.deferredCleanupEvent = default;
         this.deferredCleanupUtc = DateTime.MinValue;
+        this.appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    ///     Arms one short pre-draw refresh window after a lifecycle event so
+    ///     addons with slightly delayed chrome population can settle without
+    ///     requiring permanent per-frame polling.
+    /// </summary>
+    private void ArmAppliedStatePreDrawRefreshWindow()
+    {
+        var duration = this.GetAppliedStatePreDrawRefreshWindow();
+        if (duration <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        this.appliedStatePreDrawRefreshUntilUtc = DateTime.UtcNow + duration;
+    }
+
+    /// <summary>
+    ///     Gets whether the handler should keep polling on
+    ///     <see cref="AddonEvent.PreDraw" /> even after one translated runtime
+    ///     state is already available.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> when continuous polling is explicitly
+    ///     requested or the lifecycle-triggered grace window is still active;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private bool ShouldContinueAppliedStateRefreshOnPreDraw()
+    {
+        return this.ShouldRefreshAppliedStateOnPreDraw() ||
+               DateTime.UtcNow < this.appliedStatePreDrawRefreshUntilUtc;
     }
 
     /// <summary>
