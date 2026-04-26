@@ -20,20 +20,16 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private static readonly TimeSpan ToDoListRetryInterval =
       TimeSpan.FromSeconds(2);
 
-  private static readonly TimeSpan ToDoListWaitingNotificationCooldown =
-      TimeSpan.FromSeconds(15);
-
   private readonly Dictionary<string, ToDoRuntimeEntry> toDoRuntimeEntries = [];
+
+  private readonly QuestWaitingNotificationGate toDoListWaitingNotificationGate
+      = new();
 
   private bool currentToDoListDataReady;
 
   private JournalTranslationDisplayMode? lastAppliedDisplayMode;
 
   private DateTime nextToDoListRetryUtc = DateTime.MinValue;
-
-  private string toDoListWaitingSignature = string.Empty;
-
-  private DateTime toDoListWaitingNotificationUtc = DateTime.MinValue;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="ToDoListHandler" /> class.
@@ -852,27 +848,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private void NotifyToDoListWaitingForQuestData(
       IReadOnlyCollection<string> blockingQuestLabels)
   {
-    if (blockingQuestLabels.Count == 0)
+    if (!this.toDoListWaitingNotificationGate.TryBeginWaiting(
+            blockingQuestLabels.Count))
     {
       return;
     }
-
-    var waitingSignature = string.Join(
-        "|",
-        blockingQuestLabels.OrderBy(label => label, StringComparer.Ordinal));
-    var now = DateTime.UtcNow;
-    if (string.Equals(
-            this.toDoListWaitingSignature,
-            waitingSignature,
-            StringComparison.Ordinal) &&
-        now - this.toDoListWaitingNotificationUtc <
-        ToDoListWaitingNotificationCooldown)
-    {
-      return;
-    }
-
-    this.toDoListWaitingSignature = waitingSignature;
-    this.toDoListWaitingNotificationUtc = now;
 
     NotificationManager.AddNotification(new Notification
     {
@@ -891,8 +871,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </summary>
   private void ClearToDoListWaitingState()
   {
-    this.toDoListWaitingSignature = string.Empty;
-    this.toDoListWaitingNotificationUtc = DateTime.MinValue;
+    this.toDoListWaitingNotificationGate.Clear();
   }
 
   /// <summary>

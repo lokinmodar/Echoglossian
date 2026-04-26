@@ -32,6 +32,8 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private const int MaximumDiagnosticPreviewEntryCount = 8;
     private const string MainCommandWindowTitle = "_MainCommand";
 
+    private static readonly TimeSpan AppliedStateRefreshWindow =
+        TimeSpan.FromMilliseconds(250);
     private static readonly Regex TrailingLevelTokenPattern = new(
         @"^(?<prefix>.*?)(?<separator>\s*)(?<level>(?:Lv\.|Nv\.|Level|Nível)\s*\d+)$",
         RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant);
@@ -95,6 +97,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     protected override bool ShouldRefreshAppliedStateOnPreDraw()
     {
         return false;
+    }
+
+    /// <inheritdoc />
+    protected override TimeSpan GetAppliedStatePreDrawRefreshWindow()
+    {
+        return GetActionMenuAppliedStateRefreshWindow();
     }
 
     /// <inheritdoc />
@@ -1790,6 +1798,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static IEnumerable<string> EnumerateStableSignatureTexts(
         DbFirstGameWindowPayload payload)
     {
+        var corroboratedVisibleTexts = BuildCorroboratedVisibleTextSet(payload);
+        var preferVisibleTexts = corroboratedVisibleTexts.Count > 0;
+
         foreach (var (key, text) in payload.AtkValues)
         {
             if (!ShouldIncludeStableSignatureText(key, text))
@@ -1797,7 +1808,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            yield return NormalizeStableSignatureText(text);
+            var normalizedText = NormalizeStableSignatureText(text);
+            if (preferVisibleTexts &&
+                !corroboratedVisibleTexts.Contains(normalizedText))
+            {
+                continue;
+            }
+
+            yield return normalizedText;
         }
 
         foreach (var text in payload.StringArrayValues.Values)
@@ -1879,6 +1897,41 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static string NormalizeStableSignatureText(string text)
     {
         return NormalizeCanonicalLookupText(text);
+    }
+
+    /// <summary>
+    ///     Builds the visible short-text set that should be trusted as the
+    ///     active ActionMenu page surface before considering any ATK string
+    ///     values that may still carry residual text from inactive panes.
+    /// </summary>
+    /// <param name="payload">The payload to inspect.</param>
+    /// <returns>The normalized visible short-text set.</returns>
+    private static HashSet<string> BuildCorroboratedVisibleTextSet(
+        DbFirstGameWindowPayload payload)
+    {
+        var texts = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var text in payload.StringArrayValues.Values)
+        {
+            if (!ShouldIncludeStableSignatureText(text))
+            {
+                continue;
+            }
+
+            texts.Add(NormalizeStableSignatureText(text));
+        }
+
+        foreach (var text in payload.TextNodes.Values)
+        {
+            if (!ShouldIncludeStableSignatureText(text))
+            {
+                continue;
+            }
+
+            texts.Add(NormalizeStableSignatureText(text));
+        }
+
+        return texts;
     }
 
     /// <summary>
@@ -2460,6 +2513,17 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         }
 
         return playerState->CurrentClassJobId;
+    }
+
+    /// <summary>
+    ///     Gets the short post-lifecycle refresh window that allows
+    ///     `ActionMenu` page transitions to be observed twice for stability
+    ///     gating without reintroducing sustained per-frame polling.
+    /// </summary>
+    /// <returns>The bounded applied-state refresh window.</returns>
+    internal static TimeSpan GetActionMenuAppliedStateRefreshWindow()
+    {
+        return AppliedStateRefreshWindow;
     }
 
     /// <summary>

@@ -345,8 +345,8 @@ data:
 - restore original ScenarioTree text
 - remove ScenarioTree hover targets
 - leave the addon untouched
-- emit a debounced notification explaining that ScenarioTree is waiting for
-  stored quest data
+- emit one notification per waiting episode explaining that ScenarioTree is
+  waiting for stored quest data
 
 If all visible slots are ready:
 
@@ -433,8 +433,8 @@ For each quest name entry:
    - restore original ToDoList text
    - remove ToDoList hover targets
    - keep the addon untouched
-   - emit a debounced notification that the ToDoList is waiting for stored
-     quest data
+   - emit one notification per waiting episode that the ToDoList is waiting
+     for stored quest data
 7. If all visible quest rows are ready:
    - native mode writes only DB-backed translated text
    - tooltip modes register only DB-backed hover payloads

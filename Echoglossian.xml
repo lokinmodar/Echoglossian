@@ -7650,6 +7650,9 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldRefreshAppliedStateOnPreDraw">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetAppliedStatePreDrawRefreshWindow">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
@@ -8202,6 +8205,15 @@
             <param name="text">The text to normalize.</param>
             <returns>The normalized text.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildCorroboratedVisibleTextSet(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Builds the visible short-text set that should be trusted as the
+                active ActionMenu page surface before considering any ATK string
+                values that may still carry residual text from inactive panes.
+            </summary>
+            <param name="payload">The payload to inspect.</param>
+            <returns>The normalized visible short-text set.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalActionMenuText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Determines whether one ActionMenu text is already covered by either
@@ -8395,6 +8407,14 @@
                 The current class/job identifier, or <see langword="null" /> when
                 no active job could be resolved.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetActionMenuAppliedStateRefreshWindow">
+            <summary>
+                Gets the short post-lifecycle refresh window that allows
+                `ActionMenu` page transitions to be observed twice for stability
+                gating without reintroducing sustained per-frame polling.
+            </summary>
+            <returns>The bounded applied-state refresh window.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.PayloadMatchesClassJob(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String)">
             <summary>
@@ -11663,6 +11683,29 @@
                 Whether the quest-family diacritics toggle is enabled.
             </param>
             <returns><c>true</c> when normalization should be applied.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestWaitingNotificationGate">
+            <summary>
+                Tracks whether a quest addon has already emitted its waiting
+                notification for the current unresolved episode.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestWaitingNotificationGate.TryBeginWaiting(System.Int32)">
+            <summary>
+                Tries to begin a new waiting-notification episode.
+            </summary>
+            <param name="blockingQuestCount">
+                The number of currently visible blocking quest rows.
+            </param>
+            <returns>
+                True only for the first unresolved observation in the current waiting
+                episode; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestWaitingNotificationGate.Clear">
+            <summary>
+                Clears the current waiting-notification episode.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler">
             <summary>

@@ -25,21 +25,17 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   private static readonly TimeSpan ScenarioTreeRetryInterval =
       TimeSpan.FromSeconds(2);
 
-  private static readonly TimeSpan ScenarioTreeWaitingNotificationCooldown =
-      TimeSpan.FromSeconds(15);
-
   private readonly Dictionary<int, ScenarioTreeRuntimeEntry>
       scenarioTreeRuntimeEntries = [];
+
+  private readonly QuestWaitingNotificationGate
+      scenarioTreeWaitingNotificationGate = new();
 
   private bool currentScenarioTreeDataReady;
 
   private JournalTranslationDisplayMode? lastAppliedDisplayMode;
 
   private DateTime nextScenarioTreeRetryUtc = DateTime.MinValue;
-
-  private string scenarioTreeWaitingSignature = string.Empty;
-
-  private DateTime scenarioTreeWaitingNotificationUtc = DateTime.MinValue;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="ScenarioTreeHandler" />
@@ -693,27 +689,11 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   private void NotifyScenarioTreeWaitingForQuestData(
       IReadOnlyCollection<string> blockingQuestLabels)
   {
-    if (blockingQuestLabels.Count == 0)
+    if (!this.scenarioTreeWaitingNotificationGate.TryBeginWaiting(
+            blockingQuestLabels.Count))
     {
       return;
     }
-
-    var waitingSignature = string.Join(
-        "|",
-        blockingQuestLabels.OrderBy(label => label, StringComparer.Ordinal));
-    var now = DateTime.UtcNow;
-    if (string.Equals(
-            this.scenarioTreeWaitingSignature,
-            waitingSignature,
-            StringComparison.Ordinal) &&
-        now - this.scenarioTreeWaitingNotificationUtc <
-        ScenarioTreeWaitingNotificationCooldown)
-    {
-      return;
-    }
-
-    this.scenarioTreeWaitingSignature = waitingSignature;
-    this.scenarioTreeWaitingNotificationUtc = now;
 
     NotificationManager.AddNotification(new Notification
     {
@@ -732,8 +712,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   private void ClearScenarioTreeWaitingState()
   {
-    this.scenarioTreeWaitingSignature = string.Empty;
-    this.scenarioTreeWaitingNotificationUtc = DateTime.MinValue;
+    this.scenarioTreeWaitingNotificationGate.Clear();
   }
 
   /// <summary>

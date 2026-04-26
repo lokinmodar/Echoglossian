@@ -72,6 +72,20 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures the `ActionMenu` handler keeps a short bounded post-event
+    ///     refresh window so new pages can satisfy the stability gate without
+    ///     restoring permanent applied-state `PreDraw` polling.
+    /// </summary>
+    [Fact]
+    public void GetActionMenuAppliedStateRefreshWindow_ReturnsExpectedDuration()
+    {
+        var duration = ActionMenuWindowHandler
+            .GetActionMenuAppliedStateRefreshWindow();
+
+        Assert.Equal(TimeSpan.FromMilliseconds(250), duration);
+    }
+
+    /// <summary>
     ///     Ensures level-aware action-name resolution can translate a visible
     ///     ActionMenu label by reusing the canonical action-tooltip cache.
     /// </summary>
@@ -340,6 +354,38 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures stale ATK-only labels do not affect the stable page
+    ///     signature when the active ActionMenu surface already exposes the
+    ///     real page labels through visible text nodes.
+    /// </summary>
+    [Fact]
+    public void BuildStablePayloadSignature_PrefersVisibleTextsOverResidualAtkStrings()
+    {
+        var payload = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>
+            {
+                [12] = "Dancer",
+                [17] = "Support Desk",
+                [25] = "Official Sites",
+                [33] = "Alarm",
+            },
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["3:100"] = "Support Desk",
+                ["3:101"] = "Official Sites",
+            });
+
+        var signature = ActionMenuWindowHandler.BuildStablePayloadSignature(
+            payload);
+
+        Assert.Contains("job:Dancer", signature, StringComparison.Ordinal);
+        Assert.Contains("Support Desk", signature, StringComparison.Ordinal);
+        Assert.Contains("Official Sites", signature, StringComparison.Ordinal);
+        Assert.DoesNotContain("Alarm", signature, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the unseen-text counter excludes short texts already
     ///     covered by either canonical action names or persisted window-chrome
     ///     fallbacks.
@@ -481,6 +527,42 @@ public class ActionMenuWindowHandlerTests
             0,
             "7.3",
             new Dictionary<string, string>(StringComparer.Ordinal));
+
+        Assert.Equal(0, unseenCount);
+    }
+
+    /// <summary>
+    ///     Ensures residual ATK-only labels do not inflate the unseen-text
+    ///     count when the active ActionMenu page already exposes corroborated
+    ///     visible text nodes for the real page content.
+    /// </summary>
+    [Fact]
+    public void CountMeaningfulUnseenTexts_IgnoresResidualAtkStringsWhenVisibleTextsExist()
+    {
+        var payload = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>
+            {
+                [17] = "Support Desk",
+                [25] = "Official Sites",
+                [33] = "Alarm",
+            },
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["3:100"] = "Support Desk",
+                ["3:101"] = "Official Sites",
+            });
+
+        var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+            payload,
+            "pt-BR",
+            0,
+            "7.3",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["Support Desk"] = "Central de Suporte",
+                ["Official Sites"] = "Sites Oficiais",
+            });
 
         Assert.Equal(0, unseenCount);
     }
