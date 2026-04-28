@@ -274,6 +274,7 @@ public partial class Echoglossian : IDalamudPlugin
         message => PluginLog.Warning(message),
         message => PluginLog.Error(message));
     this.hoverTooltipManager = new HoverTooltipManager(this.configuration);
+    this.RegisterStructuredTooltipLifecycleHandlers();
 
     this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 
@@ -426,6 +427,7 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     this.ResetStructuredTooltipUiRuntime();
+    this.UnregisterStructuredTooltipLifecycleHandlers();
 
     AddonLifecycle.UnLogAddon("CutSceneSelectString");
       this.hoverTooltipManager.Clear();

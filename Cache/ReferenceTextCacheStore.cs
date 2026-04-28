@@ -143,9 +143,51 @@ public sealed class ReferenceTextCacheStore<TRow>
                 lang) &&
             row.TranslationEngine == engine &&
             GameVersionLookupHelper.MatchesStoredVersion(
-                row.GameVersion,
-                gameVersion) &&
+            row.GameVersion,
+            gameVersion) &&
             row.SourceContentHash == sourceContentHash);
+    }
+
+    /// <summary>
+    ///     Tries to find the best translated reference-text row by stable
+    ///     identity when the stricter canonical hash does not match.
+    /// </summary>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>The best translated row, or <see langword="null" />.</returns>
+    public TRow? TryFindIdentityMatch(
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion)
+    {
+        if (referenceId == 0 || string.IsNullOrWhiteSpace(lang))
+        {
+            return null;
+        }
+
+        if (!this.cache.TryGetValue(referenceId, out var rows) ||
+            rows.Count == 0)
+        {
+            return null;
+        }
+
+        return rows
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    row.GameVersion,
+                    gameVersion))
+            .OrderByDescending(row => ComputeIdentityMatchScore(
+                row,
+                gameVersion))
+            .ThenByDescending(row => row.UpdatedDate)
+            .FirstOrDefault();
     }
 
     /// <summary>
@@ -549,6 +591,58 @@ public sealed class ReferenceTextCacheStore<TRow>
         {
             lookup[translatedText] = originalText;
         }
+    }
+
+    /// <summary>
+    ///     Computes one ordering score for tolerant identity-based reference
+    ///     text lookup.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <returns>The ordering score.</returns>
+    private static int ComputeIdentityMatchScore(
+        TRow row,
+        string? gameVersion)
+    {
+        var score = 0;
+
+        if (HasCompleteTranslation(row))
+        {
+            score += 10_000;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion) &&
+            string.Equals(
+                row.GameVersion,
+                gameVersion,
+                StringComparison.Ordinal))
+        {
+            score += 1_000;
+        }
+
+        if (row.GameVersion == null)
+        {
+            score += 100;
+        }
+
+        return score;
+    }
+
+    /// <summary>
+    ///     Gets whether one reference-text row contains every translated field
+    ///     required by the live runtime.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the row contains a translated name and
+    ///     any required translated description; otherwise
+    ///     <see langword="false" />.
+    /// </returns>
+    private static bool HasCompleteTranslation(TRow row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedName) &&
+               (string.IsNullOrWhiteSpace(row.OriginalDescription) ||
+                !string.IsNullOrWhiteSpace(row.TranslatedDescription));
     }
 
     /// <summary>

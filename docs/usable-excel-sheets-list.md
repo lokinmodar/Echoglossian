@@ -13,10 +13,12 @@ and cache lookups stay specific while the prefetch mechanics remain reusable.
 - `GeneralAction` -> `GeneralActionText` table + specific reference-text cache
 - `BuddyAction` -> `BuddyActionText` table + specific reference-text cache
 - `EventAction` -> `EventActionText` table + specific reference-text cache
+- `EventItem` -> `EventItemText` table + specific reference-text cache
 - `MountAction` -> `MountActionText` table + specific reference-text cache
 - `EurekaMagiaAction` -> `EurekaMagiaActionText` table + specific reference-text cache
 - `PvPAction` -> `PvPActionText` table + specific reference-text cache
 - `MainCommand` -> `MainCommandText` table + specific reference-text cache
+- `DeepDungeonItem` -> `DeepDungeonItemText` table + specific reference-text cache
 
 `MainCommand` is intentionally kept in both dimensions, but with different
 runtime owners:

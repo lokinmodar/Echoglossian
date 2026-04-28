@@ -291,10 +291,6 @@ public class ActionMenuWindowHandlerTests
                 [0] = "Switch View",
                 [10] = "Level 92",
                 [12] = "Dancer",
-                [17] = "Support Desk\n",
-                [25] = "Official Sites\n",
-                [33] = "Playguide\n",
-                [41] = "Character Configuration\n",
                 [49] =
                     "Search for answers to frequently asked questions, report issues, and confirm messages from the FINAL FANTASY XIV support team.",
             },
@@ -302,6 +298,10 @@ public class ActionMenuWindowHandlerTests
             new SortedDictionary<string, string>(StringComparer.Ordinal)
             {
                 ["3:100"] = "System",
+                ["6:101"] = "Support Desk",
+                ["6:102"] = "Official Sites",
+                ["6:103"] = "Playguide",
+                ["6:104"] = "Character Configuration",
             });
 
         var signature = ActionMenuWindowHandler.BuildStablePayloadSignature(

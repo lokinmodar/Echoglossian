@@ -12,12 +12,14 @@ the source of truth.
 - `CraftActionText`
 - `PetActionText`
 - `EventActionText`
+- `EventItemText`
 - `BgcArmyActionText`
 - `AozActionText`
 - `PvPActionText`
 - `MountActionText`
 - `EurekaMagiaActionText`
 - `MainCommandText`
+- `DeepDungeonItemText`
 
 ## Code paths
 
@@ -44,10 +46,14 @@ Excel sheet rows
   -> specific DB table
   -> specific ReferenceText cache
   -> aggregated cache registry lookups
-  -> consumers such as ActionMenu
+  -> consumers such as ActionMenu, ActionDetail, and ItemDetail
 ```
 
 ## `MainCommand` placement
 
 - `MainCommand` belongs to this sheet-backed canonical flow as `MainCommandText`.
 - That does not migrate the live `_MainCommand` addon runtime.
+- `EventItem` and `DeepDungeonItem` also live in dedicated sheet-backed tables.
+- `ActionDetail` and `ItemDetail` may now consume this flow by stable
+  identity (`id + lang + engine + gameVersion`) when the dedicated
+  `ActionTooltip` / `ItemTooltip` tables are not the right source of truth.

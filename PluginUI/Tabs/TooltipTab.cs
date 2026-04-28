@@ -6,11 +6,29 @@
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
-///     Renders the settings tab for action and item tooltips plus shared
+///     Renders the settings tab for action/item detail presentation plus shared
 ///     hover-tooltip appearance.
 /// </summary>
 public static class TooltipTab
 {
+    private const string DetailSectionLabel = "Action and item details";
+    private const string DetailToggleLabel =
+        "Enable action/item detail translation and shared hover tooltips";
+    private const string DetailDisplayModeLabel = "Detail display mode";
+    private const string DetailDisplayModeDescription =
+        "This mode controls the ActionDetail and ItemDetail surfaces. Native UI " +
+        "writes the translated detail text into the game addon, overlay-only " +
+        "keeps the native addon intact and uses Echoglossian overlays, and " +
+        "native-with-original-overlay writes translation natively while showing " +
+        "the original in our overlay.";
+
+    private static readonly string[] DetailDisplayModes =
+    [
+        Resources.QuestDisplayModeNativeUiTranslation,
+        Resources.OverlayDisplayModeOverlayTranslationOnly,
+        Resources.OverlayDisplayModeNativeUiTranslationWithOriginalOverlay,
+    ];
+
     /// <summary>
     ///     Draws the tooltip settings tab.
     /// </summary>
@@ -25,11 +43,11 @@ public static class TooltipTab
             return false;
         }
 
-        ImGui.TextUnformatted(Resources.ActionAndItemTooltipsSectionLabel);
+        ImGui.TextUnformatted(DetailSectionLabel);
         ImGui.Separator();
 
         changed |= ImGui.Checkbox(
-            Resources.JournalGlobalHoverTooltipsLabel,
+            DetailToggleLabel,
             ref config.TranslateTooltips);
 
         if (!config.TranslateTooltips)
@@ -47,8 +65,9 @@ public static class TooltipTab
             nameof(config.TooltipTranslationDisplayMode),
             ref config.TooltipTranslationDisplayMode,
             config.OverlayOnlyLanguage,
-            Resources.ActionAndItemTooltipsDisplayModeLabel,
-            Resources.ActionAndItemTooltipsDisplayModeDescription);
+            DetailDisplayModeLabel,
+            DetailDisplayModeDescription,
+            DetailDisplayModes);
 
         ImGui.Spacing();
         ImGui.TextUnformatted(Resources.HoverTooltipAppearanceSectionLabel);

@@ -4,8 +4,12 @@
 // </copyright>
 
 using System.Globalization;
+using Dalamud.Game.Gui;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using DeepDungeonItemSheet = Lumina.Excel.Sheets.DeepDungeonItem;
+using EventItemSheet = Lumina.Excel.Sheets.EventItem;
 using ItemSheet = Lumina.Excel.Sheets.Item;
 
 namespace Echoglossian;
@@ -50,6 +54,33 @@ public unsafe partial class Echoglossian
     private DateTime itemDetailPrefetchLastTickUtc = DateTime.MinValue;
 
     private int itemDetailPrefetchQueueIndex;
+
+    /// <summary>
+    ///     Describes which canonical sheet family produced one ItemDetail
+    ///     payload.
+    /// </summary>
+    private enum StructuredTooltipItemSourceKind
+    {
+        /// <summary>
+        ///     No source family resolved.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        ///     The standard <c>Item</c> sheet resolved the payload.
+        /// </summary>
+        Item = 1,
+
+        /// <summary>
+        ///     The <c>EventItem</c> sheet resolved the payload.
+        /// </summary>
+        EventItem = 2,
+
+        /// <summary>
+        ///     The <c>DeepDungeonItem</c> sheet resolved the payload.
+        /// </summary>
+        DeepDungeonItem = 3,
+    }
 
     /// <summary>
     ///     Ticks the item-tooltip prefetch runtime so current inventory surfaces
@@ -164,7 +195,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ItemDetailPrefetch|{originalPayload.ItemId}|Name|{originalPayload.Name}";
+            BuildItemDetailNameTranslationKey(originalPayload);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedName))
@@ -202,7 +233,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ItemDetailPrefetch|{originalPayload.ItemId}|Description|{originalPayload.Description}";
+            BuildItemDetailDescriptionTranslationKey(originalPayload);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedDescription))
@@ -269,6 +300,13 @@ public unsafe partial class Echoglossian
             !string.IsNullOrWhiteSpace(translatedDescription)
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
+        this.TryPopulatePendingItemDetailTranslations(
+            originalPayload,
+            translatedPayload);
+        if (!translatedPayload.HasCompleteTranslation)
+        {
+            return;
+        }
 
         var translatedRow = ItemTooltipPersistenceHelper.CreateCanonicalRow(
             ClientStateInterface.ClientLanguage.Humanize(),
@@ -278,6 +316,59 @@ public unsafe partial class Echoglossian
             originalPayload,
             translatedPayload);
         this.InsertItemTooltip(translatedRow);
+    }
+
+    /// <summary>
+    ///     Tries to enrich one item-detail payload with any queued counterpart
+    ///     translation so canonical persistence only happens when the payload is complete.
+    /// </summary>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="translatedPayload">The partially translated payload.</param>
+    private void TryPopulatePendingItemDetailTranslations(
+        ItemTooltipCanonicalPayload originalPayload,
+        ItemTooltipCanonicalPayload translatedPayload)
+    {
+        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedName) &&
+            !string.IsNullOrWhiteSpace(originalPayload.Name) &&
+            this.TryGetQueuedTranslation(
+                BuildItemDetailNameTranslationKey(originalPayload),
+                out var cachedTranslatedName))
+        {
+            translatedPayload.TranslatedName = cachedTranslatedName;
+        }
+
+        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedDescription) &&
+            !string.IsNullOrWhiteSpace(originalPayload.Description) &&
+            this.TryGetQueuedTranslation(
+                BuildItemDetailDescriptionTranslationKey(originalPayload),
+                out var cachedTranslatedDescription))
+        {
+            translatedPayload.TranslatedDescription =
+                cachedTranslatedDescription;
+        }
+    }
+
+    /// <summary>
+    ///     Builds the stable queued-translation key for one item-detail name.
+    /// </summary>
+    /// <param name="payload">The canonical payload.</param>
+    /// <returns>The stable queue key.</returns>
+    private static string BuildItemDetailNameTranslationKey(
+        ItemTooltipCanonicalPayload payload)
+    {
+        return $"ItemDetailPrefetch|{payload.ItemId}|Name|{payload.Name}";
+    }
+
+    /// <summary>
+    ///     Builds the stable queued-translation key for one item-detail description.
+    /// </summary>
+    /// <param name="payload">The canonical payload.</param>
+    /// <returns>The stable queue key.</returns>
+    private static string BuildItemDetailDescriptionTranslationKey(
+        ItemTooltipCanonicalPayload payload)
+    {
+        return
+            $"ItemDetailPrefetch|{payload.ItemId}|Description|{payload.Description}";
     }
 
     /// <summary>
@@ -356,12 +447,110 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
-    ///     Tries to build one canonical item-tooltip payload from the item sheet.
+    ///     Tries to build one canonical item-tooltip payload from the active
+    ///     item-adjacent sheets.
     /// </summary>
-    /// <param name="itemId">The item row identifier.</param>
+    /// <param name="rawItemId">The raw hovered or agent item identifier.</param>
     /// <param name="payload">The resolved payload.</param>
     /// <returns>True when the payload resolved successfully.</returns>
     private static bool TryBuildItemTooltipCanonicalPayload(
+        uint rawItemId,
+        out ItemTooltipCanonicalPayload payload)
+    {
+        return TryBuildItemTooltipCanonicalPayload(
+            rawItemId,
+            HoverActionKind.None,
+            out payload,
+            out _);
+    }
+
+    /// <summary>
+    ///     Tries to build one canonical item-tooltip payload from the active
+    ///     item-adjacent sheets while also reporting the source family.
+    /// </summary>
+    /// <param name="rawItemId">The raw hovered or agent item identifier.</param>
+    /// <param name="hoverActionKind">The current hover action kind, if any.</param>
+    /// <param name="payload">The resolved payload.</param>
+    /// <param name="sourceKind">The sheet family that produced the payload.</param>
+    /// <returns>True when the payload resolved successfully.</returns>
+    private static bool TryBuildItemTooltipCanonicalPayload(
+        uint rawItemId,
+        HoverActionKind hoverActionKind,
+        out ItemTooltipCanonicalPayload payload,
+        out StructuredTooltipItemSourceKind sourceKind)
+    {
+        payload = new ItemTooltipCanonicalPayload();
+        sourceKind = StructuredTooltipItemSourceKind.None;
+
+        if (rawItemId == 0)
+        {
+            return false;
+        }
+
+        if (hoverActionKind == HoverActionKind.DeepDungeonItem &&
+            TryBuildDeepDungeonItemCanonicalPayload(
+                rawItemId,
+                out payload))
+        {
+            sourceKind = StructuredTooltipItemSourceKind.DeepDungeonItem;
+            return true;
+        }
+
+        if (ItemUtil.IsEventItem(rawItemId) &&
+            TryBuildEventItemCanonicalPayload(
+                rawItemId,
+                out payload))
+        {
+            sourceKind = StructuredTooltipItemSourceKind.EventItem;
+            return true;
+        }
+
+        var normalizedItemId = NormalizeStandardItemReferenceId(rawItemId);
+        if (normalizedItemId != 0 &&
+            TryBuildStandardItemTooltipCanonicalPayload(
+                normalizedItemId,
+                out payload))
+        {
+            sourceKind = StructuredTooltipItemSourceKind.Item;
+            return true;
+        }
+
+        if (TryBuildDeepDungeonItemCanonicalPayload(
+                rawItemId,
+                out payload))
+        {
+            sourceKind = StructuredTooltipItemSourceKind.DeepDungeonItem;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Normalizes one raw item id to the base <c>Item</c> sheet row
+    ///     identifier.
+    /// </summary>
+    /// <param name="rawItemId">The raw hovered or agent item identifier.</param>
+    /// <returns>The normalized base <c>Item</c> row identifier.</returns>
+    private static uint NormalizeStandardItemReferenceId(uint rawItemId)
+    {
+        if (rawItemId == 0)
+        {
+            return 0;
+        }
+
+        var (itemId, _) = ItemUtil.GetBaseId(rawItemId);
+        return itemId;
+    }
+
+    /// <summary>
+    ///     Tries to build one canonical payload from the standard
+    ///     <c>Item</c> sheet.
+    /// </summary>
+    /// <param name="itemId">The normalized <c>Item</c> row identifier.</param>
+    /// <param name="payload">The resolved payload.</param>
+    /// <returns>True when the payload resolved successfully.</returns>
+    private static bool TryBuildStandardItemTooltipCanonicalPayload(
         uint itemId,
         out ItemTooltipCanonicalPayload payload)
     {
@@ -383,6 +572,80 @@ public unsafe partial class Echoglossian
             ClassJobCategoryId = itemRow.ClassJobCategory.RowId,
             Name = itemRow.Name.ExtractText(),
             Description = itemRow.Description.ExtractText(),
+        };
+
+        return !string.IsNullOrWhiteSpace(payload.Name);
+    }
+
+    /// <summary>
+    ///     Tries to build one canonical payload from the <c>EventItem</c>
+    ///     sheet.
+    /// </summary>
+    /// <param name="eventItemId">The <c>EventItem</c> row identifier.</param>
+    /// <param name="payload">The resolved payload.</param>
+    /// <returns>True when the payload resolved successfully.</returns>
+    private static bool TryBuildEventItemCanonicalPayload(
+        uint eventItemId,
+        out ItemTooltipCanonicalPayload payload)
+    {
+        payload = new ItemTooltipCanonicalPayload();
+
+        var eventItemSheet =
+            DManager.GetExcelSheet<EventItemSheet>(
+                ClientStateInterface.ClientLanguage);
+        if (eventItemSheet == null ||
+            !eventItemSheet.TryGetRow(eventItemId, out var eventItemRow))
+        {
+            return false;
+        }
+
+        payload = new ItemTooltipCanonicalPayload
+        {
+            ItemId = eventItemRow.RowId,
+            IconId = eventItemRow.Icon,
+            ItemActionId = eventItemRow.Action.RowId,
+            ItemUiCategoryId = eventItemRow.Category.RowId,
+            ClassJobCategoryId = 0,
+            Name = eventItemRow.Name.ExtractText(),
+            Description = string.Empty,
+        };
+
+        return !string.IsNullOrWhiteSpace(payload.Name);
+    }
+
+    /// <summary>
+    ///     Tries to build one canonical payload from the
+    ///     <c>DeepDungeonItem</c> sheet.
+    /// </summary>
+    /// <param name="deepDungeonItemId">
+    ///     The <c>DeepDungeonItem</c> row identifier.
+    /// </param>
+    /// <param name="payload">The resolved payload.</param>
+    /// <returns>True when the payload resolved successfully.</returns>
+    private static bool TryBuildDeepDungeonItemCanonicalPayload(
+        uint deepDungeonItemId,
+        out ItemTooltipCanonicalPayload payload)
+    {
+        payload = new ItemTooltipCanonicalPayload();
+
+        var sheet =
+            DManager.GetExcelSheet<DeepDungeonItemSheet>(
+                ClientStateInterface.ClientLanguage);
+        if (sheet == null ||
+            !sheet.TryGetRow(deepDungeonItemId, out var row))
+        {
+            return false;
+        }
+
+        payload = new ItemTooltipCanonicalPayload
+        {
+            ItemId = row.RowId,
+            IconId = row.Icon,
+            ItemActionId = row.Action.RowId,
+            ItemUiCategoryId = 0,
+            ClassJobCategoryId = 0,
+            Name = row.Name.ExtractText(),
+            Description = row.Tooltip.ExtractText(),
         };
 
         return !string.IsNullOrWhiteSpace(payload.Name);

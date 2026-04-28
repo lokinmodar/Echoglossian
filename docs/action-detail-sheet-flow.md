@@ -8,7 +8,7 @@ surfaces.
 - action detail runtime:
   [ActionItemDetailUiRuntime.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/ActionItemDetailUiRuntime.cs)
 - action detail prefetch:
-  [ActionItemDetailPrefetchRuntime.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/ActionItemDetailPrefetchRuntime.cs)
+  [ActionDetailPrefetchRuntime.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/ActionDetailPrefetchRuntime.cs)
 - trait detail prefetch:
   [TraitDetailPrefetchRuntime.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/TraitDetailPrefetchRuntime.cs)
 - persistence helpers:
@@ -37,8 +37,30 @@ Excel sheet rows
 - `ActionTooltip`
 - `ItemTooltip`
 - `Trait`
+- `EventItemText`
+- `DeepDungeonItemText`
+- action-adjacent `*ActionText` families as identity fallback for
+  non-`Action` addon content
 
 ## Notes
 
 - This flow is sheet-first and not tied to one live addon capture payload.
 - It is already split by entity family and should remain split.
+- `ActionDetail` and `ItemDetail` runtime presentation is overlay-backed for
+  translated detail text; they should not be treated as hover-tooltip-only
+  surfaces in config or UX wording.
+- Live runtime resolution is lifecycle-gated:
+  `ActionDetail` and `ItemDetail` only run while their addons are active in
+  `AddonLifecycle`, and the active payload is resolved from
+  `AgentActionDetail` / `AgentItemDetail` instead of relying only on
+  `HoveredAction` / `HoveredItem`.
+- Native lookup is now identity-first:
+  `ActionTooltip` / `ItemTooltip` stay primary for standard rows, while
+  `EventItemText`, `DeepDungeonItemText`, and the relevant `*ActionText`
+  tables can supply translated payloads by `id + targetLang + engine +
+  gameVersion` without depending on live addon text equality.
+- When one standard `Action` row is hovered before it exists in translated
+  canonical storage, `ActionDetail` now triggers the existing
+  `ActionDetailPrefetchRuntime` on demand with a cooldown, so missing common
+  actions can backfill through the same canonical `ActionTooltip` pipeline
+  instead of waiting for the periodic per-job sweep.

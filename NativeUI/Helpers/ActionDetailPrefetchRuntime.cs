@@ -9,6 +9,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ActionSheet = Lumina.Excel.Sheets.Action;
 using ActionTransientSheet = Lumina.Excel.Sheets.ActionTransient;
 using ClassJobSheet = Lumina.Excel.Sheets.ClassJob;
+using Lumina.Text.ReadOnly;
 
 namespace Echoglossian;
 
@@ -22,11 +23,15 @@ public unsafe partial class Echoglossian
 
     private static readonly TimeSpan ActionDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan ActionDetailOnDemandPrefetchCooldown =
+        TimeSpan.FromSeconds(10);
 
     private static readonly Dictionary<Type, Dictionary<string, PropertyInfo?>> ActionClassJobCategoryPropertyCache =
         [];
 
     private readonly List<uint> actionDetailPrefetchQueue = [];
+    private readonly Dictionary<string, DateTime> actionDetailOnDemandPrefetchUtcByScope =
+        [];
 
     private string actionDetailPrefetchSignature = string.Empty;
 
@@ -98,9 +103,51 @@ public unsafe partial class Echoglossian
     private void ClearActionDetailPrefetchState()
     {
         this.actionDetailPrefetchQueue.Clear();
+        this.actionDetailOnDemandPrefetchUtcByScope.Clear();
         this.actionDetailPrefetchQueueIndex = 0;
         this.actionDetailPrefetchSignature = string.Empty;
         this.actionDetailPrefetchLastTickUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    ///     Requests one on-demand canonical action-tooltip prefetch when the
+    ///     live tooltip runtime encounters a hovered action that does not yet
+    ///     exist in translated storage.
+    /// </summary>
+    /// <param name="actionId">The hovered action identifier.</param>
+    /// <param name="currentClassJobId">The current class-job identifier.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one prefetch was scheduled for this
+    ///     scope; otherwise <see langword="false" />.
+    /// </returns>
+    private bool TryRequestActionDetailOnDemandPrefetch(
+        uint actionId,
+        byte currentClassJobId)
+    {
+        if (actionId == 0 ||
+            !this.ShouldPrefetchStructuredTooltips() ||
+            !TryBuildActionTooltipCanonicalPayload(
+                actionId,
+                currentClassJobId,
+                out _))
+        {
+            return false;
+        }
+
+        var scopeKey =
+            $"{actionId}|{LangDict[LanguageInt].Code}|{this.configuration.ChosenTransEngine}|{GetGameVersion() ?? string.Empty}";
+        var utcNow = DateTime.UtcNow;
+        if (this.actionDetailOnDemandPrefetchUtcByScope.TryGetValue(
+                scopeKey,
+                out var lastQueuedUtc) &&
+            utcNow - lastQueuedUtc < ActionDetailOnDemandPrefetchCooldown)
+        {
+            return false;
+        }
+
+        this.actionDetailOnDemandPrefetchUtcByScope[scopeKey] = utcNow;
+        this.PrefetchActionDetail(actionId, currentClassJobId);
+        return true;
     }
 
     /// <summary>
@@ -147,7 +194,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ActionDetailPrefetch|{originalPayload.ActionId}|Name|{originalPayload.Name}";
+            BuildActionDetailNameTranslationKey(originalPayload);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedName))
@@ -187,7 +234,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"ActionDetailPrefetch|{originalPayload.ActionId}|Description|{originalPayload.Description}";
+            BuildActionDetailDescriptionTranslationKey(originalPayload);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedDescription))
@@ -261,6 +308,13 @@ public unsafe partial class Echoglossian
             !string.IsNullOrWhiteSpace(translatedDescription)
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
+        this.TryPopulatePendingActionDetailTranslations(
+            originalPayload,
+            translatedPayload);
+        if (!translatedPayload.HasCompleteTranslation)
+        {
+            return;
+        }
 
         var translatedRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
             ClientStateInterface.ClientLanguage.Humanize(),
@@ -270,6 +324,60 @@ public unsafe partial class Echoglossian
             originalPayload,
             translatedPayload);
         this.InsertActionTooltip(translatedRow);
+    }
+
+    /// <summary>
+    ///     Tries to enrich one action-detail payload with any queued counterpart
+    ///     translation so canonical persistence only happens when the payload is complete.
+    /// </summary>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="translatedPayload">The partially translated payload.</param>
+    private void TryPopulatePendingActionDetailTranslations(
+        ActionTooltipCanonicalPayload originalPayload,
+        ActionTooltipCanonicalPayload translatedPayload)
+    {
+        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedName) &&
+            !string.IsNullOrWhiteSpace(originalPayload.Name) &&
+            this.TryGetQueuedTranslation(
+                BuildActionDetailNameTranslationKey(originalPayload),
+                out var cachedTranslatedName))
+        {
+            translatedPayload.TranslatedName = cachedTranslatedName;
+        }
+
+        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedDescription) &&
+            !string.IsNullOrWhiteSpace(originalPayload.Description) &&
+            this.TryGetQueuedTranslation(
+                BuildActionDetailDescriptionTranslationKey(originalPayload),
+                out var cachedTranslatedDescription))
+        {
+            translatedPayload.TranslatedDescription =
+                cachedTranslatedDescription;
+        }
+    }
+
+    /// <summary>
+    ///     Builds the stable queued-translation key for one action-detail name.
+    /// </summary>
+    /// <param name="payload">The canonical payload.</param>
+    /// <returns>The stable queue key.</returns>
+    private static string BuildActionDetailNameTranslationKey(
+        ActionTooltipCanonicalPayload payload)
+    {
+        return
+            $"ActionDetailPrefetch|{payload.ActionId}|Name|{payload.Name}";
+    }
+
+    /// <summary>
+    ///     Builds the stable queued-translation key for one action-detail description.
+    /// </summary>
+    /// <param name="payload">The canonical payload.</param>
+    /// <returns>The stable queue key.</returns>
+    private static string BuildActionDetailDescriptionTranslationKey(
+        ActionTooltipCanonicalPayload payload)
+    {
+        return
+            $"ActionDetailPrefetch|{payload.ActionId}|Description|{payload.Description}";
     }
 
     /// <summary>
@@ -348,7 +456,7 @@ public unsafe partial class Echoglossian
         }
 
         var description = actionTransientSheet.TryGetRow(actionId, out var transientRow)
-            ? transientRow.Description.ExtractText()
+            ? EvaluateSheetText(transientRow.Description)
             : string.Empty;
         payload = new ActionTooltipCanonicalPayload
         {
@@ -364,6 +472,33 @@ public unsafe partial class Echoglossian
         };
 
         return !string.IsNullOrWhiteSpace(payload.Name);
+    }
+
+    /// <summary>
+    ///     Evaluates one sheet-backed SeString before extracting visible text,
+    ///     so transient descriptions with macros do not lose numeric values.
+    /// </summary>
+    /// <param name="text">The raw sheet text.</param>
+    /// <returns>The evaluated visible text.</returns>
+    private static string EvaluateSheetText(ReadOnlySeString text)
+    {
+        var evaluator = SeStringEvaluator;
+        if (evaluator == null)
+        {
+            return text.ExtractText();
+        }
+
+        try
+        {
+            return evaluator.Evaluate(
+                    text,
+                    language: ClientStateInterface.ClientLanguage)
+                .ExtractText();
+        }
+        catch
+        {
+            return text.ExtractText();
+        }
     }
 
     /// <summary>

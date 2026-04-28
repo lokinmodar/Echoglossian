@@ -18,8 +18,10 @@ using BgcArmyActionTransientSheet = Lumina.Excel.Sheets.BgcArmyActionTransient;
 using BuddyActionSheet = Lumina.Excel.Sheets.BuddyAction;
 using CompanyActionSheet = Lumina.Excel.Sheets.CompanyAction;
 using CraftActionSheet = Lumina.Excel.Sheets.CraftAction;
+using DeepDungeonItemSheet = Lumina.Excel.Sheets.DeepDungeonItem;
 using EurekaMagiaActionSheet = Lumina.Excel.Sheets.EurekaMagiaAction;
 using EventActionSheet = Lumina.Excel.Sheets.EventAction;
+using EventItemSheet = Lumina.Excel.Sheets.EventItem;
 using GeneralActionSheet = Lumina.Excel.Sheets.GeneralAction;
 using MainCommandSheet = Lumina.Excel.Sheets.MainCommand;
 using MountActionSheet = Lumina.Excel.Sheets.MountAction;
@@ -127,6 +129,15 @@ public unsafe partial class Echoglossian
     {
         return this.configuration.TranslateActionMenuWindow ||
                this.configuration.TranslateMainCommandWindow;
+    }
+
+    /// <summary>
+    ///     Gets whether item-adjacent reference-text prefetch should run.
+    /// </summary>
+    /// <returns>True when item-adjacent prefetch is enabled.</returns>
+    private bool ShouldPrefetchItemAdjacentReferenceTexts()
+    {
+        return this.configuration.TranslateTooltips;
     }
 
     /// <summary>
@@ -413,6 +424,13 @@ public unsafe partial class Echoglossian
                 ReferenceTextCacheRegistry.EventActionTexts,
                 static context => context.EventActionTexts,
                 this.ShouldPrefetchActionAdjacentReferenceTexts),
+            this.CreateReferenceTextPrefetchRegistration<EventItemText>(
+                "EventItemPrefetch",
+                TryCollectEventItemIds,
+                TryBuildEventItemPayload,
+                ReferenceTextCacheRegistry.EventItemTexts,
+                static context => context.EventItemTexts,
+                this.ShouldPrefetchItemAdjacentReferenceTexts),
             this.CreateReferenceTextPrefetchRegistration<BgcArmyActionText>(
                 "BgcArmyActionPrefetch",
                 TryCollectBgcArmyActionIds,
@@ -456,6 +474,13 @@ public unsafe partial class Echoglossian
                 ReferenceTextCacheRegistry.EurekaMagiaActionTexts,
                 static context => context.EurekaMagiaActionTexts,
                 this.ShouldPrefetchActionAdjacentReferenceTexts),
+            this.CreateReferenceTextPrefetchRegistration<DeepDungeonItemText>(
+                "DeepDungeonItemPrefetch",
+                TryCollectDeepDungeonItemIds,
+                TryBuildDeepDungeonItemPayload,
+                ReferenceTextCacheRegistry.DeepDungeonItemTexts,
+                static context => context.DeepDungeonItemTexts,
+                this.ShouldPrefetchItemAdjacentReferenceTexts),
         ];
     }
 
@@ -707,6 +732,34 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Tries to collect EventItem row identifiers.
+    /// </summary>
+    /// <param name="referenceIds">The collected row identifiers.</param>
+    /// <returns>True when identifiers were collected successfully.</returns>
+    private static bool TryCollectEventItemIds(out List<uint> referenceIds)
+    {
+        referenceIds = [];
+
+        var sheet =
+            DManager.GetExcelSheet<EventItemSheet>(
+                ClientStateInterface.ClientLanguage);
+        if (sheet == null)
+        {
+            return false;
+        }
+
+        referenceIds = sheet
+            .Where(row =>
+                row.RowId != 0 &&
+                !string.IsNullOrWhiteSpace(row.Name.ExtractText()))
+            .Select(row => row.RowId)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToList();
+        return referenceIds.Count > 0;
+    }
+
+    /// <summary>
     ///     Tries to collect BgcArmyAction row identifiers.
     /// </summary>
     /// <param name="referenceIds">The collected row identifiers.</param>
@@ -878,6 +931,35 @@ public unsafe partial class Echoglossian
             .Where(row =>
                 row.RowId != 0 &&
                 row.Action.RowId != 0)
+            .Select(row => row.RowId)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToList();
+        return referenceIds.Count > 0;
+    }
+
+    /// <summary>
+    ///     Tries to collect DeepDungeonItem row identifiers.
+    /// </summary>
+    /// <param name="referenceIds">The collected row identifiers.</param>
+    /// <returns>True when identifiers were collected successfully.</returns>
+    private static bool TryCollectDeepDungeonItemIds(
+        out List<uint> referenceIds)
+    {
+        referenceIds = [];
+
+        var sheet =
+            DManager.GetExcelSheet<DeepDungeonItemSheet>(
+                ClientStateInterface.ClientLanguage);
+        if (sheet == null)
+        {
+            return false;
+        }
+
+        referenceIds = sheet
+            .Where(row =>
+                row.RowId != 0 &&
+                !string.IsNullOrWhiteSpace(row.Name.ExtractText()))
             .Select(row => row.RowId)
             .Distinct()
             .OrderBy(id => id)
@@ -1060,6 +1142,35 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Tries to build one canonical EventItem payload from sheets.
+    /// </summary>
+    /// <param name="referenceId">The EventItem row identifier.</param>
+    /// <param name="payload">The resolved payload.</param>
+    /// <returns>True when the payload resolved successfully.</returns>
+    private static bool TryBuildEventItemPayload(
+        uint referenceId,
+        out ReferenceTextCanonicalPayload payload)
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        var sheet =
+            DManager.GetExcelSheet<EventItemSheet>(
+                ClientStateInterface.ClientLanguage);
+        if (sheet == null || !sheet.TryGetRow(referenceId, out var row))
+        {
+            return false;
+        }
+
+        return TryBuildDirectReferenceTextPayload(
+            row.RowId,
+            row.Name.ExtractText(),
+            description: null,
+            row.Icon,
+            row.Action.RowId != 0 ? row.Action.RowId : null,
+            out payload);
+    }
+
+    /// <summary>
     ///     Tries to build one canonical BgcArmyAction payload from sheets.
     /// </summary>
     /// <param name="referenceId">The BgcArmyAction row identifier.</param>
@@ -1085,7 +1196,7 @@ public unsafe partial class Echoglossian
         }
 
         var description = transientSheet.TryGetRow(referenceId, out var transientRow)
-            ? transientRow.Text.ExtractText()
+            ? EvaluateSheetText(transientRow.Text)
             : null;
         return TryBuildDirectReferenceTextPayload(
             row.RowId,
@@ -1126,7 +1237,7 @@ public unsafe partial class Echoglossian
         uint? iconId = null;
         if (transientSheet.TryGetRow(referenceId, out var transientRow))
         {
-            description = transientRow.Description.ExtractText();
+            description = EvaluateSheetText(transientRow.Description);
             iconId = transientRow.Icon;
         }
 
@@ -1309,6 +1420,35 @@ public unsafe partial class Echoglossian
             row.Action.RowId,
             iconOverride: null,
             descriptionOverride: null,
+            out payload);
+    }
+
+    /// <summary>
+    ///     Tries to build one canonical DeepDungeonItem payload from sheets.
+    /// </summary>
+    /// <param name="referenceId">The DeepDungeonItem row identifier.</param>
+    /// <param name="payload">The resolved payload.</param>
+    /// <returns>True when the payload resolved successfully.</returns>
+    private static bool TryBuildDeepDungeonItemPayload(
+        uint referenceId,
+        out ReferenceTextCanonicalPayload payload)
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        var sheet =
+            DManager.GetExcelSheet<DeepDungeonItemSheet>(
+                ClientStateInterface.ClientLanguage);
+        if (sheet == null || !sheet.TryGetRow(referenceId, out var row))
+        {
+            return false;
+        }
+
+        return TryBuildDirectReferenceTextPayload(
+            row.RowId,
+            row.Name.ExtractText(),
+            row.Tooltip.ExtractText(),
+            row.Icon,
+            row.Action.RowId != 0 ? row.Action.RowId : null,
             out payload);
     }
 

@@ -32,6 +32,21 @@
             <param name="sourceContentHash">The stable source-content hash.</param>
             <returns>The matching row, or <see langword="null" />.</returns>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.UInt32,System.UInt32)">
+            <summary>
+                Tries to find the best translated action-tooltip row by stable
+                identity when the stricter canonical hash does not match.
+            </summary>
+            <param name="actionId">The action row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="classJobId">The preferred class-job identifier.</param>
+            <param name="classJobCategoryId">
+                The preferred class-job-category identifier.
+            </param>
+            <returns>The best translated row, or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one translated action text by exact original text
@@ -165,6 +180,31 @@
             <param name="originalText">The canonical original text.</param>
             <param name="translatedText">The translated text.</param>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.String,System.UInt32,System.UInt32)">
+            <summary>
+                Computes one ordering score for tolerant identity-based action
+                tooltip lookup.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <param name="classJobId">The preferred class-job identifier.</param>
+            <param name="classJobCategoryId">
+                The preferred class-job-category identifier.
+            </param>
+            <returns>The ordering score.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.HasCompleteTranslation(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Gets whether one action-tooltip row contains every translated field
+                required by the live tooltip runtime.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <returns>
+                <see langword="true" /> when the row contains a translated name and
+                any required translated description; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.BuildTextLookupScopeKey(System.String,System.Int32,System.String)">
             <summary>
                 Builds one stable scope key for translated-text lookups.
@@ -293,10 +333,48 @@
             <param name="sourceContentHash">The stable source-content hash.</param>
             <returns>The matching row, or <see langword="null" />.</returns>
         </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.UInt32)">
+            <summary>
+                Tries to find the best translated item-tooltip row by stable
+                identity when the stricter canonical hash does not match.
+            </summary>
+            <param name="itemId">The item row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="classJobCategoryId">
+                The preferred class-job-category identifier.
+            </param>
+            <returns>The best translated row, or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.Clear">
             <summary>
                 Clears the in-memory cache.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.ItemTooltip,System.String,System.UInt32)">
+            <summary>
+                Computes one ordering score for tolerant identity-based item
+                tooltip lookup.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <param name="classJobCategoryId">
+                The preferred class-job-category identifier.
+            </param>
+            <returns>The ordering score.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.HasCompleteTranslation(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Gets whether one item-tooltip row contains every translated field
+                required by the live tooltip runtime.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <returns>
+                <see langword="true" /> when the row contains a translated name and
+                any required translated description; otherwise
+                <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.Cache.QuestHoverTranslationCache">
             <summary>
@@ -432,6 +510,11 @@
                 Gets the specific EventAction cache.
             </summary>
         </member>
+        <member name="P:Echoglossian.Cache.ReferenceTextCacheRegistry.EventItemTexts">
+            <summary>
+                Gets the specific EventItem cache.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Cache.ReferenceTextCacheRegistry.BgcArmyActionTexts">
             <summary>
                 Gets the specific BgcArmyAction cache.
@@ -460,6 +543,11 @@
         <member name="P:Echoglossian.Cache.ReferenceTextCacheRegistry.EurekaMagiaActionTexts">
             <summary>
                 Gets the specific EurekaMagiaAction cache.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.ReferenceTextCacheRegistry.DeepDungeonItemTexts">
+            <summary>
+                Gets the specific DeepDungeonItem cache.
             </summary>
         </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.PreloadAll(System.String)">
@@ -517,6 +605,53 @@
                 the specific reference-text caches; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(System.UInt32,System.String,System.Int32,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated action-adjacent reference payload by
+                stable identity.
+            </summary>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when one translated payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(System.UInt32,System.String,System.Int32,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated item-adjacent reference payload by
+                stable identity.
+            </summary>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when one translated payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedIdentityPayload``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},System.UInt32,System.String,System.Int32,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated payload by exact row identity from a
+                specific reference-text cache.
+            </summary>
+            <typeparam name="TRow">The specific persisted row type.</typeparam>
+            <param name="cacheStore">The cache store to query.</param>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when one translated payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="T:Echoglossian.Cache.ReferenceTextCacheStore`1">
             <summary>
                 Manages one in-memory cache of canonical reference-text rows.
@@ -553,6 +688,17 @@
             <param name="gameVersion">The current game version.</param>
             <param name="sourceContentHash">The stable source-content hash.</param>
             <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String)">
+            <summary>
+                Tries to find the best translated reference-text row by stable
+                identity when the stricter canonical hash does not match.
+            </summary>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The best translated row, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
             <summary>
@@ -683,6 +829,27 @@
             <param name="originalText">The original text.</param>
             <param name="translatedText">The translated text.</param>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.ComputeIdentityMatchScore(`0,System.String)">
+            <summary>
+                Computes one ordering score for tolerant identity-based reference
+                text lookup.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <returns>The ordering score.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.HasCompleteTranslation(`0)">
+            <summary>
+                Gets whether one reference-text row contains every translated field
+                required by the live runtime.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <returns>
+                <see langword="true" /> when the row contains a translated name and
+                any required translated description; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.BuildScopeKey(System.String,System.Int32,System.String)">
             <summary>
                 Builds one cache scope key from language, engine, and version.
@@ -767,6 +934,21 @@
             <param name="gameVersion">The game version.</param>
             <param name="sourceContentHash">The stable source-content hash.</param>
             <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.UInt32,System.UInt32)">
+            <summary>
+                Tries to find the best translated trait row by stable identity when
+                the stricter canonical hash does not match.
+            </summary>
+            <param name="traitId">The trait row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="classJobId">The preferred class-job identifier.</param>
+            <param name="classJobCategoryId">
+                The preferred class-job-category identifier.
+            </param>
+            <returns>The best translated row, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
             <summary>
@@ -898,6 +1080,31 @@
             </param>
             <param name="originalText">The canonical original text.</param>
             <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.Trait,System.String,System.UInt32,System.UInt32)">
+            <summary>
+                Computes one ordering score for tolerant identity-based trait
+                lookup.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <param name="classJobId">The preferred class-job identifier.</param>
+            <param name="classJobCategoryId">
+                The preferred class-job-category identifier.
+            </param>
+            <returns>The ordering score.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.HasCompleteTranslation(Echoglossian.EFCoreSqlite.Models.Trait)">
+            <summary>
+                Gets whether one trait row contains every translated field required
+                by the live tooltip runtime.
+            </summary>
+            <param name="row">The candidate row.</param>
+            <returns>
+                <see langword="true" /> when the row contains a translated name and
+                any required translated description; otherwise
+                <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.BuildTextLookupScopeKey(System.String,System.Int32,System.String)">
             <summary>
@@ -2520,6 +2727,19 @@
                 Clears the action-tooltip prefetch runtime state.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryRequestActionDetailOnDemandPrefetch(System.UInt32,System.Byte)">
+            <summary>
+                Requests one on-demand canonical action-tooltip prefetch when the
+                live tooltip runtime encounters a hovered action that does not yet
+                exist in translated storage.
+            </summary>
+            <param name="actionId">The hovered action identifier.</param>
+            <param name="currentClassJobId">The current class-job identifier.</param>
+            <returns>
+                <see langword="true" /> when one prefetch was scheduled for this
+                scope; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.PrefetchActionDetail(System.UInt32,System.Byte)">
             <summary>
                 Prefetches one canonical action-tooltip payload and any missing translations.
@@ -2550,6 +2770,28 @@
             <param name="translatedName">The translated name, if any.</param>
             <param name="translatedDescription">The translated description, if any.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryPopulatePendingActionDetailTranslations(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Tries to enrich one action-detail payload with any queued counterpart
+                translation so canonical persistence only happens when the payload is complete.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The partially translated payload.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildActionDetailNameTranslationKey(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Builds the stable queued-translation key for one action-detail name.
+            </summary>
+            <param name="payload">The canonical payload.</param>
+            <returns>The stable queue key.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildActionDetailDescriptionTranslationKey(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Builds the stable queued-translation key for one action-detail description.
+            </summary>
+            <param name="payload">The canonical payload.</param>
+            <returns>The stable queue key.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobActionIds(System.Byte,System.String,System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect the current class/job action ids from canonical sheets.
@@ -2567,6 +2809,14 @@
             <param name="currentClassJobId">The current class-job identifier.</param>
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateSheetText(Lumina.Text.ReadOnly.ReadOnlySeString)">
+            <summary>
+                Evaluates one sheet-backed SeString before extracting visible text,
+                so transient descriptions with macros do not lose numeric values.
+            </summary>
+            <param name="text">The raw sheet text.</param>
+            <returns>The evaluated visible text.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryGetCurrentClassJobInfo(System.Byte@,System.String@)">
             <summary>
@@ -2615,6 +2865,53 @@
             </summary>
             <returns><see langword="true" /> when the runtime should execute.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.HandleStructuredTooltipRuntimeDisabled">
+            <summary>
+                Handles the shared structured-tooltip runtime transition from enabled
+                to disabled without redoing reset work every frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterStructuredTooltipLifecycleHandlers">
+            <summary>
+                Registers one shared lifecycle listener for the structured tooltip
+                addons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterStructuredTooltipLifecycleHandlers">
+            <summary>
+                Unregisters the shared lifecycle listener for the structured tooltip
+                addons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnStructuredTooltipLifecycleEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Updates structured-tooltip addon activity from addon lifecycle events.
+            </summary>
+            <param name="evt">The lifecycle event.</param>
+            <param name="args">The event arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.HandleStructuredTooltipLifecycleEvent(Echoglossian.Echoglossian.StructuredTooltipLifecycleState,Dalamud.Game.Addon.Lifecycle.AddonEvent)">
+            <summary>
+                Applies one lifecycle transition to one structured-tooltip surface.
+            </summary>
+            <param name="state">The tracked surface state.</param>
+            <param name="evt">The lifecycle event.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveLifecycleTooltipAddon(Echoglossian.Echoglossian.StructuredTooltipLifecycleState,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Tries to resolve one tooltip addon, but only while lifecycle state says
+                the surface is active.
+            </summary>
+            <param name="state">The tracked surface state.</param>
+            <param name="addon">The resolved visible addon.</param>
+            <returns><see langword="true" /> when one visible addon was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResetStructuredTooltipSurfaceRuntime(System.String)">
+            <summary>
+                Resets one structured-tooltip surface runtime immediately.
+            </summary>
+            <param name="surfaceName">The logical surface name.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryResolveTooltipAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@,System.String[])">
             <summary>
                 Tries to resolve one visible tooltip addon by name.
@@ -2623,29 +2920,147 @@
             <param name="addonNames">The candidate addon names.</param>
             <returns><see langword="true" /> when a visible addon was resolved.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedActionTooltipPayload(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+        <member name="M:Echoglossian.Echoglossian.GetActiveActionDetailId">
             <summary>
-                Tries to resolve one translated action-tooltip payload from canonical storage.
+                Gets the active ActionDetail action id from the action-detail agent.
             </summary>
+            <returns>The active action id, or zero when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetActiveItemDetailId">
+            <summary>
+                Gets the active ItemDetail item id from the item-detail agent.
+            </summary>
+            <returns>The active item id, or zero when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredActionTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.HoverActionKind,System.Byte,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@,System.UInt32@)">
+            <summary>
+                Tries to build one runtime action-detail payload from one
+                structured reference-text family when the standard
+                <c>Action</c>/<c>ActionTransient</c> path does not apply.
+            </summary>
+            <param name="referenceId">The hovered action or command identifier.</param>
+            <param name="hoverActionKind">The active hover action kind.</param>
+            <param name="currentClassJobId">The current class/job identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <param name="resolvedReferenceId">
+                The stable structured row identifier actually used for lookup.
+            </param>
+            <returns><see langword="true" /> when one structured payload was built.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedActionTooltipPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated action-tooltip payload from
+                canonical storage.
+            </summary>
+            <param name="referenceId">The hovered action or command identifier.</param>
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated payload, if any.</param>
             <returns><see langword="true" /> when a complete translation is available.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryFindTranslatedTraitTooltipPayload(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload@)">
             <summary>
-                Tries to resolve one translated trait payload from canonical storage.
+                Tries to resolve one translated trait payload from canonical
+                storage.
             </summary>
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated payload, if any.</param>
             <returns><see langword="true" /> when a complete translation is available.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedItemTooltipPayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedItemTooltipPayload(Echoglossian.Echoglossian.StructuredTooltipItemSourceKind,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
             <summary>
-                Tries to resolve one translated item-tooltip payload from canonical storage.
+                Tries to resolve one translated item-tooltip payload from canonical
+                storage.
             </summary>
+            <param name="sourceKind">The sheet family that produced the payload.</param>
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated payload, if any.</param>
             <returns><see langword="true" /> when a complete translation is available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildTranslatedActionTooltipPayloadFromRow(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one translated action payload from one stored row.
+            </summary>
+            <param name="row">The stored row, if any.</param>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns><see langword="true" /> when a complete translated payload was built.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildTranslatedActionTooltipPayloadFromReferencePayload(Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one translated action payload from one translated
+                structured reference payload.
+            </summary>
+            <param name="referencePayload">The translated reference payload.</param>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns><see langword="true" /> when a complete translated payload was built.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildTranslatedTraitTooltipPayloadFromRow(Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload@)">
+            <summary>
+                Tries to build one translated trait payload from one stored row.
+            </summary>
+            <param name="row">The stored row, if any.</param>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns><see langword="true" /> when a complete translated payload was built.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildTranslatedItemTooltipPayloadFromRow(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one translated item payload from one stored row.
+            </summary>
+            <param name="row">The stored row, if any.</param>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns><see langword="true" /> when a complete translated payload was built.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildTranslatedItemTooltipPayloadFromReferencePayload(Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one translated item payload from one translated
+                structured reference payload.
+            </summary>
+            <param name="referencePayload">The translated reference payload.</param>
+            <param name="originalPayload">The original canonical payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns><see langword="true" /> when a complete translated payload was built.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateTranslatedActionTooltipPayload(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,System.String,System.String)">
+            <summary>
+                Creates one translated action payload by layering translated fields
+                over the canonical original payload.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedName">The translated name, if any.</param>
+            <param name="translatedDescription">The translated description, if any.</param>
+            <returns>The layered payload.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateTranslatedTraitTooltipPayload(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,System.String,System.String)">
+            <summary>
+                Creates one translated trait payload by layering translated fields
+                over the canonical original payload.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedName">The translated name, if any.</param>
+            <param name="translatedDescription">The translated description, if any.</param>
+            <returns>The layered payload.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateTranslatedItemTooltipPayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,System.String,System.String)">
+            <summary>
+                Creates one translated item payload by layering translated fields
+                over the canonical original payload.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedName">The translated name, if any.</param>
+            <param name="translatedDescription">The translated description, if any.</param>
+            <returns>The layered payload.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateActionTooltipPayloadFromReferencePayload(Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,System.Byte)">
+            <summary>
+                Creates one runtime action-detail payload from one structured
+                reference payload.
+            </summary>
+            <param name="referencePayload">The structured reference payload.</param>
+            <param name="currentClassJobId">The current class/job identifier.</param>
+            <returns>The converted runtime payload.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ApplyStructuredActionTooltipNative(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
             <summary>
@@ -2671,17 +3086,54 @@
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated canonical payload.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyStructuredTooltipNative(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+        <member name="M:Echoglossian.Echoglossian.ApplyStructuredTooltipNative(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
             <summary>
                 Applies translated native text to the name and description nodes of a tooltip.
             </summary>
+            <param name="surfaceName">The logical surface name.</param>
             <param name="addon">The visible tooltip addon.</param>
             <param name="contentId">The logical content identifier.</param>
+            <param name="contentKind">The logical content kind.</param>
             <param name="originalName">The original name text.</param>
             <param name="originalDescription">The original description text.</param>
             <param name="translatedName">The translated name text.</param>
             <param name="translatedDescription">The translated description text.</param>
             <param name="runtimeState">The active native-runtime state.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryEnsureStructuredTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+            <summary>
+                Ensures the native runtime has the best currently available tooltip
+                node addresses for the active content, enriching partial state after
+                the addon finishes populating its late text nodes.
+            </summary>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="contentId">The logical content identifier.</param>
+            <param name="contentKind">The logical content kind.</param>
+            <param name="originalName">The canonical original name.</param>
+            <param name="originalDescription">The canonical original description.</param>
+            <param name="runtimeState">The current runtime state to enrich.</param>
+            <returns><see langword="true" /> when at least one relevant node is available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CanApplyStructuredTooltipNative(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+                Gets whether the structured-tooltip native path can safely mutate
+                the active tooltip without partial or markup-corrupt writes.
+            </summary>
+            <param name="descriptionExpected">Whether the tooltip is expected to have a description node.</param>
+            <param name="nameNodeResolved">Whether the name node was resolved.</param>
+            <param name="nameNodeSupportsPlainTextMutation">Whether the name node can be safely rewritten as plain text.</param>
+            <param name="descriptionNodeResolved">Whether the description node was resolved.</param>
+            <param name="descriptionNodeSupportsPlainTextMutation">Whether the description node can be safely rewritten as plain text.</param>
+            <returns><see langword="true" /> when native mutation is safe to perform atomically.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetStructuredTooltipNativeApplyDeferredReason(System.Boolean,Echoglossian.Echoglossian.StructuredTooltipNativeState)">
+            <summary>
+                Gets the compact reason describing why native structured-tooltip
+                mutation was deferred for the current frame.
+            </summary>
+            <param name="descriptionExpected">Whether the tooltip is expected to have a description node.</param>
+            <param name="runtimeState">The current runtime state.</param>
+            <returns>The compact deferred-apply reason.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.RestoreStructuredTooltipOriginals(Echoglossian.Echoglossian.StructuredTooltipNativeState@,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
@@ -2696,10 +3148,55 @@
             </summary>
             <param name="addon">The visible tooltip addon.</param>
             <param name="contentId">The logical content identifier.</param>
+            <param name="contentKind">The logical content kind.</param>
             <param name="originalName">The canonical original name.</param>
             <param name="originalDescription">The canonical original description.</param>
             <param name="runtimeState">The resolved node-address map.</param>
             <returns><see langword="true" /> when at least one relevant node was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CollectStructuredTooltipTextNodeCandidates(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Collects the readable text-node candidates exposed by a structured
+                tooltip addon.
+            </summary>
+            <param name="addon">The visible tooltip addon.</param>
+            <returns>The collected text-node candidates.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipNodePlainTextMutable(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Gets whether one tooltip text node can be safely rewritten using
+                plain-text <c>SetText(string)</c> without corrupting inline payloads.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns><see langword="true" /> when plain-text mutation is safe.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipTextNodeCandidate(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.String,System.IntPtr,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
+            <summary>
+                Tries to find the best live text-node candidate for a canonical
+                structured-tooltip text value.
+            </summary>
+            <param name="candidates">The candidate nodes.</param>
+            <param name="canonicalText">The canonical source text.</param>
+            <param name="excludedNodeAddress">One node address to exclude.</param>
+            <param name="bestCandidate">The best matching candidate, if any.</param>
+            <returns><see langword="true" /> when a suitable candidate was found.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.NormalizeStructuredTooltipLookupText(System.String)">
+            <summary>
+                Normalizes one structured-tooltip text value so live wrapped text and
+                canonical sheet text can be compared safely.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeStructuredTooltipTextMatchScore(System.String,System.String)">
+            <summary>
+                Computes one score describing how well a visible structured-tooltip
+                text matches its canonical source text.
+            </summary>
+            <param name="visibleText">The visible live text.</param>
+            <param name="canonicalText">The canonical source text.</param>
+            <returns>The match score, or zero when the texts do not match.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.IsTraitHoverActionKind(Dalamud.Game.Gui.HoverActionKind)">
             <summary>
@@ -2708,6 +3205,34 @@
             <param name="hoverActionKind">The hovered action kind.</param>
             <returns><see langword="true" /> when the hover kind represents a trait.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredReferencePayload(System.UInt32,Dalamud.Game.Gui.HoverActionKind,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to build one structured action-adjacent reference payload for
+                the requested hover family.
+            </summary>
+            <param name="referenceId">The candidate structured row identifier.</param>
+            <param name="hoverActionKind">The active hover action kind.</param>
+            <param name="referencePayload">The resolved reference payload.</param>
+            <returns><see langword="true" /> when a payload was built.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.NormalizeStructuredActionReferenceId(System.UInt32,Dalamud.Game.Gui.HoverActionKind)">
+            <summary>
+                Normalizes one structured action reference id through Dalamud's
+                ActStr redirect when the hover family supports it.
+            </summary>
+            <param name="referenceId">The raw hovered identifier.</param>
+            <param name="hoverActionKind">The active hover action kind.</param>
+            <returns>The normalized row identifier, or the raw identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryMapHoverActionKindToActionKind(Dalamud.Game.Gui.HoverActionKind,Dalamud.Game.ActionKind@)">
+            <summary>
+                Tries to map one action-detail hover kind to the corresponding
+                Dalamud action kind used by ActStr redirects.
+            </summary>
+            <param name="hoverActionKind">The hover action kind.</param>
+            <param name="actionKind">The mapped action kind.</param>
+            <returns><see langword="true" /> when the mapping exists.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ReadTooltipTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Reads one tooltip text node using the same fallback order used elsewhere in the repo.
@@ -2715,18 +3240,59 @@
             <param name="textNode">The text node to read.</param>
             <returns>The resolved text, or <see cref="F:System.String.Empty" />.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.UpdateStructuredTooltipOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ClearStructuredTooltipOverlay(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String,System.UInt32,System.UInt32)">
+            <summary>
+                Clears one structured-tooltip overlay and emits a compact reason log.
+            </summary>
+            <param name="surfaceName">The logical overlay surface name.</param>
+            <param name="overlay">The overlay instance to clear.</param>
+            <param name="reason">The compact clear reason.</param>
+            <param name="contentId">The logical content identifier.</param>
+            <param name="contentKind">The logical content kind.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.HasPublishedStructuredTooltipOverlayContent(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Gets whether one structured tooltip overlay currently has visible or
+                published content worth logging before clear.
+            </summary>
+            <param name="overlay">The overlay instance to inspect.</param>
+            <returns><see langword="true" /> when the overlay currently has content.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogStructuredTooltipState(System.String,System.String,System.UInt32,System.UInt32,System.Nullable{Echoglossian.JournalTranslationDisplayMode},System.String,System.String,System.String,System.String,System.IntPtr,System.IntPtr,System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
+            <summary>
+                Emits one throttled structured-tooltip diagnostic covering runtime,
+                native-apply, and overlay stages.
+            </summary>
+            <param name="surfaceName">The logical surface name.</param>
+            <param name="category">The logical diagnostic category.</param>
+            <param name="contentId">The logical content identifier.</param>
+            <param name="contentKind">The logical content kind.</param>
+            <param name="displayMode">The effective display mode, if relevant.</param>
+            <param name="reason">The compact state reason.</param>
+            <param name="name">The optional name text.</param>
+            <param name="description">The optional description text.</param>
+            <param name="overlayText">The optional overlay text.</param>
+            <param name="nameNodeAddress">The resolved name-node address.</param>
+            <param name="descriptionNodeAddress">The resolved description-node address.</param>
+            <param name="nameApplied">Whether the translated name was written.</param>
+            <param name="descriptionApplied">Whether the translated description was written.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UpdateStructuredTooltipOverlay(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String)">
             <summary>
                 Updates one tooltip overlay from the currently visible tooltip addon.
             </summary>
+            <param name="surfaceName">The logical surface name.</param>
             <param name="overlay">The overlay instance to update.</param>
             <param name="addon">The visible tooltip addon.</param>
+            <param name="contentId">The logical content identifier.</param>
+            <param name="contentKind">The logical content kind.</param>
             <param name="text">The tooltip text to render.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.DrawStructuredTooltipOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
+        <member name="M:Echoglossian.Echoglossian.DrawStructuredTooltipOverlay(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
             <summary>
                 Draws one structured tooltip overlay when it has published content.
             </summary>
+            <param name="surfaceName">The logical surface name.</param>
             <param name="overlay">The overlay instance to draw.</param>
             <param name="config">The overlay configuration.</param>
         </member>
@@ -2745,6 +3311,48 @@
             <param name="hoveredItemId">The raw hovered item identifier.</param>
             <returns>The normalized base item row identifier.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeStructuredTooltipDiagnosticHash(System.String)">
+            <summary>
+                Computes one short diagnostic hash for structured-tooltip logs.
+            </summary>
+            <param name="value">The optional text to hash.</param>
+            <returns>The short uppercase hash, or <c>EMPTY</c>.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildStructuredTooltipPreview(System.String)">
+            <summary>
+                Builds one compact single-line preview for structured-tooltip logs.
+            </summary>
+            <param name="value">The optional text to preview.</param>
+            <returns>The compact preview.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatStructuredTooltipDisplayMode(System.Nullable{Echoglossian.JournalTranslationDisplayMode})">
+            <summary>
+                Formats one optional structured-tooltip display mode.
+            </summary>
+            <param name="displayMode">The optional display mode.</param>
+            <returns>The formatted text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatStructuredTooltipContentKind(System.UInt32)">
+            <summary>
+                Formats one structured-tooltip content kind.
+            </summary>
+            <param name="contentKind">The content kind value.</param>
+            <returns>The formatted text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatStructuredTooltipNodeAddress(System.IntPtr)">
+            <summary>
+                Formats one optional node address for diagnostics.
+            </summary>
+            <param name="nodeAddress">The node address.</param>
+            <returns>The formatted node address.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatStructuredTooltipOptionalBool(System.Nullable{System.Boolean})">
+            <summary>
+                Formats one optional boolean for diagnostics.
+            </summary>
+            <param name="value">The optional boolean.</param>
+            <returns>The formatted text.</returns>
+        </member>
         <member name="T:Echoglossian.Echoglossian.StructuredTooltipNativeState">
             <summary>
                 Captures the minimal mutable state for one structured tooltip instance.
@@ -2756,7 +3364,7 @@
             <param name="DescriptionNodeAddress">The resolved description-node address.</param>
             <param name="OriginalDescriptionText">The original description-node text.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.StructuredTooltipNativeState.#ctor(System.IntPtr,System.UInt32,System.UInt32,System.IntPtr,System.String,System.IntPtr,System.String)">
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipNativeState.#ctor(System.IntPtr,System.UInt32,System.UInt32,System.IntPtr,System.String,System.IntPtr,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
                 Captures the minimal mutable state for one structured tooltip instance.
             </summary>
@@ -2784,6 +3392,81 @@
         </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.OriginalDescriptionText">
             <summary>The original description-node text.</summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate">
+            <summary>
+                Captures one readable structured-tooltip text node together with its
+                normalized comparison text.
+            </summary>
+            <param name="NodeAddress">The text-node address.</param>
+            <param name="VisibleText">The visible text read from the node.</param>
+            <param name="NormalizedVisibleText">The normalized visible text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.#ctor(System.IntPtr,System.String,System.String,System.Boolean)">
+            <summary>
+                Captures one readable structured-tooltip text node together with its
+                normalized comparison text.
+            </summary>
+            <param name="NodeAddress">The text-node address.</param>
+            <param name="VisibleText">The visible text read from the node.</param>
+            <param name="NormalizedVisibleText">The normalized visible text.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.NodeAddress">
+            <summary>The text-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.VisibleText">
+            <summary>The visible text read from the node.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.NormalizedVisibleText">
+            <summary>The normalized visible text.</summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.StructuredTooltipLifecycleState">
+            <summary>
+                Tracks whether one structured-tooltip addon family is currently active
+                according to addon lifecycle events.
+            </summary>
+            <param name="SurfaceName">The logical surface name.</param>
+            <param name="AddonNames">The addon names bound to that surface.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipLifecycleState.#ctor(System.String,System.String[])">
+            <summary>
+                Tracks whether one structured-tooltip addon family is currently active
+                according to addon lifecycle events.
+            </summary>
+            <param name="SurfaceName">The logical surface name.</param>
+            <param name="AddonNames">The addon names bound to that surface.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipLifecycleState.SurfaceName">
+            <summary>
+                Gets the logical surface name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipLifecycleState.AddonNames">
+            <summary>
+                Gets the addon names tracked for this surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipLifecycleState.IsActive">
+            <summary>
+                Gets a value indicating whether this surface is currently active.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipLifecycleState.MarkActive">
+            <summary>
+                Marks this surface as active.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipLifecycleState.MarkInactive">
+            <summary>
+                Marks this surface as inactive.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipLifecycleState.Matches(System.String)">
+            <summary>
+                Gets whether one addon name belongs to this tracked surface.
+            </summary>
+            <param name="addonName">The addon name to test.</param>
+            <returns><see langword="true" /> when the addon name matches.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
             <summary>
@@ -2904,6 +3587,32 @@
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
+        <member name="T:Echoglossian.Echoglossian.StructuredTooltipItemSourceKind">
+            <summary>
+                Describes which canonical sheet family produced one ItemDetail
+                payload.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.StructuredTooltipItemSourceKind.None">
+            <summary>
+                No source family resolved.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.StructuredTooltipItemSourceKind.Item">
+            <summary>
+                The standard <c>Item</c> sheet resolved the payload.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.StructuredTooltipItemSourceKind.EventItem">
+            <summary>
+                The <c>EventItem</c> sheet resolved the payload.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Echoglossian.StructuredTooltipItemSourceKind.DeepDungeonItem">
+            <summary>
+                The <c>DeepDungeonItem</c> sheet resolved the payload.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TickItemDetailPrefetch">
             <summary>
                 Ticks the item-tooltip prefetch runtime so current inventory surfaces
@@ -2949,6 +3658,28 @@
             <param name="translatedName">The translated name, if any.</param>
             <param name="translatedDescription">The translated description, if any.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryPopulatePendingItemDetailTranslations(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Tries to enrich one item-detail payload with any queued counterpart
+                translation so canonical persistence only happens when the payload is complete.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The partially translated payload.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildItemDetailNameTranslationKey(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Builds the stable queued-translation key for one item-detail name.
+            </summary>
+            <param name="payload">The canonical payload.</param>
+            <returns>The stable queue key.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildItemDetailDescriptionTranslationKey(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Builds the stable queued-translation key for one item-detail description.
+            </summary>
+            <param name="payload">The canonical payload.</param>
+            <returns>The stable queue key.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryCollectTrackedItemIds(System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect tracked item ids from inventory, armory, equipment, and hotbars.
@@ -2958,9 +3689,58 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.TryBuildItemTooltipCanonicalPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
             <summary>
-                Tries to build one canonical item-tooltip payload from the item sheet.
+                Tries to build one canonical item-tooltip payload from the active
+                item-adjacent sheets.
             </summary>
-            <param name="itemId">The item row identifier.</param>
+            <param name="rawItemId">The raw hovered or agent item identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildItemTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.HoverActionKind,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@,Echoglossian.Echoglossian.StructuredTooltipItemSourceKind@)">
+            <summary>
+                Tries to build one canonical item-tooltip payload from the active
+                item-adjacent sheets while also reporting the source family.
+            </summary>
+            <param name="rawItemId">The raw hovered or agent item identifier.</param>
+            <param name="hoverActionKind">The current hover action kind, if any.</param>
+            <param name="payload">The resolved payload.</param>
+            <param name="sourceKind">The sheet family that produced the payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.NormalizeStandardItemReferenceId(System.UInt32)">
+            <summary>
+                Normalizes one raw item id to the base <c>Item</c> sheet row
+                identifier.
+            </summary>
+            <param name="rawItemId">The raw hovered or agent item identifier.</param>
+            <returns>The normalized base <c>Item</c> row identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildStandardItemTooltipCanonicalPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one canonical payload from the standard
+                <c>Item</c> sheet.
+            </summary>
+            <param name="itemId">The normalized <c>Item</c> row identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildEventItemCanonicalPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one canonical payload from the <c>EventItem</c>
+                sheet.
+            </summary>
+            <param name="eventItemId">The <c>EventItem</c> row identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildDeepDungeonItemCanonicalPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@)">
+            <summary>
+                Tries to build one canonical payload from the
+                <c>DeepDungeonItem</c> sheet.
+            </summary>
+            <param name="deepDungeonItemId">
+                The <c>DeepDungeonItem</c> row identifier.
+            </param>
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
         </member>
@@ -3311,6 +4091,12 @@
             </summary>
             <returns>True when MainCommand sheet prefetch is enabled.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldPrefetchItemAdjacentReferenceTexts">
+            <summary>
+                Gets whether item-adjacent reference-text prefetch should run.
+            </summary>
+            <returns>True when item-adjacent prefetch is enabled.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TickReferenceTextPrefetchRegistration(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.Int32)">
             <summary>
                 Ticks one specific sheet-registration queue and processes up to the
@@ -3427,6 +4213,13 @@
             <param name="referenceIds">The collected row identifiers.</param>
             <returns>True when identifiers were collected successfully.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryCollectEventItemIds(System.Collections.Generic.List{System.UInt32}@)">
+            <summary>
+                Tries to collect EventItem row identifiers.
+            </summary>
+            <param name="referenceIds">The collected row identifiers.</param>
+            <returns>True when identifiers were collected successfully.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryCollectBgcArmyActionIds(System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect BgcArmyAction row identifiers.
@@ -3465,6 +4258,13 @@
         <member name="M:Echoglossian.Echoglossian.TryCollectEurekaMagiaActionIds(System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect EurekaMagiaAction row identifiers.
+            </summary>
+            <param name="referenceIds">The collected row identifiers.</param>
+            <returns>True when identifiers were collected successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCollectDeepDungeonItemIds(System.Collections.Generic.List{System.UInt32}@)">
+            <summary>
+                Tries to collect DeepDungeonItem row identifiers.
             </summary>
             <param name="referenceIds">The collected row identifiers.</param>
             <returns>True when identifiers were collected successfully.</returns>
@@ -3514,6 +4314,14 @@
                 Tries to build one canonical EventAction payload from sheets.
             </summary>
             <param name="referenceId">The EventAction row identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildEventItemPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to build one canonical EventItem payload from sheets.
+            </summary>
+            <param name="referenceId">The EventItem row identifier.</param>
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
         </member>
@@ -3584,6 +4392,14 @@
                 Tries to build one canonical EurekaMagiaAction payload from sheets.
             </summary>
             <param name="referenceId">The EurekaMagiaAction row identifier.</param>
+            <param name="payload">The resolved payload.</param>
+            <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryBuildDeepDungeonItemPayload(System.UInt32,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to build one canonical DeepDungeonItem payload from sheets.
+            </summary>
+            <param name="referenceId">The DeepDungeonItem row identifier.</param>
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
         </member>
@@ -3755,6 +4571,28 @@
             <param name="currentClassJobId">The current class-job identifier.</param>
             <param name="translatedName">The translated name, if any.</param>
             <param name="translatedDescription">The translated description, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryPopulatePendingTraitDetailTranslations(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
+            <summary>
+                Tries to enrich one trait-detail payload with any queued counterpart
+                translation so canonical persistence only happens when the payload is complete.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The partially translated payload.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildTraitDetailNameTranslationKey(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
+            <summary>
+                Builds the stable queued-translation key for one trait-detail name.
+            </summary>
+            <param name="payload">The canonical payload.</param>
+            <returns>The stable queue key.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildTraitDetailDescriptionTranslationKey(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
+            <summary>
+                Builds the stable queued-translation key for one trait-detail description.
+            </summary>
+            <param name="payload">The canonical payload.</param>
+            <returns>The stable queue key.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobTraitIds(System.Byte,System.String,System.Collections.Generic.List{System.UInt32}@)">
             <summary>
@@ -4242,24 +5080,6 @@
             <param name="context">The database context.</param>
             <param name="gameWindow">The candidate ActionMenu row.</param>
             <returns>The matching scoped row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.LogActionMenuPersistence(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Int64)">
-            <summary>
-                Emits one focused persistence diagnostic for ActionMenu rows so the
-                live log can distinguish inserts from updates and correlate them
-                with payload hashes.
-            </summary>
-            <param name="operation">The persistence operation label.</param>
-            <param name="row">The persisted row.</param>
-            <param name="persistedId">The database identifier of the row.</param>
-        </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.ComputeDiagnosticHash(System.String)">
-            <summary>
-                Computes one short diagnostic hash for correlating persisted JSON
-                payloads with the ActionMenu runtime logs.
-            </summary>
-            <param name="value">The value to hash.</param>
-            <returns>The short uppercase hexadecimal hash.</returns>
         </member>
         <member name="T:Echoglossian.ItemTooltipPersistenceHelper">
             <summary>
@@ -4830,6 +5650,11 @@
                 Gets or sets the canonical EventAction text rows.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.EventItemTexts">
+            <summary>
+                Gets or sets the canonical EventItem text rows.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.BgcArmyActionTexts">
             <summary>
                 Gets or sets the canonical BgcArmyAction text rows.
@@ -4858,6 +5683,11 @@
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.EurekaMagiaActionTexts">
             <summary>
                 Gets or sets the canonical EurekaMagiaAction text rows.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.DeepDungeonItemTexts">
+            <summary>
+                Gets or sets the canonical DeepDungeonItem text rows.
             </summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.TranslationFailures">
@@ -5168,6 +5998,18 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddMainCommandTextTable.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddEventAndDeepDungeonItemTextTables">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddEventAndDeepDungeonItemTextTables.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddEventAndDeepDungeonItemTextTables.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddEventAndDeepDungeonItemTextTables.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
                 Represents one canonical DB-first action tooltip payload.
@@ -5427,6 +6269,19 @@
         <member name="M:Echoglossian.EFCoreSqlite.Models.CraftActionText.ToString">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText">
+            <summary>
+                Represents one canonical DB-first DeepDungeonItem payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText.DeepDungeonItemId">
+            <summary>
+                Gets or sets the DeepDungeonItem row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText.ToString">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.EurekaMagiaActionText">
             <summary>
                 Represents one canonical DB-first EurekaMagiaAction payload.
@@ -5451,6 +6306,19 @@
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.EventActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.EventItemText">
+            <summary>
+                Represents one canonical DB-first EventItem payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.EventItemText.EventItemId">
+            <summary>
+                Gets or sets the EventItem row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.EventItemText.ToString">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.GameWindow">
@@ -7641,9 +8509,6 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldReuseCompatiblePayloads">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.OnLifecycleEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <inheritdoc />
-        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.OnPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <inheritdoc />
         </member>
@@ -8083,52 +8948,6 @@
                 stable-signature count.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.LogLifecycleDiagnostic(System.String,Dalamud.Game.Addon.Lifecycle.AddonEvent)">
-            <summary>
-                Emits one throttled lifecycle diagnostic for the ActionMenu handler.
-            </summary>
-            <param name="stage">The current lifecycle stage label.</param>
-            <param name="evt">The current addon event.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.LogGateDecision(System.String,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String,System.Int32,System.Int32,System.Int32,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,System.String)">
-            <summary>
-                Emits one compact decision log for the ActionMenu queue or
-                persistence gates.
-            </summary>
-            <param name="category">The diagnostic category.</param>
-            <param name="stablePayloadSignature">The stable payload signature.</param>
-            <param name="payload">The payload being evaluated.</param>
-            <param name="classJobId">The current class/job identifier.</param>
-            <param name="classJobName">The current class/job name.</param>
-            <param name="unseenCount">The unresolved short-text count.</param>
-            <param name="candidateCount">The scoped persisted candidate count.</param>
-            <param name="stableMatchCount">The matching stable-signature count.</param>
-            <param name="stabilityReady">
-                The stability-tracker result when applicable.
-            </param>
-            <param name="queueAdded">The queue-insert result when applicable.</param>
-            <param name="allow">Whether the gate allowed the action.</param>
-            <param name="reason">The compact gate reason.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.LogPersistencePayloads(System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
-            <summary>
-                Emits detailed payload diagnostics immediately before one new
-                ActionMenu row is persisted.
-            </summary>
-            <param name="category">The diagnostic category.</param>
-            <param name="originalPayload">The original-facing payload.</param>
-            <param name="translatedPayload">The translated payload.</param>
-            <param name="classJobId">The current class/job identifier.</param>
-            <param name="classJobName">The current class/job name.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildDiagnosticPreview(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
-            <summary>
-                Builds one short preview of the stable texts that define the current
-                ActionMenu page.
-            </summary>
-            <param name="payload">The payload to summarize.</param>
-            <returns>The preview string.</returns>
-        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CountStableSignatureEntries(System.String)">
             <summary>
                 Counts the number of stable signature entries contained in one
@@ -8136,35 +8955,6 @@
             </summary>
             <param name="stablePayloadSignature">The serialized signature.</param>
             <returns>The entry count.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ComputeDiagnosticHash(System.String)">
-            <summary>
-                Computes one short diagnostic hash for correlating large payload
-                strings across lifecycle, queue, and persistence logs.
-            </summary>
-            <param name="value">The value to hash.</param>
-            <returns>The short uppercase hexadecimal hash.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.FormatOptionalUInt(System.Nullable{System.UInt32})">
-            <summary>
-                Formats one optional unsigned integer for compact diagnostics.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>The formatted text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.FormatOptionalText(System.String)">
-            <summary>
-                Formats one optional text value for compact diagnostics.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>The formatted text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.FormatOptionalBool(System.Nullable{System.Boolean})">
-            <summary>
-                Formats one optional boolean for compact diagnostics.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>The formatted text.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.EnumerateStableSignatureTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
@@ -17370,7 +18160,7 @@
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TooltipTab">
             <summary>
-                Renders the settings tab for action and item tooltips plus shared
+                Renders the settings tab for action/item detail presentation plus shared
                 hover-tooltip appearance.
             </summary>
         </member>

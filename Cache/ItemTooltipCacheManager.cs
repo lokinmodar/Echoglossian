@@ -119,11 +119,121 @@ public static class ItemTooltipCacheManager
     }
 
     /// <summary>
+    ///     Tries to find the best translated item-tooltip row by stable
+    ///     identity when the stricter canonical hash does not match.
+    /// </summary>
+    /// <param name="itemId">The item row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobCategoryId">
+    ///     The preferred class-job-category identifier.
+    /// </param>
+    /// <returns>The best translated row, or <see langword="null" />.</returns>
+    public static ItemTooltip? TryFindIdentityMatch(
+        uint itemId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        uint classJobCategoryId)
+    {
+        if (itemId == 0 || string.IsNullOrWhiteSpace(lang))
+        {
+            return null;
+        }
+
+        if (!Cache.TryGetValue(itemId, out var rows) || rows.Count == 0)
+        {
+            return null;
+        }
+
+        return rows
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    row.GameVersion,
+                    gameVersion))
+            .OrderByDescending(row => ComputeIdentityMatchScore(
+                row,
+                gameVersion,
+                classJobCategoryId))
+            .ThenByDescending(row => row.UpdatedDate)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()
     {
         Cache.Clear();
-        PluginLog.Debug("[ItemTooltipCacheManager] Cleared item-tooltip cache.");
+        global::Echoglossian.Echoglossian.PluginLog?.Debug(
+            "[ItemTooltipCacheManager] Cleared item-tooltip cache.");
+    }
+
+    /// <summary>
+    ///     Computes one ordering score for tolerant identity-based item
+    ///     tooltip lookup.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <param name="classJobCategoryId">
+    ///     The preferred class-job-category identifier.
+    /// </param>
+    /// <returns>The ordering score.</returns>
+    private static int ComputeIdentityMatchScore(
+        ItemTooltip row,
+        string? gameVersion,
+        uint classJobCategoryId)
+    {
+        var score = 0;
+
+        if (HasCompleteTranslation(row))
+        {
+            score += 10_000;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion) &&
+            string.Equals(
+                row.GameVersion,
+                gameVersion,
+                StringComparison.Ordinal))
+        {
+            score += 1_000;
+        }
+
+        if (row.GameVersion == null)
+        {
+            score += 100;
+        }
+
+        if (classJobCategoryId != 0 &&
+            row.ClassJobCategoryId == classJobCategoryId)
+        {
+            score += 25;
+        }
+
+        return score;
+    }
+
+    /// <summary>
+    ///     Gets whether one item-tooltip row contains every translated field
+    ///     required by the live tooltip runtime.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the row contains a translated name and
+    ///     any required translated description; otherwise
+    ///     <see langword="false" />.
+    /// </returns>
+    private static bool HasCompleteTranslation(ItemTooltip row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedItemName) &&
+               (string.IsNullOrWhiteSpace(row.ItemDescription) ||
+                !string.IsNullOrWhiteSpace(
+                    row.TranslatedItemDescription));
     }
 }

@@ -128,6 +128,55 @@ public static class TraitCacheManager
     }
 
     /// <summary>
+    ///     Tries to find the best translated trait row by stable identity when
+    ///     the stricter canonical hash does not match.
+    /// </summary>
+    /// <param name="traitId">The trait row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobId">The preferred class-job identifier.</param>
+    /// <param name="classJobCategoryId">
+    ///     The preferred class-job-category identifier.
+    /// </param>
+    /// <returns>The best translated row, or <see langword="null" />.</returns>
+    public static Trait? TryFindIdentityMatch(
+        uint traitId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        uint classJobId,
+        uint classJobCategoryId)
+    {
+        if (traitId == 0 || string.IsNullOrWhiteSpace(lang))
+        {
+            return null;
+        }
+
+        if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
+        {
+            return null;
+        }
+
+        return rows
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    row.GameVersion,
+                    gameVersion))
+            .OrderByDescending(row => ComputeIdentityMatchScore(
+                row,
+                gameVersion,
+                classJobId,
+                classJobCategoryId))
+            .ThenByDescending(row => row.UpdatedDate)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
     ///     Tries to resolve one translated trait text by exact original text
     ///     from the canonical trait cache.
     /// </summary>
@@ -557,6 +606,76 @@ public static class TraitCacheManager
         }
 
         lookup[translatedText] = originalText;
+    }
+
+    /// <summary>
+    ///     Computes one ordering score for tolerant identity-based trait
+    ///     lookup.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <param name="classJobId">The preferred class-job identifier.</param>
+    /// <param name="classJobCategoryId">
+    ///     The preferred class-job-category identifier.
+    /// </param>
+    /// <returns>The ordering score.</returns>
+    private static int ComputeIdentityMatchScore(
+        Trait row,
+        string? gameVersion,
+        uint classJobId,
+        uint classJobCategoryId)
+    {
+        var score = 0;
+
+        if (HasCompleteTranslation(row))
+        {
+            score += 10_000;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion) &&
+            string.Equals(
+                row.GameVersion,
+                gameVersion,
+                StringComparison.Ordinal))
+        {
+            score += 1_000;
+        }
+
+        if (row.GameVersion == null)
+        {
+            score += 100;
+        }
+
+        if (classJobId != 0 && row.ClassJobId == classJobId)
+        {
+            score += 50;
+        }
+
+        if (classJobCategoryId != 0 &&
+            row.ClassJobCategoryId == classJobCategoryId)
+        {
+            score += 25;
+        }
+
+        return score;
+    }
+
+    /// <summary>
+    ///     Gets whether one trait row contains every translated field required
+    ///     by the live tooltip runtime.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the row contains a translated name and
+    ///     any required translated description; otherwise
+    ///     <see langword="false" />.
+    /// </returns>
+    private static bool HasCompleteTranslation(Trait row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedTraitName) &&
+               (string.IsNullOrWhiteSpace(row.TraitDescription) ||
+                !string.IsNullOrWhiteSpace(
+                    row.TranslatedTraitDescription));
     }
 
     /// <summary>

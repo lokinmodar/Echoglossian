@@ -139,7 +139,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"TraitDetailPrefetch|{originalPayload.TraitId}|Name|{originalPayload.Name}";
+            BuildTraitDetailNameTranslationKey(originalPayload);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedName))
@@ -179,7 +179,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            $"TraitDetailPrefetch|{originalPayload.TraitId}|Description|{originalPayload.Description}";
+            BuildTraitDetailDescriptionTranslationKey(originalPayload);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedDescription))
@@ -252,6 +252,13 @@ public unsafe partial class Echoglossian
             !string.IsNullOrWhiteSpace(translatedDescription)
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
+        this.TryPopulatePendingTraitDetailTranslations(
+            originalPayload,
+            translatedPayload);
+        if (!translatedPayload.HasCompleteTranslation)
+        {
+            return;
+        }
 
         var translatedRow = TraitPersistenceHelper.CreateCanonicalRow(
             ClientStateInterface.ClientLanguage.Humanize(),
@@ -261,6 +268,59 @@ public unsafe partial class Echoglossian
             originalPayload,
             translatedPayload);
         this.InsertTrait(translatedRow);
+    }
+
+    /// <summary>
+    ///     Tries to enrich one trait-detail payload with any queued counterpart
+    ///     translation so canonical persistence only happens when the payload is complete.
+    /// </summary>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="translatedPayload">The partially translated payload.</param>
+    private void TryPopulatePendingTraitDetailTranslations(
+        TraitCanonicalPayload originalPayload,
+        TraitCanonicalPayload translatedPayload)
+    {
+        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedName) &&
+            !string.IsNullOrWhiteSpace(originalPayload.Name) &&
+            this.TryGetQueuedTranslation(
+                BuildTraitDetailNameTranslationKey(originalPayload),
+                out var cachedTranslatedName))
+        {
+            translatedPayload.TranslatedName = cachedTranslatedName;
+        }
+
+        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedDescription) &&
+            !string.IsNullOrWhiteSpace(originalPayload.Description) &&
+            this.TryGetQueuedTranslation(
+                BuildTraitDetailDescriptionTranslationKey(originalPayload),
+                out var cachedTranslatedDescription))
+        {
+            translatedPayload.TranslatedDescription =
+                cachedTranslatedDescription;
+        }
+    }
+
+    /// <summary>
+    ///     Builds the stable queued-translation key for one trait-detail name.
+    /// </summary>
+    /// <param name="payload">The canonical payload.</param>
+    /// <returns>The stable queue key.</returns>
+    private static string BuildTraitDetailNameTranslationKey(
+        TraitCanonicalPayload payload)
+    {
+        return $"TraitDetailPrefetch|{payload.TraitId}|Name|{payload.Name}";
+    }
+
+    /// <summary>
+    ///     Builds the stable queued-translation key for one trait-detail description.
+    /// </summary>
+    /// <param name="payload">The canonical payload.</param>
+    /// <returns>The stable queue key.</returns>
+    private static string BuildTraitDetailDescriptionTranslationKey(
+        TraitCanonicalPayload payload)
+    {
+        return
+            $"TraitDetailPrefetch|{payload.TraitId}|Description|{payload.Description}";
     }
 
     /// <summary>
@@ -337,7 +397,7 @@ public unsafe partial class Echoglossian
         }
 
         var description = traitTransientSheet.TryGetRow(traitId, out var transientRow)
-            ? transientRow.Description.ExtractText()
+            ? EvaluateSheetText(transientRow.Description)
             : string.Empty;
         payload = new TraitCanonicalPayload
         {

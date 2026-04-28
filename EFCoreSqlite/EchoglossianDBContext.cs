@@ -96,6 +96,11 @@ public class EchoglossianDbContext : DbContext
   public DbSet<EventActionText> EventActionTexts { get; set; }
 
   /// <summary>
+  ///     Gets or sets the canonical EventItem text rows.
+  /// </summary>
+  public DbSet<EventItemText> EventItemTexts { get; set; }
+
+  /// <summary>
   ///     Gets or sets the canonical BgcArmyAction text rows.
   /// </summary>
   public DbSet<BgcArmyActionText> BgcArmyActionTexts { get; set; }
@@ -124,6 +129,11 @@ public class EchoglossianDbContext : DbContext
   ///     Gets or sets the canonical EurekaMagiaAction text rows.
   /// </summary>
   public DbSet<EurekaMagiaActionText> EurekaMagiaActionTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the canonical DeepDungeonItem text rows.
+  /// </summary>
+  public DbSet<DeepDungeonItemText> DeepDungeonItemTexts { get; set; }
 
   /// <summary>
   ///     Gets or sets exact translation failures that should not be retried for
@@ -339,6 +349,10 @@ public class EchoglossianDbContext : DbContext
         modelBuilder,
         "eventactiontexts",
         "IX_eventactiontexts_lookup");
+    ConfigureReferenceTextEntity<EventItemText>(
+        modelBuilder,
+        "eventitemtexts",
+        "IX_eventitemtexts_lookup");
     ConfigureReferenceTextEntity<BgcArmyActionText>(
         modelBuilder,
         "bgcarmyactiontexts",
@@ -363,6 +377,10 @@ public class EchoglossianDbContext : DbContext
         modelBuilder,
         "eurekamagiaactiontexts",
         "IX_eurekamagiaactiontexts_lookup");
+    ConfigureReferenceTextEntity<DeepDungeonItemText>(
+        modelBuilder,
+        "deepdungeonitemtexts",
+        "IX_deepdungeonitemtexts_lookup");
   }
 
   /// <summary>
