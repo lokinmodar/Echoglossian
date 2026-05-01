@@ -644,8 +644,9 @@ public sealed class TalkHandler : IAddonTranslationHandler
   /// <returns>The extracted text, or an empty string when unavailable.</returns>
   private unsafe string ReadTalkAtkString(AtkValue atkValue)
   {
-    return atkValue.String != null
-        ? MemoryHelper.ReadSeStringAsString(out _, (nint)atkValue.String.Value)
+    var stringPointer = (nint)atkValue.String.Value;
+    return stringPointer != 0
+        ? MemoryHelper.ReadSeStringAsString(out _, stringPointer)
         : string.Empty;
   }
 

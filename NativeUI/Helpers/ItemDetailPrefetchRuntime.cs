@@ -6,6 +6,7 @@
 using System.Globalization;
 using Dalamud.Game.Gui;
 using Dalamud.Utility;
+using DetailKind = Dalamud.Game.Gui.DetailKind;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using DeepDungeonItemSheet = Lumina.Excel.Sheets.DeepDungeonItem;
@@ -459,7 +460,7 @@ public unsafe partial class Echoglossian
     {
         return TryBuildItemTooltipCanonicalPayload(
             rawItemId,
-            HoverActionKind.None,
+            DetailKind.None,
             out payload,
             out _);
     }
@@ -475,7 +476,7 @@ public unsafe partial class Echoglossian
     /// <returns>True when the payload resolved successfully.</returns>
     private static bool TryBuildItemTooltipCanonicalPayload(
         uint rawItemId,
-        HoverActionKind hoverActionKind,
+        DetailKind hoverActionKind,
         out ItemTooltipCanonicalPayload payload,
         out StructuredTooltipItemSourceKind sourceKind)
     {
@@ -487,7 +488,7 @@ public unsafe partial class Echoglossian
             return false;
         }
 
-        if (hoverActionKind == HoverActionKind.DeepDungeonItem &&
+        if (hoverActionKind == DetailKind.DeepDungeonItem &&
             TryBuildDeepDungeonItemCanonicalPayload(
                 rawItemId,
                 out payload))

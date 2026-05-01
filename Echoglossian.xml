@@ -296,6 +296,18 @@
                 otherwise <see langword="false"/>.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.IsCharacterWindow(System.String)">
+            <summary>
+                Determines whether the specified addon name belongs to one of the
+                Character-family windows whose DB-first lookup should ignore partial
+                historical rows.
+            </summary>
+            <param name="addonName">The addon name to test.</param>
+            <returns>
+                <see langword="true"/> when the addon belongs to the Character
+                family; otherwise <see langword="false"/>.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetPreferredActionMenuCandidates(System.Collections.Generic.List{Echoglossian.EFCoreSqlite.Models.GameWindow}[])">
             <summary>
                 Chooses the preferred ActionMenu candidate set and collapses it to
@@ -304,6 +316,24 @@
             </summary>
             <param name="candidateSets">The candidate sets in preference order.</param>
             <returns>The preferred collapsed candidate list.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetPreferredCharacterCandidates(System.Collections.Generic.List{Echoglossian.EFCoreSqlite.Models.GameWindow}[])">
+            <summary>
+                Chooses the preferred Character-family candidate set and collapses
+                it to the richest row so DB-first reuse prefers the most complete
+                canonical payload rather than partial historical snapshots.
+            </summary>
+            <param name="candidateSets">The candidate sets in preference order.</param>
+            <returns>The preferred collapsed candidate list.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.ComputeCharacterCandidateScore(Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>
+                Computes one completeness score for a Character-family candidate so
+                richer payloads outrank partial snapshots from the same lookup
+                scope.
+            </summary>
+            <param name="row">The candidate row to score.</param>
+            <returns>The row completeness score.</returns>
         </member>
         <member name="T:Echoglossian.Cache.ItemTooltipCacheManager">
             <summary>
@@ -2932,7 +2962,7 @@
             </summary>
             <returns>The active item id, or zero when unavailable.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredActionTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.HoverActionKind,System.Byte,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@,System.UInt32@)">
+        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredActionTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.DetailKind,System.Byte,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@,System.UInt32@)">
             <summary>
                 Tries to build one runtime action-detail payload from one
                 structured reference-text family when the standard
@@ -3154,13 +3184,31 @@
             <param name="runtimeState">The resolved node-address map.</param>
             <returns><see langword="true" /> when at least one relevant node was resolved.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.CollectStructuredTooltipTextNodeCandidates(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.Echoglossian.CollectStructuredTooltipTextNodeCandidates(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32)">
             <summary>
                 Collects the readable text-node candidates exposed by a structured
                 tooltip addon.
             </summary>
             <param name="addon">The visible tooltip addon.</param>
             <returns>The collected text-node candidates.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CollectItemDetailTextNodeCandidates(FFXIVClientStructs.FFXIV.Client.UI.AddonItemDetail*,System.Collections.Generic.List{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+                Collects semantically anchored <c>ItemDetail</c> text nodes before
+                falling back to generic tooltip tree traversal.
+            </summary>
+            <param name="addon">The typed <c>ItemDetail</c> addon.</param>
+            <param name="candidates">Receives collected candidates.</param>
+            <param name="seenNodeAddresses">Receives deduplicated node addresses.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryAddStructuredTooltipTextNodeCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.List{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.Collections.Generic.HashSet{System.IntPtr},System.Boolean)">
+            <summary>
+                Adds one readable structured-tooltip text-node candidate when the
+                node has not already been collected.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="candidates">Receives collected candidates.</param>
+            <param name="seenNodeAddresses">Receives deduplicated node addresses.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipNodePlainTextMutable(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
@@ -3198,14 +3246,14 @@
             <param name="canonicalText">The canonical source text.</param>
             <returns>The match score, or zero when the texts do not match.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.IsTraitHoverActionKind(Dalamud.Game.Gui.HoverActionKind)">
+        <member name="M:Echoglossian.Echoglossian.IsTraitHoverActionKind(Dalamud.Game.Gui.DetailKind)">
             <summary>
                 Gets whether the hovered ActionDetail payload should use the trait pipeline.
             </summary>
             <param name="hoverActionKind">The hovered action kind.</param>
             <returns><see langword="true" /> when the hover kind represents a trait.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredReferencePayload(System.UInt32,Dalamud.Game.Gui.HoverActionKind,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredReferencePayload(System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to build one structured action-adjacent reference payload for
                 the requested hover family.
@@ -3215,7 +3263,7 @@
             <param name="referencePayload">The resolved reference payload.</param>
             <returns><see langword="true" /> when a payload was built.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.NormalizeStructuredActionReferenceId(System.UInt32,Dalamud.Game.Gui.HoverActionKind)">
+        <member name="M:Echoglossian.Echoglossian.NormalizeStructuredActionReferenceId(System.UInt32,Dalamud.Game.Gui.DetailKind)">
             <summary>
                 Normalizes one structured action reference id through Dalamud's
                 ActStr redirect when the hover family supports it.
@@ -3224,7 +3272,7 @@
             <param name="hoverActionKind">The active hover action kind.</param>
             <returns>The normalized row identifier, or the raw identifier.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryMapHoverActionKindToActionKind(Dalamud.Game.Gui.HoverActionKind,Dalamud.Game.ActionKind@)">
+        <member name="M:Echoglossian.Echoglossian.TryMapHoverActionKindToActionKind(Dalamud.Game.Gui.DetailKind,Dalamud.Game.ActionKind@)">
             <summary>
                 Tries to map one action-detail hover kind to the corresponding
                 Dalamud action kind used by ActStr redirects.
@@ -3696,7 +3744,7 @@
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryBuildItemTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.HoverActionKind,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@,Echoglossian.Echoglossian.StructuredTooltipItemSourceKind@)">
+        <member name="M:Echoglossian.Echoglossian.TryBuildItemTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload@,Echoglossian.Echoglossian.StructuredTooltipItemSourceKind@)">
             <summary>
                 Tries to build one canonical item-tooltip payload from the active
                 item-adjacent sheets while also reporting the source family.
@@ -9882,6 +9930,12 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.GetAppliedStatePreDrawRefreshWindow">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.ShouldQueueNewGameWindowTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.ApplyVisibleTextNodesByValue(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">

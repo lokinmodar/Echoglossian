@@ -4,7 +4,7 @@
 // </copyright>
 
 using AgentScenarioTree = FFXIVClientStructs.FFXIV.Client.UI.Agent.AgentScenarioTree;
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
@@ -815,7 +815,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         (ValueType.String or
          ValueType.String8 or
          ValueType.ManagedString) ||
-        atkValues[valueIndex].String == null)
+        !atkValues[valueIndex].String.HasValue)
     {
       return false;
     }

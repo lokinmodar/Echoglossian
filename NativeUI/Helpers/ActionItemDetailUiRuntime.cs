@@ -9,6 +9,8 @@ using Echoglossian.NativeUI.Helpers;
 using Echoglossian.UIOverlays.TranslationOverlay;
 using Dalamud.Game.Gui;
 using Dalamud.Utility;
+using DetailKind = Dalamud.Game.Gui.DetailKind;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -138,9 +140,10 @@ public unsafe partial class Echoglossian
         }
 
         var hoveredAction = GameGuiInterface.HoveredAction;
-        var hoveredActionId = hoveredAction?.ActionID ??
-                              this.GetActiveActionDetailId();
-        var hoveredActionKind = hoveredAction?.ActionKind ?? HoverActionKind.None;
+        var hoveredActionId = hoveredAction.ActionId != 0
+            ? hoveredAction.ActionId
+            : this.GetActiveActionDetailId();
+        var hoveredActionKind = hoveredAction.DetailKind;
         if (hoveredActionId == 0 ||
             !TryGetCurrentClassJobInfo(
                 out var currentClassJobId,
@@ -390,8 +393,7 @@ public unsafe partial class Echoglossian
         }
 
         var hoveredItemId = this.GetActiveItemDetailId();
-        var hoveredItemKind = GameGuiInterface.HoveredAction?.ActionKind ??
-                              HoverActionKind.None;
+        var hoveredItemKind = GameGuiInterface.HoveredAction.DetailKind;
         if (hoveredItemId == 0)
         {
             hoveredItemId = (uint)GameGuiInterface.HoveredItem;
@@ -785,7 +787,7 @@ public unsafe partial class Echoglossian
     /// <returns><see langword="true" /> when one structured payload was built.</returns>
     private static bool TryBuildStructuredActionTooltipCanonicalPayload(
         uint referenceId,
-        HoverActionKind hoverActionKind,
+        DetailKind hoverActionKind,
         byte currentClassJobId,
         out ActionTooltipCanonicalPayload payload,
         out uint resolvedReferenceId)
@@ -1517,7 +1519,9 @@ public unsafe partial class Echoglossian
             return true;
         }
 
-        var textNodeCandidates = this.CollectStructuredTooltipTextNodeCandidates(addon);
+        var textNodeCandidates = this.CollectStructuredTooltipTextNodeCandidates(
+            addon,
+            contentKind);
         if (textNodeCandidates.Count == 0)
         {
             return runtimeState.NameNodeAddress != 0 ||
@@ -1705,7 +1709,9 @@ public unsafe partial class Echoglossian
             return false;
         }
 
-        var textNodeCandidates = this.CollectStructuredTooltipTextNodeCandidates(addon);
+        var textNodeCandidates = this.CollectStructuredTooltipTextNodeCandidates(
+            addon,
+            contentKind);
         if (textNodeCandidates.Count == 0)
         {
             return false;
@@ -1751,7 +1757,8 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <returns>The collected text-node candidates.</returns>
     private List<StructuredTooltipTextNodeCandidate> CollectStructuredTooltipTextNodeCandidates(
-        AtkUnitBase* addon)
+        AtkUnitBase* addon,
+        uint contentKind)
     {
         List<StructuredTooltipTextNodeCandidate> candidates = [];
         if (addon == null)
@@ -1759,24 +1766,98 @@ public unsafe partial class Echoglossian
             return candidates;
         }
 
+        HashSet<nint> seenNodeAddresses = [];
+        if (contentKind == StructuredTooltipContentKindItem)
+        {
+            this.CollectItemDetailTextNodeCandidates(
+                (AddonItemDetail*)addon,
+                candidates,
+                seenNodeAddresses);
+        }
+
         foreach (var nodeAddress in AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon))
         {
             var textNode = (AtkTextNode*)nodeAddress;
-            var visibleText = this.ReadTooltipTextNode(textNode);
-            var normalizedVisibleText = NormalizeStructuredTooltipLookupText(visibleText);
-            if (string.IsNullOrWhiteSpace(normalizedVisibleText))
+            if (seenNodeAddresses.Contains(nodeAddress))
             {
                 continue;
             }
 
-            candidates.Add(new StructuredTooltipTextNodeCandidate(
-                nodeAddress,
-                visibleText,
-                normalizedVisibleText,
-                this.IsStructuredTooltipNodePlainTextMutable(textNode)));
+            this.TryAddStructuredTooltipTextNodeCandidate(
+                textNode,
+                candidates,
+                seenNodeAddresses);
         }
 
         return candidates;
+    }
+
+    /// <summary>
+    ///     Collects semantically anchored <c>ItemDetail</c> text nodes before
+    ///     falling back to generic tooltip tree traversal.
+    /// </summary>
+    /// <param name="addon">The typed <c>ItemDetail</c> addon.</param>
+    /// <param name="candidates">Receives collected candidates.</param>
+    /// <param name="seenNodeAddresses">Receives deduplicated node addresses.</param>
+    private void CollectItemDetailTextNodeCandidates(
+        AddonItemDetail* addon,
+        List<StructuredTooltipTextNodeCandidate> candidates,
+        HashSet<nint> seenNodeAddresses)
+    {
+        if (addon == null)
+        {
+            return;
+        }
+
+        this.TryAddStructuredTooltipTextNodeCandidate(
+            addon->ItemNameText,
+            candidates,
+            seenNodeAddresses,
+            trustPlainTextMutation: true);
+        this.TryAddStructuredTooltipTextNodeCandidate(
+            addon->DescriptionText,
+            candidates,
+            seenNodeAddresses,
+            trustPlainTextMutation: true);
+    }
+
+    /// <summary>
+    ///     Adds one readable structured-tooltip text-node candidate when the
+    ///     node has not already been collected.
+    /// </summary>
+    /// <param name="textNode">The text node to inspect.</param>
+    /// <param name="candidates">Receives collected candidates.</param>
+    /// <param name="seenNodeAddresses">Receives deduplicated node addresses.</param>
+    private void TryAddStructuredTooltipTextNodeCandidate(
+        AtkTextNode* textNode,
+        List<StructuredTooltipTextNodeCandidate> candidates,
+        HashSet<nint> seenNodeAddresses,
+        bool trustPlainTextMutation = false)
+    {
+        if (textNode == null)
+        {
+            return;
+        }
+
+        var nodeAddress = (nint)textNode;
+        if (!seenNodeAddresses.Add(nodeAddress))
+        {
+            return;
+        }
+
+        var visibleText = this.ReadTooltipTextNode(textNode);
+        var normalizedVisibleText = NormalizeStructuredTooltipLookupText(visibleText);
+        if (string.IsNullOrWhiteSpace(normalizedVisibleText))
+        {
+            return;
+        }
+
+        candidates.Add(new StructuredTooltipTextNodeCandidate(
+            nodeAddress,
+            visibleText,
+            normalizedVisibleText,
+            trustPlainTextMutation ||
+            this.IsStructuredTooltipNodePlainTextMutable(textNode)));
     }
 
     /// <summary>
@@ -1950,11 +2031,11 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="hoverActionKind">The hovered action kind.</param>
     /// <returns><see langword="true" /> when the hover kind represents a trait.</returns>
-    private static bool IsTraitHoverActionKind(HoverActionKind hoverActionKind)
+    private static bool IsTraitHoverActionKind(DetailKind hoverActionKind)
     {
-        return hoverActionKind is HoverActionKind.Trait or
-               HoverActionKind.PvPSelectTrait or
-               HoverActionKind.MKDTrait;
+        return hoverActionKind is DetailKind.Trait or
+               DetailKind.PvPSelectTrait or
+               DetailKind.MKDTrait;
     }
 
     /// <summary>
@@ -1967,49 +2048,49 @@ public unsafe partial class Echoglossian
     /// <returns><see langword="true" /> when a payload was built.</returns>
     private static bool TryBuildStructuredReferencePayload(
         uint referenceId,
-        HoverActionKind hoverActionKind,
+        DetailKind hoverActionKind,
         out ReferenceTextCanonicalPayload referencePayload)
     {
         referencePayload = new ReferenceTextCanonicalPayload();
 
         switch (hoverActionKind)
         {
-            case HoverActionKind.GeneralAction:
+            case DetailKind.GeneralAction:
                 return TryBuildGeneralActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.BuddyAction:
-            case HoverActionKind.Companion:
-            case HoverActionKind.CompanionOrder:
+            case DetailKind.BuddyAction:
+            case DetailKind.Companion:
+            case DetailKind.BuddyOrder:
                 return TryBuildBuddyActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.CompanyAction:
+            case DetailKind.CompanyAction:
                 return TryBuildCompanyActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.CraftingAction:
+            case DetailKind.CraftingAction:
                 return TryBuildCraftActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.PetOrder:
+            case DetailKind.PetOrder:
                 return TryBuildPetActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.Mount:
+            case DetailKind.Mount:
                 return TryBuildMountActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.BgcArmyAction:
+            case DetailKind.BgcArmyAction:
                 return TryBuildBgcArmyActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.EurekaMagiaAction:
+            case DetailKind.EurekaMagiaAction:
                 return TryBuildEurekaMagiaActionPayload(
                     referenceId,
                     out referencePayload);
-            case HoverActionKind.MainCommand:
-            case HoverActionKind.ExtraCommand:
+            case DetailKind.MainCommand:
+            case DetailKind.ExtraCommand:
                 return TryBuildMainCommandPayload(
                     referenceId,
                     out referencePayload);
@@ -2027,7 +2108,7 @@ public unsafe partial class Echoglossian
     /// <returns>The normalized row identifier, or the raw identifier.</returns>
     internal static uint NormalizeStructuredActionReferenceId(
         uint referenceId,
-        HoverActionKind hoverActionKind)
+        DetailKind hoverActionKind)
     {
         if (referenceId == 0 ||
             !TryMapHoverActionKindToActionKind(
@@ -2051,40 +2132,40 @@ public unsafe partial class Echoglossian
     /// <param name="actionKind">The mapped action kind.</param>
     /// <returns><see langword="true" /> when the mapping exists.</returns>
     private static bool TryMapHoverActionKindToActionKind(
-        HoverActionKind hoverActionKind,
+        DetailKind hoverActionKind,
         out Dalamud.Game.ActionKind actionKind)
     {
         actionKind = default;
 
         switch (hoverActionKind)
         {
-            case HoverActionKind.GeneralAction:
+            case DetailKind.GeneralAction:
                 actionKind = Dalamud.Game.ActionKind.GeneralAction;
                 return true;
-            case HoverActionKind.BuddyAction:
+            case DetailKind.BuddyAction:
                 actionKind = Dalamud.Game.ActionKind.BuddyAction;
                 return true;
-            case HoverActionKind.Companion:
-            case HoverActionKind.CompanionOrder:
+            case DetailKind.Companion:
+            case DetailKind.BuddyOrder:
                 actionKind = Dalamud.Game.ActionKind.Companion;
                 return true;
-            case HoverActionKind.CompanyAction:
+            case DetailKind.CompanyAction:
                 actionKind = Dalamud.Game.ActionKind.CompanyAction;
                 return true;
-            case HoverActionKind.CraftingAction:
+            case DetailKind.CraftingAction:
                 actionKind = Dalamud.Game.ActionKind.CraftAction;
                 return true;
-            case HoverActionKind.PetOrder:
+            case DetailKind.PetOrder:
                 actionKind = Dalamud.Game.ActionKind.PetAction;
                 return true;
-            case HoverActionKind.Mount:
+            case DetailKind.Mount:
                 actionKind = Dalamud.Game.ActionKind.Mount;
                 return true;
-            case HoverActionKind.BgcArmyAction:
+            case DetailKind.BgcArmyAction:
                 actionKind = Dalamud.Game.ActionKind.BgcArmyAction;
                 return true;
-            case HoverActionKind.MainCommand:
-            case HoverActionKind.ExtraCommand:
+            case DetailKind.MainCommand:
+            case DetailKind.ExtraCommand:
                 actionKind = Dalamud.Game.ActionKind.MainCommand;
                 return true;
             default:

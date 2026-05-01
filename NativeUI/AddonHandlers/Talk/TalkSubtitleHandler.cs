@@ -3,7 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 
@@ -152,7 +152,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
     }
 
     if (atkValues[0].Type != ValueType.String ||
-        atkValues[0].String == null)
+        !atkValues[0].String.HasValue)
     {
       return;
     }

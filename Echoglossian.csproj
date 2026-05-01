@@ -1,4 +1,4 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/14.0.2">
+﻿<Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup Label="MultilingualAppToolkit">
     <MultilingualAppToolkitVersion>4.0</MultilingualAppToolkitVersion>
     <MultilingualFallbackLanguage>en</MultilingualFallbackLanguage>
@@ -47,17 +47,8 @@
   <Target Name="MATPrerequisite" BeforeTargets="PrepareForBuild" Condition="'$(EnableVisualStudioMatTargets)' == 'true' and !Exists('$(VisualStudioMatTargets)')" Label="MultilingualAppToolkit">
     <Warning Text="$(MSBuildProjectFile) is configured to use Visual Studio MAT targets, but the toolkit is unavailable during the build." />
   </Target>
-  <Target Name="GenerateResourcesDesigner"
-          BeforeTargets="BeforeCompile"
-          Inputs="Properties\Resources.resx"
-          Outputs="Properties\Resources.Designer.cs">
-    <GenerateResource
-      Sources="Properties\Resources.resx"
-      StronglyTypedClassName="Resources"
-      StronglyTypedNamespace="Echoglossian.Properties"
-      StronglyTypedLanguage="C#"
-      StronglyTypedFileName="Properties\Resources.Designer.cs"
-      PublicClass="true" />
+  <Target Name="GenerateResourcesDesigner" BeforeTargets="BeforeCompile" Inputs="Properties\Resources.resx" Outputs="Properties\Resources.Designer.cs">
+    <GenerateResource Sources="Properties\Resources.resx" StronglyTypedClassName="Resources" StronglyTypedNamespace="Echoglossian.Properties" StronglyTypedLanguage="C#" StronglyTypedFileName="Properties\Resources.Designer.cs" PublicClass="true" />
   </Target>
   <Target Name="RemoveDalamudProvidedAssembliesFromOutput" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
@@ -274,16 +265,16 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoCtor" Version="2.12.0" />
-    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.25" />
+    <PackageReference Include="AutoCtor" Version="3.0.0" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.1.27" />
 
     <PackageReference Include="DeepL.net" Version="1.21.0" />
     <PackageReference Include="GTranslate" Version="2.3.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-    <PackageReference Include="Injectio" Version="5.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">
+    <PackageReference Include="Injectio" Version="5.2.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
@@ -294,7 +285,7 @@
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.7" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Font\NotoSans-Regular.ttf">
@@ -364,7 +355,7 @@
 
 
   <ItemGroup>
-    <PackageReference Update="DalamudPackager" Version="14.0.2" />
+    <PackageReference Update="DalamudPackager" Version="15.0.0" />
     <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
   </ItemGroup>
 

@@ -4,7 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
@@ -94,7 +94,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     try
     {
       if (setupAtkValues[1].Type != ValueType.String ||
-          setupAtkValues[1].String == null)
+          !setupAtkValues[1].String.HasValue)
       {
         return;
       }

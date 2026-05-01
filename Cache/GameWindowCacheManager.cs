@@ -16,6 +16,7 @@ namespace Echoglossian.Cache;
 public static class GameWindowCacheManager
 {
   private const string ActionMenuWindowName = "ActionMenu";
+  private const string CharacterWindowNamePrefix = "Character";
 
   private static bool isPreloaded;
 
@@ -247,6 +248,11 @@ public static class GameWindowCacheManager
         return GetPreferredActionMenuCandidates(exactRows, legacyRows);
       }
 
+      if (IsCharacterWindow(addonName))
+      {
+        return GetPreferredCharacterCandidates(exactRows, legacyRows);
+      }
+
       return MergeCandidateLists(exactRows, legacyRows);
     }
 
@@ -276,6 +282,14 @@ public static class GameWindowCacheManager
             legacyVersionAgnosticRows);
       }
 
+      if (IsCharacterWindow(addonName))
+      {
+        return GetPreferredCharacterCandidates(
+            versionAgnosticRows,
+            legacyRows,
+            legacyVersionAgnosticRows);
+      }
+
       return MergeCandidateLists(versionAgnosticRows, legacyRows, legacyVersionAgnosticRows);
     }
 
@@ -289,12 +303,29 @@ public static class GameWindowCacheManager
             legacyVersionAgnosticRows);
       }
 
+      if (IsCharacterWindow(addonName))
+      {
+        return GetPreferredCharacterCandidates(
+            exactRows,
+            legacyRows,
+            legacyVersionAgnosticRows);
+      }
+
       return MergeCandidateLists(exactRows, legacyRows, legacyVersionAgnosticRows);
     }
 
     if (IsActionMenu(addonName))
     {
       return GetPreferredActionMenuCandidates(
+          exactRows,
+          versionAgnosticRows,
+          legacyRows,
+          legacyVersionAgnosticRows);
+    }
+
+    if (IsCharacterWindow(addonName))
+    {
+      return GetPreferredCharacterCandidates(
           exactRows,
           versionAgnosticRows,
           legacyRows,
@@ -487,6 +518,24 @@ public static class GameWindowCacheManager
   }
 
   /// <summary>
+  ///     Determines whether the specified addon name belongs to one of the
+  ///     Character-family windows whose DB-first lookup should ignore partial
+  ///     historical rows.
+  /// </summary>
+  /// <param name="addonName">The addon name to test.</param>
+  /// <returns>
+  ///     <see langword="true"/> when the addon belongs to the Character
+  ///     family; otherwise <see langword="false"/>.
+  /// </returns>
+  private static bool IsCharacterWindow(string? addonName)
+  {
+    return !string.IsNullOrWhiteSpace(addonName) &&
+           addonName.StartsWith(
+               CharacterWindowNamePrefix,
+               StringComparison.Ordinal);
+  }
+
+  /// <summary>
   ///     Chooses the preferred ActionMenu candidate set and collapses it to
   ///     the newest row so recovery and gate checks do not scan historical
   ///     duplicates from the same lookup scope.
@@ -511,5 +560,48 @@ public static class GameWindowCacheManager
     }
 
     return [];
+  }
+
+  /// <summary>
+  ///     Chooses the preferred Character-family candidate set and collapses
+  ///     it to the richest row so DB-first reuse prefers the most complete
+  ///     canonical payload rather than partial historical snapshots.
+  /// </summary>
+  /// <param name="candidateSets">The candidate sets in preference order.</param>
+  /// <returns>The preferred collapsed candidate list.</returns>
+  private static IReadOnlyList<GameWindow> GetPreferredCharacterCandidates(
+      params List<GameWindow>?[] candidateSets)
+  {
+    foreach (var candidateSet in candidateSets)
+    {
+      if (candidateSet == null || candidateSet.Count == 0)
+      {
+        continue;
+      }
+
+      var preferred = candidateSet
+          .OrderByDescending(ComputeCharacterCandidateScore)
+          .ThenByDescending(static row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(static row => row.Id)
+          .First();
+      return [preferred];
+    }
+
+    return [];
+  }
+
+  /// <summary>
+  ///     Computes one completeness score for a Character-family candidate so
+  ///     richer payloads outrank partial snapshots from the same lookup
+  ///     scope.
+  /// </summary>
+  /// <param name="row">The candidate row to score.</param>
+  /// <returns>The row completeness score.</returns>
+  private static int ComputeCharacterCandidateScore(GameWindow row)
+  {
+    ArgumentNullException.ThrowIfNull(row);
+
+    return (row.OriginalWindowStrings?.Length ?? 0) +
+           (row.TranslatedWindowStrings?.Length ?? 0);
   }
 }

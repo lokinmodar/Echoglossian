@@ -101,6 +101,21 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         return CharacterAppliedStateRefreshWindow;
     }
 
+    /// <inheritdoc />
+    private protected override bool ShouldPersistNewGameWindowPayload(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return false;
+    }
+
+    /// <inheritdoc />
+    private protected override bool ShouldQueueNewGameWindowTranslation(
+        DbFirstGameWindowPayload originalPayload)
+    {
+        return false;
+    }
+
     /// <summary>
     ///     Applies one text-node payload by matching current visible text
     ///     values rather than unstable node ordinals.

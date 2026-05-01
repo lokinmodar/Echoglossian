@@ -11,7 +11,7 @@ using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Handlers;
 using Echoglossian.NativeUI.Helpers;
 using Lumina.Text.ReadOnly;
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Common;
 
