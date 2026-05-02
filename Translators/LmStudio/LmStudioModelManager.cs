@@ -1,4 +1,4 @@
-﻿// <copyright file="LmStudioModelManager.cs" company="lokinmodar">
+// <copyright file="LmStudioModelManager.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -17,7 +17,7 @@ public static class LmStudioModelManager
     /// <summary>
     ///     Gets the current list of LM Studio models.
     /// </summary>
-    public static List<OpenAITextModel> CurrentModelList { get; private set; } =
+    public static List<LlmTextModel> CurrentModelList { get; private set; } =
         LmStudioTextModelDefaults.PredefinedModels;
 
     /// <summary>
@@ -46,7 +46,7 @@ public static class LmStudioModelManager
             var parsed = JObject.Parse(json);
             var data = parsed["data"]?.ToObject<List<JObject>>() ?? [];
 
-            var models = new List<OpenAITextModel>();
+            var models = new List<LlmTextModel>();
             foreach (var item in data)
             {
                 var idToken = item["id"];
@@ -60,7 +60,7 @@ public static class LmStudioModelManager
                 if (!id.Contains("vision")) // skip vision models
                 {
                     models.Add(
-                        new OpenAITextModel(
+                        new LlmTextModel(
                             id,
                             $"🧠 {id}",
                             true,

@@ -1,4 +1,4 @@
-﻿// <copyright file="OpenRouterTextModelDefaults.cs" company="lokinmodar">
+// <copyright file="OpenRouterTextModelDefaults.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -9,9 +9,9 @@ namespace Echoglossian.Translators.OpenRouter;
 
 public static class OpenRouterTextModelDefaults
 {
-    public static readonly List<OpenAITextModel> PredefinedModels = new()
+    public static readonly List<LlmTextModel> PredefinedModels = new()
     {
-        new OpenAITextModel(
+        new LlmTextModel(
             "mistral",
             "🛰 Mistral (default)",
             true,
@@ -20,7 +20,7 @@ public static class OpenRouterTextModelDefaults
             false,
             true,
             "OpenRouter"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "openchat/openchat-3.5",
             "🛰 OpenChat 3.5",
             true,
@@ -29,7 +29,7 @@ public static class OpenRouterTextModelDefaults
             false,
             false,
             "OpenRouter"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "gryphe/mythomax-l2-13b",
             "🛰 Mythomax L2 13B",
             true,
@@ -38,7 +38,7 @@ public static class OpenRouterTextModelDefaults
             false,
             false,
             "OpenRouter"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "meta-llama/llama-3-70b-instruct",
             "🛰 LLaMA 3 70B",
             true,
@@ -47,7 +47,7 @@ public static class OpenRouterTextModelDefaults
             false,
             false,
             "OpenRouter"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "google/gemini-pro",
             "🛰 Gemini Pro via OpenRouter",
             true,

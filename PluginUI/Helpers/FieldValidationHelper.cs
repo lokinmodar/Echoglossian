@@ -84,6 +84,11 @@ public static class FieldValidationHelper
     MarkFieldAsTouched(Resources.ModelEndpoint);
     MarkFieldAsTouched(Resources.LLMModel);
 
+    // Claude
+    MarkFieldAsTouched(Resources.APIKey);
+    MarkFieldAsTouched(Resources.ModelEndpoint);
+    MarkFieldAsTouched(Resources.LLMModel);
+
     // Amazon
     MarkFieldAsTouched(Resources.AWSAccessKey);
     MarkFieldAsTouched(Resources.AWSSecretKey);

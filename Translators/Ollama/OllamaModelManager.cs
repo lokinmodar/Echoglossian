@@ -1,4 +1,4 @@
-﻿// <copyright file="OllamaModelManager.cs" company="lokinmodar">
+// <copyright file="OllamaModelManager.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -9,13 +9,13 @@ namespace Echoglossian.Translators.Ollama;
 
 public static class OllamaModelManager
 {
-    private static readonly List<OpenAITextModel> FallbackModels =
+    private static readonly List<LlmTextModel> FallbackModels =
         OllamaTextModelDefaults.PredefinedModels;
 
-    private static readonly List<OpenAITextModel> CurrentModels = new();
+    private static readonly List<LlmTextModel> CurrentModels = new();
     private static Dictionary<string, string>? tooltips;
 
-    public static IReadOnlyList<OpenAITextModel> CurrentModelList =>
+    public static IReadOnlyList<LlmTextModel> CurrentModelList =>
         CurrentModels.Count > 0 ? CurrentModels : FallbackModels;
 
     public static async Task RefreshAsync(string baseUrl)
@@ -38,7 +38,7 @@ public static class OllamaModelManager
                 foreach (var name in tags)
                 {
                     var tier = name?.Split(':')[0] ?? "unknown";
-                    var model = new OpenAITextModel(
+                    var model = new LlmTextModel(
                         name!,
                         $"🦙 {name}",
                         true,

@@ -1,4 +1,4 @@
-﻿// <copyright file="ModelDropdownUI.cs" company="lokinmodar">
+// <copyright file="ModelDropdownUI.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -12,12 +12,12 @@ public static class ModelDropdownUI
     public static bool Draw(
         string label,
         ref string modelId,
-        IReadOnlyList<OpenAITextModel> models,
+        IReadOnlyList<LlmTextModel> models,
         string engine,
         Dictionary<string, string>? tooltips = null,
-        Func<OpenAITextModel, int>? sortOverride = null)
+        Func<LlmTextModel, int>? sortOverride = null)
     {
-        OpenAITextModel? selected;
+        LlmTextModel? selected;
         return DrawInternal(
             label,
             models,
@@ -30,11 +30,11 @@ public static class ModelDropdownUI
 
     public static bool Draw(
         string label,
-        IReadOnlyList<OpenAITextModel> models,
+        IReadOnlyList<LlmTextModel> models,
         string engine,
-        out OpenAITextModel? selectedModel,
+        out LlmTextModel? selectedModel,
         Dictionary<string, string>? tooltips = null,
-        Func<OpenAITextModel, int>? sortOverride = null,
+        Func<LlmTextModel, int>? sortOverride = null,
         string? initialModelId = null)
     {
         var selectedId = initialModelId ??
@@ -51,12 +51,12 @@ public static class ModelDropdownUI
 
     private static bool DrawInternal(
         string label,
-        IReadOnlyList<OpenAITextModel> models,
+        IReadOnlyList<LlmTextModel> models,
         string engine,
         Dictionary<string, string>? tooltips,
-        Func<OpenAITextModel, int>? sortOverride,
+        Func<LlmTextModel, int>? sortOverride,
         ref string modelId,
-        out OpenAITextModel? selectedModel)
+        out LlmTextModel? selectedModel)
     {
         selectedModel = null;
 
@@ -80,13 +80,13 @@ public static class ModelDropdownUI
             currentIndex = 0;
         }
 
-        string LabelFor(OpenAITextModel model)
+        string LabelFor(LlmTextModel model)
         {
             var tag = model.IsDefault ? " [default]" : string.Empty;
             return $"{model.DisplayName}{tag}";
         }
 
-        string GetEngineTierGroup(OpenAITextModel model)
+        string GetEngineTierGroup(LlmTextModel model)
         {
             var tier = model.Id switch
             {
@@ -97,6 +97,10 @@ public static class ModelDropdownUI
                 var id when id.StartsWith("gemini-pro") => "Gemini Pro",
                 var id when id.StartsWith("deepseek-chat") => "Chat",
                 var id when id.StartsWith("deepseek-reasoner") => "Reasoner",
+                var id when id.StartsWith("claude-opus") => "Opus",
+                var id when id.StartsWith("claude-sonnet") => "Sonnet",
+                var id when id.StartsWith("claude-3-7-sonnet") => "Sonnet",
+                var id when id.StartsWith("claude-3-5-haiku") => "Haiku",
                 var id when id.StartsWith("o1-") => "O1",
                 _ => "Other",
             };
@@ -112,6 +116,7 @@ public static class ModelDropdownUI
                 "gemini" => new Vector4(0.85f, 0.6f, 1f, 1f),
                 "deepseek" => new Vector4(0.6f, 1f, 0.6f, 1f),
                 "ollama" => new Vector4(1f, 1f, 0.6f, 1f),
+                "claude" => new Vector4(1f, 0.78f, 0.55f, 1f),
                 _ => new Vector4(1f, 1f, 1f, 1f),
             };
         }
@@ -177,7 +182,7 @@ public static class ModelDropdownUI
         return changed;
     }
 
-    private static Func<OpenAITextModel, int>? BuildTooltipSort(
+    private static Func<LlmTextModel, int>? BuildTooltipSort(
         Dictionary<string, string>? tooltips)
     {
         if (tooltips == null)

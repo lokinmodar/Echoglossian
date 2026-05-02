@@ -28,6 +28,7 @@ public partial class Echoglossian
         "YandexPublic",
         "OpenRouter",
         "LmStudio",
+        "Claude",
     };
 
   private List<string> languageList;

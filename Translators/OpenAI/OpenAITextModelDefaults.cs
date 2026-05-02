@@ -1,4 +1,4 @@
-﻿// <copyright file="OpenAITextModelDefaults.cs" company="lokinmodar">
+// <copyright file="OpenAITextModelDefaults.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -7,7 +7,7 @@ namespace Echoglossian.Translators.OpenAI;
 
 public static class OpenAITextModelDefaults
 {
-  public static readonly List<OpenAITextModel> PredefinedModels = new()
+  public static readonly List<LlmTextModel> PredefinedModels = new()
   {
     new("gpt-4-0613", "🧠 GPT-4 (0613)", true, false, false, false, false, "OpenAI"),
     new("gpt-4", "🧠 GPT-4", true, false, false, false, false, "OpenAI"),

@@ -1,4 +1,4 @@
-﻿// <copyright file="OpenAIModelManager.cs" company="lokinmodar">
+// <copyright file="OpenAIModelManager.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -10,7 +10,7 @@ public static class OpenAIModelManager
   private static readonly HttpClient HttpClient = new();
   private static readonly object SyncLock = new();
 
-  public static List<OpenAITextModel> CurrentModelList { get; private set; } = OpenAITextModelDefaults.PredefinedModels;
+  public static List<LlmTextModel> CurrentModelList { get; private set; } = OpenAITextModelDefaults.PredefinedModels;
 
   public static void ResetToDefault()
   {
@@ -47,7 +47,7 @@ public static class OpenAIModelManager
         return;
       }
 
-      var models = new List<OpenAITextModel>();
+      var models = new List<LlmTextModel>();
 
       foreach (var item in data)
       {
@@ -76,7 +76,7 @@ public static class OpenAIModelManager
         bool supportsText = true;
         bool supportsVision = id.Contains("gpt-4o");
 
-        models.Add(new OpenAITextModel(
+        models.Add(new LlmTextModel(
           Id: id,
           DisplayName: displayName,
           SupportsText: supportsText,

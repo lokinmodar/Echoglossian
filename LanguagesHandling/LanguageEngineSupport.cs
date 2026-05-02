@@ -8,7 +8,7 @@ namespace Echoglossian.LanguagesHandling
     /// <summary>
     /// Provides supported engine lists per language code, computed from vendor-verified language sets
     /// and your runtime engine ordering. Broad-coverage LLM engines (ChatGPT, DeepSeek, Gemini,
-    /// OpenRouter, Ollama, LmStudio) are added to all languages.
+    /// OpenRouter, Ollama, LmStudio, Claude) are added to all languages.
     /// <para>
     /// Engine indices (must match your <c>enginesList</c>):
     /// <list type="number">
@@ -26,6 +26,7 @@ namespace Echoglossian.LanguagesHandling
     ///   <item><description>11 - YandexPublic</description></item>
     ///   <item><description>12 - OpenRouter</description></item>
     ///   <item><description>13 - LmStudio</description></item>
+    ///   <item><description>14 - Claude</description></item>
     /// </list>
     /// </para>
     /// <remarks>
@@ -53,6 +54,7 @@ namespace Echoglossian.LanguagesHandling
         private const int YandexPublic = 11;
         private const int OpenRouter = 12;
         private const int LmStudio = 13;
+        private const int Claude = 14;
 
         /// <summary>
         /// Engines treated as broadly multilingual (no fixed official "translation language" list).
@@ -60,7 +62,7 @@ namespace Echoglossian.LanguagesHandling
         /// </summary>
         private static readonly int[] BroadCoverageLlms =
         {
-            ChatGPT, DeepSeek, Gemini, OpenRouter, Ollama, LmStudio,
+            ChatGPT, DeepSeek, Gemini, OpenRouter, Ollama, LmStudio, Claude,
         };
 
         /// <summary>

@@ -1224,6 +1224,21 @@
         <member name="F:Echoglossian.Config.ChosenTransEngine">
             <summary>Selected translation engine ID (index-based).</summary>
         </member>
+        <member name="F:Echoglossian.Config.ClaudeApiKey">
+            <summary>API key for Anthropic Claude usage.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClaudeBaseUrl">
+            <summary>Base URL for Anthropic Claude API usage.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClaudeModel">
+            <summary>Model used with Anthropic Claude translator API.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClaudePrompt">
+            <summary>Prompt passed to Claude for contextual translation.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ClaudeTemperature">
+            <summary>Temperature used for Claude responses.</summary>
+        </member>
         <member name="F:Echoglossian.Config.CopyTranslationToClipboard">
             <summary>Copy translated text to clipboard automatically.</summary>
         </member>
@@ -1802,6 +1817,11 @@
         <member name="F:Echoglossian.Config.UseLiveOpenRouterModelList">
             <summary>
                 Use live model list from OpenRouter instead of static defaults.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseLiveClaudeModelList">
+            <summary>
+                Use live model list from Claude instead of static defaults.
             </summary>
         </member>
         <member name="F:Echoglossian.Config.UseLmStudioAuth">
@@ -8591,7 +8611,7 @@
             <summary>
             Provides supported engine lists per language code, computed from vendor-verified language sets
             and your runtime engine ordering. Broad-coverage LLM engines (ChatGPT, DeepSeek, Gemini,
-            OpenRouter, Ollama, LmStudio) are added to all languages.
+            OpenRouter, Ollama, LmStudio, Claude) are added to all languages.
             <para>
             Engine indices (must match your <c>enginesList</c>):
             <list type="number">
@@ -8609,6 +8629,7 @@
               <item><description>11 - YandexPublic</description></item>
               <item><description>12 - OpenRouter</description></item>
               <item><description>13 - LmStudio</description></item>
+              <item><description>14 - Claude</description></item>
             </list>
             </para>
             <remarks>
@@ -18148,6 +18169,19 @@
             </param>
             <param name="label">The label used to identify the prompt editor instance.</param>
         </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.ClaudeEngineUI">
+            <summary>
+                UI for configuring the Anthropic Claude translation engine.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ClaudeEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+            <summary>
+                Draws the Claude configuration panel.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="promptManager">The shared prompt template manager.</param>
+            <returns><see langword="true"/> when any setting changed.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.DeepLEngineUI">
             <summary>
             Renders the configuration UI for DeepL Translator.
@@ -18606,6 +18640,11 @@
               Looks up a localized string similar to API Key is empty or invalid. ChatGPT translation will not be available..
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable">
+            <summary>
+              Looks up a localized string similar to API Key is empty or invalid. Claude translation will not be available..
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable">
             <summary>
               Looks up a localized string similar to API Key is empty or invalid. DeepSeek translation will not be available..
@@ -18684,6 +18723,11 @@
         <member name="P:Echoglossian.Properties.Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey">
             <summary>
               Looks up a localized string similar to [ChatGPT translation unavailable. Please check your API key.].
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ClaudeTranslationUnavailablePleaseCheckYourAPIKey">
+            <summary>
+              Looks up a localized string similar to [Claude translation unavailable. Please check your API key.].
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.choice">
@@ -19359,6 +19403,11 @@
         <member name="P:Echoglossian.Properties.Resources.SettingsForChatGptTransText">
             <summary>
               Looks up a localized string similar to Settings for ChatGPT.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.SettingsForClaudeText">
+            <summary>
+              Looks up a localized string similar to Settings for Claude.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.SettingsForDeepLTransText">
@@ -20147,6 +20196,57 @@
                 A task that represents the asynchronous translation operation. The
                 task result contains the translated text.
             </returns>
+        </member>
+        <member name="T:Echoglossian.Translators.ClaudeTranslator">
+            <summary>
+                Translator implementation for Anthropic Claude using the Messages API.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.ClaudeTranslator" /> class.
+            </summary>
+            <param name="pluginLog">The plugin log instance for diagnostics.</param>
+            <param name="config">The active plugin configuration.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.Translate(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Echoglossian.Translators.Claude.ClaudeModelManager">
+            <summary>
+                Manages the optional live Claude model catalog used by the engine configuration UI.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Translators.Claude.ClaudeModelManager.CurrentModelList">
+            <summary>
+                Gets the current Claude model list used by the UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Claude.ClaudeModelManager.ResetToDefault">
+            <summary>
+                Restores the committed fallback model list.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Claude.ClaudeModelManager.RefreshAsync(System.String,System.String)">
+            <summary>
+                Refreshes the Claude model list from Anthropic's official models endpoint.
+            </summary>
+            <param name="apiKey">The Anthropic API key.</param>
+            <param name="baseUrl">The Anthropic API base URL.</param>
+            <returns>A task that completes when refresh finishes.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.Claude.ClaudeTextModelDefaults">
+            <summary>
+                Provides the committed fallback Claude model list used when live fetch is disabled or unavailable.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Translators.Claude.ClaudeTextModelDefaults.PredefinedModels">
+            <summary>
+                Gets the predefined Claude models.
+            </summary>
         </member>
         <member name="T:Echoglossian.Translators.DeepLTranslator">
             <summary>

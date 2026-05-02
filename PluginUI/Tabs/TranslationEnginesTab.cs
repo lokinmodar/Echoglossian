@@ -143,6 +143,9 @@ public static class TranslationEnginesTab
             case Echoglossian.TransEngines.LmStudio:
                 changed |= LmStudioEngineUI.Draw(config, promptManager);
                 break;
+            case Echoglossian.TransEngines.Claude:
+                changed |= ClaudeEngineUI.Draw(config, promptManager);
+                break;
             default:
                 ImGui.Text(Resources.NoSettingsForEngine);
                 break;

@@ -1,4 +1,4 @@
-﻿// <copyright file="DeepSeekModelManager.cs" company="lokinmodar">
+// <copyright file="DeepSeekModelManager.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -12,7 +12,7 @@ public static class DeepSeekModelManager
     private static readonly HttpClient HttpClient = new();
     private static readonly object SyncLock = new();
 
-    public static List<OpenAITextModel> CurrentModelList { get; private set; } =
+    public static List<LlmTextModel> CurrentModelList { get; private set; } =
         DeepSeekTextModelDefaults.PredefinedModels;
 
     public static void ResetToDefault()
@@ -53,7 +53,7 @@ public static class DeepSeekModelManager
                 return;
             }
 
-            var models = new List<OpenAITextModel>();
+            var models = new List<LlmTextModel>();
 
             foreach (var item in data)
             {
@@ -83,7 +83,7 @@ public static class DeepSeekModelManager
                 var supportsVision = false;
 
                 models.Add(
-                    new OpenAITextModel(
+                    new LlmTextModel(
                         id,
                         displayName,
                         supportsText,

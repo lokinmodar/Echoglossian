@@ -61,6 +61,7 @@ Please provide only the translated text in your response, without any explanatio
   {
     return type switch
     {
+      Echoglossian.PromptType.Claude => this.config.ClaudePrompt,
       Echoglossian.PromptType.DeepSeek => this.config.DeepSeekPrompt,
       Echoglossian.PromptType.Gemini => this.config.GeminiPrompt,
       Echoglossian.PromptType.OpenRouter => this.config.OpenRouterPrompt,
@@ -69,6 +70,7 @@ Please provide only the translated text in your response, without any explanatio
       Echoglossian.PromptType.ChatGPT => this.config.ChatGptPrompt,
       Echoglossian.PromptType.YandexCloud => this.config.YandexCloudPrompt,
       Echoglossian.PromptType.Ollama => this.config.OllamaPrompt,
+      Echoglossian.PromptType.LmStudio => this.config.LmStudioPrompt,
       _ => null,
     };
   }
@@ -85,6 +87,7 @@ Please provide only the translated text in your response, without any explanatio
 
     switch (type)
     {
+      case Echoglossian.PromptType.Claude: this.config.ClaudePrompt = normalizedPrompt; break;
       case Echoglossian.PromptType.DeepSeek: this.config.DeepSeekPrompt = normalizedPrompt; break;
       case Echoglossian.PromptType.Gemini: this.config.GeminiPrompt = normalizedPrompt; break;
       case Echoglossian.PromptType.OpenRouter: this.config.OpenRouterPrompt = normalizedPrompt; break;
@@ -93,21 +96,24 @@ Please provide only the translated text in your response, without any explanatio
       case Echoglossian.PromptType.ChatGPT: this.config.ChatGptPrompt = normalizedPrompt; break;
       case Echoglossian.PromptType.YandexCloud: this.config.YandexCloudPrompt = normalizedPrompt; break;
       case Echoglossian.PromptType.Ollama: this.config.OllamaPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.LmStudio: this.config.LmStudioPrompt = normalizedPrompt; break;
     }
   }
 
   public Echoglossian.PromptType? GetPromptTypeForEngine(int engineIndex)
   {
-    return engineIndex switch
+    return (Echoglossian.TransEngines)engineIndex switch
     {
-      2 => Echoglossian.PromptType.ChatGPT,
-      3 => Echoglossian.PromptType.DeepSeek,
-      4 => Echoglossian.PromptType.Gemini,
-      5 => Echoglossian.PromptType.OpenRouter,
-      6 => Echoglossian.PromptType.Microsoft,
-      7 => Echoglossian.PromptType.Amazon,
-      8 => Echoglossian.PromptType.YandexCloud,
-      9 => Echoglossian.PromptType.Ollama,
+      Echoglossian.TransEngines.ChatGPT => Echoglossian.PromptType.ChatGPT,
+      Echoglossian.TransEngines.YandexCloud => Echoglossian.PromptType.YandexCloud,
+      Echoglossian.TransEngines.DeepSeek => Echoglossian.PromptType.DeepSeek,
+      Echoglossian.TransEngines.Ollama => Echoglossian.PromptType.Ollama,
+      Echoglossian.TransEngines.Microsoft => Echoglossian.PromptType.Microsoft,
+      Echoglossian.TransEngines.Amazon => Echoglossian.PromptType.Amazon,
+      Echoglossian.TransEngines.Gemini => Echoglossian.PromptType.Gemini,
+      Echoglossian.TransEngines.OpenRouter => Echoglossian.PromptType.OpenRouter,
+      Echoglossian.TransEngines.LmStudio => Echoglossian.PromptType.LmStudio,
+      Echoglossian.TransEngines.Claude => Echoglossian.PromptType.Claude,
       _ => null,
     };
   }

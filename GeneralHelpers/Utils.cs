@@ -15,6 +15,7 @@ public partial class Echoglossian
   /// </summary>
   public enum PromptType
   {
+    Claude,
     DeepSeek,
     Gemini,
     OpenRouter,
@@ -47,10 +48,11 @@ public partial class Echoglossian
     YandexPublic = 11, // Yandex Public Translator
     OpenRouter = 12, // OpenRouter Translator
     LmStudio = 13, // LM Studio Translator
+    Claude = 14, // Anthropic Claude Translator
 
     All = Google | Deepl | YandexCloud | GTranslate | Amazon | Microsoft |
           ChatGPT | Gemini | DeepSeek | Ollama | LibreTranslate |
-          YandexPublic | OpenRouter | LmStudio,
+          YandexPublic | OpenRouter | LmStudio | Claude,
   }
 
   /// <summary>
@@ -150,6 +152,7 @@ public partial class Echoglossian
     }
 
     SetPromptIfEmpty(nameof(Config.ChatGptPrompt));
+    SetPromptIfEmpty(nameof(Config.ClaudePrompt));
     SetPromptIfEmpty(nameof(Config.DeepSeekPrompt));
     SetPromptIfEmpty(nameof(Config.GeminiPrompt));
     SetPromptIfEmpty(nameof(Config.OpenRouterPrompt));

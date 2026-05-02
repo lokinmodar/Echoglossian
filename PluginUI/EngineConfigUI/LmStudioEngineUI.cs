@@ -1,4 +1,4 @@
-﻿// <copyright file="LmStudioEngineUI.cs" company="lokinmodar">
+// <copyright file="LmStudioEngineUI.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -14,10 +14,10 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class LmStudioEngineUI
 {
-    private static List<OpenAITextModel> staticModels =
+    private static List<LlmTextModel> staticModels =
         LmStudioTextModelDefaults.PredefinedModels;
 
-    private static List<OpenAITextModel> liveModels = new();
+    private static List<LlmTextModel> liveModels = new();
     private static bool modelsFetched;
 
     /// <summary>

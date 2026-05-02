@@ -63,6 +63,8 @@ public static class TranslatorFactory
                 new OpenRouterTranslator(pluginLog, config),
             Echoglossian.TransEngines.LmStudio =>
                 new LmStudioTranslator(pluginLog, config),
+            Echoglossian.TransEngines.Claude =>
+                new ClaudeTranslator(pluginLog, config),
             _ => throw new NotSupportedException(
                 $"Translation engine {engine} is not supported."),
         };

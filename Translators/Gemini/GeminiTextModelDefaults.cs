@@ -1,4 +1,4 @@
-﻿// <copyright file="GeminiTextModelDefaults.cs" company="lokinmodar">
+// <copyright file="GeminiTextModelDefaults.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -9,9 +9,9 @@ namespace Echoglossian.Translators.Gemini;
 
 public static class GeminiTextModelDefaults
 {
-    public static readonly List<OpenAITextModel> PredefinedModels = new()
+    public static readonly List<LlmTextModel> PredefinedModels = new()
     {
-        new OpenAITextModel(
+        new LlmTextModel(
             "gemini-pro",
             "🔷 Gemini Pro",
             true,
@@ -20,7 +20,7 @@ public static class GeminiTextModelDefaults
             false,
             true,
             "Gemini"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "gemini-1.5-pro",
             "🟢 Gemini 1.5 Pro",
             true,
@@ -29,7 +29,7 @@ public static class GeminiTextModelDefaults
             false,
             false,
             "Gemini"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "gemini-1.5-flash",
             "⚡ Gemini 1.5 Flash",
             true,

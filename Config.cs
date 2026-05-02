@@ -65,6 +65,23 @@ public class Config : IPluginConfiguration
   /// <summary>Selected translation engine ID (index-based).</summary>
   [DefaultValue(0)] public int ChosenTransEngine = 0;
 
+  /// <summary>API key for Anthropic Claude usage.</summary>
+  [DefaultValue("")] public string ClaudeApiKey = string.Empty;
+
+  /// <summary>Base URL for Anthropic Claude API usage.</summary>
+  [DefaultValue("https://api.anthropic.com")]
+  public string ClaudeBaseUrl = "https://api.anthropic.com";
+
+  /// <summary>Model used with Anthropic Claude translator API.</summary>
+  [DefaultValue("claude-sonnet-4-20250514")]
+  public string ClaudeModel = "claude-sonnet-4-20250514";
+
+  /// <summary>Prompt passed to Claude for contextual translation.</summary>
+  [DefaultValue("")] public string ClaudePrompt = string.Empty;
+
+  /// <summary>Temperature used for Claude responses.</summary>
+  [DefaultValue(0.1f)] public float ClaudeTemperature = 0.1f;
+
   /// <summary>Copy translated text to clipboard automatically.</summary>
   [DefaultValue(false)] public bool CopyTranslationToClipboard = false;
 
@@ -785,6 +802,11 @@ public class Config : IPluginConfiguration
   ///     Use live model list from OpenRouter instead of static defaults.
   /// </summary>
   [DefaultValue(false)] public bool UseLiveOpenRouterModelList = false;
+
+  /// <summary>
+  ///     Use live model list from Claude instead of static defaults.
+  /// </summary>
+  [DefaultValue(false)] public bool UseLiveClaudeModelList = false;
 
   /// <summary>
   ///     API key for LM Studio authentication (if required).

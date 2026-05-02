@@ -358,3 +358,5 @@ AGENTS.md
 /.github/copilot-instructions.md
 /.github/prompts
 /.github/instructions
+/.agents/skills
+/.agents/skills/dalamud-addon-probing

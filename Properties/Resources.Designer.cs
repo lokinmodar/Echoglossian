@@ -106,6 +106,15 @@ namespace Echoglossian.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to API Key is empty or invalid. Claude translation will not be available..
+        /// </summary>
+        public static string APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable {
+            get {
+                return ResourceManager.GetString("APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to API Key is empty or invalid. DeepSeek translation will not be available..
         /// </summary>
         public static string APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable {
@@ -246,6 +255,15 @@ namespace Echoglossian.Properties {
         public static string ChatGPTTranslationUnavailablePleaseCheckYourAPIKey {
             get {
                 return ResourceManager.GetString("ChatGPTTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Claude translation unavailable. Please check your API key.].
+        /// </summary>
+        public static string ClaudeTranslationUnavailablePleaseCheckYourAPIKey {
+            get {
+                return ResourceManager.GetString("ClaudeTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
             }
         }
         
@@ -1468,6 +1486,15 @@ namespace Echoglossian.Properties {
         public static string SettingsForChatGptTransText {
             get {
                 return ResourceManager.GetString("SettingsForChatGptTransText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings for Claude.
+        /// </summary>
+        public static string SettingsForClaudeText {
+            get {
+                return ResourceManager.GetString("SettingsForClaudeText", resourceCulture);
             }
         }
         

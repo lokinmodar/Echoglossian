@@ -454,6 +454,15 @@
   <data name="ChatGPTTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
     <value>[ChatGPT translation unavailable. Please check your API key.]</value>
   </data>
+  <data name="SettingsForClaudeText" xml:space="preserve">
+    <value>Settings for Claude</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API Key is empty or invalid. Claude translation will not be available.</value>
+  </data>
+  <data name="ClaudeTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Claude translation unavailable. Please check your API key.]</value>
+  </data>
   <data name="TranslationError" xml:space="preserve">
     <value>Translation Error:</value>
   </data>

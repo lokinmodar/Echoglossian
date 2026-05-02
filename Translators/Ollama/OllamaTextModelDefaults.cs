@@ -1,4 +1,4 @@
-﻿// <copyright file="OllamaTextModelDefaults.cs" company="lokinmodar">
+// <copyright file="OllamaTextModelDefaults.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -9,9 +9,9 @@ namespace Echoglossian.Translators.Ollama;
 
 public static class OllamaTextModelDefaults
 {
-    public static readonly List<OpenAITextModel> PredefinedModels = new()
+    public static readonly List<LlmTextModel> PredefinedModels = new()
     {
-        new OpenAITextModel(
+        new LlmTextModel(
             "llama3",
             "🦙 llama3",
             true,
@@ -20,7 +20,7 @@ public static class OllamaTextModelDefaults
             false,
             true,
             "Ollama"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "mistral",
             "🦙 mistral",
             true,
@@ -29,7 +29,7 @@ public static class OllamaTextModelDefaults
             false,
             false,
             "Ollama"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "gemma",
             "🦙 gemma",
             true,
@@ -38,7 +38,7 @@ public static class OllamaTextModelDefaults
             false,
             false,
             "Ollama"),
-        new OpenAITextModel(
+        new LlmTextModel(
             "phi3",
             "🦙 phi3",
             true,
