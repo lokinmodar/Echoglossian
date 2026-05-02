@@ -16023,6 +16023,49 @@
             <param name="index">The addon instance index.</param>
             <returns>The cache key.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.BuildWatchStateSignature(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+            Builds a lightweight signature of the addon's currently visible text
+            state so a probe watch can react to content changes even when the game
+            reuses the same addon pointer.
+            </summary>
+            <param name="addon">The live addon pointer.</param>
+            <returns>A compact signature for the current visible state.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AppendWatchStateSignature(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32,System.Collections.Generic.HashSet{System.IntPtr},System.Int32@,System.UInt64@)">
+            <summary>
+            Appends one node-list subtree into the probe-watch state signature.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <param name="visitedNodes">The visited-node guard set.</param>
+            <param name="remainingNodes">The remaining node budget.</param>
+            <param name="hash">The signature hash being populated.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AppendWatchStateSignature(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Int32,System.Collections.Generic.HashSet{System.IntPtr},System.Int32@,System.UInt64@)">
+            <summary>
+            Appends one node subtree into the probe-watch state signature.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <param name="depth">The current traversal depth.</param>
+            <param name="visitedNodes">The visited-node guard set.</param>
+            <param name="remainingNodes">The remaining node budget.</param>
+            <param name="hash">The signature hash being populated.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddWatchStateSignature(System.UInt64@,System.UInt32)">
+            <summary>
+            Appends one unsigned integer value into the probe-watch state signature.
+            </summary>
+            <param name="hash">The signature hash being populated.</param>
+            <param name="value">The value to append.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddWatchStateSignature(System.UInt64@,System.String)">
+            <summary>
+            Appends one string value into the probe-watch state signature.
+            </summary>
+            <param name="hash">The signature hash being populated.</param>
+            <param name="value">The value to append.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeWatch">
             <summary>
             Represents a live probe watch for an addon name.

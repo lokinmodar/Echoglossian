@@ -19,6 +19,8 @@ internal static unsafe class AddonStructureProbe
 {
   private const int DefaultMaxDepth = 32;
   private const int DefaultMaxNodes = 4096;
+  private const int WatchSignatureMaxDepth = 16;
+  private const int WatchSignatureMaxNodes = 1024;
 
   private static readonly ConcurrentDictionary<string, AddonStructureProbeSnapshot>
       LatestSnapshots = new();
@@ -671,6 +673,196 @@ internal static unsafe class AddonStructureProbe
   }
 
   /// <summary>
+  /// Builds a lightweight signature of the addon's currently visible text
+  /// state so a probe watch can react to content changes even when the game
+  /// reuses the same addon pointer.
+  /// </summary>
+  /// <param name="addon">The live addon pointer.</param>
+  /// <returns>A compact signature for the current visible state.</returns>
+  private static ulong BuildWatchStateSignature(AtkUnitBase* addon)
+  {
+    if (addon == null)
+    {
+      return 0;
+    }
+
+    var hash = 14695981039346656037UL;
+    AddWatchStateSignature(ref hash, addon->Id);
+    AddWatchStateSignature(ref hash, addon->IsVisible ? 1u : 0u);
+    AddWatchStateSignature(ref hash, (uint)addon->UldManager.NodeListCount);
+    AddWatchStateSignature(ref hash, (uint)addon->CollisionNodeListCount);
+
+    var remainingNodes = WatchSignatureMaxNodes;
+    HashSet<nint> visitedNodes = [];
+    AppendWatchStateSignature(
+        addon->UldManager.RootNode,
+        depth: 0,
+        visitedNodes,
+        ref remainingNodes,
+        ref hash);
+    AppendWatchStateSignature(
+        addon->UldManager.NodeList,
+        (int)addon->UldManager.NodeListCount,
+        visitedNodes,
+        ref remainingNodes,
+        ref hash);
+    return hash;
+  }
+
+  /// <summary>
+  /// Appends one node-list subtree into the probe-watch state signature.
+  /// </summary>
+  /// <param name="nodeList">The node list to inspect.</param>
+  /// <param name="nodeCount">The number of nodes in the list.</param>
+  /// <param name="visitedNodes">The visited-node guard set.</param>
+  /// <param name="remainingNodes">The remaining node budget.</param>
+  /// <param name="hash">The signature hash being populated.</param>
+  private static void AppendWatchStateSignature(
+      AtkResNode** nodeList,
+      int nodeCount,
+      HashSet<nint> visitedNodes,
+      ref int remainingNodes,
+      ref ulong hash)
+  {
+    if (nodeList == null || nodeCount <= 0 || remainingNodes <= 0)
+    {
+      return;
+    }
+
+    for (var index = 0; index < nodeCount; index++)
+    {
+      AppendWatchStateSignature(
+          nodeList[index],
+          depth: 0,
+          visitedNodes,
+          ref remainingNodes,
+          ref hash);
+      if (remainingNodes <= 0)
+      {
+        return;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Appends one node subtree into the probe-watch state signature.
+  /// </summary>
+  /// <param name="node">The node to inspect.</param>
+  /// <param name="depth">The current traversal depth.</param>
+  /// <param name="visitedNodes">The visited-node guard set.</param>
+  /// <param name="remainingNodes">The remaining node budget.</param>
+  /// <param name="hash">The signature hash being populated.</param>
+  private static void AppendWatchStateSignature(
+      AtkResNode* node,
+      int depth,
+      HashSet<nint> visitedNodes,
+      ref int remainingNodes,
+      ref ulong hash)
+  {
+    if (node == null ||
+        depth > WatchSignatureMaxDepth ||
+        remainingNodes <= 0)
+    {
+      return;
+    }
+
+    var nodeAddress = (nint)node;
+    if (!visitedNodes.Add(nodeAddress))
+    {
+      return;
+    }
+
+    remainingNodes--;
+    AddWatchStateSignature(ref hash, (uint)node->Type);
+    AddWatchStateSignature(ref hash, node->NodeId);
+    AddWatchStateSignature(ref hash, node->IsVisible() ? 1u : 0u);
+
+    if (node->Type == NodeType.Text)
+    {
+      var textNode = (AtkTextNode*)node;
+      AddWatchStateSignature(ref hash, textNode->TextId);
+      if (node->IsVisible())
+      {
+        AddWatchStateSignature(
+            ref hash,
+            NormalizeForLog(ReadNodeText(textNode), 512) ?? string.Empty);
+      }
+    }
+
+    if ((ushort)node->Type >= 1000)
+    {
+      var componentNode = (AtkComponentNode*)node;
+      if (componentNode->Component != null)
+      {
+        AddWatchStateSignature(
+            ref hash,
+            (uint)componentNode->Component->UldManager.NodeListCount);
+        AppendWatchStateSignature(
+            componentNode->Component->UldManager.RootNode,
+            depth + 1,
+            visitedNodes,
+            ref remainingNodes,
+            ref hash);
+        AppendWatchStateSignature(
+            componentNode->Component->UldManager.NodeList,
+            (int)componentNode->Component->UldManager.NodeListCount,
+            visitedNodes,
+            ref remainingNodes,
+            ref hash);
+      }
+    }
+
+    AppendWatchStateSignature(
+        node->ChildNode,
+        depth + 1,
+        visitedNodes,
+        ref remainingNodes,
+        ref hash);
+    AppendWatchStateSignature(
+        node->NextSiblingNode,
+        depth,
+        visitedNodes,
+        ref remainingNodes,
+        ref hash);
+  }
+
+  /// <summary>
+  /// Appends one unsigned integer value into the probe-watch state signature.
+  /// </summary>
+  /// <param name="hash">The signature hash being populated.</param>
+  /// <param name="value">The value to append.</param>
+  private static void AddWatchStateSignature(ref ulong hash, uint value)
+  {
+    hash ^= (byte)(value & 0xFF);
+    hash *= 1099511628211UL;
+    hash ^= (byte)((value >> 8) & 0xFF);
+    hash *= 1099511628211UL;
+    hash ^= (byte)((value >> 16) & 0xFF);
+    hash *= 1099511628211UL;
+    hash ^= (byte)((value >> 24) & 0xFF);
+    hash *= 1099511628211UL;
+  }
+
+  /// <summary>
+  /// Appends one string value into the probe-watch state signature.
+  /// </summary>
+  /// <param name="hash">The signature hash being populated.</param>
+  /// <param name="value">The value to append.</param>
+  private static void AddWatchStateSignature(ref ulong hash, string value)
+  {
+    foreach (var character in value)
+    {
+      hash ^= (byte)(character & 0xFF);
+      hash *= 1099511628211UL;
+      hash ^= (byte)(character >> 8);
+      hash *= 1099511628211UL;
+    }
+
+    hash ^= 0xFF;
+    hash *= 1099511628211UL;
+  }
+
+  /// <summary>
   /// Represents a live probe watch for an addon name.
   /// </summary>
   internal sealed class AddonStructureProbeWatch : IDisposable
@@ -681,6 +873,8 @@ internal static unsafe class AddonStructureProbe
     private readonly string addonName;
     private readonly int index;
     private nint lastDumpedAddonAddress;
+    private ulong lastDumpedStateSignature;
+    private bool hasLastDumpedStateSignature;
     private bool disposed;
 
     /// <summary>
@@ -783,19 +977,28 @@ internal static unsafe class AddonStructureProbe
         return;
       }
 
-      if ((nint)addon == this.lastDumpedAddonAddress)
+      var currentStateSignature = BuildWatchStateSignature(addon);
+      if ((nint)addon == this.lastDumpedAddonAddress &&
+          this.hasLastDumpedStateSignature &&
+          currentStateSignature == this.lastDumpedStateSignature)
       {
         return;
       }
 
+      var sameAddonAddress = (nint)addon == this.lastDumpedAddonAddress;
       this.lastDumpedAddonAddress = (nint)addon;
+      this.lastDumpedStateSignature = currentStateSignature;
+      this.hasLastDumpedStateSignature = true;
 
       ProbeAddon(
           addon,
           this.pluginLog,
           this.addonName,
           this.index,
-          trigger);
+          sameAddonAddress &&
+          trigger == "watch-poll"
+              ? "watch-content-change"
+              : trigger);
     }
   }
 
