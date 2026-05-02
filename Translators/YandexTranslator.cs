@@ -40,7 +40,7 @@ public class YandexTranslator : ITranslator
         string targetLanguage)
     {
         this.pluginLog.Debug("Inside YandexTranslator Translate (sync)");
-        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result ?? string.Empty;
     }
 
     /// <summary>

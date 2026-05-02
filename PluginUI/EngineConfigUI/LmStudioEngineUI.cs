@@ -64,7 +64,7 @@ public static class LmStudioEngineUI
             _ = Task.Run(async () =>
             {
                 await LmStudioModelManager.RefreshAsync(
-                    config.LmStudioBaseUrl,
+                    config.LmStudioBaseUrl ?? string.Empty,
                     config.UseLmStudioAuth ? config.LmStudioApiKey : null);
                 modelsFetched = true;
             });

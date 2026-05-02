@@ -79,18 +79,20 @@ Please provide only the translated text in your response, without any explanatio
     return string.IsNullOrWhiteSpace(prompt) ? DefaultPrompt : prompt;
   }
 
-  public void SetPrompt(Echoglossian.PromptType type, string prompt)
+  public void SetPrompt(Echoglossian.PromptType type, string? prompt)
   {
+    var normalizedPrompt = prompt ?? string.Empty;
+
     switch (type)
     {
-      case Echoglossian.PromptType.DeepSeek: this.config.DeepSeekPrompt = prompt; break;
-      case Echoglossian.PromptType.Gemini: this.config.GeminiPrompt = prompt; break;
-      case Echoglossian.PromptType.OpenRouter: this.config.OpenRouterPrompt = prompt; break;
-      case Echoglossian.PromptType.Microsoft: this.config.MicrosoftTranslatorPrompt = prompt; break;
-      case Echoglossian.PromptType.Amazon: this.config.AmazonPrompt = prompt; break;
-      case Echoglossian.PromptType.ChatGPT: this.config.ChatGptPrompt = prompt; break;
-      case Echoglossian.PromptType.YandexCloud: this.config.YandexCloudPrompt = prompt; break;
-      case Echoglossian.PromptType.Ollama: this.config.OllamaPrompt = prompt; break;
+      case Echoglossian.PromptType.DeepSeek: this.config.DeepSeekPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.Gemini: this.config.GeminiPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.OpenRouter: this.config.OpenRouterPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.Microsoft: this.config.MicrosoftTranslatorPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.Amazon: this.config.AmazonPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.ChatGPT: this.config.ChatGptPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.YandexCloud: this.config.YandexCloudPrompt = normalizedPrompt; break;
+      case Echoglossian.PromptType.Ollama: this.config.OllamaPrompt = normalizedPrompt; break;
     }
   }
 

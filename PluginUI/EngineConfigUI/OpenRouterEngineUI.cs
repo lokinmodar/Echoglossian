@@ -21,19 +21,23 @@ public static class OpenRouterEngineUI
         ImGui.TextWrapped(Resources.SettingsForOpenRouterText);
         ImGui.Spacing();
 
+        var apiKey = config.OpenRouterApiKey ?? string.Empty;
         bool isApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.APIKey,
-            ref config.OpenRouterApiKey,
+            ref apiKey,
             300,
             out isApiKeyInvalid);
+        config.OpenRouterApiKey = apiKey;
 
+        var baseUrl = config.OpenRouterBaseUrl ?? string.Empty;
         bool isBaseUrlInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.ModelEndpoint,
-            ref config.OpenRouterBaseUrl,
+            ref baseUrl,
             400,
             out isBaseUrlInvalid);
+        config.OpenRouterBaseUrl = baseUrl;
 
         // Live model list toggle
         var newToggle = config.UseLiveOpenRouterModelList;
@@ -47,8 +51,8 @@ public static class OpenRouterEngineUI
                 Task.Run(async () =>
                 {
                     await OpenRouterModelManager.RefreshAsync(
-                        config.OpenRouterApiKey,
-                        config.OpenRouterBaseUrl);
+                        config.OpenRouterApiKey ?? string.Empty,
+                        config.OpenRouterBaseUrl ?? string.Empty);
                     models = OpenRouterModelManager.CurrentModelList;
                 });
             }
@@ -60,11 +64,13 @@ public static class OpenRouterEngineUI
         }
 
         // Dropdown model selection
+        var model = config.OpenRouterModel ?? string.Empty;
         changed |= ModelDropdownUI.Draw(
             Resources.LLMModel,
-            ref config.OpenRouterModel,
+            ref model,
             models,
             "OpenRouter");
+        config.OpenRouterModel = model;
 
         var temp = config.OpenRouterTemperature;
         if (ImGui.SliderFloat(Resources.Temperature, ref temp, 0.1f, 1.0f, "%.1f"))

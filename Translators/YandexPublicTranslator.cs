@@ -51,7 +51,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         string targetLanguage)
     {
         return this.TranslateAsync(text, sourceLanguage, targetLanguage)
-            .GetAwaiter().GetResult();
+            .GetAwaiter().GetResult() ?? string.Empty;
     }
 
     public async Task<string?> TranslateAsync(
@@ -196,7 +196,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
             this.Set(value);
         }
 
-        public T Value { get; private set; }
+        public T Value { get; private set; } = default!;
 
         public bool IsExpired()
         {

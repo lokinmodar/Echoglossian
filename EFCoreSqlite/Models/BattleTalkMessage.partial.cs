@@ -20,7 +20,7 @@ public partial class BattleTalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetOriginalText()
   {
-    return this.SenderName;
+    return this.SenderName ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -32,7 +32,7 @@ public partial class BattleTalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetOriginalLang()
   {
-    return this.OriginalBattleTalkMessageLang;
+    return this.OriginalBattleTalkMessageLang ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -44,7 +44,7 @@ public partial class BattleTalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetOriginalSecondaryText()
   {
-    return this.OriginalBattleTalkMessage;
+    return this.OriginalBattleTalkMessage ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -104,7 +104,7 @@ public partial class BattleTalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetEntityKey()
   {
-    return this.SenderName;
+    return this.SenderName ?? string.Empty;
   }
 
   /// <inheritdoc />

@@ -13,7 +13,7 @@ public partial class TalkSubtitleMessage : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalTalkSubtitleMessage;
+        return this.OriginalTalkSubtitleMessage ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -25,7 +25,7 @@ public partial class TalkSubtitleMessage : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalTalkSubtitleMessageLang;
+        return this.OriginalTalkSubtitleMessageLang ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -73,7 +73,7 @@ public partial class TalkSubtitleMessage : IGenericEntity
     /// <inheritdoc />
     public string GetEntityKey()
     {
-        return this.OriginalTalkSubtitleMessage;
+        return this.OriginalTalkSubtitleMessage ?? string.Empty;
     }
 
     /// <inheritdoc />

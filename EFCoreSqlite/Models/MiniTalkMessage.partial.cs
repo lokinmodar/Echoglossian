@@ -13,7 +13,7 @@ public partial class MiniTalkMessage : IGenericEntity
   /// <inheritdoc />
   public string GetOriginalText()
   {
-    return this.OriginalMiniTalkMessage;
+    return this.OriginalMiniTalkMessage ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -25,7 +25,7 @@ public partial class MiniTalkMessage : IGenericEntity
   /// <inheritdoc />
   public string GetOriginalLang()
   {
-    return this.OriginalMiniTalkMessageLang;
+    return this.OriginalMiniTalkMessageLang ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -73,7 +73,7 @@ public partial class MiniTalkMessage : IGenericEntity
   /// <inheritdoc />
   public string GetEntityKey()
   {
-    return this.OriginalMiniTalkMessage;
+    return this.OriginalMiniTalkMessage ?? string.Empty;
   }
 
   /// <inheritdoc />

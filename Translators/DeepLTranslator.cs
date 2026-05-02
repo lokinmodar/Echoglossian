@@ -310,7 +310,7 @@ public class DeepLTranslator : ITranslator
               deepLResponse.Result.Texts[0].Text;
           this.pluginLog.Debug(
               $"FinalTranslatedText: {finalTranslatedText}");
-          return finalTranslatedText;
+          return finalTranslatedText ?? text;
         }
 
         this.pluginLog.Warning(
@@ -410,11 +410,11 @@ public class DeepLTranslator : ITranslator
 /// </summary>
 public class DeepLResponse
 {
-  public string Id { get; set; }
+  public string? Id { get; set; }
 
-  public string Jsonrpc { get; set; }
+  public string? Jsonrpc { get; set; }
 
-  public DeepLResult Result { get; set; }
+  public DeepLResult? Result { get; set; }
 }
 
 /// <summary>
@@ -422,9 +422,9 @@ public class DeepLResponse
 /// </summary>
 public class DeepLResult
 {
-  public DeepLTextResult[] Texts { get; set; }
+  public DeepLTextResult[]? Texts { get; set; }
 
-  public string Lang { get; set; }
+  public string? Lang { get; set; }
 }
 
 /// <summary>
@@ -432,5 +432,5 @@ public class DeepLResult
 /// </summary>
 public class DeepLTextResult
 {
-  public string Text { get; set; }
+  public string? Text { get; set; }
 }

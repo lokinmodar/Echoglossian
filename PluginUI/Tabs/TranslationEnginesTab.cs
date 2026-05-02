@@ -59,13 +59,17 @@ public static class TranslationEnginesTab
 
         var supportedEngines =
             langDict.TryGetValue(languageIndex, out var langInfo)
-                ? langInfo.SupportedEngines
+                ? langInfo.SupportedEngines ?? new List<int>()
                 : new List<int>();
 
         var filteredEngines = availableEngines
             .Where((_, i) => supportedEngines.Contains(i)).ToArray();
 
         var selected = supportedEngines.IndexOf(config.ChosenTransEngine);
+        if (selected < 0 && supportedEngines.Count > 0)
+        {
+            selected = 0;
+        }
 
         if (ImGui.Combo(
                 Resources.TranslationEngineChoose,

@@ -14,7 +14,7 @@ public partial class ToastMessage : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalToastMessage;
+        return this.OriginalToastMessage ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -26,7 +26,7 @@ public partial class ToastMessage : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalLang;
+        return this.OriginalLang ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -74,7 +74,7 @@ public partial class ToastMessage : IGenericEntity
     /// <inheritdoc />
     public string GetEntityKey()
     {
-        return this.OriginalToastMessage;
+        return this.OriginalToastMessage ?? string.Empty;
     }
 
     /// <inheritdoc />

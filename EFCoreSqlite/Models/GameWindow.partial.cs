@@ -22,7 +22,7 @@ public partial class GameWindow : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalWindowStrings;
+        return this.OriginalWindowStrings ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -34,7 +34,7 @@ public partial class GameWindow : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalWindowStringsLang;
+        return this.OriginalWindowStringsLang ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -82,7 +82,7 @@ public partial class GameWindow : IGenericEntity
     /// <inheritdoc />
     public string GetEntityKey()
     {
-        return this.WindowAddonName;
+        return this.WindowAddonName ?? string.Empty;
     }
 
     /// <inheritdoc />

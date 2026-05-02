@@ -20,7 +20,7 @@ public partial class TalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetOriginalText()
   {
-    return this.SenderName;
+    return this.SenderName ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -32,7 +32,7 @@ public partial class TalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetOriginalLang()
   {
-    return this.OriginalTalkMessageLang;
+    return this.OriginalTalkMessageLang ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -44,7 +44,7 @@ public partial class TalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetOriginalSecondaryText()
   {
-    return this.OriginalTalkMessage;
+    return this.OriginalTalkMessage ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -104,7 +104,7 @@ public partial class TalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public string GetEntityKey()
   {
-    return this.SenderName;
+    return this.SenderName ?? string.Empty;
   }
 
   /// <inheritdoc />

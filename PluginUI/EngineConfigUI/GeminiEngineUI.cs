@@ -16,12 +16,14 @@ public static class GeminiEngineUI
 
         ImGui.TextWrapped(Resources.SettingsForGeminiText);
 
+        var geminiApiKey = config.GeminiTranslatorApiKey ?? string.Empty;
         bool isGeminiApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             "Gemini API Key",
-            ref config.GeminiTranslatorApiKey,
+            ref geminiApiKey,
             300,
             out isGeminiApiKeyInvalid);
+        config.GeminiTranslatorApiKey = geminiApiKey;
 
         // Optional: Live fetch toggle
 
@@ -34,7 +36,7 @@ public static class GeminiEngineUI
             {
                 _ = Task.Run(() =>
                     GeminiModelManager.RefreshAsync(
-                        config.GeminiTranslatorApiKey));
+                        config.GeminiTranslatorApiKey ?? string.Empty));
             }
             else
             {

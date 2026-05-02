@@ -19,7 +19,7 @@ public partial class TextGimmickHintMessage : IGenericEntity
   /// <inheritdoc />
   public string GetOriginalText()
   {
-    return this.OriginalText;
+    return this.OriginalText ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -31,7 +31,7 @@ public partial class TextGimmickHintMessage : IGenericEntity
   /// <inheritdoc />
   public string GetOriginalLang()
   {
-    return this.OriginalLang;
+    return this.OriginalLang ?? string.Empty;
   }
 
   /// <inheritdoc />
@@ -79,7 +79,7 @@ public partial class TextGimmickHintMessage : IGenericEntity
   /// <inheritdoc />
   public string GetEntityKey()
   {
-    return this.OriginalText;
+    return this.OriginalText ?? string.Empty;
   }
 
   /// <inheritdoc />

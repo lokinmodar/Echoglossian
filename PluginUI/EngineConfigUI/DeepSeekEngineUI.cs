@@ -16,19 +16,23 @@ public static class DeepSeekEngineUI
 
         ImGui.TextWrapped(Resources.SettingsForDeepSeekText);
 
+        var apiKey = config.DeepSeekTranslatorApiKey ?? string.Empty;
         bool isApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.APIKey,
-            ref config.DeepSeekTranslatorApiKey,
+            ref apiKey,
             300,
             out isApiKeyInvalid);
+        config.DeepSeekTranslatorApiKey = apiKey;
 
+        var endpoint = config.DeepSeekBaseUrl;
         bool isEndpointInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.Endpoint,
-            ref config.DeepSeekBaseUrl,
+            ref endpoint,
             300,
             out isEndpointInvalid);
+        config.DeepSeekBaseUrl = endpoint;
 
         // Live model fetch toggle
         var prev = config.UseLiveDeepSeekModelList;
@@ -40,8 +44,8 @@ public static class DeepSeekEngineUI
             if (config.UseLiveDeepSeekModelList && !prev)
             {
                 _ = Task.Run(() => DeepSeekModelManager.RefreshAsync(
-                    config.DeepSeekTranslatorApiKey,
-                    config.DeepSeekBaseUrl));
+                    config.DeepSeekTranslatorApiKey ?? string.Empty,
+                    config.DeepSeekBaseUrl ?? string.Empty));
             }
             else if (!config.UseLiveDeepSeekModelList)
             {
@@ -59,12 +63,14 @@ public static class DeepSeekEngineUI
             ? DeepSeekModelManager.CurrentModelList
             : DeepSeekTextModelDefaults.PredefinedModels;
 
+        var model = config.DeepSeekModel ?? string.Empty;
         changed |= ModelDropdownUI.Draw(
             Resources.LLMModel,
-            ref config.DeepSeekModel,
+            ref model,
             models,
             "DeepSeek",
             tooltips);
+        config.DeepSeekModel = model;
 
         PromptEditorUI.Draw(
             promptManager,

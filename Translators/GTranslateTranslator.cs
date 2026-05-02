@@ -48,7 +48,7 @@ public class GTranslateTranslator : ITranslator
     {
         this.pluginLog.Debug("GTranslate sync translate requested.");
 
-        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result ?? string.Empty;
     }
 
     /// <summary>

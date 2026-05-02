@@ -52,7 +52,7 @@ public static class ChatGPTEngineUI
             if (config.UseLiveOpenAIModelList && !prev)
             {
                 _ = Task.Run(() =>
-                    OpenAIModelManager.RefreshAsync(config.ChatGptApiKey));
+                    OpenAIModelManager.RefreshAsync(config.ChatGptApiKey ?? string.Empty));
             }
             else if (!config.UseLiveOpenAIModelList)
             {

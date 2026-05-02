@@ -27,7 +27,7 @@ public class LibreTranslateTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result ?? string.Empty;
     }
 
     /// <summary>

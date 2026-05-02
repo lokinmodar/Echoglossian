@@ -9,6 +9,8 @@ namespace Echoglossian.Translators;
 
 public class OpenRouterTranslator : ITranslator
 {
+    private const string DefaultModel = "mistral";
+    private const string DefaultOpenRouterUrl = "https://openrouter.ai/api/v1/";
     private readonly string apiKey;
     private readonly HttpClient httpClient;
     private readonly string model;
@@ -22,11 +24,15 @@ public class OpenRouterTranslator : ITranslator
     public OpenRouterTranslator(IPluginLog pluginLog, Config config)
     {
         this.pluginLog = pluginLog;
-        this.model = config.OpenRouterModel;
+        this.model = string.IsNullOrWhiteSpace(config.OpenRouterModel)
+            ? DefaultModel
+            : config.OpenRouterModel!;
         this.temperature = config.OpenRouterTemperature;
-        this.apiKey = config.OpenRouterApiKey;
-        this.openRouterUrl = config.OpenRouterBaseUrl;
-        this.prompt = config.OpenRouterPrompt;
+        this.apiKey = config.OpenRouterApiKey ?? string.Empty;
+        this.openRouterUrl = string.IsNullOrWhiteSpace(config.OpenRouterBaseUrl)
+            ? DefaultOpenRouterUrl
+            : config.OpenRouterBaseUrl!;
+        this.prompt = config.OpenRouterPrompt ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {

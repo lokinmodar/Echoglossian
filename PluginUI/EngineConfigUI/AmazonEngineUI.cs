@@ -13,26 +13,32 @@ public static class AmazonEngineUI
 
         ImGui.TextWrapped(Resources.SettingsForAmazonTranslateText);
 
+        var awsAccessKey = config.AwsAccessKey ?? string.Empty;
         bool isAccessKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.AWSAccessKey,
-            ref config.AwsAccessKey,
+            ref awsAccessKey,
             200,
             out isAccessKeyInvalid);
+        config.AwsAccessKey = awsAccessKey;
 
+        var awsSecretKey = config.AwsSecretKey ?? string.Empty;
         bool isSecretKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.AWSSecretKey,
-            ref config.AwsSecretKey,
+            ref awsSecretKey,
             200,
             out isSecretKeyInvalid);
+        config.AwsSecretKey = awsSecretKey;
 
+        var awsRegion = config.AwsRegion ?? string.Empty;
         bool isRegionInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.Region,
-            ref config.AwsRegion,
+            ref awsRegion,
             100,
             out isRegionInvalid);
+        config.AwsRegion = awsRegion;
 
         if (changed)
         {

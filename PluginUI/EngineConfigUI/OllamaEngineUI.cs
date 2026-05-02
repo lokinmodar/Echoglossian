@@ -33,7 +33,7 @@ public static class OllamaEngineUI
             if (config.UseLiveOllamaModelList && !previous)
             {
                 _ = Task.Run(() =>
-                    OllamaModelManager.RefreshAsync(config.OllamaUrl));
+                    OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
             }
             else if (!config.UseLiveOllamaModelList)
             {

@@ -13,26 +13,32 @@ public static class MicrosoftEngineUI
 
         ImGui.TextWrapped(Resources.SettingsForMicrosoftText);
 
+        var apiKey = config.MicrosoftTranslatorApiKey ?? string.Empty;
         bool isApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.MicrosoftTranslatorAPIKey,
-            ref config.MicrosoftTranslatorApiKey,
+            ref apiKey,
             200,
             out isApiKeyInvalid);
+        config.MicrosoftTranslatorApiKey = apiKey;
 
+        var region = config.MicrosoftTranslatorRegion ?? string.Empty;
         bool isRegionInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.Region,
-            ref config.MicrosoftTranslatorRegion,
+            ref region,
             100,
             out isRegionInvalid);
+        config.MicrosoftTranslatorRegion = region;
 
+        var endpoint = config.MicrosoftTranslatorEndpoint ?? string.Empty;
         bool isEndpointInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
             Resources.Endpoint,
-            ref config.MicrosoftTranslatorEndpoint,
+            ref endpoint,
             300,
             out isEndpointInvalid);
+        config.MicrosoftTranslatorEndpoint = endpoint;
 
         if (changed)
         {

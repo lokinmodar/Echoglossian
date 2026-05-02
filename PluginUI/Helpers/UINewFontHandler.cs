@@ -10,6 +10,7 @@ namespace Echoglossian.PluginUI.Helpers;
 
 public class UINewFontHandler : IDisposable
 {
+    private const int DefaultFontSize = 24;
     private readonly Config? configuration;
     private bool disposedValue;
     public IFontHandle GeneralFontHandle;
@@ -63,7 +64,7 @@ public class UINewFontHandler : IDisposable
                     // more ranges here
                     this.sfc = new SafeFontConfig
                     {
-                        SizePx = (float)this.configuration?.FontSize,
+                        SizePx = this.configuration?.FontSize ?? DefaultFontSize,
                         GlyphRanges = rangeBuilder.Build(),
                     };
                     this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(
@@ -110,7 +111,7 @@ public class UINewFontHandler : IDisposable
                     // more ranges here
                     this.sfc = new SafeFontConfig
                     {
-                        SizePx = (float)this.configuration?.FontSize,
+                        SizePx = this.configuration?.FontSize ?? DefaultFontSize,
                         GlyphRanges = rangeBuilder.Build(),
                     };
                     this.sfc.MergeFont = tk.Font = tk.AddFontFromFile(

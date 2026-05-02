@@ -73,7 +73,7 @@ public class AmazonTranslateTranslator : ITranslator
         string targetLanguage)
     {
         this.pluginLog.Debug("AWS Translate sync translate requested.");
-        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result;
+        return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result ?? string.Empty;
     }
 
     /// <summary>

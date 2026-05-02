@@ -81,9 +81,9 @@ namespace Echoglossian.EFCoreSqlite.Models
     }
 
     /// <inheritdoc />
-    public string? GetOriginalLang()
+    public string GetOriginalLang()
     {
-      return this.OriginalLang;
+      return this.OriginalLang ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -230,9 +230,9 @@ namespace Echoglossian.EFCoreSqlite.Models
     }
 
     /// <inheritdoc />
-    public string? GetOriginalText()
+    public string GetOriginalText()
     {
-      return this.OriginalStrings;
+      return this.OriginalStrings ?? string.Empty;
     }
 
     /// <inheritdoc />

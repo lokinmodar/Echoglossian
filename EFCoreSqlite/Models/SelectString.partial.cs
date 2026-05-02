@@ -13,7 +13,7 @@ public partial class SelectString : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalText()
     {
-        return this.OriginalSelectString;
+        return this.OriginalSelectString ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -25,7 +25,7 @@ public partial class SelectString : IGenericEntity
     /// <inheritdoc />
     public string GetOriginalLang()
     {
-        return this.OriginalSelectStringLang;
+        return this.OriginalSelectStringLang ?? string.Empty;
     }
 
     /// <inheritdoc />
@@ -90,6 +90,6 @@ public partial class SelectString : IGenericEntity
     /// <inheritdoc />
     public string GetEntityKey()
     {
-        return this.RowVersion?.ToString();
+        return this.RowVersion?.ToString() ?? string.Empty;
     }
 }
