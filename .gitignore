@@ -355,3 +355,6 @@ AGENTS.md
 /.codex_characterstatus_tail.txt
 /.codex_lastlog_slice.txt
 /.codex_lastlog_tail.txt
+/.github/copilot-instructions.md
+/.github/prompts
+/.github/instructions

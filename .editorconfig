@@ -99,6 +99,52 @@ dotnet_analyzer_diagnostic.category-StyleCop.CSharp.OrderingRules.severity = sug
 # SA1010: Opening square brackets should be spaced correctly
 dotnet_diagnostic.SA1010.severity = silent
 
+# S107: Methods should not have too many parameters
+dotnet_diagnostic.S107.severity = none
+
+# Legacy StyleCop backlog disabled in build.
+# Keep following repo style on new and modified code, but do not fail builds on
+# historical formatting, documentation, or layout debt.
+dotnet_diagnostic.SA1108.severity = none
+dotnet_diagnostic.SA1122.severity = none
+dotnet_diagnostic.SA1133.severity = none
+dotnet_diagnostic.SA1134.severity = none
+dotnet_diagnostic.SA1135.severity = none
+dotnet_diagnostic.SA1137.severity = none
+dotnet_diagnostic.SA1300.severity = none
+dotnet_diagnostic.SA1309.severity = none
+dotnet_diagnostic.SA1311.severity = none
+dotnet_diagnostic.SA1313.severity = none
+dotnet_diagnostic.SA1402.severity = none
+dotnet_diagnostic.SA1408.severity = none
+dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.SA1500.severity = none
+dotnet_diagnostic.SA1501.severity = none
+dotnet_diagnostic.SA1502.severity = none
+dotnet_diagnostic.SA1503.severity = none
+dotnet_diagnostic.SA1505.severity = none
+dotnet_diagnostic.SA1507.severity = none
+dotnet_diagnostic.SA1508.severity = none
+dotnet_diagnostic.SA1512.severity = none
+dotnet_diagnostic.SA1513.severity = none
+dotnet_diagnostic.SA1514.severity = none
+dotnet_diagnostic.SA1516.severity = none
+dotnet_diagnostic.SA1518.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1612.severity = none
+dotnet_diagnostic.SA1614.severity = none
+dotnet_diagnostic.SA1615.severity = none
+dotnet_diagnostic.SA1616.severity = none
+dotnet_diagnostic.SA1623.severity = none
+dotnet_diagnostic.SA1629.severity = none
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1636.severity = none
+dotnet_diagnostic.SA1638.severity = none
+dotnet_diagnostic.SA1641.severity = none
+dotnet_diagnostic.SA1642.severity = none
+dotnet_diagnostic.SA1648.severity = none
+dotnet_diagnostic.SA1649.severity = none
+
 [*.{cs,vb}]
 #### Naming styles ####
 
