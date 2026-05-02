@@ -54,7 +54,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
             .GetAwaiter().GetResult();
     }
 
-    public async Task<string> TranslateAsync(
+    public async Task<string?> TranslateAsync(
         string text,
         string sourceLanguage,
         string targetLanguage)

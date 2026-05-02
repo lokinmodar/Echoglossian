@@ -21,7 +21,7 @@ namespace Echoglossian.EFCoreSqlite.Models
     }
 
     /// <inheritdoc />
-    public string GetType()
+    public new string GetType()
     {
       return this.Type ?? string.Empty;
     }

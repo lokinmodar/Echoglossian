@@ -84,7 +84,7 @@ public class AmazonTranslateTranslator : ITranslator
     /// <param name="sourceLanguage"></param>
     /// <param name="targetLanguage"></param>
     /// <returns></returns>
-    public async Task<string> TranslateAsync(
+    public async Task<string?> TranslateAsync(
         string text,
         string sourceLanguage,
         string targetLanguage)
