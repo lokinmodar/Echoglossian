@@ -64,6 +64,40 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
+    ///     Ensures strict live-name gating still accepts decorated item names
+    ///     that normalize to the canonical payload text.
+    /// </summary>
+    [Fact]
+    public void IsStructuredTooltipExactTextMatch_MatchesDecoratedItemName()
+    {
+        const string visibleText = "\uE03C Super-Potion";
+        const string canonicalText = "Super-Potion";
+
+        var result = Echoglossian.IsStructuredTooltipExactTextMatch(
+            visibleText,
+            canonicalText);
+
+        Assert.True(result);
+    }
+
+    /// <summary>
+    ///     Ensures strict live-name gating does not treat a shorter similar name
+    ///     as an exact match for a different action.
+    /// </summary>
+    [Fact]
+    public void IsStructuredTooltipExactTextMatch_RejectsSubstringNameMatch()
+    {
+        const string visibleText = "Enhanced En Avant";
+        const string canonicalText = "Enhanced En Avant II";
+
+        var result = Echoglossian.IsStructuredTooltipExactTextMatch(
+            visibleText,
+            canonicalText);
+
+        Assert.False(result);
+    }
+
+    /// <summary>
     ///     Ensures native tooltip mutation is deferred until both name and
     ///     description nodes are resolved for description-bearing tooltips.
     /// </summary>
@@ -146,5 +180,65 @@ public class StructuredTooltipTextMatchingTests
         Assert.True(found);
         Assert.Equal((nint)2, bestCandidate.NodeAddress);
         Assert.True(bestCandidate.SupportsPlainTextMutation);
+    }
+
+    /// <summary>
+    ///     Ensures strict live-name candidate resolution does not accept a
+    ///     substring-only match for a different tooltip name.
+    /// </summary>
+    [Fact]
+    public void TryFindBestStructuredTooltipExactTextNodeCandidate_RejectsSubstringOnlyCandidate()
+    {
+        IReadOnlyList<Echoglossian.StructuredTooltipTextNodeCandidate> candidates =
+        [
+            new Echoglossian.StructuredTooltipTextNodeCandidate(
+                (nint)1,
+                "Enhanced En Avant",
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Enhanced En Avant"),
+                true),
+        ];
+
+        var found = Echoglossian.TryFindBestStructuredTooltipExactTextNodeCandidate(
+            candidates,
+            "Enhanced En Avant II",
+            excludedNodeAddress: 0,
+            out _);
+
+        Assert.False(found);
+    }
+
+    /// <summary>
+    ///     Ensures ActionDetail does not reuse a stale agent-backed action id
+    ///     while a live item hover is active.
+    /// </summary>
+    [Fact]
+    public void ShouldUseActionDetailAgentFallback_BlocksFallbackDuringItemHover()
+    {
+        Assert.False(
+            Echoglossian.ShouldUseActionDetailAgentFallback(
+                hoveredActionId: 0,
+                hoveredItemId: 23167));
+        Assert.True(
+            Echoglossian.ShouldUseActionDetailAgentFallback(
+                hoveredActionId: 0,
+                hoveredItemId: 0));
+    }
+
+    /// <summary>
+    ///     Ensures ItemDetail does not reuse a stale agent-backed item id while
+    ///     a live action hover is active.
+    /// </summary>
+    [Fact]
+    public void ShouldUseItemDetailAgentFallback_BlocksFallbackDuringActionHover()
+    {
+        Assert.False(
+            Echoglossian.ShouldUseItemDetailAgentFallback(
+                hoveredItemId: 0,
+                hoveredActionId: 15997));
+        Assert.True(
+            Echoglossian.ShouldUseItemDetailAgentFallback(
+                hoveredItemId: 0,
+                hoveredActionId: 0));
     }
 }

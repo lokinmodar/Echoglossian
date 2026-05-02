@@ -3,12 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Globalization;
-using System.Reflection;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ActionSheet = Lumina.Excel.Sheets.Action;
 using ActionTransientSheet = Lumina.Excel.Sheets.ActionTransient;
-using ClassJobSheet = Lumina.Excel.Sheets.ClassJob;
 using Lumina.Text.ReadOnly;
 
 namespace Echoglossian;
@@ -23,13 +20,12 @@ public unsafe partial class Echoglossian
 
     private static readonly TimeSpan ActionDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
+
     private static readonly TimeSpan ActionDetailOnDemandPrefetchCooldown =
         TimeSpan.FromSeconds(10);
 
-    private static readonly Dictionary<Type, Dictionary<string, PropertyInfo?>> ActionClassJobCategoryPropertyCache =
-        [];
-
     private readonly List<uint> actionDetailPrefetchQueue = [];
+
     private readonly Dictionary<string, DateTime> actionDetailOnDemandPrefetchUtcByScope =
         [];
 
@@ -54,12 +50,9 @@ public unsafe partial class Echoglossian
 
         this.actionDetailPrefetchLastTickUtc = DateTime.UtcNow;
 
-        if (!TryGetCurrentClassJobInfo(
-                out var currentClassJobId,
-                out var currentClassJobAbbreviation) ||
+        if (!TryGetCurrentClassJobId(out var currentClassJobId) ||
             !TryCollectCurrentClassJobActionIds(
                 currentClassJobId,
-                currentClassJobAbbreviation,
                 out var actionIds))
         {
             this.ClearActionDetailPrefetchState();
@@ -384,12 +377,10 @@ public unsafe partial class Echoglossian
     ///     Tries to collect the current class/job action ids from canonical sheets.
     /// </summary>
     /// <param name="currentClassJobId">The current class-job identifier.</param>
-    /// <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
     /// <param name="actionIds">The collected action ids.</param>
     /// <returns>True when action ids were collected successfully.</returns>
     private static bool TryCollectCurrentClassJobActionIds(
         byte currentClassJobId,
-        string currentClassJobAbbreviation,
         out List<uint> actionIds)
     {
         actionIds = [];
@@ -414,9 +405,9 @@ public unsafe partial class Echoglossian
 
             var matchesClassJob = actionRow.ClassJob.RowId == currentClassJobId;
             var matchesCategory =
-                DoesActionCategoryMatchCurrentJob(
+                ClassJobCategorySheetHelper.HasClassJob(
                     actionRow.ClassJobCategory.ValueNullable,
-                    currentClassJobAbbreviation);
+                    currentClassJobId);
             if (!matchesClassJob && !matchesCategory)
             {
                 continue;
@@ -462,11 +453,13 @@ public unsafe partial class Echoglossian
         {
             ActionId = actionRow.RowId,
             IconId = actionRow.Icon,
-            ActionCategoryId = actionRow.ActionCategory.RowId,
-            ClassJobId = actionRow.ClassJob.RowId != 0
-                ? actionRow.ClassJob.RowId
-                : currentClassJobId,
-            ClassJobCategoryId = actionRow.ClassJobCategory.RowId,
+            ActionCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                actionRow.ActionCategory.RowId),
+            ClassJobId = SheetRowIdNormalizationHelper.NormalizeWithFallback(
+                actionRow.ClassJob.RowId,
+                currentClassJobId),
+            ClassJobCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                actionRow.ClassJobCategory.RowId),
             Name = actionRow.Name.ExtractText(),
             Description = description,
         };
@@ -502,17 +495,13 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
-    ///     Tries to resolve the current class/job id and abbreviation.
+    ///     Tries to resolve the current class/job id.
     /// </summary>
     /// <param name="currentClassJobId">The current class/job id.</param>
-    /// <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
     /// <returns>True when the current class/job was resolved.</returns>
-    private static bool TryGetCurrentClassJobInfo(
-        out byte currentClassJobId,
-        out string currentClassJobAbbreviation)
+    private static bool TryGetCurrentClassJobId(out byte currentClassJobId)
     {
         currentClassJobId = 0;
-        currentClassJobAbbreviation = string.Empty;
 
         var playerState = PlayerState.Instance();
         if (playerState == null || playerState->CurrentClassJobId == 0)
@@ -520,66 +509,7 @@ public unsafe partial class Echoglossian
             return false;
         }
 
-        var classJobSheet =
-            DManager.GetExcelSheet<ClassJobSheet>(ClientStateInterface.ClientLanguage);
-        if (classJobSheet == null ||
-            !classJobSheet.TryGetRow(playerState->CurrentClassJobId, out var classJobRow))
-        {
-            return false;
-        }
-
         currentClassJobId = playerState->CurrentClassJobId;
-        currentClassJobAbbreviation = classJobRow.Abbreviation.ExtractText()
-            .Trim()
-            .ToUpperInvariant();
-        return !string.IsNullOrWhiteSpace(currentClassJobAbbreviation);
-    }
-
-    /// <summary>
-    ///     Determines whether an action class-job-category includes the current job.
-    /// </summary>
-    /// <param name="classJobCategory">The action class-job-category row.</param>
-    /// <param name="abbreviation">The current class/job abbreviation.</param>
-    /// <returns>True when the category contains the current job.</returns>
-    private static bool DoesActionCategoryMatchCurrentJob(
-        object? classJobCategory,
-        string abbreviation)
-    {
-        if (classJobCategory == null || string.IsNullOrWhiteSpace(abbreviation))
-        {
-            return false;
-        }
-
-        var categoryType = classJobCategory.GetType();
-        if (!ActionClassJobCategoryPropertyCache.TryGetValue(
-                categoryType,
-                out var propertyMap))
-        {
-            propertyMap = new Dictionary<string, PropertyInfo?>(
-                StringComparer.OrdinalIgnoreCase);
-            foreach (var jobAbbreviation in new[]
-                     {
-                         "GLA", "PGL", "MRD", "LNC", "ARC", "CNJ", "THM",
-                         "PLD", "MNK", "WAR", "DRG", "BRD", "WHM", "BLM",
-                         "ACN", "SMN", "SCH", "ROG", "NIN", "MCH", "DRK",
-                         "AST", "SAM", "RDM", "BLU", "GNB", "DNC", "RPR",
-                         "SGE", "VPR", "PCT",
-                     })
-            {
-                propertyMap[jobAbbreviation] = categoryType.GetProperty(
-                    jobAbbreviation,
-                    BindingFlags.Public | BindingFlags.Instance);
-            }
-
-            ActionClassJobCategoryPropertyCache[categoryType] = propertyMap;
-        }
-
-        if (!propertyMap.TryGetValue(abbreviation, out var property) ||
-            property == null)
-        {
-            return false;
-        }
-
-        return property.GetValue(classJobCategory) is bool matches && matches;
+        return true;
     }
 }

@@ -34,25 +34,34 @@ public static class ItemTooltipPersistenceHelper
     {
         ArgumentNullException.ThrowIfNull(originalPayload);
 
+        var normalizedOriginalPayload = NormalizePayload(originalPayload);
+        var normalizedTranslatedPayload = translatedPayload != null
+            ? NormalizePayload(translatedPayload)
+            : null;
+
         return new ItemTooltip
         {
-            ItemId = originalPayload.ItemId,
-            IconId = originalPayload.IconId,
-            ItemActionId = originalPayload.ItemActionId,
-            ItemUiCategoryId = originalPayload.ItemUiCategoryId,
-            ClassJobCategoryId = originalPayload.ClassJobCategoryId,
-            ItemName = originalPayload.Name,
-            ItemDescription = originalPayload.Description,
-            OriginalTooltipText = originalPayload.BuildOriginalTooltipText(),
+            ItemId = normalizedOriginalPayload.ItemId,
+            IconId = normalizedOriginalPayload.IconId,
+            ItemActionId = normalizedOriginalPayload.ItemActionId,
+            ItemUiCategoryId = normalizedOriginalPayload.ItemUiCategoryId,
+            ClassJobCategoryId = normalizedOriginalPayload.ClassJobCategoryId,
+            ItemName = normalizedOriginalPayload.Name,
+            ItemDescription = normalizedOriginalPayload.Description,
+            OriginalTooltipText = normalizedOriginalPayload.BuildOriginalTooltipText(),
             OriginalLang = originalLang,
-            TranslatedItemName = translatedPayload?.TranslatedName,
-            TranslatedItemDescription = translatedPayload?.TranslatedDescription,
-            TranslatedTooltipText = translatedPayload?.BuildTranslatedTooltipText(),
+            TranslatedItemName = normalizedTranslatedPayload?.TranslatedName,
+            TranslatedItemDescription =
+                normalizedTranslatedPayload?.TranslatedDescription,
+            TranslatedTooltipText =
+                normalizedTranslatedPayload?.BuildTranslatedTooltipText(),
             TranslationLang = translationLang,
             TranslationEngine = translationEngine,
             GameVersion = gameVersion,
-            SourceContentHash = originalPayload.ComputeSourceContentHash(),
-            CanonicalPayloadAsText = (translatedPayload ?? originalPayload).Serialize(),
+            SourceContentHash = normalizedOriginalPayload.ComputeSourceContentHash(),
+            CanonicalPayloadAsText =
+                (normalizedTranslatedPayload ?? normalizedOriginalPayload)
+                .Serialize(),
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
         };
@@ -220,5 +229,32 @@ public static class ItemTooltipPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Normalizes canonical item payload identity before persistence so
+    ///     unresolved sheet sentinels do not leak into the DB or source hash.
+    /// </summary>
+    /// <param name="payload">The payload to normalize.</param>
+    /// <returns>The normalized payload copy.</returns>
+    private static ItemTooltipCanonicalPayload NormalizePayload(
+        ItemTooltipCanonicalPayload payload)
+    {
+        return new ItemTooltipCanonicalPayload
+        {
+            SchemaVersion = payload.SchemaVersion,
+            ItemId = payload.ItemId,
+            IconId = payload.IconId,
+            ItemActionId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ItemActionId),
+            ItemUiCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ItemUiCategoryId),
+            ClassJobCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ClassJobCategoryId),
+            Name = payload.Name,
+            Description = payload.Description,
+            TranslatedName = payload.TranslatedName,
+            TranslatedDescription = payload.TranslatedDescription,
+        };
     }
 }

@@ -2822,12 +2822,11 @@
             <param name="payload">The canonical payload.</param>
             <returns>The stable queue key.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobActionIds(System.Byte,System.String,System.Collections.Generic.List{System.UInt32}@)">
+        <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobActionIds(System.Byte,System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect the current class/job action ids from canonical sheets.
             </summary>
             <param name="currentClassJobId">The current class-job identifier.</param>
-            <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
             <param name="actionIds">The collected action ids.</param>
             <returns>True when action ids were collected successfully.</returns>
         </member>
@@ -2848,21 +2847,12 @@
             <param name="text">The raw sheet text.</param>
             <returns>The evaluated visible text.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryGetCurrentClassJobInfo(System.Byte@,System.String@)">
+        <member name="M:Echoglossian.Echoglossian.TryGetCurrentClassJobId(System.Byte@)">
             <summary>
-                Tries to resolve the current class/job id and abbreviation.
+                Tries to resolve the current class/job id.
             </summary>
             <param name="currentClassJobId">The current class/job id.</param>
-            <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
             <returns>True when the current class/job was resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DoesActionCategoryMatchCurrentJob(System.Object,System.String)">
-            <summary>
-                Determines whether an action class-job-category includes the current job.
-            </summary>
-            <param name="classJobCategory">The action class-job-category row.</param>
-            <param name="abbreviation">The current class/job abbreviation.</param>
-            <returns>True when the category contains the current job.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.UpdateStructuredTooltipUiRuntime">
             <summary>
@@ -3130,7 +3120,17 @@
             <param name="translatedDescription">The translated description text.</param>
             <param name="runtimeState">The active native-runtime state.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryEnsureStructuredTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+        <member name="M:Echoglossian.Echoglossian.RestoreStructuredTooltipOriginalsIfContentChanged(Echoglossian.Echoglossian.StructuredTooltipNativeState@,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32)">
+            <summary>
+                Restores prior native mutations immediately when the visible tooltip
+                surface transitions to different logical content on the same addon.
+            </summary>
+            <param name="runtimeState">The active native-runtime state.</param>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="contentId">The logical content identifier.</param>
+            <param name="contentKind">The logical content kind.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryEnsureStructuredTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
             <summary>
                 Ensures the native runtime has the best currently available tooltip
                 node addresses for the active content, enriching partial state after
@@ -3141,6 +3141,9 @@
             <param name="contentKind">The logical content kind.</param>
             <param name="originalName">The canonical original name.</param>
             <param name="originalDescription">The canonical original description.</param>
+            <param name="translatedName">
+                The translated live name, if the tooltip was already mutated.
+            </param>
             <param name="runtimeState">The current runtime state to enrich.</param>
             <returns><see langword="true" /> when at least one relevant node is available.</returns>
         </member>
@@ -3172,7 +3175,7 @@
             <param name="runtimeState">The runtime state to restore.</param>
             <param name="addon">The current visible tooltip addon, if any.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+        <member name="M:Echoglossian.Echoglossian.TryResolveTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
             <summary>
                 Tries to resolve tooltip text-node addresses that match the canonical name and description.
             </summary>
@@ -3181,6 +3184,9 @@
             <param name="contentKind">The logical content kind.</param>
             <param name="originalName">The canonical original name.</param>
             <param name="originalDescription">The canonical original description.</param>
+            <param name="translatedName">
+                The translated live name, if the tooltip was already mutated.
+            </param>
             <param name="runtimeState">The resolved node-address map.</param>
             <returns><see langword="true" /> when at least one relevant node was resolved.</returns>
         </member>
@@ -3200,6 +3206,30 @@
             <param name="addon">The typed <c>ItemDetail</c> addon.</param>
             <param name="candidates">Receives collected candidates.</param>
             <param name="seenNodeAddresses">Receives deduplicated node addresses.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.HasStructuredTooltipLiveNameMatch(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.String,System.String)">
+            <summary>
+                Gets whether the currently visible tooltip addon already exposes a
+                live name that matches the canonical payload being processed.
+            </summary>
+            <param name="addon">The visible tooltip addon.</param>
+            <param name="contentKind">The logical content kind.</param>
+            <param name="originalName">The canonical original name.</param>
+            <param name="translatedName">The translated live name, if already applied.</param>
+            <returns><see langword="true" /> when the live name matches.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindStructuredTooltipNameNodeCandidate(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.String,System.String,System.IntPtr,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
+            <summary>
+                Tries to resolve the live tooltip name node using strict normalized
+                equality against either the original or already-applied translated
+                name.
+            </summary>
+            <param name="candidates">The candidate nodes.</param>
+            <param name="originalName">The canonical original name.</param>
+            <param name="translatedName">The translated live name, if any.</param>
+            <param name="excludedNodeAddress">One node address to exclude.</param>
+            <param name="bestCandidate">The best matching candidate, if any.</param>
+            <returns><see langword="true" /> when a name candidate was found.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryAddStructuredTooltipTextNodeCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.List{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.Collections.Generic.HashSet{System.IntPtr},System.Boolean)">
             <summary>
@@ -3229,6 +3259,52 @@
             <param name="bestCandidate">The best matching candidate, if any.</param>
             <returns><see langword="true" /> when a suitable candidate was found.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipExactTextNodeCandidate(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.String,System.IntPtr,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
+            <summary>
+                Tries to find the best live text-node candidate for a canonical
+                structured-tooltip value using strict normalized equality only.
+            </summary>
+            <param name="candidates">The candidate nodes.</param>
+            <param name="canonicalText">The canonical source text.</param>
+            <param name="excludedNodeAddress">One node address to exclude.</param>
+            <param name="bestCandidate">The best exact-match candidate, if any.</param>
+            <returns><see langword="true" /> when an exact-match candidate was found.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipDescriptionNodeCandidate(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.UInt32,System.String,System.IntPtr,System.IntPtr,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
+            <summary>
+                Tries to find the best description candidate, preferring nodes that
+                appear after the resolved name node for ActionDetail/Trait surfaces.
+            </summary>
+            <param name="candidates">The candidate nodes.</param>
+            <param name="contentKind">The logical content kind.</param>
+            <param name="canonicalText">The canonical description text.</param>
+            <param name="excludedNodeAddress">One node address to exclude.</param>
+            <param name="nameNodeAddress">The already-resolved name node address.</param>
+            <param name="bestCandidate">The best matching candidate, if any.</param>
+            <returns><see langword="true" /> when a description candidate was found.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FindStructuredTooltipCandidateIndex(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.IntPtr)">
+            <summary>
+                Gets the index of one candidate node address within the collected
+                tooltip candidate list.
+            </summary>
+            <param name="candidates">The candidate nodes.</param>
+            <param name="nodeAddress">The node address to locate.</param>
+            <returns>The candidate index, or <c>-1</c> when not present.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipTextNodeCandidateInRange(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.String,System.IntPtr,System.Int32,System.Int32,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
+            <summary>
+                Tries to find the best matching text-node candidate inside one slice
+                of the collected tooltip tree order.
+            </summary>
+            <param name="candidates">The candidate nodes.</param>
+            <param name="canonicalText">The canonical source text.</param>
+            <param name="excludedNodeAddress">One node address to exclude.</param>
+            <param name="startIndex">The inclusive start index.</param>
+            <param name="endIndex">The exclusive end index.</param>
+            <param name="bestCandidate">The best matching candidate, if any.</param>
+            <returns><see langword="true" /> when a candidate was found in range.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.NormalizeStructuredTooltipLookupText(System.String)">
             <summary>
                 Normalizes one structured-tooltip text value so live wrapped text and
@@ -3245,6 +3321,42 @@
             <param name="visibleText">The visible live text.</param>
             <param name="canonicalText">The canonical source text.</param>
             <returns>The match score, or zero when the texts do not match.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipExactTextMatch(System.String,System.String)">
+            <summary>
+                Gets whether two structured-tooltip text values match exactly after
+                normalization.
+            </summary>
+            <param name="visibleText">The visible live text.</param>
+            <param name="canonicalText">The canonical source text.</param>
+            <returns><see langword="true" /> when the texts match exactly.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetStructuredTooltipSafeRestoreText(System.String,System.String)">
+            <summary>
+                Gets the safest restore text for one structured-tooltip node,
+                preserving the live original text only when it still matches the
+                canonical payload exactly after normalization.
+            </summary>
+            <param name="visibleText">The visible live text captured from the node.</param>
+            <param name="canonicalText">The canonical original payload text.</param>
+            <returns>The safest text to restore into the node later.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipExactNormalizedTextMatch(System.String,System.String)">
+            <summary>
+                Gets whether two already-normalized structured-tooltip text values
+                match exactly.
+            </summary>
+            <param name="normalizedVisibleText">The normalized visible live text.</param>
+            <param name="normalizedCanonicalText">The normalized canonical text.</param>
+            <returns><see langword="true" /> when the texts match exactly.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipSeparatorCategory(System.Globalization.UnicodeCategory)">
+            <summary>
+                Gets whether one Unicode category should behave like a separator when
+                normalizing structured-tooltip text for live matching.
+            </summary>
+            <param name="category">The Unicode category to inspect.</param>
+            <returns><see langword="true" /> when the category should collapse to space.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.IsTraitHoverActionKind(Dalamud.Game.Gui.DetailKind)">
             <summary>
@@ -3287,6 +3399,15 @@
             </summary>
             <param name="textNode">The text node to read.</param>
             <returns>The resolved text, or <see cref="F:System.String.Empty" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DoesStructuredTooltipNodeMatchTarget(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <summary>
+                Gets whether one live tooltip text node already exposes the desired
+                target text after normalization.
+            </summary>
+            <param name="textNode">The live text node.</param>
+            <param name="targetText">The desired target text.</param>
+            <returns><see langword="true" /> when the live node already matches.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ClearStructuredTooltipOverlay(System.String,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String,System.UInt32,System.UInt32)">
             <summary>
@@ -3358,6 +3479,24 @@
             </summary>
             <param name="hoveredItemId">The raw hovered item identifier.</param>
             <returns>The normalized base item row identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldUseActionDetailAgentFallback(System.UInt32,System.UInt32)">
+            <summary>
+                Gets whether ActionDetail may safely fall back to the agent-backed
+                action id when direct hovered-action state is empty.
+            </summary>
+            <param name="hoveredActionId">The direct hovered action identifier.</param>
+            <param name="hoveredItemId">The direct hovered item identifier.</param>
+            <returns><see langword="true" /> when agent fallback is safe.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldUseItemDetailAgentFallback(System.UInt32,System.UInt32)">
+            <summary>
+                Gets whether ItemDetail may safely fall back to the agent-backed
+                item id when direct hovered-item state is empty.
+            </summary>
+            <param name="hoveredItemId">The direct hovered item identifier.</param>
+            <param name="hoveredActionId">The direct hovered action identifier.</param>
+            <returns><see langword="true" /> when agent fallback is safe.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ComputeStructuredTooltipDiagnosticHash(System.String)">
             <summary>
@@ -4642,12 +4781,11 @@
             <param name="payload">The canonical payload.</param>
             <returns>The stable queue key.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobTraitIds(System.Byte,System.String,System.Collections.Generic.List{System.UInt32}@)">
+        <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobTraitIds(System.Byte,System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect the current class/job trait ids from canonical sheets.
             </summary>
             <param name="currentClassJobId">The current class-job identifier.</param>
-            <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
             <param name="traitIds">The collected trait ids.</param>
             <returns>True when trait ids were collected successfully.</returns>
         </member>
@@ -5073,6 +5211,14 @@
             <param name="fallback">The existing value.</param>
             <returns>The chosen string.</returns>
         </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Normalizes canonical action payload identity before persistence so
+                unresolved sheet sentinels do not leak into the DB or source hash.
+            </summary>
+            <param name="payload">The payload to normalize.</param>
+            <returns>The normalized payload copy.</returns>
+        </member>
         <member name="T:Echoglossian.GameWindowPersistenceHelper">
             <summary>
                 Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows without requiring the full plugin runtime.
@@ -5184,6 +5330,14 @@
             <param name="preferred">The candidate incoming value.</param>
             <param name="fallback">The existing value.</param>
             <returns>The chosen string.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Normalizes canonical item payload identity before persistence so
+                unresolved sheet sentinels do not leak into the DB or source hash.
+            </summary>
+            <param name="payload">The payload to normalize.</param>
+            <returns>The normalized payload copy.</returns>
         </member>
         <member name="T:Echoglossian.ReferenceTextPersistenceHelper">
             <summary>
@@ -5393,6 +5547,14 @@
             <param name="preferred">The candidate incoming value.</param>
             <param name="fallback">The existing value.</param>
             <returns>The chosen string.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
+            <summary>
+                Normalizes canonical trait payload identity before persistence so
+                unresolved sheet sentinels do not leak into the DB or source hash.
+            </summary>
+            <param name="payload">The payload to normalize.</param>
+            <returns>The normalized payload copy.</returns>
         </member>
         <member name="T:Echoglossian.DBHelpers.TranslationFailurePersistenceHelper">
             <summary>
@@ -16033,6 +16195,24 @@
                 Frees the previously allocated buffer.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.ClassJobCategorySheetHelper">
+            <summary>
+                Reads class-job-category membership directly from sheet-backed row data
+                so newly added jobs do not depend on generated property names.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ClassJobCategorySheetHelper.HasClassJob(System.Nullable{Lumina.Excel.Sheets.ClassJobCategory},System.UInt32)">
+            <summary>
+                Returns whether the provided class-job-category row contains the
+                specified class/job identifier.
+            </summary>
+            <param name="category">The class-job-category row.</param>
+            <param name="classJobId">The class/job row identifier.</param>
+            <returns>
+                <see langword="true" /> when the category includes the requested
+                class/job; otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.DbFirstPayloadRecoveryHelper">
             <summary>
                 Recovers canonical original payloads when a live addon surface is
@@ -17022,6 +17202,40 @@
             </summary>
             <param name="serializedPayload">The serialized payload.</param>
             <returns>The deserialized payload, or <see langword="null" />.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.SheetRowIdNormalizationHelper">
+            <summary>
+                Normalizes sheet-backed row identifiers before they become canonical
+                runtime or persistence identity.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.SheetRowIdNormalizationHelper.IsMeaningfulRowId(System.UInt32)">
+            <summary>
+                Returns whether the provided row identifier represents one concrete
+                sheet row.
+            </summary>
+            <param name="rowId">The raw sheet row identifier.</param>
+            <returns>
+                <see langword="true" /> when the row identifier represents one real
+                row; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.SheetRowIdNormalizationHelper.NormalizeOrZero(System.UInt32)">
+            <summary>
+                Normalizes one raw sheet row identifier to zero when the source
+                sheet exposes its empty sentinel.
+            </summary>
+            <param name="rowId">The raw sheet row identifier.</param>
+            <returns>The normalized row identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.SheetRowIdNormalizationHelper.NormalizeWithFallback(System.UInt32,System.UInt32)">
+            <summary>
+                Normalizes one raw scoped row identifier and falls back to one
+                caller-supplied identity when the sheet value is empty.
+            </summary>
+            <param name="rowId">The raw sheet row identifier.</param>
+            <param name="fallbackRowId">The fallback identity.</param>
+            <returns>The normalized resolved row identifier.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload">
             <summary>

@@ -198,16 +198,29 @@ public class MigrationCompatibilityTests
             )
             """);
 
-        context.GameWindow.Add(new GameWindow(
-            windowAddonName: "JournalDetail",
-            originalWindowStrings: "{\"atkValues\":{\"1\":\"Quest\"}}",
-            originalWindowStringsLang: "en",
-            translatedWindowStrings: "{\"atkValues\":{\"1\":\"Missao\"}}",
-            translationLang: "pt",
-            translationEngine: 1,
-            gameVersion: "7.2",
-            createdDate: now,
-            updatedDate: now));
+        context.Database.ExecuteSqlInterpolated($"""
+            INSERT INTO gamewindows (
+                WindowAddonName,
+                OriginalWindowStrings,
+                OriginalWindowStringsLang,
+                TranslatedWindowStrings,
+                TranslationLang,
+                TranslationEngine,
+                GameVersion,
+                CreatedDate,
+                UpdatedDate
+            ) VALUES (
+                {"JournalDetail"},
+                {"{\"atkValues\":{\"1\":\"Quest\"}}"},
+                {"en"},
+                {"{\"atkValues\":{\"1\":\"Missao\"}}"},
+                {"pt"},
+                {1},
+                {"7.2"},
+                {now},
+                {now}
+            )
+            """);
 
         context.Database.ExecuteSqlInterpolated($"""
             INSERT INTO stringarraydatas (

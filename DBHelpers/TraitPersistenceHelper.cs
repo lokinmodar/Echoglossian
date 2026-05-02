@@ -34,24 +34,33 @@ public static class TraitPersistenceHelper
     {
         ArgumentNullException.ThrowIfNull(originalPayload);
 
+        var normalizedOriginalPayload = NormalizePayload(originalPayload);
+        var normalizedTranslatedPayload = translatedPayload != null
+            ? NormalizePayload(translatedPayload)
+            : null;
+
         return new Trait
         {
-            TraitId = originalPayload.TraitId,
-            IconId = originalPayload.IconId,
-            ClassJobId = originalPayload.ClassJobId,
-            ClassJobCategoryId = originalPayload.ClassJobCategoryId,
-            TraitName = originalPayload.Name,
-            TraitDescription = originalPayload.Description,
-            OriginalTooltipText = originalPayload.BuildOriginalTooltipText(),
+            TraitId = normalizedOriginalPayload.TraitId,
+            IconId = normalizedOriginalPayload.IconId,
+            ClassJobId = normalizedOriginalPayload.ClassJobId,
+            ClassJobCategoryId = normalizedOriginalPayload.ClassJobCategoryId,
+            TraitName = normalizedOriginalPayload.Name,
+            TraitDescription = normalizedOriginalPayload.Description,
+            OriginalTooltipText = normalizedOriginalPayload.BuildOriginalTooltipText(),
             OriginalLang = originalLang,
-            TranslatedTraitName = translatedPayload?.TranslatedName,
-            TranslatedTraitDescription = translatedPayload?.TranslatedDescription,
-            TranslatedTooltipText = translatedPayload?.BuildTranslatedTooltipText(),
+            TranslatedTraitName = normalizedTranslatedPayload?.TranslatedName,
+            TranslatedTraitDescription =
+                normalizedTranslatedPayload?.TranslatedDescription,
+            TranslatedTooltipText =
+                normalizedTranslatedPayload?.BuildTranslatedTooltipText(),
             TranslationLang = translationLang,
             TranslationEngine = translationEngine,
             GameVersion = gameVersion,
-            SourceContentHash = originalPayload.ComputeSourceContentHash(),
-            CanonicalPayloadAsText = (translatedPayload ?? originalPayload).Serialize(),
+            SourceContentHash = normalizedOriginalPayload.ComputeSourceContentHash(),
+            CanonicalPayloadAsText =
+                (normalizedTranslatedPayload ?? normalizedOriginalPayload)
+                .Serialize(),
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
         };
@@ -215,5 +224,30 @@ public static class TraitPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Normalizes canonical trait payload identity before persistence so
+    ///     unresolved sheet sentinels do not leak into the DB or source hash.
+    /// </summary>
+    /// <param name="payload">The payload to normalize.</param>
+    /// <returns>The normalized payload copy.</returns>
+    private static TraitCanonicalPayload NormalizePayload(
+        TraitCanonicalPayload payload)
+    {
+        return new TraitCanonicalPayload
+        {
+            SchemaVersion = payload.SchemaVersion,
+            TraitId = payload.TraitId,
+            IconId = payload.IconId,
+            ClassJobId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ClassJobId),
+            ClassJobCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ClassJobCategoryId),
+            Name = payload.Name,
+            Description = payload.Description,
+            TranslatedName = payload.TranslatedName,
+            TranslatedDescription = payload.TranslatedDescription,
+        };
     }
 }

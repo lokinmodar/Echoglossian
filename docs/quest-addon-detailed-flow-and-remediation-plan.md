@@ -20,6 +20,16 @@ This document is intentionally more operational than
 `quest-addon-translation-runtime-flow.md`. That document explains the runtime
 flow. This document explains the current flow **plus the remediation plan**.
 
+## Status Update - 2026-05-01
+
+`JournalDetail` is currently in a good operational state for the active
+stabilization branch and is no longer the main refactor focus.
+
+Keep the current `JournalDetail` runtime as-is unless a concrete regression is
+observed. The active tooltip/runtime investigation has moved to
+`ActionDetail`, `ItemDetail`, and the related tooltip identity and overlay
+coordination issues.
+
 ---
 
 ## Current Shared Quest Substrate

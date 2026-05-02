@@ -632,8 +632,13 @@ Handler-local runtime caches should **not** replace:
 
 ### Current Journal mode rule
 
-For the currently active `Journal` / `JournalDetail` stabilization pass, hover
-tooltips must now obey a strict readiness contract:
+The `Journal` / `JournalDetail` stabilization pass is currently in a good
+state on this branch. The readiness rule below remains the intended contract,
+but it is no longer the active refactor front. Current tooltip-runtime work is
+focused on `ActionDetail` / `ItemDetail`.
+
+For the stabilized `Journal` / `JournalDetail` path, hover tooltips must obey
+a strict readiness contract:
 
 - native-only mode: no hover tooltip
 - tooltip-translation mode: no tooltip until translated payload is ready

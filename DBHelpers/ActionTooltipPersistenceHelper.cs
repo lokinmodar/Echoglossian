@@ -34,25 +34,34 @@ public static class ActionTooltipPersistenceHelper
     {
         ArgumentNullException.ThrowIfNull(originalPayload);
 
+        var normalizedOriginalPayload = NormalizePayload(originalPayload);
+        var normalizedTranslatedPayload = translatedPayload != null
+            ? NormalizePayload(translatedPayload)
+            : null;
+
         return new ActionTooltip
         {
-            ActionId = originalPayload.ActionId,
-            IconId = originalPayload.IconId,
-            ActionCategoryId = originalPayload.ActionCategoryId,
-            ClassJobId = originalPayload.ClassJobId,
-            ClassJobCategoryId = originalPayload.ClassJobCategoryId,
-            ActionName = originalPayload.Name,
-            ActionDescription = originalPayload.Description,
-            OriginalTooltipText = originalPayload.BuildOriginalTooltipText(),
+            ActionId = normalizedOriginalPayload.ActionId,
+            IconId = normalizedOriginalPayload.IconId,
+            ActionCategoryId = normalizedOriginalPayload.ActionCategoryId,
+            ClassJobId = normalizedOriginalPayload.ClassJobId,
+            ClassJobCategoryId = normalizedOriginalPayload.ClassJobCategoryId,
+            ActionName = normalizedOriginalPayload.Name,
+            ActionDescription = normalizedOriginalPayload.Description,
+            OriginalTooltipText = normalizedOriginalPayload.BuildOriginalTooltipText(),
             OriginalLang = originalLang,
-            TranslatedActionName = translatedPayload?.TranslatedName,
-            TranslatedActionDescription = translatedPayload?.TranslatedDescription,
-            TranslatedTooltipText = translatedPayload?.BuildTranslatedTooltipText(),
+            TranslatedActionName = normalizedTranslatedPayload?.TranslatedName,
+            TranslatedActionDescription =
+                normalizedTranslatedPayload?.TranslatedDescription,
+            TranslatedTooltipText =
+                normalizedTranslatedPayload?.BuildTranslatedTooltipText(),
             TranslationLang = translationLang,
             TranslationEngine = translationEngine,
             GameVersion = gameVersion,
-            SourceContentHash = originalPayload.ComputeSourceContentHash(),
-            CanonicalPayloadAsText = (translatedPayload ?? originalPayload).Serialize(),
+            SourceContentHash = normalizedOriginalPayload.ComputeSourceContentHash(),
+            CanonicalPayloadAsText =
+                (normalizedTranslatedPayload ?? normalizedOriginalPayload)
+                .Serialize(),
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
         };
@@ -220,5 +229,32 @@ public static class ActionTooltipPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Normalizes canonical action payload identity before persistence so
+    ///     unresolved sheet sentinels do not leak into the DB or source hash.
+    /// </summary>
+    /// <param name="payload">The payload to normalize.</param>
+    /// <returns>The normalized payload copy.</returns>
+    private static ActionTooltipCanonicalPayload NormalizePayload(
+        ActionTooltipCanonicalPayload payload)
+    {
+        return new ActionTooltipCanonicalPayload
+        {
+            SchemaVersion = payload.SchemaVersion,
+            ActionId = payload.ActionId,
+            IconId = payload.IconId,
+            ActionCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ActionCategoryId),
+            ClassJobId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ClassJobId),
+            ClassJobCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                payload.ClassJobCategoryId),
+            Name = payload.Name,
+            Description = payload.Description,
+            TranslatedName = payload.TranslatedName,
+            TranslatedDescription = payload.TranslatedDescription,
+        };
     }
 }

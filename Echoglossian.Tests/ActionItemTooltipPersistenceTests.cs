@@ -223,6 +223,50 @@ public class ActionItemTooltipPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures unresolved sheet sentinels do not leak into persisted action
+    ///     tooltip identity, source hashes, or canonical payload JSON.
+    /// </summary>
+    [Fact]
+    public void CreateCanonicalRow_ActionTooltip_NormalizesInvalidSheetIdentity()
+    {
+        var originalPayload = new ActionTooltipCanonicalPayload
+        {
+            ActionId = 7535,
+            IconId = 806,
+            ActionCategoryId = 4,
+            ClassJobId = uint.MaxValue,
+            ClassJobCategoryId = 113,
+            Name = "Reprisal",
+            Description = "Reduces damage dealt by nearby enemies by 10%.",
+        };
+        var normalizedPayload = new ActionTooltipCanonicalPayload
+        {
+            ActionId = 7535,
+            IconId = 806,
+            ActionCategoryId = 4,
+            ClassJobId = 0,
+            ClassJobCategoryId = 113,
+            Name = "Reprisal",
+            Description = "Reduces damage dealt by nearby enemies by 10%.",
+        };
+
+        var row = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+            "en",
+            "pt",
+            0,
+            "7.3",
+            originalPayload);
+        var serializedPayload = Assert.IsType<ActionTooltipCanonicalPayload>(
+            ActionTooltipCanonicalPayload.Deserialize(row.CanonicalPayloadAsText));
+
+        Assert.Equal((uint)0, row.ClassJobId);
+        Assert.Equal((uint)0, serializedPayload.ClassJobId);
+        Assert.Equal(
+            normalizedPayload.ComputeSourceContentHash(),
+            row.SourceContentHash);
+    }
+
+    /// <summary>
     ///     Ensures distinct item variants for the same item id are preserved
     ///     when their source payload hash differs.
     /// </summary>
@@ -427,6 +471,54 @@ public class ActionItemTooltipPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures unresolved sheet sentinels do not leak into persisted item
+    ///     tooltip identity, source hashes, or canonical payload JSON.
+    /// </summary>
+    [Fact]
+    public void CreateCanonicalRow_ItemTooltip_NormalizesInvalidSheetIdentity()
+    {
+        var originalPayload = new ItemTooltipCanonicalPayload
+        {
+            ItemId = 2000001,
+            IconId = 1234,
+            ItemActionId = uint.MaxValue,
+            ItemUiCategoryId = uint.MaxValue,
+            ClassJobCategoryId = uint.MaxValue,
+            Name = "Aether Compass",
+            Description = string.Empty,
+        };
+        var normalizedPayload = new ItemTooltipCanonicalPayload
+        {
+            ItemId = 2000001,
+            IconId = 1234,
+            ItemActionId = 0,
+            ItemUiCategoryId = 0,
+            ClassJobCategoryId = 0,
+            Name = "Aether Compass",
+            Description = string.Empty,
+        };
+
+        var row = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+            "en",
+            "pt",
+            0,
+            "7.3",
+            originalPayload);
+        var serializedPayload = Assert.IsType<ItemTooltipCanonicalPayload>(
+            ItemTooltipCanonicalPayload.Deserialize(row.CanonicalPayloadAsText));
+
+        Assert.Equal((uint)0, row.ItemActionId);
+        Assert.Equal((uint)0, row.ItemUiCategoryId);
+        Assert.Equal((uint)0, row.ClassJobCategoryId);
+        Assert.Equal((uint)0, serializedPayload.ItemActionId);
+        Assert.Equal((uint)0, serializedPayload.ItemUiCategoryId);
+        Assert.Equal((uint)0, serializedPayload.ClassJobCategoryId);
+        Assert.Equal(
+            normalizedPayload.ComputeSourceContentHash(),
+            row.SourceContentHash);
+    }
+
+    /// <summary>
     ///     Ensures distinct trait variants for the same trait id are preserved
     ///     when their source payload hash differs.
     /// </summary>
@@ -566,6 +658,50 @@ public class ActionItemTooltipPersistenceTests
         {
             TryDeleteDirectory(configDir);
         }
+    }
+
+    /// <summary>
+    ///     Ensures unresolved sheet sentinels do not leak into persisted trait
+    ///     identity, source hashes, or canonical payload JSON.
+    /// </summary>
+    [Fact]
+    public void CreateCanonicalRow_Trait_NormalizesInvalidSheetIdentity()
+    {
+        var originalPayload = new TraitCanonicalPayload
+        {
+            TraitId = 642,
+            IconId = 1,
+            ClassJobId = uint.MaxValue,
+            ClassJobCategoryId = uint.MaxValue,
+            Name = "Enhanced Second Wind",
+            Description = "Increases the healing potency of Second Wind to 800.",
+        };
+        var normalizedPayload = new TraitCanonicalPayload
+        {
+            TraitId = 642,
+            IconId = 1,
+            ClassJobId = 0,
+            ClassJobCategoryId = 0,
+            Name = "Enhanced Second Wind",
+            Description = "Increases the healing potency of Second Wind to 800.",
+        };
+
+        var row = TraitPersistenceHelper.CreateCanonicalRow(
+            "en",
+            "pt",
+            0,
+            "7.3",
+            originalPayload);
+        var serializedPayload = Assert.IsType<TraitCanonicalPayload>(
+            TraitCanonicalPayload.Deserialize(row.CanonicalPayloadAsText));
+
+        Assert.Equal((uint)0, row.ClassJobId);
+        Assert.Equal((uint)0, row.ClassJobCategoryId);
+        Assert.Equal((uint)0, serializedPayload.ClassJobId);
+        Assert.Equal((uint)0, serializedPayload.ClassJobCategoryId);
+        Assert.Equal(
+            normalizedPayload.ComputeSourceContentHash(),
+            row.SourceContentHash);
     }
 
     /// <summary>

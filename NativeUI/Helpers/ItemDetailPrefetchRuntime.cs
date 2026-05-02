@@ -568,9 +568,12 @@ public unsafe partial class Echoglossian
         {
             ItemId = itemRow.RowId,
             IconId = (uint)itemRow.Icon,
-            ItemActionId = itemRow.ItemAction.RowId,
-            ItemUiCategoryId = itemRow.ItemUICategory.RowId,
-            ClassJobCategoryId = itemRow.ClassJobCategory.RowId,
+            ItemActionId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                itemRow.ItemAction.RowId),
+            ItemUiCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                itemRow.ItemUICategory.RowId),
+            ClassJobCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                itemRow.ClassJobCategory.RowId),
             Name = itemRow.Name.ExtractText(),
             Description = itemRow.Description.ExtractText(),
         };
@@ -604,8 +607,10 @@ public unsafe partial class Echoglossian
         {
             ItemId = eventItemRow.RowId,
             IconId = eventItemRow.Icon,
-            ItemActionId = eventItemRow.Action.RowId,
-            ItemUiCategoryId = eventItemRow.Category.RowId,
+            ItemActionId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                eventItemRow.Action.RowId),
+            ItemUiCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                eventItemRow.Category.RowId),
             ClassJobCategoryId = 0,
             Name = eventItemRow.Name.ExtractText(),
             Description = string.Empty,
@@ -642,7 +647,8 @@ public unsafe partial class Echoglossian
         {
             ItemId = row.RowId,
             IconId = row.Icon,
-            ItemActionId = row.Action.RowId,
+            ItemActionId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                row.Action.RowId),
             ItemUiCategoryId = 0,
             ClassJobCategoryId = 0,
             Name = row.Name.ExtractText(),

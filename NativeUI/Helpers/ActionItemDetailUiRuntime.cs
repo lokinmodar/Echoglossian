@@ -29,6 +29,7 @@ public unsafe partial class Echoglossian
     private const uint StructuredTooltipContentKindAction = 1;
     private const uint StructuredTooltipContentKindTrait = 2;
     private const uint StructuredTooltipContentKindItem = 3;
+
     private static readonly AddonEvent[] StructuredTooltipLifecycleEvents =
     [
         AddonEvent.PreSetup,
@@ -45,10 +46,12 @@ public unsafe partial class Echoglossian
     private readonly DiagnosticTelemetryHelper structuredTooltipTelemetry = new(
         "StructuredDetailDiag",
         TimeSpan.FromSeconds(1));
+
     private readonly StructuredTooltipLifecycleState actionDetailLifecycleState = new(
         ActionDetailSurfaceName,
         "ActionDetail",
         "_ActionDetail");
+
     private readonly StructuredTooltipLifecycleState itemDetailLifecycleState = new(
         ItemDetailSurfaceName,
         "ItemDetail",
@@ -140,14 +143,17 @@ public unsafe partial class Echoglossian
         }
 
         var hoveredAction = GameGuiInterface.HoveredAction;
+        var hoveredItemId = (uint)GameGuiInterface.HoveredItem;
         var hoveredActionId = hoveredAction.ActionId != 0
             ? hoveredAction.ActionId
-            : this.GetActiveActionDetailId();
+            : ShouldUseActionDetailAgentFallback(
+                hoveredAction.ActionId,
+                hoveredItemId)
+                ? this.GetActiveActionDetailId()
+                : 0;
         var hoveredActionKind = hoveredAction.DetailKind;
         if (hoveredActionId == 0 ||
-            !TryGetCurrentClassJobInfo(
-                out var currentClassJobId,
-                out _))
+            !TryGetCurrentClassJobId(out var currentClassJobId))
         {
             this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
             this.LogStructuredTooltipState(
@@ -157,13 +163,17 @@ public unsafe partial class Echoglossian
                 0,
                 displayMode: null,
                 reason: hoveredActionId == 0
-                    ? "hovered-action-missing"
+                    ? hoveredItemId != 0
+                        ? "hovered-action-suppressed-by-item"
+                        : "hovered-action-missing"
                     : "classjob-missing");
             this.ClearStructuredTooltipOverlay(
                 ActionDetailSurfaceName,
                 this.actionDetailOverlay,
                 hoveredActionId == 0
-                    ? "hovered-action-missing"
+                    ? hoveredItemId != 0
+                        ? "hovered-action-suppressed-by-item"
+                        : "hovered-action-missing"
                     : "classjob-missing");
             return;
         }
@@ -227,12 +237,32 @@ public unsafe partial class Echoglossian
             this.LogStructuredTooltipState(
                 ActionDetailSurfaceName,
                 "lookup",
-                hoveredActionId,
+                originalTraitPayload.TraitId,
                 StructuredTooltipContentKindTrait,
                 displayMode,
                 reason: "translated-trait-payload-ready",
                 name: translatedTraitPayload.TranslatedName ?? originalTraitPayload.Name,
                 description: translatedTraitPayload.TranslatedDescription ?? originalTraitPayload.Description);
+            this.RestoreStructuredTooltipOriginalsIfContentChanged(
+                ref this.currentActionDetailState,
+                addon,
+                originalTraitPayload.TraitId,
+                StructuredTooltipContentKindTrait);
+            if (!this.HasStructuredTooltipLiveNameMatch(
+                    addon,
+                    StructuredTooltipContentKindTrait,
+                    originalTraitPayload.Name,
+                    translatedTraitPayload.TranslatedName))
+            {
+                this.ClearStructuredTooltipOverlay(
+                    ActionDetailSurfaceName,
+                    this.actionDetailOverlay,
+                    reason: "awaiting-live-name-match",
+                    contentId: originalTraitPayload.TraitId,
+                    contentKind: StructuredTooltipContentKindTrait);
+                return;
+            }
+
             if (useOverlayOnly)
             {
                 this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
@@ -254,7 +284,7 @@ public unsafe partial class Echoglossian
                     ActionDetailSurfaceName,
                     this.actionDetailOverlay,
                     addon,
-                    hoveredActionId,
+                    originalTraitPayload.TraitId,
                     StructuredTooltipContentKindTrait,
                     overlayText);
             }
@@ -264,7 +294,7 @@ public unsafe partial class Echoglossian
                     ActionDetailSurfaceName,
                     this.actionDetailOverlay,
                     reason: "overlay-disabled-by-display-mode",
-                    contentId: hoveredActionId,
+                    contentId: originalTraitPayload.TraitId,
                     contentKind: StructuredTooltipContentKindTrait);
             }
 
@@ -320,7 +350,7 @@ public unsafe partial class Echoglossian
             this.LogStructuredTooltipState(
                 ActionDetailSurfaceName,
                 "lookup",
-                hoveredActionId,
+                originalPayload.ActionId,
                 StructuredTooltipContentKindAction,
                 displayMode,
                 reason: "translated-action-payload-missing",
@@ -330,7 +360,7 @@ public unsafe partial class Echoglossian
                 ActionDetailSurfaceName,
                 this.actionDetailOverlay,
                 reason: "translated-action-payload-missing",
-                contentId: hoveredActionId,
+                contentId: originalPayload.ActionId,
                 contentKind: StructuredTooltipContentKindAction);
             return;
         }
@@ -338,12 +368,32 @@ public unsafe partial class Echoglossian
         this.LogStructuredTooltipState(
             ActionDetailSurfaceName,
             "lookup",
-            hoveredActionId,
+            originalPayload.ActionId,
             StructuredTooltipContentKindAction,
             displayMode,
             reason: "translated-action-payload-ready",
             name: translatedPayload.TranslatedName ?? originalPayload.Name,
             description: translatedPayload.TranslatedDescription ?? originalPayload.Description);
+        this.RestoreStructuredTooltipOriginalsIfContentChanged(
+            ref this.currentActionDetailState,
+            addon,
+            originalPayload.ActionId,
+            StructuredTooltipContentKindAction);
+        if (!this.HasStructuredTooltipLiveNameMatch(
+                addon,
+                StructuredTooltipContentKindAction,
+                originalPayload.Name,
+                translatedPayload.TranslatedName))
+        {
+            this.ClearStructuredTooltipOverlay(
+                ActionDetailSurfaceName,
+                this.actionDetailOverlay,
+                reason: "awaiting-live-name-match",
+                contentId: originalPayload.ActionId,
+                contentKind: StructuredTooltipContentKindAction);
+            return;
+        }
+
         if (useOverlayOnly)
         {
             this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
@@ -365,7 +415,7 @@ public unsafe partial class Echoglossian
                 ActionDetailSurfaceName,
                 this.actionDetailOverlay,
                 addon,
-                hoveredActionId,
+                originalPayload.ActionId,
                 StructuredTooltipContentKindAction,
                 overlayText);
         }
@@ -375,7 +425,7 @@ public unsafe partial class Echoglossian
                 ActionDetailSurfaceName,
                 this.actionDetailOverlay,
                 reason: "overlay-disabled-by-display-mode",
-                contentId: hoveredActionId,
+                contentId: originalPayload.ActionId,
                 contentKind: StructuredTooltipContentKindAction);
         }
     }
@@ -392,11 +442,16 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var hoveredItemId = this.GetActiveItemDetailId();
-        var hoveredItemKind = GameGuiInterface.HoveredAction.DetailKind;
-        if (hoveredItemId == 0)
+        var hoveredAction = GameGuiInterface.HoveredAction;
+        var hoveredActionId = hoveredAction.ActionId;
+        var hoveredItemKind = hoveredAction.DetailKind;
+        var hoveredItemId = (uint)GameGuiInterface.HoveredItem;
+        if (hoveredItemId == 0 &&
+            ShouldUseItemDetailAgentFallback(
+                hoveredItemId,
+                hoveredActionId))
         {
-            hoveredItemId = (uint)GameGuiInterface.HoveredItem;
+            hoveredItemId = this.GetActiveItemDetailId();
         }
 
         if (hoveredItemId == 0)
@@ -408,11 +463,15 @@ public unsafe partial class Echoglossian
                 0,
                 StructuredTooltipContentKindItem,
                 displayMode: null,
-                reason: "hovered-item-missing");
+                reason: hoveredActionId != 0
+                    ? "hovered-item-suppressed-by-action"
+                    : "hovered-item-missing");
             this.ClearStructuredTooltipOverlay(
                 ItemDetailSurfaceName,
                 this.itemDetailOverlay,
-                reason: "hovered-item-missing");
+                reason: hoveredActionId != 0
+                    ? "hovered-item-suppressed-by-action"
+                    : "hovered-item-missing");
             return;
         }
 
@@ -456,7 +515,7 @@ public unsafe partial class Echoglossian
             this.LogStructuredTooltipState(
                 ItemDetailSurfaceName,
                 "lookup",
-                hoveredItemId,
+                originalPayload.ItemId,
                 StructuredTooltipContentKindItem,
                 displayMode,
                 reason: "translated-item-payload-missing",
@@ -466,7 +525,7 @@ public unsafe partial class Echoglossian
                 ItemDetailSurfaceName,
                 this.itemDetailOverlay,
                 reason: "translated-item-payload-missing",
-                contentId: hoveredItemId,
+                contentId: originalPayload.ItemId,
                 contentKind: StructuredTooltipContentKindItem);
             return;
         }
@@ -474,12 +533,31 @@ public unsafe partial class Echoglossian
         this.LogStructuredTooltipState(
             ItemDetailSurfaceName,
             "lookup",
-            hoveredItemId,
+            originalPayload.ItemId,
             StructuredTooltipContentKindItem,
             displayMode,
             reason: "translated-item-payload-ready",
             name: translatedPayload.TranslatedName ?? originalPayload.Name,
             description: translatedPayload.TranslatedDescription ?? originalPayload.Description);
+        this.RestoreStructuredTooltipOriginalsIfContentChanged(
+            ref this.currentItemDetailState,
+            addon,
+            originalPayload.ItemId,
+            StructuredTooltipContentKindItem);
+        if (!this.HasStructuredTooltipLiveNameMatch(
+                addon,
+                StructuredTooltipContentKindItem,
+                originalPayload.Name,
+                translatedPayload.TranslatedName))
+        {
+            this.ClearStructuredTooltipOverlay(
+                ItemDetailSurfaceName,
+                this.itemDetailOverlay,
+                reason: "awaiting-live-name-match",
+                contentId: originalPayload.ItemId,
+                contentKind: StructuredTooltipContentKindItem);
+            return;
+        }
 
         if (useOverlayOnly)
         {
@@ -502,7 +580,7 @@ public unsafe partial class Echoglossian
                 ItemDetailSurfaceName,
                 this.itemDetailOverlay,
                 addon,
-                hoveredItemId,
+                originalPayload.ItemId,
                 StructuredTooltipContentKindItem,
                 overlayText);
         }
@@ -512,7 +590,7 @@ public unsafe partial class Echoglossian
                 ItemDetailSurfaceName,
                 this.itemDetailOverlay,
                 reason: "overlay-disabled-by-display-mode",
-                contentId: hoveredItemId,
+                contentId: originalPayload.ItemId,
                 contentKind: StructuredTooltipContentKindItem);
         }
     }
@@ -1384,6 +1462,7 @@ public unsafe partial class Echoglossian
                 contentKind,
                 originalName,
                 originalDescription,
+                translatedName,
                 ref runtimeState))
         {
             this.LogStructuredTooltipState(
@@ -1429,7 +1508,9 @@ public unsafe partial class Echoglossian
         {
             var nameNode = (AtkTextNode*)runtimeState.NameNodeAddress;
             if (nameNode != null &&
-                this.ReadTooltipTextNode(nameNode) != translatedName)
+                !this.DoesStructuredTooltipNodeMatchTarget(
+                    nameNode,
+                    translatedName))
             {
                 nameNode->SetText(translatedName);
                 nameApplied = true;
@@ -1445,7 +1526,9 @@ public unsafe partial class Echoglossian
         {
             var descriptionNode = (AtkTextNode*)runtimeState.DescriptionNodeAddress;
             if (descriptionNode != null &&
-                this.ReadTooltipTextNode(descriptionNode) != translatedDescription)
+                !this.DoesStructuredTooltipNodeMatchTarget(
+                    descriptionNode,
+                    translatedDescription))
             {
                 descriptionNode->SetText(translatedDescription);
                 descriptionApplied = true;
@@ -1472,6 +1555,33 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Restores prior native mutations immediately when the visible tooltip
+    ///     surface transitions to different logical content on the same addon.
+    /// </summary>
+    /// <param name="runtimeState">The active native-runtime state.</param>
+    /// <param name="addon">The visible tooltip addon.</param>
+    /// <param name="contentId">The logical content identifier.</param>
+    /// <param name="contentKind">The logical content kind.</param>
+    private void RestoreStructuredTooltipOriginalsIfContentChanged(
+        ref StructuredTooltipNativeState? runtimeState,
+        AtkUnitBase* addon,
+        uint contentId,
+        uint contentKind)
+    {
+        if (runtimeState == null)
+        {
+            return;
+        }
+
+        if ((nint)addon != runtimeState.AddonAddress ||
+            runtimeState.ContentId != contentId ||
+            runtimeState.ContentKind != contentKind)
+        {
+            this.RestoreStructuredTooltipOriginals(ref runtimeState, addon);
+        }
+    }
+
+    /// <summary>
     ///     Ensures the native runtime has the best currently available tooltip
     ///     node addresses for the active content, enriching partial state after
     ///     the addon finishes populating its late text nodes.
@@ -1481,6 +1591,9 @@ public unsafe partial class Echoglossian
     /// <param name="contentKind">The logical content kind.</param>
     /// <param name="originalName">The canonical original name.</param>
     /// <param name="originalDescription">The canonical original description.</param>
+    /// <param name="translatedName">
+    ///     The translated live name, if the tooltip was already mutated.
+    /// </param>
     /// <param name="runtimeState">The current runtime state to enrich.</param>
     /// <returns><see langword="true" /> when at least one relevant node is available.</returns>
     private bool TryEnsureStructuredTooltipNodeAddresses(
@@ -1489,6 +1602,7 @@ public unsafe partial class Echoglossian
         uint contentKind,
         string originalName,
         string originalDescription,
+        string translatedName,
         ref StructuredTooltipNativeState? runtimeState)
     {
         if (runtimeState == null)
@@ -1499,6 +1613,7 @@ public unsafe partial class Echoglossian
                     contentKind,
                     originalName,
                     originalDescription,
+                    translatedName,
                     out var resolvedRuntimeState))
             {
                 return false;
@@ -1529,31 +1644,38 @@ public unsafe partial class Echoglossian
         }
 
         if (needsNameNode &&
-            TryFindBestStructuredTooltipTextNodeCandidate(
+            this.TryFindStructuredTooltipNameNodeCandidate(
                 textNodeCandidates,
                 originalName,
+                translatedName,
                 runtimeState.DescriptionNodeAddress,
                 out var nameCandidate))
         {
             runtimeState = runtimeState with
             {
                 NameNodeAddress = nameCandidate.NodeAddress,
-                OriginalNameText = nameCandidate.VisibleText,
+                OriginalNameText = GetStructuredTooltipSafeRestoreText(
+                    nameCandidate.VisibleText,
+                    originalName),
                 NameNodeSupportsPlainTextMutation = nameCandidate.SupportsPlainTextMutation,
             };
         }
 
         if (needsDescriptionNode &&
-            TryFindBestStructuredTooltipTextNodeCandidate(
+            TryFindBestStructuredTooltipDescriptionNodeCandidate(
                 textNodeCandidates,
+                contentKind,
                 originalDescription,
+                runtimeState.NameNodeAddress,
                 runtimeState.NameNodeAddress,
                 out var descriptionCandidate))
         {
             runtimeState = runtimeState with
             {
                 DescriptionNodeAddress = descriptionCandidate.NodeAddress,
-                OriginalDescriptionText = descriptionCandidate.VisibleText,
+                OriginalDescriptionText = GetStructuredTooltipSafeRestoreText(
+                    descriptionCandidate.VisibleText,
+                    originalDescription),
                 DescriptionNodeSupportsPlainTextMutation = descriptionCandidate.SupportsPlainTextMutation,
             };
         }
@@ -1653,7 +1775,9 @@ public unsafe partial class Echoglossian
         {
             var nameNode = (AtkTextNode*)runtimeState.NameNodeAddress;
             if (nameNode != null &&
-                this.ReadTooltipTextNode(nameNode) != runtimeState.OriginalNameText)
+                !this.DoesStructuredTooltipNodeMatchTarget(
+                    nameNode,
+                    runtimeState.OriginalNameText))
             {
                 nameNode->SetText(runtimeState.OriginalNameText);
             }
@@ -1664,7 +1788,9 @@ public unsafe partial class Echoglossian
         {
             var descriptionNode = (AtkTextNode*)runtimeState.DescriptionNodeAddress;
             if (descriptionNode != null &&
-                this.ReadTooltipTextNode(descriptionNode) != runtimeState.OriginalDescriptionText)
+                !this.DoesStructuredTooltipNodeMatchTarget(
+                    descriptionNode,
+                    runtimeState.OriginalDescriptionText))
             {
                 descriptionNode->SetText(runtimeState.OriginalDescriptionText);
             }
@@ -1681,6 +1807,9 @@ public unsafe partial class Echoglossian
     /// <param name="contentKind">The logical content kind.</param>
     /// <param name="originalName">The canonical original name.</param>
     /// <param name="originalDescription">The canonical original description.</param>
+    /// <param name="translatedName">
+    ///     The translated live name, if the tooltip was already mutated.
+    /// </param>
     /// <param name="runtimeState">The resolved node-address map.</param>
     /// <returns><see langword="true" /> when at least one relevant node was resolved.</returns>
     private bool TryResolveTooltipNodeAddresses(
@@ -1689,6 +1818,7 @@ public unsafe partial class Echoglossian
         uint contentKind,
         string originalName,
         string originalDescription,
+        string translatedName,
         out StructuredTooltipNativeState runtimeState)
     {
         runtimeState = new StructuredTooltipNativeState(
@@ -1717,31 +1847,38 @@ public unsafe partial class Echoglossian
             return false;
         }
 
-        if (TryFindBestStructuredTooltipTextNodeCandidate(
+        if (this.TryFindStructuredTooltipNameNodeCandidate(
                 textNodeCandidates,
                 originalName,
+                translatedName,
                 excludedNodeAddress: 0,
                 out var nameCandidate))
         {
             runtimeState = runtimeState with
             {
                 NameNodeAddress = nameCandidate.NodeAddress,
-                OriginalNameText = nameCandidate.VisibleText,
+                OriginalNameText = GetStructuredTooltipSafeRestoreText(
+                    nameCandidate.VisibleText,
+                    originalName),
                 NameNodeSupportsPlainTextMutation = nameCandidate.SupportsPlainTextMutation,
             };
         }
 
         if (!string.IsNullOrWhiteSpace(originalDescription) &&
-            TryFindBestStructuredTooltipTextNodeCandidate(
+            TryFindBestStructuredTooltipDescriptionNodeCandidate(
                 textNodeCandidates,
+                contentKind,
                 originalDescription,
+                runtimeState.NameNodeAddress,
                 runtimeState.NameNodeAddress,
                 out var descriptionCandidate))
         {
             runtimeState = runtimeState with
             {
                 DescriptionNodeAddress = descriptionCandidate.NodeAddress,
-                OriginalDescriptionText = descriptionCandidate.VisibleText,
+                OriginalDescriptionText = GetStructuredTooltipSafeRestoreText(
+                    descriptionCandidate.VisibleText,
+                    originalDescription),
                 DescriptionNodeSupportsPlainTextMutation = descriptionCandidate.SupportsPlainTextMutation,
             };
         }
@@ -1819,6 +1956,77 @@ public unsafe partial class Echoglossian
             candidates,
             seenNodeAddresses,
             trustPlainTextMutation: true);
+    }
+
+    /// <summary>
+    ///     Gets whether the currently visible tooltip addon already exposes a
+    ///     live name that matches the canonical payload being processed.
+    /// </summary>
+    /// <param name="addon">The visible tooltip addon.</param>
+    /// <param name="contentKind">The logical content kind.</param>
+    /// <param name="originalName">The canonical original name.</param>
+    /// <param name="translatedName">The translated live name, if already applied.</param>
+    /// <returns><see langword="true" /> when the live name matches.</returns>
+    private bool HasStructuredTooltipLiveNameMatch(
+        AtkUnitBase* addon,
+        uint contentKind,
+        string originalName,
+        string? translatedName)
+    {
+        if (addon == null || string.IsNullOrWhiteSpace(originalName))
+        {
+            return false;
+        }
+
+        var textNodeCandidates = this.CollectStructuredTooltipTextNodeCandidates(
+            addon,
+            contentKind);
+        if (this.TryFindStructuredTooltipNameNodeCandidate(
+                textNodeCandidates,
+                originalName,
+                translatedName,
+                excludedNodeAddress: 0,
+                out _))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Tries to resolve the live tooltip name node using strict normalized
+    ///     equality against either the original or already-applied translated
+    ///     name.
+    /// </summary>
+    /// <param name="candidates">The candidate nodes.</param>
+    /// <param name="originalName">The canonical original name.</param>
+    /// <param name="translatedName">The translated live name, if any.</param>
+    /// <param name="excludedNodeAddress">One node address to exclude.</param>
+    /// <param name="bestCandidate">The best matching candidate, if any.</param>
+    /// <returns><see langword="true" /> when a name candidate was found.</returns>
+    private bool TryFindStructuredTooltipNameNodeCandidate(
+        IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
+        string originalName,
+        string? translatedName,
+        nint excludedNodeAddress,
+        out StructuredTooltipTextNodeCandidate bestCandidate)
+    {
+        if (TryFindBestStructuredTooltipExactTextNodeCandidate(
+                candidates,
+                originalName,
+                excludedNodeAddress,
+                out bestCandidate))
+        {
+            return true;
+        }
+
+        return !string.IsNullOrWhiteSpace(translatedName) &&
+               TryFindBestStructuredTooltipExactTextNodeCandidate(
+                   candidates,
+                   translatedName,
+                   excludedNodeAddress,
+                   out bestCandidate);
     }
 
     /// <summary>
@@ -1946,6 +2154,192 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Tries to find the best live text-node candidate for a canonical
+    ///     structured-tooltip value using strict normalized equality only.
+    /// </summary>
+    /// <param name="candidates">The candidate nodes.</param>
+    /// <param name="canonicalText">The canonical source text.</param>
+    /// <param name="excludedNodeAddress">One node address to exclude.</param>
+    /// <param name="bestCandidate">The best exact-match candidate, if any.</param>
+    /// <returns><see langword="true" /> when an exact-match candidate was found.</returns>
+    internal static bool TryFindBestStructuredTooltipExactTextNodeCandidate(
+        IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
+        string canonicalText,
+        nint excludedNodeAddress,
+        out StructuredTooltipTextNodeCandidate bestCandidate)
+    {
+        bestCandidate = default;
+        if (candidates.Count == 0 || string.IsNullOrWhiteSpace(canonicalText))
+        {
+            return false;
+        }
+
+        var normalizedCanonicalText =
+            NormalizeStructuredTooltipLookupText(canonicalText);
+        if (string.IsNullOrWhiteSpace(normalizedCanonicalText))
+        {
+            return false;
+        }
+
+        foreach (var candidate in candidates)
+        {
+            if (candidate.NodeAddress == excludedNodeAddress ||
+                !IsStructuredTooltipExactNormalizedTextMatch(
+                    candidate.NormalizedVisibleText,
+                    normalizedCanonicalText))
+            {
+                continue;
+            }
+
+            if (bestCandidate.NodeAddress == 0 ||
+                (candidate.SupportsPlainTextMutation &&
+                 !bestCandidate.SupportsPlainTextMutation))
+            {
+                bestCandidate = candidate;
+            }
+        }
+
+        return bestCandidate.NodeAddress != 0;
+    }
+
+    /// <summary>
+    ///     Tries to find the best description candidate, preferring nodes that
+    ///     appear after the resolved name node for ActionDetail/Trait surfaces.
+    /// </summary>
+    /// <param name="candidates">The candidate nodes.</param>
+    /// <param name="contentKind">The logical content kind.</param>
+    /// <param name="canonicalText">The canonical description text.</param>
+    /// <param name="excludedNodeAddress">One node address to exclude.</param>
+    /// <param name="nameNodeAddress">The already-resolved name node address.</param>
+    /// <param name="bestCandidate">The best matching candidate, if any.</param>
+    /// <returns><see langword="true" /> when a description candidate was found.</returns>
+    private static bool TryFindBestStructuredTooltipDescriptionNodeCandidate(
+        IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
+        uint contentKind,
+        string canonicalText,
+        nint excludedNodeAddress,
+        nint nameNodeAddress,
+        out StructuredTooltipTextNodeCandidate bestCandidate)
+    {
+        bestCandidate = default;
+        if ((contentKind == StructuredTooltipContentKindAction ||
+             contentKind == StructuredTooltipContentKindTrait) &&
+            nameNodeAddress != 0)
+        {
+            var nameCandidateIndex = FindStructuredTooltipCandidateIndex(
+                candidates,
+                nameNodeAddress);
+            if (nameCandidateIndex >= 0 &&
+                TryFindBestStructuredTooltipTextNodeCandidateInRange(
+                    candidates,
+                    canonicalText,
+                    excludedNodeAddress,
+                    nameCandidateIndex + 1,
+                    candidates.Count,
+                    out bestCandidate))
+            {
+                return true;
+            }
+        }
+
+        return TryFindBestStructuredTooltipTextNodeCandidate(
+            candidates,
+            canonicalText,
+            excludedNodeAddress,
+            out bestCandidate);
+    }
+
+    /// <summary>
+    ///     Gets the index of one candidate node address within the collected
+    ///     tooltip candidate list.
+    /// </summary>
+    /// <param name="candidates">The candidate nodes.</param>
+    /// <param name="nodeAddress">The node address to locate.</param>
+    /// <returns>The candidate index, or <c>-1</c> when not present.</returns>
+    private static int FindStructuredTooltipCandidateIndex(
+        IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
+        nint nodeAddress)
+    {
+        for (var index = 0; index < candidates.Count; index++)
+        {
+            if (candidates[index].NodeAddress == nodeAddress)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    ///     Tries to find the best matching text-node candidate inside one slice
+    ///     of the collected tooltip tree order.
+    /// </summary>
+    /// <param name="candidates">The candidate nodes.</param>
+    /// <param name="canonicalText">The canonical source text.</param>
+    /// <param name="excludedNodeAddress">One node address to exclude.</param>
+    /// <param name="startIndex">The inclusive start index.</param>
+    /// <param name="endIndex">The exclusive end index.</param>
+    /// <param name="bestCandidate">The best matching candidate, if any.</param>
+    /// <returns><see langword="true" /> when a candidate was found in range.</returns>
+    private static bool TryFindBestStructuredTooltipTextNodeCandidateInRange(
+        IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
+        string canonicalText,
+        nint excludedNodeAddress,
+        int startIndex,
+        int endIndex,
+        out StructuredTooltipTextNodeCandidate bestCandidate)
+    {
+        bestCandidate = default;
+        if (candidates.Count == 0 ||
+            string.IsNullOrWhiteSpace(canonicalText) ||
+            startIndex < 0 ||
+            startIndex >= endIndex)
+        {
+            return false;
+        }
+
+        var bestScore = 0;
+        for (var index = startIndex; index < endIndex; index++)
+        {
+            var candidate = candidates[index];
+            if (candidate.NodeAddress == excludedNodeAddress)
+            {
+                continue;
+            }
+
+            var score = ComputeStructuredTooltipTextMatchScore(
+                candidate.NormalizedVisibleText,
+                canonicalText);
+            if (score < bestScore)
+            {
+                continue;
+            }
+
+            if (score == bestScore &&
+                bestScore > 0 &&
+                !candidate.SupportsPlainTextMutation &&
+                bestCandidate.SupportsPlainTextMutation)
+            {
+                continue;
+            }
+
+            if (score == bestScore &&
+                candidate.SupportsPlainTextMutation ==
+                bestCandidate.SupportsPlainTextMutation &&
+                bestCandidate.NodeAddress != 0)
+            {
+                continue;
+            }
+
+            bestScore = score;
+            bestCandidate = candidate;
+        }
+
+        return bestScore > 0;
+    }
+
+    /// <summary>
     ///     Normalizes one structured-tooltip text value so live wrapped text and
     ///     canonical sheet text can be compared safely.
     /// </summary>
@@ -1963,7 +2357,9 @@ public unsafe partial class Echoglossian
         {
             var category = char.GetUnicodeCategory(character);
             if (char.IsControl(character) ||
-                category == UnicodeCategory.Format)
+                category == UnicodeCategory.Format ||
+                category == UnicodeCategory.PrivateUse ||
+                IsStructuredTooltipSeparatorCategory(category))
             {
                 builder.Append(' ');
                 continue;
@@ -1998,10 +2394,9 @@ public unsafe partial class Echoglossian
             return 0;
         }
 
-        if (string.Equals(
+        if (IsStructuredTooltipExactNormalizedTextMatch(
                 normalizedVisibleText,
-                normalizedCanonicalText,
-                StringComparison.OrdinalIgnoreCase))
+                normalizedCanonicalText))
         {
             return 10_000 + normalizedVisibleText.Length;
         }
@@ -2024,6 +2419,82 @@ public unsafe partial class Echoglossian
         }
 
         return 0;
+    }
+
+    /// <summary>
+    ///     Gets whether two structured-tooltip text values match exactly after
+    ///     normalization.
+    /// </summary>
+    /// <param name="visibleText">The visible live text.</param>
+    /// <param name="canonicalText">The canonical source text.</param>
+    /// <returns><see langword="true" /> when the texts match exactly.</returns>
+    internal static bool IsStructuredTooltipExactTextMatch(
+        string visibleText,
+        string canonicalText)
+    {
+        return IsStructuredTooltipExactNormalizedTextMatch(
+            NormalizeStructuredTooltipLookupText(visibleText),
+            NormalizeStructuredTooltipLookupText(canonicalText));
+    }
+
+    /// <summary>
+    ///     Gets the safest restore text for one structured-tooltip node,
+    ///     preserving the live original text only when it still matches the
+    ///     canonical payload exactly after normalization.
+    /// </summary>
+    /// <param name="visibleText">The visible live text captured from the node.</param>
+    /// <param name="canonicalText">The canonical original payload text.</param>
+    /// <returns>The safest text to restore into the node later.</returns>
+    private static string GetStructuredTooltipSafeRestoreText(
+        string visibleText,
+        string canonicalText)
+    {
+        return IsStructuredTooltipExactTextMatch(
+            visibleText,
+            canonicalText)
+            ? visibleText
+            : canonicalText;
+    }
+
+    /// <summary>
+    ///     Gets whether two already-normalized structured-tooltip text values
+    ///     match exactly.
+    /// </summary>
+    /// <param name="normalizedVisibleText">The normalized visible live text.</param>
+    /// <param name="normalizedCanonicalText">The normalized canonical text.</param>
+    /// <returns><see langword="true" /> when the texts match exactly.</returns>
+    private static bool IsStructuredTooltipExactNormalizedTextMatch(
+        string normalizedVisibleText,
+        string normalizedCanonicalText)
+    {
+        return !string.IsNullOrWhiteSpace(normalizedVisibleText) &&
+               !string.IsNullOrWhiteSpace(normalizedCanonicalText) &&
+               string.Equals(
+                   normalizedVisibleText,
+                   normalizedCanonicalText,
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    ///     Gets whether one Unicode category should behave like a separator when
+    ///     normalizing structured-tooltip text for live matching.
+    /// </summary>
+    /// <param name="category">The Unicode category to inspect.</param>
+    /// <returns><see langword="true" /> when the category should collapse to space.</returns>
+    private static bool IsStructuredTooltipSeparatorCategory(
+        UnicodeCategory category)
+    {
+        return category is UnicodeCategory.ConnectorPunctuation or
+               UnicodeCategory.DashPunctuation or
+               UnicodeCategory.OpenPunctuation or
+               UnicodeCategory.ClosePunctuation or
+               UnicodeCategory.InitialQuotePunctuation or
+               UnicodeCategory.FinalQuotePunctuation or
+               UnicodeCategory.OtherPunctuation or
+               UnicodeCategory.MathSymbol or
+               UnicodeCategory.CurrencySymbol or
+               UnicodeCategory.ModifierSymbol or
+               UnicodeCategory.OtherSymbol;
     }
 
     /// <summary>
@@ -2209,6 +2680,27 @@ public unsafe partial class Echoglossian
         {
             return string.Empty;
         }
+    }
+
+    /// <summary>
+    ///     Gets whether one live tooltip text node already exposes the desired
+    ///     target text after normalization.
+    /// </summary>
+    /// <param name="textNode">The live text node.</param>
+    /// <param name="targetText">The desired target text.</param>
+    /// <returns><see langword="true" /> when the live node already matches.</returns>
+    private bool DoesStructuredTooltipNodeMatchTarget(
+        AtkTextNode* textNode,
+        string targetText)
+    {
+        if (textNode == null || string.IsNullOrWhiteSpace(targetText))
+        {
+            return false;
+        }
+
+        return IsStructuredTooltipExactTextMatch(
+            this.ReadTooltipTextNode(textNode),
+            targetText);
     }
 
     /// <summary>
@@ -2423,6 +2915,36 @@ public unsafe partial class Echoglossian
         return hoveredItemId > 1_000_000u
             ? hoveredItemId - 1_000_000u
             : hoveredItemId;
+    }
+
+    /// <summary>
+    ///     Gets whether ActionDetail may safely fall back to the agent-backed
+    ///     action id when direct hovered-action state is empty.
+    /// </summary>
+    /// <param name="hoveredActionId">The direct hovered action identifier.</param>
+    /// <param name="hoveredItemId">The direct hovered item identifier.</param>
+    /// <returns><see langword="true" /> when agent fallback is safe.</returns>
+    internal static bool ShouldUseActionDetailAgentFallback(
+        uint hoveredActionId,
+        uint hoveredItemId)
+    {
+        return hoveredActionId == 0 &&
+               hoveredItemId == 0;
+    }
+
+    /// <summary>
+    ///     Gets whether ItemDetail may safely fall back to the agent-backed
+    ///     item id when direct hovered-item state is empty.
+    /// </summary>
+    /// <param name="hoveredItemId">The direct hovered item identifier.</param>
+    /// <param name="hoveredActionId">The direct hovered action identifier.</param>
+    /// <returns><see langword="true" /> when agent fallback is safe.</returns>
+    internal static bool ShouldUseItemDetailAgentFallback(
+        uint hoveredItemId,
+        uint hoveredActionId)
+    {
+        return hoveredItemId == 0 &&
+               hoveredActionId == 0;
     }
 
     /// <summary>

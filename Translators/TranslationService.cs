@@ -118,10 +118,10 @@ public class TranslationService
     var startingEllipsis = string.Empty;
 
     var parsedText = sanitizedText;
-    if (text.StartsWith("..."))
+    if (sanitizedText.StartsWith("...", StringComparison.Ordinal))
     {
       startingEllipsis = "...";
-      parsedText = text.Substring(3);
+      parsedText = sanitizedText.Substring(3);
     }
 
     var normalizedSourceLanguage =
@@ -153,7 +153,11 @@ public class TranslationService
           resolvedOriginContext);
       finalDialogueText = sanitizedText;
     }
-    return finalDialogueText;
+
+    return string.IsNullOrEmpty(startingEllipsis) ||
+           string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
+        ? finalDialogueText
+        : startingEllipsis + finalDialogueText;
   }
 
   /// <summary>
@@ -187,10 +191,10 @@ public class TranslationService
     var startingEllipsis = string.Empty;
 
     var parsedText = sanitizedText;
-    if (text.StartsWith("..."))
+    if (sanitizedText.StartsWith("...", StringComparison.Ordinal))
     {
       startingEllipsis = "...";
-      parsedText = text.Substring(3);
+      parsedText = sanitizedText.Substring(3);
     }
 
     var normalizedSourceLanguage =
@@ -222,7 +226,11 @@ public class TranslationService
           resolvedOriginContext);
       finalDialogueText = sanitizedText;
     }
-    return finalDialogueText;
+
+    return string.IsNullOrEmpty(startingEllipsis) ||
+           string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
+        ? finalDialogueText
+        : startingEllipsis + finalDialogueText;
   }
 
   /// <summary>

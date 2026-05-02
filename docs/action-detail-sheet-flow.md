@@ -44,6 +44,11 @@ Excel sheet rows
 
 ## Notes
 
+- Status update - 2026-05-01:
+  `JournalDetail` is no longer the active front for this refactor pass.
+  Current runtime work is focused on `ActionDetail`, `ItemDetail`, and their
+  associated tooltip surfaces, especially fast-hover transitions, content
+  identity, and overlay/native-mode synchronization.
 - This flow is sheet-first and not tied to one live addon capture payload.
 - It is already split by entity family and should remain split.
 - `ActionDetail` and `ItemDetail` runtime presentation is overlay-backed for
@@ -51,9 +56,9 @@ Excel sheet rows
   surfaces in config or UX wording.
 - Live runtime resolution is lifecycle-gated:
   `ActionDetail` and `ItemDetail` only run while their addons are active in
-  `AddonLifecycle`, and the active payload is resolved from
-  `AgentActionDetail` / `AgentItemDetail` instead of relying only on
-  `HoveredAction` / `HoveredItem`.
+  `AddonLifecycle`, and the active payload is resolved from the current hover
+  first, with `AgentActionDetail` / `AgentItemDetail` used only as guarded
+  fallback when the opposite tooltip family is not currently hovered.
 - Native lookup is now identity-first:
   `ActionTooltip` / `ItemTooltip` stay primary for standard rows, while
   `EventItemText`, `DeepDungeonItemText`, and the relevant `*ActionText`

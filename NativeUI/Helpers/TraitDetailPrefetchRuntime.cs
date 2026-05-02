@@ -41,12 +41,9 @@ public unsafe partial class Echoglossian
 
         this.traitDetailPrefetchLastTickUtc = DateTime.UtcNow;
 
-        if (!TryGetCurrentClassJobInfo(
-                out var currentClassJobId,
-                out var currentClassJobAbbreviation) ||
+        if (!TryGetCurrentClassJobId(out var currentClassJobId) ||
             !TryCollectCurrentClassJobTraitIds(
                 currentClassJobId,
-                currentClassJobAbbreviation,
                 out var traitIds))
         {
             this.ClearTraitDetailPrefetchState();
@@ -327,12 +324,10 @@ public unsafe partial class Echoglossian
     ///     Tries to collect the current class/job trait ids from canonical sheets.
     /// </summary>
     /// <param name="currentClassJobId">The current class-job identifier.</param>
-    /// <param name="currentClassJobAbbreviation">The current class/job abbreviation.</param>
     /// <param name="traitIds">The collected trait ids.</param>
     /// <returns>True when trait ids were collected successfully.</returns>
     private static bool TryCollectCurrentClassJobTraitIds(
         byte currentClassJobId,
-        string currentClassJobAbbreviation,
         out List<uint> traitIds)
     {
         traitIds = [];
@@ -355,9 +350,9 @@ public unsafe partial class Echoglossian
 
             var matchesClassJob = traitRow.ClassJob.RowId == currentClassJobId;
             var matchesCategory =
-                DoesActionCategoryMatchCurrentJob(
+                ClassJobCategorySheetHelper.HasClassJob(
                     traitRow.ClassJobCategory.ValueNullable,
-                    currentClassJobAbbreviation);
+                    currentClassJobId);
             if (!matchesClassJob && !matchesCategory)
             {
                 continue;
@@ -403,10 +398,11 @@ public unsafe partial class Echoglossian
         {
             TraitId = traitRow.RowId,
             IconId = (uint)traitRow.Icon,
-            ClassJobId = traitRow.ClassJob.RowId != 0
-                ? traitRow.ClassJob.RowId
-                : currentClassJobId,
-            ClassJobCategoryId = traitRow.ClassJobCategory.RowId,
+            ClassJobId = SheetRowIdNormalizationHelper.NormalizeWithFallback(
+                traitRow.ClassJob.RowId,
+                currentClassJobId),
+            ClassJobCategoryId = SheetRowIdNormalizationHelper.NormalizeOrZero(
+                traitRow.ClassJobCategory.RowId),
             Name = traitRow.Name.ExtractText(),
             Description = description,
         };
