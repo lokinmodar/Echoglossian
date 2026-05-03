@@ -257,6 +257,7 @@ public partial class Echoglossian : IDalamudPlugin
     PluginInterface.UiBuilder.DisableCutsceneUiHide =
         this.configuration.ShowInCutscenes;
 
+    PluginInterface.UiBuilder.OpenMainUi += this.ConfigWindow;
     PluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
     this.TryShowConfigVersionUpgradeNotification(
         loadedConfigVersion,
@@ -470,6 +471,7 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterQuestToastRuntime();
       this.queuedTranslationBroker.Dispose();
 
+      PluginInterface.UiBuilder.OpenMainUi -= this.ConfigWindow;
       PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
 
     PluginInterface.UiBuilder.Draw -= this.BuildUi;
