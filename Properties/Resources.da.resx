@@ -42,6 +42,12 @@
   <data name="ConfigTabAbout" xml:space="preserve">
     <value>Om Echoglossian</value>
   </data>
+  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
+    <value>Din gemte Echoglossian-konfiguration er fra en ældre version. Vi har migreret den, men det anbefales, at du gennemgår og konfigurerer pluginet igen.</value>
+  </data>
+  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
+    <value>Åbn konfiguration</value>
+  </data>
   <data name="ContribText" xml:space="preserve">
     <value>Støt os enten ved at bidrage til projektudviklingen, indsende problemer eller hjælpe os med en kop kaffe.</value>
   </data>

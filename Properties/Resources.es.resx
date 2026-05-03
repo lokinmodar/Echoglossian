@@ -19,6 +19,12 @@
     <value>Configuración de Echoglossian</value>
     <comment>Config Window title bar</comment>
   </data>
+  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
+    <value>La configuración guardada de Echoglossian proviene de una versión anterior. La hemos migrado, pero se recomienda revisar y volver a configurar el plugin.</value>
+  </data>
+  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
+    <value>Abrir configuración</value>
+  </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Abre la ventana de configuración de Echoglossian</value>
     <comment>Shown in plugin install window</comment>

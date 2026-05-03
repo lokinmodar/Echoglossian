@@ -404,6 +404,66 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Shows a persistent notification recommending that the user review the
+  ///     plugin configuration after a config version upgrade migration.
+  /// </summary>
+  /// <param name="loadedConfigVersion">
+  ///     The configuration version loaded from disk before migrations.
+  /// </param>
+  /// <param name="currentConfigVersion">
+  ///     The current configuration schema version supported by the plugin.
+  /// </param>
+  private void TryShowConfigVersionUpgradeNotification(
+      int loadedConfigVersion,
+      int currentConfigVersion)
+  {
+    if (loadedConfigVersion >= currentConfigVersion)
+    {
+      return;
+    }
+
+    var notification = new Notification
+    {
+      Title = Resources.Name,
+      Content = Resources.ResourceManager.GetString(
+                    nameof(Resources.ConfigVersionUpgradeRecommendedMessage),
+                    this.cultureInfo) ??
+                Resources.ConfigVersionUpgradeRecommendedMessage,
+      Icon = FontAwesomeIcon.ExclamationTriangle.ToNotificationIcon(),
+      Type = NotificationType.Warning,
+      UserDismissable = true,
+      InitialDuration = TimeSpan.MaxValue,
+      HardExpiry = DateTime.MaxValue,
+    };
+
+    var activeNotification = NotificationManager.AddNotification(notification);
+    Action<Dalamud.Interface.ImGuiNotification.EventArgs.INotificationDrawArgs>?
+        drawActions = null;
+    var openConfigurationLabel = Resources.ResourceManager.GetString(
+                                     nameof(Resources.OpenConfigurationButtonLabel),
+                                     this.cultureInfo) ??
+                                 Resources.OpenConfigurationButtonLabel;
+
+    drawActions = _ =>
+    {
+      if (!ImGui.Button(openConfigurationLabel))
+      {
+        return;
+      }
+
+      this.ConfigWindow();
+      if (drawActions is not null)
+      {
+        activeNotification.DrawActions -= drawActions;
+      }
+
+      activeNotification.DismissNow();
+    };
+
+    activeNotification.DrawActions += drawActions;
+  }
+
+  /// <summary>
   ///     Resolves a per-surface translation display mode from the historical
   ///     overlay boolean plus the shared swap toggle.
   /// </summary>

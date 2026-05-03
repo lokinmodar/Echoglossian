@@ -12,11 +12,13 @@ public partial class Echoglossian
   /// </summary>
   private void Tick(IFramework tFramework)
   {
+#if DEBUG
     this.addonProbeWatch?.Tick();
     if (this.addonProbeWatch?.IsDisposed == true)
     {
       this.addonProbeWatch = null;
     }
+#endif
 
     if (!this.configuration.Translate)
     {

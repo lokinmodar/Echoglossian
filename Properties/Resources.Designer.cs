@@ -429,6 +429,15 @@ namespace Echoglossian.Properties {
                 return ResourceManager.GetString("ConfigWindowTitle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Your saved Echoglossian configuration is from an older version. We migrated it, but reviewing and reconfiguring the plugin is recommended..
+        /// </summary>
+        public static string ConfigVersionUpgradeRecommendedMessage {
+            get {
+                return ResourceManager.GetString("ConfigVersionUpgradeRecommendedMessage", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
@@ -1016,6 +1025,15 @@ namespace Echoglossian.Properties {
         public static string OpensTheEchoglossianDBEditor {
             get {
                 return ResourceManager.GetString("OpensTheEchoglossianDBEditor", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open Configuration.
+        /// </summary>
+        public static string OpenConfigurationButtonLabel {
+            get {
+                return ResourceManager.GetString("OpenConfigurationButtonLabel", resourceCulture);
             }
         }
         

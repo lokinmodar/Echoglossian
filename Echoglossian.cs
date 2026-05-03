@@ -31,9 +31,11 @@ public partial class Echoglossian : IDalamudPlugin
 
   private const string DBManagerWindowCommand = "/eglodbmanager";
 
+#if DEBUG
   private const string AddonProbeCommand = "/egloaddonprobe";
 
   private const string QuestProbeCommand = "/egloquestprobe";
+#endif
 
   /// <summary>
   /// The language ID to translate to.
@@ -73,7 +75,9 @@ public partial class Echoglossian : IDalamudPlugin
   /// <summary>
   /// Holds the currently active addon structure probe watch, if any.
   /// </summary>
+#if DEBUG
   private AddonStructureProbe.AddonStructureProbeWatch? addonProbeWatch;
+#endif
 
   /// <summary>
   /// Holds the sanitizer instance for cleaning up text input.
@@ -139,6 +143,8 @@ public partial class Echoglossian : IDalamudPlugin
   {
     this.configuration = PluginInterface.GetPluginConfig() as Config ??
                          new Config();
+    var loadedConfigVersion = this.configuration.Version;
+    var currentConfigVersion = new Config().Version;
     this.DisableStructuredTooltipTranslationForRelease();
 
     ConfigDirectory = PluginInterface.GetPluginConfigDirectory() +
@@ -156,19 +162,21 @@ public partial class Echoglossian : IDalamudPlugin
       HelpMessage = Resources.OpensTheEchoglossianDBEditor
     });
 
+#if DEBUG
     CommandManager.AddHandler(
         AddonProbeCommand,
         new CommandInfo(this.OnEgloAddonProbeCommand)
         {
-            HelpMessage = Resources.AddonProbeHelpMessage,
+          HelpMessage = Resources.AddonProbeHelpMessage,
         });
 
     CommandManager.AddHandler(
         QuestProbeCommand,
         new CommandInfo(this.OnEgloQuestProbeCommand)
         {
-            HelpMessage = Resources.QuestProbeHelpMessage,
+          HelpMessage = Resources.QuestProbeHelpMessage,
         });
+#endif
 
     Sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
@@ -250,6 +258,9 @@ public partial class Echoglossian : IDalamudPlugin
         this.configuration.ShowInCutscenes;
 
     PluginInterface.UiBuilder.OpenConfigUi += this.ConfigWindow;
+    this.TryShowConfigVersionUpgradeNotification(
+        loadedConfigVersion,
+        currentConfigVersion);
 
     LanguageInt = this.configuration.Lang;
 
@@ -464,8 +475,10 @@ public partial class Echoglossian : IDalamudPlugin
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
 
-      this.addonProbeWatch?.Dispose();
-      this.addonProbeWatch = null;
+#if DEBUG
+    this.addonProbeWatch?.Dispose();
+    this.addonProbeWatch = null;
+#endif
 
       ToastGuiInterface.QuestToast -= this.questToastRuntime.HandleQuestToast;
       this.queuedTranslationBroker.Dispose();
@@ -512,8 +525,10 @@ public partial class Echoglossian : IDalamudPlugin
 
     CommandManager.RemoveHandler(SlashCommand);
     CommandManager.RemoveHandler(DBManagerWindowCommand);
+#if DEBUG
     CommandManager.RemoveHandler(AddonProbeCommand);
     CommandManager.RemoveHandler(QuestProbeCommand);
+#endif
   }
 
 }

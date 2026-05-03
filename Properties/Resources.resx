@@ -170,6 +170,12 @@
     <value>Echoglossian Configuration</value>
     <comment>Config Window title bar</comment>
   </data>
+  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
+    <value>Your saved Echoglossian configuration is from an older version. We migrated it, but reviewing and reconfiguring the plugin is recommended.</value>
+  </data>
+  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
+    <value>Open Configuration</value>
+  </data>
   <data name="ContribText" xml:space="preserve">
     <value>Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</value>
   </data>

@@ -49,6 +49,12 @@
     <value>Configuration échoglossienne</value>
     <comment>Config Window title bar</comment>
   </data>
+  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
+    <value>Votre configuration enregistrée d'Echoglossian provient d'une version plus ancienne. Nous l'avons migrée, mais il est recommandé de vérifier et de reconfigurer le plugin.</value>
+  </data>
+  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
+    <value>Ouvrir la configuration</value>
+  </data>
   <data name="ContribText" xml:space="preserve">
     <value>S’il vous plaît soutenez-nous soit en contribuant au développement du projet, en soumettant des problèmes ou en nous aidant avec un café.</value>
   </data>

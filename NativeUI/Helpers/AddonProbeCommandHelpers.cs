@@ -5,6 +5,7 @@
 
 namespace Echoglossian;
 
+#if DEBUG
 public partial class Echoglossian
 {
   /// <summary>
@@ -78,3 +79,4 @@ public partial class Echoglossian
     return (trimmedArgs, 0);
   }
 }
+#endif

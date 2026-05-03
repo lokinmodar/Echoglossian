@@ -64,6 +64,12 @@
     <value>Konfigurazio ekoglosiarra</value>
     <comment>Config Window title bar</comment>
   </data>
+  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
+    <value>Gordetako Echoglossian konfigurazioa bertsio zaharrago batekoa da. Migratu dugu, baina plugina berrikusi eta berriro konfiguratzea gomendatzen da.</value>
+  </data>
+  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
+    <value>Ireki konfigurazioa</value>
+  </data>
   <data name="ContribText" xml:space="preserve">
     <value>Mesedez, jarri iezaguzu proiektua garatzen lagundu, zenbakiak bidaliz edo kafe batekin lagunduz.</value>
   </data>

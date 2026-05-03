@@ -64,6 +64,12 @@
     <value>Ηχογλωσσιανή διαμόρφωση</value>
     <comment>Config Window title bar</comment>
   </data>
+  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
+    <value>Η αποθηκευμένη ρύθμιση του Echoglossian προέρχεται από παλαιότερη έκδοση. Έγινε μετεγκατάσταση, αλλά συνιστάται να ελέγξετε και να ρυθμίσετε ξανά το πρόσθετο.</value>
+  </data>
+  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
+    <value>Άνοιγμα ρυθμίσεων</value>
+  </data>
   <data name="ContribText" xml:space="preserve">
     <value>Υποστηρίξτε μας είτε συμβάλλοντας στην ανάπτυξη του έργου, υποβάλλοντας θέματα ή βοηθώντας μας με έναν καφέ.</value>
   </data>

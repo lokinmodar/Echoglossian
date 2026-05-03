@@ -15,6 +15,7 @@ using Lumina.Text.ReadOnly;
 
 namespace Echoglossian;
 
+#if DEBUG
 /// <summary>
 ///     Handles the quest probe command used to inspect the complete quest data
 ///     shape from Lumina, the live quest progress resolver, and the current
@@ -451,3 +452,4 @@ public partial class Echoglossian
     return string.Empty;
   }
 }
+#endif

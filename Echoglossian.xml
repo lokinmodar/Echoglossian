@@ -1904,11 +1904,6 @@
                 payloads.
             </summary>
             <summary>
-                Handles the quest probe command used to inspect the complete quest data
-                shape from Lumina, the live quest progress resolver, and the current
-                QuestPlate database rows.
-            </summary>
-            <summary>
                 Provides reusable DB-first background prefetch for action-adjacent
                 reference-text sheets used by <c>ActionMenu</c>.
             </summary>
@@ -2312,11 +2307,6 @@
             Holds the database editor window instance.
             </summary>
         </member>
-        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
-            <summary>
-            Holds the currently active addon structure probe watch, if any.
-            </summary>
-        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2389,11 +2379,6 @@
                 Regex used to help filtering out numeric-like strings.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
-            <summary>
-                Lists all available culture information and writes it to a file.
-            </summary>
-        </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
             <summary>
                 Moves the given path up by the specified number of levels.
@@ -2441,6 +2426,18 @@
             <summary>
                 Saves the current configuration to the plugin config file.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryShowConfigVersionUpgradeNotification(System.Int32,System.Int32)">
+            <summary>
+                Shows a persistent notification recommending that the user review the
+                plugin configuration after a config version upgrade migration.
+            </summary>
+            <param name="loadedConfigVersion">
+                The configuration version loaded from disk before migrations.
+            </param>
+            <param name="currentConfigVersion">
+                The current configuration schema version supported by the plugin.
+            </param>
         </member>
         <member name="M:Echoglossian.Echoglossian.ResolveLegacyOverlayDisplayMode(System.Boolean,System.Boolean)">
             <summary>
@@ -3686,21 +3683,6 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name and optional index.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name and index to probe.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -3962,102 +3944,6 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
-            <summary>
-                Handles the quest probe command.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
-            <summary>
-                Tries to resolve the quest probe target from either a quest id or a
-                quest name.
-            </summary>
-            <param name="input">The command argument.</param>
-            <param name="questIdText">The resolved quest id as text.</param>
-            <param name="questName">The resolved quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>True when the quest could be resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the quest data structure for inspection.
-            </summary>
-            <param name="questIdText">The quest id as text.</param>
-            <param name="questName">The quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the raw Lumina quest row properties.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs all rows from the quest text sheet, not just the live todo
-                entries, so we can inspect the full structure of the quest sheet.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
-            <summary>
-                Logs the QuestPlate rows currently stored for the quest.
-            </summary>
-            <param name="questIdText">The quest id text.</param>
-            <param name="questName">The quest name.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Logs the resolved live quest progression snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves a human-readable quest name from a quest row.
-            </summary>
-            <param name="questRow">The quest row.</param>
-            <returns>The resolved quest name, if available.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
-            <summary>
-                Converts quest text to a readable string for probe output.
-            </summary>
-            <param name="text">The quest text.</param>
-            <returns>The evaluated text string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
-            <summary>
-                Formats a probe value for log output.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>A human-readable value string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Builds the raw quest sheet name used by the game files.
-            </summary>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>The quest text sheet name, if it can be derived.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest row id as text through reflection so the probe
-                stays compatible with generated sheet shapes.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest row id as text, or an empty string if unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest sheet identifier used to mount the quest text
-                sheet path.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.QuestModeUsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
@@ -18826,6 +18712,11 @@
               Looks up a localized string similar to Echoglossian Configuration.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ConfigVersionUpgradeRecommendedMessage">
+            <summary>
+              Looks up a localized string similar to Your saved Echoglossian configuration is from an older version. We migrated it, but reviewing and reconfiguring the plugin is recommended..
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.ContribText">
             <summary>
               Looks up a localized string similar to Please support us either by contributing to the project development, submitting issues or helping us with a coffee..
@@ -19149,6 +19040,11 @@
         <member name="P:Echoglossian.Properties.Resources.OpensTheEchoglossianDBEditor">
             <summary>
               Looks up a localized string similar to Opens the Echoglossian DB Editor..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OpenConfigurationButtonLabel">
+            <summary>
+              Looks up a localized string similar to Open Configuration.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.OtherUIElementsTabTitle">
