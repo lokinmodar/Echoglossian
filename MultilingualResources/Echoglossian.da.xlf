@@ -189,7 +189,7 @@
         </trans-unit>
         <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
           <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
-          <target state="translated" state-qualifier="mt-suggestion">Absolut sti til echoglossian mappe (inde XIVLauncher -&gt; pluginConfigs mappe)</target>
+          <target state="translated" state-qualifier="mt-suggestion">Absolut sti til Echoglossian mappe (inde XIVLauncher -&gt; pluginConfigs mappe)</target>
         </trans-unit>
         <trans-unit id="PathTypeInstructions" translate="yes" xml:space="preserve">
           <source>Please type the path and save so the plugin can work properly!</source>
@@ -325,7 +325,7 @@
         </trans-unit>
         <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
           <source>Echoglossian settings reset to default successfully!</source>
-          <target state="translated" state-qualifier="mt-suggestion">Ekkoglossiske indstillinger nulstilles til standard!</target>
+          <target state="translated" state-qualifier="mt-suggestion">Echoglossian-indstillinger nulstilles til standard!</target>
         </trans-unit>
         <trans-unit id="WhichToastsToTranslate" translate="yes" xml:space="preserve">
           <source>Select which kind of in-game message toasts to translate</source>
@@ -518,7 +518,7 @@
         </trans-unit>
         <trans-unit id="ResetSettingsMessageText" translate="yes" xml:space="preserve">
           <source>You can reset Echoglossian's configuration to default using the button below:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Du kan nulstille Echoglossians konfiguration til standard ved hjælp af knappen nedenfor:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Du kan nulstille Echoglossian-konfigurationen til standard ved hjælp af knappen nedenfor:</target>
         </trans-unit>
         <trans-unit id="ResetSettingsButtonText" translate="yes" xml:space="preserve">
           <source>Reset configuration to defaults</source>

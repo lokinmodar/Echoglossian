@@ -132,7 +132,7 @@
     <value>Multiplikator for overlejring af oversættelsesoverlejring</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
-    <value>Absolut sti til echoglossian mappe (inde XIVLauncher -&gt; pluginConfigs mappe)</value>
+    <value>Absolut sti til Echoglossian mappe (inde XIVLauncher -&gt; pluginConfigs mappe)</value>
   </data>
   <data name="PathTypeInstructions" xml:space="preserve">
     <value>Skriv stien og gem, så plugin kan fungere korrekt!</value>
@@ -228,7 +228,7 @@
     <value>Nulstil indstillinger</value>
   </data>
   <data name="SettingsReset" xml:space="preserve">
-    <value>Ekkoglossiske indstillinger nulstilles til standard!</value>
+    <value>Echoglossian-indstillinger nulstilles til standard!</value>
   </data>
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Vælg, hvilken type skåltaler for beskeder i spillet der skal oversættes</value>
@@ -375,7 +375,7 @@
     <value>Prompt Editor</value>
   </data>
   <data name="ResetSettingsMessageText" xml:space="preserve">
-    <value>Du kan nulstille Echoglossians konfiguration til standard ved hjælp af knappen nedenfor:</value>
+    <value>Du kan nulstille Echoglossian-konfigurationen til standard ved hjælp af knappen nedenfor:</value>
   </data>
   <data name="ResetSettingsButtonText" xml:space="preserve">
     <value>Nulstil konfiguration til standardindstillinger</value>

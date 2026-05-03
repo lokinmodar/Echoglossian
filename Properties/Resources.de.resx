@@ -46,7 +46,7 @@
     <value>Über Echoglossian</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
-    <value>Echoglossianische Konfiguration</value>
+    <value>Echoglossian-Konfiguration</value>
     <comment>Config Window title bar</comment>
   </data>
   <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
@@ -256,7 +256,7 @@
     <value>Einstellungen zurücksetzen</value>
   </data>
   <data name="SettingsReset" xml:space="preserve">
-    <value>Echoglossianische Einstellungen wurden erfolgreich auf die Standardeinstellungen zurückgesetzt!</value>
+    <value>Echoglossian-Einstellungen wurden erfolgreich auf die Standardeinstellungen zurückgesetzt!</value>
   </data>
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Wählen Sie aus, welche Art von Nachrichtentoasts im Spiel übersetzt werden sollen</value>
@@ -616,7 +616,7 @@
     <value>Ausgewählte löschen</value>
   </data>
   <data name="EchoglossianDBEditor" xml:space="preserve">
-    <value>Echoglossianischer DB-Editor</value>
+    <value>Echoglossian DB-Editor</value>
   </data>
   <data name="SelectATableToViewItsRecords" xml:space="preserve">
     <value>Wählen Sie eine Tabelle aus, um die zugehörigen Datensätze anzuzeigen.</value>

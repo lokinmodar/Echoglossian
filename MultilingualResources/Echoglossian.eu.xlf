@@ -69,11 +69,11 @@
         </trans-unit>
         <trans-unit id="ConfigTabAbout" translate="yes" xml:space="preserve">
           <source>About Echoglossian</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossiani buruz</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian buruz</target>
         </trans-unit>
         <trans-unit id="ConfigWindowTitle" translate="yes" xml:space="preserve">
           <source>Echoglossian Configuration</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Konfigurazio ekoglosiarra</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian konfigurazioa</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Config Window title bar</note>
         </trans-unit>
         <trans-unit id="ContribText" translate="yes" xml:space="preserve">
@@ -94,7 +94,7 @@
         </trans-unit>
         <trans-unit id="DisclaimerTitle" translate="yes" xml:space="preserve">
           <source>About Echoglossian:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossiani buruz:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian buruz:</target>
         </trans-unit>
         <trans-unit id="DownloadingAssetsPopupMsg" translate="yes" xml:space="preserve">
           <source>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</source>
@@ -114,7 +114,7 @@
         </trans-unit>
         <trans-unit id="HelpMessage" translate="yes" xml:space="preserve">
           <source>Opens Echoglossian config window</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossianen konfigurazio leihoa ireki du</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian konfigurazio leihoa ireki du</target>
           <note from="MultilingualBuild" annotates="source" priority="2">Shown in plugin install window</note>
         </trans-unit>
         <trans-unit id="HoverTooltipIndicator" translate="yes" xml:space="preserve">
@@ -155,7 +155,7 @@
         </trans-unit>
         <trans-unit id="Name" translate="yes" xml:space="preserve">
           <source>Echoglossian</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ekoglosianoa</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian</target>
         </trans-unit>
         <trans-unit id="NEListText" translate="yes" xml:space="preserve">
           <source>The non-exhaustive list of issues and TODOs is available in the link below:</source>
@@ -268,7 +268,7 @@
         </trans-unit>
         <trans-unit id="SettingsReset" translate="yes" xml:space="preserve">
           <source>Echoglossian settings reset to default successfully!</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Konfigurazio ekoglosiarra arrakastaz aurrez zehaztutako balioetara berrezartzen da!</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian konfigurazioa arrakastaz aurrez zehaztutako balioetara berrezartzen da!</target>
         </trans-unit>
         <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
           <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
@@ -517,7 +517,7 @@
         </trans-unit>
         <trans-unit id="ResetSettingsMessageText" translate="yes" xml:space="preserve">
           <source>You can reset Echoglossian's configuration to default using the button below:</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossianen aurrez zehaztutako konfigurazioa berrezar daiteke, jarraian botoia erabiliz:</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian konfigurazioa aurrez zehaztutako balioetara berrezar daiteke, jarraian botoia erabiliz:</target>
         </trans-unit>
         <trans-unit id="ResetSettingsButtonText" translate="yes" xml:space="preserve">
           <source>Reset configuration to defaults</source>
@@ -685,7 +685,7 @@
         </trans-unit>
         <trans-unit id="ResetSettingsToDefault" translate="yes" xml:space="preserve">
           <source>Reset ALL Echoglossian Settings to Default</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Konfigurazio ekoglosiarrak aurrez zehaztutako balioetara berrezartzea</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian konfigurazioa aurrez zehaztutako balioetara berrezarri</target>
         </trans-unit>
         <trans-unit id="Cancel" translate="yes" xml:space="preserve">
           <source>Cancel</source>
@@ -726,7 +726,7 @@
         </trans-unit>
         <trans-unit id="OpensTheEchoglossianDBEditor" translate="yes" xml:space="preserve">
           <source>Opens the Echoglossian DB Editor.</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossianen datu-baseko editorea ireki du.</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian datu-baseko editorea ireki du.</target>
         </trans-unit>
         <trans-unit id="CryptoQRCodeInstructionsText" translate="yes" xml:space="preserve">
           <source>Scan the QR Code to send cryptocurrency. Any amount is appreciated :)</source>
@@ -802,7 +802,7 @@
         </trans-unit>
         <trans-unit id="EchoglossianDBEditor" translate="yes" xml:space="preserve">
           <source>Echoglossian DB Editor</source>
-          <target state="needs-review-translation" state-qualifier="mt-suggestion">Ekoglosiar datu-basearen editorea</target>
+          <target state="needs-review-translation" state-qualifier="mt-suggestion">Echoglossian datu-basearen editorea</target>
         </trans-unit>
         <trans-unit id="SelectATableToViewItsRecords" translate="yes" xml:space="preserve">
           <source>Select a table to view its records.</source>

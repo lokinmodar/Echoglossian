@@ -58,10 +58,10 @@
     <value>Itzulpen-motorraren konfigurazioa</value>
   </data>
   <data name="ConfigTabAbout" xml:space="preserve">
-    <value>Echoglossiani buruz</value>
+    <value>Echoglossian buruz</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
-    <value>Konfigurazio ekoglosiarra</value>
+    <value>Echoglossian konfigurazioa</value>
     <comment>Config Window title bar</comment>
   </data>
   <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
@@ -83,7 +83,7 @@
     <value>Oraingoz, Google Translateren APIren bidez bakarrik egiten ditugu itzulpen automatikoak, baina etorkizunean MLren beste itzulpen-sistema batzuk onartzeko asmoa dugu. Itzulpen kolaboratiboetara bideratutako ideiak ere baditugu, komunitateak aukeratutakoak.</value>
   </data>
   <data name="DisclaimerTitle" xml:space="preserve">
-    <value>Echoglossiani buruz:</value>
+    <value>Echoglossian buruz:</value>
   </data>
   <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
     <value>Osagarri gehigarrien aktiboak bigarren planoan deskargatzea. Itxaron deskarga bukatu arte konfigurazioa ireki baino lehen!</value>
@@ -98,7 +98,7 @@
     <value>Gainjartze-iturriaren kolorea:</value>
   </data>
   <data name="HelpMessage" xml:space="preserve">
-    <value>Echoglossianen konfigurazio leihoa ireki du</value>
+    <value>Echoglossian konfigurazio leihoa ireki du</value>
     <comment>Shown in plugin install window</comment>
   </data>
   <data name="HoverTooltipIndicator" xml:space="preserve">
@@ -129,7 +129,7 @@
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="Name" xml:space="preserve">
-    <value>Ekoglosianoa</value>
+    <value>Echoglossian</value>
   </data>
   <data name="NEListText" xml:space="preserve">
     <value>Egiteke dauden arazo eta zereginen zerrenda ez-zehatza honako esteka honetan eskuragarri:</value>
@@ -214,7 +214,7 @@
     <value>Google Translateren konfigurazioa:</value>
   </data>
   <data name="SettingsReset" xml:space="preserve">
-    <value>Konfigurazio ekoglosiarra arrakastaz aurrez zehaztutako balioetara berrezartzen da!</value>
+    <value>Echoglossian konfigurazioa arrakastaz aurrez zehaztutako balioetara berrezartzen da!</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
     <value>Jokoaren erabiltzaile-interfazearen elkarrizketa-koadroan, Superposizioan eta itzulian, jatorrizko elkarrizketaren testua erakustea</value>
@@ -403,7 +403,7 @@
     <value>Abisuen editorea</value>
   </data>
   <data name="ResetSettingsMessageText" xml:space="preserve">
-    <value>Echoglossianen aurrez zehaztutako konfigurazioa berrezar daiteke, jarraian botoia erabiliz:</value>
+    <value>Echoglossian konfigurazioa aurrez zehaztutako balioetara berrezar daiteke, jarraian botoia erabiliz:</value>
   </data>
   <data name="ResetSettingsButtonText" xml:space="preserve">
     <value>Aurrez zehaztutako balioei konfigurazioa berrezartzea</value>
@@ -529,7 +529,7 @@
     <value>Bai, berriro hastea</value>
   </data>
   <data name="ResetSettingsToDefault" xml:space="preserve">
-    <value>Konfigurazio ekoglosiarrak aurrez zehaztutako balioetara berrezartzea</value>
+    <value>Echoglossian konfigurazioa aurrez zehaztutako balioetara berrezarri</value>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>Ezeztatu</value>
@@ -559,7 +559,7 @@
     <value>ErrorSavingData: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
-    <value>Echoglossianen datu-baseko editorea ireki du.</value>
+    <value>Echoglossian datu-baseko editorea ireki du.</value>
   </data>
   <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
     <value>Eskaneatu QR kodea kriptomonedak bidaltzeko. Edozein kopuru :)</value>
@@ -616,7 +616,7 @@
     <value>Hautatutako ezabatzea</value>
   </data>
   <data name="EchoglossianDBEditor" xml:space="preserve">
-    <value>Ekoglosiar datu-basearen editorea</value>
+    <value>Echoglossian datu-basearen editorea</value>
   </data>
   <data name="SelectATableToViewItsRecords" xml:space="preserve">
     <value>Erregistroak ikusteko taula bat hautatu.</value>
