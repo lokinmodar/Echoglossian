@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Collections.Concurrent;
+using Echoglossian.PluginUI.Helpers;
 
 namespace Echoglossian.NativeUI.Helpers;
 
@@ -17,6 +18,7 @@ public sealed class HoverTooltipManager
     private readonly ConcurrentDictionary<string, HoverTooltipEntry> entries = new();
     private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(30);
     private readonly Config config;
+    private readonly UINewFontHandler fontHandler;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="HoverTooltipManager" />
@@ -25,9 +27,12 @@ public sealed class HoverTooltipManager
     /// <param name="config">
     ///     The live plugin configuration used to style hover tooltips.
     /// </param>
-    public HoverTooltipManager(Config config)
+    public HoverTooltipManager(
+        Config config,
+        UINewFontHandler fontHandler)
     {
         this.config = config;
+        this.fontHandler = fontHandler;
     }
 
     /// <summary>
@@ -39,7 +44,8 @@ public sealed class HoverTooltipManager
         Vector2 bottomRight,
         string title,
         string body,
-        bool enabled = true)
+        bool enabled = true,
+        bool useGeneralFont = false)
     {
         var newEntry = new HoverTooltipEntry(
             topLeft,
@@ -47,6 +53,7 @@ public sealed class HoverTooltipManager
             title,
             body,
             enabled,
+            useGeneralFont,
             DateTime.UtcNow);
 
         this.entries[key] = newEntry;
@@ -173,6 +180,15 @@ public sealed class HoverTooltipManager
             1f);
         ImGui.PushStyleColor(ImGuiCol.PopupBg, backgroundColor);
         ImGui.PushStyleColor(ImGuiCol.Text, textColor);
+        if (hoveredEntry.UseGeneralFont)
+        {
+            this.fontHandler.GeneralFontHandle.Push();
+        }
+        else
+        {
+            this.fontHandler.LanguageFontHandle.Push();
+        }
+
         ImGui.BeginTooltip();
         try
         {
@@ -190,6 +206,15 @@ public sealed class HoverTooltipManager
         finally
         {
             ImGui.EndTooltip();
+            if (hoveredEntry.UseGeneralFont)
+            {
+                this.fontHandler.GeneralFontHandle.Pop();
+            }
+            else
+            {
+                this.fontHandler.LanguageFontHandle.Pop();
+            }
+
             ImGui.PopStyleColor(2);
         }
     }
@@ -277,5 +302,6 @@ public sealed class HoverTooltipManager
         string Title,
         string Body,
         bool Enabled,
+        bool UseGeneralFont,
         DateTime LastUpdatedUtc);
 }

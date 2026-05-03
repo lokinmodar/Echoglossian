@@ -91,10 +91,27 @@ namespace Echoglossian.DBManagerUI.Components
         this.onPageSizeChange(localSize);
       }
 
-      float right = ImGui.GetWindowContentRegionMax().X + ImGui.GetWindowPos().X;
-      float buttonWidth = 140f;
+      float exportButtonGroupWidth =
+          this.CalculateToolbarButtonWidth(Resources.ExportSelectedCSV) +
+          this.CalculateToolbarButtonWidth(Resources.ExportPageCSV) +
+          this.CalculateToolbarButtonWidth(Resources.DeleteSelected) +
+          (ImGui.GetStyle().ItemSpacing.X * 2.0f);
+      float lastItemRight =
+          ImGui.GetItemRectMax().X - ImGui.GetWindowPos().X;
+      float minInlineStart = lastItemRight + ImGui.GetStyle().ItemSpacing.X;
+      float maxContentX = ImGui.GetWindowContentRegionMax().X;
+      if ((maxContentX - minInlineStart) >= exportButtonGroupWidth)
+      {
+        float desiredButtonStart = Math.Max(
+            minInlineStart,
+            maxContentX - exportButtonGroupWidth);
+        ImGui.SameLine(desiredButtonStart);
+      }
+      else
+      {
+        ImGui.NewLine();
+      }
 
-      ImGui.SameLine(right - (buttonWidth * 3.0f) - 12.0f);
       if (ImGui.Button(Resources.ExportSelectedCSV))
       {
         this.onExportSelected();
@@ -111,6 +128,17 @@ namespace Echoglossian.DBManagerUI.Components
       {
         this.onDeleteSelected();
       }
+    }
+
+    /// <summary>
+    /// Calculates the width required to render a toolbar button with the current
+    /// font and style.
+    /// </summary>
+    /// <param name="label">The button label.</param>
+    /// <returns>The required ImGui-space width for the button.</returns>
+    private float CalculateToolbarButtonWidth(string label)
+    {
+      return ImGui.CalcTextSize(label).X + (ImGui.GetStyle().FramePadding.X * 2.0f);
     }
   }
 }

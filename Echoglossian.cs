@@ -285,7 +285,9 @@ public partial class Echoglossian : IDalamudPlugin
         (TransEngines)this.configuration.ChosenTransEngine,
         message => PluginLog.Warning(message),
         message => PluginLog.Error(message));
-    this.hoverTooltipManager = new HoverTooltipManager(this.configuration);
+    this.hoverTooltipManager = new HoverTooltipManager(
+        this.configuration,
+        UINewFontHandler);
     this.RegisterStructuredTooltipLifecycleHandlers();
 
     this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();

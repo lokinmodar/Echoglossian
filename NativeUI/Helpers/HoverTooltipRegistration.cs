@@ -22,7 +22,8 @@ public partial class Echoglossian
       string title,
       string body,
       bool forceEnabled = false,
-      bool denseHitbox = false)
+      bool denseHitbox = false,
+      bool useGeneralFont = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -56,7 +57,8 @@ public partial class Echoglossian
         new Vector2(right, bottom),
         title,
         body,
-        true);
+        true,
+        useGeneralFont);
   }
 
   /// <summary>
@@ -73,7 +75,8 @@ public partial class Echoglossian
       string title,
       string body,
       bool forceEnabled = false,
-      bool denseHitbox = false)
+      bool denseHitbox = false,
+      bool useGeneralFont = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -103,7 +106,8 @@ public partial class Echoglossian
         new Vector2(right, bottom),
         title,
         body,
-        true);
+        true,
+        useGeneralFont);
   }
 
   /// <summary>
@@ -119,7 +123,8 @@ public partial class Echoglossian
       string title,
       string body,
       bool forceEnabled = false,
-      bool denseHitbox = false)
+      bool denseHitbox = false,
+      bool useGeneralFont = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -155,7 +160,8 @@ public partial class Echoglossian
         new Vector2(right, bottom),
         title,
         body,
-        true);
+        true,
+        useGeneralFont);
   }
 
   /// <summary>
@@ -173,7 +179,8 @@ public partial class Echoglossian
       Vector2 bottomRight,
       string title,
       string body,
-      bool forceEnabled = false)
+      bool forceEnabled = false,
+      bool useGeneralFont = false)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -186,7 +193,8 @@ public partial class Echoglossian
         bottomRight,
         title,
         body,
-        true);
+        true,
+        useGeneralFont);
   }
 
   /// <summary>
@@ -238,7 +246,8 @@ public partial class Echoglossian
         string.Empty,
         displayText,
         forceEnabled,
-        denseHitbox);
+        denseHitbox,
+        useGeneralFont: shouldSwap);
   }
 
   /// <summary>
@@ -291,7 +300,8 @@ public partial class Echoglossian
         string.Empty,
         displayText,
         forceEnabled,
-        denseHitbox);
+        denseHitbox,
+        useGeneralFont: shouldSwap);
   }
 
   /// <summary>
@@ -343,7 +353,8 @@ public partial class Echoglossian
         string.Empty,
         displayText,
         forceEnabled,
-        denseHitbox);
+        denseHitbox,
+        useGeneralFont: shouldSwap);
   }
 
   /// <summary>
@@ -397,7 +408,8 @@ public partial class Echoglossian
         bottomRight,
         string.Empty,
         displayText,
-        forceEnabled);
+        forceEnabled,
+        useGeneralFont: shouldSwap);
   }
 
 }

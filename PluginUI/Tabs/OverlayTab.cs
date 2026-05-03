@@ -618,7 +618,7 @@ public static class OverlayTab
     {
         var changed = false;
 
-        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
+        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, 0.25f, 3f, "%.2f"))
         {
             changed = true;
             fontChangeTime = DateTime.Now.Ticks;
@@ -678,7 +678,7 @@ public static class OverlayTab
     {
         var changed = false;
 
-        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, -3f, 3f, "%.2f"))
+        if (ImGui.SliderFloat(fontScaleLabel, ref fontScale, 0.25f, 3f, "%.2f"))
         {
             changed = true;
             fontChangeTime = DateTime.Now.Ticks;
@@ -761,7 +761,7 @@ public static class OverlayTab
         if (ImGui.SliderFloat(
                 Resources.OverlayFontScaleLabel,
                 ref fontScale,
-                -3f,
+                0.25f,
                 3f,
                 "%.2f"))
         {

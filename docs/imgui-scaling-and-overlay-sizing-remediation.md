@@ -138,6 +138,24 @@ These are not automatically wrong, but they are less resilient under:
 
 This is the second remediation target.
 
+### 5. DbManagerUI is mostly safe from GlobalScale drift, but still has a few rigid layouts
+
+The DB manager does not currently use `ImGuiHelpers.GlobalScale` either.
+
+That is good.
+
+However, the audit found two distinct categories of layout:
+
+- relatively safe controls that already size from content width, such as `DBManagerUI/Components/Ui/TextInputHelpers.cs`
+- rigid sections that still rely on fixed widths or manual `SameLine(...)` offsets, such as:
+  - `DBManagerUI/Components/DbToolbar.cs`
+  - `DBManagerUI/Components/EditModal.cs`
+  - `DBManagerUI/DBEditorWindow.cs`
+
+For the first remediation pass, the `DbToolbar` export-button alignment should stop relying on hardcoded button widths and should instead use measured button widths and content-region alignment.
+
+The modal label/value layout and the DB editor sidebar split can stay as future cleanup items unless they become a concrete usability bug.
+
 ## Failsafe Rules For Echoglossian
 
 These are the rules the repository should follow going forward.
@@ -232,13 +250,16 @@ Work:
 - move overlay text measurement into the same font context used for drawing
 - ensure `CalcTextSize(...)` runs after selecting the proper font handle
 - ensure width constraint logic reflects `config.FontScale`
+- normalize overlay font scale to a positive supported range instead of allowing invalid negative render scale
 - keep the patch narrow and avoid changing visual style policy at the same time
+- for `DbManagerUI`, replace hardcoded right-alignment assumptions in `DbToolbar.cs` with measured button widths
 
 Expected benefit:
 
 - more accurate overlay width
 - fewer wrap/clipping issues
 - behavior that tracks actual rendered text instead of guessed text metrics
+- `DbManagerUI` toolbar remains aligned under different fonts without assuming fixed button widths
 
 Risk:
 

@@ -616,13 +616,18 @@ namespace Echoglossian
       ImGuiHelpers.SetNextWindowPosRelativeMainViewport(
           desiredPosition + config.PosCorrection);
 
+      var shouldUseGeneralFont = this.ShouldUseGeneralOverlayFont(config);
+      var effectiveFontScale = GetEffectiveOverlayFontScale(config.FontScale);
       var viewportWidth = ImGui.GetMainViewport().Size.X;
       var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2;
       var baseWidth = overlay.Dimensions.X * config.WidthMultiplier;
       var overlayTextLines = SplitOverlayTextLines(overlayText);
-      var textWidth = overlayTextLines.Length == 0
-          ? ImGui.CalcTextSize(overlayText).X + horizontalPadding
-          : overlayTextLines.Max(line => ImGui.CalcTextSize(line).X) + horizontalPadding;
+      var textWidth = this.MeasureOverlayTextWidth(
+          overlayText,
+          overlayTextLines,
+          shouldUseGeneralFont,
+          effectiveFontScale,
+          horizontalPadding);
       var defaultMaxWidth = Math.Max(320f, viewportWidth - 80f);
       var minWidth = config.MinWidthViewportFraction > 0.0f
           ? viewportWidth * config.MinWidthViewportFraction
@@ -669,7 +674,7 @@ namespace Echoglossian
 
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1.0f));
 
-      if (this.ShouldUseGeneralOverlayFont(config))
+      if (shouldUseGeneralFont)
       {
         UINewFontHandler.GeneralFontHandle.Push();
       }
@@ -703,7 +708,7 @@ namespace Echoglossian
           ? resolvedTitle
           : $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}";
       ImGui.Begin(windowLabel, flags);
-      ImGui.SetWindowFontScale(config.FontScale);
+      ImGui.SetWindowFontScale(effectiveFontScale);
       var renderedWindowPos = ImGui.GetWindowPos();
 
       overlay.Semaphore.Wait();
@@ -737,13 +742,67 @@ namespace Echoglossian
         //     $"contentWidth={textWidth:0.##} windowWidth={width:0.##} overlayPos=({overlay.Position.X:0.##}, {overlay.Position.Y:0.##})");
       }
 
-      if (this.ShouldUseGeneralOverlayFont(config))
+      if (shouldUseGeneralFont)
       {
         UINewFontHandler.GeneralFontHandle.Pop();
       }
       else
       {
         UINewFontHandler.LanguageFontHandle.Pop();
+      }
+    }
+
+    /// <summary>
+    /// Measures the width of the overlay text using the same font family and
+    /// effective scale that will be used during rendering.
+    /// </summary>
+    /// <param name="overlayText">The full overlay text content.</param>
+    /// <param name="overlayTextLines">The split overlay lines.</param>
+    /// <param name="shouldUseGeneralFont">
+    /// Whether the general/original font path should be used.
+    /// </param>
+    /// <param name="effectiveFontScale">
+    /// The sanitized font scale that will be used for rendering.
+    /// </param>
+    /// <param name="horizontalPadding">
+    /// The horizontal window padding that must be added to the text width.
+    /// </param>
+    /// <returns>The measured overlay width including horizontal padding.</returns>
+    private float MeasureOverlayTextWidth(
+        string overlayText,
+        string[] overlayTextLines,
+        bool shouldUseGeneralFont,
+        float effectiveFontScale,
+        float horizontalPadding)
+    {
+      if (shouldUseGeneralFont)
+      {
+        UINewFontHandler.GeneralFontHandle.Push();
+      }
+      else
+      {
+        UINewFontHandler.LanguageFontHandle.Push();
+      }
+
+      try
+      {
+        var rawTextWidth = overlayTextLines.Length == 0
+            ? ImGui.CalcTextSize(overlayText).X
+            : overlayTextLines.Max(line => string.IsNullOrEmpty(line)
+                ? 0f
+                : ImGui.CalcTextSize(line).X);
+        return (rawTextWidth * effectiveFontScale) + horizontalPadding;
+      }
+      finally
+      {
+        if (shouldUseGeneralFont)
+        {
+          UINewFontHandler.GeneralFontHandle.Pop();
+        }
+        else
+        {
+          UINewFontHandler.LanguageFontHandle.Pop();
+        }
       }
     }
 
@@ -814,6 +873,16 @@ namespace Echoglossian
       return NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
           displayMode,
           this.configuration.OverlayOnlyLanguage);
+    }
+
+    /// <summary>
+    /// Normalizes the overlay font scale to the supported render range.
+    /// </summary>
+    /// <param name="configuredFontScale">The configured overlay font scale.</param>
+    /// <returns>The effective positive font scale to use for measurement and render.</returns>
+    private static float GetEffectiveOverlayFontScale(float configuredFontScale)
+    {
+      return Math.Clamp(configuredFontScale, 0.25f, 3.0f);
     }
 
     /// <summary>
