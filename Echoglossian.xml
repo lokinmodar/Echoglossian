@@ -2359,6 +2359,12 @@
                 Initializes a new instance of the <see cref="T:Echoglossian.Echoglossian" /> class.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.DisableStructuredTooltipTranslationForRelease">
+            <summary>
+                Temporarily disables the structured tooltip feature family for release
+                builds while <c>ActionDetail</c> and <c>ItemDetail</c> remain unstable.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
         </member>

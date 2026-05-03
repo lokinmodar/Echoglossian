@@ -232,3 +232,16 @@ When adding or modifying an engine:
 - `Translators/TranslatorEngineMap.cs`
 - `Translators/TranslationService.cs`
 - `Translators/<Engine>/*`
+
+## Future Backlog
+
+For requested-but-not-yet-implemented engine candidates, see:
+
+- [translation-engine-backlog.md](/C:/Dante/_dalamud/Echoglossian/docs/translation-engine-backlog.md)
+
+## Governance Reminder
+
+Development-time AI usage disclosure for official repository submissions is a
+separate governance concern from runtime translation engines. See:
+
+- [official-plugin-repo-ai-usage-disclosure.md](/C:/Dante/_dalamud/Echoglossian/docs/official-plugin-repo-ai-usage-disclosure.md)

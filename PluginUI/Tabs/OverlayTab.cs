@@ -24,7 +24,6 @@ public static class OverlayTab
         Resources.OverlayTabCutSceneSelectStringText,
         Resources.ConfigTab4Name,
         Resources.QuestWindowsTabTitle,
-        Resources.TooltipTabTitle,
         Resources.SelectionDialogsTabTitle,
         Resources.GameWindowsTabTitle,
     };
@@ -107,12 +106,9 @@ public static class OverlayTab
                 changed |= QuestWindowsTab.Draw(config);
                 break;
             case 8:
-                changed |= TooltipTab.Draw(config);
-                break;
-            case 9:
                 changed |= SelectionDialogsTab.Draw(config);
                 break;
-            case 10:
+            case 9:
                 changed |= GameWindowsTab.Draw(config);
                 break;
         }

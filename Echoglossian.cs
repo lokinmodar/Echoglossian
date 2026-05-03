@@ -139,6 +139,7 @@ public partial class Echoglossian : IDalamudPlugin
   {
     this.configuration = PluginInterface.GetPluginConfig() as Config ??
                          new Config();
+    this.DisableStructuredTooltipTranslationForRelease();
 
     ConfigDirectory = PluginInterface.GetPluginConfigDirectory() +
                       Path.DirectorySeparatorChar;
@@ -336,6 +337,21 @@ public partial class Echoglossian : IDalamudPlugin
 
   [PluginService]
   public static ICommandManager CommandManager { get; set; } = null!;
+
+  /// <summary>
+  ///     Temporarily disables the structured tooltip feature family for release
+  ///     builds while <c>ActionDetail</c> and <c>ItemDetail</c> remain unstable.
+  /// </summary>
+  private void DisableStructuredTooltipTranslationForRelease()
+  {
+    if (!this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    this.configuration.TranslateTooltips = false;
+    PluginInterface.SavePluginConfig(this.configuration);
+  }
 
   [PluginService]
   public static IFramework FrameworkInterface { get; set; } = null!;

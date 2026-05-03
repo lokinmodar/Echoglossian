@@ -22,6 +22,13 @@
 
 Enable the desired translations and configure the various options through the Configuration Window.
 
+## Official Repo AI Disclosure
+
+For work intended for the official Dalamud plugin repository, AI usage beyond
+basic autocomplete should be disclosed in the PR description, and AI-generated
+assets should be disclosed as well. Repo-local guidance lives in
+[docs/official-plugin-repo-ai-usage-disclosure.md](docs/official-plugin-repo-ai-usage-disclosure.md).
+
 ## Known Issues
 
 - Refer to [This](https://github.com/lokinmodar/Echoglossian/issues/12)
