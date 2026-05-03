@@ -1,4 +1,4 @@
-﻿// <copyright file="OpenRouterTranslator.cs" company="lokinmodar">
+// <copyright file="OpenRouterTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -36,7 +36,8 @@ public class OpenRouterTranslator : ITranslator
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 Resources
                     .APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable);
         }
@@ -118,7 +119,7 @@ public class OpenRouterTranslator : ITranslator
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} {ex.Message}");
             return $"[{Resources.TranslationError} {ex.Message}]";
         }
 

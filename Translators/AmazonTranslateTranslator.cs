@@ -1,4 +1,4 @@
-﻿// <copyright file="AwsTranslateTranslator.cs" company="lokinmodar">
+// <copyright file="AwsTranslateTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -38,7 +38,8 @@ public class AmazonTranslateTranslator : ITranslator
             }
             else
             {
-                pluginLog.Warning(
+                PluginRuntimeLog.Warning(
+                    pluginLog,
                     "Using default AWS credentials provider chain.");
                 credentials =
                     DefaultAWSCredentialsIdentityResolver.GetCredentials();
@@ -53,7 +54,8 @@ public class AmazonTranslateTranslator : ITranslator
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error(
+            PluginRuntimeLog.Error(
+                this.pluginLog,
                 $"Failed to initialize AWS Translate client: {ex}");
             throw;
         }
@@ -72,7 +74,7 @@ public class AmazonTranslateTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        this.pluginLog.Debug("AWS Translate sync translate requested.");
+        PluginRuntimeLog.Debug(this.pluginLog, "AWS Translate sync translate requested.");
         return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result ?? string.Empty;
     }
 
@@ -95,7 +97,7 @@ public class AmazonTranslateTranslator : ITranslator
         }
 
         var fixedText = FixText(text);
-        this.pluginLog.Debug($"AWS Translate input: {fixedText}");
+        PluginRuntimeLog.Debug(this.pluginLog, $"AWS Translate input: {fixedText}");
 
         try
         {
@@ -109,12 +111,12 @@ public class AmazonTranslateTranslator : ITranslator
             var response =
                 await this.translateClient.TranslateTextAsync(request);
             var cleaned = FixText(response.TranslatedText);
-            this.pluginLog.Debug($"AWS Translate result: {cleaned}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"AWS Translate result: {cleaned}");
             return cleaned;
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"AWS Translate error: {ex}");
+            PluginRuntimeLog.Error(this.pluginLog, $"AWS Translate error: {ex}");
             return string.Empty;
         }
     }

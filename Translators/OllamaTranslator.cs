@@ -1,4 +1,4 @@
-﻿// <copyright file="OllamaTranslator.cs" company="lokinmodar">
+// <copyright file="OllamaTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -81,13 +81,13 @@ public class OllamaTranslator : ITranslator
                 return cleaned;
             }
 
-            this.pluginLog.Warning("OllamaTranslator: No output returned.");
+            PluginRuntimeLog.Warning(this.pluginLog, "OllamaTranslator: No output returned.");
             return
                 $"[{Resources.TranslationError} No translation received from Ollama]";
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"OllamaTranslator failed: {ex.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"OllamaTranslator failed: {ex.Message}");
             return $"[{Resources.TranslationError} Ollama error: {ex.Message}]";
         }
     }

@@ -79,7 +79,7 @@ public static class LmStudioModelManager
         }
         catch (Exception ex)
         {
-            PluginLog.Warning(
+            PluginRuntimeLog.Warning(
                 $"[LmStudioModelManager] Failed to fetch models: {ex.Message}");
             CurrentModelList = LmStudioTextModelDefaults.PredefinedModels;
         }

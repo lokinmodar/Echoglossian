@@ -160,11 +160,11 @@ namespace Echoglossian.DBManagerUI
           .Select(t => t.ClrType.Name)
           .OrderBy(n => n)
           .ToList();
-        global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Tables: {string.Join(", ", this.tableNames)}");
+        PluginRuntimeLog.Debug($"[DbEditorWindow] Tables: {string.Join(", ", this.tableNames)}");
       }
       catch (Exception ex)
       {
-        PluginLog.Error($"[DbEditorWindow] Failed to get tables: {ex}");
+        PluginRuntimeLog.Error($"[DbEditorWindow] Failed to get tables: {ex}");
         this.tableNames = new List<string>();
       }
     }
@@ -189,7 +189,7 @@ namespace Echoglossian.DBManagerUI
           .FirstOrDefault(t => t.ClrType.Name == this.selectedTable);
         if (et == null)
         {
-          PluginLog.Error($"[DbEditorWindow] Entity type not found: {this.selectedTable}");
+          PluginRuntimeLog.Error($"[DbEditorWindow] Entity type not found: {this.selectedTable}");
           this.currentRows = null;
           return;
         }
@@ -207,7 +207,7 @@ namespace Echoglossian.DBManagerUI
 
         if (this.currentRows.Count == 0)
         {
-          global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] No records found in {this.selectedTable}.");
+          PluginRuntimeLog.Debug($"[DbEditorWindow] No records found in {this.selectedTable}.");
           NotificationManager.AddNotification(new Notification
           {
             Content = Resources.NoRecordsFoundInThisTable,
@@ -217,7 +217,7 @@ namespace Echoglossian.DBManagerUI
         }
         else
         {
-          global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
+          PluginRuntimeLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
           NotificationManager.AddNotification(new Notification
           {
             Content = this.SafeFormat(Resources.LoadedNRecords, this.currentRows.Count),
@@ -228,7 +228,7 @@ namespace Echoglossian.DBManagerUI
       }
       catch (Exception ex)
       {
-        PluginLog.Error($"[DbEditorWindow] LoadRows failed: {ex}");
+        PluginRuntimeLog.Error($"[DbEditorWindow] LoadRows failed: {ex}");
         this.currentRows = null;
       }
     }
@@ -239,7 +239,7 @@ namespace Echoglossian.DBManagerUI
     /// <param name="entity">Entity instance.</param>
     private void OpenEditor(object entity)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Opening editor for type={entity.GetType().Name}");
+      PluginRuntimeLog.Debug($"[DbEditorWindow] Opening editor for type={entity.GetType().Name}");
       this.editModal.Open(entity);
     }
 
@@ -253,7 +253,7 @@ namespace Echoglossian.DBManagerUI
       {
         this.dbContext.Update(updatedEntity);
         this.dbContext.SaveChanges();
-        global::Echoglossian.PluginRuntimeLog.Debug("[DbEditorWindow] Record saved.");
+        PluginRuntimeLog.Debug("[DbEditorWindow] Record saved.");
         NotificationManager.AddNotification(new Notification
         {
           Content = Resources.RecordSaved,
@@ -265,7 +265,7 @@ namespace Echoglossian.DBManagerUI
       }
       catch (Exception ex)
       {
-        PluginLog.Error($"[DbEditorWindow] Save failed: {ex}");
+        PluginRuntimeLog.Error($"[DbEditorWindow] Save failed: {ex}");
       }
     }
 
@@ -279,7 +279,7 @@ namespace Echoglossian.DBManagerUI
       {
         this.dbContext.Remove(entity);
         this.dbContext.SaveChanges();
-        global::Echoglossian.PluginRuntimeLog.Debug("[DbEditorWindow] Record deleted.");
+        PluginRuntimeLog.Debug("[DbEditorWindow] Record deleted.");
         NotificationManager.AddNotification(new Notification
         {
           Content = Resources.RecordDeleted,
@@ -291,7 +291,7 @@ namespace Echoglossian.DBManagerUI
       }
       catch (Exception ex)
       {
-        PluginLog.Error($"[DbEditorWindow] Delete failed: {ex}");
+        PluginRuntimeLog.Error($"[DbEditorWindow] Delete failed: {ex}");
       }
     }
 
@@ -320,7 +320,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.RemoveRange(toDelete);
         this.dbContext.SaveChanges();
 
-        global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Deleted {toDelete.Count} record(s).");
+        PluginRuntimeLog.Debug($"[DbEditorWindow] Deleted {toDelete.Count} record(s).");
         NotificationManager.AddNotification(new Notification
         {
           Content = this.SafeFormat(Resources.DeletedNRecords, toDelete.Count),
@@ -332,7 +332,7 @@ namespace Echoglossian.DBManagerUI
       }
       catch (Exception ex)
       {
-        PluginLog.Error($"[DbEditorWindow] Batch delete failed: {ex}");
+        PluginRuntimeLog.Error($"[DbEditorWindow] Batch delete failed: {ex}");
       }
     }
 
@@ -360,7 +360,7 @@ namespace Echoglossian.DBManagerUI
       {
         string csv = this.csvExporter.BuildCsv(rows, this.metadata.CurrentScalarProps);
         ImGui.SetClipboardText(csv);
-        global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] CSV copied to clipboard ({rows.Count} row(s)).");
+        PluginRuntimeLog.Debug($"[DbEditorWindow] CSV copied to clipboard ({rows.Count} row(s)).");
         NotificationManager.AddNotification(new Notification
         {
           Content = this.SafeFormat(Resources.CopiedNRecordsToClipboard, rows.Count),
@@ -370,7 +370,7 @@ namespace Echoglossian.DBManagerUI
       }
       catch (Exception ex)
       {
-        PluginLog.Error($"[DbEditorWindow] CSV export failed: {ex}");
+        PluginRuntimeLog.Error($"[DbEditorWindow] CSV export failed: {ex}");
       }
     }
 
@@ -406,9 +406,11 @@ namespace Echoglossian.DBManagerUI
       }
       catch (FormatException ex)
       {
-        PluginLog.Error($"[DbEditorWindow] Bad resource format: \"{format}\". {ex}");
+        PluginRuntimeLog.Error($"[DbEditorWindow] Bad resource format: \"{format}\". {ex}");
         return format;
       }
     }
   }
 }
+
+

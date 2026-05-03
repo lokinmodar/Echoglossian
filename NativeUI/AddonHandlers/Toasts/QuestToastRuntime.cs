@@ -92,7 +92,7 @@ internal sealed class QuestToastRuntime
       return;
     }
 
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[QuestToast] trigger=IToastGui.QuestToast captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
@@ -102,7 +102,7 @@ internal sealed class QuestToastRuntime
     if (storedToast != null &&
         !string.IsNullOrWhiteSpace(storedToast.TranslatedToastMessage))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     "[QuestToast] trigger=IToastGui.QuestToast cache-hit -> resolved immediately");
       this.ApplyResolvedToast(
           ref message,
@@ -146,7 +146,7 @@ internal sealed class QuestToastRuntime
       return;
     }
 
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[QuestToast] trigger=IToastGui.QuestToast applying native replacement text='{translatedText}'");
     if (!this.ShouldUseOverlay())
     {
@@ -179,19 +179,19 @@ internal sealed class QuestToastRuntime
     }
     catch (Exception ex)
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger=async-resolve exception {ex}");
       return;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger=async-resolve empty translation for source='{originalText}'");
       return;
     }
 
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[QuestToast] trigger=async-resolve translation ready for source='{originalText}'");
     await this.insertToastMessageAsync(
         new ToastMessage(
@@ -311,7 +311,7 @@ internal sealed class QuestToastRuntime
   {
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+           TranslationDisplayModeHelper.UsesOverlayPresentation(
                this.config.QuestToastTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -328,7 +328,7 @@ internal sealed class QuestToastRuntime
   {
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+           TranslationDisplayModeHelper.ShowsOriginalOverlayText(
                this.config.QuestToastTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -345,7 +345,7 @@ internal sealed class QuestToastRuntime
   {
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+           TranslationDisplayModeHelper.WritesNativeTranslation(
                this.config.QuestToastTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -383,7 +383,7 @@ internal sealed class QuestToastRuntime
   {
     if (!this.ShouldUseOverlay())
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger={trigger} overlay disabled -> clear");
       this.clearOverlay();
       return;
@@ -392,7 +392,7 @@ internal sealed class QuestToastRuntime
     var overlayText = this.SelectOverlayText(originalText, translatedText);
     if (string.IsNullOrWhiteSpace(overlayText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger={trigger} overlay text unavailable -> clear");
       this.clearOverlay();
       return;
@@ -401,3 +401,5 @@ internal sealed class QuestToastRuntime
     this.updateOverlay(string.Empty, overlayText, string.Empty);
   }
 }
+
+

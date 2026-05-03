@@ -187,11 +187,11 @@ public partial class Echoglossian : IDalamudPlugin
     try
     {
       this.CreateOrUseDb();
-      global::Echoglossian.PluginRuntimeLog.Debug("Eglo database created or used successfully.");
+      PluginRuntimeLog.Debug("Eglo database created or used successfully.");
     }
     catch (Exception e)
     {
-      PluginLog.Error($"Error creating or using database: {e}");
+      PluginRuntimeLog.Error($"Error creating or using database: {e}");
     }
 
     this.cultureInfo =
@@ -230,9 +230,9 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
 
-    global::Echoglossian.PluginRuntimeLog.Debug(
+    PluginRuntimeLog.Debug(
         $"Assets state config: {this.configuration.PluginAssetsDownloaded}");
-    global::Echoglossian.PluginRuntimeLog.Debug($"Assets state var: {this.pluginAssetsState}");
+    PluginRuntimeLog.Debug($"Assets state var: {this.pluginAssetsState}");
 
     if (!this.pluginAssetsState)
     {
@@ -283,8 +283,8 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.queuedTranslationBroker = new QueuedTranslationBroker(
         (TransEngines)this.configuration.ChosenTransEngine,
-        message => PluginLog.Warning(message),
-        message => PluginLog.Error(message));
+        message => PluginRuntimeLog.Warning(message),
+        message => PluginRuntimeLog.Error(message));
     this.hoverTooltipManager = new HoverTooltipManager(
         this.configuration,
         UINewFontHandler);
@@ -519,3 +519,5 @@ public partial class Echoglossian : IDalamudPlugin
   }
 
 }
+
+

@@ -74,7 +74,7 @@ public static class AddonLifecycleExtensions
     /// <param name="type">The event type that triggered the logging operation.</param>
     /// <param name="args">The arguments containing details about the add-on, including its name and context.</param>
     private static void Logger(AddonEvent type, AddonArgs args)
-        => global::Echoglossian.PluginRuntimeLog.Debug($"{args.AddonName} called {type}");
+        => PluginRuntimeLog.Debug($"{args.AddonName} called {type}");
 
     /// <summary>
     /// Removes logging event listeners for the specified add-on from the provided add-on lifecycle instance.
@@ -97,3 +97,5 @@ public static class AddonLifecycleExtensions
     }
   }
 }
+
+

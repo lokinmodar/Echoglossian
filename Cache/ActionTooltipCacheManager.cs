@@ -50,8 +50,9 @@ public static class ActionTooltipCacheManager
         }
         catch (Exception ex)
         {
-            PluginLog.Error(
-                $"[ActionTooltipCacheManager] Failed to preload cache: {ex}");
+            PluginRuntimeLog.Error(
+                "ActionTooltipCacheManager",
+                $"Failed to preload cache: {ex}");
         }
     }
 
@@ -331,8 +332,9 @@ public static class ActionTooltipCacheManager
         Cache.Clear();
         TextLookupCache.Clear();
         ReverseTextLookupCache.Clear();
-        global::Echoglossian.Echoglossian.PluginLog?.Debug(
-            "[ActionTooltipCacheManager] Cleared action-tooltip cache.");
+        PluginRuntimeLog.Debug(
+            "ActionTooltipCacheManager",
+            "Cleared action-tooltip cache.");
     }
 
     /// <summary>

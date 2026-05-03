@@ -44,7 +44,9 @@ public static class GameWindowCacheManager
   /// <param name="configDir">The plugin's configuration directory path.</param>
   public static void Preload(string configDir)
   {
-    global::Echoglossian.Echoglossian.PluginLog?.Debug("[GameWindowCacheManager] Preloading GameWindow entries from DB...");
+    PluginRuntimeLog.Debug(
+        "GameWindowCacheManager",
+        "Preloading GameWindow entries from DB...");
 
     try
     {
@@ -69,12 +71,16 @@ public static class GameWindowCacheManager
       }
 
       isPreloaded = true;
-      global::Echoglossian.Echoglossian.PluginLog?.Debug($"[GameWindowCacheManager] Loaded {all.Count} records into {Cache.Count} addon buckets.");
+      PluginRuntimeLog.Debug(
+          "GameWindowCacheManager",
+          $"Loaded {all.Count} records into {Cache.Count} addon buckets.");
     }
     catch (Exception ex)
     {
       isPreloaded = false;
-      global::Echoglossian.Echoglossian.PluginLog?.Error($"[GameWindowCacheManager] Failed to preload cache: {ex}");
+      PluginRuntimeLog.Error(
+          "GameWindowCacheManager",
+          $"Failed to preload cache: {ex}");
     }
   }
 
@@ -87,7 +93,9 @@ public static class GameWindowCacheManager
   {
     if (newRecord == null || string.IsNullOrWhiteSpace(newRecord.WindowAddonName))
     {
-      global::Echoglossian.Echoglossian.PluginLog?.Warning("[GameWindowCacheManager.Update] Attempted to update cache with null or invalid record.");
+      PluginRuntimeLog.Warning(
+          "GameWindowCacheManager.Update",
+          "Attempted to update cache with null or invalid record.");
       return;
     }
 
@@ -96,12 +104,15 @@ public static class GameWindowCacheManager
     if (existing != null)
     {
       RemoveIndexedRecord(existing);
-      global::Echoglossian.Echoglossian.PluginLog?.Debug("[GameWindowCacheManager.Update] Replacing duplicate GameWindow in cache.");
+      PluginRuntimeLog.Debug(
+          "GameWindowCacheManager.Update",
+          "Replacing duplicate GameWindow in cache.");
     }
 
     IndexRecord(newRecord);
-    global::Echoglossian.Echoglossian.PluginLog?.Debug(
-        $"[GameWindowCacheManager.Update] Cached GameWindow for addon: {newRecord.WindowAddonName} (now {GetAddonBucket(newRecord.WindowAddonName).Count} entries).");
+    PluginRuntimeLog.Debug(
+        "GameWindowCacheManager.Update",
+        $"Cached GameWindow for addon: {newRecord.WindowAddonName} (now {GetAddonBucket(newRecord.WindowAddonName).Count} entries).");
   }
 
   /// <summary>
@@ -113,7 +124,9 @@ public static class GameWindowCacheManager
     ExactCache.Clear();
     ScopeCache.Clear();
     isPreloaded = false;
-    global::Echoglossian.Echoglossian.PluginLog?.Debug("[GameWindowCacheManager] Cleared GameWindow cache.");
+    PluginRuntimeLog.Debug(
+        "GameWindowCacheManager",
+        "Cleared GameWindow cache.");
   }
 
   /// <summary>
@@ -138,7 +151,9 @@ public static class GameWindowCacheManager
   {
     if (string.IsNullOrWhiteSpace(addonName) || string.IsNullOrWhiteSpace(lang))
     {
-      global::Echoglossian.Echoglossian.PluginLog?.Warning("[GameWindowCacheManager.TryFindMatch] Invalid parameters.");
+      PluginRuntimeLog.Warning(
+          "GameWindowCacheManager.TryFindMatch",
+          "Invalid parameters.");
       return null;
     }
 

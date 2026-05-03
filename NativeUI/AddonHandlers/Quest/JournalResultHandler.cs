@@ -72,7 +72,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   private unsafe void OnJournalResultEvent(AddonEvent type, AddonArgs args)
   {
 #if DEBUG
-    global::Echoglossian.PluginRuntimeLog.Debug($"JournalResultHandler AddonEvent: {type} {args.AddonName}");
+    PluginRuntimeLog.Debug($"JournalResultHandler AddonEvent: {type} {args.AddonName}");
 #endif
 
     if (!this.Config.TranslateJournalResult)
@@ -134,7 +134,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       if (foundQuestPlate != null)
       {
 #if DEBUG
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
         var translatedNameText = foundQuestPlate.TranslatedQuestName;
@@ -174,7 +174,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       {
         var translatedNameText = cachedTranslatedName;
 #if DEBUG
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
         if (this.JournalResultShouldRemoveDiacritics)
@@ -223,14 +223,14 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 
             var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-            global::Echoglossian.PluginRuntimeLog.Debug(
+            PluginRuntimeLog.Debug(
                 $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
           });
     }
     catch (Exception e)
     {
-      PluginLog.Error("UiJournalResultHandler Exception: " + e.StackTrace);
+      PluginRuntimeLog.Error("UiJournalResultHandler Exception: " + e.StackTrace);
     }
   }
 
@@ -247,3 +247,5 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     }
   }
 }
+
+

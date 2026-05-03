@@ -29,7 +29,7 @@ internal static class QuestProgressResolver
     public static void Clear()
     {
         QuestProgressCache.Clear();
-        global::Echoglossian.PluginRuntimeLog.Debug("[QuestProgressResolver] Cleared quest progress cache.");
+        PluginRuntimeLog.Debug("[QuestProgressResolver] Cleared quest progress cache.");
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ internal static class QuestProgressResolver
             return false;
         }
 
-        var questName = ReadQuestString(questRow, "Name", "Text", "QuestName");
+        var questName = QuestLuminaResolver.GetQuestNameText(questRow);
         var (questSteps, questSeqs, questSystemTexts) = ReadQuestTextRows(questTextSheet);
         if (questSteps.Count == 0 && questSeqs.Count == 0)
         {
@@ -235,9 +235,9 @@ internal static class QuestProgressResolver
         }
     }
 
-    private static string BuildQuestTextSheetName(object questRow)
+    private static string BuildQuestTextSheetName(Quest questRow)
     {
-        var questId = ReadQuestString(questRow, "Id");
+        var questId = QuestLuminaResolver.GetQuestSheetIdText(questRow);
         if (questId.Length < 5)
         {
             return string.Empty;
@@ -245,32 +245,6 @@ internal static class QuestProgressResolver
 
         var dir = questId.Substring(questId.Length - 5, 3);
         return $"quest/{dir}/{questId}";
-    }
-
-    private static string ReadQuestString(
-        object quest,
-        params string[] propertyNames)
-    {
-        var questType = quest.GetType();
-        foreach (var propertyName in propertyNames)
-        {
-            var property = questType.GetProperty(
-                propertyName,
-                BindingFlags.Instance | BindingFlags.Public);
-
-            if (property?.GetValue(quest) is null)
-            {
-                continue;
-            }
-
-            var value = property.GetValue(quest)?.ToString();
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                return value.Trim();
-            }
-        }
-
-        return string.Empty;
     }
 }
 
@@ -314,3 +288,5 @@ internal readonly record struct QuestProgressEntry(
     ReadOnlySeString OriginalText,
     string KeyText,
     string Text);
+
+

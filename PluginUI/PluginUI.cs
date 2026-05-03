@@ -90,10 +90,10 @@ public partial class Echoglossian
       }
 
       this.SaveConfigValue = true;
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           "Language selected: " +
           LangDict[this.configuration.Lang].LanguageName);
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           "Language font: " + LangDict[this.configuration.Lang].FontName);
 
       MountFontPaths();
@@ -237,3 +237,5 @@ public partial class Echoglossian
     return true;
   }
 }
+
+

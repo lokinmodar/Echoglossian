@@ -1,4 +1,4 @@
-﻿// <copyright file="YandexTranslator.cs" company="lokinmodar">
+// <copyright file="YandexTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -39,7 +39,7 @@ public class YandexTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        this.pluginLog.Debug("Inside YandexTranslator Translate (sync)");
+        PluginRuntimeLog.Debug(this.pluginLog, "Inside YandexTranslator Translate (sync)");
         return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result ?? string.Empty;
     }
 
@@ -59,7 +59,7 @@ public class YandexTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        this.pluginLog.Debug("Inside YandexTranslator TranslateAsync");
+        PluginRuntimeLog.Debug(this.pluginLog, "Inside YandexTranslator TranslateAsync");
 
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -67,7 +67,7 @@ public class YandexTranslator : ITranslator
         }
 
         var fixedText = FixText(text);
-        this.pluginLog.Debug($"Fixed Input Text: {fixedText}");
+        PluginRuntimeLog.Debug(this.pluginLog, $"Fixed Input Text: {fixedText}");
 
         try
         {
@@ -84,13 +84,13 @@ public class YandexTranslator : ITranslator
                         targetLanguage);
 
             var cleanedResult = FixText(result);
-            this.pluginLog.Debug($"Final Translated Text: {cleanedResult}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"Final Translated Text: {cleanedResult}");
 
             return cleanedResult;
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"Yandex translation failed: {ex}");
+            PluginRuntimeLog.Error(this.pluginLog, $"Yandex translation failed: {ex}");
             return string.Empty;
         }
     }
@@ -106,11 +106,11 @@ public class YandexTranslator : ITranslator
 
         var requestUrl =
             $"https://translate.yandex.net/api/v1.5/tr.json/translate?key={apiKey}&text={Uri.EscapeDataString(text)}&lang={from}-{to}";
-        this.pluginLog.Debug($"Free API Request URL: {requestUrl}");
+        PluginRuntimeLog.Debug(this.pluginLog, $"Free API Request URL: {requestUrl}");
 
         var response = await HttpClient.GetAsync(requestUrl);
         var responseContent = await response.Content.ReadAsStringAsync();
-        this.pluginLog.Debug($"Response: {responseContent}");
+        PluginRuntimeLog.Debug(this.pluginLog, $"Response: {responseContent}");
 
         var parsed = JObject.Parse(responseContent);
         return parsed["text"]?[0]?.ToString() ?? string.Empty;
@@ -146,14 +146,15 @@ public class YandexTranslator : ITranslator
             "Authorization",
             $"Api-Key {apiKey}");
 
-        this.pluginLog.Debug(
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
             $"V2 API request body: {JsonConvert.SerializeObject(requestBody)}");
 
         var response = await HttpClient.PostAsync(
             "https://translate.api.cloud.yandex.net/translate/v2/translate",
             content);
         var responseBody = await response.Content.ReadAsStringAsync();
-        this.pluginLog.Debug($"V2 API response: {responseBody}");
+        PluginRuntimeLog.Debug(this.pluginLog, $"V2 API response: {responseBody}");
 
         if (!response.IsSuccessStatusCode)
         {
@@ -168,7 +169,7 @@ public class YandexTranslator : ITranslator
 
         if (!string.IsNullOrEmpty(detectedLang))
         {
-            this.pluginLog.Debug($"Detected Language: {detectedLang}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"Detected Language: {detectedLang}");
         }
 
         this.TrackApiUsage(text.Length);
@@ -182,11 +183,11 @@ public class YandexTranslator : ITranslator
             var error = JObject.Parse(responseBody);
             var message = error["message"]?.ToString() ?? "Unknown error";
             var code = error["code"]?.ToString() ?? "N/A";
-            this.pluginLog.Warning($"Yandex API Error [{code}]: {message}");
+            PluginRuntimeLog.Warning(this.pluginLog, $"Yandex API Error [{code}]: {message}");
         }
         catch
         {
-            this.pluginLog.Error($"Unexpected error response: {responseBody}");
+            PluginRuntimeLog.Error(this.pluginLog, $"Unexpected error response: {responseBody}");
         }
     }
 
@@ -198,19 +199,21 @@ public class YandexTranslator : ITranslator
 
             PluginInterface.SavePluginConfig(this.config);
 
-            this.pluginLog.Debug(
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
                 $"Characters translated today (stored in config): {this.config.YandexCharactersTranslated}");
 
             if (this.config.YandexCharactersTranslated >
                 this.characterQuotaLimit)
             {
-                this.pluginLog.Warning(
+                PluginRuntimeLog.Warning(
+                    this.pluginLog,
                     "Yandex API character quota likely exceeded.");
             }
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"Failed to track API usage: {ex}");
+            PluginRuntimeLog.Error(this.pluginLog, $"Failed to track API usage: {ex}");
         }
     }
 }

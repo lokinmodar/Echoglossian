@@ -26,14 +26,14 @@ public partial class Echoglossian
 
   private static void AdjustLanguageForFontBuild()
   {
-    global::Echoglossian.PluginRuntimeLog.Debug("Inside AdjustLanguageForFontBuild method");
+    PluginRuntimeLog.Debug("Inside AdjustLanguageForFontBuild method");
 
 
     var lang = SelectedLanguage;
     SpecialFontFileName = lang.FontName;
     ScriptCharList = lang.ExclusiveCharsToAdd;
 
-    global::Echoglossian.PluginRuntimeLog.Debug(
+    PluginRuntimeLog.Debug(
         "Lang:\n " + lang + "\nSpecialFontFileName:\n " +
         SpecialFontFileName + "\nScriptCharList:\n " + ScriptCharList);
   }
@@ -55,7 +55,7 @@ public partial class Echoglossian
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
     LangComboFontFilePath =
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
-    global::Echoglossian.PluginRuntimeLog.Debug(
+    PluginRuntimeLog.Debug(
         "Fonts paths:\n " + SpecialFontFilePath + "\n " + FontFilePath +
         "\n " + SymbolsFontFilePath + "\n " + DummyFontFilePath);
   }
@@ -69,3 +69,4 @@ public partial class Echoglossian
     }
   }
 }
+

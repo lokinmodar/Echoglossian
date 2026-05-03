@@ -1,4 +1,4 @@
-﻿// <copyright file="TranslationService.cs" company="lokinmodar">
+// <copyright file="TranslationService.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -37,7 +37,7 @@ public class TranslationService
       IPluginLog pluginLog,
       Sanitizer sanitizer)
   {
-    this.debugLog = message => pluginLog.Debug(message);
+    this.debugLog = message => PluginRuntimeLog.Debug(pluginLog, message);
     this.sanitizeText = sanitizer.Sanitize;
     var chosenEngine = (Echoglossian.TransEngines)config.ChosenTransEngine;
     this.translationEngineId = (int)chosenEngine;

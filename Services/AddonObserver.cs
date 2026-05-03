@@ -1,4 +1,4 @@
-﻿// <copyright file="AddonObserver.cs" company="lokinmodar">
+// <copyright file="AddonObserver.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -67,7 +67,7 @@ public unsafe partial class AddonObserver : IDisposable
   {
     this._visibleUnits.Clear();
 
-    if (!global::Echoglossian.FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
+    if (!FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
     {
       var closedAddonNames = this._nameCache.Values.ToArray();
       this._removedUnits.Clear();
@@ -113,3 +113,5 @@ public unsafe partial class AddonObserver : IDisposable
     }
   }
 }
+
+

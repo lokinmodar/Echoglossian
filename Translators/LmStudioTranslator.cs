@@ -1,4 +1,4 @@
-﻿// <copyright file="LmStudioTranslator.cs" company="lokinmodar">
+// <copyright file="LmStudioTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -110,12 +110,13 @@ public class LmStudioTranslator : ITranslator
                 return result;
             }
 
-            this.pluginLog.Warning("LmStudio returned empty translation.");
+            PluginRuntimeLog.Warning(this.pluginLog, "LmStudio returned empty translation.");
             return null;
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error(
+            PluginRuntimeLog.Error(
+                this.pluginLog,
                 $"{Resources.TranslationError} LmStudio: {ex.Message}");
             return $"[{Resources.TranslationError} LmStudio: {ex.Message}]";
         }

@@ -1490,7 +1490,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     }
     catch (Exception e)
     {
-      PluginLog.Error($"Error in UiJournalDetailHandler: {e}");
+      PluginRuntimeLog.Error($"Error in UiJournalDetailHandler: {e}");
     }
   }
 
@@ -1621,7 +1621,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     }
     catch (Exception e)
     {
-      PluginLog.Error($"Error in UIJournalDetailHandler: {e}");
+      PluginRuntimeLog.Error($"Error in UIJournalDetailHandler: {e}");
     }
 
     return true;

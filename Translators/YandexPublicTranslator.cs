@@ -1,4 +1,4 @@
-﻿// <copyright file="YandexPublicTranslator.cs" company="lokinmodar">
+// <copyright file="YandexPublicTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -73,7 +73,7 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"Yandex translation failed: {ex}");
+            PluginRuntimeLog.Error(this.pluginLog, $"Yandex translation failed: {ex}");
             return string.Empty;
         }
     }
@@ -93,12 +93,13 @@ public class YandexPublicTranslator : ITranslator, IDisposable
             { "lang", langPair },
         };
 
-        this.pluginLog.Debug(
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
             $"Yandex Free API data: {string.Join(", ", data.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
 
         var requestURL = $"{ApiUrl}/translate{query}";
 
-        this.pluginLog.Debug($"Yandex Free API Request URL: {requestURL}");
+        PluginRuntimeLog.Debug(this.pluginLog, $"Yandex Free API Request URL: {requestURL}");
 
         using var request = new HttpRequestMessage(HttpMethod.Post, requestURL)
         {
@@ -110,7 +111,8 @@ public class YandexPublicTranslator : ITranslator, IDisposable
         var response = await this.httpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 $"Yandex API returned HTTP {response.StatusCode}");
             return string.Empty;
         }
@@ -120,7 +122,8 @@ public class YandexPublicTranslator : ITranslator, IDisposable
 
         if (result is null || !result.IsSuccessful)
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 $"Yandex API returned error code {result?.Code}, lang: {result?.Lang}");
             return string.Empty;
         }

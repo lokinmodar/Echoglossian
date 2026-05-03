@@ -1,4 +1,4 @@
-﻿// <copyright file="GeminiTranslator.cs" company="lokinmodar">
+// <copyright file="GeminiTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -25,7 +25,8 @@ public class GeminiTranslator : ITranslator
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 Resources
                     .APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable);
             this.httpClient = null;
@@ -34,7 +35,8 @@ public class GeminiTranslator : ITranslator
         {
             try
             {
-                pluginLog.Debug(
+                PluginRuntimeLog.Debug(
+                    pluginLog,
                     $"GeminiTranslator: {this.model}, {this.apiKey[..20]}***{this.apiKey[^5..]}, {this.temperature}");
 
                 this.httpClient = new HttpClient();
@@ -43,7 +45,8 @@ public class GeminiTranslator : ITranslator
             }
             catch (Exception ex)
             {
-                this.pluginLog.Error(
+                PluginRuntimeLog.Error(
+                    this.pluginLog,
                     $"Failed to initialize Gemini HTTP client: {ex.Message}");
                 this.httpClient = null;
             }
@@ -139,13 +142,15 @@ Please provide only the translated text in your response, without any explanatio
                     if (retry < this.maxRetries)
                     {
                         var backoff = this.initialBackoff * Math.Pow(2, retry);
-                        this.pluginLog.Warning(
+                        PluginRuntimeLog.Warning(
+                            this.pluginLog,
                             $"Gemini API request failed with status code {response.StatusCode}. Retrying in {backoff.TotalSeconds} seconds...");
                         await Task.Delay(backoff);
                         continue; // Retry
                     }
 
-                    this.pluginLog.Error(
+                    PluginRuntimeLog.Error(
+                        this.pluginLog,
                         $"Gemini API request failed after {this.maxRetries} retries with status code {response.StatusCode}.");
                     return
                         $"[{Resources.TranslationError} Gemini API request failed with status code {response.StatusCode}]";
@@ -165,7 +170,8 @@ Please provide only the translated text in your response, without any explanatio
                     return translatedText;
                 }
 
-                this.pluginLog.Error(
+                PluginRuntimeLog.Error(
+                    this.pluginLog,
                     "Gemini API returned an empty translated text.");
                 return
                     $"[{Resources.TranslationError} Gemini API returned an empty translated text.]";
@@ -175,13 +181,15 @@ Please provide only the translated text in your response, without any explanatio
                 if (retry < this.maxRetries)
                 {
                     var backoff = this.initialBackoff * Math.Pow(2, retry);
-                    this.pluginLog.Warning(
+                    PluginRuntimeLog.Warning(
+                        this.pluginLog,
                         $"HTTP Error: {httpEx.Message}. Retrying in {backoff.TotalSeconds} seconds...");
                     await Task.Delay(backoff);
                 }
                 else
                 {
-                    this.pluginLog.Error(
+                    PluginRuntimeLog.Error(
+                        this.pluginLog,
                         $"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
                     return
                         $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
@@ -189,14 +197,16 @@ Please provide only the translated text in your response, without any explanatio
             }
             catch (JsonException jsonEx)
             {
-                this.pluginLog.Error(
+                PluginRuntimeLog.Error(
+                    this.pluginLog,
                     $"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
                 return
                     $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
             }
             catch (Exception ex)
             {
-                this.pluginLog.Error(
+                PluginRuntimeLog.Error(
+                    this.pluginLog,
                     $"{Resources.TranslationError} {ex.Message}");
                 return $"[{Resources.TranslationError} {ex.Message}]";
             }

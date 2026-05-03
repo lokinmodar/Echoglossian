@@ -1,4 +1,4 @@
-﻿// <copyright file="MicrosoftTranslator.cs" company="lokinmodar">
+// <copyright file="MicrosoftTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -24,14 +24,14 @@ public class MicrosoftTranslator : ITranslator
 
     if (string.IsNullOrWhiteSpace(this.apiKey))
     {
-      this.pluginLog.Warning(Resources.APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable);
+      PluginRuntimeLog.Warning(this.pluginLog, Resources.APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable);
       this.httpClient = null;
     }
     else
     {
       try
       {
-        pluginLog.Debug($"MicrosoftTranslator: key {this.apiKey[..5]}***{this.apiKey[^5..]}, region: {this.region}, endpoint: {this.endpoint}");
+        PluginRuntimeLog.Debug(pluginLog, $"MicrosoftTranslator: key {this.apiKey[..5]}***{this.apiKey[^5..]}, region: {this.region}, endpoint: {this.endpoint}");
 
         this.httpClient = new HttpClient();
         this.httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -43,7 +43,7 @@ public class MicrosoftTranslator : ITranslator
       }
       catch (Exception ex)
       {
-        this.pluginLog.Error($"Failed to initialize Microsoft Translator HTTP client: {ex.Message}");
+        PluginRuntimeLog.Error(this.pluginLog, $"Failed to initialize Microsoft Translator HTTP client: {ex.Message}");
         this.httpClient = null;
       }
     }
@@ -93,12 +93,12 @@ public class MicrosoftTranslator : ITranslator
           if (retry < this.maxRetries)
           {
             var backoff = this.initialBackoff * Math.Pow(2, retry);
-            this.pluginLog.Warning($"Microsoft Translator API request failed with status code {response.StatusCode}. Retrying in {backoff.TotalSeconds} seconds...");
+            PluginRuntimeLog.Warning(this.pluginLog, $"Microsoft Translator API request failed with status code {response.StatusCode}. Retrying in {backoff.TotalSeconds} seconds...");
             await Task.Delay(backoff);
             continue;
           }
 
-          this.pluginLog.Error($"Microsoft Translator API request failed after {this.maxRetries} retries with status code {response.StatusCode}.");
+          PluginRuntimeLog.Error(this.pluginLog, $"Microsoft Translator API request failed after {this.maxRetries} retries with status code {response.StatusCode}.");
           return $"[{Resources.TranslationError} Microsoft Translator API request failed with status code {response.StatusCode}]";
         }
 
@@ -114,7 +114,7 @@ public class MicrosoftTranslator : ITranslator
           return translatedText;
         }
 
-        this.pluginLog.Error("Microsoft Translator API returned an empty or invalid translated text.");
+        PluginRuntimeLog.Error(this.pluginLog, "Microsoft Translator API returned an empty or invalid translated text.");
         return $"[{Resources.TranslationError} Microsoft Translator API returned an empty or invalid translated text.]";
       }
       catch (HttpRequestException httpEx)
@@ -122,22 +122,22 @@ public class MicrosoftTranslator : ITranslator
         if (retry < this.maxRetries)
         {
           var backoff = this.initialBackoff * Math.Pow(2, retry);
-          this.pluginLog.Warning($"HTTP Error: {httpEx.Message}. Retrying in {backoff.TotalSeconds} seconds...");
+          PluginRuntimeLog.Warning(this.pluginLog, $"HTTP Error: {httpEx.Message}. Retrying in {backoff.TotalSeconds} seconds...");
           await Task.Delay(backoff);
           continue;
         }
 
-        this.pluginLog.Error($"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
+        PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
         return $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
       }
       catch (JsonException jsonEx)
       {
-        this.pluginLog.Error($"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
+        PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
         return $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
       }
       catch (Exception ex)
       {
-        this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
+        PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} {ex.Message}");
         return $"[{Resources.TranslationError} {ex.Message}]";
       }
     }

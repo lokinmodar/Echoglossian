@@ -50,7 +50,7 @@ public partial class Echoglossian
         }
 
         finalText = FixText(finalText);
-        global::Echoglossian.PluginRuntimeLog.Debug($"FinalTranslatedText: {finalText}");
+        PluginRuntimeLog.Debug($"FinalTranslatedText: {finalText}");
 
         return finalText;
     }
@@ -70,8 +70,9 @@ public partial class Echoglossian
         HttpUtility.HtmlDecode(parsedText, stringWriter);
 
         var decodedString = stringWriter.ToString();
-        global::Echoglossian.PluginRuntimeLog.Debug("In parser: " + parsedText);
+        PluginRuntimeLog.Debug("In parser: " + parsedText);
 
         return decodedString;
     }
 }
+

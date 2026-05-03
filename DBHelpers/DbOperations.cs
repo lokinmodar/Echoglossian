@@ -35,16 +35,16 @@ public partial class Echoglossian
   public void CreateOrUseDb()
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
-    global::Echoglossian.PluginRuntimeLog.Debug($"Config dir path: {ConfigDirectory}");
+    PluginRuntimeLog.Debug($"Config dir path: {ConfigDirectory}");
     try
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"Config dir path: {ConfigDirectory}");
+      PluginRuntimeLog.Debug($"Config dir path: {ConfigDirectory}");
 
       var pendingMigrations = context.Database.GetPendingMigrations().ToList();
 
       if (pendingMigrations.Count != 0)
       {
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Pending migrations: {pendingMigrations.Count}");
         context.Database.Migrate();
       }
@@ -52,21 +52,21 @@ public partial class Echoglossian
       var appliedMigrations = context.Database.GetAppliedMigrations().ToList();
       if (appliedMigrations.Count != 0)
       {
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Last applied migration: {appliedMigrations[^1]}");
       }
       else
       {
-        global::Echoglossian.PluginRuntimeLog.Debug("No applied migrations found.");
+        PluginRuntimeLog.Debug("No applied migrations found.");
       }
     }
     catch (Exception e)
     {
-      PluginLog.Error($"Error creating or using Db: {e}");
+      PluginRuntimeLog.Error($"Error creating or using Db: {e}");
     }
     finally
     {
-      global::Echoglossian.PluginRuntimeLog.Debug("Db created or used successfully");
+      PluginRuntimeLog.Debug("Db created or used successfully");
     }
   }
   /// <summary>
@@ -144,7 +144,7 @@ public partial class Echoglossian
 
       var localFoundToastMessage = existingToastMessage.FirstOrDefault();
 
-      global::Echoglossian.PluginRuntimeLog.Debug($"localFoundToasMessage: {localFoundToastMessage}");
+      PluginRuntimeLog.Debug($"localFoundToasMessage: {localFoundToastMessage}");
 
       if (localFoundToastMessage == null ||
           localFoundToastMessage.OriginalToastMessage !=
@@ -159,7 +159,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindToastMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindToastMessage exception {e}");
       return false;
     }
   }
@@ -214,7 +214,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindAndReturnToastMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindAndReturnToastMessage exception {e}");
       return null;
     }
   }
@@ -266,7 +266,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindErrorToastMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindErrorToastMessage exception {e}");
       return false;
     }
   }
@@ -316,7 +316,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindAndReturnBattleTalkMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindAndReturnBattleTalkMessage exception {e}");
       return null;
     }
   }
@@ -424,7 +424,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindQuestPlate exception: {e}");
+      PluginRuntimeLog.Debug($"FindQuestPlate exception: {e}");
       return null;
     }
   }
@@ -457,7 +457,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"UpdateQuestPlateGameVersion exception: {e}");
+      PluginRuntimeLog.Debug($"UpdateQuestPlateGameVersion exception: {e}");
     }
   }
 
@@ -578,7 +578,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindAndReturnTalkSubtitleMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindAndReturnTalkSubtitleMessage exception {e}");
       return null;
     }
   }
@@ -622,7 +622,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindAndReturnMiniTalkMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindAndReturnMiniTalkMessage exception {e}");
       return null;
     }
   }
@@ -664,7 +664,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindAndReturnTextGimmickHintMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindAndReturnTextGimmickHintMessage exception {e}");
       return null;
     }
   }
@@ -708,7 +708,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindAndReturnCutSceneSelectStringMessage exception {e}");
+      PluginRuntimeLog.Debug($"FindAndReturnCutSceneSelectStringMessage exception {e}");
       return null;
     }
   }
@@ -743,7 +743,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug($"FindAndReturnGameWindow exception {e}");
+      PluginRuntimeLog.Debug($"FindAndReturnGameWindow exception {e}");
       return null;
     }
   }
@@ -759,7 +759,7 @@ public partial class Echoglossian
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
 
-    global::Echoglossian.PluginRuntimeLog.Debug($"TalkMessage to be saved in DB: {talkMessage}");
+    PluginRuntimeLog.Debug($"TalkMessage to be saved in DB: {talkMessage}");
 
     var pluginConfig = PluginInterface.GetPluginConfig() as Config;
 
@@ -783,7 +783,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      PluginLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
+      PluginRuntimeLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
       return $"ErrorSavingData: {e}";
     }
   }
@@ -976,7 +976,7 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
-      PluginLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
+      PluginRuntimeLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
       return $"ErrorSavingData: {e}";
     }
   }
@@ -997,7 +997,7 @@ public partial class Echoglossian
           this.ErrorToastsCache.Count > 0)
       {
 
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Total ErrorToasts in cache: {this.ErrorToastsCache.Count}");
 
         isInThere = this.ErrorToastsCache.Exists(t =>
@@ -1050,7 +1050,7 @@ public partial class Echoglossian
           this.OtherToastsCache.Count > 0)
       {
 
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Total ErrorToasts in cache: {this.OtherToastsCache.Count}");
 
         isInThere = this.OtherToastsCache.Exists(t =>
@@ -1355,7 +1355,7 @@ public partial class Echoglossian
     catch (Exception e)
     {
       this.ErrorToastsCache = new List<ToastMessage>();
-      global::Echoglossian.PluginRuntimeLog.Debug("Could not find any Error Toasts in Database", e.Message);
+      PluginRuntimeLog.Debug("Could not find any Error Toasts in Database", e.Message);
     }
   }
 
@@ -1376,7 +1376,7 @@ public partial class Echoglossian
     catch (Exception e)
     {
       this.OtherToastsCache = new List<ToastMessage>();
-      global::Echoglossian.PluginRuntimeLog.Debug("Could not find any Other Toasts in Database", e.Message);
+      PluginRuntimeLog.Debug("Could not find any Other Toasts in Database", e.Message);
     }
   }
 
@@ -1433,7 +1433,7 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
-    global::Echoglossian.PluginRuntimeLog.Debug(
+    PluginRuntimeLog.Debug(
         $"FindEntity<{typeof(T).Name}> called with predicate: {predicate}");
     try
     {
@@ -1441,7 +1441,7 @@ public partial class Echoglossian
     }
     catch (Exception ex)
     {
-      PluginLog.Error(
+      PluginRuntimeLog.Error(
           $"FindEntity<{typeof(T).Name}> failed: {ex.Message}");
       return null;
     }
@@ -1465,7 +1465,7 @@ public partial class Echoglossian
         PluginInterface.GetPluginConfigDirectory() +
         Path.DirectorySeparatorChar);
 
-    global::Echoglossian.PluginRuntimeLog.Debug($"InsertEntity<{typeof(T).Name}> called with entity: {entity}");
+    PluginRuntimeLog.Debug($"InsertEntity<{typeof(T).Name}> called with entity: {entity}");
 
     try
     {
@@ -1475,10 +1475,12 @@ public partial class Echoglossian
     }
     catch (Exception ex)
     {
-      PluginLog.Error($"InsertEntity<{typeof(T).Name}> failed: {ex.Message}");
+      PluginRuntimeLog.Error($"InsertEntity<{typeof(T).Name}> failed: {ex.Message}");
       return $"Insert failed: {ex.Message}";
     }
   }
 
 }
+
+
 

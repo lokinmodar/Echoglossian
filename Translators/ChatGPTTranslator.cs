@@ -1,4 +1,4 @@
-﻿// <copyright file="ChatGPTTranslator.cs" company="lokinmodar">
+// <copyright file="ChatGPTTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -38,7 +38,8 @@ public class ChatGPTTranslator : ITranslator
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 Resources
                     .APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable);
             this.chatClient = null;
@@ -47,7 +48,8 @@ public class ChatGPTTranslator : ITranslator
         {
             try
             {
-                pluginLog.Debug(
+                PluginRuntimeLog.Debug(
+                    pluginLog,
                     $"ChatGPTTranslator: {baseUrl}, {apiKey[..20]}***{apiKey[^5..]}, {temperature}");
 
                 var clientOptions = new OpenAIClientOptions
@@ -55,8 +57,9 @@ public class ChatGPTTranslator : ITranslator
                     Endpoint = new Uri(baseUrl),
                 };
 
-                pluginLog.Debug(
-                    $"ChatGPTTranslator: {string.Join(", ", clientOptions.GetType().GetProperties().Select(p => $"{p.Name}={p.GetValue(clientOptions)}"))}");
+                PluginRuntimeLog.Debug(
+                    pluginLog,
+                    $"ChatGPTTranslator: Endpoint={clientOptions.Endpoint}");
 
                 this.chatClient = new ChatClient(
                     model,
@@ -65,7 +68,8 @@ public class ChatGPTTranslator : ITranslator
             }
             catch (Exception ex)
             {
-                this.pluginLog.Error(
+                PluginRuntimeLog.Error(
+                    this.pluginLog,
                     $"Failed to initialize GPT ChatClient: {ex.Message}");
                 this.chatClient = null;
             }
@@ -164,7 +168,7 @@ public class ChatGPTTranslator : ITranslator
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} {ex.Message}");
             return $"[{Resources.TranslationError} {ex.Message}]";
         }
 

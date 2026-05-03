@@ -35,6 +35,32 @@ internal static class PluginRuntimeLog
   /// <summary>
   ///     Writes a debug log line only in <c>DEBUG</c> builds.
   /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="message">The message to write.</param>
+  [Conditional("DEBUG")]
+  public static void Debug(IPluginLog pluginLog, string message)
+  {
+    pluginLog.Debug(message);
+  }
+
+  /// <summary>
+  ///     Writes a formatted debug log line only in <c>DEBUG</c> builds.
+  /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="messageTemplate">The structured message template.</param>
+  /// <param name="values">The structured logging values.</param>
+  [Conditional("DEBUG")]
+  public static void Debug(
+      IPluginLog pluginLog,
+      string messageTemplate,
+      params object[] values)
+  {
+    pluginLog.Debug(messageTemplate, values);
+  }
+
+  /// <summary>
+  ///     Writes a debug log line only in <c>DEBUG</c> builds.
+  /// </summary>
   /// <param name="message">The message to write.</param>
   [Conditional("DEBUG")]
   public static void Debug(string message)
@@ -90,10 +116,52 @@ internal static class PluginRuntimeLog
       string scope,
       string message)
   {
+    Write(Echoglossian.PluginLog, level, scope, message);
+  }
+
+  /// <summary>
+  ///     Writes a message using the requested level.
+  /// </summary>
+  /// <param name="level">The log level to use.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Write(
+      PluginRuntimeLogLevel level,
+      string message)
+  {
+    Write(Echoglossian.PluginLog, level, string.Empty, message);
+  }
+
+  /// <summary>
+  ///     Writes a message using the requested level and explicit logger sink.
+  /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="level">The log level to use.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Write(
+      IPluginLog pluginLog,
+      PluginRuntimeLogLevel level,
+      string message)
+  {
+    Write(pluginLog, level, string.Empty, message);
+  }
+
+  /// <summary>
+  ///     Writes a scoped message using the requested level and explicit logger sink.
+  /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="level">The log level to use.</param>
+  /// <param name="scope">The logical scope to render inside square brackets.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Write(
+      IPluginLog pluginLog,
+      PluginRuntimeLogLevel level,
+      string scope,
+      string message)
+  {
     if (level == PluginRuntimeLogLevel.Debug)
     {
 #if DEBUG
-      Echoglossian.PluginLog.Debug(Format(scope, message));
+      pluginLog.Debug(Format(scope, message));
 #endif
       return;
     }
@@ -102,21 +170,40 @@ internal static class PluginRuntimeLog
     switch (level)
     {
       case PluginRuntimeLogLevel.Verbose:
-        Echoglossian.PluginLog.Verbose(formatted);
+        pluginLog.Verbose(formatted);
         break;
       case PluginRuntimeLogLevel.Information:
-        Echoglossian.PluginLog.Information(formatted);
+        pluginLog.Information(formatted);
         break;
       case PluginRuntimeLogLevel.Warning:
-        Echoglossian.PluginLog.Warning(formatted);
+        pluginLog.Warning(formatted);
         break;
       case PluginRuntimeLogLevel.Error:
-        Echoglossian.PluginLog.Error(formatted);
+        pluginLog.Error(formatted);
         break;
       default:
-        Echoglossian.PluginLog.Information(formatted);
+        pluginLog.Information(formatted);
         break;
     }
+  }
+
+  /// <summary>
+  ///     Writes a verbose log line.
+  /// </summary>
+  /// <param name="message">The message to write.</param>
+  public static void Verbose(string message)
+  {
+    Echoglossian.PluginLog.Verbose(message);
+  }
+
+  /// <summary>
+  ///     Writes a verbose log line to an explicit logger sink.
+  /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Verbose(IPluginLog pluginLog, string message)
+  {
+    pluginLog.Verbose(message);
   }
 
   /// <summary>
@@ -130,6 +217,25 @@ internal static class PluginRuntimeLog
   }
 
   /// <summary>
+  ///     Writes an informational log line.
+  /// </summary>
+  /// <param name="message">The message to write.</param>
+  public static void Information(string message)
+  {
+    Echoglossian.PluginLog.Information(message);
+  }
+
+  /// <summary>
+  ///     Writes an informational log line to an explicit logger sink.
+  /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Information(IPluginLog pluginLog, string message)
+  {
+    pluginLog.Information(message);
+  }
+
+  /// <summary>
   ///     Writes a scoped informational log line.
   /// </summary>
   /// <param name="scope">The logical scope to render inside square brackets.</param>
@@ -140,6 +246,25 @@ internal static class PluginRuntimeLog
   }
 
   /// <summary>
+  ///     Writes a warning log line.
+  /// </summary>
+  /// <param name="message">The message to write.</param>
+  public static void Warning(string message)
+  {
+    Echoglossian.PluginLog.Warning(message);
+  }
+
+  /// <summary>
+  ///     Writes a warning log line to an explicit logger sink.
+  /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Warning(IPluginLog pluginLog, string message)
+  {
+    pluginLog.Warning(message);
+  }
+
+  /// <summary>
   ///     Writes a scoped warning log line.
   /// </summary>
   /// <param name="scope">The logical scope to render inside square brackets.</param>
@@ -147,6 +272,25 @@ internal static class PluginRuntimeLog
   public static void Warning(string scope, string message)
   {
     Echoglossian.PluginLog.Warning(Format(scope, message));
+  }
+
+  /// <summary>
+  ///     Writes an error log line.
+  /// </summary>
+  /// <param name="message">The message to write.</param>
+  public static void Error(string message)
+  {
+    Echoglossian.PluginLog.Error(message);
+  }
+
+  /// <summary>
+  ///     Writes an error log line to an explicit logger sink.
+  /// </summary>
+  /// <param name="pluginLog">The explicit logger sink to use.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Error(IPluginLog pluginLog, string message)
+  {
+    pluginLog.Error(message);
   }
 
   /// <summary>

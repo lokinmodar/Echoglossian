@@ -45,7 +45,8 @@ internal static unsafe class AddonStructureProbe
   {
     if (!TryResolveAddonPointer(gameGui, addonName, index, out var addon))
     {
-      pluginLog.Warning(
+      PluginRuntimeLog.Warning(
+          pluginLog,
           $"[AddonProbe] addon='{addonName}' index={index} was not found.");
       return false;
     }
@@ -82,7 +83,8 @@ internal static unsafe class AddonStructureProbe
   {
     if (addon == null)
     {
-      pluginLog.Warning(
+      PluginRuntimeLog.Warning(
+          pluginLog,
           $"[AddonProbe] addon='{addonName}' index={index} resolved to a null pointer.");
       return false;
     }
@@ -97,7 +99,8 @@ internal static unsafe class AddonStructureProbe
     };
 
     var visitedNodes = new HashSet<nint>();
-    pluginLog.Information(
+    PluginRuntimeLog.Information(
+        pluginLog,
         $"[AddonProbe] Starting probe addon='{snapshot.AddonName}' index={index} trigger='{trigger ?? "manual"}' ptr=0x{(ulong)(nint)addon:X} addonId={snapshot.AddonId} visible={snapshot.IsVisible} root=0x{(ulong)snapshot.RootNodeAddress:X} nodeList={snapshot.NodeListCount} collisionList={snapshot.CollisionNodeListCount}");
 
     if (addon->UldManager.RootNode != null)
@@ -140,7 +143,8 @@ internal static unsafe class AddonStructureProbe
 
     LatestSnapshots[GetSnapshotKey(snapshot.AddonName, snapshot.Index)] = snapshot;
 
-    pluginLog.Information(
+    PluginRuntimeLog.Information(
+        pluginLog,
         $"[AddonProbe] Summary addon='{snapshot.AddonName}' index={index} nodes={snapshot.NodeCount} textNodes={snapshot.TextNodeCount} sheetTextNodes={snapshot.SheetTextNodeCount} visibleTextNodes={snapshot.VisibleTextNodeCount} componentNodes={snapshot.ComponentNodeCount} stringArrays={snapshot.StringArraySubscriptionCount} bestAnchor='{snapshot.BestTextAnchorPath ?? "<none>"}' bestText='{NormalizeForLog(snapshot.BestTextAnchorText) ?? "<none>"}'");
 
     return true;
@@ -174,7 +178,7 @@ internal static unsafe class AddonStructureProbe
       return true;
     }
 
-    if (!global::Echoglossian.FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
+    if (!FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
     {
       return false;
     }
@@ -321,7 +325,8 @@ internal static unsafe class AddonStructureProbe
 
     if (depth > maxDepth)
     {
-      pluginLog.Debug(
+      PluginRuntimeLog.Debug(
+          pluginLog,
           $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} path={path} depth={depth} max-depth reached");
       return;
     }
@@ -335,7 +340,8 @@ internal static unsafe class AddonStructureProbe
     snapshot.NodeCount++;
     if (snapshot.NodeCount > maxNodes)
     {
-      pluginLog.Warning(
+      PluginRuntimeLog.Warning(
+          pluginLog,
           $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} aborted after {snapshot.NodeCount} nodes to avoid runaway traversal.");
       return;
     }
@@ -362,7 +368,8 @@ internal static unsafe class AddonStructureProbe
     }
 
     var nodeDescription = DescribeNode(node, textNode, text);
-    pluginLog.Debug(
+    PluginRuntimeLog.Debug(
+        pluginLog,
         $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} depth={depth} path={path} {nodeDescription}");
 
     if (snapshot.BestTextAnchorPath == null &&
@@ -381,7 +388,8 @@ internal static unsafe class AddonStructureProbe
           componentNode->Component->UldManager.RootNode != null)
       {
         var componentRoot = componentNode->Component->UldManager.RootNode;
-        pluginLog.Debug(
+        PluginRuntimeLog.Debug(
+            pluginLog,
             $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} path={path} component-root=0x{(ulong)(nint)componentRoot:X}");
         WalkNode(
             pluginLog,
@@ -508,7 +516,8 @@ internal static unsafe class AddonStructureProbe
           $"stringArrayIndex={arrayIndex} size={stringArrayData->Size} subscribers=[{string.Join(", ", subscriberIds)}] subscriberNames=[{ResolveSubscriberNames(subscriberIds, addonNamesById)}]";
       snapshot.StringArraySubscriptions.Add(subscriptionSummary);
       snapshot.StringArraySubscriptionCount++;
-      pluginLog.Information(
+      PluginRuntimeLog.Information(
+          pluginLog,
           $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} addonId={snapshot.AddonId} {subscriptionSummary}");
     }
   }
@@ -521,7 +530,7 @@ internal static unsafe class AddonStructureProbe
   private static Dictionary<byte, HashSet<string>> BuildLoadedAddonNamesById()
   {
     var namesById = new Dictionary<byte, HashSet<string>>();
-    if (!global::Echoglossian.FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
+    if (!FrameworkAccessGuard.TryGetRaptureAtkUnitManager(out var manager))
     {
       return namesById;
     }
@@ -898,7 +907,8 @@ internal static unsafe class AddonStructureProbe
       this.index = index;
       this.expiresAt = DateTimeOffset.UtcNow + duration;
 
-      this.pluginLog.Information(
+      PluginRuntimeLog.Information(
+          this.pluginLog,
           $"[AddonProbe] Watching addon='{this.addonName}' index={this.index} for {(int)duration.TotalSeconds}s");
 
       this.TryDumpCurrent("watch-start");
@@ -956,7 +966,8 @@ internal static unsafe class AddonStructureProbe
 
       this.disposed = true;
 
-      this.pluginLog.Information(
+      PluginRuntimeLog.Information(
+          this.pluginLog,
           $"[AddonProbe] Watch {reason} addon='{this.addonName}' index={this.index}");
     }
 
@@ -1109,3 +1120,5 @@ internal static unsafe class AddonStructureProbe
     public string? BestTextAnchorText { get; set; }
   }
 }
+
+

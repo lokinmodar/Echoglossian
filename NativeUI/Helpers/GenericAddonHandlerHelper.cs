@@ -157,9 +157,9 @@ public static class GenericAddonHandlerHelper
       TranslationService service)
       where T : class, IGenericEntity, new()
   {
-    global::Echoglossian.PluginRuntimeLog.Debug($"[{addonName}] [Async] Starting translation...");
+    PluginRuntimeLog.Debug($"[{addonName}] [Async] Starting translation...");
     Type entityType = typeof(T);
-    global::Echoglossian.PluginRuntimeLog.Debug($"[{addonName}] Entity type resolved as {entityType.Name}");
+    PluginRuntimeLog.Debug($"[{addonName}] Entity type resolved as {entityType.Name}");
 
     try
     {
@@ -179,18 +179,18 @@ public static class GenericAddonHandlerHelper
           service);
       if (!translatedPayloadResult.HasValue)
       {
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"[{addonName}] [Async] Skipping persistence because the translated payload is empty or incomplete.");
         return false;
       }
 
       var translatedPayload = translatedPayloadResult.Value;
       var entity = new T();
-      global::Echoglossian.PluginRuntimeLog.Debug($"[{addonName}] [Async] Creating entity of type {entityType.Name}...");
+      PluginRuntimeLog.Debug($"[{addonName}] [Async] Creating entity of type {entityType.Name}...");
 
       if (entity is IMultiTextEntity multi)
       {
-        global::Echoglossian.PluginRuntimeLog.Debug($"[{addonName}] [Async] Saving IMultiTextEntity...");
+        PluginRuntimeLog.Debug($"[{addonName}] [Async] Saving IMultiTextEntity...");
 
         var messageEntry = translatedPayload.AtkValues
             .FirstOrDefault(kvp => kvp.Key == 0);
@@ -211,7 +211,7 @@ public static class GenericAddonHandlerHelper
       }
       else
       {
-        global::Echoglossian.PluginRuntimeLog.Debug($"[{addonName}] [Async] Saving IGenericEntity...");
+        PluginRuntimeLog.Debug($"[{addonName}] [Async] Saving IGenericEntity...");
 
         var translatedJson = translatedPayload.Serialize();
 
@@ -235,7 +235,7 @@ public static class GenericAddonHandlerHelper
 
       if (entity is GameWindow gw)
       {
-        global::Echoglossian.PluginRuntimeLog.Debug($"[{addonName}] [Async] Saving GameWindow...");
+        PluginRuntimeLog.Debug($"[{addonName}] [Async] Saving GameWindow...");
         gw.GameVersion = GetGameVersion();
         InsertGameWindow(gw);
         GameWindowCacheManager.Update(gw);
@@ -254,12 +254,12 @@ public static class GenericAddonHandlerHelper
         await InsertEntity(entity);
       }
 
-      global::Echoglossian.PluginRuntimeLog.Debug($"[{addonName}] [Async] Translation saved successfully.");
+      PluginRuntimeLog.Debug($"[{addonName}] [Async] Translation saved successfully.");
       return true;
     }
     catch (Exception ex)
     {
-      PluginLog.Error($"[{addonName}] [Async] Error during translation: {ex}");
+      PluginRuntimeLog.Error($"[{addonName}] [Async] Error during translation: {ex}");
       return false;
     }
   }
@@ -271,7 +271,7 @@ public static class GenericAddonHandlerHelper
       string sourceLang,
       string targetLang)
   {
-    global::Echoglossian.PluginRuntimeLog.Debug($"Translating chunk of length {chunk.Length} characters.");
+    PluginRuntimeLog.Debug($"Translating chunk of length {chunk.Length} characters.");
     var translated = await service.TranslateAsync(chunk, sourceLang, targetLang);
     if (string.IsNullOrWhiteSpace(translated))
     {
@@ -412,3 +412,5 @@ public static class GenericAddonHandlerHelper
     }
   }
 }
+
+

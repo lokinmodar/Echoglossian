@@ -1,4 +1,4 @@
-﻿// <copyright file="DeepLTranslator.cs" company="lokinmodar">
+// <copyright file="DeepLTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -126,7 +126,7 @@ public class DeepLTranslator : ITranslator
       string sourceLanguage,
       string targetLanguage)
   {
-    this.pluginLog.Debug("inside DeepLTranslator Translate method");
+    PluginRuntimeLog.Debug(this.pluginLog, "inside DeepLTranslator Translate method");
 
     try
     {
@@ -134,12 +134,13 @@ public class DeepLTranslator : ITranslator
           text,
           FormatSourceLanguageCode(sourceLanguage),
           FormatTargetLanguageCode(targetLanguage)).Result;
-      this.pluginLog.Debug($"FinalTranslatedText: {translation?.Text}");
+      PluginRuntimeLog.Debug(this.pluginLog, $"FinalTranslatedText: {translation?.Text}");
       return translation?.Text;
     }
     catch (Exception exception)
     {
-      this.pluginLog.Error(
+      PluginRuntimeLog.Error(
+          this.pluginLog,
           $"DeepLTranslator Translate: {exception.Message}");
       return text;
     }
@@ -159,7 +160,7 @@ public class DeepLTranslator : ITranslator
       string sourceLanguage,
       string targetLanguage)
   {
-    this.pluginLog.Debug("inside DeepLTranslator TranslateAsync method");
+    PluginRuntimeLog.Debug(this.pluginLog, "inside DeepLTranslator TranslateAsync method");
 
     try
     {
@@ -173,12 +174,13 @@ public class DeepLTranslator : ITranslator
           text,
           FormatSourceLanguageCode(sourceLanguage),
           FormatTargetLanguageCode(targetLanguage));
-      this.pluginLog.Debug($"FinalTranslatedText: {translation.Text}");
+      PluginRuntimeLog.Debug(this.pluginLog, $"FinalTranslatedText: {translation.Text}");
       return translation.Text;
     }
     catch (Exception exception)
     {
-      this.pluginLog.Error(
+      PluginRuntimeLog.Error(
+          this.pluginLog,
           $"DeepLTranslator TranslateAsync: {exception.Message}");
       return text;
     }
@@ -227,7 +229,8 @@ public class DeepLTranslator : ITranslator
       string sourceLanguage,
       string targetLanguage)
   {
-    this.pluginLog.Debug(
+    PluginRuntimeLog.Debug(
+        this.pluginLog,
         "inside DeepLTranslator FreeTranslateAsync method");
 
     try
@@ -308,23 +311,27 @@ public class DeepLTranslator : ITranslator
         {
           var finalTranslatedText =
               deepLResponse.Result.Texts[0].Text;
-          this.pluginLog.Debug(
+          PluginRuntimeLog.Debug(
+              this.pluginLog,
               $"FinalTranslatedText: {finalTranslatedText}");
           return finalTranslatedText ?? text;
         }
 
-        this.pluginLog.Warning(
+        PluginRuntimeLog.Warning(
+            this.pluginLog,
             "DeepLTranslator FreeTranslateAsync: No translation result found.");
         return text;
       }
 
-      this.pluginLog.Warning(
+      PluginRuntimeLog.Warning(
+          this.pluginLog,
           $"DeepLTranslator FreeTranslateAsync error: {response.StatusCode}");
       return text;
     }
     catch (Exception exception)
     {
-      this.pluginLog.Error(
+      PluginRuntimeLog.Error(
+          this.pluginLog,
           $"DeepLTranslator FreeTranslateAsync: {exception.Message}");
       return text;
     }

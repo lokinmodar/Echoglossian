@@ -1,4 +1,4 @@
-﻿// <copyright file="PluginUITranslationEnginesTab.cs" company="lokinmodar">
+// <copyright file="PluginUITranslationEnginesTab.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -114,7 +114,7 @@ public static class TranslationEnginesTab
                 }
                 catch (Exception ex)
                 {
-                    PluginLog.Error(
+                    PluginRuntimeLog.Error(
                         $"OllamaEngineUI failed: {ex.Message}, {ex.StackTrace}");
                     ImGui.TextColored(
                         new Vector4(1f, 0.4f, 0.4f, 1f),

@@ -40,7 +40,7 @@ public static class TranslationFailureCacheManager
         catch (Exception ex)
         {
             Cache.Clear();
-            PluginLog.Error(
+            PluginRuntimeLog.Error(
                 $"[TranslationFailureCacheManager] Failed to preload cache: {ex}");
         }
     }
@@ -123,7 +123,7 @@ public static class TranslationFailureCacheManager
     public static void Clear()
     {
         Cache.Clear();
-        global::Echoglossian.PluginRuntimeLog.Debug("[TranslationFailureCacheManager] Cleared translation-failure cache.");
+        PluginRuntimeLog.Debug("[TranslationFailureCacheManager] Cleared translation-failure cache.");
     }
 
     private static void IndexRecord(TranslationFailure record)
@@ -155,3 +155,5 @@ public static class TranslationFailureCacheManager
         return rows;
     }
 }
+
+

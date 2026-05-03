@@ -47,7 +47,7 @@ public static class StringArrayDataCacheManager
         }
         catch (Exception ex)
         {
-            PluginLog.Error(
+            PluginRuntimeLog.Error(
                 $"[StringArrayDataCacheManager] Failed to preload cache: {ex}");
         }
     }
@@ -173,6 +173,8 @@ public static class StringArrayDataCacheManager
     public static void Clear()
     {
         Cache.Clear();
-        global::Echoglossian.PluginRuntimeLog.Debug("[StringArrayDataCacheManager] Cleared StringArrayData cache.");
+        PluginRuntimeLog.Debug("[StringArrayDataCacheManager] Cleared StringArrayData cache.");
     }
 }
+
+

@@ -12,7 +12,7 @@ public partial class Echoglossian
   /// </summary>
   private unsafe void EgloAddonHandler()
   {
-    global::Echoglossian.PluginRuntimeLog.Debug("Echoglossian", "EgloAddonHandler called.");
+    PluginRuntimeLog.Debug("Echoglossian", "EgloAddonHandler called.");
 
     this.registeredAddonHandlers =
         [
@@ -205,7 +205,7 @@ public partial class Echoglossian
 
     if (this.configuration.TranslateCutSceneSelectString)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           "Echoglossian",
           "Registering CutSceneSelectString handler " +
           $"overlay={this.configuration.UseImGuiForCutSceneSelectString} " +
@@ -233,7 +233,7 @@ public partial class Echoglossian
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
-      global::Echoglossian.PluginRuntimeLog.Debug("Echoglossian", "CutSceneSelectString handler registered");
+      PluginRuntimeLog.Debug("Echoglossian", "CutSceneSelectString handler registered");
     }
 
     var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();
@@ -475,3 +475,5 @@ public partial class Echoglossian
 
   }
 }
+
+

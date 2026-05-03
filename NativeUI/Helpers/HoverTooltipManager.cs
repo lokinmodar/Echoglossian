@@ -111,7 +111,7 @@ public sealed class HoverTooltipManager
     public void Clear()
     {
         this.entries.Clear();
-        global::Echoglossian.PluginRuntimeLog.Debug("[HoverTooltipManager] Cleared hover tooltip entries.");
+        PluginRuntimeLog.Debug("[HoverTooltipManager] Cleared hover tooltip entries.");
     }
 
     /// <summary>
@@ -305,3 +305,5 @@ public sealed class HoverTooltipManager
         bool UseGeneralFont,
         DateTime LastUpdatedUtc);
 }
+
+

@@ -874,7 +874,7 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   private bool ShouldUseOverlay()
   {
     return this.config.TranslateCutSceneSelectString &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+           TranslationDisplayModeHelper.UsesOverlayPresentation(
                this.config.CutSceneSelectStringTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -884,7 +884,7 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   /// </summary>
   private bool ShouldApplyNativeText()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+    return TranslationDisplayModeHelper.WritesNativeTranslation(
         this.config.CutSceneSelectStringTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -894,7 +894,7 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   /// </summary>
   private bool ShouldSwapTexts()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+    return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
         this.config.CutSceneSelectStringTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -982,3 +982,5 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
     }
   }
 }
+
+

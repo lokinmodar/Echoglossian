@@ -56,7 +56,7 @@ public static class OllamaModelManager
         }
         catch (Exception ex)
         {
-            PluginLog.Warning(
+            PluginRuntimeLog.Warning(
                 $"[OllamaModelManager] Failed to fetch model list from Ollama: {ex.Message}");
             ResetToDefault();
         }

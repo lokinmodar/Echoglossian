@@ -69,7 +69,7 @@ internal sealed class DiagnosticTelemetryHelper
             message,
             signature,
             cooldown,
-            logLine => global::Echoglossian.PluginRuntimeLog.Debug(logLine));
+            logLine => PluginRuntimeLog.Debug(logLine));
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ internal sealed class DiagnosticTelemetryHelper
             message,
             signature,
             cooldown,
-            logLine => PluginLog.Information(logLine));
+            logLine => PluginRuntimeLog.Information(logLine));
     }
 
     /// <summary>
@@ -124,7 +124,7 @@ internal sealed class DiagnosticTelemetryHelper
             message,
             signature,
             cooldown,
-            logLine => PluginLog.Warning(logLine));
+            logLine => PluginRuntimeLog.Warning(logLine));
     }
 
     /// <summary>
@@ -249,3 +249,5 @@ internal sealed class DiagnosticTelemetryHelper
         string Signature,
         DateTime NextAllowedUtc);
 }
+
+

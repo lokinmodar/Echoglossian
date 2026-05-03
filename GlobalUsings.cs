@@ -1,4 +1,4 @@
-﻿// <copyright file="GlobalUsings.cs" company="lokinmodar">
+// <copyright file="GlobalUsings.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -49,6 +49,7 @@ global using Dalamud.Utility;
 
 global using static Echoglossian.Echoglossian;
 
+global using Echoglossian.Cache;
 global using Echoglossian.DBManagerUI;
 global using Echoglossian.DBManagerUI.Components;
 global using Echoglossian.DBManagerUI.Services;

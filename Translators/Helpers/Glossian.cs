@@ -22,11 +22,11 @@ namespace Echoglossian
           string sanitizedString = Sanitizer.Sanitize(message);
 
     #if DEBUG
-          global::Echoglossian.PluginRuntimeLog.Debug($"Message in Lang Method: {sanitizedString}");
+          PluginRuntimeLog.Debug($"Message in Lang Method: {sanitizedString}");
     #endif
           Tuple<NTextCat.LanguageInfo, double> mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
     #if DEBUG
-          global::Echoglossian.PluginRuntimeLog.Debug($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
+          PluginRuntimeLog.Debug($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
     #endif
           return mostCertainLanguage != null
             ? mostCertainLanguage.Item1.Iso639_2T
@@ -56,3 +56,5 @@ namespace Echoglossian
     }
   }
 }
+
+

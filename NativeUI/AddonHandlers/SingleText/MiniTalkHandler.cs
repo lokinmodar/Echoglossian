@@ -247,7 +247,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     var bubbleTextNodes = this.resolveMiniTalkBubbleTextNodes(addon);
     if (bubbleTextNodes == null || bubbleTextNodes.Count == 0)
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} text-node unavailable");
       return;
     }
@@ -266,14 +266,14 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
       if (!this.TryReadCurrentSource(bubbleNodeAddress, textNode, out var originalText))
       {
-        // global::Echoglossian.PluginRuntimeLog.Debug(
+        // PluginRuntimeLog.Debug(
         //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} readable text unavailable {this.DescribeMiniTalkTextNode(textNode)}");
         continue;
       }
 
       this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
 
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} bubble=0x{bubbleNodeAddress:X} visible-capture overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} swap={this.ShouldSwapTexts()}");
 
       if (this.TryCaptureOrQueueMiniTalkSource(bubbleNodeAddress, originalText, type.ToString()))
@@ -301,7 +301,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     var bubbleTextNodes = this.resolveMiniTalkBubbleTextNodes(addon);
     if (bubbleTextNodes == null || bubbleTextNodes.Count == 0)
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} text-node unavailable");
       return;
     }
@@ -319,7 +319,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       activeBubbleKeys.Add(bubbleNodeAddress);
       this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
 
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} bubble=0x{bubbleNodeAddress:X} visible-update overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} swap={this.ShouldSwapTexts()}");
 
       if (!this.TryGetCurrentResolvedTranslation(
@@ -341,7 +341,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         }
         else
         {
-          // global::Echoglossian.PluginRuntimeLog.Debug(
+          // PluginRuntimeLog.Debug(
           //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} readable text unavailable {this.DescribeMiniTalkTextNode(textNode)}");
         }
 
@@ -368,7 +368,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
       if (textNode == null)
       {
-        // global::Echoglossian.PluginRuntimeLog.Debug(
+        // PluginRuntimeLog.Debug(
         //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} native text unavailable");
         continue;
       }
@@ -392,7 +392,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// <param name="args">The addon arguments associated with the reset.</param>
   private void OnResetState(AddonEvent type, AddonArgs args)
   {
-    // global::Echoglossian.PluginRuntimeLog.Debug($"[MiniTalk] trigger={type} resetting mini talk state");
+    // PluginRuntimeLog.Debug($"[MiniTalk] trigger={type} resetting mini talk state");
 
     List<nint> bubbleKeys;
     lock (this.stateGate)
@@ -429,14 +429,14 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     }
     catch (Exception ex)
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
       translatedText = string.Empty;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger=async-resolve empty translation for source='{originalText}'");
 
       lock (this.stateGate)
@@ -454,7 +454,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     }
 
     var replacementText = this.NormalizeForReplacement(translatedText);
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[MiniTalk] trigger=async-resolve translation ready for source='{originalText}'");
 
     var translatedMiniTalk = new MiniTalkMessage(
@@ -664,7 +664,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   {
     if (!this.ShouldUseOverlay())
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug($"[MiniTalk] trigger={trigger} overlay disabled -> clear");
+      // PluginRuntimeLog.Debug($"[MiniTalk] trigger={trigger} overlay disabled -> clear");
       this.clearOverlay(bubbleKey, true);
       return;
     }
@@ -675,12 +675,12 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
     if (string.IsNullOrWhiteSpace(overlayText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug($"[MiniTalk] trigger={trigger} overlay text unavailable -> clear");
+      // PluginRuntimeLog.Debug($"[MiniTalk] trigger={trigger} overlay text unavailable -> clear");
       this.clearOverlay(bubbleKey, false);
       return;
     }
 
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[MiniTalk] trigger={trigger} publish overlay text='{overlayText}'");
 
     this.updateOverlay(bubbleKey, string.Empty, overlayText, string.Empty);
@@ -697,7 +697,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   private bool ShouldUseOverlay()
   {
     return this.config.TranslateMiniTalk &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+           TranslationDisplayModeHelper.UsesOverlayPresentation(
                this.config.MiniTalkTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -712,7 +712,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeText()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+    return TranslationDisplayModeHelper.WritesNativeTranslation(
         this.config.MiniTalkTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -727,7 +727,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldSwapTexts()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+    return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
         this.config.MiniTalkTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -955,7 +955,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
             out var translatedText,
             out _))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={trigger} cache-hit -> overlay publish");
 
       this.SetResolvedState(
@@ -971,7 +971,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     var storedMiniTalk = this.findMiniTalkMessage(lookupMiniTalk);
     if (this.IsStoredTranslationUsable(storedMiniTalk, originalText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={trigger} db-hit -> overlay publish");
 
       this.SetResolvedState(
@@ -989,7 +989,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
     if (this.TryQueueTranslation(bubbleKey, originalText, out var requestId))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={trigger} cache-miss -> queued translation request #{requestId}");
 
       this.PublishOverlay(bubbleKey, originalText, string.Empty, trigger);
@@ -1059,3 +1059,5 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         $"node=0x{(nint)textNode:X} type={textNode->Type} nodeId={textNode->NodeId} visible={textNode->IsVisible()} flags={textNode->NodeFlags} drawFlags={textNode->DrawFlags} text='{rawText}' original='{originalText}'";
   }
 }
+
+

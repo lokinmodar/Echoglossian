@@ -1,4 +1,4 @@
-﻿// <copyright file="GoogleTranslator.cs" company="lokinmodar">
+// <copyright file="GoogleTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -86,7 +86,7 @@ public class GoogleTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        this.pluginLog.Debug("inside GoogleTranslator translate method");
+        PluginRuntimeLog.Debug(this.pluginLog, "inside GoogleTranslator translate method");
 
         try
         {
@@ -103,7 +103,7 @@ public class GoogleTranslator : ITranslator
         }
         catch (Exception e)
         {
-            this.pluginLog.Error(e.ToString());
+            PluginRuntimeLog.Error(this.pluginLog, e.ToString());
             throw;
         }
     }
@@ -114,7 +114,7 @@ public class GoogleTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        this.pluginLog.Debug("inside GoogleTranslator translateAsync method");
+        PluginRuntimeLog.Debug(this.pluginLog, "inside GoogleTranslator translateAsync method");
 
         try
         {
@@ -137,7 +137,7 @@ public class GoogleTranslator : ITranslator
         }
         catch (Exception e)
         {
-            this.pluginLog.Error(e.ToString());
+            PluginRuntimeLog.Error(this.pluginLog, e.ToString());
             throw;
         }
     }
@@ -184,7 +184,8 @@ public class GoogleTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        this.pluginLog.Debug(
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
             "Google Translate V1 endpoint logic is not implemented.");
 
         // Example payload to send:
@@ -261,11 +262,12 @@ public class GoogleTranslator : ITranslator
 
             if (!string.IsNullOrEmpty(translatedText))
             {
-                this.pluginLog.Debug("Translated Text: " + translatedText);
+                PluginRuntimeLog.Debug(this.pluginLog, "Translated Text: " + translatedText);
                 return translatedText;
             }
 
-            this.pluginLog.Error(
+            PluginRuntimeLog.Error(
+                this.pluginLog,
                 $"GoogleTranslator returned no translateResponse.translateText for input '{parsedText}'. " +
                 $"Status={(int)response.StatusCode} {response.ReasonPhrase}. " +
                 $"Content preview: {FormatResponsePreview(content)}");
@@ -273,7 +275,8 @@ public class GoogleTranslator : ITranslator
         }
         catch (JsonException ex)
         {
-            this.pluginLog.Error(
+            PluginRuntimeLog.Error(
+                this.pluginLog,
                 $"GoogleTranslator JSON parse error for input '{parsedText}': {ex.Message}. " +
                 $"Content preview: {FormatResponsePreview(content)}");
             return string.Empty;

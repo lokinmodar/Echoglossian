@@ -308,7 +308,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     }
     catch (Exception e)
     {
-      PluginLog.Error($"Error in JournalHandler: {e}");
+      PluginRuntimeLog.Error($"Error in JournalHandler: {e}");
     }
   }
 

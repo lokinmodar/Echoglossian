@@ -20,7 +20,7 @@ public static class AssetsManager
   public static void PluginAssetsChecker()
   {
 #if DEBUG
-    global::Echoglossian.PluginRuntimeLog.Debug("Checking Plugin assets!");
+    PluginRuntimeLog.Debug("Checking Plugin assets!");
 #endif
 
     lock (MissingAssetFilesLock)
@@ -39,12 +39,12 @@ public static class AssetsManager
     foreach (string f in AssetFiles)
     {
 #if DEBUG
-      global::Echoglossian.PluginRuntimeLog.Debug($"Asset file: {f}");
+      PluginRuntimeLog.Debug($"Asset file: {f}");
 #endif
       if (!File.Exists($"{AssetsPath}{f}"))
       {
 #if DEBUG
-        global::Echoglossian.PluginRuntimeLog.Debug($"Missing file: {f}");
+        PluginRuntimeLog.Debug($"Missing file: {f}");
 #endif
         MissingAssetFiles.Add(f);
       }
@@ -71,7 +71,7 @@ public static class AssetsManager
       var assetIndex = AssetFiles.IndexOf(f);
       if (assetIndex < 0)
       {
-        Echoglossian.PluginLog.Warning(
+        PluginRuntimeLog.Warning(
             $"Unknown asset file in missing assets list: {f}");
         continue;
       }
@@ -154,7 +154,7 @@ public static class AssetsManager
     }
     catch (Exception e)
     {
-      Echoglossian.PluginLog.Error($"Error downloading plugin assets: {e}");
+      PluginRuntimeLog.Error($"Error downloading plugin assets: {e}");
 
       Echoglossian.NotificationManager.AddNotification(new Notification
       {
@@ -176,7 +176,7 @@ public static class AssetsManager
   private static void WebClientDownloadCompleted()
   {
 #if DEBUG
-    global::Echoglossian.PluginRuntimeLog.Debug("Download finished!");
+    PluginRuntimeLog.Debug("Download finished!");
 #endif
 
     Echoglossian.NotificationManager.AddNotification(new Notification
@@ -188,4 +188,6 @@ public static class AssetsManager
     });
   }
 }
+
+
 

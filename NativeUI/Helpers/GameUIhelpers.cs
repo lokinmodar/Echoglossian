@@ -21,14 +21,15 @@ public partial class Echoglossian
 
         var addonList = uiStuffz?.ToList();
 
-        global::Echoglossian.PluginRuntimeLog.Debug($"Addon list: {uiStuffz?.Count.ToString()}");
+        PluginRuntimeLog.Debug($"Addon list: {uiStuffz?.Count.ToString()}");
         if (uiStuffz != null)
         {
             foreach (var a in uiStuffz)
             {
                 this.UiElementsLabels.Add(a.Text.ToString());
-                global::Echoglossian.PluginRuntimeLog.Debug($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+                PluginRuntimeLog.Debug($"Sheet row: {a.RowId}: {a.Text.ToString()}");
             }
         }
     }
 }
+

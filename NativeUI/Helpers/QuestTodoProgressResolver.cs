@@ -26,7 +26,7 @@ internal static class QuestTodoProgressResolver
     public static void Clear()
     {
         QuestTodoProgressCache.Clear();
-        global::Echoglossian.PluginRuntimeLog.Debug("[QuestTodoProgressResolver] Cleared quest todo progress cache.");
+        PluginRuntimeLog.Debug("[QuestTodoProgressResolver] Cleared quest todo progress cache.");
     }
 
     /// <summary>
@@ -148,3 +148,5 @@ internal readonly record struct QuestTodoProgressSnapshot(
     public string CacheKey =>
         $"{this.QuestProgress.CacheKey}:{this.ObjectiveProgress}:{this.ObjectiveCount}:{this.QuestCount}";
 }
+
+

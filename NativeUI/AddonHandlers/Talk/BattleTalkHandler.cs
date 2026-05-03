@@ -446,7 +446,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
           }
           catch (Exception ex)
           {
-            PluginLog.Warning(
+            PluginRuntimeLog.Warning(
                 $"[{BattleTalkAddonName}] Speaker name translation failed; continuing with translated text. {ex.Message}");
           }
         }
@@ -520,7 +520,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         }
       }
 
-      PluginLog.Error(
+      PluginRuntimeLog.Error(
           $"[{BattleTalkAddonName}] Error resolving BattleTalk translation: {ex}");
     }
   }
@@ -567,7 +567,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeBattleTalkText()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+    return TranslationDisplayModeHelper.WritesNativeTranslation(
         this.config.BattleTalkTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -582,7 +582,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldSwapTexts()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+    return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
         this.config.BattleTalkTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -1172,3 +1172,5 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     }
   }
 }
+
+

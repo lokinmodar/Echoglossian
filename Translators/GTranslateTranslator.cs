@@ -1,4 +1,4 @@
-﻿// <copyright file="GTranslateTranslator.cs" company="lokinmodar">
+// <copyright file="GTranslateTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -46,7 +46,7 @@ public class GTranslateTranslator : ITranslator
         string sourceLanguage,
         string targetLanguage)
     {
-        this.pluginLog.Debug("GTranslate sync translate requested.");
+        PluginRuntimeLog.Debug(this.pluginLog, "GTranslate sync translate requested.");
 
         return this.TranslateAsync(text, sourceLanguage, targetLanguage).Result ?? string.Empty;
     }
@@ -73,10 +73,11 @@ public class GTranslateTranslator : ITranslator
         }
 
         var fixedText = FixText(text);
-        this.pluginLog.Debug($"GTranslate input: {fixedText}");
+        PluginRuntimeLog.Debug(this.pluginLog, $"GTranslate input: {fixedText}");
 
-        this.pluginLog.Debug($"GTranslate source language: {sourceLanguage}");
-        this.pluginLog.Debug(
+        PluginRuntimeLog.Debug(this.pluginLog, $"GTranslate source language: {sourceLanguage}");
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
             $"GTranslate target language: {this.gTransTargetLanguage}");
 
         try
@@ -88,12 +89,12 @@ public class GTranslateTranslator : ITranslator
                 this.gTransTargetLanguage.Name,
                 sourceLanguage);
             var cleaned = FixText(result.Translation);
-            this.pluginLog.Debug($"GTranslate result: {cleaned}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"GTranslate result: {cleaned}");
             return cleaned;
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"GTranslate error: {ex}");
+            PluginRuntimeLog.Error(this.pluginLog, $"GTranslate error: {ex}");
             return string.Empty;
         }
     }

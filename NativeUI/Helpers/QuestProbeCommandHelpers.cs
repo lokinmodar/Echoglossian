@@ -118,7 +118,7 @@ public partial class Echoglossian
       string questName,
       Quest questRow)
   {
-    PluginLog.Information(
+    PluginRuntimeLog.Information(
         $"[QuestProbe] start questId={questIdText} questName='{questName}' language={ClientStateInterface.ClientLanguage.Humanize()} gameVersion={GetGameVersion()}");
 
     this.LogQuestRow(questRow);
@@ -133,7 +133,7 @@ public partial class Echoglossian
     }
     else
     {
-      PluginLog.Information(
+      PluginRuntimeLog.Information(
           $"[QuestProbe] progress snapshot unavailable questId={questIdText}");
     }
 
@@ -141,7 +141,7 @@ public partial class Echoglossian
             questIdText,
             out var questTodoProgressSnapshot))
     {
-      PluginLog.Information(
+      PluginRuntimeLog.Information(
           $"[QuestProbe] todo progress questId={questIdText} sequence={questTodoProgressSnapshot.QuestProgress.QuestSequence} objectiveProgress={questTodoProgressSnapshot.ObjectiveProgress} objectiveCount={questTodoProgressSnapshot.ObjectiveCount} questCount={questTodoProgressSnapshot.QuestCount}");
     }
   }
@@ -156,7 +156,7 @@ public partial class Echoglossian
     var properties = questType.GetProperties(
         BindingFlags.Instance | BindingFlags.Public);
 
-    PluginLog.Information(
+    PluginRuntimeLog.Information(
         $"[QuestProbe] quest row type={questType.Name} propertyCount={properties.Length}");
 
     foreach (var property in properties)
@@ -173,12 +173,12 @@ public partial class Echoglossian
       }
       catch (Exception ex)
       {
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"[QuestProbe] quest property {property.Name} read failed: {ex.Message}");
         continue;
       }
 
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           $"[QuestProbe] quest.{property.Name}={this.FormatProbeValue(value)}");
     }
   }
@@ -193,7 +193,7 @@ public partial class Echoglossian
     var questSheetName = this.BuildQuestTextSheetName(questRow);
     if (questSheetName.Length == 0)
     {
-      PluginLog.Information(
+      PluginRuntimeLog.Information(
           $"[QuestProbe] quest text sheet name unavailable questRowId={this.GetQuestRowIdText(questRow)} questSheetId='{this.GetQuestSheetIdText(questRow)}'");
       return;
     }
@@ -201,13 +201,13 @@ public partial class Echoglossian
     var questTextSheet = DManager?.GameData.GetExcelSheet<RawRow>(name: questSheetName);
     if (questTextSheet == null)
     {
-      PluginLog.Information(
+      PluginRuntimeLog.Information(
           $"[QuestProbe] quest text sheet not found questSheet='{questSheetName}'");
       return;
     }
 
     var rowCount = Convert.ToInt32(questTextSheet.Count, CultureInfo.InvariantCulture);
-    PluginLog.Information(
+    PluginRuntimeLog.Information(
         $"[QuestProbe] quest text sheet='{questSheetName}' rowCount={rowCount}");
 
     for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
@@ -218,7 +218,7 @@ public partial class Echoglossian
       var keyText = this.EvaluateQuestProbeText(rawKey);
       var valueText = this.EvaluateQuestProbeText(rawValue);
 
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           $"[QuestProbe] sheet[{rowIndex}] keyText='{keyText}' valueText='{valueText}' rawKey='{rawKey.ExtractText()}' rawValue='{rawValue.ExtractText()}'");
     }
   }
@@ -237,12 +237,12 @@ public partial class Echoglossian
         t.TranslationLang).ThenBy(t => t.TranslationEngine).ThenBy(t =>
         t.GameVersion).ThenBy(t => t.Id).ToList();
 
-    PluginLog.Information(
+    PluginRuntimeLog.Information(
         $"[QuestProbe] questplate rows matched={questRows.Count} questId={questIdText} questName='{questName}'");
 
     foreach (var questPlate in questRows)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           $"[QuestProbe] db id={questPlate.Id} questId='{questPlate.QuestId}' questName='{questPlate.QuestName}' originalLang='{questPlate.OriginalLang}' translationLang='{questPlate.TranslationLang}' engine={questPlate.TranslationEngine} gameVersion='{questPlate.GameVersion}' originalNameLen={questPlate.QuestName?.Length ?? 0} originalMsgLen={questPlate.OriginalQuestMessage?.Length ?? 0} translatedNameLen={questPlate.TranslatedQuestName?.Length ?? 0} translatedMsgLen={questPlate.TranslatedQuestMessage?.Length ?? 0} objectives={questPlate.Objectives.Count} summaries={questPlate.Summaries.Count}");
     }
   }
@@ -254,27 +254,27 @@ public partial class Echoglossian
   private void LogQuestProgressSnapshot(
       QuestProgressSnapshot questProgressSnapshot)
   {
-    PluginLog.Information(
+    PluginRuntimeLog.Information(
         $"[QuestProbe] progress questId={questProgressSnapshot.QuestId} questSequence={questProgressSnapshot.QuestSequence} questName='{questProgressSnapshot.QuestName}' sheet='{questProgressSnapshot.QuestSheetName}' stepCount={questProgressSnapshot.QuestSteps.Count} seqCount={questProgressSnapshot.QuestSeqTexts.Count} systemCount={questProgressSnapshot.QuestSystemTexts.Count}");
 
     for (var i = 0; i < questProgressSnapshot.QuestSteps.Count; i++)
     {
       var questStep = questProgressSnapshot.QuestSteps[i];
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           $"[QuestProbe] step[{i}] keyText='{questStep.KeyText}' text='{questStep.Text}' rawKey='{questStep.OriginalKey.ExtractText()}' rawText='{questStep.OriginalText.ExtractText()}'");
     }
 
     for (var i = 0; i < questProgressSnapshot.QuestSeqTexts.Count; i++)
     {
       var seqEntry = questProgressSnapshot.QuestSeqTexts[i];
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           $"[QuestProbe] seq[{i}] keyText='{seqEntry.KeyText}' text='{seqEntry.Text}'");
     }
 
     for (var i = 0; i < questProgressSnapshot.QuestSystemTexts.Count; i++)
     {
       var sysEntry = questProgressSnapshot.QuestSystemTexts[i];
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           $"[QuestProbe] system[{i}] keyText='{sysEntry.KeyText}' text='{sysEntry.Text}'");
     }
   }
@@ -453,3 +453,5 @@ public partial class Echoglossian
   }
 }
 #endif
+
+

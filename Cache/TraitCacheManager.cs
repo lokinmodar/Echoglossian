@@ -50,8 +50,9 @@ public static class TraitCacheManager
         }
         catch (Exception ex)
         {
-            PluginLog.Error(
-                $"[TraitCacheManager] Failed to preload cache: {ex}");
+            PluginRuntimeLog.Error(
+                "TraitCacheManager",
+                $"Failed to preload cache: {ex}");
         }
     }
 
@@ -331,8 +332,7 @@ public static class TraitCacheManager
         Cache.Clear();
         TextLookupCache.Clear();
         ReverseTextLookupCache.Clear();
-        global::Echoglossian.Echoglossian.PluginLog?.Debug(
-            "[TraitCacheManager] Cleared trait cache.");
+        PluginRuntimeLog.Debug("TraitCacheManager", "Cleared trait cache.");
     }
 
     /// <summary>

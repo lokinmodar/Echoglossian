@@ -860,7 +860,7 @@ public static class OverlayTab
         JournalTranslationDisplayMode displayMode,
         bool overlayOnlyLanguage)
     {
-        return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+        return TranslationDisplayModeHelper.UsesOverlayPresentation(
             displayMode,
             overlayOnlyLanguage);
     }
@@ -889,3 +889,5 @@ public static class OverlayTab
             or 105 or 109 or 110;
     }
 }
+
+

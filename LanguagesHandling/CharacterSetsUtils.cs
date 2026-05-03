@@ -1,4 +1,4 @@
-﻿// <copyright file="CharacterSetsUtils.cs" company="lokinmodar">
+// <copyright file="CharacterSetsUtils.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -75,7 +75,7 @@ public partial class Echoglossian
     };
 
     public static readonly string LangComboItems =
-        "العَرَبِيَّة'ẗéՀայերէնèՀայերենãããã-آذربایجاندیلیАзәрбајҹанДилиБеларускаяМоваâБеларускаяМоваâবাংলাBāŋlāইমারঠার/বিষ্ণুপ্রিয়ামণিপুরীБългарскиЕзикăမြန်မာစာãāāမြန်မာစကားãāāàiàភាសាខ្មែរPhiəsaakhmær中文ōé汉语漢語àǔ中文ōén汉语漢語àǔČšČýçàᲥᲐᲠᲗᲣᲚᲘᲥართულიΝέαΕλληνικάéaêáModerગુજરાતીāīòهَرْشَن;ʻōleloHawaiʻi;עברית'Ivriyþ;हिन्दीī;Ísụsụ日本語ꦧꦱꦗꦮಕನ್ನಡҚазақТіліQazaqTili;ҚазақшаQazaqşaКыргызчаKırgızça;КыргызТилиKırgız한국어''Ôîکوردی;ພາສາລາວīšųëtМакедонскиЈазикMakedonskiമലയാളംMalayāļãMāoriमराठीMarāţhīМонголХэлᠮᠣᠩᠭᠣᠯᠬᠡᠯᠡ;नेपालीभाषाNepālīBhāśā;NepaliNorsk;'Òଓଡ଼ିଆ;OriyaਪੰਜਾਬੀپنجابیPãjābī;فارسیāJęzykêPax̌TowRomânăРусскийЯзыкRusskiĭÂzık;FaʻaSāСрпскиSrpski;سنڌيसिन्धीਸਿੰਧੀ;SindhiසිංහලSĩhala;čýšči]ТоҷикӣToçikīதமிழ்Tamił;ТатарТелеتاتار;TatarతెలుగుภาษาไทยTürkçe;TürkmençeТүркменчеتورکمنتیلیتورکمنچ;üТүркменДили;ئۇيغۇرچە;ئۇيغۇرتىلى;УкраїнськаМова;УкраїнськаاُردُوOʻzbekchaÓzbekçaЎзбекчаئوزبېچه;ЎзбекТилиئوبېکتیلیếệüñâââייִדיש;יידיש;אידישYidiš";
+        "العَرَبِيَّة'ẗéՀայերէնèՀայերենãããã-آذربایجاندیلیАзәрбајҹанДилиБеларускаяМоваâБеларускаяМоваâবাংলাBāŋlāইমারঠার/বিষ্ণুপ্রিয়ামণিপুरीБългарскиЕзикăမြန်မာစာãāāမြန်မာစကားãکمان中文ōé汉语漢語àǔ中文ōén汉语漢語àǔČšČýçàᲥᲐᲠᲗᲣᲚᲘᲥართულიΝέαΕλληνικάéaêáModerગુજરાતીāīòهَرْشَن;ʻōleloHawaiʻi;עברית'Ivriyþ;हिन्दीī;Ísụsụ日本語ꦧꦱꦗꦮಕನ್ನಡҚазақТіліQazaqTili;ҚазақшаQazaqşaКыргызчаKırgızça;КыргызТилиKırgız한국어''Ôîکوردی;ພາສາລາວīšųëtМакедонскиЈазикMakedonskіమალയാളംMalayāļãMāoriमराठीMarāţhīМонголХэлᠮᠣᠩᠭᠣᠯᠬᠡᠮᠢᠪ;नेपालीभाषाNepālīBhāśā;NepaliNorsk;'Òଓଡ଼ିଆ;OriyaਪੰਜਾਬੀپنجابیPãjābī;فارسیāJęzykêPax̌TowRomânăРусскийЯзыкRusskiĭÂzık;FaʻaSāСрпскиSrpski;سنڌيसिन्धीਸਿੰਧੀ;SindhiසිංහලSĩhala;čýšči]ТоҷикӣToçikīதமிழ்Tamił;ТатарТелеتаتار;TatarతెలుగుภาษาไทยTürkçe;TürkmençeТүркменчеتورکمنتیلیتورکمنچ;üТүркменДили;ئۇيغۇرچە;ئۇيغۇرتىلى;УкраїнськаМова;УкраїнськаاُردُوOʻzbekchaÓzbekçaЎзбекчаئوبېچه;ЎзбекТилиئوبېکتیلیếệüñâââייִדיש;יידיש;אידישYidiš";
 
     private static readonly Dictionary<char, string> CustomReplacements = new()
     {

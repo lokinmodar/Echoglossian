@@ -792,7 +792,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
         }
       }
 
-      PluginLog.Error($"[{TalkAddonName}] Error resolving Talk translation: {ex}");
+      PluginRuntimeLog.Error($"[{TalkAddonName}] Error resolving Talk translation: {ex}");
     }
   }
 
@@ -806,7 +806,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeTalkText()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+    return TranslationDisplayModeHelper.WritesNativeTranslation(
         this.config.TalkTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -821,7 +821,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldSwapTexts()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+    return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
         this.config.TalkTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -949,3 +949,5 @@ public sealed class TalkHandler : IAddonTranslationHandler
     }
   }
 }
+
+

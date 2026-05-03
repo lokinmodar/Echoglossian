@@ -918,11 +918,11 @@ public partial class Echoglossian
     if (AcceptedQuestPrefetchEmitDalamudLog &&
         string.Equals(phase, "resolve-failed", StringComparison.Ordinal))
     {
-      PluginLog.Warning(logLine);
+      PluginRuntimeLog.Warning(logLine);
     }
     else if (AcceptedQuestPrefetchEmitDalamudLog)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug(logLine);
+      PluginRuntimeLog.Debug(logLine);
     }
 
     DiagnosticFileEmitter.Emit(
@@ -1016,3 +1016,5 @@ public partial class Echoglossian
             $"{questId}:{QuestManager.GetQuestSequence(questId)}"));
   }
 }
+
+

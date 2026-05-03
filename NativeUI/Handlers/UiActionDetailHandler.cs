@@ -18,7 +18,7 @@ namespace Echoglossian
 
       foreach (Dalamud.Game.Text.SeStringHandling.Payload line in lines)
       {
-        global::Echoglossian.PluginRuntimeLog.Debug(line.ToString() ?? string.Empty);
+        PluginRuntimeLog.Debug(line.ToString() ?? string.Empty);
       }
 
       string payloadText = payload.ToString();
@@ -26,9 +26,11 @@ namespace Echoglossian
       string desc = tooltipDescription.TextValue;
       Task<string> status = this.TranslateAsync(desc);
 
-      global::Echoglossian.PluginRuntimeLog.Debug($"Tooltip desc: {desc}");
-      global::Echoglossian.PluginRuntimeLog.Debug($"Tooltip trans: {status.Result}");
+      PluginRuntimeLog.Debug($"Tooltip desc: {desc}");
+      PluginRuntimeLog.Debug($"Tooltip trans: {status.Result}");
 #endif
     }*/
   }
 }
+
+

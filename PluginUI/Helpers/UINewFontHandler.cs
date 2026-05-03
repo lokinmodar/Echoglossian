@@ -23,32 +23,32 @@ public class UINewFontHandler : IDisposable
 
         var allUnicodeRanges = UnicodeRanges.All;
 
-        global::Echoglossian.PluginRuntimeLog.Debug($"SymbolsFontPath: {SymbolsFontFilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug($"FontFilePath: {FontFilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug($"SymbolsFontPath: {SymbolsFontFilePath}");
+        PluginRuntimeLog.Debug($"FontFilePath: {FontFilePath}");
+        PluginRuntimeLog.Debug(
             $"ComplementaryFont3FilePath: {ComplementaryFont3FilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"ComplementaryFont4FilePath: {ComplementaryFont4FilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"ComplementaryFont5FilePath: {ComplementaryFont5FilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"ComplementaryFont6FilePath: {ComplementaryFont6FilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"ComplementaryFont7FilePath: {ComplementaryFont7FilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug($"SpecialFontFilePath: {SpecialFontFilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug($"LangComboFontFilePath: {LangComboFontFilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug($"DummyFontFilePath: {DummyFontFilePath}");
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug($"SpecialFontFilePath: {SpecialFontFilePath}");
+        PluginRuntimeLog.Debug($"LangComboFontFilePath: {LangComboFontFilePath}");
+        PluginRuntimeLog.Debug($"DummyFontFilePath: {DummyFontFilePath}");
+        PluginRuntimeLog.Debug(
             $"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
 
         this.GeneralFontHandle =
             PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(e =>
                 e.OnPreBuild(tk =>
                 {
-                    global::Echoglossian.PluginRuntimeLog.Debug("Building font atlas for general use...");
-                    global::Echoglossian.PluginRuntimeLog.Debug(
+                    PluginRuntimeLog.Debug("Building font atlas for general use...");
+                    PluginRuntimeLog.Debug(
                         $"Font size: {this.configuration?.FontSize} px");
-                    global::Echoglossian.PluginRuntimeLog.Debug(
+                    PluginRuntimeLog.Debug(
                         $"Glyph ranges: {LangComboItems.Length} items, {CharsToAddToAll.Length} chars, {ScriptCharList.Length} script chars, {PuaCharCodes.Length} PUA codes, {PuaChars.Length} PUA chars");
 
                     var rangeBuilder = default(FluentGlyphRangeBuilder)
@@ -87,15 +87,15 @@ public class UINewFontHandler : IDisposable
             PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(e =>
                 e.OnPreBuild(tk =>
                 {
-                    global::Echoglossian.PluginRuntimeLog.Debug(
+                    PluginRuntimeLog.Debug(
                         "Building font atlas for language-specific use...");
-                    global::Echoglossian.PluginRuntimeLog.Debug(
+                    PluginRuntimeLog.Debug(
                         $"Font size: {this.configuration?.FontSize} px");
-                    global::Echoglossian.PluginRuntimeLog.Debug(
+                    PluginRuntimeLog.Debug(
                         $"Glyph ranges: {CharsToAddToAll.Length} chars, {ScriptCharList.Length} script chars, {PuaCharCodes.Length} PUA codes, {PuaChars.Length} PUA chars");
-                    global::Echoglossian.PluginRuntimeLog.Debug(
+                    PluginRuntimeLog.Debug(
                         $"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
-                    global::Echoglossian.PluginRuntimeLog.Debug(
+                    PluginRuntimeLog.Debug(
                         $"Selected language: {SelectedLanguage.LanguageName}");
 
                     var rangeBuilder = default(FluentGlyphRangeBuilder)
@@ -154,3 +154,5 @@ public class UINewFontHandler : IDisposable
         }
     }
 }
+
+

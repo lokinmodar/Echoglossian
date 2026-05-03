@@ -73,7 +73,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         InFlightPayloads.Clear();
         FailedPayloadRetryUtc.Clear();
         ParsedPayloadCache.Clear();
-        global::Echoglossian.PluginRuntimeLog.Debug("[DbFirstGameWindowAddonHandler] Cleared DB-first session caches.");
+        PluginRuntimeLog.Debug("[DbFirstGameWindowAddonHandler] Cleared DB-first session caches.");
     }
 
     /// <summary>
@@ -2753,7 +2753,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
         catch (Exception ex)
         {
-            PluginLog.Error(
+            PluginRuntimeLog.Error(
                 $"[DbFirstGameWindowAddonHandler] Failed to parse serialized payload: {ex}");
             return false;
         }
@@ -3052,3 +3052,5 @@ internal sealed record DbFirstGameWindowRuntimeState(
     string PayloadKey,
     DbFirstGameWindowPayload OriginalPayload,
     DbFirstGameWindowPayload TranslatedPayload);
+
+

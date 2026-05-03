@@ -1,4 +1,4 @@
-﻿// <copyright file="DeepSeekTranslator.cs" company="lokinmodar">
+// <copyright file="DeepSeekTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -30,7 +30,8 @@ public class DeepSeekTranslator : ITranslator
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 Resources
                     .APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable);
             this.httpClient = null;
@@ -39,7 +40,8 @@ public class DeepSeekTranslator : ITranslator
         {
             try
             {
-                pluginLog.Debug(
+                PluginRuntimeLog.Debug(
+                    pluginLog,
                     $"DeepSeekTranslator: {this.baseUrl}, {this.apiKey[..20]}***{this.apiKey[^5..]}, {this.temperature}");
 
                 this.httpClient = new HttpClient
@@ -53,7 +55,8 @@ public class DeepSeekTranslator : ITranslator
             }
             catch (Exception ex)
             {
-                this.pluginLog.Error(
+                PluginRuntimeLog.Error(
+                    this.pluginLog,
                     $"Failed to initialize DeepSeek HTTP client: {ex.Message}");
                 this.httpClient = null;
             }
@@ -149,21 +152,23 @@ Please provide only the translated text in your response, without any explanatio
         }
         catch (HttpRequestException httpEx)
         {
-            this.pluginLog.Error(
+            PluginRuntimeLog.Error(
+                this.pluginLog,
                 $"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
             return
                 $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
         }
         catch (JsonException jsonEx)
         {
-            this.pluginLog.Error(
+            PluginRuntimeLog.Error(
+                this.pluginLog,
                 $"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
             return
                 $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} {ex.Message}");
             return $"[{Resources.TranslationError} {ex.Message}]";
         }
 

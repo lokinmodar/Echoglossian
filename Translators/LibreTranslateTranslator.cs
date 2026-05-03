@@ -1,4 +1,4 @@
-﻿// <copyright file="LibreTranslateTranslator.cs" company="lokinmodar">
+// <copyright file="LibreTranslateTranslator.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -68,13 +68,14 @@ public class LibreTranslateTranslator : ITranslator
             HttpClient.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
 
-            this.pluginLog.Debug(
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
                 $"Sending LibreTranslate request to {this.endpoint} for: {fixedText}");
 
             var response = await HttpClient.PostAsync(this.endpoint, content);
             var json = await response.Content.ReadAsStringAsync();
 
-            this.pluginLog.Debug($"Response: {json}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"Response: {json}");
 
             var parsed = JObject.Parse(json);
             var translated = parsed["translatedText"]?.ToString();
@@ -82,17 +83,19 @@ public class LibreTranslateTranslator : ITranslator
             if (!string.IsNullOrEmpty(translated))
             {
                 var clean = FixText(translated);
-                this.pluginLog.Debug($"Translated: {clean}");
+                PluginRuntimeLog.Debug(this.pluginLog, $"Translated: {clean}");
                 return clean;
             }
 
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 "LibreTranslateTranslator: Empty translation result");
             return string.Empty;
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error(
+            PluginRuntimeLog.Error(
+                this.pluginLog,
                 $"LibreTranslateTranslator failed: {ex.Message}");
             return string.Empty;
         }
@@ -140,7 +143,8 @@ public class LibreTranslateTranslator : ITranslator
         }
         catch (Exception ex)
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 $"Failed to fetch LibreTranslate languages: {ex.Message}");
             return new List<string>
                 { "en", "es", "fr", "de", "it", "pt", "auto" };

@@ -33,7 +33,7 @@ public partial class Echoglossian
     /// </summary>
     private unsafe void RegisterOverlays()
     {
-        global::Echoglossian.PluginRuntimeLog.Debug("Registering overlays...");
+        PluginRuntimeLog.Debug("Registering overlays...");
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -190,7 +190,9 @@ public partial class Echoglossian
                 () => TranslationWindowConfig.FromConfigForChatBubble(
                     this.configuration)));
 
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Overlays registered: {this.registeredOverlays.Count} ");
     }
 }
+
+

@@ -321,7 +321,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
     }
     catch (Exception ex)
     {
-      global::Echoglossian.PluginRuntimeLog.Debug(
+      PluginRuntimeLog.Debug(
           $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
       translatedText = string.Empty;
     }
@@ -553,7 +553,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
   private bool ShouldUseOverlay()
   {
     return this.config.TranslateTalkSubtitle &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+           TranslationDisplayModeHelper.UsesOverlayPresentation(
                this.config.TalkSubtitleTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -568,7 +568,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldApplyNativeTalkSubtitleText()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+    return TranslationDisplayModeHelper.WritesNativeTranslation(
         this.config.TalkSubtitleTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -583,7 +583,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
   /// </returns>
   private bool ShouldSwapTexts()
   {
-    return global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+    return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
         this.config.TalkSubtitleTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -691,3 +691,5 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
     this.clearOverlay();
   }
 }
+
+

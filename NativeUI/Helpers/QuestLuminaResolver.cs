@@ -5,8 +5,6 @@
 
 using System.Collections.Concurrent;
 using System.Globalization;
-using System.Reflection;
-
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -43,7 +41,7 @@ public static class QuestLuminaResolver
             questNameIndex = null;
         }
 
-        global::Echoglossian.PluginRuntimeLog.Debug("[QuestLuminaResolver] Cleared quest Lumina caches.");
+        PluginRuntimeLog.Debug("[QuestLuminaResolver] Cleared quest Lumina caches.");
     }
 
     /// <summary>
@@ -109,11 +107,13 @@ public static class QuestLuminaResolver
         }
 
         var questIndex = GetQuestNameIndex(questSheet);
-        if (!questIndex.TryGetValue(normalizedQuestName, out questId))
+        if (!questIndex.TryGetValue(normalizedQuestName, out var resolvedQuestId) ||
+            string.IsNullOrWhiteSpace(resolvedQuestId))
         {
             return false;
         }
 
+        questId = resolvedQuestId;
         QuestIdCache[normalizedQuestName] = questId;
         return questId.Length != 0;
     }
@@ -137,14 +137,14 @@ public static class QuestLuminaResolver
 
             foreach (var quest in questSheet)
             {
-                var questName = ReadQuestString(quest, "Name", "Text", "QuestName");
+                var questName = GetQuestNameText(quest);
                 var normalizedQuestName = NormalizeQuestName(questName);
                 if (normalizedQuestName.Length == 0)
                 {
                     continue;
                 }
 
-                var questId = ReadQuestString(quest, "RowId", "Id");
+                var questId = GetQuestRowIdText(quest);
                 if (questId.Length == 0)
                 {
                     continue;
@@ -158,28 +158,34 @@ public static class QuestLuminaResolver
         }
     }
 
-    private static string ReadQuestString(object quest, params string[] propertyNames)
+    /// <summary>
+    ///     Resolves the display name text from a Lumina quest row.
+    /// </summary>
+    /// <param name="quest">The Lumina quest row.</param>
+    /// <returns>The trimmed quest name, or an empty string when unavailable.</returns>
+    internal static string GetQuestNameText(Quest quest)
     {
-        var questType = quest.GetType();
-        foreach (var propertyName in propertyNames)
-        {
-            var property = questType.GetProperty(
-                propertyName,
-                BindingFlags.Instance | BindingFlags.Public);
+        return quest.Name.ExtractText().Trim();
+    }
 
-            if (property?.GetValue(quest) is null)
-            {
-                continue;
-            }
+    /// <summary>
+    ///     Resolves the stable numeric quest row identifier as text.
+    /// </summary>
+    /// <param name="quest">The Lumina quest row.</param>
+    /// <returns>The quest row id as invariant text.</returns>
+    internal static string GetQuestRowIdText(Quest quest)
+    {
+        return quest.RowId.ToString(CultureInfo.InvariantCulture);
+    }
 
-            var value = property.GetValue(quest)?.ToString();
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                return value.Trim();
-            }
-        }
-
-        return string.Empty;
+    /// <summary>
+    ///     Resolves the raw internal quest sheet identifier text.
+    /// </summary>
+    /// <param name="quest">The Lumina quest row.</param>
+    /// <returns>The trimmed internal quest sheet id, or an empty string.</returns>
+    internal static string GetQuestSheetIdText(Quest quest)
+    {
+        return quest.Id.ExtractText().Trim();
     }
 
     private static string NormalizeQuestName(string? questName)
@@ -189,3 +195,5 @@ public static class QuestLuminaResolver
             : questName.Trim();
     }
 }
+
+

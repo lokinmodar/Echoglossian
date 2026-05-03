@@ -42,7 +42,7 @@ public static class QuestHoverTranslationCache
     public static void Clear()
     {
         Cache.Clear();
-        global::Echoglossian.PluginRuntimeLog.Debug("[QuestHoverTranslationCache] Cleared quest hover translation cache.");
+        PluginRuntimeLog.Debug("[QuestHoverTranslationCache] Cleared quest hover translation cache.");
     }
 }
 
@@ -54,3 +54,5 @@ public static class QuestHoverTranslationCache
 public sealed record QuestHoverTranslationSnapshot(
     string OriginalText,
     string TranslatedText);
+
+

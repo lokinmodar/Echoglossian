@@ -43,8 +43,9 @@ public static class ItemTooltipCacheManager
         }
         catch (Exception ex)
         {
-            PluginLog.Error(
-                $"[ItemTooltipCacheManager] Failed to preload cache: {ex}");
+            PluginRuntimeLog.Error(
+                "ItemTooltipCacheManager",
+                $"Failed to preload cache: {ex}");
         }
     }
 
@@ -170,8 +171,9 @@ public static class ItemTooltipCacheManager
     public static void Clear()
     {
         Cache.Clear();
-        global::Echoglossian.Echoglossian.PluginLog?.Debug(
-            "[ItemTooltipCacheManager] Cleared item-tooltip cache.");
+        PluginRuntimeLog.Debug(
+            "ItemTooltipCacheManager",
+            "Cleared item-tooltip cache.");
     }
 
     /// <summary>

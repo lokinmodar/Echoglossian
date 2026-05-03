@@ -48,7 +48,8 @@ public class ClaudeTranslator : ITranslator
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {
-            this.pluginLog.Warning(
+            PluginRuntimeLog.Warning(
+                this.pluginLog,
                 Resources.APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable);
             this.httpClient = null;
             return;
@@ -67,7 +68,7 @@ public class ClaudeTranslator : ITranslator
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"Failed to initialize Claude HTTP client: {ex.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"Failed to initialize Claude HTTP client: {ex.Message}");
             this.httpClient = null;
         }
     }
@@ -147,17 +148,17 @@ public class ClaudeTranslator : ITranslator
         }
         catch (HttpRequestException httpEx)
         {
-            this.pluginLog.Error($"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} HTTP Error: {httpEx.Message}");
             return $"[{Resources.TranslationError} HTTP Error: {httpEx.Message}]";
         }
         catch (JsonException jsonEx)
         {
-            this.pluginLog.Error($"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} JSON Error: {jsonEx.Message}");
             return $"[{Resources.TranslationError} JSON Error: {jsonEx.Message}]";
         }
         catch (Exception ex)
         {
-            this.pluginLog.Error($"{Resources.TranslationError} {ex.Message}");
+            PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} {ex.Message}");
             return $"[{Resources.TranslationError} {ex.Message}]";
         }
 

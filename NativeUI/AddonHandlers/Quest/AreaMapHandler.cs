@@ -139,7 +139,7 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       if (foundQuestPlate != null)
       {
 #if DEBUG
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
         if (this.AreaMapShouldRemoveDiacritics)
@@ -182,7 +182,7 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       {
         var translatedNameText = cachedTranslatedName;
 #if DEBUG
-        global::Echoglossian.PluginRuntimeLog.Debug(
+        PluginRuntimeLog.Debug(
             $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
         if (this.AreaMapShouldRemoveDiacritics)
@@ -234,14 +234,14 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
 
             var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-            global::Echoglossian.PluginRuntimeLog.Debug(
+            PluginRuntimeLog.Debug(
                 $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
           });
     }
     catch (Exception e)
     {
-      PluginLog.Error("Exception at AreaMapHandler: " + e);
+      PluginRuntimeLog.Error("Exception at AreaMapHandler: " + e);
     }
   }
 
@@ -406,3 +406,5 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       string OriginalText,
       string TranslatedText);
 }
+
+

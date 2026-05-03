@@ -25,7 +25,7 @@ public class ActionMenuWindowHandlerTests
     /// </summary>
     public ActionMenuWindowHandlerTests()
     {
-        global::Echoglossian.Echoglossian.PluginLog ??=
+        Echoglossian.PluginLog ??=
             new NoOpPluginLog();
     }
 
@@ -662,3 +662,5 @@ public class ActionMenuWindowHandlerTests
         Assert.True(accepted);
     }
 }
+
+

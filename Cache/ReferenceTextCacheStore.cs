@@ -66,8 +66,9 @@ public sealed class ReferenceTextCacheStore<TRow>
         }
         catch (Exception ex)
         {
-            Echoglossian.PluginLog.Error(
-                $"[{this.cacheName}] Failed to preload cache: {ex}");
+            PluginRuntimeLog.Error(
+                this.cacheName,
+                $"Failed to preload cache: {ex}");
         }
     }
 
@@ -344,8 +345,9 @@ public sealed class ReferenceTextCacheStore<TRow>
         this.cache.Clear();
         this.forwardTextLookupCache.Clear();
         this.reverseTextLookupCache.Clear();
-        global::Echoglossian.Echoglossian.PluginLog?.Debug(
-            $"[{this.cacheName}] Cleared reference-text cache.");
+        PluginRuntimeLog.Debug(
+            this.cacheName,
+            "Cleared reference-text cache.");
     }
 
     /// <summary>

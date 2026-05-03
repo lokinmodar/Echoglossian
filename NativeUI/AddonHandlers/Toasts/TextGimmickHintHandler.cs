@@ -146,7 +146,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
 
     this.updateOverlayBounds(addon, textNode);
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger={type} captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
@@ -156,7 +156,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
             out var translatedText,
             out _))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger={type} cache-hit -> overlay publish");
       this.SetResolvedState(
           originalText,
@@ -170,7 +170,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     var storedToast = this.findTextGimmickHintMessage(lookupToast);
     if (this.IsStoredTranslationUsable(storedToast, originalText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger={type} db-hit -> overlay publish");
       this.SetResolvedState(
           originalText,
@@ -185,7 +185,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     if (this.TryQueueTranslation(originalText, out var requestId))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger={type} cache-miss -> queued translation request #{requestId}");
       this.PublishOverlay(originalText, string.Empty, type.ToString());
       Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
@@ -207,7 +207,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     var textNode = this.resolveToastTextNode(addon);
     this.updateOverlayBounds(addon, textNode);
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger={type} visible-update " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
@@ -222,7 +222,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     if (this.ShouldUseOverlay())
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger={type} republishing overlay from resolved state");
       this.PublishOverlay(
           resolvedOriginalText,
@@ -250,7 +250,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       return;
     }
 
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger={type} applying native replacement");
     textNode->SetText(replacementText);
   }
@@ -262,7 +262,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// <param name="args">The addon arguments associated with the reset.</param>
   private void OnResetState(AddonEvent type, AddonArgs args)
   {
-    // global::Echoglossian.PluginRuntimeLog.Debug($"[{TextGimmickHintAddonName}] trigger={type} resetting toast state");
+    // PluginRuntimeLog.Debug($"[{TextGimmickHintAddonName}] trigger={type} resetting toast state");
     lock (this.stateGate)
     {
       this.activeRequestId++;
@@ -297,14 +297,14 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
     catch (Exception ex)
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
       translatedText = string.Empty;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger=async-resolve empty translation for source='{originalText}'");
       lock (this.stateGate)
       {
@@ -320,7 +320,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
 
     var replacementText = this.NormalizeForReplacement(translatedText);
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger=async-resolve translation ready for source='{originalText}'");
     var translatedGimmickHint = new TextGimmickHintMessage(
         originalText,
@@ -541,7 +541,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   {
     if (!this.ShouldUseOverlay())
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger={trigger} overlay disabled -> clear");
       this.clearOverlay();
       return;
@@ -550,13 +550,13 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     var overlayText = this.SelectOverlayText(originalText, translatedText);
     if (string.IsNullOrWhiteSpace(overlayText))
     {
-      // global::Echoglossian.PluginRuntimeLog.Debug(
+      // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger={trigger} overlay text unavailable -> clear");
       this.clearOverlay();
       return;
     }
 
-    // global::Echoglossian.PluginRuntimeLog.Debug(
+    // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger={trigger} publish overlay text='{overlayText}'");
     this.updateOverlay(string.Empty, overlayText, string.Empty);
   }
@@ -572,7 +572,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool ShouldUseOverlay()
   {
     return this.config.TranslateTextGimmickHint &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+           TranslationDisplayModeHelper.UsesOverlayPresentation(
                this.config.TextGimmickHintTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -588,7 +588,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool ShouldApplyNativeText()
   {
     return this.config.TranslateTextGimmickHint &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.WritesNativeTranslation(
+           TranslationDisplayModeHelper.WritesNativeTranslation(
                this.config.TextGimmickHintTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -604,7 +604,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool ShouldSwapTexts()
   {
     return this.config.TranslateTextGimmickHint &&
-           global::Echoglossian.NativeUI.Helpers.TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+           TranslationDisplayModeHelper.ShowsOriginalOverlayText(
                this.config.TextGimmickHintTranslationDisplayMode,
                this.config.OverlayOnlyLanguage);
   }
@@ -783,3 +783,5 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
         : text;
   }
 }
+
+

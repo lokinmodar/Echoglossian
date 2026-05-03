@@ -53,7 +53,7 @@ public static class QuestUiTranslationCache
   public static void Clear()
   {
     Cache.Clear();
-    global::Echoglossian.PluginRuntimeLog.Debug("[QuestUiTranslationCache] Cleared quest UI translation cache.");
+    PluginRuntimeLog.Debug("[QuestUiTranslationCache] Cleared quest UI translation cache.");
   }
 }
 
@@ -67,3 +67,5 @@ public readonly record struct QuestUiTranslationSnapshot(
     string OriginalText,
     string AppliedText,
     DateTime LastUpdatedUtc);
+
+
