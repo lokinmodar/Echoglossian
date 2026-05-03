@@ -29,7 +29,7 @@ internal static class QuestProgressResolver
     public static void Clear()
     {
         QuestProgressCache.Clear();
-        PluginLog.Debug("[QuestProgressResolver] Cleared quest progress cache.");
+        global::Echoglossian.PluginRuntimeLog.Debug("[QuestProgressResolver] Cleared quest progress cache.");
     }
 
     /// <summary>

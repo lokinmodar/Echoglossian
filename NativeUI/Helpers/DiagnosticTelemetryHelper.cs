@@ -69,7 +69,7 @@ internal sealed class DiagnosticTelemetryHelper
             message,
             signature,
             cooldown,
-            logLine => PluginLog.Debug(logLine));
+            logLine => global::Echoglossian.PluginRuntimeLog.Debug(logLine));
     }
 
     /// <summary>

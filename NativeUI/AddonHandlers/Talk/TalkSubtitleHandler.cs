@@ -321,7 +321,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
     }
     catch (Exception ex)
     {
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
       translatedText = string.Empty;
     }

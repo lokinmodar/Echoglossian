@@ -92,7 +92,7 @@ internal sealed class QuestToastRuntime
       return;
     }
 
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[QuestToast] trigger=IToastGui.QuestToast captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
@@ -102,7 +102,7 @@ internal sealed class QuestToastRuntime
     if (storedToast != null &&
         !string.IsNullOrWhiteSpace(storedToast.TranslatedToastMessage))
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     "[QuestToast] trigger=IToastGui.QuestToast cache-hit -> resolved immediately");
       this.ApplyResolvedToast(
           ref message,
@@ -146,7 +146,7 @@ internal sealed class QuestToastRuntime
       return;
     }
 
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[QuestToast] trigger=IToastGui.QuestToast applying native replacement text='{translatedText}'");
     if (!this.ShouldUseOverlay())
     {
@@ -179,19 +179,19 @@ internal sealed class QuestToastRuntime
     }
     catch (Exception ex)
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger=async-resolve exception {ex}");
       return;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger=async-resolve empty translation for source='{originalText}'");
       return;
     }
 
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[QuestToast] trigger=async-resolve translation ready for source='{originalText}'");
     await this.insertToastMessageAsync(
         new ToastMessage(
@@ -383,7 +383,7 @@ internal sealed class QuestToastRuntime
   {
     if (!this.ShouldUseOverlay())
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger={trigger} overlay disabled -> clear");
       this.clearOverlay();
       return;
@@ -392,7 +392,7 @@ internal sealed class QuestToastRuntime
     var overlayText = this.SelectOverlayText(originalText, translatedText);
     if (string.IsNullOrWhiteSpace(overlayText))
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[QuestToast] trigger={trigger} overlay text unavailable -> clear");
       this.clearOverlay();
       return;

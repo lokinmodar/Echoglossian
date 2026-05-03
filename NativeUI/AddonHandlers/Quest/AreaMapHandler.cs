@@ -139,7 +139,7 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       if (foundQuestPlate != null)
       {
 #if DEBUG
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
         if (this.AreaMapShouldRemoveDiacritics)
@@ -182,7 +182,7 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       {
         var translatedNameText = cachedTranslatedName;
 #if DEBUG
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"Name translated: {questNameText} -> {translatedNameText}");
 #endif
         if (this.AreaMapShouldRemoveDiacritics)
@@ -234,7 +234,7 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
 
             var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-            PluginLog.Debug(
+            global::Echoglossian.PluginRuntimeLog.Debug(
                 $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
           });

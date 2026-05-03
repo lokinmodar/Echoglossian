@@ -1,4 +1,4 @@
-﻿// <copyright file="Utils.cs" company="lokinmodar">
+// <copyright file="Utils.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -190,7 +190,7 @@ public partial class Echoglossian
     if (!File.Exists(PluginInterface.ConfigFile.FullName))
     {
 #if DEBUG
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"Inside config file fixer - Config File Info: {PluginInterface.ConfigFile.FullName}");
 #endif
       SaveConfig(this.configuration);
@@ -507,7 +507,7 @@ public partial class Echoglossian
       Color? backColorOptional = null,
       Size? minSizeOptional = null)
   {
-    PluginLog.Debug("Inside image creation method");
+    global::Echoglossian.PluginRuntimeLog.Debug("Inside image creation method");
 
     PrivateFontCollection pfc = new();
     pfc.AddFontFile(
@@ -577,7 +577,7 @@ public partial class Echoglossian
       }
     }
 
-    PluginLog.Debug("Before returning the image created");
+    global::Echoglossian.PluginRuntimeLog.Debug("Before returning the image created");
 
     return textAsImage;
   }
@@ -589,7 +589,7 @@ public partial class Echoglossian
   /// <returns>Byte array to be used elsewhere.</returns>
   private byte[] TranslationImageConverter(Image image)
   {
-    PluginLog.Debug("Conversion to byte");
+    global::Echoglossian.PluginRuntimeLog.Debug("Conversion to byte");
 
     var imageConverter = new ImageConverter();
     return (byte[])imageConverter.ConvertTo(image, typeof(byte[]));
@@ -621,7 +621,7 @@ public partial class Echoglossian
   /// <returns>Returns true if the input is valide time information.</returns>
   internal static bool IsValidTimeFormat(string time)
   {
-    // PluginLog.Debug($"Checking time format: {time}");
+    // global::Echoglossian.PluginRuntimeLog.Debug($"Checking time format: {time}");
     var pattern = @"(\d{1,3}):(\d{2})";
     var match = Regex.Match(time, pattern);
 
@@ -643,10 +643,10 @@ public partial class Echoglossian
   /// <returns>Cleaned string.</returns>
   public static string CleanString(string input)
   {
-    PluginLog.Debug($"Cleaning string: {input}");
+    global::Echoglossian.PluginRuntimeLog.Debug($"Cleaning string: {input}");
     if (string.IsNullOrEmpty(input))
     {
-      PluginLog.Debug("Input is null or empty, returning as is.");
+      global::Echoglossian.PluginRuntimeLog.Debug("Input is null or empty, returning as is.");
       return input;
     }
 
@@ -680,11 +680,11 @@ public partial class Echoglossian
   /// <returns>Cleand text.</returns>
   public string RemoveDiacritics(string text, HashSet<char> supportedChars)
   {
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"Removing diacritics from text: {text}, supportedChars count: {supportedChars.Count}");
     if (string.IsNullOrEmpty(text))
     {
-      // PluginLog.Debug("Text is null or empty, returning as is.");
+      // global::Echoglossian.PluginRuntimeLog.Debug("Text is null or empty, returning as is.");
       return text;
     }
 
@@ -731,7 +731,7 @@ public partial class Echoglossian
     // var gameVersion = Framework.Instance()->GameVersionString;
 
     var gv = DManager.GameData.Repositories?["ffxiv"].Version;
-    // PluginLog.Debug($"Game Version: {gv}");
+    // global::Echoglossian.PluginRuntimeLog.Debug($"Game Version: {gv}");
 
     return gv;
   }
@@ -758,7 +758,7 @@ public partial class Echoglossian
     var jsonOutput = JsonConvert.SerializeObject(
         dictionary,
         Formatting.Indented);
-    PluginLog.Debug($"Parsed Dictionary JSON: {jsonOutput}");
+    global::Echoglossian.PluginRuntimeLog.Debug($"Parsed Dictionary JSON: {jsonOutput}");
 
     return dictionary;
   }
@@ -781,7 +781,7 @@ public partial class Echoglossian
 
     if (isInstanceContent)
     {
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"IsInstance: {isInstanceContent}, InstanceContentType: {icDirector->InstanceContentType}");
     }
 

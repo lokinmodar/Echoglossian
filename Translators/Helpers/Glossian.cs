@@ -1,4 +1,4 @@
-﻿// <copyright file="Glossian.cs" company="lokinmodar">
+// <copyright file="Glossian.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -22,11 +22,11 @@ namespace Echoglossian
           string sanitizedString = Sanitizer.Sanitize(message);
 
     #if DEBUG
-          PluginLog.Debug($"Message in Lang Method: {sanitizedString}");
+          global::Echoglossian.PluginRuntimeLog.Debug($"Message in Lang Method: {sanitizedString}");
     #endif
           Tuple<NTextCat.LanguageInfo, double> mostCertainLanguage = identifier.Identify(sanitizedString).FirstOrDefault();
     #if DEBUG
-          PluginLog.Debug($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
+          global::Echoglossian.PluginRuntimeLog.Debug($"Most Certain language: {mostCertainLanguage?.Item1.Iso639_2T}");
     #endif
           return mostCertainLanguage != null
             ? mostCertainLanguage.Item1.Iso639_2T

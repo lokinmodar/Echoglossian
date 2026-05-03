@@ -1,4 +1,4 @@
-﻿// <copyright file="UiFontHelpers.cs" company="lokinmodar">
+// <copyright file="UiFontHelpers.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -26,14 +26,14 @@ public partial class Echoglossian
 
   private static void AdjustLanguageForFontBuild()
   {
-    PluginLog.Debug("Inside AdjustLanguageForFontBuild method");
+    global::Echoglossian.PluginRuntimeLog.Debug("Inside AdjustLanguageForFontBuild method");
 
 
     var lang = SelectedLanguage;
     SpecialFontFileName = lang.FontName;
     ScriptCharList = lang.ExclusiveCharsToAdd;
 
-    PluginLog.Debug(
+    global::Echoglossian.PluginRuntimeLog.Debug(
         "Lang:\n " + lang + "\nSpecialFontFileName:\n " +
         SpecialFontFileName + "\nScriptCharList:\n " + ScriptCharList);
   }
@@ -55,7 +55,7 @@ public partial class Echoglossian
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
     LangComboFontFilePath =
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
-    PluginLog.Debug(
+    global::Echoglossian.PluginRuntimeLog.Debug(
         "Fonts paths:\n " + SpecialFontFilePath + "\n " + FontFilePath +
         "\n " + SymbolsFontFilePath + "\n " + DummyFontFilePath);
   }

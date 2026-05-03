@@ -20,7 +20,7 @@ public static class AssetsManager
   public static void PluginAssetsChecker()
   {
 #if DEBUG
-    Echoglossian.PluginLog.Debug("Checking Plugin assets!");
+    global::Echoglossian.PluginRuntimeLog.Debug("Checking Plugin assets!");
 #endif
 
     lock (MissingAssetFilesLock)
@@ -39,12 +39,12 @@ public static class AssetsManager
     foreach (string f in AssetFiles)
     {
 #if DEBUG
-      Echoglossian.PluginLog.Debug($"Asset file: {f}");
+      global::Echoglossian.PluginRuntimeLog.Debug($"Asset file: {f}");
 #endif
       if (!File.Exists($"{AssetsPath}{f}"))
       {
 #if DEBUG
-        Echoglossian.PluginLog.Debug($"Missing file: {f}");
+        global::Echoglossian.PluginRuntimeLog.Debug($"Missing file: {f}");
 #endif
         MissingAssetFiles.Add(f);
       }
@@ -176,7 +176,7 @@ public static class AssetsManager
   private static void WebClientDownloadCompleted()
   {
 #if DEBUG
-    Echoglossian.PluginLog.Debug("Download finished!");
+    global::Echoglossian.PluginRuntimeLog.Debug("Download finished!");
 #endif
 
     Echoglossian.NotificationManager.AddNotification(new Notification

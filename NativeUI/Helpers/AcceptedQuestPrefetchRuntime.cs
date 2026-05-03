@@ -922,7 +922,7 @@ public partial class Echoglossian
     }
     else if (AcceptedQuestPrefetchEmitDalamudLog)
     {
-      PluginLog.Debug(logLine);
+      global::Echoglossian.PluginRuntimeLog.Debug(logLine);
     }
 
     DiagnosticFileEmitter.Emit(

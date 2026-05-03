@@ -1,4 +1,4 @@
-﻿// <copyright file="UINewFontHandler.cs" company="lokinmodar">
+// <copyright file="UINewFontHandler.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -23,32 +23,32 @@ public class UINewFontHandler : IDisposable
 
         var allUnicodeRanges = UnicodeRanges.All;
 
-        PluginLog.Debug($"SymbolsFontPath: {SymbolsFontFilePath}");
-        PluginLog.Debug($"FontFilePath: {FontFilePath}");
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug($"SymbolsFontPath: {SymbolsFontFilePath}");
+        global::Echoglossian.PluginRuntimeLog.Debug($"FontFilePath: {FontFilePath}");
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"ComplementaryFont3FilePath: {ComplementaryFont3FilePath}");
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"ComplementaryFont4FilePath: {ComplementaryFont4FilePath}");
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"ComplementaryFont5FilePath: {ComplementaryFont5FilePath}");
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"ComplementaryFont6FilePath: {ComplementaryFont6FilePath}");
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"ComplementaryFont7FilePath: {ComplementaryFont7FilePath}");
-        PluginLog.Debug($"SpecialFontFilePath: {SpecialFontFilePath}");
-        PluginLog.Debug($"LangComboFontFilePath: {LangComboFontFilePath}");
-        PluginLog.Debug($"DummyFontFilePath: {DummyFontFilePath}");
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug($"SpecialFontFilePath: {SpecialFontFilePath}");
+        global::Echoglossian.PluginRuntimeLog.Debug($"LangComboFontFilePath: {LangComboFontFilePath}");
+        global::Echoglossian.PluginRuntimeLog.Debug($"DummyFontFilePath: {DummyFontFilePath}");
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
 
         this.GeneralFontHandle =
             PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(e =>
                 e.OnPreBuild(tk =>
                 {
-                    PluginLog.Debug("Building font atlas for general use...");
-                    PluginLog.Debug(
+                    global::Echoglossian.PluginRuntimeLog.Debug("Building font atlas for general use...");
+                    global::Echoglossian.PluginRuntimeLog.Debug(
                         $"Font size: {this.configuration?.FontSize} px");
-                    PluginLog.Debug(
+                    global::Echoglossian.PluginRuntimeLog.Debug(
                         $"Glyph ranges: {LangComboItems.Length} items, {CharsToAddToAll.Length} chars, {ScriptCharList.Length} script chars, {PuaCharCodes.Length} PUA codes, {PuaChars.Length} PUA chars");
 
                     var rangeBuilder = default(FluentGlyphRangeBuilder)
@@ -87,15 +87,15 @@ public class UINewFontHandler : IDisposable
             PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(e =>
                 e.OnPreBuild(tk =>
                 {
-                    PluginLog.Debug(
+                    global::Echoglossian.PluginRuntimeLog.Debug(
                         "Building font atlas for language-specific use...");
-                    PluginLog.Debug(
+                    global::Echoglossian.PluginRuntimeLog.Debug(
                         $"Font size: {this.configuration?.FontSize} px");
-                    PluginLog.Debug(
+                    global::Echoglossian.PluginRuntimeLog.Debug(
                         $"Glyph ranges: {CharsToAddToAll.Length} chars, {ScriptCharList.Length} script chars, {PuaCharCodes.Length} PUA codes, {PuaChars.Length} PUA chars");
-                    PluginLog.Debug(
+                    global::Echoglossian.PluginRuntimeLog.Debug(
                         $"UndicodeRanges.All Length: {UnicodeRanges.All.Length}");
-                    PluginLog.Debug(
+                    global::Echoglossian.PluginRuntimeLog.Debug(
                         $"Selected language: {SelectedLanguage.LanguageName}");
 
                     var rangeBuilder = default(FluentGlyphRangeBuilder)

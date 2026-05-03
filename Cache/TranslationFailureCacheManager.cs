@@ -123,7 +123,7 @@ public static class TranslationFailureCacheManager
     public static void Clear()
     {
         Cache.Clear();
-        PluginLog.Debug("[TranslationFailureCacheManager] Cleared translation-failure cache.");
+        global::Echoglossian.PluginRuntimeLog.Debug("[TranslationFailureCacheManager] Cleared translation-failure cache.");
     }
 
     private static void IndexRecord(TranslationFailure record)

@@ -1,4 +1,4 @@
-﻿// <copyright file="AddonLifecycleExtensions.cs" company="lokinmodar">
+// <copyright file="AddonLifecycleExtensions.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -74,7 +74,7 @@ public static class AddonLifecycleExtensions
     /// <param name="type">The event type that triggered the logging operation.</param>
     /// <param name="args">The arguments containing details about the add-on, including its name and context.</param>
     private static void Logger(AddonEvent type, AddonArgs args)
-        => PluginLog.Debug($"{args.AddonName} called {type}");
+        => global::Echoglossian.PluginRuntimeLog.Debug($"{args.AddonName} called {type}");
 
     /// <summary>
     /// Removes logging event listeners for the specified add-on from the provided add-on lifecycle instance.

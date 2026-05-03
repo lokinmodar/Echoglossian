@@ -185,7 +185,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
 
     this.updateOverlayBounds(addon, textNode);
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger={type} captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
@@ -207,7 +207,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     var textNode = this.resolveToastTextNode(addon);
     this.updateOverlayBounds(addon, textNode);
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger={type} visible-update " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
@@ -220,7 +220,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       if (this.TryReadCurrentSource(textNode, out var visibleOriginalText))
       {
         this.updateOverlayBounds(addon, textNode);
-        // PluginLog.Debug(
+        // global::Echoglossian.PluginRuntimeLog.Debug(
         //     $"[{this.addonName}] trigger={type} visible-capture source='{visibleOriginalText}' " +
         //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
         //     $"swap={this.ShouldSwapTexts()}");
@@ -237,7 +237,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     if (this.ShouldUseOverlay())
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger={type} republishing overlay from resolved state");
       this.PublishOverlay(resolvedOriginalText, translatedText, type.ToString());
       if (!this.ShouldSwapTexts())
@@ -262,7 +262,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       return;
     }
 
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger={type} applying native replacement");
     textNode->SetText(replacementText);
   }
@@ -288,7 +288,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
             out var translatedText,
             out _))
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger={trigger} cache-hit -> overlay publish");
       this.PublishOverlay(originalText, translatedText, trigger);
       return true;
@@ -302,7 +302,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
           originalText,
           storedToast!.TranslatedToastMessage!,
           this.NormalizeForReplacement(storedToast.TranslatedToastMessage!));
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger={trigger} db-hit -> overlay publish");
       this.PublishOverlay(
           originalText,
@@ -313,7 +313,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     if (this.TryQueueTranslation(originalText, out var requestId))
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger={trigger} cache-miss -> queued translation request #{requestId}");
       this.PublishOverlay(originalText, string.Empty, trigger);
       Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
@@ -330,7 +330,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   /// <param name="args">The addon arguments associated with the reset.</param>
   protected void OnResetState(AddonEvent type, AddonArgs args)
   {
-    // PluginLog.Debug($"[{this.addonName}] trigger={type} resetting toast state");
+    // global::Echoglossian.PluginRuntimeLog.Debug($"[{this.addonName}] trigger={type} resetting toast state");
     var shouldDelayOverlayClear = this.ShouldUseOverlay();
     var resetRequestId = 0;
     var publicationVersion = 0;
@@ -377,14 +377,14 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
     catch (Exception ex)
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
       translatedText = string.Empty;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger=async-resolve empty translation for source='{originalText}'");
       lock (this.stateGate)
       {
@@ -400,7 +400,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
 
     var replacementText = this.NormalizeForReplacement(translatedText);
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger=async-resolve translation ready for source='{originalText}'");
     var translatedToast = new ToastMessage(
         this.toastType,
@@ -703,7 +703,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   {
     if (!this.ShouldUseOverlay())
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger={trigger} overlay disabled -> clear");
       this.clearOverlay();
       return;
@@ -712,13 +712,13 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     var overlayText = this.SelectOverlayText(originalText, translatedText);
     if (string.IsNullOrWhiteSpace(overlayText))
     {
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger={trigger} overlay text unavailable -> clear");
       this.clearOverlay();
       return;
     }
 
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger={trigger} publish overlay text='{overlayText}'");
     lock (this.stateGate)
     {

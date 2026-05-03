@@ -1,4 +1,4 @@
-﻿// <copyright file="TranslationOverlayDrawer.cs" company="lokinmodar">
+// <copyright file="TranslationOverlayDrawer.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -438,7 +438,7 @@ namespace Echoglossian
       }
 
       this.UpdateToastOverlayBounds(overlay, addon, textNode);
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"Synced toast overlay '{addonName}' index={resolvedIndex} at ({overlay.Position.X:0.##}, {overlay.Position.Y:0.##}) " +
       //     $"size ({overlay.Dimensions.X:0.##} x {overlay.Dimensions.Y:0.##})");
       return true;
@@ -502,7 +502,7 @@ namespace Echoglossian
 
         addon = unitPtr;
         resolvedIndex = index;
-        // PluginLog.Debug(
+        // global::Echoglossian.PluginRuntimeLog.Debug(
         //     $"Toast overlay resolved '{addonName}' requestedIndex={index} using fallback loaded unit");
         return true;
       }
@@ -523,7 +523,7 @@ namespace Echoglossian
 
         addon = unitPtr;
         resolvedIndex = matchIndex;
-        // PluginLog.Debug(
+        // global::Echoglossian.PluginRuntimeLog.Debug(
         //     $"Toast overlay resolved '{addonName}' requestedIndex={index} using first available matching unit");
         return true;
       }
@@ -559,7 +559,7 @@ namespace Echoglossian
       this.questToastOverlay.Dimensions = new Vector2(
           viewport.Size.X * 0.35f,
           56f);
-      // PluginLog.Debug(
+      // global::Echoglossian.PluginRuntimeLog.Debug(
       //     $"Synced quest toast overlay at ({this.questToastOverlay.Position.X:0.##}, {this.questToastOverlay.Position.Y:0.##}) " +
       //     $"size ({this.questToastOverlay.Dimensions.X:0.##} x {this.questToastOverlay.Dimensions.Y:0.##})");
       return true;
@@ -576,7 +576,7 @@ namespace Echoglossian
         TranslationWindowConfig config,
         string? customTitle = null)
     {
-      // PluginLog.Debug($"DrawTranslationWindow: {overlay.CurrentName} - {overlay.CurrentText}");
+      // global::Echoglossian.PluginRuntimeLog.Debug($"DrawTranslationWindow: {overlay.CurrentName} - {overlay.CurrentText}");
       if (!overlay.Display)
       {
         return;
@@ -600,7 +600,7 @@ namespace Echoglossian
             : overlay.OriginalName;
       }
 
-      // PluginLog.Debug($"Drawing translation window: {overlay.CurrentName} -  {overlay.CurrentText}");
+      // global::Echoglossian.PluginRuntimeLog.Debug($"Drawing translation window: {overlay.CurrentName} -  {overlay.CurrentText}");
 
       var desiredPosition = config.CenterOnAddon
           ? new Vector2(
@@ -723,7 +723,7 @@ namespace Echoglossian
       this.TraceOverlayRenderOnce(config, overlay, windowLabel, renderedWindowPos, textWidth, width);
       if (config.SurfaceId == TranslationOverlaySurfaceId.WideTextToast)
       {
-        // PluginLog.Debug(
+        // global::Echoglossian.PluginRuntimeLog.Debug(
         //     $"Rendered toast overlay '{windowLabel}' at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##})");
       }
       ImGui.PopStyleColor(1);
@@ -731,7 +731,7 @@ namespace Echoglossian
 
       if (this.IsToastLikeOverlaySurface(config.SurfaceId))
       {
-        // PluginLog.Debug(
+        // global::Echoglossian.PluginRuntimeLog.Debug(
         //     $"Rendered overlay '{windowLabel}' at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) " +
         //     $"size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##}) " +
         //     $"contentWidth={textWidth:0.##} windowWidth={width:0.##} overlayPos=({overlay.Position.X:0.##}, {overlay.Position.Y:0.##})");
@@ -774,8 +774,9 @@ namespace Echoglossian
         this.overlayRenderTraceVersions[overlay] = overlay.CurrentTextId;
       }
 
-      PluginLog.Debug(
-          $"[CutSceneSelectStringOverlay] rendered '{windowLabel}' version={overlay.CurrentTextId} " +
+      global::Echoglossian.PluginRuntimeLog.Debug(
+          "CutSceneSelectStringOverlay",
+          $"rendered '{windowLabel}' version={overlay.CurrentTextId} " +
           $"at ({renderedWindowPos.X:0.##}, {renderedWindowPos.Y:0.##}) " +
           $"size ({overlay.ImGuiSize.X:0.##} x {overlay.ImGuiSize.Y:0.##}) " +
           $"contentWidth={textWidth:0.##} windowWidth={windowWidth:0.##} " +

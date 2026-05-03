@@ -1,4 +1,4 @@
-﻿// <copyright file="AddonHandlerWiring.cs" company="lokinmodar">
+// <copyright file="AddonHandlerWiring.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -12,7 +12,7 @@ public partial class Echoglossian
   /// </summary>
   private unsafe void EgloAddonHandler()
   {
-    PluginLog.Debug("EgloAddonHandler called.");
+    global::Echoglossian.PluginRuntimeLog.Debug("Echoglossian", "EgloAddonHandler called.");
 
     this.registeredAddonHandlers =
         [
@@ -205,8 +205,9 @@ public partial class Echoglossian
 
     if (this.configuration.TranslateCutSceneSelectString)
     {
-      PluginLog.Debug(
-          $"[Echoglossian] Registering CutSceneSelectString handler " +
+      global::Echoglossian.PluginRuntimeLog.Debug(
+          "Echoglossian",
+          "Registering CutSceneSelectString handler " +
           $"overlay={this.configuration.UseImGuiForCutSceneSelectString} " +
           $"swap={this.configuration.SwapTextsUsingImGui}");
       this.registeredAddonHandlers.Add(
@@ -232,7 +233,7 @@ public partial class Echoglossian
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
-      PluginLog.Debug("[Echoglossian] CutSceneSelectString handler registered");
+      global::Echoglossian.PluginRuntimeLog.Debug("Echoglossian", "CutSceneSelectString handler registered");
     }
 
     var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();

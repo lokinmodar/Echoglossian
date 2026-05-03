@@ -1,4 +1,4 @@
-﻿// <copyright file="TranslatorHelpers.cs" company="lokinmodar">
+// <copyright file="TranslatorHelpers.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -50,7 +50,7 @@ public partial class Echoglossian
         }
 
         finalText = FixText(finalText);
-        PluginLog.Debug($"FinalTranslatedText: {finalText}");
+        global::Echoglossian.PluginRuntimeLog.Debug($"FinalTranslatedText: {finalText}");
 
         return finalText;
     }
@@ -70,7 +70,7 @@ public partial class Echoglossian
         HttpUtility.HtmlDecode(parsedText, stringWriter);
 
         var decodedString = stringWriter.ToString();
-        PluginLog.Debug("In parser: " + parsedText);
+        global::Echoglossian.PluginRuntimeLog.Debug("In parser: " + parsedText);
 
         return decodedString;
     }

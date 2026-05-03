@@ -26,7 +26,7 @@ internal static class QuestTodoProgressResolver
     public static void Clear()
     {
         QuestTodoProgressCache.Clear();
-        PluginLog.Debug("[QuestTodoProgressResolver] Cleared quest todo progress cache.");
+        global::Echoglossian.PluginRuntimeLog.Debug("[QuestTodoProgressResolver] Cleared quest todo progress cache.");
     }
 
     /// <summary>

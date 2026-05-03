@@ -173,12 +173,12 @@ public partial class Echoglossian
       }
       catch (Exception ex)
       {
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"[QuestProbe] quest property {property.Name} read failed: {ex.Message}");
         continue;
       }
 
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"[QuestProbe] quest.{property.Name}={this.FormatProbeValue(value)}");
     }
   }
@@ -218,7 +218,7 @@ public partial class Echoglossian
       var keyText = this.EvaluateQuestProbeText(rawKey);
       var valueText = this.EvaluateQuestProbeText(rawValue);
 
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"[QuestProbe] sheet[{rowIndex}] keyText='{keyText}' valueText='{valueText}' rawKey='{rawKey.ExtractText()}' rawValue='{rawValue.ExtractText()}'");
     }
   }
@@ -242,7 +242,7 @@ public partial class Echoglossian
 
     foreach (var questPlate in questRows)
     {
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"[QuestProbe] db id={questPlate.Id} questId='{questPlate.QuestId}' questName='{questPlate.QuestName}' originalLang='{questPlate.OriginalLang}' translationLang='{questPlate.TranslationLang}' engine={questPlate.TranslationEngine} gameVersion='{questPlate.GameVersion}' originalNameLen={questPlate.QuestName?.Length ?? 0} originalMsgLen={questPlate.OriginalQuestMessage?.Length ?? 0} translatedNameLen={questPlate.TranslatedQuestName?.Length ?? 0} translatedMsgLen={questPlate.TranslatedQuestMessage?.Length ?? 0} objectives={questPlate.Objectives.Count} summaries={questPlate.Summaries.Count}");
     }
   }
@@ -260,21 +260,21 @@ public partial class Echoglossian
     for (var i = 0; i < questProgressSnapshot.QuestSteps.Count; i++)
     {
       var questStep = questProgressSnapshot.QuestSteps[i];
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"[QuestProbe] step[{i}] keyText='{questStep.KeyText}' text='{questStep.Text}' rawKey='{questStep.OriginalKey.ExtractText()}' rawText='{questStep.OriginalText.ExtractText()}'");
     }
 
     for (var i = 0; i < questProgressSnapshot.QuestSeqTexts.Count; i++)
     {
       var seqEntry = questProgressSnapshot.QuestSeqTexts[i];
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"[QuestProbe] seq[{i}] keyText='{seqEntry.KeyText}' text='{seqEntry.Text}'");
     }
 
     for (var i = 0; i < questProgressSnapshot.QuestSystemTexts.Count; i++)
     {
       var sysEntry = questProgressSnapshot.QuestSystemTexts[i];
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"[QuestProbe] system[{i}] keyText='{sysEntry.KeyText}' text='{sysEntry.Text}'");
     }
   }

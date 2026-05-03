@@ -1,4 +1,4 @@
-﻿// <copyright file="DbEditorWindow.cs" company="lokinmodar">
+// <copyright file="DbEditorWindow.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -160,7 +160,7 @@ namespace Echoglossian.DBManagerUI
           .Select(t => t.ClrType.Name)
           .OrderBy(n => n)
           .ToList();
-        PluginLog.Debug($"[DbEditorWindow] Tables: {string.Join(", ", this.tableNames)}");
+        global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Tables: {string.Join(", ", this.tableNames)}");
       }
       catch (Exception ex)
       {
@@ -207,7 +207,7 @@ namespace Echoglossian.DBManagerUI
 
         if (this.currentRows.Count == 0)
         {
-          PluginLog.Debug($"[DbEditorWindow] No records found in {this.selectedTable}.");
+          global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] No records found in {this.selectedTable}.");
           NotificationManager.AddNotification(new Notification
           {
             Content = Resources.NoRecordsFoundInThisTable,
@@ -217,7 +217,7 @@ namespace Echoglossian.DBManagerUI
         }
         else
         {
-          PluginLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
+          global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
           NotificationManager.AddNotification(new Notification
           {
             Content = this.SafeFormat(Resources.LoadedNRecords, this.currentRows.Count),
@@ -239,7 +239,7 @@ namespace Echoglossian.DBManagerUI
     /// <param name="entity">Entity instance.</param>
     private void OpenEditor(object entity)
     {
-      PluginLog.Debug($"[DbEditorWindow] Opening editor for type={entity.GetType().Name}");
+      global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Opening editor for type={entity.GetType().Name}");
       this.editModal.Open(entity);
     }
 
@@ -253,7 +253,7 @@ namespace Echoglossian.DBManagerUI
       {
         this.dbContext.Update(updatedEntity);
         this.dbContext.SaveChanges();
-        PluginLog.Debug("[DbEditorWindow] Record saved.");
+        global::Echoglossian.PluginRuntimeLog.Debug("[DbEditorWindow] Record saved.");
         NotificationManager.AddNotification(new Notification
         {
           Content = Resources.RecordSaved,
@@ -279,7 +279,7 @@ namespace Echoglossian.DBManagerUI
       {
         this.dbContext.Remove(entity);
         this.dbContext.SaveChanges();
-        PluginLog.Debug("[DbEditorWindow] Record deleted.");
+        global::Echoglossian.PluginRuntimeLog.Debug("[DbEditorWindow] Record deleted.");
         NotificationManager.AddNotification(new Notification
         {
           Content = Resources.RecordDeleted,
@@ -320,7 +320,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.RemoveRange(toDelete);
         this.dbContext.SaveChanges();
 
-        PluginLog.Debug($"[DbEditorWindow] Deleted {toDelete.Count} record(s).");
+        global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] Deleted {toDelete.Count} record(s).");
         NotificationManager.AddNotification(new Notification
         {
           Content = this.SafeFormat(Resources.DeletedNRecords, toDelete.Count),
@@ -360,7 +360,7 @@ namespace Echoglossian.DBManagerUI
       {
         string csv = this.csvExporter.BuildCsv(rows, this.metadata.CurrentScalarProps);
         ImGui.SetClipboardText(csv);
-        PluginLog.Debug($"[DbEditorWindow] CSV copied to clipboard ({rows.Count} row(s)).");
+        global::Echoglossian.PluginRuntimeLog.Debug($"[DbEditorWindow] CSV copied to clipboard ({rows.Count} row(s)).");
         NotificationManager.AddNotification(new Notification
         {
           Content = this.SafeFormat(Resources.CopiedNRecordsToClipboard, rows.Count),

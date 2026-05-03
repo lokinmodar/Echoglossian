@@ -1904,6 +1904,11 @@
                 payloads.
             </summary>
             <summary>
+                Handles bootstrap and teardown of the quest-toast runtime that hangs off
+                <see cref="E:Dalamud.Plugin.Services.IToastGui.QuestToast" /> instead of the addon-handler
+                registrar.
+            </summary>
+            <summary>
                 Provides reusable DB-first background prefetch for action-adjacent
                 reference-text sheets used by <c>ActionMenu</c>.
             </summary>
@@ -3944,6 +3949,26 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
+            <summary>
+                Creates the quest-toast runtime using the same shared toast cache,
+                persistence, overlay, and replacement helpers used by the rest of the
+                toast family.
+            </summary>
+            <returns>The initialized quest-toast runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterQuestToastRuntime">
+            <summary>
+                Registers the quest-toast runtime with Dalamud's toast callback
+                surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterQuestToastRuntime">
+            <summary>
+                Unregisters the quest-toast runtime from Dalamud's toast callback
+                surface.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.QuestModeUsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
@@ -8345,6 +8370,104 @@
             <param name="storedVersion">The version persisted with the row.</param>
             <param name="requestedVersion">The current runtime version being requested.</param>
             <returns>True when the stored row should be considered compatible.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginRuntimeLogLevel">
+            <summary>
+                Supported plugin log levels for shared logging helpers.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginRuntimeLogLevel.Debug">
+            <summary>Debug-only diagnostics.</summary>
+        </member>
+        <member name="F:Echoglossian.PluginRuntimeLogLevel.Verbose">
+            <summary>Low-priority runtime detail.</summary>
+        </member>
+        <member name="F:Echoglossian.PluginRuntimeLogLevel.Information">
+            <summary>General informational message.</summary>
+        </member>
+        <member name="F:Echoglossian.PluginRuntimeLogLevel.Warning">
+            <summary>Warning that does not abort the current flow.</summary>
+        </member>
+        <member name="F:Echoglossian.PluginRuntimeLogLevel.Error">
+            <summary>Error condition.</summary>
+        </member>
+        <member name="T:Echoglossian.PluginRuntimeLog">
+            <summary>
+                Wraps plugin logging so debug diagnostics compile away from release
+                builds while also centralizing optional <c>[Scope]</c> formatting.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Debug(System.String)">
+            <summary>
+                Writes a debug log line only in <c>DEBUG</c> builds.
+            </summary>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Debug(System.String,System.Object[])">
+            <summary>
+                Writes a formatted debug log line only in <c>DEBUG</c> builds.
+            </summary>
+            <param name="messageTemplate">The structured message template.</param>
+            <param name="values">The structured logging values.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Debug(System.String,System.String)">
+            <summary>
+                Writes a scoped debug log line only in <c>DEBUG</c> builds.
+            </summary>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Debug(System.String,System.String,System.Object[])">
+            <summary>
+                Writes a scoped formatted debug log line only in <c>DEBUG</c> builds.
+            </summary>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="messageTemplate">The structured message template.</param>
+            <param name="values">The structured logging values.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Write(Echoglossian.PluginRuntimeLogLevel,System.String,System.String)">
+            <summary>
+                Writes a scoped message using the requested level.
+            </summary>
+            <param name="level">The log level to use.</param>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Verbose(System.String,System.String)">
+            <summary>
+                Writes a scoped verbose log line.
+            </summary>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Information(System.String,System.String)">
+            <summary>
+                Writes a scoped informational log line.
+            </summary>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Warning(System.String,System.String)">
+            <summary>
+                Writes a scoped warning log line.
+            </summary>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Error(System.String,System.String)">
+            <summary>
+                Writes a scoped error log line.
+            </summary>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Format(System.String,System.String)">
+            <summary>
+                Prepends an optional logical scope to a message.
+            </summary>
+            <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to format.</param>
+            <returns>The formatted message.</returns>
         </member>
         <member name="T:Echoglossian.RuntimeLanguageHelper">
             <summary>

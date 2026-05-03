@@ -188,7 +188,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
         if (foundQuestPlate != null)
         {
 #if DEBUG
-          // PluginLog.Debug(
+          // global::Echoglossian.PluginRuntimeLog.Debug(
           //     $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
           var translatedQuestName = foundQuestPlate.TranslatedQuestName;
@@ -281,12 +281,12 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
 
               var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-              // PluginLog.Debug(
+              // global::Echoglossian.PluginRuntimeLog.Debug(
               //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
             });
 #if DEBUG
-        // PluginLog.Debug(
+        // global::Echoglossian.PluginRuntimeLog.Debug(
         //     $"Name translated queued: {questNameText}");
 #endif
       }
@@ -308,7 +308,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   private unsafe void OnRecommendListEvent(AddonEvent type, AddonArgs args)
   {
 #if DEBUG
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"UiRecommendListHandler AddonEvent: {type} {args.AddonName}");
 #endif
 
@@ -333,7 +333,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   private void OnRecommendListEventAsync(AddonEvent type, AddonArgs args)
   {
 #if DEBUG
-    // PluginLog.Debug(
+    // global::Echoglossian.PluginRuntimeLog.Debug(
     //     $"UiRecommendListHandlerAsync AddonEvent: {type} {args.AddonName}");
 #endif
 
@@ -623,7 +623,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
         if (foundQuestPlate != null)
         {
 #if DEBUG
-          // PluginLog.Debug(
+          // global::Echoglossian.PluginRuntimeLog.Debug(
           //     $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
 #endif
           var translatedQuestName = foundQuestPlate.TranslatedQuestName;
@@ -714,12 +714,12 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
               var result = this.InsertQuestPlate(
                   translatedQuestPlate);
 #if DEBUG
-              // PluginLog.Debug(
+              // global::Echoglossian.PluginRuntimeLog.Debug(
               //     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
             });
 #if DEBUG
-        // PluginLog.Debug(
+        // global::Echoglossian.PluginRuntimeLog.Debug(
         //     $"Name translated queued: {questNameText}");
 #endif
       }

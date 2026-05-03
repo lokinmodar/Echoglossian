@@ -1,4 +1,4 @@
-﻿// <copyright file="OverlayConfigs.cs" company="lokinmodar">
+// <copyright file="OverlayConfigs.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -33,7 +33,7 @@ public partial class Echoglossian
     /// </summary>
     private unsafe void RegisterOverlays()
     {
-        PluginLog.Debug("Registering overlays...");
+        global::Echoglossian.PluginRuntimeLog.Debug("Registering overlays...");
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -190,7 +190,7 @@ public partial class Echoglossian
                 () => TranslationWindowConfig.FromConfigForChatBubble(
                     this.configuration)));
 
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"Overlays registered: {this.registeredOverlays.Count} ");
     }
 }

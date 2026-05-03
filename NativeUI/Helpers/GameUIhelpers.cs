@@ -1,4 +1,4 @@
-﻿// <copyright file="GameUIhelpers.cs" company="lokinmodar">
+// <copyright file="GameUIhelpers.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -21,13 +21,13 @@ public partial class Echoglossian
 
         var addonList = uiStuffz?.ToList();
 
-        PluginLog.Debug($"Addon list: {uiStuffz?.Count.ToString()}");
+        global::Echoglossian.PluginRuntimeLog.Debug($"Addon list: {uiStuffz?.Count.ToString()}");
         if (uiStuffz != null)
         {
             foreach (var a in uiStuffz)
             {
                 this.UiElementsLabels.Add(a.Text.ToString());
-                PluginLog.Debug($"Sheet row: {a.RowId}: {a.Text.ToString()}");
+                global::Echoglossian.PluginRuntimeLog.Debug($"Sheet row: {a.RowId}: {a.Text.ToString()}");
             }
         }
     }

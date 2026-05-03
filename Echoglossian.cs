@@ -1,4 +1,4 @@
-﻿// <copyright file="Echoglossian.cs" company="lokinmodar">
+// <copyright file="Echoglossian.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -187,7 +187,7 @@ public partial class Echoglossian : IDalamudPlugin
     try
     {
       this.CreateOrUseDb();
-      PluginLog.Debug("Eglo database created or used successfully.");
+      global::Echoglossian.PluginRuntimeLog.Debug("Eglo database created or used successfully.");
     }
     catch (Exception e)
     {
@@ -230,9 +230,9 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
 
-    PluginLog.Debug(
+    global::Echoglossian.PluginRuntimeLog.Debug(
         $"Assets state config: {this.configuration.PluginAssetsDownloaded}");
-    PluginLog.Debug($"Assets state var: {this.pluginAssetsState}");
+    global::Echoglossian.PluginRuntimeLog.Debug($"Assets state var: {this.pluginAssetsState}");
 
     if (!this.pluginAssetsState)
     {
@@ -304,23 +304,8 @@ public partial class Echoglossian : IDalamudPlugin
 
     FrameworkInterface.Update += this.Tick;
 
-    this.questToastRuntime = new QuestToastRuntime(
-        this.configuration,
-        TranslationService,
-        this.FindAndReturnToastMessage,
-        toastMessage => Task.Run(() => this.InsertToastMessageData(toastMessage)),
-        (translatedName, translatedText, originalName) =>
-            this.UpdateOverlayContent(
-                this.questToastOverlay,
-                translatedName,
-                translatedText,
-                originalName),
-        () => this.ClearOverlay(this.questToastOverlay, clearText: true),
-        text => this.RemoveDiacritics(
-            text,
-            this.SpecialCharsSupportedByGameFont));
-
-    ToastGuiInterface.QuestToast += this.questToastRuntime.HandleQuestToast;
+    this.questToastRuntime = this.CreateQuestToastRuntime();
+    this.RegisterQuestToastRuntime();
 
     this.EgloAddonHandler();
 
@@ -480,7 +465,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.addonProbeWatch = null;
 #endif
 
-      ToastGuiInterface.QuestToast -= this.questToastRuntime.HandleQuestToast;
+      this.UnregisterQuestToastRuntime();
       this.queuedTranslationBroker.Dispose();
 
       PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;

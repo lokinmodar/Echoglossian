@@ -71,7 +71,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   private unsafe void OnJournalAcceptEvent(AddonEvent type, AddonArgs args)
   {
 #if DEBUG
-    PluginLog.Debug($"JournalAcceptHandler AddonEvent: {type} {args.AddonName}");
+    global::Echoglossian.PluginRuntimeLog.Debug($"JournalAcceptHandler AddonEvent: {type} {args.AddonName}");
 #endif
 
     if (!this.Config.TranslateJournalAccept)
@@ -100,10 +100,10 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
           (nint)setupAtkValues[12].String.Value);
 
 #if DEBUG
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"Language: {ClientStateInterface.ClientLanguage.Humanize()}");
-      PluginLog.Debug($"Quest name: {questName}");
-      PluginLog.Debug($"Quest message: {questMessage}");
+      global::Echoglossian.PluginRuntimeLog.Debug($"Quest name: {questName}");
+      global::Echoglossian.PluginRuntimeLog.Debug($"Quest message: {questMessage}");
 #endif
 
       var questPlate = this.CreateQuestPlate(questName, questMessage);
@@ -166,9 +166,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
                 out translatedQuestMessage))
         {
 #if DEBUG
-          PluginLog.Debug(
+          global::Echoglossian.PluginRuntimeLog.Debug(
               $"Translated quest name: {translatedQuestName}");
-          PluginLog.Debug(
+          global::Echoglossian.PluginRuntimeLog.Debug(
               $"Translated quest message: {translatedQuestMessage}");
 #endif
         }
@@ -198,7 +198,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
 
                 var result = this.InsertQuestPlate(translatedQuestPlate);
 #if DEBUG
-                PluginLog.Debug(
+                global::Echoglossian.PluginRuntimeLog.Debug(
                     $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
 #endif
               });
@@ -211,13 +211,13 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
         translatedQuestName = foundQuestPlate.TranslatedQuestName;
         translatedQuestMessage = foundQuestPlate.TranslatedQuestMessage;
 #if DEBUG
-        PluginLog.Debug(
+        global::Echoglossian.PluginRuntimeLog.Debug(
             $"From database - Name: {translatedQuestName}, Message: {translatedQuestMessage}");
 #endif
       }
 
 #if DEBUG
-      PluginLog.Debug(
+      global::Echoglossian.PluginRuntimeLog.Debug(
           $"Using QuestPlate Replace - {translatedQuestName}: {translatedQuestMessage}");
 #endif
       if (this.JournalAcceptShouldRemoveDiacritics)

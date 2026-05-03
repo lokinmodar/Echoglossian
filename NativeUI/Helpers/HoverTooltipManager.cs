@@ -104,7 +104,7 @@ public sealed class HoverTooltipManager
     public void Clear()
     {
         this.entries.Clear();
-        PluginLog.Debug("[HoverTooltipManager] Cleared hover tooltip entries.");
+        global::Echoglossian.PluginRuntimeLog.Debug("[HoverTooltipManager] Cleared hover tooltip entries.");
     }
 
     /// <summary>

@@ -43,7 +43,7 @@ public static class QuestLuminaResolver
             questNameIndex = null;
         }
 
-        PluginLog.Debug("[QuestLuminaResolver] Cleared quest Lumina caches.");
+        global::Echoglossian.PluginRuntimeLog.Debug("[QuestLuminaResolver] Cleared quest Lumina caches.");
     }
 
     /// <summary>
