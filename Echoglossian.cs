@@ -141,8 +141,13 @@ public partial class Echoglossian : IDalamudPlugin
   /// </summary>
   public Echoglossian()
   {
-    this.configuration = PluginInterface.GetPluginConfig() as Config ??
-                         new Config();
+    var persistedConfig = PluginInterface.GetPluginConfig() as Config;
+    this.configuration = persistedConfig ?? new Config();
+    if (persistedConfig == null)
+    {
+      PluginInterface.SavePluginConfig(this.configuration);
+    }
+
     var loadedConfigVersion = this.configuration.Version;
     var currentConfigVersion = new Config().Version;
     this.DisableStructuredTooltipTranslationForRelease();

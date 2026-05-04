@@ -72,15 +72,15 @@ public partial class Echoglossian
   /// </summary>
   private void BuildUi()
   {
+    if (this.config)
+    {
+      this.EchoglossianConfigUi();
+    }
+
     if (!this.configuration.PluginAssetsDownloaded)
     {
       this.ResetStructuredTooltipUiRuntime();
       return;
-    }
-
-    if (this.config)
-    {
-      this.EchoglossianConfigUi();
     }
 
     if (this.configuration.FontChangeTime > 0)
