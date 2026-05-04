@@ -19,12 +19,6 @@
     <value>Configuração do Echoglossian</value>
     <comment>Config Window title bar</comment>
   </data>
-  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
-    <value>A configuração salva do Echoglossian é de uma versão mais antiga. Nós a migramos, mas é recomendado revisar e reconfigurar o plugin.</value>
-  </data>
-  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
-    <value>Abrir configuração</value>
-  </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Abre janela de configuração do Echoglossian</value>
     <comment>Shown in plugin install window</comment>
@@ -282,9 +276,6 @@
   <data name="TranslateJournalToggle" xml:space="preserve">
     <value>Traduzir nome, descrição e objetivos da missão (WIP)</value>
   </data>
-  <data name="TranslateJournalDetailToggle" xml:space="preserve">
-    <value>Traduzir JournalDetail</value>
-  </data>
   <data name="DeeplTranslatorApiKey" xml:space="preserve">
     <value>Adicione sua chave API DeepL</value>
   </data>
@@ -465,18 +456,6 @@
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
     <value>Outros elementos da interface do usuário</value>
   </data>
-  <data name="QuestWindowsTabTitle" xml:space="preserve">
-    <value>Janelas de missão</value>
-  </data>
-  <data name="TooltipTabTitle" xml:space="preserve">
-    <value>Tooltips</value>
-  </data>
-  <data name="SelectionDialogsTabTitle" xml:space="preserve">
-    <value>Diálogos de seleção</value>
-  </data>
-  <data name="GameWindowsTabTitle" xml:space="preserve">
-    <value>Janelas do jogo</value>
-  </data>
   <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
     <value>Tem certeza de que deseja redefinir todas as configurações para o padrão?</value>
   </data>
@@ -599,107 +578,5 @@
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Registros {0} carregados</value>
-  </data>
-  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
-    <value>A pré-tradução em segundo plano começou para {0} quests aceitas.</value>
-  </data>
-  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
-    <value>A pré-tradução em segundo plano terminou para {0} quests aceitas.</value>
-  </data>
-  <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Este modo controla como o texto traduzido é apresentado. A UI nativa escreve diretamente no addon do jogo, o modo apenas-overlay deixa o addon nativo intacto, e o modo nativo-com-overlay-original escreve a tradução de forma nativa enquanto mostra o original no overlay.</value>
-  </data>
-  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
-    <value>Apenas tradução em overlay</value>
-  </data>
-  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Tradução na UI nativa + overlay original</value>
-  </data>
-  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>O idioma selecionado não oferece suporte à fonte nativa do jogo, então esta superfície fica limitada aos overlays e tooltips personalizados do Echoglossian.</value>
-  </data>
-  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
-    <value>Tooltips de ações e itens</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
-    <value>Modo de exibição do tooltip</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Este modo controla os tooltips de ações e itens. A UI nativa escreve o tooltip traduzido diretamente no tooltip do jogo, o modo apenas-tooltip mantém o tooltip nativo intacto e usa overlays do Echoglossian, e o modo nativo-com-tooltips-originais escreve a tradução de forma nativa enquanto mostra o original no nosso overlay.</value>
-  </data>
-  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Aparência dos hover tooltips</value>
-  </data>
-  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
-    <value>Cor do texto do tooltip</value>
-  </data>
-  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
-    <value>Cor de fundo do tooltip</value>
-  </data>
-  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
-    <value>Opacidade do fundo do tooltip</value>
-  </data>
-  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Estas cores se aplicam aos hover tooltips do Echoglossian usados por quests e superfícies DB-first UI.</value>
-  </data>
-  <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Traduzir Main Command</value>
-  </data>
-  <data name="TranslateActionMenuWindow" xml:space="preserve">
-    <value>Traduzir janela ActionMenu</value>
-  </data>
-  <data name="TranslateHudWindows" xml:space="preserve">
-    <value>Traduzir janelas do HUD</value>
-  </data>
-  <data name="TranslateOperationGuideWindow" xml:space="preserve">
-    <value>Traduzir Operation Guide</value>
-  </data>
-  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
-    <value>Traduzir o título do menu de contexto do addon</value>
-  </data>
-  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
-    <value>Tradução Talk</value>
-  </data>
-  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
-    <value>Tradução BattleTalk</value>
-  </data>
-  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
-    <value>Tradução Talk Subtitle</value>
-  </data>
-  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
-    <value>Tradução MiniTalk</value>
-  </data>
-  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
-    <value>Tradução CutSceneSelectString</value>
-  </data>
-  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
-    <value>Tradução Text Gimmick Hint</value>
-  </data>
-  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
-    <value>Tradução do toast Screen Info</value>
-  </data>
-  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
-    <value>Tradução Error Toast</value>
-  </data>
-  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
-    <value>Tradução Area toast</value>
-  </data>
-  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
-    <value>Tradução do toast Class/Job</value>
-  </data>
-  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
-    <value>Tradução Quest toast</value>
-  </data>
-  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
-    <value>Tradução ChatBubble</value>
-  </data>
-  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
-    <value>Tradução Action tooltip</value>
-  </data>
-  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
-    <value>Tradução Item tooltip</value>
-  </data>
-  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
-    <value>Não foi possível buscar os modelos. O Ollama está rodando localmente?</value>
   </data>
 </root>

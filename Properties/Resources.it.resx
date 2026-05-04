@@ -64,12 +64,6 @@
     <value>Configurazione ecoglossiana</value>
     <comment>Config Window title bar</comment>
   </data>
-  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
-    <value>La configurazione salvata di Echoglossian proviene da una versione precedente. È stata migrata, ma si consiglia di rivedere e riconfigurare il plugin.</value>
-  </data>
-  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
-    <value>Apri configurazione</value>
-  </data>
   <data name="ContribText" xml:space="preserve">
     <value>Vi preghiamo di sostenerci contribuendo allo sviluppo del progetto, inviando problemi o aiutandoci con un caffè.</value>
   </data>
@@ -308,9 +302,6 @@
   </data>
   <data name="TranslateJournalToggle" xml:space="preserve">
     <value>Traduci il nome, la descrizione e gli obiettivi della missione (WIP)</value>
-  </data>
-  <data name="TranslateJournalDetailToggle" xml:space="preserve">
-    <value>Traduci JournalDetail</value>
   </data>
   <data name="DeeplTranslatorApiKey" xml:space="preserve">
     <value>Aggiungi la tua chiave API DeepL</value>
@@ -647,104 +638,5 @@
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Record caricati {0}</value>
-  </data>
-  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
-    <value>La pre-traduzione in background è iniziata per {0} missioni accettate.</value>
-  </data>
-  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
-    <value>La pre-traduzione in background è terminata per {0} missioni accettate.</value>
-  </data>
-  <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Questa modalità controlla come viene presentato il testo tradotto. La UI nativa scrive direttamente nell’addon di gioco, solo-overlay lascia intatto l’addon nativo, e nativo-con-overlay-originale scrive la traduzione in modo nativo mostrando l’originale nell’overlay.</value>
-  </data>
-  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
-    <value>Solo traduzione in overlay</value>
-  </data>
-  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Traduzione UI nativa + overlay originale</value>
-  </data>
-  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>La lingua selezionata non supporta il font nativo del gioco, quindi questa superficie è limitata agli overlay e ai tooltip personalizzati di Echoglossian.</value>
-  </data>
-  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
-    <value>Tooltip di azioni e oggetti</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
-    <value>Modalità di visualizzazione del tooltip</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Questa modalità controlla i tooltip di azioni e oggetti. La UI nativa scrive il tooltip tradotto direttamente nel tooltip del gioco, solo-tooltip lascia intatto il tooltip nativo e usa gli overlay di Echoglossian, e nativo-con-tooltip-originali scrive la traduzione in modo nativo mostrando l’originale nel nostro overlay.</value>
-  </data>
-  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Aspetto dei tooltip al passaggio del mouse</value>
-  </data>
-  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
-    <value>Colore del testo del tooltip</value>
-  </data>
-  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
-    <value>Colore di sfondo del tooltip</value>
-  </data>
-  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
-    <value>Opacità dello sfondo del tooltip</value>
-  </data>
-  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Questi colori si applicano ai tooltip al passaggio del mouse di Echoglossian usati da quest e superfici UI DB-first.</value>
-  </data>
-  <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Traduci Main Command</value>
-  </data>
-  <data name="TranslateHudWindows" xml:space="preserve">
-    <value>Traduci finestre HUD</value>
-  </data>
-  <data name="TranslateOperationGuideWindow" xml:space="preserve">
-    <value>Traduci Operation Guide</value>
-  </data>
-  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
-    <value>Traduci il titolo del menu contestuale dell’addon</value>
-  </data>
-  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
-    <value>Traduzione Talk</value>
-  </data>
-  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
-    <value>Traduzione BattleTalk</value>
-  </data>
-  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
-    <value>Traduzione Talk Subtitle</value>
-  </data>
-  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
-    <value>Traduzione MiniTalk</value>
-  </data>
-  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
-    <value>Traduzione CutSceneSelectString</value>
-  </data>
-  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
-    <value>Traduzione Text Gimmick Hint</value>
-  </data>
-  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
-    <value>Traduzione toast Screen Info</value>
-  </data>
-  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
-    <value>Traduzione Error Toast</value>
-  </data>
-  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
-    <value>Traduzione Area toast</value>
-  </data>
-  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
-    <value>Traduzione toast Class/Job</value>
-  </data>
-  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
-    <value>Traduzione Quest toast</value>
-  </data>
-  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
-    <value>Traduzione ChatBubble</value>
-  </data>
-  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
-    <value>Traduzione Action tooltip</value>
-  </data>
-  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
-    <value>Traduzione Item tooltip</value>
-  </data>
-  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
-    <value>Impossibile recuperare i modelli. Ollama è in esecuzione in locale?</value>
   </data>
 </root>

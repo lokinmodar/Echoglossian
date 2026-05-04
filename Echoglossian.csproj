@@ -43,12 +43,9 @@
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-  <Import Project="$(VisualStudioMatTargets)" Label="MultilingualAppToolkit" Condition="'$(EnableVisualStudioMatTargets)' == 'true' and Exists('$(VisualStudioMatTargets)')" />
-  <Target Name="MATPrerequisite" BeforeTargets="PrepareForBuild" Condition="'$(EnableVisualStudioMatTargets)' == 'true' and !Exists('$(VisualStudioMatTargets)')" Label="MultilingualAppToolkit">
-    <Warning Text="$(MSBuildProjectFile) is configured to use Visual Studio MAT targets, but the toolkit is unavailable during the build." />
-  </Target>
-  <Target Name="GenerateResourcesDesigner" BeforeTargets="BeforeCompile" Inputs="Properties\Resources.resx" Outputs="Properties\Resources.Designer.cs">
-    <GenerateResource Sources="Properties\Resources.resx" StronglyTypedClassName="Resources" StronglyTypedNamespace="Echoglossian.Properties" StronglyTypedLanguage="C#" StronglyTypedFileName="Properties\Resources.Designer.cs" PublicClass="true" />
+<Import Project="$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets" Label="MultilingualAppToolkit" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\v$(MultilingualAppToolkitVersion)\Microsoft.Multilingual.ResxResources.targets')" />
+  <Target Name="MATPrerequisite" BeforeTargets="PrepareForBuild" Condition="!Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets')" Label="MultilingualAppToolkit">
+    <Warning Text="$(MSBuildProjectFile) is Multilingual build enabled, but the Multilingual App Toolkit is unavailable during the build. If building with Visual Studio, please check to ensure that toolkit is properly installed." />
   </Target>
   <Target Name="RemoveDalamudProvidedAssembliesFromOutput" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>

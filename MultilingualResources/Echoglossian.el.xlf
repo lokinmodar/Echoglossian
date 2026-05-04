@@ -1035,6 +1035,190 @@
           <source>Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</source>
           <target state="new">Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</target>
         </trans-unit>
+        <trans-unit id="ConfigVersionUpgradeRecommendedMessage" translate="yes" xml:space="preserve">
+          <source>Your saved Echoglossian configuration is from an older version. We migrated it, but reviewing and reconfiguring the plugin is recommended.</source>
+          <target state="new">Your saved Echoglossian configuration is from an older version. We migrated it, but reviewing and reconfiguring the plugin is recommended.</target>
+        </trans-unit>
+        <trans-unit id="OpenConfigurationButtonLabel" translate="yes" xml:space="preserve">
+          <source>Open Configuration</source>
+          <target state="new">Open Configuration</target>
+        </trans-unit>
+        <trans-unit id="TranslateJournalDetailToggle" translate="yes" xml:space="preserve">
+          <source>Translate JournalDetail</source>
+          <target state="new">Translate JournalDetail</target>
+        </trans-unit>
+        <trans-unit id="SettingsForClaudeText" translate="yes" xml:space="preserve">
+          <source>Settings for Claude</source>
+          <target state="new">Settings for Claude</target>
+        </trans-unit>
+        <trans-unit id="APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>API Key is empty or invalid. Claude translation will not be available.</source>
+          <target state="new">API Key is empty or invalid. Claude translation will not be available.</target>
+        </trans-unit>
+        <trans-unit id="ClaudeTranslationUnavailablePleaseCheckYourAPIKey" translate="yes" xml:space="preserve">
+          <source>[Claude translation unavailable. Please check your API key.]</source>
+          <target state="new">[Claude translation unavailable. Please check your API key.]</target>
+        </trans-unit>
+        <trans-unit id="QuestWindowsTabTitle" translate="yes" xml:space="preserve">
+          <source>Quest windows</source>
+          <target state="new">Quest windows</target>
+        </trans-unit>
+        <trans-unit id="TooltipTabTitle" translate="yes" xml:space="preserve">
+          <source>Tooltips</source>
+          <target state="new">Tooltips</target>
+        </trans-unit>
+        <trans-unit id="SelectionDialogsTabTitle" translate="yes" xml:space="preserve">
+          <source>Selection dialogs</source>
+          <target state="new">Selection dialogs</target>
+        </trans-unit>
+        <trans-unit id="GameWindowsTabTitle" translate="yes" xml:space="preserve">
+          <source>Game windows</source>
+          <target state="new">Game windows</target>
+        </trans-unit>
+        <trans-unit id="AcceptedQuestPrefetchStartedNotification" translate="yes" xml:space="preserve">
+          <source>Background quest pre-translation started for {0} accepted quests.</source>
+          <target state="new">Background quest pre-translation started for {0} accepted quests.</target>
+        </trans-unit>
+        <trans-unit id="AcceptedQuestPrefetchCompletedNotification" translate="yes" xml:space="preserve">
+          <source>Background quest pre-translation finished for {0} accepted quests.</source>
+          <target state="new">Background quest pre-translation finished for {0} accepted quests.</target>
+        </trans-unit>
+        <trans-unit id="ToDoListAwaitingQuestDataNotification" translate="yes" xml:space="preserve">
+          <source>ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</source>
+          <target state="new">ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</target>
+        </trans-unit>
+        <trans-unit id="ScenarioTreeAwaitingQuestDataNotification" translate="yes" xml:space="preserve">
+          <source>ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</source>
+          <target state="new">ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</target>
+        </trans-unit>
+        <trans-unit id="OverlayDisplayModeDescription" translate="yes" xml:space="preserve">
+          <source>This mode controls how the translated text is presented. Native UI writes directly into the game addon, overlay-only leaves the native addon untouched, and native-with-original-overlay writes translation natively while showing the original in the overlay.</source>
+          <target state="new">This mode controls how the translated text is presented. Native UI writes directly into the game addon, overlay-only leaves the native addon untouched, and native-with-original-overlay writes translation natively while showing the original in the overlay.</target>
+        </trans-unit>
+        <trans-unit id="OverlayDisplayModeOverlayTranslationOnly" translate="yes" xml:space="preserve">
+          <source>Overlay translation only</source>
+          <target state="new">Overlay translation only</target>
+        </trans-unit>
+        <trans-unit id="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" translate="yes" xml:space="preserve">
+          <source>Native UI translation + original overlay</source>
+          <target state="new">Native UI translation + original overlay</target>
+        </trans-unit>
+        <trans-unit id="OverlayOnlyLanguageModeDescription" translate="yes" xml:space="preserve">
+          <source>The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.</source>
+          <target state="new">The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.</target>
+        </trans-unit>
+        <trans-unit id="ActionAndItemTooltipsSectionLabel" translate="yes" xml:space="preserve">
+          <source>Action and item tooltips</source>
+          <target state="new">Action and item tooltips</target>
+        </trans-unit>
+        <trans-unit id="ActionAndItemTooltipsDisplayModeLabel" translate="yes" xml:space="preserve">
+          <source>Tooltip display mode</source>
+          <target state="new">Tooltip display mode</target>
+        </trans-unit>
+        <trans-unit id="ActionAndItemTooltipsDisplayModeDescription" translate="yes" xml:space="preserve">
+          <source>This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.</source>
+          <target state="new">This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.</target>
+        </trans-unit>
+        <trans-unit id="HoverTooltipAppearanceSectionLabel" translate="yes" xml:space="preserve">
+          <source>Hover tooltip appearance</source>
+          <target state="new">Hover tooltip appearance</target>
+        </trans-unit>
+        <trans-unit id="HoverTooltipTextColorLabel" translate="yes" xml:space="preserve">
+          <source>Tooltip text color</source>
+          <target state="new">Tooltip text color</target>
+        </trans-unit>
+        <trans-unit id="HoverTooltipBackgroundColorLabel" translate="yes" xml:space="preserve">
+          <source>Tooltip background color</source>
+          <target state="new">Tooltip background color</target>
+        </trans-unit>
+        <trans-unit id="HoverTooltipBackgroundOpacityLabel" translate="yes" xml:space="preserve">
+          <source>Tooltip background opacity</source>
+          <target state="new">Tooltip background opacity</target>
+        </trans-unit>
+        <trans-unit id="HoverTooltipAppearanceDescription" translate="yes" xml:space="preserve">
+          <source>These colors apply to Echoglossian hover tooltips used by quest and DB-first UI surfaces.</source>
+          <target state="new">These colors apply to Echoglossian hover tooltips used by quest and DB-first UI surfaces.</target>
+        </trans-unit>
+        <trans-unit id="TranslateMainCommandWindow" translate="yes" xml:space="preserve">
+          <source>Translate Main Command</source>
+          <target state="new">Translate Main Command</target>
+        </trans-unit>
+        <trans-unit id="TranslateActionMenuWindow" translate="yes" xml:space="preserve">
+          <source>Translate ActionMenu Window</source>
+          <target state="new">Translate ActionMenu Window</target>
+        </trans-unit>
+        <trans-unit id="TranslateHudWindows" translate="yes" xml:space="preserve">
+          <source>Translate HUD Windows</source>
+          <target state="new">Translate HUD Windows</target>
+        </trans-unit>
+        <trans-unit id="TranslateOperationGuideWindow" translate="yes" xml:space="preserve">
+          <source>Translate Operation Guide</source>
+          <target state="new">Translate Operation Guide</target>
+        </trans-unit>
+        <trans-unit id="TranslateAddonContextMenuTitleWindow" translate="yes" xml:space="preserve">
+          <source>Translate Addon Context Menu Title</source>
+          <target state="new">Translate Addon Context Menu Title</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleTalkTranslation" translate="yes" xml:space="preserve">
+          <source>Talk translation</source>
+          <target state="new">Talk translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleBattleTalkTranslation" translate="yes" xml:space="preserve">
+          <source>BattleTalk translation</source>
+          <target state="new">BattleTalk translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleTalkSubtitleTranslation" translate="yes" xml:space="preserve">
+          <source>Talk Subtitle translation</source>
+          <target state="new">Talk Subtitle translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleMiniTalkTranslation" translate="yes" xml:space="preserve">
+          <source>MiniTalk translation</source>
+          <target state="new">MiniTalk translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleCutSceneSelectStringTranslation" translate="yes" xml:space="preserve">
+          <source>CutSceneSelectString translation</source>
+          <target state="new">CutSceneSelectString translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleTextGimmickHintTranslation" translate="yes" xml:space="preserve">
+          <source>Text Gimmick Hint translation</source>
+          <target state="new">Text Gimmick Hint translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleWideTextToastTranslation" translate="yes" xml:space="preserve">
+          <source>Screen Info toast translation</source>
+          <target state="new">Screen Info toast translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleErrorToastTranslation" translate="yes" xml:space="preserve">
+          <source>Error Toast translation</source>
+          <target state="new">Error Toast translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleAreaToastTranslation" translate="yes" xml:space="preserve">
+          <source>Area toast translation</source>
+          <target state="new">Area toast translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleClassJobToastTranslation" translate="yes" xml:space="preserve">
+          <source>Class/Job toast translation</source>
+          <target state="new">Class/Job toast translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleQuestToastTranslation" translate="yes" xml:space="preserve">
+          <source>Quest toast translation</source>
+          <target state="new">Quest toast translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleChatBubbleTranslation" translate="yes" xml:space="preserve">
+          <source>ChatBubble translation</source>
+          <target state="new">ChatBubble translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleActionTooltipTranslation" translate="yes" xml:space="preserve">
+          <source>Action tooltip translation</source>
+          <target state="new">Action tooltip translation</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleItemTooltipTranslation" translate="yes" xml:space="preserve">
+          <source>Item tooltip translation</source>
+          <target state="new">Item tooltip translation</target>
+        </trans-unit>
+        <trans-unit id="CouldNotFetchOllamaModels" translate="yes" xml:space="preserve">
+          <source>Could not fetch models. Is Ollama running locally?</source>
+          <target state="new">Could not fetch models. Is Ollama running locally?</target>
+        </trans-unit>
       </group>
     </body>
   </file>
