@@ -1,15 +1,39 @@
 ﻿# GitHub Issue Backlog
 
-Snapshot date: 2026-05-04
+Snapshot date: 2026-05-05
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
 feature work.
 
+When the user asks to "read the issues" or "update the issue list", the
+default source of truth for that request is the open issue tracker in
+`lokinmodar/Echoglossian`.
+
 ## Immediate 4.x Release Follow-up
 
 These issues are active release-quality or rollout problems and should be
 triaged before lower-priority feature work.
+
+### #172 Google Translation breaks quest and NPC dialogue layout, some quest/FATE text remains untranslated
+
+- Status: active regression
+- Notes:
+  - Reporter shows two quest-family problems on the right-side tracker:
+    dynamic objective progress staying stale and quest slots sometimes
+    reusing title/objective text from another quest.
+  - Also reports NPC dialogue layout breakage that likely belongs to the
+    Talk/BattleTalk native-vs-overlay path and should be triaged separately
+    from the tracker bug.
+
+### #171 Deepseek translation is not available. Please check your API key. When using other translators, mission titles and descriptions are not being translated
+
+- Status: active regression
+- Notes:
+  - The visible `[Translation Error: ...]` placeholder should never be treated
+    as a valid translation or persisted into DB/cache state.
+  - The quest title/description symptom overlaps the same quest-family tracker
+    instability reported in `#172`.
 
 ### #170 Plugin failed to load
 

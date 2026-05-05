@@ -226,6 +226,63 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures a synthetic translation-error placeholder is treated as a
+    ///     failed translation and never returned to callers.
+    /// </summary>
+    [Fact]
+    public void Translate_SyntheticErrorResult_FallsBackAndRecordsFailure()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "[Translation Error: LmStudio: Connection refused]",
+        };
+        string? recordedReason = null;
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 3,
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedReason = reason;
+            });
+
+        var result = service.Translate("hello", "en", "pt-BR");
+
+        Assert.Equal("hello", result);
+        Assert.Equal("synthetic-error-result", recordedReason);
+    }
+
+    /// <summary>
+    ///     Ensures the async path also treats synthetic translation-error
+    ///     placeholders as failed translations.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Fact]
+    public async Task TranslateAsync_SyntheticErrorResult_FallsBackAndRecordsFailure()
+    {
+        var translator = new RecordingTranslator
+        {
+            AsyncResult = "[Translation Error: Ollama error: Connection refused]",
+        };
+        string? recordedReason = null;
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 4,
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedReason = reason;
+            });
+
+        var result = await service.TranslateAsync("...hello", "en", "pt-BR");
+
+        Assert.Equal("...hello", result);
+        Assert.Equal("synthetic-error-result", recordedReason);
+    }
+
+    /// <summary>
     ///     Ensures a known failed request keeps the sanitized original text
     ///     instead of collapsing to an empty string.
     /// </summary>

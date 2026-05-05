@@ -15,7 +15,6 @@ namespace Echoglossian.Translators;
 public class TranslationService
 {
   private const string EmptyResultFailureReason = "empty-result";
-
   private readonly Action<string>? debugLog;
   private readonly Func<string, string, string, int, bool>? isKnownFailedTranslation;
   private readonly Action<string, string, string, int, string, string?>? recordFailedTranslation;
@@ -144,15 +143,13 @@ public class TranslationService
         parsedText,
         sourceLanguage,
         targetLanguage);
-    if (string.IsNullOrWhiteSpace(finalDialogueText))
-    {
-      this.RecordFailedTranslation(
-          parsedText,
-          normalizedSourceLanguage,
-          normalizedTargetLanguage,
-          resolvedOriginContext);
-      finalDialogueText = sanitizedText;
-    }
+    finalDialogueText = this.AcceptTranslatedResultOrFallback(
+        finalDialogueText,
+        parsedText,
+        sanitizedText,
+        normalizedSourceLanguage,
+        normalizedTargetLanguage,
+        resolvedOriginContext);
 
     return string.IsNullOrEmpty(startingEllipsis) ||
            string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
@@ -217,20 +214,58 @@ public class TranslationService
         parsedText,
         sourceLanguage,
         targetLanguage);
-    if (string.IsNullOrWhiteSpace(finalDialogueText))
-    {
-      this.RecordFailedTranslation(
-          parsedText,
-          normalizedSourceLanguage,
-          normalizedTargetLanguage,
-          resolvedOriginContext);
-      finalDialogueText = sanitizedText;
-    }
+    finalDialogueText = this.AcceptTranslatedResultOrFallback(
+        finalDialogueText,
+        parsedText,
+        sanitizedText,
+        normalizedSourceLanguage,
+        normalizedTargetLanguage,
+        resolvedOriginContext);
 
     return string.IsNullOrEmpty(startingEllipsis) ||
            string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
         ? finalDialogueText
         : startingEllipsis + finalDialogueText;
+  }
+
+  /// <summary>
+  /// Accepts a translated result only when it is safe to treat as a real
+  /// translation; otherwise records the failure and falls back to the
+  /// sanitized source text.
+  /// </summary>
+  /// <param name="translatedText">The translated text candidate.</param>
+  /// <param name="parsedText">The parsed source text sent to the translator.</param>
+  /// <param name="sanitizedText">The sanitized source text shown on fallback.</param>
+  /// <param name="normalizedSourceLanguage">The normalized source language code.</param>
+  /// <param name="normalizedTargetLanguage">The normalized target language code.</param>
+  /// <param name="resolvedOriginContext">The resolved origin context for diagnostics.</param>
+  /// <returns>
+  /// The accepted translated text, or <paramref name="sanitizedText" /> when
+  /// the result is empty or synthetic.
+  /// </returns>
+  private string AcceptTranslatedResultOrFallback(
+      string? translatedText,
+      string parsedText,
+      string sanitizedText,
+      string normalizedSourceLanguage,
+      string normalizedTargetLanguage,
+      string? resolvedOriginContext)
+  {
+    if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+    {
+      return translatedText!;
+    }
+
+    this.RecordFailedTranslation(
+        parsedText,
+        normalizedSourceLanguage,
+        normalizedTargetLanguage,
+        string.IsNullOrWhiteSpace(translatedText)
+            ? EmptyResultFailureReason
+            : TranslationResultGuard.SyntheticErrorFailureReason,
+        resolvedOriginContext);
+
+    return sanitizedText;
   }
 
   /// <summary>
@@ -310,6 +345,7 @@ public class TranslationService
       string sourceText,
       string sourceLanguage,
       string targetLanguage,
+      string failureReason,
       string? originContext)
   {
     if (this.translationEngineId < 0 ||
@@ -324,7 +360,7 @@ public class TranslationService
         sourceLanguage,
         targetLanguage,
         this.translationEngineId,
-        EmptyResultFailureReason,
+        failureReason,
         originContext);
   }
 

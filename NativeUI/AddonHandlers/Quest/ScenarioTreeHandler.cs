@@ -559,7 +559,10 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     if (this.scenarioTreeRuntimeEntries.TryGetValue(valueIndex, out var previousEntry) &&
         !string.IsNullOrWhiteSpace(previousEntry.OriginalText))
     {
-      return previousEntry.OriginalText;
+      return QuestAddonOriginalTextHelper.ResolveOriginalVisibleText(
+          visibleText,
+          previousEntry.OriginalText,
+          this.GetScenarioTreeTranslatedDisplayText(previousEntry.TranslatedText));
     }
 
     return visibleText;

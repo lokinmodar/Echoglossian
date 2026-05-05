@@ -1401,25 +1401,10 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="text"></param>
   /// <returns></returns>
-  public static bool ShouldSaveToDB(string text)
-  {
-    if (string.IsNullOrWhiteSpace(text))
+  public static bool ShouldSaveToDB(string? text)
     {
-      return false;
+      return TranslationResultGuard.IsPersistableTranslation(text);
     }
-
-    if (text.Contains("[Translation Error: HTTP 400") ||
-        text.Contains("[Translation Error: HTTP 401") ||
-        text.Contains("[Translation Error: HTTP 403") ||
-        text.Contains("[Translation Error: HTTP 404") ||
-        text.Contains("[Translation Error: HTTP 429") ||
-        text.Contains("[Translation Error: HTTP 500"))
-    {
-      return false;
-    }
-
-    return true;
-  }
 
   /// <summary>
   ///     Finds an entity in the database matching the given filter.

@@ -142,7 +142,11 @@ public class ClaudeTranslator : ITranslator
             if (!string.IsNullOrWhiteSpace(translatedText))
             {
                 translatedText = FixText(translatedText);
-                this.translationCache[cacheKey] = translatedText;
+                if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+                {
+                    this.translationCache[cacheKey] = translatedText;
+                }
+
                 return translatedText;
             }
         }

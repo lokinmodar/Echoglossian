@@ -77,7 +77,11 @@ public class OllamaTranslator : ITranslator
             if (!string.IsNullOrWhiteSpace(output))
             {
                 var cleaned = FixText(output.Trim('"'));
-                this.translationCache[cacheKey] = cleaned;
+                if (TranslationResultGuard.IsPersistableTranslation(cleaned))
+                {
+                    this.translationCache[cacheKey] = cleaned;
+                }
+
                 return cleaned;
             }
 

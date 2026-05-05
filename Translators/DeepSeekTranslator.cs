@@ -146,7 +146,11 @@ Please provide only the translated text in your response, without any explanatio
             if (!string.IsNullOrEmpty(translatedText))
             {
                 translatedText = translatedText.Trim('"');
-                this.translationCache[cacheKey] = translatedText;
+                if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+                {
+                    this.translationCache[cacheKey] = translatedText;
+                }
+
                 return translatedText;
             }
         }

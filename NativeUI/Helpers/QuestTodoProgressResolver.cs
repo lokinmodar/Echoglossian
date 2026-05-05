@@ -97,12 +97,6 @@ internal static class QuestTodoProgressResolver
     {
         snapshot = default;
 
-        var cacheKey = questProgressSnapshot.CacheKey;
-        if (QuestTodoProgressCache.TryGetValue(cacheKey, out snapshot))
-        {
-            return true;
-        }
-
         var todoArray = ToDoListNumberArray.Instance();
         if (todoArray == null)
         {
@@ -118,13 +112,20 @@ internal static class QuestTodoProgressResolver
             return false;
         }
 
+        var liveCacheKey =
+            $"{questProgressSnapshot.CacheKey}:{objectiveProgress[questSequence]}:{objectiveCount[questSequence]}:{todoArray->QuestCount}";
+        if (QuestTodoProgressCache.TryGetValue(liveCacheKey, out snapshot))
+        {
+            return true;
+        }
+
         snapshot = new QuestTodoProgressSnapshot(
             questProgressSnapshot,
             objectiveProgress[questSequence],
             objectiveCount[questSequence],
             todoArray->QuestCount);
 
-        QuestTodoProgressCache[cacheKey] = snapshot;
+        QuestTodoProgressCache[liveCacheKey] = snapshot;
         return true;
     }
 }

@@ -106,7 +106,11 @@ public class LmStudioTranslator : ITranslator
             if (!string.IsNullOrWhiteSpace(result))
             {
                 result = FixText(result);
-                this.translationCache[cacheKey] = result;
+                if (TranslationResultGuard.IsPersistableTranslation(result))
+                {
+                    this.translationCache[cacheKey] = result;
+                }
+
                 return result;
             }
 

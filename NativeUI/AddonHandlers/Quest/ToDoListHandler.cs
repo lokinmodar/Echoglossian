@@ -560,7 +560,10 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     if (previousEntry != null &&
         !string.IsNullOrWhiteSpace(previousEntry.OriginalText))
     {
-      return previousEntry.OriginalText;
+      return QuestAddonOriginalTextHelper.ResolveOriginalVisibleText(
+          todoItem.Text,
+          previousEntry.OriginalText,
+          this.GetToDoTranslatedDisplayText(previousEntry.TranslatedText));
     }
 
     return todoItem.Text;

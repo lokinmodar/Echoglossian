@@ -113,7 +113,11 @@ public class OpenRouterTranslator : ITranslator
 
             if (!string.IsNullOrEmpty(result))
             {
-                this.translationCache[cacheKey] = result;
+                if (TranslationResultGuard.IsPersistableTranslation(result))
+                {
+                    this.translationCache[cacheKey] = result;
+                }
+
                 return result;
             }
         }

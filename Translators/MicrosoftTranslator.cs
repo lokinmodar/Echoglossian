@@ -110,7 +110,11 @@ public class MicrosoftTranslator : ITranslator
         if (!string.IsNullOrEmpty(translatedText))
         {
           translatedText = Echoglossian.FixText(translatedText.Trim('"'));
-          this.translationCache[cacheKey] = translatedText;
+          if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+          {
+            this.translationCache[cacheKey] = translatedText;
+          }
+
           return translatedText;
         }
 

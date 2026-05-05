@@ -162,7 +162,11 @@ public class ChatGPTTranslator : ITranslator
 
             if (!string.IsNullOrEmpty(translatedText))
             {
-                this.translationCache[cacheKey] = translatedText;
+                if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+                {
+                    this.translationCache[cacheKey] = translatedText;
+                }
+
                 return translatedText;
             }
         }

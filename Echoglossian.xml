@@ -1910,11 +1910,6 @@
                 payloads.
             </summary>
             <summary>
-                Handles the quest probe command used to inspect the complete quest data
-                shape from Lumina, the live quest progress resolver, and the current
-                QuestPlate database rows.
-            </summary>
-            <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
                 <see cref="E:Dalamud.Plugin.Services.IToastGui.QuestToast" /> instead of the addon-handler
                 registrar.
@@ -2323,11 +2318,6 @@
             Holds the database editor window instance.
             </summary>
         </member>
-        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
-            <summary>
-            Holds the currently active addon structure probe watch, if any.
-            </summary>
-        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2398,11 +2388,6 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
-            <summary>
-                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -3709,21 +3694,6 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name and optional index.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name and index to probe.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -3985,102 +3955,6 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
-            <summary>
-                Handles the quest probe command.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
-            <summary>
-                Tries to resolve the quest probe target from either a quest id or a
-                quest name.
-            </summary>
-            <param name="input">The command argument.</param>
-            <param name="questIdText">The resolved quest id as text.</param>
-            <param name="questName">The resolved quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>True when the quest could be resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the quest data structure for inspection.
-            </summary>
-            <param name="questIdText">The quest id as text.</param>
-            <param name="questName">The quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the raw Lumina quest row properties.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs all rows from the quest text sheet, not just the live todo
-                entries, so we can inspect the full structure of the quest sheet.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
-            <summary>
-                Logs the QuestPlate rows currently stored for the quest.
-            </summary>
-            <param name="questIdText">The quest id text.</param>
-            <param name="questName">The quest name.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Logs the resolved live quest progression snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves a human-readable quest name from a quest row.
-            </summary>
-            <param name="questRow">The quest row.</param>
-            <returns>The resolved quest name, if available.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
-            <summary>
-                Converts quest text to a readable string for probe output.
-            </summary>
-            <param name="text">The quest text.</param>
-            <returns>The evaluated text string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
-            <summary>
-                Formats a probe value for log output.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>A human-readable value string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Builds the raw quest sheet name used by the game files.
-            </summary>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>The quest text sheet name, if it can be derived.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest row id as text through reflection so the probe
-                stays compatible with generated sheet shapes.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest row id as text, or an empty string if unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest sheet identifier used to mount the quest text
-                sheet path.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -6320,6 +6194,18 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddEventAndDeepDungeonItemTextTables.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.RemovePersistedTranslationErrors">
+            <summary>
+                Removes legacy rows whose translated payloads contain synthetic
+                translation-error placeholders emitted by failed engines.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.RemovePersistedTranslationErrors.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.RemovePersistedTranslationErrors.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -8765,6 +8651,48 @@
             </summary>
             <param name="language">The raw language value.</param>
             <returns>The normalized language code, or an empty string.</returns>
+        </member>
+        <member name="T:Echoglossian.TranslationResultGuard">
+            <summary>
+                Provides shared guards for synthetic translation-error placeholders so
+                they never become accepted translated output.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.TranslationResultGuard.SyntheticErrorFailureReason">
+            <summary>
+                Gets the shared failure reason used when an engine returns a
+                synthetic error placeholder instead of a real translation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationResultGuard.IsPersistableTranslation(System.String)">
+            <summary>
+                Determines whether the specified text is safe to accept as a stored
+                translated result.
+            </summary>
+            <param name="text">The translated text candidate.</param>
+            <returns>
+                <see langword="true" /> when the text is non-empty and not a
+                synthetic translation-error placeholder; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationResultGuard.ContainsSyntheticTranslationError(System.String)">
+            <summary>
+                Determines whether the specified text is one of the synthetic
+                translation-error placeholders emitted by translator engines.
+            </summary>
+            <param name="text">The translated text candidate.</param>
+            <returns>
+                <see langword="true" /> when the text matches a known localized
+                translation-error prefix; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationResultGuard.GetSyntheticErrorPrefixes">
+            <summary>
+                Gets the known localized synthetic error prefixes for cleanup tasks
+                such as database migrations.
+            </summary>
+            <returns>The localized synthetic error prefixes.</returns>
         </member>
         <member name="T:Echoglossian.ImageGeneration.CachedTextureEntry">
             <summary>
@@ -12981,6 +12909,27 @@
                 Whether the quest-family diacritics toggle is enabled.
             </param>
             <returns><c>true</c> when normalization should be applied.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonOriginalTextHelper">
+            <summary>
+                Resolves whether a quest-addon row should keep using the previously
+                captured original text or switch to the currently visible text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonOriginalTextHelper.ResolveOriginalVisibleText(System.String,System.String,System.String)">
+            <summary>
+                Resolves the original text for a visible quest-addon row while
+                allowing stable recovery from previously applied translated text.
+            </summary>
+            <param name="visibleText">The text currently visible in the addon.</param>
+            <param name="previousOriginalText">The last captured original text.</param>
+            <param name="previousTranslatedDisplayText">
+                The translated text exactly as it would have been written into the
+                native UI for the previous row state.
+            </param>
+            <returns>
+                The original source text that should back the current visible row.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestWaitingNotificationGate">
             <summary>
@@ -20911,6 +20860,23 @@
                 contains the translated text as a string.
             </returns>
         </member>
+        <member name="M:Echoglossian.Translators.TranslationService.AcceptTranslatedResultOrFallback(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Accepts a translated result only when it is safe to treat as a real
+            translation; otherwise records the failure and falls back to the
+            sanitized source text.
+            </summary>
+            <param name="translatedText">The translated text candidate.</param>
+            <param name="parsedText">The parsed source text sent to the translator.</param>
+            <param name="sanitizedText">The sanitized source text shown on fallback.</param>
+            <param name="normalizedSourceLanguage">The normalized source language code.</param>
+            <param name="normalizedTargetLanguage">The normalized target language code.</param>
+            <param name="resolvedOriginContext">The resolved origin context for diagnostics.</param>
+            <returns>
+            The accepted translated text, or <paramref name="sanitizedText" /> when
+            the result is empty or synthetic.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Translators.TranslationService.CheckTextToTranslate(System.String)">
             <summary>
             Determines whether the specified text should be translated and returns a sanitized version of the text.
@@ -20934,7 +20900,7 @@
                 is already cached as a known failure; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Translators.TranslationService.RecordFailedTranslation(System.String,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Translators.TranslationService.RecordFailedTranslation(System.String,System.String,System.String,System.String,System.String)">
             <summary>
                 Records one exact translation request as a known failure for the
                 current engine and language pair.
