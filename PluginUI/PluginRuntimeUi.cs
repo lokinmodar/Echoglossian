@@ -77,7 +77,8 @@ public partial class Echoglossian
       this.EchoglossianConfigUi();
     }
 
-    if (!this.configuration.PluginAssetsDownloaded)
+    if (AssetsManager.RequiresDownloadedAssets(SelectedLanguage) &&
+        !AssetsManager.PluginAssetsDownloaded)
     {
       this.ResetStructuredTooltipUiRuntime();
       return;

@@ -234,18 +234,21 @@ public partial class Echoglossian : IDalamudPlugin
     this.MigrateOverlayDisplayModes();
     this.MigrateTranslationEngineSelection(loadedConfigVersion);
 
+    SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
+    AssetsManager.RefreshPluginAssetsState(SelectedLanguage);
+    this.configuration.PluginAssetsDownloaded = AssetsManager.PluginAssetsDownloaded;
+
     this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
 
     PluginRuntimeLog.Debug(
         $"Assets state config: {this.configuration.PluginAssetsDownloaded}");
     PluginRuntimeLog.Debug($"Assets state var: {this.pluginAssetsState}");
 
-    if (!this.pluginAssetsState)
+    if (!this.pluginAssetsState &&
+        AssetsManager.RequiresDownloadedAssets(SelectedLanguage))
     {
-      AssetsManager.PluginAssetsChecker();
+      AssetsManager.PluginAssetsChecker(SelectedLanguage);
     }
-
-    SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
 
     // this.ListCultureInfos();
     this.pixImage =

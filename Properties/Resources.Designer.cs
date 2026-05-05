@@ -522,6 +522,105 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Manage required language assets.
+        /// </summary>
+        public static string ManageLanguageAssetsButtonText {
+            get {
+                return ResourceManager.GetString("ManageLanguageAssetsButtonText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This language requires extra downloadable font assets before translation can be enabled..
+        /// </summary>
+        public static string TranslationRequiresDownloadedAssetsText {
+            get {
+                return ResourceManager.GetString("TranslationRequiresDownloadedAssetsText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for required font assets.
+        /// </summary>
+        public static string TranslationBlockedByMissingAssetsStatusText {
+            get {
+                return ResourceManager.GetString("TranslationBlockedByMissingAssetsStatusText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} requires one or more external font assets before Echoglossian can translate safely..
+        /// </summary>
+        public static string LanguageAssetsPopupBodyFormat {
+            get {
+                return ResourceManager.GetString("LanguageAssetsPopupBodyFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to An automatic background download was triggered when possible. If it fails, use the controls below to place the files manually and recheck them..
+        /// </summary>
+        public static string LanguageAssetsPopupAutoDownloadHint {
+            get {
+                return ResourceManager.GetString("LanguageAssetsPopupAutoDownloadHint", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Assets folder:.
+        /// </summary>
+        public static string LanguageAssetsPopupFolderLabel {
+            get {
+                return ResourceManager.GetString("LanguageAssetsPopupFolderLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Required files:.
+        /// </summary>
+        public static string LanguageAssetsPopupFilesLabel {
+            get {
+                return ResourceManager.GetString("LanguageAssetsPopupFilesLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open assets folder.
+        /// </summary>
+        public static string OpenAssetsFolderButtonText {
+            get {
+                return ResourceManager.GetString("OpenAssetsFolderButtonText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open manual download links.
+        /// </summary>
+        public static string OpenManualDownloadLinksButtonText {
+            get {
+                return ResourceManager.GetString("OpenManualDownloadLinksButtonText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Recheck assets.
+        /// </summary>
+        public static string RecheckAssetsButtonText {
+            get {
+                return ResourceManager.GetString("RecheckAssetsButtonText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The selected language &quot;{0}&quot; depends on downloaded font assets. Manual files should be placed in: {1}.
+        /// </summary>
+        public static string LanguageAssetsTroubleshootingSummaryFormat {
+            get {
+                return ResourceManager.GetString("LanguageAssetsTroubleshootingSummaryFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Customize the prompt used for translation. All of the following placeholders are required:.
         /// </summary>
         public static string CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired {

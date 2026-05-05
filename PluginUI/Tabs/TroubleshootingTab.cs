@@ -16,12 +16,30 @@ public static class TroubleshootingTab
     {
         var changed = false;
 
-        var pluginAssetsStatus = config.PluginAssetsDownloaded;
+        AssetsManager.RefreshPluginAssetsState(Echoglossian.SelectedLanguage);
+        config.PluginAssetsDownloaded = AssetsManager.PluginAssetsDownloaded;
+        var pluginAssetsStatus = AssetsManager.PluginAssetsDownloaded;
 
         ImGui.BeginGroup();
         ImGui.TextWrapped(
             Resources.CurrentPluginAssetsStatus + ": " + pluginAssetsStatus);
         ImGui.TextWrapped(Resources.PluginAssetsNotDownloadedText);
+
+        if (AssetsManager.RequiresDownloadedAssets(Echoglossian.SelectedLanguage))
+        {
+            ImGui.Spacing();
+            ImGui.TextWrapped(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resources.LanguageAssetsTroubleshootingSummaryFormat,
+                    Echoglossian.SelectedLanguage.LanguageName,
+                    AssetsManager.AssetsPath));
+
+            if (ImGui.Button(Resources.ManageLanguageAssetsButtonText))
+            {
+                PluginAssetRequirementUiHelper.RequestForSelectedLanguage();
+            }
+        }
 
         ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
@@ -29,12 +47,8 @@ public static class TroubleshootingTab
 
         if (ImGui.Button(Resources.DownloadPluginAssetsButtonText))
         {
-            AssetsManager.DownloadAssets(0);
-            AssetsManager.DownloadAssets(1);
-            AssetsManager.DownloadAssets(2);
-            AssetsManager.DownloadAssets(3);
-            AssetsManager.DownloadAssets(4);
-            AssetsManager.PluginAssetsChecker();
+            AssetsManager.PluginAssetsChecker(Echoglossian.SelectedLanguage);
+            config.PluginAssetsDownloaded = AssetsManager.PluginAssetsDownloaded;
             changed = true;
         }
 

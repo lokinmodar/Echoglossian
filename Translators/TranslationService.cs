@@ -114,6 +114,11 @@ public class TranslationService
       return sanitizedText;
     }
 
+    if (this.ShouldBypassTranslationDueToMissingLanguageAssets())
+    {
+      return sanitizedText;
+    }
+
     var startingEllipsis = string.Empty;
 
     var parsedText = sanitizedText;
@@ -181,6 +186,11 @@ public class TranslationService
   {
     var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
     if (!shouldTranslate)
+    {
+      return sanitizedText;
+    }
+
+    if (this.ShouldBypassTranslationDueToMissingLanguageAssets())
     {
       return sanitizedText;
     }
@@ -266,6 +276,27 @@ public class TranslationService
         resolvedOriginContext);
 
     return sanitizedText;
+  }
+
+  /// <summary>
+  /// Determines whether the current selected language depends on missing
+  /// downloaded font assets and should therefore bypass translation work until
+  /// those assets are available.
+  /// </summary>
+  /// <returns>
+  /// <c>true</c> when translation should be bypassed because required language
+  /// assets are missing; otherwise, <c>false</c>.
+  /// </returns>
+  private bool ShouldBypassTranslationDueToMissingLanguageAssets()
+  {
+    if (!AssetsManager.HasMissingRequiredAssets(SelectedLanguage))
+    {
+      return false;
+    }
+
+    this.debugLog?.Invoke(
+        "TranslationService: bypassing translation because the selected language requires missing downloaded font assets.");
+    return true;
   }
 
   /// <summary>

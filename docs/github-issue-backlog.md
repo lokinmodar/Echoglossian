@@ -145,12 +145,13 @@ require careful UI/runtime investigation rather than a narrow config fix.
 
 - Priority: P2
 - Ease: medium
-- Status: bug/enhancement
+- Status: fixed in code, awaiting published-build validation
 - Notes:
-  - This is a good hardening task.
-  - It also includes retry behavior for font downloads on error.
-  - It is a good follow-up right after the current release-breakage cluster
-    because it affects first-run behavior and unnecessary gating.
+  - Asset gating is now language-aware instead of global.
+  - Languages that do not use downloaded CJK font assets are no longer blocked.
+  - Languages that do require them now trigger automatic check/download,
+    disable translation until assets are valid, and expose manual recovery UI.
+  - Download retry behavior was added for transient fetch failures.
 
 ### #173 Plugin function incompatibility: Character panel refined
 
@@ -253,7 +254,7 @@ work rather than release fallout.
 5. `#174` + `#178` as one cache/settings cluster
 6. reassess `#171` after `#170` and `#174`
 7. release-validate and then close `#170`
-8. `#180`
+8. release-validate and then close `#180`
 9. `#167`
 10. release-validate the remaining open parts of `#172`
 11. `#173` / `#179`

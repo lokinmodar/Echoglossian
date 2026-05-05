@@ -403,6 +403,39 @@
   <data name="CurrentPluginAssetsStatus" xml:space="preserve">
     <value>Are the plugin assets downloaded?</value>
   </data>
+  <data name="ManageLanguageAssetsButtonText" xml:space="preserve">
+    <value>Manage required language assets</value>
+  </data>
+  <data name="TranslationRequiresDownloadedAssetsText" xml:space="preserve">
+    <value>This language requires extra downloadable font assets before translation can be enabled.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsStatusText" xml:space="preserve">
+    <value>Waiting for required font assets</value>
+  </data>
+  <data name="LanguageAssetsPopupBodyFormat" xml:space="preserve">
+    <value>{0} requires one or more external font assets before Echoglossian can translate safely.</value>
+  </data>
+  <data name="LanguageAssetsPopupAutoDownloadHint" xml:space="preserve">
+    <value>An automatic background download was triggered when possible. If it fails, use the controls below to place the files manually and recheck them.</value>
+  </data>
+  <data name="LanguageAssetsPopupFolderLabel" xml:space="preserve">
+    <value>Assets folder:</value>
+  </data>
+  <data name="LanguageAssetsPopupFilesLabel" xml:space="preserve">
+    <value>Required files:</value>
+  </data>
+  <data name="OpenAssetsFolderButtonText" xml:space="preserve">
+    <value>Open assets folder</value>
+  </data>
+  <data name="OpenManualDownloadLinksButtonText" xml:space="preserve">
+    <value>Open manual download links</value>
+  </data>
+  <data name="RecheckAssetsButtonText" xml:space="preserve">
+    <value>Recheck assets</value>
+  </data>
+  <data name="LanguageAssetsTroubleshootingSummaryFormat" xml:space="preserve">
+    <value>The selected language "{0}" depends on downloaded font assets. Manual files should be placed in: {1}</value>
+  </data>
   <data name="ConfigTab9Name" xml:space="preserve">
     <value>Misc. Settings</value>
   </data>

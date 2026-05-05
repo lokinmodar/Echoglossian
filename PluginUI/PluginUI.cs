@@ -93,8 +93,20 @@ public partial class Echoglossian
       PluginRuntimeLog.Debug(
           "Language font: " + LangDict[this.configuration.Lang].FontName);
 
+      AssetsManager.RefreshPluginAssetsState(SelectedLanguage);
+      this.configuration.PluginAssetsDownloaded =
+          AssetsManager.PluginAssetsDownloaded;
       MountFontPaths();
-      PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync();
+      if (!this.configuration.PluginAssetsDownloaded &&
+          AssetsManager.RequiresDownloadedAssets(SelectedLanguage))
+      {
+        AssetsManager.PluginAssetsChecker(SelectedLanguage);
+        PluginAssetRequirementUiHelper.RequestForSelectedLanguage();
+      }
+      else
+      {
+        PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync();
+      }
     }
 
     UINewFontHandler.GeneralFontHandle.Pop();
@@ -122,14 +134,37 @@ public partial class Echoglossian
     ImGui.EndGroup();
     ImGui.Spacing();
 
+    var translationBlockedByMissingAssets =
+        AssetsManager.HasMissingRequiredAssets(SelectedLanguage);
+
     if (!this.configuration.UnsupportedLanguage)
     {
+      if (translationBlockedByMissingAssets)
+      {
+        ImGui.BeginDisabled();
+      }
+
       this.SaveConfigValue |= ImGui.Checkbox(
           Resources.EnableTranslation,
           ref this.configuration.Translate);
+
+      if (translationBlockedByMissingAssets)
+      {
+        ImGui.EndDisabled();
+      }
     }
 
-    if (this.configuration.Translate)
+    if (translationBlockedByMissingAssets)
+    {
+      ImGui.SameLine();
+      ImGui.TextColored(
+          new Vector4(255, 165, 0, 255),
+          Resources.TranslationBlockedByMissingAssetsStatusText);
+      this.SaveConfigValue |=
+          PluginAssetRequirementUiHelper.DrawInlineWarning(
+              this.configuration);
+    }
+    else if (this.configuration.Translate)
     {
       ImGui.SameLine();
       ImGui.TextColored(
@@ -208,6 +243,10 @@ public partial class Echoglossian
         () => SaveConfig(this.configuration),
         this.pixImage.Handle,
         this.cryptoImage.Handle);
+
+    this.SaveConfigValue |=
+        PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
+            this.configuration);
 
     ImGui.End();
 

@@ -45,8 +45,13 @@ public partial class Echoglossian
   {
     AdjustLanguageForFontBuild();
 
-    SpecialFontFilePath =
+    var resolvedSpecialFontPath =
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{SpecialFontFileName}";
+    SpecialFontFilePath = AssetsManager.RequiresDownloadedAsset(
+            SpecialFontFileName) &&
+        !File.Exists(resolvedSpecialFontPath)
+        ? string.Empty
+        : resolvedSpecialFontPath;
     FontFilePath =
         $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{FontFileName}";
     SymbolsFontFilePath =
