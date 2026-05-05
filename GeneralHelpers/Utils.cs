@@ -165,7 +165,8 @@ public partial class Echoglossian
     // Restore runtime-mutable metadata
     config.FontChangeTime = DateTime.Now.Ticks;
     config.PluginVersion = ResolvePluginVersion() ?? config.PluginVersion;
-    config.Version = 13;
+    config.Version =
+        TranslationEngineSelectionMigrationHelper.TranslationEngineSchemaVersion;
 
     // Persist config
     saveCallback?.Invoke();
@@ -396,11 +397,124 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Migrates legacy persisted translation engine ids and stamps the config
+  ///     with the current engine-selection schema version.
+  /// </summary>
+  /// <param name="loadedConfigVersion">
+  ///     The configuration version loaded from disk
+  ///     before migrations.
+  /// </param>
+  public void MigrateTranslationEngineSelection(int loadedConfigVersion)
+  {
+    var changed = false;
+
+    var normalizedChatGptBaseUrl =
+        TranslationEngineSelectionMigrationHelper.NormalizeLegacyChatGptBaseUrl(
+            this.configuration.ChatGPTBaseUrl);
+    if (!string.Equals(
+            normalizedChatGptBaseUrl,
+            this.configuration.ChatGPTBaseUrl,
+            StringComparison.Ordinal))
+    {
+      this.configuration.ChatGPTBaseUrl = normalizedChatGptBaseUrl;
+      changed = true;
+    }
+
+    if (TranslationEngineSelectionMigrationHelper.TryMigrateLegacyV325Selection(
+            loadedConfigVersion,
+            this.configuration.ChosenTransEngine,
+            out var migratedEngineId))
+    {
+      this.configuration.ChosenTransEngine = migratedEngineId;
+      changed = true;
+    }
+
+    if (!TranslationEngineSelectionMigrationHelper.IsConcreteEngineId(
+            this.configuration.ChosenTransEngine))
+    {
+      this.configuration.ChosenTransEngine =
+          (int)TransEngines.Google;
+      changed = true;
+    }
+
+    if (this.configuration.Version <
+        TranslationEngineSelectionMigrationHelper.TranslationEngineSchemaVersion)
+    {
+      this.configuration.Version =
+          TranslationEngineSelectionMigrationHelper.TranslationEngineSchemaVersion;
+      changed = true;
+    }
+
+    if (changed)
+    {
+      SaveConfig(this.configuration);
+    }
+  }
+
+  /// <summary>
   ///     Saves the current configuration to the plugin config file.
   /// </summary>
   public static void SaveConfig(Config config)
   {
     PluginInterface.SavePluginConfig(config);
+  }
+
+  /// <summary>
+  ///     Rebuilds the shared translation service using the current config while
+  ///     preventing engine-constructor failures from tearing down the plugin.
+  /// </summary>
+  public void RebuildTranslationServiceSafely()
+  {
+    TranslationService = this.CreateTranslationServiceSafely();
+    ChosenTransEngine = this.configuration.ChosenTransEngine;
+    transEngineName = ((TransEngines)ChosenTransEngine).ToString();
+  }
+
+  /// <summary>
+  ///     Creates a translation service using the current config, retrying known
+  ///     legacy engine-collision repairs and falling back to a safe no-op
+  ///     translator when instantiation still fails.
+  /// </summary>
+  /// <returns>The created translation service.</returns>
+  private TranslationService CreateTranslationServiceSafely()
+  {
+    try
+    {
+      return new TranslationService(
+          this.configuration,
+          PluginLog,
+          Sanitizer);
+    }
+    catch (Exception ex)
+    {
+      PluginRuntimeLog.Error(
+          $"Failed to initialize translation service for engine id {this.configuration.ChosenTransEngine}: {ex}");
+
+      if (TranslationEngineSelectionMigrationHelper
+              .TryRepairLikelyLegacyAmazonCollision(this.configuration))
+      {
+        SaveConfig(this.configuration);
+        try
+        {
+          return new TranslationService(
+              this.configuration,
+              PluginLog,
+              Sanitizer);
+        }
+        catch (Exception retryEx)
+        {
+          PluginRuntimeLog.Error(
+              $"Failed to initialize translation service after legacy engine repair: {retryEx}");
+        }
+      }
+
+      PluginRuntimeLog.Warning(
+          "Falling back to an unavailable translator to keep the plugin loaded.");
+      return new TranslationService(
+          Sanitizer.Sanitize,
+          new UnavailableTranslator(),
+          this.configuration.ChosenTransEngine);
+    }
   }
 
   /// <summary>

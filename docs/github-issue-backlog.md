@@ -1,4 +1,4 @@
-﻿# GitHub Issue Backlog
+# GitHub Issue Backlog
 
 Snapshot date: 2026-05-05
 
@@ -10,69 +10,185 @@ When the user asks to "read the issues" or "update the issue list", the
 default source of truth for that request is the open issue tracker in
 `lokinmodar/Echoglossian`.
 
-## Immediate 4.x Release Follow-up
+## Triage Model
 
-These issues are active release-quality or rollout problems and should be
-triaged before lower-priority feature work.
+Priority here is sorted by two factors:
 
-### #172 Google Translation breaks quest and NPC dialogue layout, some quest/FATE text remains untranslated
+1. User impact and release risk
+2. Ease of delivering a narrow, low-risk fix
 
-- Status: active regression
-- Notes:
-  - Reporter shows two quest-family problems on the right-side tracker:
-    dynamic objective progress staying stale and quest slots sometimes
-    reusing title/objective text from another quest.
-  - Also reports NPC dialogue layout breakage that likely belongs to the
-    Talk/BattleTalk native-vs-overlay path and should be triaged separately
-    from the tracker bug.
+The first bucket is not "most important only"; it is "most important and
+likely to be the next best use of engineering time right now."
 
-### #171 Deepseek translation is not available. Please check your API key. When using other translators, mission titles and descriptions are not being translated
+## P0: Urgent and Likely Short Fix
 
-- Status: active regression
-- Notes:
-  - The visible `[Translation Error: ...]` placeholder should never be treated
-    as a valid translation or persisted into DB/cache state.
-  - The quest title/description symptom overlaps the same quest-family tracker
-    instability reported in `#172`.
+These are the best immediate targets because they are blocking, widespread, or
+highly visible and appear to have a narrow root cause.
 
 ### #170 Plugin failed to load
 
-- Status: active triage, `needs more info`
-- Notes:
-  - Reporter already confirmed reinstalling, disabling other plugins, and
-    adding `%appdata%\XIVLauncher` to Microsoft Defender exceptions did not
-    resolve the issue.
-  - This may be distinct from the "config missing blocks UI" bug fixed in
-    `7d2360d`.
-
-### #169 Overlay doesn't appear
-
-- Status: active regression
-- Notes:
-  - User reports overlay mode enabled but no visible overlay output.
-  - Likely belongs to overlay bootstrap, configuration, visibility, or asset
-    readiness investigation rather than translation-engine work.
+- Priority: P0
+- Ease: short/medium
+- Status: fixed in code, awaiting published-build validation
+- Why it is first:
+  - This is hard release breakage.
+  - User workaround strongly suggests a concrete root cause: persisted
+    `ChosenTransEngine` values from older builds now map to the wrong engine
+    after engine-order changes.
+  - This likely also explains part of `#171` and `#178`.
+- Landed fix shape:
+  - config migration/remap for old engine ids
+  - bootstrap guard for invalid or newly incompatible engine selections
+  - safe fallback translator so engine init failure no longer prevents plugin load
+  - legacy ChatGPT base-url normalization moved into the same migration path
 
 ### #168 The plugin isn't opening
 
-- Status: active, likely addressed by `7d2360d`
+- Priority: P0
+- Ease: short
+- Status: likely already fixed in code
 - Notes:
-  - This matches the first-launch/config bootstrap failure where a missing
-    config plus asset gating prevented the UI from opening.
-  - Verify against the next published build and close once the fix is
-    confirmed in release.
+  - This matches the "missing config prevents UI from opening" regression.
+  - Code already creates and saves a default config on first launch.
+  - Keep high only until the published build confirms it for users, then close.
+
+### #177 "Waiting to stored quest data" notification
+
+- Priority: P0
+- Ease: short
+- Status: likely already fixed in code
+- Notes:
+  - Code now has `ShowQuestProgressNotifications`, disabled by default.
+  - This should be verified against the next release and then closed.
+
+## P1: Urgent but Medium Investigation
+
+These are still release-quality problems, but they likely need a more careful
+ runtime pass than the P0 items above.
+
+### #169 Overlay doesn't appear
+
+- Priority: P1
+- Ease: medium
+- Status: active regression
+- Notes:
+  - Translation can still work while overlays remain invisible.
+  - Likely tied to overlay visibility/apply-state/config propagation.
+
+### #175 Overlay problem
+
+- Priority: P1
+- Ease: medium
+- Status: likely same cluster as `#169`
+- Notes:
+  - Keep linked to `#169` until proven distinct.
+  - User comments suggest settings may only take effect after plugin reload.
+
+### #174 Translate already saved translated texts does not work
+
+- Priority: P1
+- Ease: medium
+- Status: active regression/UX gap
+- Notes:
+  - Users expect settings or engine changes to affect already stored rows.
+  - Reports also suggest some settings do not fully take effect until
+    plugin toggle/restart.
+  - Likely overlaps with cache invalidation, runtime refresh, and config
+    propagation issues.
+
+### #178 It isn't translating anything
+
+- Priority: P1
+- Ease: medium
+- Status: active regression
+- Notes:
+  - Could be a downstream symptom of `#170` config/engine mismatch.
+  - Could also overlap with `#174` stale cache/settings propagation.
+  - Reassess after the `ChosenTransEngine` compatibility fix lands.
+
+### #171 Deepseek translation is not available... mission titles and descriptions are not being translated
+
+- Priority: P1
+- Ease: medium
+- Status: partly addressed, partly still active
+- Notes:
+  - The persisted `[Translation Error: ...]` path was already fixed in code.
+  - Remaining symptoms may collapse into `#170` and `#174`.
+  - Reassess after the next published build and engine-migration fix.
+
+## P2: Release Stabilization, More Involved
+
+These are serious, but they are either more specialized or more likely to
+require careful UI/runtime investigation rather than a narrow config fix.
 
 ### #167 Dialogue text glitches when using overlay translation only
 
+- Priority: P2
+- Ease: medium/hard
 - Status: active regression
 - Notes:
-  - Most likely belongs to the Talk/BattleTalk overlay-only path and should be
-    investigated as a native-mutation or incomplete-restore leak.
+  - Most likely in the `Talk` / `BattleTalk` overlay-only path.
+  - Suspect native state mutation or incomplete restore.
 
-## Active Product Backlog
+### #172 Google Translation breaks quest and NPC dialogue layout, some quest/FATE text remains untranslated
+
+- Priority: P2
+- Ease: medium/hard
+- Status: partially addressed in code, still open
+- Notes:
+  - Dynamic quest objective updates and slot text reuse were already fixed in
+    code and need release validation.
+  - Remaining risk is the NPC dialogue/native layout path and possibly
+    selection-dialog sizing.
+
+### #180 Remove need for downloaded font assets for languages that donot use them
+
+- Priority: P2
+- Ease: medium
+- Status: bug/enhancement
+- Notes:
+  - This is a good hardening task.
+  - It also includes retry behavior for font downloads on error.
+  - It is a good follow-up right after the current release-breakage cluster
+    because it affects first-run behavior and unnecessary gating.
+
+### #173 Plugin function incompatibility: Character panel refined
+
+- Priority: P2
+- Ease: hard
+- Status: open user report
+- Notes:
+  - Game closes when Character translation is enabled with
+    CharacterPanelRefined.
+  - This likely needs addon-shape compatibility work.
+
+### #179 Analyze compatibility with CharacterPanelRefined
+
+- Priority: P2
+- Ease: hard
+- Status: tracking issue
+- Notes:
+  - This is the explicit analysis/backlog issue created for the CPR
+    compatibility work.
+  - Keep this as the structured engineering item; `#173` is the originating
+    user bug report and may later be closed as superseded by `#179`.
+
+## P3: Important, Not Immediate Release Blockers
+
+### #176 [Performance] Overhead de ~1s entre captura do texto e exibição da tradução com LLM local
+
+- Priority: P3
+- Ease: medium/hard
+- Status: valid performance backlog
+- Notes:
+  - This needs investigation across capture latency, request overhead,
+    prompt size, and presentation timing.
+  - Important, but not more urgent than bootstrap/load/overlay failures.
+
+## Long-Term Product Backlog
 
 These remain open on purpose and still represent real feature or architecture
-work.
+work rather than release fallout.
 
 ### #148 Structured input and output for glossary and metadata
 
@@ -80,27 +196,23 @@ work.
 - Scope:
   - LLM prompt and output shaping
   - richer glossary and metadata flow
-  - likely future translation-engine enhancement work
+  - future translation-engine enhancement work
 
 ### #139 Arabic Translation Support
 
 - Status: keep open
 - Notes:
-  - Engine-side translation support is not enough on its own.
+  - Engine-side support alone is not enough.
   - Proper overlay and UI support still depends on right-to-left rendering
     remediation.
 
 ### #104 Add quest translations to the Unending Journey
 
 - Status: keep open
-- Notes:
-  - Still valid quest-family backlog item.
 
 ### #103 Translate Interactible WorldObjects
 
 - Status: keep open
-- Notes:
-  - Still valid gameplay/UI capture backlog item.
 
 ### #68 Handling of specific in-game addons
 
@@ -119,9 +231,8 @@ work.
 
 - Status: keep open
 - Notes:
-  - This intersects the currently disabled structured tooltip path.
-  - `ActionDetail` and `ItemDetail` remain off for release safety, so this is
-    not done.
+  - Intersects the currently disabled structured tooltip path.
+  - `ActionDetail` and `ItemDetail` remain off for release safety.
 
 ## Tracking and Meta
 
@@ -130,16 +241,21 @@ work.
 - Status: keep open
 - Purpose:
   - top-level known-issues tracker
-  - currently used to preserve the RTL limitation and point users to the issue
-    tracker plus changelog
+  - preserves the RTL limitation
+  - points users to the issue tracker plus changelog
 
-## Working Priority
+## Recommended Execution Order
 
-Suggested priority order:
-
-1. `#170` load failure triage
-2. `#169` overlay visibility regression
-3. `#168` verify and close after published fix confirmation
-4. `#167` Talk/BattleTalk overlay-only glitch investigation
-5. `#15` only after structured tooltip work is re-enabled safely
-6. backlog items `#148`, `#139`, `#104`, `#103`, `#68`
+1. `#170`
+2. verify published release outcome for `#168`
+3. verify published release outcome for `#177`
+4. `#169` + `#175` as one overlay cluster
+5. `#174` + `#178` as one cache/settings cluster
+6. reassess `#171` after `#170` and `#174`
+7. release-validate and then close `#170`
+8. `#180`
+9. `#167`
+10. release-validate the remaining open parts of `#172`
+11. `#173` / `#179`
+12. `#176`
+13. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`

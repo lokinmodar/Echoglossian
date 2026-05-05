@@ -83,10 +83,7 @@ public partial class Echoglossian
               .Contains(this.configuration.ChosenTransEngine))
       {
         this.configuration.ChosenTransEngine = 0;
-        TranslationService = new TranslationService(
-            this.configuration,
-            PluginLog,
-            Sanitizer);
+        this.RebuildTranslationServiceSafely();
       }
 
       this.SaveConfigValue = true;
@@ -181,13 +178,7 @@ public partial class Echoglossian
             LanguageDropdownHelper.GetDisplayNames().ToList(),
             this.enginesList,
             LangDict,
-            () =>
-            {
-              TranslationService = new TranslationService(
-                          this.configuration,
-                          PluginLog,
-                          Sanitizer);
-            });
+            this.RebuildTranslationServiceSafely);
         ImGui.EndTabItem();
       }
 

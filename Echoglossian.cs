@@ -232,6 +232,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.MigrateOverlayStyleSettings();
     this.MigrateOverlayDisplayModes();
+    this.MigrateTranslationEngineSelection(loadedConfigVersion);
 
     this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
 
@@ -272,20 +273,13 @@ public partial class Echoglossian : IDalamudPlugin
 
     fontSize = this.configuration.FontSize;
 
-    ChosenTransEngine = this.configuration.ChosenTransEngine;
-
     this.LangToTranslateTo = LangDict[LanguageInt].Code;
 
     MountFontPaths();
 
     UINewFontHandler = new UINewFontHandler(this.configuration);
 
-    var t = (TransEngines)ChosenTransEngine;
-    transEngineName = t.ToString();
-    TranslationService = new TranslationService(
-        this.configuration,
-        PluginLog,
-        Sanitizer);
+    this.RebuildTranslationServiceSafely();
 
     this.queuedTranslationBroker = new QueuedTranslationBroker(
         (TransEngines)this.configuration.ChosenTransEngine,
@@ -324,14 +318,6 @@ public partial class Echoglossian : IDalamudPlugin
     PluginInterface.UiBuilder.Draw += this.DrawDbEditorWindow;
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
-    // Fix wrong chatgpt base url in v3.17
-    // TODO: remove it in later versions
-    if (this.configuration.ChatGPTBaseUrl ==
-        "https://api.openai.com/v1/chat/completions")
-    {
-      this.configuration.ChatGPTBaseUrl = "https://api.openai.com/v1";
-      PluginInterface.SavePluginConfig(this.configuration);
-    }
   }
 
   [PluginService] public static IDataManager DManager { get; set; }

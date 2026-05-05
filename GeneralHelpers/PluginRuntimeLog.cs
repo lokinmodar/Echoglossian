@@ -65,7 +65,13 @@ internal static class PluginRuntimeLog
   [Conditional("DEBUG")]
   public static void Debug(string message)
   {
-    Echoglossian.PluginLog.Debug(message);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Debug(message);
   }
 
   /// <summary>
@@ -76,7 +82,13 @@ internal static class PluginRuntimeLog
   [Conditional("DEBUG")]
   public static void Debug(string messageTemplate, params object[] values)
   {
-    Echoglossian.PluginLog.Debug(messageTemplate, values);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Debug(messageTemplate, values);
   }
 
   /// <summary>
@@ -87,7 +99,13 @@ internal static class PluginRuntimeLog
   [Conditional("DEBUG")]
   public static void Debug(string scope, string message)
   {
-    Echoglossian.PluginLog.Debug(Format(scope, message));
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Debug(Format(scope, message));
   }
 
   /// <summary>
@@ -102,7 +120,13 @@ internal static class PluginRuntimeLog
       string messageTemplate,
       params object[] values)
   {
-    Echoglossian.PluginLog.Debug(Format(scope, messageTemplate), values);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Debug(Format(scope, messageTemplate), values);
   }
 
   /// <summary>
@@ -116,7 +140,13 @@ internal static class PluginRuntimeLog
       string scope,
       string message)
   {
-    Write(Echoglossian.PluginLog, level, scope, message);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    Write(pluginLog, level, scope, message);
   }
 
   /// <summary>
@@ -128,7 +158,13 @@ internal static class PluginRuntimeLog
       PluginRuntimeLogLevel level,
       string message)
   {
-    Write(Echoglossian.PluginLog, level, string.Empty, message);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    Write(pluginLog, level, string.Empty, message);
   }
 
   /// <summary>
@@ -193,7 +229,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Verbose(string message)
   {
-    Echoglossian.PluginLog.Verbose(message);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Verbose(message);
   }
 
   /// <summary>
@@ -213,7 +255,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Verbose(string scope, string message)
   {
-    Echoglossian.PluginLog.Verbose(Format(scope, message));
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Verbose(Format(scope, message));
   }
 
   /// <summary>
@@ -222,7 +270,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Information(string message)
   {
-    Echoglossian.PluginLog.Information(message);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Information(message);
   }
 
   /// <summary>
@@ -242,7 +296,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Information(string scope, string message)
   {
-    Echoglossian.PluginLog.Information(Format(scope, message));
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Information(Format(scope, message));
   }
 
   /// <summary>
@@ -251,7 +311,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Warning(string message)
   {
-    Echoglossian.PluginLog.Warning(message);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Warning(message);
   }
 
   /// <summary>
@@ -271,7 +337,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Warning(string scope, string message)
   {
-    Echoglossian.PluginLog.Warning(Format(scope, message));
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Warning(Format(scope, message));
   }
 
   /// <summary>
@@ -280,7 +352,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Error(string message)
   {
-    Echoglossian.PluginLog.Error(message);
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Error(message);
   }
 
   /// <summary>
@@ -300,7 +378,13 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Error(string scope, string message)
   {
-    Echoglossian.PluginLog.Error(Format(scope, message));
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Error(Format(scope, message));
   }
 
   /// <summary>

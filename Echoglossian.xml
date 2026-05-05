@@ -1910,6 +1910,11 @@
                 payloads.
             </summary>
             <summary>
+                Handles the quest probe command used to inspect the complete quest data
+                shape from Lumina, the live quest progress resolver, and the current
+                QuestPlate database rows.
+            </summary>
+            <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
                 <see cref="E:Dalamud.Plugin.Services.IToastGui.QuestToast" /> instead of the addon-handler
                 registrar.
@@ -2318,6 +2323,11 @@
             Holds the database editor window instance.
             </summary>
         </member>
+        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
+            <summary>
+            Holds the currently active addon structure probe watch, if any.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2390,6 +2400,11 @@
                 Regex used to help filtering out numeric-like strings.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
+            <summary>
+                Lists all available culture information and writes it to a file.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
             <summary>
                 Moves the given path up by the specified number of levels.
@@ -2433,10 +2448,34 @@
                 per-surface translation display modes.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.MigrateTranslationEngineSelection(System.Int32)">
+            <summary>
+                Migrates legacy persisted translation engine ids and stamps the config
+                with the current engine-selection schema version.
+            </summary>
+            <param name="loadedConfigVersion">
+                The configuration version loaded from disk
+                before migrations.
+            </param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.SaveConfig(Echoglossian.Config)">
             <summary>
                 Saves the current configuration to the plugin config file.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RebuildTranslationServiceSafely">
+            <summary>
+                Rebuilds the shared translation service using the current config while
+                preventing engine-constructor failures from tearing down the plugin.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateTranslationServiceSafely">
+            <summary>
+                Creates a translation service using the current config, retrying known
+                legacy engine-collision repairs and falling back to a safe no-op
+                translator when instantiation still fails.
+            </summary>
+            <returns>The created translation service.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryShowConfigVersionUpgradeNotification(System.Int32,System.Int32)">
             <summary>
@@ -3694,6 +3733,21 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log so we can
+            inspect its live node tree, component roots, and likely overlay anchors.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
+            <summary>
+            Parses the addon probe command arguments into an addon name and optional index.
+            </summary>
+            <param name="args">The raw command arguments.</param>
+            <returns>The addon name and index to probe.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -3955,6 +4009,102 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
+            <summary>
+                Handles the quest probe command.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
+            <summary>
+                Tries to resolve the quest probe target from either a quest id or a
+                quest name.
+            </summary>
+            <param name="input">The command argument.</param>
+            <param name="questIdText">The resolved quest id as text.</param>
+            <param name="questName">The resolved quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>True when the quest could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the quest data structure for inspection.
+            </summary>
+            <param name="questIdText">The quest id as text.</param>
+            <param name="questName">The quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the raw Lumina quest row properties.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs all rows from the quest text sheet, not just the live todo
+                entries, so we can inspect the full structure of the quest sheet.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
+            <summary>
+                Logs the QuestPlate rows currently stored for the quest.
+            </summary>
+            <param name="questIdText">The quest id text.</param>
+            <param name="questName">The quest name.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Logs the resolved live quest progression snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves a human-readable quest name from a quest row.
+            </summary>
+            <param name="questRow">The quest row.</param>
+            <returns>The resolved quest name, if available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
+            <summary>
+                Converts quest text to a readable string for probe output.
+            </summary>
+            <param name="text">The quest text.</param>
+            <returns>The evaluated text string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
+            <summary>
+                Formats a probe value for log output.
+            </summary>
+            <param name="value">The value to format.</param>
+            <returns>A human-readable value string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Builds the raw quest sheet name used by the game files.
+            </summary>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>The quest text sheet name, if it can be derived.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest row id as text through reflection so the probe
+                stays compatible with generated sheet shapes.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest row id as text, or an empty string if unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest sheet identifier used to mount the quest text
+                sheet path.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -8651,6 +8801,76 @@
             </summary>
             <param name="language">The raw language value.</param>
             <returns>The normalized language code, or an empty string.</returns>
+        </member>
+        <member name="T:Echoglossian.TranslationEngineSelectionMigrationHelper">
+            <summary>
+                Centralizes compatibility and safety rules for persisted translation
+                engine selections.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.TranslationEngineSelectionMigrationHelper.TranslationEngineSchemaVersion">
+            <summary>
+                The first config schema version that explicitly includes the current
+                engine ordering contract.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.TryMigrateLegacyV325Selection(System.Int32,System.Int32,System.Int32@)">
+            <summary>
+                Tries to migrate a legacy persisted engine id from the v3.25.x layout
+                to the current runtime ordering.
+            </summary>
+            <param name="loadedConfigVersion">
+                The config version loaded from disk before
+                migrations.
+            </param>
+            <param name="chosenEngineId">The persisted chosen engine id.</param>
+            <param name="migratedEngineId">The remapped engine id when migration applies.</param>
+            <returns>
+                <see langword="true" /> when a legacy id was remapped; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.IsConcreteEngineId(System.Int32)">
+            <summary>
+                Determines whether the current selected engine id is a valid concrete
+                runtime engine choice.
+            </summary>
+            <param name="engineId">The selected engine id.</param>
+            <returns>
+                <see langword="true" /> when the value is a valid concrete engine id;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.TryRepairLikelyLegacyAmazonCollision(Echoglossian.Config)">
+            <summary>
+                Repairs the specific bootstrap failure pattern where a legacy
+                v3.25.x selection of YandexPublic was persisted as id 9 and now
+                resolves to Amazon in v4.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the selection was repaired in-place;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.NormalizeLegacyChatGptBaseUrl(System.String)">
+            <summary>
+                Normalizes the legacy ChatGPT base URL that pointed directly at the
+                completions endpoint instead of the API root.
+            </summary>
+            <param name="chatGptBaseUrl">The configured ChatGPT base URL.</param>
+            <returns>The normalized base URL.</returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.HasExplicitAmazonConfiguration(Echoglossian.Config)">
+            <summary>
+                Determines whether the user appears to have explicitly configured the
+                Amazon translator rather than carrying forward a legacy engine id.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the config contains explicit Amazon
+                translator setup; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.TranslationResultGuard">
             <summary>
@@ -20951,6 +21171,30 @@
             <exception cref="T:System.NotSupportedException">
                 Thrown when the engine cannot be instantiated through this factory.
             </exception>
+        </member>
+        <member name="T:Echoglossian.Translators.UnavailableTranslator">
+            <summary>
+                Safe fallback translator used when the configured engine cannot be
+                instantiated during bootstrap.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.UnavailableTranslator.Translate(System.String,System.String,System.String)">
+            <summary>
+                Returns the original input text unchanged.
+            </summary>
+            <param name="text">The source text.</param>
+            <param name="sourceLanguage">The source language code.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <returns>The original input text.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.UnavailableTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+                Returns the original input text unchanged.
+            </summary>
+            <param name="text">The source text.</param>
+            <param name="sourceLanguage">The source language code.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <returns>The original input text.</returns>
         </member>
         <member name="T:Echoglossian.Translators.YandexTranslator">
             <summary>

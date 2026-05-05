@@ -841,8 +841,8 @@ public class Config : IPluginConfiguration
   [DefaultValue("")] public string YandexPaidApiKey = string.Empty;
 
   /// <summary>Plugin configuration version number (used during migration).</summary>
-  [DefaultValue(13)]
-  public int Version { get; set; } = 13;
+  [DefaultValue(15)]
+  public int Version { get; set; } = 15;
 
   /// <summary>
   /// Gets or sets a value indicating whether translation should run asynchronously.
