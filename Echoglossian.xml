@@ -1527,6 +1527,12 @@
         <member name="F:Echoglossian.Config.ShowInCutscenes">
             <summary>Show overlays and translations during cutscenes.</summary>
         </member>
+        <member name="F:Echoglossian.Config.ShowQuestProgressNotifications">
+            <summary>
+                Show informational Dalamud notifications for quest prefetch and
+                quest-window readiness waits.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.SwapTextsUsingImGui">
             <summary>
                 Render translations via ImGui rather than replacing game text
@@ -18624,6 +18630,13 @@
             <param name="langToRemoveDiacritics">Whether the selected language supports diacritic removal.</param>
             <returns><c>true</c> when a setting changed.</returns>
         </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestNotificationSection(Echoglossian.Config)">
+            <summary>
+                Draws the quest-background notification toggle.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <returns><c>true</c> when a setting changed.</returns>
+        </member>
         <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawJournalSection(Echoglossian.Config)">
             <summary>
                 Draws the Journal-specific quest translation controls.
@@ -19994,6 +20007,16 @@
         <member name="P:Echoglossian.Properties.Resources.ScenarioTreeAwaitingQuestDataNotification">
             <summary>
               Looks up a localized string similar to ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ShowQuestProgressNotificationsDescription">
+            <summary>
+              Looks up a localized string similar to Shows informational notifications when background quest pre-translation starts or when quest windows are still waiting for stored quest data. Disabled by default to avoid noisy popups during normal gameplay..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ShowQuestProgressNotificationsToggle">
+            <summary>
+              Looks up a localized string similar to Show quest background notifications.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslation">

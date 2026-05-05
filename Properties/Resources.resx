@@ -790,6 +790,12 @@
   <data name="ScenarioTreeAwaitingQuestDataNotification" xml:space="preserve">
     <value>ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</value>
   </data>
+  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
+    <value>Show quest background notifications</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
+    <value>Shows informational notifications when background quest pre-translation starts or when quest windows are still waiting for stored quest data. Disabled by default to avoid noisy popups during normal gameplay.</value>
+  </data>
   <data name="AddonProbeHelpMessage" xml:space="preserve">
     <value>Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe &lt;addon name&gt; [index] or /egloaddonprobe stop</value>
   </data>
@@ -941,13 +947,13 @@
     <value>The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.</value>
   </data>
   <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
-    <value>Action and item tooltips</value>
+    <value>Action and item details</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
-    <value>Tooltip display mode</value>
+    <value>Detail display mode</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.</value>
+    <value>This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, overlay-only keeps the native addon intact and uses Echoglossian overlays, and native-with-original-overlay writes translation natively while showing the original in our overlay.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
     <value>Hover tooltip appearance</value>
@@ -1023,5 +1029,116 @@
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Could not fetch models. Is Ollama running locally?</value>
+  </data>
+  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
+    <value>Enable action/item detail translation and shared hover tooltips</value>
+  </data>
+  <data name="NoModelsAvailable" xml:space="preserve">
+    <value>No models available.</value>
+  </data>
+  <data name="DefaultTag" xml:space="preserve">
+    <value> [default]</value>
+  </data>
+  <data name="ModelIdLabel" xml:space="preserve">
+    <value>Model ID: {0}</value>
+  </data>
+  <data name="ModelTierGpt4o" xml:space="preserve">
+    <value>GPT-4o</value>
+  </data>
+  <data name="ModelTierGpt4" xml:space="preserve">
+    <value>GPT-4</value>
+  </data>
+  <data name="ModelTierGpt35" xml:space="preserve">
+    <value>GPT-3.5</value>
+  </data>
+  <data name="ModelTierGemini15" xml:space="preserve">
+    <value>Gemini 1.5</value>
+  </data>
+  <data name="ModelTierGeminiPro" xml:space="preserve">
+    <value>Gemini Pro</value>
+  </data>
+  <data name="ModelTierChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="ModelTierReasoner" xml:space="preserve">
+    <value>Reasoner</value>
+  </data>
+  <data name="ModelTierOpus" xml:space="preserve">
+    <value>Opus</value>
+  </data>
+  <data name="ModelTierSonnet" xml:space="preserve">
+    <value>Sonnet</value>
+  </data>
+  <data name="ModelTierHaiku" xml:space="preserve">
+    <value>Haiku</value>
+  </data>
+  <data name="ModelTierO1" xml:space="preserve">
+    <value>O1</value>
+  </data>
+  <data name="ModelTierOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="RequiredFieldMessageFormat" xml:space="preserve">
+    <value>{0} is required.</value>
+  </data>
+  <data name="OpenAnthropicApiKeys" xml:space="preserve">
+    <value>Open Anthropic API Keys</value>
+  </data>
+  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
+    <value>Instance</value>
+  </data>
+  <data name="CustomLabel" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="OptionalApiKeyLabel" xml:space="preserve">
+    <value>API Key (optional)</value>
+  </data>
+  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
+    <value>Ollama engine UI failed to render.</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
+    <value>⚡ Fast and affordable (4k tokens)</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
+    <value>⚡ 16k token context</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
+    <value>🧠 More capable but slower and costly</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
+    <value>🟢 Faster and cheaper GPT-4 variant</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
+    <value>👁 Multimodal and real-time model</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
+    <value>⚡ GPT-4o Mini - fast and compact</value>
+  </data>
+  <data name="GeminiModelTooltipPro" xml:space="preserve">
+    <value>🔷 Legacy Gemini Pro model (default)</value>
+  </data>
+  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
+    <value>🟢 Large context window and high accuracy</value>
+  </data>
+  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
+    <value>⚡ Fastest and cheapest Gemini model</value>
+  </data>
+  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
+    <value>💬 Optimized for general chat and speed</value>
+  </data>
+  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
+    <value>🧠 Reasoning and problem-solving tasks</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
+    <value>Balanced quality, latency, and cost for general translation.</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
+    <value>Strong general-purpose Claude alias with broad capability.</value>
+  </data>
+  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
+    <value>Fastest Claude tier for lower latency and lower cost.</value>
+  </data>
+  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
+    <value>Highest-tier Claude model when you want maximum quality.</value>
   </data>
 </root>

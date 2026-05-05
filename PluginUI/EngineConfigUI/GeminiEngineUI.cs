@@ -19,7 +19,7 @@ public static class GeminiEngineUI
         var geminiApiKey = config.GeminiTranslatorApiKey ?? string.Empty;
         bool isGeminiApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
-            "Gemini API Key",
+            Resources.GeminiAPIKey,
             ref geminiApiKey,
             300,
             out isGeminiApiKeyInvalid);
@@ -28,7 +28,7 @@ public static class GeminiEngineUI
         // Optional: Live fetch toggle
 
         if (ImGui.Checkbox(
-                "Fetch model list live",
+                Resources.FetchLiveModels,
                 ref config.UseLiveGeminiModelList))
         {
             changed = true;
@@ -47,16 +47,19 @@ public static class GeminiEngineUI
         // Tooltip info per model
         var tooltips = new Dictionary<string, string>
         {
-            ["gemini-pro"] = "🔷 Legacy Gemini Pro model (default)",
-            ["gemini-1.5-pro"] = "🟢 Large context window and high accuracy",
-            ["gemini-1.5-flash"] = "⚡ Fastest and cheapest Gemini model",
+            ["gemini-pro"] = Resources.ResourceManager.GetString("GeminiModelTooltipPro", Resources.Culture) ??
+                             "🔷 Legacy Gemini Pro model (default)",
+            ["gemini-1.5-pro"] = Resources.ResourceManager.GetString("GeminiModelTooltip15Pro", Resources.Culture) ??
+                                 "🟢 Large context window and high accuracy",
+            ["gemini-1.5-flash"] = Resources.ResourceManager.GetString("GeminiModelTooltip15Flash", Resources.Culture) ??
+                                   "⚡ Fastest and cheapest Gemini model",
         };
 
         // Use either GeminiModelManager.CurrentModels if live, or static:
         var models = GeminiTextModelDefaults.PredefinedModels;
 
         changed |= ModelDropdownUI.Draw(
-            "Gemini Model",
+            Resources.LLMModel,
             ref config.GeminiModelId,
             models,
             "Gemini",

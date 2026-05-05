@@ -38,6 +38,7 @@ public static class JournalTab
                 Resources.TranslateScenarioTreeToggle,
                 ref config.TranslateScenarioTree,
                 ref config.ScenarioTreeTranslationDisplayMode);
+            changed |= DrawQuestNotificationSection(config);
         }
 
         if (langToRemoveDiacritics)
@@ -53,6 +54,24 @@ public static class JournalTab
             Echoglossian.SaveConfig(config);
         }
 
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the quest-background notification toggle.
+    /// </summary>
+    /// <param name="config">The current plugin configuration.</param>
+    /// <returns><c>true</c> when a setting changed.</returns>
+    private static bool DrawQuestNotificationSection(Config config)
+    {
+        ImGui.Spacing();
+        ImGui.TextUnformatted(Resources.ShowQuestProgressNotificationsToggle);
+        ImGui.Separator();
+
+        var changed = ImGui.Checkbox(
+            Resources.ShowQuestProgressNotificationsToggle,
+            ref config.ShowQuestProgressNotifications);
+        ImGui.TextWrapped(Resources.ShowQuestProgressNotificationsDescription);
         return changed;
     }
 

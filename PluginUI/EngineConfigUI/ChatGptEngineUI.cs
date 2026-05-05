@@ -45,7 +45,7 @@ public static class ChatGPTEngineUI
         // Live model fetch toggle
         var prev = config.UseLiveOpenAIModelList;
         if (ImGui.Checkbox(
-                "Fetch OpenAI model list live",
+                Resources.FetchLiveModels,
                 ref config.UseLiveOpenAIModelList))
         {
             changed = true;
@@ -62,12 +62,18 @@ public static class ChatGPTEngineUI
 
         var tooltips = new Dictionary<string, string>
         {
-            ["gpt-3.5-turbo"] = "⚡ Fast and affordable (4k tokens)",
-            ["gpt-3.5-turbo-16k"] = "⚡ 16k token context",
-            ["gpt-4"] = "🧠 More capable but slower and costly",
-            ["gpt-4-turbo"] = "🟢 Faster and cheaper GPT-4 variant",
-            ["gpt-4o"] = "👁 Multimodal and real-time model",
-            ["gpt-4o-mini"] = "⚡ GPT-4o Mini — fast and compact",
+            ["gpt-3.5-turbo"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt35Turbo", Resources.Culture) ??
+                                "⚡ Fast and affordable (4k tokens)",
+            ["gpt-3.5-turbo-16k"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt35Turbo16k", Resources.Culture) ??
+                                    "⚡ 16k token context",
+            ["gpt-4"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4", Resources.Culture) ??
+                        "🧠 More capable but slower and costly",
+            ["gpt-4-turbo"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4Turbo", Resources.Culture) ??
+                              "🟢 Faster and cheaper GPT-4 variant",
+            ["gpt-4o"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4o", Resources.Culture) ??
+                         "👁 Multimodal and real-time model",
+            ["gpt-4o-mini"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4oMini", Resources.Culture) ??
+                              "⚡ GPT-4o Mini — fast and compact",
         };
 
         var models = config.UseLiveOpenAIModelList

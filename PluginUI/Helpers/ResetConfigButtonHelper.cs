@@ -22,7 +22,7 @@ public static class ResetConfigButtonHelper
     public static void Draw(
         Config config,
         Action saveCallback,
-        string buttonLabel = "Reset Settings to Default")
+        string? buttonLabel = null)
     {
         buttonLabel ??= Resources.ResetSettingsButtonText;
         var popupId = "ConfirmResetSettingsPopup##" + buttonLabel;

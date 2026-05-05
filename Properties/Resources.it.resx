@@ -436,7 +436,7 @@
     <value>Chiave API</value>
   </data>
   <data name="Endpoint" xml:space="preserve">
-    <value>Endpoint</value>
+    <value>Punto finale</value>
   </data>
   <data name="SettingsForMicrosoftText" xml:space="preserve">
     <value>Impostazioni per Microsoft Translator</value>
@@ -638,5 +638,308 @@
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Record caricati {0}</value>
+  </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Dettagli dell'azione e dell'oggetto</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Modalità di visualizzazione dei dettagli</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Questa modalità controlla le superfici ActionDetail e ItemDetail. Native UI scrive il testo dettagliato tradotto nel componente aggiuntivo del gioco, solo overlay mantiene intatto il componente aggiuntivo nativo e utilizza gli overlay Echoglossian e native-with-original-overlay scrive la traduzione in modo nativo mentre mostra l'originale nel nostro overlay.</value>
+  </data>
+  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
+    <value>Abilita la traduzione dei dettagli di azioni/elementi e le descrizioni comandi condivise al passaggio del mouse</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Impossibile recuperare i modelli. Ollama è in esecuzione localmente?</value>
+  </data>
+  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
+    <value>La domanda viene utilizzata come titolo della finestra e le opzioni vengono visualizzate una per riga.</value>
+  </data>
+  <data name="GameWindowsTabTitle" xml:space="preserve">
+    <value>Finestre di gioco</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Questi colori si applicano alle descrizioni comandi al passaggio del mouse di Echoglossian utilizzate dalle missioni e dalle superfici dell'interfaccia utente DB-first.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Aspetto della descrizione comando al passaggio del mouse</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Colore di sfondo della descrizione comando</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Opacità dello sfondo della descrizione comando</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Colore del testo della descrizione comando</value>
+  </data>
+  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
+    <value>Questa modalità controlla il diario, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept e JournalResult. I suggerimenti al passaggio del mouse sul diario seguono direttamente questa modalità; l'attivazione/disattivazione della descrizione comando globale influisce solo sull'altra interfaccia utente tradotta.</value>
+  </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Modalità di visualizzazione delle missioni del diario</value>
+  </data>
+  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
+    <value>La modalità di sostituzione nativa è attiva per questo tipo di toast. I controlli dello stile di sovrapposizione non vengono utilizzati in questa modalità.</value>
+  </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Questa modalità controlla come viene presentato il testo tradotto. Native UI scrive direttamente nel componente aggiuntivo del gioco, solo overlay lascia intatto il componente aggiuntivo nativo e native-with-original-overlay scrive la traduzione in modo nativo mostrando l'originale nell'overlay.</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI traduzione + sovrapposizione originale</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Solo traduzione sovrapposta</value>
+  </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Mostra la barra del titolo in sovrapposizione con il nome dell'oratore, se disponibile</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
+    <value>La lingua di solo overlay è attiva, quindi tutti i tipi di toast verranno visualizzati tramite overlay.</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>La lingua selezionata non supporta il carattere nativo del gioco, quindi questa superficie è limitata a sovrapposizioni Echoglossian e descrizioni comandi personalizzate.</value>
+  </data>
+  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="OverlayTabMiniTalkText" xml:space="preserve">
+    <value>MiniTalk</value>
+  </data>
+  <data name="QuestDisplayModeDescription" xml:space="preserve">
+    <value>Questa modalità controlla come viene presentata la finestra della missione. Native UI scrive la traduzione nel componente aggiuntivo, tooltip-only mantiene intatto il componente aggiuntivo e native-with-original-tooltips scrive la traduzione in modo nativo mostrando l'originale nei tooltip.</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Modalità di visualizzazione delle missioni</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Native UI traduzione</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Native UI traduzione + tooltip originali</value>
+  </data>
+  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Solo traduzione delle descrizioni comandi</value>
+  </data>
+  <data name="QuestWindowsTabTitle" xml:space="preserve">
+    <value>Finestre delle missioni</value>
+  </data>
+  <data name="SelectionDialogsTabTitle" xml:space="preserve">
+    <value>Finestre di dialogo di selezione</value>
+  </data>
+  <data name="SettingsForClaudeText" xml:space="preserve">
+    <value>Impostazioni per Claude</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
+    <value>Mostra notifiche informative quando viene avviata la pre-traduzione delle missioni in background o quando le finestre delle missioni sono ancora in attesa dei dati delle missioni memorizzati. Disabilitato per impostazione predefinita per evitare popup rumorosi durante il normale gioco.</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
+    <value>Mostra notifiche sullo sfondo delle missioni</value>
+  </data>
+  <data name="ToastModeDescription" xml:space="preserve">
+    <value>Ogni tipo di toast può scegliere in modo indipendente tra la sostituzione nativa e il rendering in sovrapposizione.</value>
+  </data>
+  <data name="ToastModeSwapDescription" xml:space="preserve">
+    <value>Quando un tipo di toast utilizza la modalità overlay, puoi anche scambiare i testi in modo che l'overlay mantenga la riga originale mentre il toast nativo mostri la traduzione.</value>
+  </data>
+  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
+    <value>Pane tostato della zona</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Opacità dello sfondo</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
+    <value>Controlla quanto deve essere opaco lo sfondo sovrapposto del toast. Utilizzare 0 per uno sfondo completamente trasparente.</value>
+  </data>
+  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
+    <value>Brindisi al cambio di classe/lavoro</value>
+  </data>
+  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
+    <value>Abilita questo tipo di toast</value>
+  </data>
+  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
+    <value>Errore Toast</value>
+  </data>
+  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
+    <value>Brindisi alla ricerca</value>
+  </data>
+  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
+    <value>Informazioni sullo schermo (_WideText)</value>
+  </data>
+  <data name="ToastOverlayTabAreaText" xml:space="preserve">
+    <value>Zona</value>
+  </data>
+  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
+    <value>Classe/Lavoro</value>
+  </data>
+  <data name="ToastOverlayTabErrorText" xml:space="preserve">
+    <value>Errore</value>
+  </data>
+  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
+    <value>Generale</value>
+  </data>
+  <data name="ToastOverlayTabQuestText" xml:space="preserve">
+    <value>Ricerca</value>
+  </data>
+  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
+    <value>Informazioni sullo schermo</value>
+  </data>
+  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateActionMenuWindow" xml:space="preserve">
+    <value>Traduci la finestra ActionMenu</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Traduci Addon Context Menu Title</value>
+  </data>
+  <data name="TranslateAreaMapToggle" xml:space="preserve">
+    <value>Traduci AreaMap</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Traduci Windows HUD</value>
+  </data>
+  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
+    <value>Traduci JournalAccept</value>
+  </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Traduci JournalDetail</value>
+  </data>
+  <data name="TranslateJournalResultToggle" xml:space="preserve">
+    <value>Traduci JournalResult</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Traduci Main Command</value>
+  </data>
+  <data name="TranslateMiniTalkLabel" xml:space="preserve">
+    <value>Traduci MiniTalk</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Traduci Operation Guide</value>
+  </data>
+  <data name="TranslateRecommendListToggle" xml:space="preserve">
+    <value>Traduci RecommendList</value>
+  </data>
+  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
+    <value>Traduci ScenarioTree</value>
+  </data>
+  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
+    <value>Traduci Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateToDoListToggle" xml:space="preserve">
+    <value>Traduci ToDoList</value>
+  </data>
+  <data name="NoModelsAvailable" xml:space="preserve">
+    <value>Nessun modello disponibile</value>
+  </data>
+  <data name="DefaultTag" xml:space="preserve">
+    <value>[predefinito]</value>
+  </data>
+  <data name="ModelIdLabel" xml:space="preserve">
+    <value>ID modello: {0}</value>
+  </data>
+  <data name="ModelTierGpt4o" xml:space="preserve">
+    <value>GPT-4o</value>
+  </data>
+  <data name="ModelTierGpt4" xml:space="preserve">
+    <value>GPT-4</value>
+  </data>
+  <data name="ModelTierGpt35" xml:space="preserve">
+    <value>GPT-3.5</value>
+  </data>
+  <data name="ModelTierGemini15" xml:space="preserve">
+    <value>Gemini 1.5</value>
+  </data>
+  <data name="ModelTierGeminiPro" xml:space="preserve">
+    <value>Gemini Pro</value>
+  </data>
+  <data name="ModelTierChat" xml:space="preserve">
+    <value>Chiacchierata</value>
+  </data>
+  <data name="ModelTierReasoner" xml:space="preserve">
+    <value>Ragionatore</value>
+  </data>
+  <data name="ModelTierOpus" xml:space="preserve">
+    <value>Opus</value>
+  </data>
+  <data name="ModelTierSonnet" xml:space="preserve">
+    <value>Sonetto</value>
+  </data>
+  <data name="ModelTierHaiku" xml:space="preserve">
+    <value>Haiku</value>
+  </data>
+  <data name="ModelTierO1" xml:space="preserve">
+    <value>O1</value>
+  </data>
+  <data name="ModelTierOther" xml:space="preserve">
+    <value>Altro</value>
+  </data>
+  <data name="RequiredFieldMessageFormat" xml:space="preserve">
+    <value>{0} è obbligatorio.</value>
+  </data>
+  <data name="OpenAnthropicApiKeys" xml:space="preserve">
+    <value>Apri Anthropic API Keys</value>
+  </data>
+  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
+    <value>Esempio</value>
+  </data>
+  <data name="CustomLabel" xml:space="preserve">
+    <value>Costume</value>
+  </data>
+  <data name="OptionalApiKeyLabel" xml:space="preserve">
+    <value>API Key (facoltativo)</value>
+  </data>
+  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
+    <value>Impossibile eseguire il rendering dell'interfaccia utente del motore Ollama.</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
+    <value>⚡ Veloce e conveniente (token 4k)</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
+    <value>⚡ Contesto token da 16k</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
+    <value>🧠 Più capace ma più lento e costoso</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
+    <value>🟢 Variante GPT-4 più veloce ed economica</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
+    <value>👁 Modello multimodale e in tempo reale</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
+    <value>⚡ GPT-4o Mini - veloce e compatto</value>
+  </data>
+  <data name="GeminiModelTooltipPro" xml:space="preserve">
+    <value>🔷 Modello legacy Gemini Pro (predefinito)</value>
+  </data>
+  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
+    <value>🟢 Ampia finestra di contesto e alta precisione</value>
+  </data>
+  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
+    <value>⚡ Modello Gemini più veloce ed economico</value>
+  </data>
+  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
+    <value>💬 Ottimizzato per chat generale e velocità</value>
+  </data>
+  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
+    <value>🧠 Compiti di ragionamento e risoluzione di problemi</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
+    <value>Qualità, latenza e costi bilanciati per la traduzione generale.</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
+    <value>Alias ​​Claude per scopi generici con ampie capacità.</value>
+  </data>
+  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
+    <value>Livello Claude più veloce per latenza e costi inferiori.</value>
+  </data>
+  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
+    <value>Modello Claude di livello più alto quando desideri la massima qualità.</value>
   </data>
 </root>

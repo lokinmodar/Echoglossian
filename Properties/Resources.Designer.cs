@@ -2039,6 +2039,24 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Shows informational notifications when background quest pre-translation starts or when quest windows are still waiting for stored quest data. Disabled by default to avoid noisy popups during normal gameplay..
+        /// </summary>
+        public static string ShowQuestProgressNotificationsDescription {
+            get {
+                return ResourceManager.GetString("ShowQuestProgressNotificationsDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show quest background notifications.
+        /// </summary>
+        public static string ShowQuestProgressNotificationsToggle {
+            get {
+                return ResourceManager.GetString("ShowQuestProgressNotificationsToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native UI translation.
         /// </summary>
         public static string QuestDisplayModeNativeUiTranslation {

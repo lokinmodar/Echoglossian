@@ -64,13 +64,13 @@ public static class ModelDropdownUI
         {
             ImGui.TextColored(
                 new Vector4(1f, 0.6f, 0.6f, 1f),
-                "No models available.");
+                GetText("NoModelsAvailable", "No models available."));
             return false;
         }
 
-        var sorter = sortOverride ?? BuildTooltipSort(tooltips);
+        var sorter = sortOverride ?? BuildDefaultSort;
         var sortedModels = sorter != null
-            ? models.OrderBy(sorter).ToList()
+            ? models.OrderBy(sorter).ThenBy(m => m.DisplayName).ToList()
             : models.ToList();
 
         var selectedModelId = modelId;
@@ -82,7 +82,9 @@ public static class ModelDropdownUI
 
         string LabelFor(LlmTextModel model)
         {
-            var tag = model.IsDefault ? " [default]" : string.Empty;
+            var tag = model.IsDefault
+                ? GetText("DefaultTag", " [default]")
+                : string.Empty;
             return $"{model.DisplayName}{tag}";
         }
 
@@ -90,19 +92,19 @@ public static class ModelDropdownUI
         {
             var tier = model.Id switch
             {
-                var id when id.StartsWith("gpt-4o") => "GPT-4o",
-                var id when id.StartsWith("gpt-4") => "GPT-4",
-                var id when id.StartsWith("gpt-3.5") => "GPT-3.5",
-                var id when id.StartsWith("gemini-1.5") => "Gemini 1.5",
-                var id when id.StartsWith("gemini-pro") => "Gemini Pro",
-                var id when id.StartsWith("deepseek-chat") => "Chat",
-                var id when id.StartsWith("deepseek-reasoner") => "Reasoner",
-                var id when id.StartsWith("claude-opus") => "Opus",
-                var id when id.StartsWith("claude-sonnet") => "Sonnet",
-                var id when id.StartsWith("claude-3-7-sonnet") => "Sonnet",
-                var id when id.StartsWith("claude-3-5-haiku") => "Haiku",
-                var id when id.StartsWith("o1-") => "O1",
-                _ => "Other",
+                var id when id.StartsWith("gpt-4o") => GetText("ModelTierGpt4o", "GPT-4o"),
+                var id when id.StartsWith("gpt-4") => GetText("ModelTierGpt4", "GPT-4"),
+                var id when id.StartsWith("gpt-3.5") => GetText("ModelTierGpt35", "GPT-3.5"),
+                var id when id.StartsWith("gemini-1.5") => GetText("ModelTierGemini15", "Gemini 1.5"),
+                var id when id.StartsWith("gemini-pro") => GetText("ModelTierGeminiPro", "Gemini Pro"),
+                var id when id.StartsWith("deepseek-chat") => GetText("ModelTierChat", "Chat"),
+                var id when id.StartsWith("deepseek-reasoner") => GetText("ModelTierReasoner", "Reasoner"),
+                var id when id.StartsWith("claude-opus") => GetText("ModelTierOpus", "Opus"),
+                var id when id.StartsWith("claude-sonnet") => GetText("ModelTierSonnet", "Sonnet"),
+                var id when id.StartsWith("claude-3-7-sonnet") => GetText("ModelTierSonnet", "Sonnet"),
+                var id when id.StartsWith("claude-3-5-haiku") => GetText("ModelTierHaiku", "Haiku"),
+                var id when id.StartsWith("o1-") => GetText("ModelTierO1", "O1"),
+                _ => GetText("ModelTierOther", "Other"),
             };
 
             return $"{model.EngineName} / {tier}";
@@ -178,46 +180,36 @@ public static class ModelDropdownUI
 
         ImGui.TextColored(
             new Vector4(1f, 1f, 0.6f, 1f),
-            $"Model ID: {modelId}");
+            string.Format(
+                GetText("ModelIdLabel", "Model ID: {0}"),
+                modelId));
         return changed;
     }
 
-    private static Func<LlmTextModel, int>? BuildTooltipSort(
-        Dictionary<string, string>? tooltips)
+    private static int BuildDefaultSort(LlmTextModel model)
     {
-        if (tooltips == null)
+        return model.Id switch
         {
-            return null;
-        }
-
-        return model =>
-        {
-            if (!tooltips.TryGetValue(model.Id, out var tip))
-            {
-                return 999;
-            }
-
-            if (tip.Contains("Fast"))
-            {
-                return 0;
-            }
-
-            if (tip.Contains("cheap") || tip.Contains("Budget"))
-            {
-                return 1;
-            }
-
-            if (tip.Contains("standard"))
-            {
-                return 2;
-            }
-
-            if (tip.Contains("accurate") || tip.Contains("long"))
-            {
-                return 3;
-            }
-
-            return 999;
+            var id when id.StartsWith("gpt-4o") => 0,
+            var id when id.StartsWith("gpt-4") => 1,
+            var id when id.StartsWith("gpt-3.5") => 2,
+            var id when id.StartsWith("gemini-1.5-flash") => 0,
+            var id when id.StartsWith("gemini-1.5-pro") => 1,
+            var id when id.StartsWith("gemini-pro") => 2,
+            var id when id.StartsWith("deepseek-chat") => 0,
+            var id when id.StartsWith("deepseek-reasoner") => 1,
+            var id when id.StartsWith("claude-3-5-haiku") => 0,
+            var id when id.StartsWith("claude-sonnet") => 1,
+            var id when id.StartsWith("claude-3-7-sonnet") => 1,
+            var id when id.StartsWith("claude-opus") => 2,
+            var id when id.StartsWith("o1-") => 3,
+            _ => 999,
         };
+    }
+
+    private static string GetText(string key, string fallback)
+    {
+        return Resources.ResourceManager.GetString(key, Resources.Culture) ??
+               fallback;
     }
 }

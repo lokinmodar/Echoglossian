@@ -689,6 +689,11 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   private void NotifyScenarioTreeWaitingForQuestData(
       IReadOnlyCollection<string> blockingQuestLabels)
   {
+    if (!this.Config.ShowQuestProgressNotifications)
+    {
+      return;
+    }
+
     if (!this.scenarioTreeWaitingNotificationGate.TryBeginWaiting(
             blockingQuestLabels.Count))
     {

@@ -11,17 +11,6 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class TooltipTab
 {
-    private const string DetailSectionLabel = "Action and item details";
-    private const string DetailToggleLabel =
-        "Enable action/item detail translation and shared hover tooltips";
-    private const string DetailDisplayModeLabel = "Detail display mode";
-    private const string DetailDisplayModeDescription =
-        "This mode controls the ActionDetail and ItemDetail surfaces. Native UI " +
-        "writes the translated detail text into the game addon, overlay-only " +
-        "keeps the native addon intact and uses Echoglossian overlays, and " +
-        "native-with-original-overlay writes translation natively while showing " +
-        "the original in our overlay.";
-
     private static readonly string[] DetailDisplayModes =
     [
         Resources.QuestDisplayModeNativeUiTranslation,
@@ -43,11 +32,13 @@ public static class TooltipTab
             return false;
         }
 
-        ImGui.TextUnformatted(DetailSectionLabel);
+        ImGui.TextUnformatted(Resources.ActionAndItemTooltipsSectionLabel);
         ImGui.Separator();
 
         changed |= ImGui.Checkbox(
-            DetailToggleLabel,
+            GetText(
+                "ActionAndItemTooltipsToggleLabel",
+                "Enable action/item detail translation and shared hover tooltips"),
             ref config.TranslateTooltips);
 
         if (!config.TranslateTooltips)
@@ -65,8 +56,8 @@ public static class TooltipTab
             nameof(config.TooltipTranslationDisplayMode),
             ref config.TooltipTranslationDisplayMode,
             config.OverlayOnlyLanguage,
-            DetailDisplayModeLabel,
-            DetailDisplayModeDescription,
+            Resources.ActionAndItemTooltipsDisplayModeLabel,
+            Resources.ActionAndItemTooltipsDisplayModeDescription,
             DetailDisplayModes);
 
         ImGui.Spacing();
@@ -104,5 +95,11 @@ public static class TooltipTab
         }
 
         return changed;
+    }
+
+    private static string GetText(string key, string fallback)
+    {
+        return Resources.ResourceManager.GetString(key, Resources.Culture) ??
+               fallback;
     }
 }

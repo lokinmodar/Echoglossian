@@ -9,22 +9,27 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 
 public static class LibreTranslateEngineUI
 {
-    private static readonly string[] InstanceLabels =
-        { "libretranslate.com", "libretranslate.de", "Custom" };
-
     public static bool Draw(Config config, PromptTemplateManager _)
     {
         var changed = false;
+        var instanceLabels = new[]
+        {
+            "libretranslate.com",
+            "libretranslate.de",
+            Resources.ResourceManager.GetString("CustomLabel", Resources.Culture) ??
+            "Custom",
+        };
 
         ImGui.TextWrapped(Resources.SettingsForLibreTranslateText);
 
         // Instance type dropdown
         var currentInstanceIndex = (int)config.LibreTranslateInstanceType;
         if (ImGui.Combo(
+                Resources.ResourceManager.GetString("LibreTranslateInstanceLabel", Resources.Culture) ??
                 "Instance",
                 ref currentInstanceIndex,
-                InstanceLabels,
-                InstanceLabels.Length))
+                instanceLabels,
+                instanceLabels.Length))
         {
             config.LibreTranslateInstanceType =
                 (LibreTranslateInstanceType)currentInstanceIndex;
@@ -46,6 +51,7 @@ public static class LibreTranslateEngineUI
         // Optional API key
         bool isApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
+            Resources.ResourceManager.GetString("OptionalApiKeyLabel", Resources.Culture) ??
             "API Key (optional)",
             ref config.LibreTranslateApiKey,
             300,

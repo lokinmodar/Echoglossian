@@ -112,7 +112,7 @@ public partial class Echoglossian
   /// <param name="questCount">The number of accepted quests being prefetched.</param>
   private void NotifyAcceptedQuestPrefetchStarted(int questCount)
   {
-    if (questCount <= 0)
+    if (questCount <= 0 || !this.configuration.ShowQuestProgressNotifications)
     {
       return;
     }
@@ -140,6 +140,13 @@ public partial class Echoglossian
   {
     if (!this.acceptedQuestPrefetchNotificationActive)
     {
+      return;
+    }
+
+    if (!this.configuration.ShowQuestProgressNotifications)
+    {
+      this.acceptedQuestPrefetchNotificationActive = false;
+      this.acceptedQuestPrefetchNotificationQuestCount = 0;
       return;
     }
 

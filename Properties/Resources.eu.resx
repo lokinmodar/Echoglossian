@@ -639,4 +639,307 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>{0} erregistroak kargatuta</value>
   </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Ekintza eta elementuaren xehetasunak</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Xehetasun bistaratzeko modua</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Modu honek ActionDetail eta ItemDetail gainazalak kontrolatzen ditu. Native UI-k itzulitako xehetasun-testua idazten du jokoaren gehigarrian, gainjartzeak soilik jatorrizko gehigarria mantentzen du oso-osorik eta Echoglossian gainjartzeak erabiltzen ditu, eta jatorrizkoak-jatorrizko gainjarrizketak jatorrizkoan idazten du itzulpena gure gainjartzean jatorrizkoa erakusten duen bitartean.</value>
+  </data>
+  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
+    <value>Gaitu ekintzen/elementuen xehetasunen itzulpena eta pasatzeko tresna-informazio partekatuak</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Ezin izan dira modeloak eskuratu. Ollama lokalean exekutatzen al da?</value>
+  </data>
+  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
+    <value>Galdera leihoaren izenburu gisa erabiltzen da eta aukerak lerro bakoitzeko bat errendatzen dira.</value>
+  </data>
+  <data name="GameWindowsTabTitle" xml:space="preserve">
+    <value>Joko leihoak</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Kolore hauek bilaketak eta DB-first UI gainazalek erabiltzen dituzten Echoglossian pasabiderako argibideei aplikatzen zaizkie.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Pasatu pasatzean tresna-informazioaren itxura</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Tresnaren atzeko planoaren kolorea</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Tresn-informazioa atzeko planoko opakutasuna</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Tresna-informazioa testuaren kolorea</value>
+  </data>
+  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
+    <value>Modu honek Aldizkaria, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept eta JournalResult kontrolatzen ditu. Egunkaria pasatzeko tresna-informazioek zuzenean jarraitzen diote modu honi; tresna-informazio globalaren txandakatzaileak itzulitako beste interfaze bat baino ez du eragiten.</value>
+  </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Aldizkaria bilatzea bistaratzeko modua</value>
+  </data>
+  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
+    <value>Tokiko ordezkapen modua aktibo dago tostada mota honetarako. Gainjartze-estiloaren kontrolak ez dira erabiltzen modu honetan.</value>
+  </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Modu honek itzulitako testua nola aurkezten den kontrolatzen du. Native UI-k zuzenean idazten du jokoaren gehigarrian, gainjartzeak soilik jatorrizko gehigarria ukitu gabe uzten du, eta jatorrizkoak-jatorrizko-gainjartzeak itzulpena idazten du jatorrizko gainjartzean jatorrizkoa erakusten duen bitartean.</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI itzulpena + jatorrizko gainjartzea</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Gainjarri itzulpena soilik</value>
+  </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Erakutsi gainjarritako izenburu-barra bozgorailuaren izenarekin erabilgarri dagoenean</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
+    <value>Gainjartze-lengoaia soilik aktibo dago, beraz, tostada mota guztiak gainjarri bidez errendatuko dira.</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>Hautatutako hizkuntzak ez du onartzen jatorrizko jokoaren letra-tipoa; beraz, azalera hau Echoglossian gainjarrietara eta tresna-aholku pertsonalizatuetara mugatuta dago.</value>
+  </data>
+  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="OverlayTabMiniTalkText" xml:space="preserve">
+    <value>MiniTalk</value>
+  </data>
+  <data name="QuestDisplayModeDescription" xml:space="preserve">
+    <value>Modu honek bilaketa-leiho hau nola aurkezten den kontrolatzen du. Native UI-k itzulpena gehigarrian idazten du, tooltip-ak bakarrik mantentzen du gehigarria oso-osorik, eta native-with-original-tooltips itzulpena jatorrizkoan idazten du, jatorrizkoa tresna-aholkuetan erakusten duen bitartean.</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Quest bistaratzeko modua</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Native UI itzulpena</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Native UI itzulpena + jatorrizko tresna-aholkuak</value>
+  </data>
+  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Tresna-informazioen itzulpena soilik</value>
+  </data>
+  <data name="QuestWindowsTabTitle" xml:space="preserve">
+    <value>Bilaketa leihoak</value>
+  </data>
+  <data name="SelectionDialogsTabTitle" xml:space="preserve">
+    <value>Hautaketa elkarrizketa-koadroak</value>
+  </data>
+  <data name="SettingsForClaudeText" xml:space="preserve">
+    <value>Claude-ren ezarpenak</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
+    <value>Jakinarazpen informatiboak erakusten ditu atzeko planoko bilaketaren aurreitzulpena hasten denean edo bilaketa-leihoak gordetako bilaketa-datuen zain daudenean. Desgaituta dago lehenespenez, joko arruntean zehar pop-up zaratatsuak saihesteko.</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
+    <value>Erakutsi bilaketaren atzeko planoko jakinarazpenak</value>
+  </data>
+  <data name="ToastModeDescription" xml:space="preserve">
+    <value>Tosta mota bakoitzak berez aukera dezake jatorrizko ordezkapenaren eta gainjartzearen errendatzearen artean.</value>
+  </data>
+  <data name="ToastModeSwapDescription" xml:space="preserve">
+    <value>Topa mota batek gainjarri modua erabiltzen duenean, testuak ere alda ditzakezu, gainjartzeak jatorrizko lerroa mantendu dezan, jatorrizko tostadak itzulpena erakusten duen bitartean.</value>
+  </data>
+  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
+    <value>Area Tostada</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Atzeko planoaren opakutasuna</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
+    <value>Tostada gainjartzearen atzeko planoa zein opakoa izan behar den kontrolatzen du. Erabili 0 atzeko plano guztiz garden baterako.</value>
+  </data>
+  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
+    <value>Klase/Lan Aldaketa Toast</value>
+  </data>
+  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
+    <value>Gaitu tostada mota hau</value>
+  </data>
+  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
+    <value>Errorea Toast</value>
+  </data>
+  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
+    <value>Bilaketa Topa</value>
+  </data>
+  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
+    <value>Pantailako informazioa (_WideText)</value>
+  </data>
+  <data name="ToastOverlayTabAreaText" xml:space="preserve">
+    <value>Eremua</value>
+  </data>
+  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
+    <value>Klasea / Lanpostua</value>
+  </data>
+  <data name="ToastOverlayTabErrorText" xml:space="preserve">
+    <value>Errorea</value>
+  </data>
+  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
+    <value>Orokorra</value>
+  </data>
+  <data name="ToastOverlayTabQuestText" xml:space="preserve">
+    <value>Bilaketa</value>
+  </data>
+  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
+    <value>Pantailaren informazioa</value>
+  </data>
+  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateActionMenuWindow" xml:space="preserve">
+    <value>Itzuli ActionMenu Leihoa</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Itzuli Addon Context Menu Title</value>
+  </data>
+  <data name="TranslateAreaMapToggle" xml:space="preserve">
+    <value>Itzuli AreaMap</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Itzuli HUD Windows</value>
+  </data>
+  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
+    <value>Itzuli JournalAccept</value>
+  </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Itzuli JournalDetail</value>
+  </data>
+  <data name="TranslateJournalResultToggle" xml:space="preserve">
+    <value>Itzuli JournalResult</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Itzuli Main Command</value>
+  </data>
+  <data name="TranslateMiniTalkLabel" xml:space="preserve">
+    <value>Itzuli MiniTalk</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Itzuli Operation Guide</value>
+  </data>
+  <data name="TranslateRecommendListToggle" xml:space="preserve">
+    <value>Itzuli RecommendList</value>
+  </data>
+  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
+    <value>Itzuli ScenarioTree</value>
+  </data>
+  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
+    <value>Itzuli Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateToDoListToggle" xml:space="preserve">
+    <value>Itzuli ToDoList</value>
+  </data>
+  <data name="NoModelsAvailable" xml:space="preserve">
+    <value>Ez dago modelorik eskuragarri.</value>
+  </data>
+  <data name="DefaultTag" xml:space="preserve">
+    <value>[lehenetsia]</value>
+  </data>
+  <data name="ModelIdLabel" xml:space="preserve">
+    <value>Modelo ID: {0}</value>
+  </data>
+  <data name="ModelTierGpt4o" xml:space="preserve">
+    <value>GPT-4o</value>
+  </data>
+  <data name="ModelTierGpt4" xml:space="preserve">
+    <value>GPT-4</value>
+  </data>
+  <data name="ModelTierGpt35" xml:space="preserve">
+    <value>GPT-3.5</value>
+  </data>
+  <data name="ModelTierGemini15" xml:space="preserve">
+    <value>Gemini 1.5</value>
+  </data>
+  <data name="ModelTierGeminiPro" xml:space="preserve">
+    <value>Gemini Pro</value>
+  </data>
+  <data name="ModelTierChat" xml:space="preserve">
+    <value>Txateatu</value>
+  </data>
+  <data name="ModelTierReasoner" xml:space="preserve">
+    <value>Arrazoitzailea</value>
+  </data>
+  <data name="ModelTierOpus" xml:space="preserve">
+    <value>Opus</value>
+  </data>
+  <data name="ModelTierSonnet" xml:space="preserve">
+    <value>Sonetoa</value>
+  </data>
+  <data name="ModelTierHaiku" xml:space="preserve">
+    <value>Haiku</value>
+  </data>
+  <data name="ModelTierO1" xml:space="preserve">
+    <value>O1</value>
+  </data>
+  <data name="ModelTierOther" xml:space="preserve">
+    <value>Bestela</value>
+  </data>
+  <data name="RequiredFieldMessageFormat" xml:space="preserve">
+    <value>{0} beharrezkoa da.</value>
+  </data>
+  <data name="OpenAnthropicApiKeys" xml:space="preserve">
+    <value>Ireki Anthropic API Keys</value>
+  </data>
+  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
+    <value>Instantzia</value>
+  </data>
+  <data name="CustomLabel" xml:space="preserve">
+    <value>Pertsonalizatua</value>
+  </data>
+  <data name="OptionalApiKeyLabel" xml:space="preserve">
+    <value>API Key (aukerakoa)</value>
+  </data>
+  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
+    <value>Ollama motorren interfazea ezin izan da errendatu.</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
+    <value>⚡ Azkar eta merkean (4k token)</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
+    <value>⚡ 16k token testuingurua</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
+    <value>🧠 Gaitasun handiagoa baina motelagoa eta garestiagoa</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
+    <value>🟢 Azkarragoa eta merkeagoa GPT-4 aldaera</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
+    <value>👁 Eredu multimodala eta denbora errealean</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
+    <value>⚡ GPT-4o Mini - azkarra eta trinkoa</value>
+  </data>
+  <data name="GeminiModelTooltipPro" xml:space="preserve">
+    <value>🔷 Legacy Gemini Pro eredua (lehenetsia)</value>
+  </data>
+  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
+    <value>🟢 Testuinguruko leiho handia eta zehaztasun handia</value>
+  </data>
+  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
+    <value>⚡ Gemini eredu azkarrena eta merkeena</value>
+  </data>
+  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
+    <value>💬 Txat orokorrerako eta abiadurarako optimizatuta</value>
+  </data>
+  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
+    <value>🧠 Arrazoitzeko eta arazoak konpontzeko lanak</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
+    <value>Itzulpen orokorrerako kalitate, latentzia eta kostu orekatuak.</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
+    <value>Erabilera orokorreko Claude alias sendoa gaitasun zabalarekin.</value>
+  </data>
+  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
+    <value>Claude mailarik azkarrena latentzia txikiagoa eta kostu txikiagoa lortzeko.</value>
+  </data>
+  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
+    <value>Maila goreneko Claude eredua kalitate handiena nahi duzunean.</value>
+  </data>
 </root>

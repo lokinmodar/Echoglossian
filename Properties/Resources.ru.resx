@@ -639,4 +639,307 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Загружены записи {0}</value>
   </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Подробности действий и предметов</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Подробный режим отображения</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Этот режим управляет поверхностями ActionDetail и ItemDetail. Native UI записывает переведенный подробный текст в дополнение к игре, overlay-only сохраняет родное дополнение нетронутым и использует оверлеи Echoglossian, а Native-with-original-overlay записывает перевод изначально, показывая оригинал в нашем наложении.</value>
+  </data>
+  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
+    <value>Включить перевод сведений о действии/элементе и общие подсказки при наведении</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Не удалось получить модели. Ollama работает локально?</value>
+  </data>
+  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
+    <value>Вопрос используется в качестве заголовка окна, а параметры отображаются по одному в строке.</value>
+  </data>
+  <data name="GameWindowsTabTitle" xml:space="preserve">
+    <value>Игровые окна</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Эти цвета применяются к всплывающим подсказкам Echoglossian, используемым в квестах и ​​поверхностях пользовательского интерфейса DB-first.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Внешний вид всплывающей подсказки при наведении</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Цвет фона подсказки</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Непрозрачность фона подсказки</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Цвет текста подсказки</value>
+  </data>
+  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
+    <value>Этот режим управляет журналом, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept и JournalResult. Подсказки при наведении на журнал напрямую следуют этому режиму; глобальный переключатель всплывающей подсказки влияет только на другой переведенный пользовательский интерфейс.</value>
+  </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Режим отображения квестов журнала</value>
+  </data>
+  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
+    <value>Для этого типа всплывающего уведомления активен режим собственной замены. В этом режиме элементы управления стилем наложения не используются.</value>
+  </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Этот режим контролирует представление переведенного текста. Native UI записывает перевод непосредственно в аддон игры, Overlay-only оставляет родной аддон нетронутым, а Native-with-original-overlay записывает перевод изначально, показывая оригинал в наложении.</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI перевод + оригинальное наложение</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Только наложенный перевод</value>
+  </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Показывать наложенную строку заголовка с именем докладчика, если она доступна</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
+    <value>Язык только наложений активен, поэтому все типы всплывающих уведомлений будут отображаться через наложения.</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>Выбранный язык не поддерживает собственный шрифт игры, поэтому эта поверхность ограничена наложениями Echoglossian и пользовательскими подсказками.</value>
+  </data>
+  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="OverlayTabMiniTalkText" xml:space="preserve">
+    <value>MiniTalk</value>
+  </data>
+  <data name="QuestDisplayModeDescription" xml:space="preserve">
+    <value>Этот режим управляет отображением этого окна квеста. Native UI записывает перевод в дополнение, Tooltip-only сохраняет дополнение нетронутым, а Native-with-Original-ToolTips записывает перевод изначально, отображая оригинал во всплывающих подсказках.</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Режим отображения квеста</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Native UI перевод</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Native UI перевод + оригинальные подсказки</value>
+  </data>
+  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Только перевод подсказки</value>
+  </data>
+  <data name="QuestWindowsTabTitle" xml:space="preserve">
+    <value>Окна квестов</value>
+  </data>
+  <data name="SelectionDialogsTabTitle" xml:space="preserve">
+    <value>Диалоги выбора</value>
+  </data>
+  <data name="SettingsForClaudeText" xml:space="preserve">
+    <value>Настройки для Claude</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
+    <value>Показывает информационные уведомления, когда начинается предварительная трансляция фонового квеста или когда окна квеста все еще ожидают сохраненных данных квеста. По умолчанию отключено, чтобы избежать появления шумных всплывающих окон во время обычного игрового процесса.</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
+    <value>Показывать фоновые уведомления о квестах</value>
+  </data>
+  <data name="ToastModeDescription" xml:space="preserve">
+    <value>Каждый тип всплывающего уведомления может независимо выбирать между собственной заменой и наложением рендеринга.</value>
+  </data>
+  <data name="ToastModeSwapDescription" xml:space="preserve">
+    <value>Если тип всплывающего уведомления использует режим наложения, вы также можете поменять местами тексты, чтобы наложение сохраняло исходную строку, а собственное всплывающее уведомление отображало перевод.</value>
+  </data>
+  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
+    <value>Тост за площадь</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Непрозрачность фона</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
+    <value>Управляет тем, насколько непрозрачным должен быть фон наложения всплывающего уведомления. Используйте 0 для полностью прозрачного фона.</value>
+  </data>
+  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
+    <value>Тост о смене класса/работы</value>
+  </data>
+  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
+    <value>Включить этот тип всплывающего уведомления</value>
+  </data>
+  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
+    <value>Тост об ошибке</value>
+  </data>
+  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
+    <value>Квест Тост</value>
+  </data>
+  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
+    <value>Информация об экране (_WideText)</value>
+  </data>
+  <data name="ToastOverlayTabAreaText" xml:space="preserve">
+    <value>Область</value>
+  </data>
+  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
+    <value>Класс/Работа</value>
+  </data>
+  <data name="ToastOverlayTabErrorText" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
+    <value>Общий</value>
+  </data>
+  <data name="ToastOverlayTabQuestText" xml:space="preserve">
+    <value>Квест</value>
+  </data>
+  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
+    <value>Информация на экране</value>
+  </data>
+  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateActionMenuWindow" xml:space="preserve">
+    <value>Перевести окно ActionMenu</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Перевести Addon Context Menu Title</value>
+  </data>
+  <data name="TranslateAreaMapToggle" xml:space="preserve">
+    <value>Перевести AreaMap</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Перевести HUD Windows</value>
+  </data>
+  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
+    <value>Перевести JournalAccept</value>
+  </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Перевести JournalDetail</value>
+  </data>
+  <data name="TranslateJournalResultToggle" xml:space="preserve">
+    <value>Перевести JournalResult</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Перевести Main Command</value>
+  </data>
+  <data name="TranslateMiniTalkLabel" xml:space="preserve">
+    <value>Перевести MiniTalk</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Перевести Operation Guide</value>
+  </data>
+  <data name="TranslateRecommendListToggle" xml:space="preserve">
+    <value>Перевести RecommendList</value>
+  </data>
+  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
+    <value>Перевести ScenarioTree</value>
+  </data>
+  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
+    <value>Перевести Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateToDoListToggle" xml:space="preserve">
+    <value>Перевести ToDoList</value>
+  </data>
+  <data name="NoModelsAvailable" xml:space="preserve">
+    <value>Нет доступных моделей.</value>
+  </data>
+  <data name="DefaultTag" xml:space="preserve">
+    <value>[по умолчанию]</value>
+  </data>
+  <data name="ModelIdLabel" xml:space="preserve">
+    <value>Идентификатор модели: {0}</value>
+  </data>
+  <data name="ModelTierGpt4o" xml:space="preserve">
+    <value>GPT-4o</value>
+  </data>
+  <data name="ModelTierGpt4" xml:space="preserve">
+    <value>GPT-4</value>
+  </data>
+  <data name="ModelTierGpt35" xml:space="preserve">
+    <value>GPT-3.5</value>
+  </data>
+  <data name="ModelTierGemini15" xml:space="preserve">
+    <value>Gemini 1.5</value>
+  </data>
+  <data name="ModelTierGeminiPro" xml:space="preserve">
+    <value>Gemini Pro</value>
+  </data>
+  <data name="ModelTierChat" xml:space="preserve">
+    <value>Чат</value>
+  </data>
+  <data name="ModelTierReasoner" xml:space="preserve">
+    <value>Разумник</value>
+  </data>
+  <data name="ModelTierOpus" xml:space="preserve">
+    <value>Опус</value>
+  </data>
+  <data name="ModelTierSonnet" xml:space="preserve">
+    <value>Сонет</value>
+  </data>
+  <data name="ModelTierHaiku" xml:space="preserve">
+    <value>Хайку</value>
+  </data>
+  <data name="ModelTierO1" xml:space="preserve">
+    <value>O1</value>
+  </data>
+  <data name="ModelTierOther" xml:space="preserve">
+    <value>Другой</value>
+  </data>
+  <data name="RequiredFieldMessageFormat" xml:space="preserve">
+    <value>{0} требуется.</value>
+  </data>
+  <data name="OpenAnthropicApiKeys" xml:space="preserve">
+    <value>Открыть Anthropic API Keys</value>
+  </data>
+  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
+    <value>Пример</value>
+  </data>
+  <data name="CustomLabel" xml:space="preserve">
+    <value>Обычай</value>
+  </data>
+  <data name="OptionalApiKeyLabel" xml:space="preserve">
+    <value>API Key (необязательно)</value>
+  </data>
+  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
+    <value>Не удалось отобразить пользовательский интерфейс Ollama.</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
+    <value>⚡ Быстро и доступно (4 тыс. токенов)</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
+    <value>⚡ Контекст токена 16 тыс.</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
+    <value>🧠 Более производительный, но медленный и дорогостоящий</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
+    <value>🟢 Быстрее и дешевле вариант GPT-4</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
+    <value>👁 Мультимодальная модель в режиме реального времени</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
+    <value>⚡ GPT-4o Mini - быстрый и компактный</value>
+  </data>
+  <data name="GeminiModelTooltipPro" xml:space="preserve">
+    <value>🔷 Устаревшая модель Gemini Pro (по умолчанию)</value>
+  </data>
+  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
+    <value>🟢 Большое контекстное окно и высокая точность</value>
+  </data>
+  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
+    <value>⚡ Самая быстрая и дешевая модель Gemini.</value>
+  </data>
+  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
+    <value>💬 Оптимизирован для общего чата и скорости</value>
+  </data>
+  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
+    <value>🧠 Задачи на рассуждение и решение проблем</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
+    <value>Сбалансированное качество, задержка и стоимость обычного перевода.</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
+    <value>Сильный псевдоним общего назначения Claude с широкими возможностями.</value>
+  </data>
+  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
+    <value>Самый быстрый уровень Claude для меньшей задержки и снижения затрат.</value>
+  </data>
+  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
+    <value>Модель Claude высшего уровня, если вам нужно максимальное качество.</value>
+  </data>
 </root>

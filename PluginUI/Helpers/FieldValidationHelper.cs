@@ -20,7 +20,7 @@ public static class FieldValidationHelper
     if (string.IsNullOrWhiteSpace(fieldValue))
     {
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.4f, 0.4f, 1f));
-      ImGui.TextWrapped($"{fieldLabel} is required.");
+      ImGui.TextWrapped(FormatRequiredFieldMessage(fieldLabel));
       ImGui.PopStyleColor();
     }
   }
@@ -52,7 +52,7 @@ public static class FieldValidationHelper
       ImGui.PopStyleColor(2);
 
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.4f, 0.4f, 1f));
-      ImGui.TextWrapped($"{label} is required.");
+      ImGui.TextWrapped(FormatRequiredFieldMessage(label));
       ImGui.PopStyleColor();
     }
 
@@ -114,5 +114,13 @@ public static class FieldValidationHelper
     // Yandex Cloud
     MarkFieldAsTouched(Resources.YandexCloudFolderId);
     MarkFieldAsTouched(Resources.YandexCloudApiKey);
+  }
+
+  private static string FormatRequiredFieldMessage(string label)
+  {
+    var format =
+      Resources.ResourceManager.GetString("RequiredFieldMessageFormat", Resources.Culture) ??
+      "{0} is required.";
+    return string.Format(format, label);
   }
 }

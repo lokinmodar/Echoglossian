@@ -469,6 +469,12 @@ public class Config : IPluginConfiguration
   [DefaultValue(true)] public bool ShowInCutscenes = true;
 
   /// <summary>
+  ///     Show informational Dalamud notifications for quest prefetch and
+  ///     quest-window readiness waits.
+  /// </summary>
+  [DefaultValue(false)] public bool ShowQuestProgressNotifications = false;
+
+  /// <summary>
   ///     Render translations via ImGui rather than replacing game text
   ///     directly.
   /// </summary>

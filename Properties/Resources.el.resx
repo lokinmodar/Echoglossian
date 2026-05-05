@@ -639,4 +639,307 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Φορτωμένες εγγραφές {0}</value>
   </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Λεπτομέρειες ενέργειας και στοιχείων</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Λειτουργία εμφάνισης λεπτομερειών</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>Αυτή η λειτουργία ελέγχει τις επιφάνειες ActionDetail και ItemDetail. Το Native UI γράφει το μεταφρασμένο κείμενο λεπτομερειών στο πρόσθετο του παιχνιδιού, μόνο με επικάλυψη διατηρεί ανέπαφο το εγγενές πρόσθετο και χρησιμοποιεί επικαλύψεις Echoglossian και το εγγενές-με-πρωτότυπο-επικάλυψη γράφει μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στην επικάλυψη μας.</value>
+  </data>
+  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
+    <value>Ενεργοποιήστε τη μετάφραση λεπτομερειών δράσης/αντικειμένου και κοινές συμβουλές εργαλείων τοποθέτησης του δείκτη</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Δεν ήταν δυνατή η ανάκτηση μοντέλων. Το Ollama εκτελείται τοπικά;</value>
+  </data>
+  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
+    <value>Η ερώτηση χρησιμοποιείται ως τίτλος παραθύρου και οι επιλογές αποδίδονται μία ανά γραμμή.</value>
+  </data>
+  <data name="GameWindowsTabTitle" xml:space="preserve">
+    <value>Παράθυρα παιχνιδιών</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>Αυτά τα χρώματα ισχύουν για Echoglossian συμβουλές εργαλείων αιώρησης που χρησιμοποιούνται από επιφάνειες διεπαφής χρήστη quest και DB-first.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Εμφάνιση επεξήγησης εργαλείου με το δείκτη του ποντικιού</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Χρώμα φόντου επεξήγησης εργαλείου</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Αδιαφάνεια φόντου επεξήγησης εργαλείου</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Χρώμα κειμένου επεξήγησης εργαλείου</value>
+  </data>
+  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
+    <value>Αυτή η λειτουργία ελέγχει το Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept και JournalResult. Οι συμβουλές εργαλείων αιώρησης περιοδικών ακολουθούν αυτήν τη λειτουργία απευθείας. η καθολική εναλλαγή επεξήγησης εργαλείου επηρεάζει μόνο άλλες μεταφρασμένες διεπαφές.</value>
+  </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Λειτουργία εμφάνισης αναζήτησης περιοδικού</value>
+  </data>
+  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
+    <value>Η λειτουργία εγγενούς αντικατάστασης είναι ενεργή για αυτόν τον τύπο τοστ. Τα στοιχεία ελέγχου στυλ επικάλυψης δεν χρησιμοποιούνται σε αυτήν τη λειτουργία.</value>
+  </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>Αυτή η λειτουργία ελέγχει τον τρόπο παρουσίασης του μεταφρασμένου κειμένου. Το Native UI γράφει απευθείας στο πρόσθετο του παιχνιδιού, η επικάλυψη μόνο αφήνει ανέγγιχτο το εγγενές πρόσθετο και το εγγενές πρόσθετο-με-πρωτότυπο-επικάλυψη γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στην επικάλυψη.</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI μετάφραση + πρωτότυπη επικάλυψη</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Μόνο μετάφραση επικάλυψης</value>
+  </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Εμφάνιση γραμμής τίτλου επικάλυψης με όνομα ηχείου όταν είναι διαθέσιμο</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
+    <value>Η γλώσσα μόνο για επικάλυψη είναι ενεργή, επομένως όλοι οι τύποι τοστ θα αποδίδονται μέσω επικαλύψεων.</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>Η επιλεγμένη γλώσσα δεν υποστηρίζει την εγγενή γραμματοσειρά του παιχνιδιού, επομένως αυτή η επιφάνεια περιορίζεται σε Echoglossian επικαλύψεις και προσαρμοσμένες συμβουλές εργαλείων.</value>
+  </data>
+  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="OverlayTabMiniTalkText" xml:space="preserve">
+    <value>MiniTalk</value>
+  </data>
+  <data name="QuestDisplayModeDescription" xml:space="preserve">
+    <value>Αυτή η λειτουργία ελέγχει τον τρόπο με τον οποίο παρουσιάζεται αυτό το παράθυρο αποστολής. Το Native UI γράφει τη μετάφραση στο πρόσθετο, το tooltip-only διατηρεί το πρόσθετο ανέπαφο και το native-with-original-tooltips γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στις επεξηγήσεις εργαλείων.</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Λειτουργία εμφάνισης αναζήτησης</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Native UI μετάφραση</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Native UI μετάφραση + πρωτότυπες συμβουλές εργαλείων</value>
+  </data>
+  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Μόνο μετάφραση επεξήγησης εργαλείου</value>
+  </data>
+  <data name="QuestWindowsTabTitle" xml:space="preserve">
+    <value>Παράθυρα αναζήτησης</value>
+  </data>
+  <data name="SelectionDialogsTabTitle" xml:space="preserve">
+    <value>Παράθυρα διαλόγου επιλογής</value>
+  </data>
+  <data name="SettingsForClaudeText" xml:space="preserve">
+    <value>Ρυθμίσεις για Claude</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
+    <value>Εμφανίζει ενημερωτικές ειδοποιήσεις όταν ξεκινά η προμετάφραση της αποστολής στο παρασκήνιο ή όταν τα παράθυρα αναζήτησης εξακολουθούν να περιμένουν τα αποθηκευμένα δεδομένα αποστολής. Απενεργοποιημένο από προεπιλογή για την αποφυγή θορυβωδών αναδυόμενων παραθύρων κατά τη διάρκεια του κανονικού παιχνιδιού.</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
+    <value>Εμφάνιση ειδοποιήσεων στο παρασκήνιο της αποστολής</value>
+  </data>
+  <data name="ToastModeDescription" xml:space="preserve">
+    <value>Κάθε τύπος τοστ μπορεί να επιλέξει ανεξάρτητα μεταξύ εγγενούς αντικατάστασης και απόδοσης επικάλυψης.</value>
+  </data>
+  <data name="ToastModeSwapDescription" xml:space="preserve">
+    <value>Όταν ένας τύπος τοστ χρησιμοποιεί λειτουργία επικάλυψης, μπορείτε επίσης να ανταλλάξετε τα κείμενα έτσι ώστε η επικάλυψη να διατηρεί την αρχική γραμμή ενώ το εγγενές τοστ δείχνει τη μετάφραση.</value>
+  </data>
+  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
+    <value>Τοστ περιοχής</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Αδιαφάνεια φόντου</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
+    <value>Ελέγχει πόσο αδιαφανές θα πρέπει να είναι το φόντο της επικάλυψης του τοστ. Χρησιμοποιήστε το 0 για ένα πλήρως διαφανές φόντο.</value>
+  </data>
+  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
+    <value>Τοστ αλλαγής τάξης / εργασίας</value>
+  </data>
+  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
+    <value>Ενεργοποιήστε αυτόν τον τύπο τοστ</value>
+  </data>
+  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
+    <value>Σφάλμα Τοστ</value>
+  </data>
+  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
+    <value>Quest Toast</value>
+  </data>
+  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
+    <value>Πληροφορίες οθόνης (_WideText)</value>
+  </data>
+  <data name="ToastOverlayTabAreaText" xml:space="preserve">
+    <value>Εκταση</value>
+  </data>
+  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
+    <value>Τάξη / Εργασία</value>
+  </data>
+  <data name="ToastOverlayTabErrorText" xml:space="preserve">
+    <value>Σφάλμα</value>
+  </data>
+  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
+    <value>Γενικός</value>
+  </data>
+  <data name="ToastOverlayTabQuestText" xml:space="preserve">
+    <value>Αναζήτηση</value>
+  </data>
+  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
+    <value>Πληροφορίες οθόνης</value>
+  </data>
+  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateActionMenuWindow" xml:space="preserve">
+    <value>Μετάφραση ActionMenu παραθύρου</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Μετάφραση Addon Context Menu Title</value>
+  </data>
+  <data name="TranslateAreaMapToggle" xml:space="preserve">
+    <value>Μετάφραση AreaMap</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Μετάφραση HUD Windows</value>
+  </data>
+  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
+    <value>Μετάφραση JournalAccept</value>
+  </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Μετάφραση JournalDetail</value>
+  </data>
+  <data name="TranslateJournalResultToggle" xml:space="preserve">
+    <value>Μετάφραση JournalResult</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+    <value>Μετάφραση Main Command</value>
+  </data>
+  <data name="TranslateMiniTalkLabel" xml:space="preserve">
+    <value>Μετάφραση MiniTalk</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Μετάφραση Operation Guide</value>
+  </data>
+  <data name="TranslateRecommendListToggle" xml:space="preserve">
+    <value>Μετάφραση RecommendList</value>
+  </data>
+  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
+    <value>Μετάφραση ScenarioTree</value>
+  </data>
+  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
+    <value>Μετάφραση Text Gimmick Hint</value>
+  </data>
+  <data name="TranslateToDoListToggle" xml:space="preserve">
+    <value>Μετάφραση ToDoList</value>
+  </data>
+  <data name="NoModelsAvailable" xml:space="preserve">
+    <value>Δεν υπάρχουν διαθέσιμα μοντέλα.</value>
+  </data>
+  <data name="DefaultTag" xml:space="preserve">
+    <value>[αθέτηση]</value>
+  </data>
+  <data name="ModelIdLabel" xml:space="preserve">
+    <value>Αναγνωριστικό μοντέλου: {0}</value>
+  </data>
+  <data name="ModelTierGpt4o" xml:space="preserve">
+    <value>GPT-4o</value>
+  </data>
+  <data name="ModelTierGpt4" xml:space="preserve">
+    <value>GPT-4</value>
+  </data>
+  <data name="ModelTierGpt35" xml:space="preserve">
+    <value>GPT-3.5</value>
+  </data>
+  <data name="ModelTierGemini15" xml:space="preserve">
+    <value>Gemini 1.5</value>
+  </data>
+  <data name="ModelTierGeminiPro" xml:space="preserve">
+    <value>Gemini Pro</value>
+  </data>
+  <data name="ModelTierChat" xml:space="preserve">
+    <value>Κουβέντα</value>
+  </data>
+  <data name="ModelTierReasoner" xml:space="preserve">
+    <value>Λογικευόμενος</value>
+  </data>
+  <data name="ModelTierOpus" xml:space="preserve">
+    <value>Εργο</value>
+  </data>
+  <data name="ModelTierSonnet" xml:space="preserve">
+    <value>Σονέττο</value>
+  </data>
+  <data name="ModelTierHaiku" xml:space="preserve">
+    <value>Χαϊκού</value>
+  </data>
+  <data name="ModelTierO1" xml:space="preserve">
+    <value>O1</value>
+  </data>
+  <data name="ModelTierOther" xml:space="preserve">
+    <value>Αλλος</value>
+  </data>
+  <data name="RequiredFieldMessageFormat" xml:space="preserve">
+    <value>{0} απαιτείται.</value>
+  </data>
+  <data name="OpenAnthropicApiKeys" xml:space="preserve">
+    <value>Άνοιγμα Anthropic API Keys</value>
+  </data>
+  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
+    <value>Παράδειγμα</value>
+  </data>
+  <data name="CustomLabel" xml:space="preserve">
+    <value>Εθιμο</value>
+  </data>
+  <data name="OptionalApiKeyLabel" xml:space="preserve">
+    <value>API Key (προαιρετικό)</value>
+  </data>
+  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
+    <value>Η διεπαφή χρήστη του κινητήρα Ollama απέτυχε να αποδοθεί.</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
+    <value>⚡ Γρήγορο και προσιτό (4k tokens)</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
+    <value>⚡ 16k διακριτικό πλαίσιο</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
+    <value>🧠 Πιο ικανό αλλά πιο αργό και δαπανηρό</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
+    <value>Τροχότερη και φθηνότερη παραλλαγή GPT-4</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
+    <value>👁 Πολυτροπικό μοντέλο και σε πραγματικό χρόνο</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
+    <value>⚡ GPT-4o Mini - γρήγορο και συμπαγές</value>
+  </data>
+  <data name="GeminiModelTooltipPro" xml:space="preserve">
+    <value>🔷 Μοντέλο παλαιού τύπου Gemini Pro (προεπιλογή)</value>
+  </data>
+  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
+    <value>🟢 Μεγάλο παράθυρο περιβάλλοντος και υψηλή ακρίβεια</value>
+  </data>
+  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
+    <value>⚡ Το πιο γρήγορο και οικονομικό μοντέλο Gemini</value>
+  </data>
+  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
+    <value>💬 Βελτιστοποιημένο για γενική συνομιλία και ταχύτητα</value>
+  </data>
+  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
+    <value>🧠 Εργασίες συλλογισμού και επίλυσης προβλημάτων</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
+    <value>Ισορροπημένη ποιότητα, καθυστέρηση και κόστος για τη γενική μετάφραση.</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
+    <value>Ισχυρό ψευδώνυμο γενικής χρήσης Claude με ευρεία ικανότητα.</value>
+  </data>
+  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
+    <value>Το ταχύτερο επίπεδο Claude για χαμηλότερο λανθάνοντα χρόνο και χαμηλότερο κόστος.</value>
+  </data>
+  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
+    <value>Μοντέλο υψηλότερης βαθμίδας Claude όταν θέλετε τη μέγιστη ποιότητα.</value>
+  </data>
 </root>

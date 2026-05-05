@@ -37,7 +37,7 @@ public static class DeepSeekEngineUI
         // Live model fetch toggle
         var prev = config.UseLiveDeepSeekModelList;
         if (ImGui.Checkbox(
-                "Fetch DeepSeek model list live",
+                Resources.FetchLiveModels,
                 ref config.UseLiveDeepSeekModelList))
         {
             changed = true;
@@ -55,8 +55,10 @@ public static class DeepSeekEngineUI
 
         var tooltips = new Dictionary<string, string>
         {
-            ["deepseek-chat"] = "💬 Optimized for general chat and speed",
-            ["deepseek-reasoner"] = "🧠 Reasoning and problem-solving tasks",
+            ["deepseek-chat"] = Resources.ResourceManager.GetString("DeepSeekModelTooltipChat", Resources.Culture) ??
+                                "💬 Optimized for general chat and speed",
+            ["deepseek-reasoner"] = Resources.ResourceManager.GetString("DeepSeekModelTooltipReasoner", Resources.Culture) ??
+                                    "🧠 Reasoning and problem-solving tasks",
         };
 
         var models = config.UseLiveDeepSeekModelList

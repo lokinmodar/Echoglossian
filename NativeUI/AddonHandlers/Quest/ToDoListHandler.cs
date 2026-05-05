@@ -848,6 +848,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private void NotifyToDoListWaitingForQuestData(
       IReadOnlyCollection<string> blockingQuestLabels)
   {
+    if (!this.Config.ShowQuestProgressNotifications)
+    {
+      return;
+    }
+
     if (!this.toDoListWaitingNotificationGate.TryBeginWaiting(
             blockingQuestLabels.Count))
     {

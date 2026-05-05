@@ -94,12 +94,14 @@ public static class LanguageDropdownHelper
     /// <returns>True if the selected language index changed; otherwise, false.</returns>
     public static bool DrawLanguageDropdown(
         ref int selectedOriginalIndex,
-        string label = "Language")
+        string? label = null)
     {
         if (_cachedSortedLanguages == null || _cachedDisplayNames == null)
         {
             return false;
         }
+
+        label ??= Resources.LanguageSelectLabelText;
 
         var currentSortedIndex = MapOriginalToSorted(selectedOriginalIndex);
         var changed = ImGui.Combo(

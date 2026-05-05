@@ -118,6 +118,7 @@ public static class TranslationEnginesTab
                         $"OllamaEngineUI failed: {ex.Message}, {ex.StackTrace}");
                     ImGui.TextColored(
                         new Vector4(1f, 0.4f, 0.4f, 1f),
+                        Resources.ResourceManager.GetString("OllamaEngineUiFailedToRender", Resources.Culture) ??
                         "Ollama engine UI failed to render.");
                 }
 
