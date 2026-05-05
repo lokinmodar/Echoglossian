@@ -1,0 +1,67 @@
+name: Feature Request
+description: Suggest a new capability, workflow improvement, engine addition, or UX improvement.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion.
+
+        Please describe the user problem first, then the proposed solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem are you trying to solve, or what workflow is missing today?
+      placeholder: |
+        I want to ...
+        Today the plugin ...
+        This becomes a problem when ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: Describe the change you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any workaround or alternative you considered.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Pick the closest area for the request.
+      options:
+        - Translation engine
+        - Quest windows / tracker
+        - Talk / BattleTalk
+        - Overlay / tooltip behavior
+        - Plugin configuration UI
+        - Database / cache behavior
+        - Fonts / language assets
+        - Compatibility with another plugin
+        - Logging / diagnostics
+        - Packaging / release workflow
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This would change user-facing behavior.
+        - label: This may require new config UI or settings.
+        - label: This may affect performance or startup behavior.
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add screenshots, mockups, related issues, or reference plugins if helpful.

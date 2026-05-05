@@ -1,0 +1,132 @@
+name: Bug Report
+description: Report a runtime bug, regression, compatibility problem, or incorrect translation behavior.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem.
+
+        Please include enough detail to reproduce the behavior on a clean plugin restart when possible.
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Echoglossian version
+      description: The plugin version shown by Dalamud for the installed release.
+      placeholder: e.g. 4.0.0.0
+    validations:
+      required: true
+  - type: input
+    id: game-language
+    attributes:
+      label: Game language
+      description: The FFXIV client language you are running.
+      placeholder: e.g. English
+    validations:
+      required: true
+  - type: input
+    id: target-language
+    attributes:
+      label: Target translation language
+      description: The language Echoglossian is translating to.
+      placeholder: e.g. Portuguese (Brazil)
+    validations:
+      required: true
+  - type: dropdown
+    id: translation-engine
+    attributes:
+      label: Translation engine
+      description: Select the configured engine if relevant.
+      options:
+        - OpenAI
+        - Claude
+        - OpenRouter
+        - Gemini
+        - DeepSeek
+        - Microsoft
+        - Google
+        - DeepL
+        - Amazon
+        - Yandex
+        - Yandex Public
+        - LibreTranslate
+        - Ollama
+        - LM Studio
+        - ChatGPT
+        - Other / Unknown
+    validations:
+      required: true
+  - type: dropdown
+    id: display-mode
+    attributes:
+      label: Display mode
+      description: Select the mode active when the bug happened.
+      options:
+        - Overlay only
+        - Native only
+        - Native with original overlay
+        - Unknown / Mixed
+    validations:
+      required: true
+  - type: dropdown
+    id: affected-surface
+    attributes:
+      label: Affected UI surface
+      description: Pick the closest affected area.
+      options:
+        - Talk
+        - BattleTalk
+        - Quest tracker / ToDoList / ScenarioTree
+        - Journal / JournalDetail
+        - Character window
+        - Toast / notification
+        - Overlay only
+        - Tooltip / hover tooltip
+        - Action / item / trait sheet-backed text
+        - Plugin config window
+        - Startup / load failure
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest set of steps that reliably reproduces the issue.
+      placeholder: |
+        1. Open ...
+        2. Hover / talk to ...
+        3. Switch language / engine ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error text
+      description: Paste the relevant part of `dalamud.log` or any visible error text if available.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or videos
+      description: Drag screenshots here or paste links if they help explain the issue.
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Include anything else relevant, such as plugin interactions, whether this started after updating, or whether a restart temporarily fixes it.
