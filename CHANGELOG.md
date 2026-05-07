@@ -7,33 +7,30 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Current Development After `v3.25.x`
+## Current Development After Official `v4.2600.x`
 
-This branch is the post-`API14` / post-`v3.25.x` line and has not yet been
-released through the official Dalamud plugin repository.
+This branch is the follow-up line after the first official `API15` / `4.x`
+release and its immediate first-launch hotfix.
 
 Highlights:
 
-- migrated the plugin toward the new `NativeUI/AddonHandlers/...` and
-  `UIOverlays/TranslationOverlay/...` architecture
-- moved `Talk`, `BattleTalk`, `MiniTalk`, `TalkSubtitle`, toast surfaces, and
-  `CutSceneSelectString` onto the newer runtime model
-- rebuilt quest-family flows around standalone handlers, DB-first persistence,
-  structured caches, and hover-tooltip presentation
-- moved `Character`, `MainCommand`, and related game-window surfaces onto
-  canonical DB-first or hybrid payload flows
-- added canonical persistence and caches for `ActionDetail`, `ItemDetail`,
-  `Trait`, `MainCommandText`, and related reference-text rows
-- added `Claude` as a translation engine and introduced local tooling for model
-  list refreshes
-- added or expanded automated test coverage, migration safety checks, and local
-  repo scripts
-- centralized runtime logging, reduced analyzer noise, and restricted probe
-  commands to `DEBUG` builds
-- aligned overlay sizing and hover tooltip font handling with the active font
-  and render scale
-- temporarily disabled structured tooltip translation for release builds while
-  `ActionDetail` and `ItemDetail` remain under stabilization
+- stabilized translation setup and activation flow so users can configure
+  language, engine, and activation without unloading or reloading the plugin
+- added runtime config refresh so engine, language, and addon-toggle changes
+  apply in-session instead of requiring plugin reloads
+- hardened engine selection migration and Amazon translator bootstrap behavior
+  to avoid broken persisted engine ids and provider-chain stalls
+- added a shared translation-activation guard that blocks invalid
+  language/engine states, emits a persistent configuration notification, and
+  localizes the related UI/status text across all repo `resx` languages
+- made downloaded font-asset requirements language-aware and added recovery UI
+  plus recheck/download guidance for CJK-target languages
+- fixed repeated config-save hot paths and narrowed `CharacterStatus`
+  framework-update registration to active deferred passes only
+- improved quest-tracker consistency, translation-error persistence guards, and
+  issue/backlog hygiene for the post-release stabilization cycle
+- temporarily kept structured tooltip translation disabled for release builds
+  while `ActionDetail` and `ItemDetail` remain under stabilization
 
 ## Official DalamudPluginsD17 Release Timeline
 
@@ -74,6 +71,8 @@ repository workflow.
 | 2025-08-09 | [PR #6690](https://github.com/goatcorp/DalamudPluginsD17/pull/6690) `v3.23.x` | immediate stabilization follow-up |
 | 2025-11-23 | [PR #7183](https://github.com/goatcorp/DalamudPluginsD17/pull/7183) `v3.24.x` | translator and UI refactor line |
 | 2025-12-22 | [PR #7523](https://github.com/goatcorp/DalamudPluginsD17/pull/7523) `v3.25.x` | `API14` bump |
+| 2026-05-04 | [PR #8510](https://github.com/goatcorp/DalamudPluginsD17/pull/8510) `v4.2600.x` | first official `4.x` / `API15` release |
+| 2026-05-04 | [PR #8522](https://github.com/goatcorp/DalamudPluginsD17/pull/8522) `v4.2600.x` hotfix | first-launch config creation fix |
 
 ## Pre-Official History
 

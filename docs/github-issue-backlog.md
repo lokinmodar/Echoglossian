@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-05
+Snapshot date: 2026-05-06
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -20,81 +20,45 @@ Priority here is sorted by two factors:
 The first bucket is not "most important only"; it is "most important and
 likely to be the next best use of engineering time right now."
 
+## Recently Closed In `4.2600.0605`
+
+- `#168` The plugin isn't opening
+- `#170` Plugin failed to load
+- `#177` "Waiting to stored quest data" notification
+- `#180` Remove need for downloaded font assets for languages that donot use them
+- `#182` Translation inconsistent - quest tracker sometimes doesn't translate
+- `#183` Align Version numbering to goatcorp standards
+
 ## P0: Urgent and Likely Short Fix
 
 These are the best immediate targets because they are blocking, widespread, or
 highly visible and appear to have a narrow root cause.
 
-### #170 Plugin failed to load
+### #169 Overlay doesn't appear
 
 - Priority: P0
-- Ease: short/medium
-- Status: fixed in code, awaiting published-build validation
+- Ease: medium
+- Status: active regression
 - Why it is first:
-  - This is hard release breakage.
-  - User workaround strongly suggests a concrete root cause: persisted
-    `ChosenTransEngine` values from older builds now map to the wrong engine
-    after engine-order changes.
-  - This likely also explains part of `#171` and `#178`.
-- Landed fix shape:
-  - config migration/remap for old engine ids
-  - bootstrap guard for invalid or newly incompatible engine selections
-  - safe fallback translator so engine init failure no longer prevents plugin load
-  - legacy ChatGPT base-url normalization moved into the same migration path
+  - The plugin can appear "dead" even when translation itself is working.
+  - This is one of the most visible remaining post-release failures.
+  - It likely affects both `#175` and part of the perceived "nothing works"
+    cluster after clean installs.
 
-### #183 Align Version numbering to goatcorp standards
+### #175 Overlay problem
 
 - Priority: P0
-- Ease: short/medium
-- Status: urgent enhancement
+- Ease: medium
+- Status: likely same cluster as `#169`
 - Notes:
-  - This is not a runtime bug, but it can become a release/process blocker.
-  - The version number should stop being fully dynamic and align with the
-    conventions expected by the goatcorp plugin release flow.
-  - Good candidate for a narrow, isolated fix once the release-breakage
-    cluster is stable.
-
-### #168 The plugin isn't opening
-
-- Priority: P0
-- Ease: short
-- Status: likely already fixed in code
-- Notes:
-  - This matches the "missing config prevents UI from opening" regression.
-  - Code already creates and saves a default config on first launch.
-  - Keep high only until the published build confirms it for users, then close.
-
-### #177 "Waiting to stored quest data" notification
-
-- Priority: P0
-- Ease: short
-- Status: likely already fixed in code
-- Notes:
-  - Code now has `ShowQuestProgressNotifications`, disabled by default.
-  - This should be verified against the next release and then closed.
+  - Keep linked to `#169` until proven distinct.
+  - Reports point to translation working while overlay rendering or visibility
+    fails.
 
 ## P1: Urgent but Medium Investigation
 
 These are still release-quality problems, but they likely need a more careful
  runtime pass than the P0 items above.
-
-### #169 Overlay doesn't appear
-
-- Priority: P1
-- Ease: medium
-- Status: active regression
-- Notes:
-  - Translation can still work while overlays remain invisible.
-  - Likely tied to overlay visibility/apply-state/config propagation.
-
-### #175 Overlay problem
-
-- Priority: P1
-- Ease: medium
-- Status: likely same cluster as `#169`
-- Notes:
-  - Keep linked to `#169` until proven distinct.
-  - User comments suggest settings may only take effect after plugin reload.
 
 ### #174 Translate already saved translated texts does not work
 
@@ -112,11 +76,12 @@ These are still release-quality problems, but they likely need a more careful
 
 - Priority: P1
 - Ease: medium
-- Status: active regression
+- Status: likely improved in code, still needs published-build confirmation
 - Notes:
-  - Could be a downstream symptom of `#170` config/engine mismatch.
-  - Could also overlap with `#174` stale cache/settings propagation.
-  - Reassess after the `ChosenTransEngine` compatibility fix lands.
+  - This overlapped with the engine-migration, first-launch config, and
+    hot-refresh regressions.
+  - Some of the root causes are already fixed, but the issue should stay open
+    until users confirm the published build behaves correctly.
 
 ### #171 Deepseek translation is not available... mission titles and descriptions are not being translated
 
@@ -127,19 +92,6 @@ These are still release-quality problems, but they likely need a more careful
   - The persisted `[Translation Error: ...]` path was already fixed in code.
   - Remaining symptoms may collapse into `#170` and `#174`.
   - Reassess after the next published build and engine-migration fix.
-
-### #182 Translation inconsistent - quest tracker sometimes doesn't translate
-
-- Priority: P1
-- Ease: medium
-- Status: active regression
-- Notes:
-  - This is a fresh tracker-specific bug report after the recent quest-family
-    stabilization work.
-  - Likely intersects `_ToDoList`, `ScenarioTree`, quest cache reuse, or
-    background prefetch timing.
-  - Treat as a high-value follow-up right after the overlay/settings cluster
-    because it is very visible and likely narrower than the Talk-family work.
 
 ## P2: Release Stabilization, More Involved
 
@@ -167,16 +119,6 @@ require careful UI/runtime investigation rather than a narrow config fix.
     selection-dialog sizing.
 
 ### #180 Remove need for downloaded font assets for languages that donot use them
-
-- Priority: P2
-- Ease: medium
-- Status: fixed in code, awaiting published-build validation
-- Notes:
-  - Asset gating is now language-aware instead of global.
-  - Languages that do not use downloaded CJK font assets are no longer blocked.
-  - Languages that do require them now trigger automatic check/download,
-    disable translation until assets are valid, and expose manual recovery UI.
-  - Download retry behavior was added for transient fetch failures.
 
 ### #173 Plugin function incompatibility: Character panel refined
 
