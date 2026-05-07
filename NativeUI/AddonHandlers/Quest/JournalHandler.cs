@@ -25,6 +25,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
   private readonly Dictionary<nint, string> journalListOriginalTextCache =
       [];
+  private readonly HashSet<nint> journalListNativeMutationNodeKeys =
+      [];
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="JournalHandler" /> class.
@@ -173,8 +175,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           if (this.JournalWritesNativeTranslation)
           {
             questName->SetText(cachedTranslatedQuestName);
+            this.journalListNativeMutationNodeKeys.Add(questNameNodeKey);
           }
-          else
+          else if (this.journalListNativeMutationNodeKeys.Remove(questNameNodeKey))
           {
             questName->SetText(originalQuestName);
           }
@@ -244,8 +247,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
           if (this.JournalWritesNativeTranslation)
           {
             questName->SetText(translatedQuestName);
+            this.journalListNativeMutationNodeKeys.Add(questNameNodeKey);
           }
-          else
+          else if (this.journalListNativeMutationNodeKeys.Remove(questNameNodeKey))
           {
             questName->SetText(originalQuestName);
           }
@@ -280,6 +284,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             questNameNodeKey,
             originalQuestName);
         if (!this.JournalWritesNativeTranslation &&
+            this.journalListNativeMutationNodeKeys.Remove(questNameNodeKey) &&
             !string.Equals(
                 liveQuestNameText,
                 originalQuestName,
@@ -342,6 +347,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     this.journalListTextCache.Clear();
     this.journalListHoverCache.Clear();
     this.journalListOriginalTextCache.Clear();
+    this.journalListNativeMutationNodeKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
   }
 

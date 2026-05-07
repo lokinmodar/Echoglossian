@@ -21,6 +21,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       TimeSpan.FromSeconds(2);
 
   private readonly Dictionary<string, ToDoRuntimeEntry> toDoRuntimeEntries = [];
+  private readonly HashSet<string> toDoNativeMutationKeys = [];
 
   private readonly QuestWaitingNotificationGate toDoListWaitingNotificationGate
       = new();
@@ -608,10 +609,17 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         continue;
       }
 
-      var displayText = this.ToDoListWritesNativeTranslation
-          ? this.GetToDoTranslatedDisplayText(runtimeEntry.TranslatedText)
-          : runtimeEntry.OriginalText;
-      textNode->SetText(displayText ?? string.Empty);
+      if (this.ToDoListWritesNativeTranslation)
+      {
+        var displayText = this.GetToDoTranslatedDisplayText(runtimeEntry.TranslatedText);
+        textNode->SetText(displayText ?? string.Empty);
+        this.toDoNativeMutationKeys.Add(runtimeEntry.Key);
+      }
+    }
+
+    if (!this.ToDoListWritesNativeTranslation)
+    {
+      this.RestoreToDoListOriginals(todoList);
     }
 
     if (this.ToDoListUsesHoverTooltips)
@@ -635,6 +643,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   {
     foreach (var runtimeEntry in this.toDoRuntimeEntries.Values)
     {
+      if (!this.toDoNativeMutationKeys.Remove(runtimeEntry.Key))
+      {
+        continue;
+      }
+
       if (!TryGetLiveToDoTextNode(
               todoList,
               runtimeEntry.IndexI,
@@ -946,6 +959,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private void OnToDoListCleanupEvent(AddonEvent type, AddonArgs args)
   {
     this.toDoRuntimeEntries.Clear();
+    this.toDoNativeMutationKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
     this.currentToDoListDataReady = false;
     this.lastAppliedDisplayMode = null;

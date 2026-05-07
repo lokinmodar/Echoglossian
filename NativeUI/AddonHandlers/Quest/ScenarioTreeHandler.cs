@@ -27,6 +27,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
   private readonly Dictionary<int, ScenarioTreeRuntimeEntry>
       scenarioTreeRuntimeEntries = [];
+  private readonly HashSet<int> scenarioTreeNativeMutationIndices = [];
 
   private readonly QuestWaitingNotificationGate
       scenarioTreeWaitingNotificationGate = new();
@@ -588,10 +589,17 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
     foreach (var runtimeEntry in this.scenarioTreeRuntimeEntries.Values)
     {
-      var displayText = this.ScenarioTreeWritesNativeTranslation
-          ? this.GetScenarioTreeTranslatedDisplayText(runtimeEntry.TranslatedText)
-          : runtimeEntry.OriginalText;
-      atkValues[runtimeEntry.ValueIndex].SetManagedString(displayText ?? string.Empty);
+      if (this.ScenarioTreeWritesNativeTranslation)
+      {
+        var displayText = this.GetScenarioTreeTranslatedDisplayText(runtimeEntry.TranslatedText);
+        atkValues[runtimeEntry.ValueIndex].SetManagedString(displayText ?? string.Empty);
+        this.scenarioTreeNativeMutationIndices.Add(runtimeEntry.ValueIndex);
+      }
+    }
+
+    if (!this.ScenarioTreeWritesNativeTranslation)
+    {
+      this.RestoreScenarioTreeOriginals(atkValues);
     }
 
     if (this.ScenarioTreeUsesHoverTooltips)
@@ -616,6 +624,11 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   {
     foreach (var runtimeEntry in this.scenarioTreeRuntimeEntries.Values)
     {
+      if (!this.scenarioTreeNativeMutationIndices.Remove(runtimeEntry.ValueIndex))
+      {
+        continue;
+      }
+
       atkValues[runtimeEntry.ValueIndex].SetManagedString(
           runtimeEntry.OriginalText ?? string.Empty);
     }
@@ -798,6 +811,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     }
 
     this.scenarioTreeRuntimeEntries.Clear();
+    this.scenarioTreeNativeMutationIndices.Clear();
     this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
     this.currentScenarioTreeDataReady = false;
     this.lastAppliedDisplayMode = null;
