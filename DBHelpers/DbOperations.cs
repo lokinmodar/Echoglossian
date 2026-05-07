@@ -131,8 +131,17 @@ public partial class Echoglossian
 
       var localFoundTalkMessage = existingTalkMessage.FirstOrDefault();
       if (localFoundTalkMessage == null ||
-          localFoundTalkMessage?.OriginalTalkMessage !=
-          talkMessage.OriginalTalkMessage)
+          localFoundTalkMessage.OriginalTalkMessage !=
+              talkMessage.OriginalTalkMessage)
+      {
+        return null;
+      }
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundTalkMessage.OriginalTalkMessage,
+              localFoundTalkMessage.TranslatedTalkMessage,
+              localFoundTalkMessage.OriginalTalkMessageLang,
+              localFoundTalkMessage.TranslationLang))
       {
         return null;
       }
@@ -335,8 +344,17 @@ public partial class Echoglossian
       var localFoundBattleTalkMessage =
           existingBattleTalkMessage.FirstOrDefault();
       if (localFoundBattleTalkMessage == null ||
-          localFoundBattleTalkMessage?.OriginalBattleTalkMessage !=
-          battleTalkMessage.OriginalBattleTalkMessage)
+          localFoundBattleTalkMessage.OriginalBattleTalkMessage !=
+              battleTalkMessage.OriginalBattleTalkMessage)
+      {
+        return null;
+      }
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundBattleTalkMessage.OriginalBattleTalkMessage,
+              localFoundBattleTalkMessage.TranslatedBattleTalkMessage,
+              localFoundBattleTalkMessage.OriginalBattleTalkMessageLang,
+              localFoundBattleTalkMessage.TranslationLang))
       {
         return null;
       }
@@ -600,7 +618,12 @@ public partial class Echoglossian
           existingTalkSubtitleMessage.FirstOrDefault();
       if (localFoundTalkSubtitleMessage == null ||
           localFoundTalkSubtitleMessage.OriginalTalkSubtitleMessage !=
-          talkSubtitleMessage.OriginalTalkSubtitleMessage)
+              talkSubtitleMessage.OriginalTalkSubtitleMessage ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundTalkSubtitleMessage.OriginalTalkSubtitleMessage,
+              localFoundTalkSubtitleMessage.TranslatedTalkSubtitleMessage,
+              localFoundTalkSubtitleMessage.OriginalTalkSubtitleMessageLang,
+              localFoundTalkSubtitleMessage.TranslationLang))
       {
         return null;
       }
@@ -643,7 +666,12 @@ public partial class Echoglossian
           existingMiniTalkMessage.FirstOrDefault();
       if (localFoundMiniTalkMessage == null ||
           localFoundMiniTalkMessage.OriginalMiniTalkMessage !=
-          miniTalkMessage.OriginalMiniTalkMessage)
+              miniTalkMessage.OriginalMiniTalkMessage ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundMiniTalkMessage.OriginalMiniTalkMessage,
+              localFoundMiniTalkMessage.TranslatedMiniTalkMessage,
+              localFoundMiniTalkMessage.OriginalMiniTalkMessageLang,
+              localFoundMiniTalkMessage.TranslationLang))
       {
         return null;
       }
@@ -797,6 +825,15 @@ public partial class Echoglossian
         return "No data to save.";
       }
 
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              talkMessage.OriginalTalkMessage,
+              talkMessage.TranslatedTalkMessage,
+              talkMessage.OriginalTalkMessageLang,
+              talkMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
       if (ShouldCopyTranslationToClipboard())
       {
         ImGui.SetClipboardText(talkMessage.ToString());
@@ -828,6 +865,15 @@ public partial class Echoglossian
     try
     {
       if (!ShouldSaveToDB(battleTalkMessage.TranslatedBattleTalkMessage))
+      {
+        return "No data to save.";
+      }
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              battleTalkMessage.OriginalBattleTalkMessage,
+              battleTalkMessage.TranslatedBattleTalkMessage,
+              battleTalkMessage.OriginalBattleTalkMessageLang,
+              battleTalkMessage.TranslationLang))
       {
         return "No data to save.";
       }
@@ -867,6 +913,15 @@ public partial class Echoglossian
         return "No data to save.";
       }
 
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              talkSubtitleMessage.OriginalTalkSubtitleMessage,
+              talkSubtitleMessage.TranslatedTalkSubtitleMessage,
+              talkSubtitleMessage.OriginalTalkSubtitleMessageLang,
+              talkSubtitleMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
       context.TalkSubtitleMessage.Attach(talkSubtitleMessage);
 
       if (ShouldCopyTranslationToClipboard())
@@ -897,6 +952,15 @@ public partial class Echoglossian
     try
     {
       if (!ShouldSaveToDB(miniTalkMessage.TranslatedMiniTalkMessage))
+      {
+        return "No data to save.";
+      }
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              miniTalkMessage.OriginalMiniTalkMessage,
+              miniTalkMessage.TranslatedMiniTalkMessage,
+              miniTalkMessage.OriginalMiniTalkMessageLang,
+              miniTalkMessage.TranslationLang))
       {
         return "No data to save.";
       }

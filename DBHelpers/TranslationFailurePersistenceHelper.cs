@@ -37,7 +37,9 @@ public static class TranslationFailurePersistenceHelper
         Action<TranslationFailure> cacheUpdate)
     {
         if (string.IsNullOrWhiteSpace(configDirectory) ||
-            string.IsNullOrWhiteSpace(sourceText))
+            string.IsNullOrWhiteSpace(sourceText) ||
+            !TranslationPersistenceGuard.IsPersistentFailureReason(
+                failureReason))
         {
             return;
         }

@@ -8951,6 +8951,37 @@
             <param name="chatGptBaseUrl">The configured ChatGPT base URL.</param>
             <returns>The normalized base URL.</returns>
         </member>
+        <member name="T:Echoglossian.TranslationPersistenceGuard">
+            <summary>
+            Provides shared guards for deciding whether translated results and
+            translation failures are safe to persist or reuse.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationPersistenceGuard.IsPersistentFailureReason(System.String)">
+            <summary>
+            Determines whether a translation failure reason is stable enough to
+            persist across sessions.
+            </summary>
+            <param name="failureReason">The recorded failure reason.</param>
+            <returns>
+            <c>true</c> when the failure reason should be persisted; otherwise,
+            <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationPersistenceGuard.IsUsableDialogueTranslation(System.String,System.String,System.String,System.String)">
+            <summary>
+            Determines whether a translated dialogue text is safe to reuse or save.
+            </summary>
+            <param name="originalText">The original source text.</param>
+            <param name="translatedText">The translated text candidate.</param>
+            <param name="originalLanguage">The original source language.</param>
+            <param name="translationLanguage">The target translation language.</param>
+            <returns>
+            <c>true</c> when the translated text is non-empty, non-synthetic, and not
+            an unchanged echo of the original across different languages; otherwise,
+            <c>false</c>.
+            </returns>
+        </member>
         <member name="T:Echoglossian.TranslationResultGuard">
             <summary>
                 Provides shared guards for synthetic translation-error placeholders so

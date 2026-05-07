@@ -157,11 +157,11 @@ public class TranslationServiceTests
     }
 
     /// <summary>
-    ///     Ensures an empty synchronous result is recorded as an exact known
-    ///     failure.
+    ///     Ensures an empty synchronous result falls back cleanly without
+    ///     persisting a long-lived known-failure row.
     /// </summary>
     [Fact]
-    public void Translate_RecordsEmptyResultAsKnownFailure()
+    public void Translate_EmptyResult_DoesNotPersistKnownFailure()
     {
         var translator = new RecordingTranslator
         {
@@ -189,20 +189,20 @@ public class TranslationServiceTests
         var result = service.Translate("hello", "English", "pt");
 
         Assert.Equal("hello", result);
-        Assert.Equal("hello", recordedText);
-        Assert.Equal("en", recordedSource);
-        Assert.Equal("pt-BR", recordedTarget);
-        Assert.Equal(11, recordedEngine);
-        Assert.Equal("empty-result", recordedReason);
+        Assert.Null(recordedText);
+        Assert.Null(recordedSource);
+        Assert.Null(recordedTarget);
+        Assert.Null(recordedEngine);
+        Assert.Null(recordedReason);
     }
 
     /// <summary>
-    ///     Ensures an empty asynchronous result is recorded as an exact known
-    ///     failure.
+    ///     Ensures an empty asynchronous result falls back cleanly without
+    ///     persisting a long-lived known-failure row.
     /// </summary>
     /// <returns>A task representing the test.</returns>
     [Fact]
-    public async Task TranslateAsync_RecordsEmptyResultAsKnownFailure()
+    public async Task TranslateAsync_EmptyResult_DoesNotPersistKnownFailure()
     {
         var translator = new RecordingTranslator
         {
@@ -222,15 +222,16 @@ public class TranslationServiceTests
         var result = await service.TranslateAsync("...hello", "en", "pt-BR");
 
         Assert.Equal("...hello", result);
-        Assert.Equal("hello", recordedText);
+        Assert.Null(recordedText);
     }
 
     /// <summary>
     ///     Ensures a synthetic translation-error placeholder is treated as a
-    ///     failed translation and never returned to callers.
+    ///     failed translation and never persisted as a long-lived known-failure
+    ///     row.
     /// </summary>
     [Fact]
-    public void Translate_SyntheticErrorResult_FallsBackAndRecordsFailure()
+    public void Translate_SyntheticErrorResult_FallsBackWithoutPersistingFailure()
     {
         var translator = new RecordingTranslator
         {
@@ -250,16 +251,17 @@ public class TranslationServiceTests
         var result = service.Translate("hello", "en", "pt-BR");
 
         Assert.Equal("hello", result);
-        Assert.Equal("synthetic-error-result", recordedReason);
+        Assert.Null(recordedReason);
     }
 
     /// <summary>
     ///     Ensures the async path also treats synthetic translation-error
-    ///     placeholders as failed translations.
+    ///     placeholders as failed translations without persisting a long-lived
+    ///     known-failure row.
     /// </summary>
     /// <returns>A task representing the test.</returns>
     [Fact]
-    public async Task TranslateAsync_SyntheticErrorResult_FallsBackAndRecordsFailure()
+    public async Task TranslateAsync_SyntheticErrorResult_FallsBackWithoutPersistingFailure()
     {
         var translator = new RecordingTranslator
         {
@@ -279,7 +281,7 @@ public class TranslationServiceTests
         var result = await service.TranslateAsync("...hello", "en", "pt-BR");
 
         Assert.Equal("...hello", result);
-        Assert.Equal("synthetic-error-result", recordedReason);
+        Assert.Null(recordedReason);
     }
 
     /// <summary>

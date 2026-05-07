@@ -38,4 +38,35 @@ public class DbOperationsTests
 
         Assert.True(shouldSave);
     }
+
+    /// <summary>
+    ///     Ensures dialogue rows that merely echo the original source text
+    ///     across different languages are never treated as reusable
+    ///     translations.
+    /// </summary>
+    [Fact]
+    public void IsUsableDialogueTranslation_RejectsOriginalEchoAcrossLanguages()
+    {
+        var isUsable = TranslationPersistenceGuard.IsUsableDialogueTranslation(
+            "If you wish to assign a level 50 retainer a job...",
+            "If you wish to assign a level 50 retainer a job...",
+            "en",
+            "pt-BR");
+
+        Assert.False(isUsable);
+    }
+
+    /// <summary>
+    ///     Ensures transient translation failures are not considered safe to
+    ///     persist as exact known-failure rows.
+    /// </summary>
+    [Theory]
+    [InlineData("empty-result")]
+    [InlineData("synthetic-error-result")]
+    public void IsPersistentFailureReason_RejectsTransientReasons(string reason)
+    {
+        var isPersistent = TranslationPersistenceGuard.IsPersistentFailureReason(reason);
+
+        Assert.False(isPersistent);
+    }
 }

@@ -29,6 +29,21 @@ likely to be the next best use of engineering time right now."
 - `#182` Translation inconsistent - quest tracker sometimes doesn't translate
 - `#183` Align Version numbering to goatcorp standards
 
+## Fixes Landed In Code, Awaiting Published Validation
+
+- `#186` Randomly stops translating to PT-BR and displays English text instead
+- `#178` It isn't translating anything
+- `#174` Translate already saved translated texts does not work
+
+Notes:
+
+- The current fix for this cluster stops persisting transient exact-failure
+  rows such as `empty-result` / synthetic translation-error placeholders.
+- Dialogue-family DB rows that merely echo the original source text across
+  different languages are now ignored on lookup and skipped on save.
+- This should reduce sticky English fallbacks and stale "no translation"
+  behavior without requiring DB cleanup in normal cases.
+
 ## P0: Urgent and Likely Short Fix
 
 These are the best immediate targets because they are blocking, widespread, or
@@ -60,17 +75,27 @@ highly visible and appear to have a narrow root cause.
 These are still release-quality problems, but they likely need a more careful
  runtime pass than the P0 items above.
 
+### #186 Randomly stops translating to PT-BR and displays English text instead
+
+- Priority: P1
+- Ease: medium
+- Status: fixed in code, awaiting published-build confirmation
+- Notes:
+  - This was treated as the visible edge of the same stale-cache / stale-DB /
+    transient-failure persistence cluster affecting `#178` and `#174`.
+  - Keep open until the published build confirms the English fallback no longer
+    becomes sticky for exact dialogue lines.
+
 ### #174 Translate already saved translated texts does not work
 
 - Priority: P1
 - Ease: medium
-- Status: active regression/UX gap
+- Status: likely improved in code, still needs published-build confirmation
 - Notes:
   - Users expect settings or engine changes to affect already stored rows.
-  - Reports also suggest some settings do not fully take effect until
-    plugin toggle/restart.
-  - Likely overlaps with cache invalidation, runtime refresh, and config
-    propagation issues.
+  - Part of this overlapped with dialogue rows persisting unchanged source text
+    and being reused as if they were valid translations.
+  - Reassess after the next published build before closing.
 
 ### #178 It isn't translating anything
 
@@ -78,10 +103,9 @@ These are still release-quality problems, but they likely need a more careful
 - Ease: medium
 - Status: likely improved in code, still needs published-build confirmation
 - Notes:
-  - This overlapped with the engine-migration, first-launch config, and
-    hot-refresh regressions.
-  - Some of the root causes are already fixed, but the issue should stay open
-    until users confirm the published build behaves correctly.
+  - This overlapped with the engine-migration, first-launch config, hot-refresh
+    regressions, and the transient-failure / stale-dialogue cluster.
+  - Keep open until users confirm the published build behaves correctly.
 
 ### #171 Deepseek translation is not available... mission titles and descriptions are not being translated
 
