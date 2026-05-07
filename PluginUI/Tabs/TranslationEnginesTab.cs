@@ -20,8 +20,6 @@ public static class TranslationEnginesTab
     ///     The index of the selected language in the language
     ///     list.
     /// </param>
-    /// <param name="languageList">The list of available languages.</param>
-    /// <param name="availableEngines">The list of available translation engines.</param>
     /// <param name="langDict">
     ///     Dictionary mapping language indices to their
     ///     information, including supported engines.
@@ -34,26 +32,13 @@ public static class TranslationEnginesTab
     public static bool Draw(
         Config config,
         int languageIndex,
-        List<string> languageList,
-        List<string> availableEngines,
         Dictionary<int, LanguageInfo> langDict,
         Action rebuildTranslationService)
     {
         var changed = false;
         var promptManager = new PromptTemplateManager(config);
 
-        using var scrollingChild = ImRaii.Child(
-            "TranslationEngineSettings",
-            new Vector2(-1, -100),
-            false,
-            ImGuiWindowFlags.NoBackground);
-
-        if (!scrollingChild)
-        {
-            return false;
-        }
-
-        ImGui.Checkbox(
+        changed |= ImGui.Checkbox(
             Resources.TranslateTextsAgain,
             ref config.TranslateAlreadyTranslatedTexts);
 
@@ -62,11 +47,37 @@ public static class TranslationEnginesTab
                 ? langInfo.SupportedEngines ?? new List<int>()
                 : new List<int>();
 
-        var filteredEngines = availableEngines
-            .Where((_, i) => supportedEngines.Contains(i)).ToArray();
+        var engineOptions = supportedEngines
+            .Where(TranslationEngineSelectionMigrationHelper.IsConcreteEngineId)
+            .Distinct()
+            .OrderBy(id => id)
+            .Select(id => new TranslationEngineOption(
+                id,
+                GetDisplayName((Echoglossian.TransEngines)id)))
+            .ToArray();
 
-        var selected = supportedEngines.IndexOf(config.ChosenTransEngine);
-        if (selected < 0 && supportedEngines.Count > 0)
+        if (engineOptions.Length == 0)
+        {
+            ImGui.Text(Resources.NoSettingsForEngine);
+            return changed;
+        }
+
+        var normalizedEngineId =
+            TranslationEngineSelectionMigrationHelper
+                .ResolveSupportedEngineSelection(
+                    config.ChosenTransEngine,
+                    supportedEngines);
+        if (normalizedEngineId != config.ChosenTransEngine)
+        {
+            config.ChosenTransEngine = normalizedEngineId;
+            rebuildTranslationService();
+            changed = true;
+        }
+
+        var selected = Array.FindIndex(
+            engineOptions,
+            option => option.EngineId == config.ChosenTransEngine);
+        if (selected < 0 && engineOptions.Length > 0)
         {
             selected = 0;
         }
@@ -74,10 +85,10 @@ public static class TranslationEnginesTab
         if (ImGui.Combo(
                 Resources.TranslationEngineChoose,
                 ref selected,
-                filteredEngines,
-                filteredEngines.Length))
+                engineOptions.Select(option => option.Label).ToArray(),
+                engineOptions.Length))
         {
-            config.ChosenTransEngine = supportedEngines[selected];
+            config.ChosenTransEngine = engineOptions[selected].EngineId;
             rebuildTranslationService();
             changed = true;
         }
@@ -156,4 +167,41 @@ public static class TranslationEnginesTab
 
         return changed;
     }
+
+    /// <summary>
+    ///     Resolves the user-facing display name for one concrete translation
+    ///     engine without depending on list ordering.
+    /// </summary>
+    /// <param name="engine">The concrete engine enum value.</param>
+    /// <returns>The display label shown in the combo.</returns>
+    private static string GetDisplayName(Echoglossian.TransEngines engine)
+    {
+        return engine switch
+        {
+            Echoglossian.TransEngines.Google => "Google",
+            Echoglossian.TransEngines.Deepl => "DeepL",
+            Echoglossian.TransEngines.ChatGPT => "ChatGPT",
+            Echoglossian.TransEngines.YandexCloud => "YandexCloud",
+            Echoglossian.TransEngines.GTranslate => "GTranslate",
+            Echoglossian.TransEngines.DeepSeek => "DeepSeek",
+            Echoglossian.TransEngines.Ollama => "Ollama",
+            Echoglossian.TransEngines.LibreTranslate => "LibreTranslate",
+            Echoglossian.TransEngines.Microsoft => "Microsoft",
+            Echoglossian.TransEngines.Amazon => "Amazon",
+            Echoglossian.TransEngines.Gemini => "Gemini",
+            Echoglossian.TransEngines.YandexPublic => "YandexPublic",
+            Echoglossian.TransEngines.OpenRouter => "OpenRouter",
+            Echoglossian.TransEngines.LmStudio => "LmStudio",
+            Echoglossian.TransEngines.Claude => "Claude",
+            _ => engine.ToString(),
+        };
+    }
+
+    /// <summary>
+    ///     Represents one user-facing translation engine choice in the settings
+    ///     combo.
+    /// </summary>
+    /// <param name="EngineId">The concrete engine id persisted in config.</param>
+    /// <param name="Label">The user-facing label.</param>
+    private sealed record TranslationEngineOption(int EngineId, string Label);
 }

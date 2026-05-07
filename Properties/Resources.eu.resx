@@ -738,6 +738,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Erakutsi bilaketaren atzeko planoko jakinarazpenak</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Konfiguratu hautatutako itzulpen-motorra itzulpena gaitu aurretik.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>Itzulpena desgaituta dago une honetan, hautatutako itzulpen-motorrak oraindik konfigurazioa behar duelako. Ireki konfigurazio-leihoa eta amaitu motorraren konfigurazioa.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>Itzulpena desgaituta dago une honetan, hautatutako hizkuntzak letra-tipo baliabide gehigarriak behar dituelako. Ireki konfigurazio-leihoa beharrezko fitxategiak deskargatzeko edo baliozkotzeko.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Tosta mota bakoitzak berez aukera dezake jatorrizko ordezkapenaren eta gainjartzearen errendatzearen artean.</value>
   </data>

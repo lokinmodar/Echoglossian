@@ -108,15 +108,21 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly CultureInfo cultureInfo;
   private readonly IDalamudTextureWrap cutsceneChoiceImage;
   private readonly IDalamudTextureWrap logo;
-  private readonly QueuedTranslationBroker queuedTranslationBroker;
+  private QueuedTranslationBroker queuedTranslationBroker;
   private readonly HoverTooltipManager hoverTooltipManager;
 
   private readonly IDalamudTextureWrap pixImage;
   private readonly IDalamudTextureWrap cryptoImage;
 
   private readonly bool pluginAssetsState;
-  private readonly QuestToastRuntime questToastRuntime;
+  private QuestToastRuntime questToastRuntime;
   private readonly IDalamudTextureWrap talkImage;
+  private static Echoglossian? activeInstance;
+  private string? addonHandlerRegistrationSignature;
+  private string? translationActivationBlockedNotificationSignature;
+  private string? translationRuntimeSignature;
+  private bool runtimeConfigurationDirty;
+  private bool runtimeConfigurationReady;
 
   private AtkTextNodeBufferWrapper atkTextNodeBufferWrapper;
 
@@ -250,6 +256,8 @@ public partial class Echoglossian : IDalamudPlugin
       AssetsManager.PluginAssetsChecker(SelectedLanguage);
     }
 
+    this.EnforceTranslationActivationConstraints();
+
     // this.ListCultureInfos();
     this.pixImage =
         TextureProvider.CreateFromImageAsync(Resources.pix).Result;
@@ -321,6 +329,13 @@ public partial class Echoglossian : IDalamudPlugin
     PluginInterface.UiBuilder.Draw += this.DrawDbEditorWindow;
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
+    activeInstance = this;
+    this.translationRuntimeSignature =
+        this.ComputeTranslationRuntimeSignature();
+    this.addonHandlerRegistrationSignature =
+        this.ComputeAddonHandlerRegistrationSignature();
+    this.runtimeConfigurationReady = true;
+    this.TryShowTranslationActivationBlockedNotification();
   }
 
   [PluginService] public static IDataManager DManager { get; set; }
@@ -512,6 +527,11 @@ public partial class Echoglossian : IDalamudPlugin
     CommandManager.RemoveHandler(AddonProbeCommand);
     CommandManager.RemoveHandler(QuestProbeCommand);
 #endif
+
+    if (ReferenceEquals(activeInstance, this))
+    {
+      activeInstance = null;
+    }
   }
 
 }

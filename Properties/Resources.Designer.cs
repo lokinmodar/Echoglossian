@@ -540,6 +540,33 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Configure the selected translation engine before enabling translation..
+        /// </summary>
+        public static string TranslationBlockedByEngineConfigurationText {
+            get {
+                return ResourceManager.GetString("TranslationBlockedByEngineConfigurationText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translation is currently disabled because the selected translation engine still needs to be configured. Open the configuration window and finish the engine setup..
+        /// </summary>
+        public static string TranslationBlockedByEngineConfigurationNotificationText {
+            get {
+                return ResourceManager.GetString("TranslationBlockedByEngineConfigurationNotificationText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Translation is currently disabled because the selected language requires extra font assets. Open the configuration window to download or validate the required files..
+        /// </summary>
+        public static string TranslationBlockedByMissingAssetsNotificationText {
+            get {
+                return ResourceManager.GetString("TranslationBlockedByMissingAssetsNotificationText", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Waiting for required font assets.
         /// </summary>
         public static string TranslationBlockedByMissingAssetsStatusText {

@@ -79,45 +79,6 @@ public class TranslationEngineSelectionMigrationHelperTests
     }
 
     /// <summary>
-    ///     Ensures legacy YandexPublic-to-Amazon collisions are repaired when
-    ///     no explicit Amazon configuration exists.
-    /// </summary>
-    [Fact]
-    public void TryRepairLikelyLegacyAmazonCollision_NoAmazonConfig_RemapApplied()
-    {
-        var config = new Config
-        {
-            ChosenTransEngine = (int)Echoglossian.TransEngines.Amazon,
-        };
-
-        var repaired = TranslationEngineSelectionMigrationHelper
-            .TryRepairLikelyLegacyAmazonCollision(config);
-
-        Assert.True(repaired);
-        Assert.Equal((int)Echoglossian.TransEngines.YandexPublic, config.ChosenTransEngine);
-    }
-
-    /// <summary>
-    ///     Ensures explicit Amazon configuration is respected and not remapped
-    ///     as a legacy collision.
-    /// </summary>
-    [Fact]
-    public void TryRepairLikelyLegacyAmazonCollision_WithAmazonConfig_DoesNotRemap()
-    {
-        var config = new Config
-        {
-            ChosenTransEngine = (int)Echoglossian.TransEngines.Amazon,
-            AwsAccessKey = "configured-access-key",
-        };
-
-        var repaired = TranslationEngineSelectionMigrationHelper
-            .TryRepairLikelyLegacyAmazonCollision(config);
-
-        Assert.False(repaired);
-        Assert.Equal((int)Echoglossian.TransEngines.Amazon, config.ChosenTransEngine);
-    }
-
-    /// <summary>
     ///     Ensures the helper rejects sentinel values that are not concrete
     ///     runtime engine selections.
     /// </summary>
@@ -128,5 +89,34 @@ public class TranslationEngineSelectionMigrationHelperTests
             (int)Echoglossian.TransEngines.All);
 
         Assert.False(valid);
+    }
+
+    /// <summary>
+    ///     Ensures an unsupported selected engine is normalized to the first
+    ///     supported concrete engine for the active language.
+    /// </summary>
+    [Fact]
+    public void ResolveSupportedEngineSelection_UnsupportedSelection_ReturnsFirstSupported()
+    {
+        var resolved = TranslationEngineSelectionMigrationHelper
+            .ResolveSupportedEngineSelection(
+                (int)Echoglossian.TransEngines.Google,
+                new[] { (int)Echoglossian.TransEngines.Microsoft, (int)Echoglossian.TransEngines.Amazon });
+
+        Assert.Equal((int)Echoglossian.TransEngines.Microsoft, resolved);
+    }
+
+    /// <summary>
+    ///     Ensures a supported selected engine remains unchanged.
+    /// </summary>
+    [Fact]
+    public void ResolveSupportedEngineSelection_SupportedSelection_Preserved()
+    {
+        var resolved = TranslationEngineSelectionMigrationHelper
+            .ResolveSupportedEngineSelection(
+                (int)Echoglossian.TransEngines.Amazon,
+                new[] { (int)Echoglossian.TransEngines.Microsoft, (int)Echoglossian.TransEngines.Amazon });
+
+        Assert.Equal((int)Echoglossian.TransEngines.Amazon, resolved);
     }
 }

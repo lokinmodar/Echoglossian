@@ -678,6 +678,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Mostrar notificações em segundo plano da missão</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Configure o mecanismo de tradução selecionado antes de habilitar a tradução.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>A tradução está desativada no momento porque o mecanismo de tradução selecionado ainda precisa ser configurado. Abra a janela de configuração e conclua a configuração do mecanismo.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>A tradução está desativada no momento porque o idioma selecionado exige assets extras de fonte. Abra a janela de configuração para baixar ou validar os arquivos necessários.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Cada tipo de sistema pode escolher independentemente entre substituição nativa e renderização de sobreposição.</value>
   </data>

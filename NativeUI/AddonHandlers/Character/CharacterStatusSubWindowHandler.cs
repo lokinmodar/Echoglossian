@@ -27,6 +27,7 @@ public unsafe class CharacterStatusSubWindowHandler
         "Função",
     ];
 
+    private bool frameworkUpdateRegistered;
     private DateTime nextRequestedUpdateUtc = DateTime.MinValue;
     private bool requestedUpdatePending;
     private bool requestedUpdateInFlight;
@@ -50,7 +51,6 @@ public unsafe class CharacterStatusSubWindowHandler
             stringArrayType: StringArrayType.Character,
             useAtkValues: true)
     {
-        Echoglossian.FrameworkInterface.Update += this.OnFrameworkUpdate;
     }
 
     /// <inheritdoc />
@@ -185,12 +185,13 @@ public unsafe class CharacterStatusSubWindowHandler
         }
 
         this.requestedUpdatePending = true;
+        this.EnsureFrameworkUpdateRegistered();
     }
 
     /// <inheritdoc />
     public override void OnPluginUnload()
     {
-        Echoglossian.FrameworkInterface.Update -= this.OnFrameworkUpdate;
+        this.RemoveFrameworkUpdateRegistration();
         this.requestedUpdatePending = false;
         this.requestedUpdateInFlight = false;
         base.OnPluginUnload();
@@ -215,6 +216,7 @@ public unsafe class CharacterStatusSubWindowHandler
         if (displayMode != JournalTranslationDisplayMode.TooltipTranslation)
         {
             this.requestedUpdatePending = false;
+            this.RemoveFrameworkUpdateRegistration();
             return;
         }
 
@@ -225,6 +227,7 @@ public unsafe class CharacterStatusSubWindowHandler
                 out var atkUnitManager))
         {
             this.requestedUpdatePending = false;
+            this.RemoveFrameworkUpdateRegistration();
             return;
         }
 
@@ -232,6 +235,7 @@ public unsafe class CharacterStatusSubWindowHandler
         if (atkStage == null)
         {
             this.requestedUpdatePending = false;
+            this.RemoveFrameworkUpdateRegistration();
             return;
         }
 
@@ -249,7 +253,41 @@ public unsafe class CharacterStatusSubWindowHandler
         finally
         {
             this.requestedUpdateInFlight = false;
+            if (!this.requestedUpdatePending)
+            {
+                this.RemoveFrameworkUpdateRegistration();
+            }
         }
+    }
+
+    /// <summary>
+    ///     Ensures the deferred framework callback is registered only while a
+    ///     native update request is pending.
+    /// </summary>
+    private void EnsureFrameworkUpdateRegistered()
+    {
+        if (this.frameworkUpdateRegistered)
+        {
+            return;
+        }
+
+        Echoglossian.FrameworkInterface.Update += this.OnFrameworkUpdate;
+        this.frameworkUpdateRegistered = true;
+    }
+
+    /// <summary>
+    ///     Removes the deferred framework callback when no further native
+    ///     update pass is required.
+    /// </summary>
+    private void RemoveFrameworkUpdateRegistration()
+    {
+        if (!this.frameworkUpdateRegistered)
+        {
+            return;
+        }
+
+        Echoglossian.FrameworkInterface.Update -= this.OnFrameworkUpdate;
+        this.frameworkUpdateRegistered = false;
     }
 
     /// <summary>

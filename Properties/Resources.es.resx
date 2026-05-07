@@ -711,6 +711,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Mostrar notificaciones en segundo plano de misiones</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Configura el motor de traducción seleccionado antes de habilitar la traducción.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>La traducción está desactivada en este momento porque el motor de traducción seleccionado todavía necesita configuración. Abre la ventana de configuración y completa la configuración del motor.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>La traducción está desactivada en este momento porque el idioma seleccionado requiere recursos de fuente adicionales. Abre la ventana de configuración para descargar o validar los archivos necesarios.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Cada tipo de brindis puede elegir de forma independiente entre reemplazo nativo y representación de superposición.</value>
   </data>

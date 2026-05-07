@@ -738,6 +738,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Afficher les notifications en arrière-plan de la quête</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Configurez le moteur de traduction sélectionné avant d’activer la traduction.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>La traduction est actuellement désactivée, car le moteur de traduction sélectionné doit encore être configuré. Ouvrez la fenêtre de configuration et terminez la configuration du moteur.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>La traduction est actuellement désactivée, car la langue sélectionnée nécessite des ressources de police supplémentaires. Ouvrez la fenêtre de configuration pour télécharger ou valider les fichiers requis.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Chaque type de toast peut choisir indépendamment entre le remplacement natif et le rendu par superposition.</value>
   </data>

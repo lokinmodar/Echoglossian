@@ -456,7 +456,18 @@ public partial class Echoglossian
   /// </summary>
   public static void SaveConfig(Config config)
   {
-    PluginInterface.SavePluginConfig(config);
+    try
+    {
+      PluginInterface.SavePluginConfig(config);
+    }
+    catch (Exception ex)
+    {
+      PluginRuntimeLog.Error(
+          "Config",
+          $"Failed to save plugin configuration: {ex}");
+    }
+
+    activeInstance?.OnConfigurationSaved(config);
   }
 
   /// <summary>
@@ -489,24 +500,6 @@ public partial class Echoglossian
     {
       PluginRuntimeLog.Error(
           $"Failed to initialize translation service for engine id {this.configuration.ChosenTransEngine}: {ex}");
-
-      if (TranslationEngineSelectionMigrationHelper
-              .TryRepairLikelyLegacyAmazonCollision(this.configuration))
-      {
-        SaveConfig(this.configuration);
-        try
-        {
-          return new TranslationService(
-              this.configuration,
-              PluginLog,
-              Sanitizer);
-        }
-        catch (Exception retryEx)
-        {
-          PluginRuntimeLog.Error(
-              $"Failed to initialize translation service after legacy engine repair: {retryEx}");
-        }
-      }
 
       PluginRuntimeLog.Warning(
           "Falling back to an unavailable translator to keep the plugin loaded.");
@@ -543,6 +536,104 @@ public partial class Echoglossian
                     nameof(Resources.ConfigVersionUpgradeRecommendedMessage),
                     this.cultureInfo) ??
                 Resources.ConfigVersionUpgradeRecommendedMessage,
+      Icon = FontAwesomeIcon.ExclamationTriangle.ToNotificationIcon(),
+      Type = NotificationType.Warning,
+      UserDismissable = true,
+      InitialDuration = TimeSpan.MaxValue,
+      HardExpiry = DateTime.MaxValue,
+    };
+
+    var activeNotification = NotificationManager.AddNotification(notification);
+    Action<Dalamud.Interface.ImGuiNotification.EventArgs.INotificationDrawArgs>?
+        drawActions = null;
+    var openConfigurationLabel = Resources.ResourceManager.GetString(
+                                     nameof(Resources.OpenConfigurationButtonLabel),
+                                     this.cultureInfo) ??
+                                 Resources.OpenConfigurationButtonLabel;
+
+    drawActions = _ =>
+    {
+      if (!ImGui.Button(openConfigurationLabel))
+      {
+        return;
+      }
+
+      this.ConfigWindow();
+      if (drawActions is not null)
+      {
+        activeNotification.DrawActions -= drawActions;
+      }
+
+      activeNotification.DismissNow();
+    };
+
+    activeNotification.DrawActions += drawActions;
+  }
+
+  /// <summary>
+  /// Forces translation off when the selected language or engine cannot support
+  /// an active translated runtime state.
+  /// </summary>
+  private void EnforceTranslationActivationConstraints()
+  {
+    var blockReason = TranslationActivationGuard.GetBlockReason(
+        this.configuration,
+        SelectedLanguage);
+    if (blockReason == TranslationActivationGuard.BlockReason.None ||
+        !this.configuration.Translate)
+    {
+      return;
+    }
+
+    this.configuration.Translate = false;
+    SaveConfig(this.configuration);
+  }
+
+  /// <summary>
+  /// Shows a persistent notification when translation is blocked by missing
+  /// required assets or incomplete engine configuration.
+  /// </summary>
+  private void TryShowTranslationActivationBlockedNotification()
+  {
+    var blockReason = TranslationActivationGuard.GetBlockReason(
+        this.configuration,
+        SelectedLanguage);
+    if (blockReason is not TranslationActivationGuard.BlockReason
+        .MissingRequiredAssets &&
+        blockReason is not TranslationActivationGuard.BlockReason
+        .EngineConfigurationIncomplete)
+    {
+      this.translationActivationBlockedNotificationSignature = null;
+      return;
+    }
+
+    var signature =
+        $"{(int)blockReason}:{this.configuration.Lang}:{this.configuration.ChosenTransEngine}";
+    if (string.Equals(
+            signature,
+            this.translationActivationBlockedNotificationSignature,
+            StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    this.translationActivationBlockedNotificationSignature = signature;
+
+    var notification = new Notification
+    {
+      Title = Resources.Name,
+      Content = blockReason ==
+                TranslationActivationGuard.BlockReason.MissingRequiredAssets
+          ? Resources.ResourceManager.GetString(
+                nameof(Resources
+                    .TranslationBlockedByMissingAssetsNotificationText),
+                this.cultureInfo) ??
+            Resources.TranslationBlockedByMissingAssetsNotificationText
+          : Resources.ResourceManager.GetString(
+                nameof(Resources
+                    .TranslationBlockedByEngineConfigurationNotificationText),
+                this.cultureInfo) ??
+            Resources.TranslationBlockedByEngineConfigurationNotificationText,
       Icon = FontAwesomeIcon.ExclamationTriangle.ToNotificationIcon(),
       Type = NotificationType.Warning,
       UserDismissable = true,

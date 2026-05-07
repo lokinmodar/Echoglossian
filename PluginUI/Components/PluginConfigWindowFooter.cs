@@ -16,9 +16,8 @@ public static class PluginConfigWindowFooter
   /// </summary>
   /// <param name="config">The window open/close flag.</param>
   /// <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
-  /// <param name="saveCallback">Callback function to invoke when saving.</param>
   /// <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
-  public static void DrawFooter(ref bool config, ref bool saveConfigValue, Action saveCallback, ImTextureID pixImageHandle, ImTextureID cryptoImageHandle)
+  public static void DrawFooter(ref bool config, ref bool saveConfigValue, ImTextureID pixImageHandle, ImTextureID cryptoImageHandle)
   {
     var windowSize = ImGui.GetWindowContentRegionMax();
 
@@ -37,7 +36,6 @@ public static class PluginConfigWindowFooter
 
     if (ImGui.Button(Resources.TodoUrl))
     {
-      saveConfigValue = true;
       Process.Start(new ProcessStartInfo
       {
         FileName = "https://github.com/users/lokinmodar/projects/2",
@@ -56,7 +54,6 @@ public static class PluginConfigWindowFooter
     {
       saveConfigValue = true;
       config = false;
-      saveCallback?.Invoke();
     }
 
     // Patron Button
@@ -67,7 +64,6 @@ public static class PluginConfigWindowFooter
 
     if (ImGui.Button(Resources.PatronButtonLabel))
     {
-      saveConfigValue = true;
       Process.Start(new ProcessStartInfo
       {
         FileName = "https://ko-fi.com/lokinmodar",
@@ -87,7 +83,6 @@ public static class PluginConfigWindowFooter
 
     if (ImGui.Button(Resources.SendCryptoButton))
     {
-      saveConfigValue = true;
       ImGui.OpenPopup(Resources.CryptoQrWindowLabel);
     }
 
@@ -122,7 +117,6 @@ public static class PluginConfigWindowFooter
 
     if (ImGui.Button(Resources.SendPixButton))
     {
-      saveConfigValue = true;
       ImGui.OpenPopup(Resources.PixQrWindowLabel);
     }
 

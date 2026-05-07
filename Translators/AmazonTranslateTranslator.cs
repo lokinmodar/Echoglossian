@@ -5,7 +5,6 @@
 
 using Amazon;
 using Amazon.Runtime;
-using Amazon.Runtime.Credentials;
 using Amazon.Translate;
 using Amazon.Translate.Model;
 
@@ -13,37 +12,18 @@ namespace Echoglossian.Translators;
 
 public class AmazonTranslateTranslator : ITranslator
 {
-    private readonly Config config;
     private readonly IPluginLog pluginLog;
     private readonly AmazonTranslateClient translateClient;
 
     public AmazonTranslateTranslator(IPluginLog pluginLog, Config config)
     {
         this.pluginLog = pluginLog;
-        this.config = config;
 
         try
         {
             var region =
                 RegionEndpoint.GetBySystemName(config.AwsRegion ?? "us-east-1");
-
-            AWSCredentials credentials;
-
-            if (!string.IsNullOrWhiteSpace(config.AwsAccessKey) &&
-                !string.IsNullOrWhiteSpace(config.AwsSecretKey))
-            {
-                credentials = new BasicAWSCredentials(
-                    config.AwsAccessKey,
-                    config.AwsSecretKey);
-            }
-            else
-            {
-                PluginRuntimeLog.Warning(
-                    pluginLog,
-                    "Using default AWS credentials provider chain.");
-                credentials =
-                    DefaultAWSCredentialsIdentityResolver.GetCredentials();
-            }
+            var credentials = ResolveDesktopCredentials(config);
 
             this.translateClient = new AmazonTranslateClient(
                 credentials,
@@ -59,6 +39,53 @@ public class AmazonTranslateTranslator : ITranslator
                 $"Failed to initialize AWS Translate client: {ex}");
             throw;
         }
+    }
+
+    /// <summary>
+    ///     Resolves AWS credentials only from explicit desktop-safe sources and
+    ///     never probes EC2 instance metadata during plugin runtime.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <returns>The resolved AWS credentials.</returns>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when no desktop-safe AWS credentials source is available.
+    /// </exception>
+    private static AWSCredentials ResolveDesktopCredentials(Config config)
+    {
+        if (!string.IsNullOrWhiteSpace(config.AwsAccessKey) &&
+            !string.IsNullOrWhiteSpace(config.AwsSecretKey))
+        {
+            return string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("AWS_SESSION_TOKEN"))
+                ? new BasicAWSCredentials(
+                    config.AwsAccessKey,
+                    config.AwsSecretKey)
+                : new SessionAWSCredentials(
+                    config.AwsAccessKey,
+                    config.AwsSecretKey,
+                    Environment.GetEnvironmentVariable("AWS_SESSION_TOKEN"));
+        }
+
+        var environmentAccessKey =
+            Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
+        var environmentSecretKey =
+            Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+        if (!string.IsNullOrWhiteSpace(environmentAccessKey) &&
+            !string.IsNullOrWhiteSpace(environmentSecretKey))
+        {
+            var environmentSessionToken =
+                Environment.GetEnvironmentVariable("AWS_SESSION_TOKEN");
+            return string.IsNullOrWhiteSpace(environmentSessionToken)
+                ? new BasicAWSCredentials(
+                    environmentAccessKey,
+                    environmentSecretKey)
+                : new SessionAWSCredentials(
+                    environmentAccessKey,
+                    environmentSecretKey,
+                    environmentSessionToken);
+        }
+
+        throw new InvalidOperationException(
+            "Amazon Translate requires explicit AWS credentials in Echoglossian or the AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY environment variables. Echoglossian will not probe EC2 instance metadata.");
     }
 
     /// <summary>

@@ -710,6 +710,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Vis quest-baggrundsmeddelelser</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Konfigurer den valgte oversættelsesmotor, før oversættelse kan aktiveres.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>Oversættelse er i øjeblikket deaktiveret, fordi den valgte oversættelsesmotor stadig skal konfigureres. Åbn konfigurationsvinduet, og fuldfør motoropsætningen.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>Oversættelse er i øjeblikket deaktiveret, fordi det valgte sprog kræver ekstra skrifttypeaktiver. Åbn konfigurationsvinduet for at downloade eller validere de nødvendige filer.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Hver toasttype kan vælge uafhængigt mellem native erstatning og overlay-gengivelse.</value>
   </data>

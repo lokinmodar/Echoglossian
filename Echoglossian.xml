@@ -1889,6 +1889,10 @@
                 services are properly initialized before using this class.
             </remarks>
             <summary>
+                Handles runtime refresh of mutable plugin configuration without requiring
+                a full plugin reload.
+            </summary>
+            <summary>
                 General utility methods for the Echoglossian plugin.
             </summary>
             <summary>
@@ -1908,11 +1912,6 @@
             <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
-            </summary>
-            <summary>
-                Handles the quest probe command used to inspect the complete quest data
-                shape from Lumina, the live quest progress resolver, and the current
-                QuestPlate database rows.
             </summary>
             <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
@@ -1974,6 +1973,36 @@
             </summary>
             <param name="row">The row to persist.</param>
             <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetActiveConfiguration">
+            <summary>
+                Returns the currently loaded live configuration without re-reading the
+                persisted plugin config file from disk.
+            </summary>
+            <returns>
+                The active configuration instance when the plugin is loaded;
+                otherwise, <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldFilterStoredTranslationsByEngine">
+            <summary>
+                Returns whether DB lookups should filter by translation engine using
+                the current live configuration.
+            </summary>
+            <returns>
+                <see langword="true" /> when stored translations should be filtered
+                by engine; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldCopyTranslationToClipboard">
+            <summary>
+                Returns whether translated text should be copied to the clipboard
+                using the current live configuration.
+            </summary>
+            <returns>
+                <see langword="true" /> when clipboard copy is enabled; otherwise,
+                <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateOrUseDb">
             <summary>
@@ -2323,11 +2352,6 @@
             Holds the database editor window instance.
             </summary>
         </member>
-        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
-            <summary>
-            Holds the currently active addon structure probe watch, if any.
-            </summary>
-        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2385,6 +2409,48 @@
             </summary>
             <param name="disposing">Indicates whether the method was called from managed code.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.OnConfigurationSaved(Echoglossian.Config)">
+            <summary>
+                Marks the live runtime configuration as dirty after the active config is
+                persisted so the next framework tick can refresh state safely.
+            </summary>
+            <param name="config">The configuration instance that was just saved.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyPendingRuntimeConfigurationChanges">
+            <summary>
+                Applies pending runtime configuration changes on the framework thread.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeTranslationRuntimeSignature">
+            <summary>
+                Computes a signature for config values that affect translator
+                construction or broker pacing.
+            </summary>
+            <returns>A stable serialized signature.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeAddonHandlerRegistrationSignature">
+            <summary>
+                Computes a signature for config values that determine which addon
+                handlers should be registered.
+            </summary>
+            <returns>A stable serialized signature.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RebuildQueuedTranslationBroker">
+            <summary>
+                Recreates the shared queued-translation broker for the current engine.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RebuildQuestToastRuntime">
+            <summary>
+                Recreates and re-registers the quest-toast runtime so it uses the
+                current translation service.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RefreshAddonHandlerRegistrations">
+            <summary>
+                Re-registers addon handlers according to the current config.
+            </summary>
+        </member>
         <member name="T:Echoglossian.Echoglossian.PromptType">
             <summary>
                 Enum for the different prompt types.
@@ -2398,11 +2464,6 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
-            <summary>
-                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -2488,6 +2549,18 @@
             <param name="currentConfigVersion">
                 The current configuration schema version supported by the plugin.
             </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EnforceTranslationActivationConstraints">
+            <summary>
+            Forces translation off when the selected language or engine cannot support
+            an active translated runtime state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryShowTranslationActivationBlockedNotification">
+            <summary>
+            Shows a persistent notification when translation is blocked by missing
+            required assets or incomplete engine configuration.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.ResolveLegacyOverlayDisplayMode(System.Boolean,System.Boolean)">
             <summary>
@@ -3733,21 +3806,6 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name and optional index.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name and index to probe.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -4009,102 +4067,6 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
-            <summary>
-                Handles the quest probe command.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
-            <summary>
-                Tries to resolve the quest probe target from either a quest id or a
-                quest name.
-            </summary>
-            <param name="input">The command argument.</param>
-            <param name="questIdText">The resolved quest id as text.</param>
-            <param name="questName">The resolved quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>True when the quest could be resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the quest data structure for inspection.
-            </summary>
-            <param name="questIdText">The quest id as text.</param>
-            <param name="questName">The quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the raw Lumina quest row properties.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs all rows from the quest text sheet, not just the live todo
-                entries, so we can inspect the full structure of the quest sheet.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
-            <summary>
-                Logs the QuestPlate rows currently stored for the quest.
-            </summary>
-            <param name="questIdText">The quest id text.</param>
-            <param name="questName">The quest name.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Logs the resolved live quest progression snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves a human-readable quest name from a quest row.
-            </summary>
-            <param name="questRow">The quest row.</param>
-            <returns>The resolved quest name, if available.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
-            <summary>
-                Converts quest text to a readable string for probe output.
-            </summary>
-            <param name="text">The quest text.</param>
-            <returns>The evaluated text string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
-            <summary>
-                Formats a probe value for log output.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>A human-readable value string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Builds the raw quest sheet name used by the game files.
-            </summary>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>The quest text sheet name, if it can be derived.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest row id as text through reflection so the probe
-                stays compatible with generated sheet shapes.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest row id as text, or an empty string if unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest sheet identifier used to mount the quest text
-                sheet path.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -5011,6 +4973,33 @@
             <summary>
                 Draws the Echoglossian configuration UI.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawTranslationStatusHeader">
+            <summary>
+            Draws the compact translation status line that stays outside the tab
+            content.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawTranslationSetupTab">
+            <summary>
+            Draws the first configuration tab that combines language selection, engine
+            configuration, activation, and the legacy general settings.
+            </summary>
+            <returns><c>true</c> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawTranslationLanguageSelectionSection">
+            <summary>
+            Draws the language-selection section and applies the related runtime side
+            effects when the target language changes.
+            </summary>
+            <returns><c>true</c> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawTranslationActivationSection">
+            <summary>
+            Draws the translation activation section and blocks activation while the
+            selected language or engine is not ready.
+            </summary>
+            <returns><c>true</c> when the configuration changed.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
             <summary>
@@ -8493,6 +8482,83 @@
         <member name="M:Echoglossian.EFCoreSqlite.Models.TranslationFailure.ToString">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.AssetsManager.RequiresDownloadedAsset(System.String)">
+            <summary>
+            Determines whether a font file name depends on a downloaded external asset.
+            </summary>
+            <param name="fontFileName">The font file name to inspect.</param>
+            <returns><c>true</c> if the font requires a downloaded asset; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.RequiresDownloadedAssets(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Determines whether the specified language requires a downloaded font asset.
+            </summary>
+            <param name="languageInfo">The language to inspect.</param>
+            <returns><c>true</c> if the language depends on a downloaded asset; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.GetRequiredAssetFiles(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Returns the downloaded font assets required by the specified language.
+            </summary>
+            <param name="languageInfo">The language to inspect.</param>
+            <returns>The required downloaded asset file names.</returns>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.AreRequiredAssetsPresent(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Determines whether all downloaded assets required by the specified language are present.
+            </summary>
+            <param name="languageInfo">The language to inspect.</param>
+            <returns><c>true</c> when every required downloaded asset exists; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.HasMissingRequiredAssets(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Returns whether the specified language currently has one or more missing
+            required downloaded assets.
+            </summary>
+            <param name="languageInfo">The language to inspect.</param>
+            <returns>
+            <c>true</c> when the language requires downloaded assets and at least one
+            required file is missing; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.RefreshPluginAssetsState(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Recomputes the runtime asset state for the specified language.
+            </summary>
+            <param name="languageInfo">The language to inspect.</param>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.GetAssetDownloadUri(System.String)">
+            <summary>
+            Returns the manual download URI for a known plugin asset file.
+            </summary>
+            <param name="assetFileName">The asset file name.</param>
+            <returns>The manual download URI, or <see langword="null" /> when unknown.</returns>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.OpenAssetsDirectory">
+            <summary>
+            Opens the configured plugin font-asset directory in the system shell.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.OpenRequiredAssetDownloadLinks(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Opens the manual download links for all downloaded assets required by the
+            specified language.
+            </summary>
+            <param name="languageInfo">The language whose assets should be opened.</param>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.PluginAssetsChecker(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Checks whether the plugin font assets required by the specified language are available.
+            </summary>
+            <param name="languageInfo">The language that may require downloaded assets.</param>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.DownloadAssets(System.Int32)">
+            <summary>
+            Downloads a plugin font asset by index with bounded retry behavior.
+            </summary>
+            <param name="index">The asset index to download.</param>
+            <returns><c>true</c> if the asset was downloaded successfully; otherwise, <c>false</c>.</returns>
+        </member>
         <member name="T:Echoglossian.DiagnosticFileEmitter">
             <summary>
                 Emits purpose-specific diagnostic files into the plugin config
@@ -8802,6 +8868,26 @@
             <param name="language">The raw language value.</param>
             <returns>The normalized language code, or an empty string.</returns>
         </member>
+        <member name="T:Echoglossian.TranslationActivationGuard">
+            <summary>
+            Determines whether translation activation must stay blocked for the current
+            language and engine configuration.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.TranslationActivationGuard.BlockReason">
+            <summary>
+            The reason why translation activation is currently blocked.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationActivationGuard.GetBlockReason(Echoglossian.Config,Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Resolves the current translation activation block reason for the provided
+            configuration and selected language.
+            </summary>
+            <param name="config">The plugin configuration to evaluate.</param>
+            <param name="selectedLanguage">The currently selected target language.</param>
+            <returns>The blocking reason, or <see cref="F:Echoglossian.TranslationActivationGuard.BlockReason.None"/>.</returns>
+        </member>
         <member name="T:Echoglossian.TranslationEngineSelectionMigrationHelper">
             <summary>
                 Centralizes compatibility and safety rules for persisted translation
@@ -8841,16 +8927,20 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.TryRepairLikelyLegacyAmazonCollision(Echoglossian.Config)">
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.ResolveSupportedEngineSelection(System.Int32,System.Collections.Generic.IReadOnlyCollection{System.Int32})">
             <summary>
-                Repairs the specific bootstrap failure pattern where a legacy
-                v3.25.x selection of YandexPublic was persisted as id 9 and now
-                resolves to Amazon in v4.
+                Normalizes a selected engine id against the currently supported engine
+                ids for the target language.
             </summary>
-            <param name="config">The active plugin configuration.</param>
+            <param name="selectedEngineId">The currently selected engine id.</param>
+            <param name="supportedEngineIds">
+                The supported engine ids for the active
+                target language.
+            </param>
             <returns>
-                <see langword="true" /> when the selection was repaired in-place;
-                otherwise, <see langword="false" />.
+                The selected engine id when it is supported; otherwise, the first
+                supported concrete engine id, or Google when the language exposes no
+                concrete engine list.
             </returns>
         </member>
         <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.NormalizeLegacyChatGptBaseUrl(System.String)">
@@ -8860,17 +8950,6 @@
             </summary>
             <param name="chatGptBaseUrl">The configured ChatGPT base URL.</param>
             <returns>The normalized base URL.</returns>
-        </member>
-        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.HasExplicitAmazonConfiguration(Echoglossian.Config)">
-            <summary>
-                Determines whether the user appears to have explicitly configured the
-                Amazon translator rather than carrying forward a legacy engine id.
-            </summary>
-            <param name="config">The active plugin configuration.</param>
-            <returns>
-                <see langword="true" /> when the config contains explicit Amazon
-                translator setup; otherwise, <see langword="false" />.
-            </returns>
         </member>
         <member name="T:Echoglossian.TranslationResultGuard">
             <summary>
@@ -10460,6 +10539,18 @@
                 from the <c>PreDraw</c> stack.
             </summary>
             <param name="framework">The active framework service.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.EnsureFrameworkUpdateRegistered">
+            <summary>
+                Ensures the deferred framework callback is registered only while a
+                native update request is pending.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.RemoveFrameworkUpdateRegistration">
+            <summary>
+                Removes the deferred framework callback when no further native
+                update pass is required.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveCanonicalCharacterStatusPayloadPair(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
@@ -18601,13 +18692,12 @@
             Includes Save, Donation, Project Links, and Pix QR popup.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,System.Action,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID)">
+        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID)">
             <summary>
             Draws the footer section with buttons and Pix QR popup.
             </summary>
             <param name="config">The window open/close flag.</param>
             <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
-            <param name="saveCallback">Callback function to invoke when saving.</param>
             <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.PromptEditorUI">
@@ -18683,6 +18773,34 @@
             Renders the configuration UI for the Yandex Public Translator (no custom prompts).
             </summary>
         </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.PluginAssetRequirementUiHelper">
+            <summary>
+            Renders the language-asset requirement UX for languages that depend on
+            downloaded font assets.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.PluginAssetRequirementUiHelper.RequestForSelectedLanguage">
+            <summary>
+            Requests that the missing-assets popup be shown for the currently
+            selected language when it depends on unavailable downloaded assets.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.PluginAssetRequirementUiHelper.DrawInlineWarning(Echoglossian.Config)">
+            <summary>
+            Draws inline warning UI and a management button when the selected
+            language requires missing downloaded assets.
+            </summary>
+            <param name="config">The plugin configuration to update.</param>
+            <returns><c>true</c> when the UI changed configuration state.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(Echoglossian.Config)">
+            <summary>
+            Draws the modal that guides the user through automatic and manual
+            resolution of required downloaded font assets.
+            </summary>
+            <param name="config">The plugin configuration to update.</param>
+            <returns><c>true</c> when the configuration changed.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorStateManager">
             <summary>
                 Manages UI editing state for each translation prompt engine tab.
@@ -18721,6 +18839,42 @@
                 Optional label for the button (defaults to "Reset
                 Settings to Default").
             </param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.TranslationEngineConfigurationHelper">
+            <summary>
+            Provides readiness checks for translator-engine configurations used by the
+            config UI activation flow.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.TranslationEngineConfigurationHelper.IsConfigured(Echoglossian.Config)">
+            <summary>
+            Determines whether the currently selected translation engine has the
+            minimum required configuration to enable translations.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <returns>
+            <c>true</c> when the selected engine is ready for activation; otherwise,
+            <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.TranslationEngineConfigurationHelper.IsConfigured(Echoglossian.Config,Echoglossian.Echoglossian.TransEngines)">
+            <summary>
+            Determines whether a specific translation engine has the minimum required
+            configuration to enable translations.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <param name="engine">The engine to validate.</param>
+            <returns>
+            <c>true</c> when the engine is ready for activation; otherwise,
+            <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.TranslationEngineConfigurationHelper.HasValue(System.String)">
+            <summary>
+            Returns whether a configuration value is meaningfully populated.
+            </summary>
+            <param name="value">The value to test.</param>
+            <returns><c>true</c> when the value is non-empty; otherwise, <c>false</c>.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.UIWarningHelpers">
             <summary>
@@ -19010,7 +19164,7 @@
                 per-engine configuration.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},System.Action)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},System.Action)">
             <summary>
                 Draws the translation engine settings UI, allowing users to select and
                 configure translation engines.
@@ -19020,8 +19174,6 @@
                 The index of the selected language in the language
                 list.
             </param>
-            <param name="languageList">The list of available languages.</param>
-            <param name="availableEngines">The list of available translation engines.</param>
             <param name="langDict">
                 Dictionary mapping language indices to their
                 information, including supported engines.
@@ -19031,6 +19183,36 @@
                 service when settings change.
             </param>
             <returns>True if any settings were changed; otherwise, false.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.GetDisplayName(Echoglossian.Echoglossian.TransEngines)">
+            <summary>
+                Resolves the user-facing display name for one concrete translation
+                engine without depending on list ordering.
+            </summary>
+            <param name="engine">The concrete engine enum value.</param>
+            <returns>The display label shown in the combo.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.TranslationEngineOption">
+            <summary>
+                Represents one user-facing translation engine choice in the settings
+                combo.
+            </summary>
+            <param name="EngineId">The concrete engine id persisted in config.</param>
+            <param name="Label">The user-facing label.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.TranslationEngineOption.#ctor(System.Int32,System.String)">
+            <summary>
+                Represents one user-facing translation engine choice in the settings
+                combo.
+            </summary>
+            <param name="EngineId">The concrete engine id persisted in config.</param>
+            <param name="Label">The user-facing label.</param>
+        </member>
+        <member name="P:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.TranslationEngineOption.EngineId">
+            <summary>The concrete engine id persisted in config.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.TranslationEngineOption.Label">
+            <summary>The user-facing label.</summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TroubleshootingTab">
             <summary>
@@ -19336,6 +19518,76 @@
         <member name="P:Echoglossian.Properties.Resources.CurrentPluginAssetsStatus">
             <summary>
               Looks up a localized string similar to Are the plugin assets downloaded?.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ManageLanguageAssetsButtonText">
+            <summary>
+              Looks up a localized string similar to Manage required language assets.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationRequiresDownloadedAssetsText">
+            <summary>
+              Looks up a localized string similar to This language requires extra downloadable font assets before translation can be enabled..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationBlockedByEngineConfigurationText">
+            <summary>
+              Looks up a localized string similar to Configure the selected translation engine before enabling translation..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationBlockedByEngineConfigurationNotificationText">
+            <summary>
+              Looks up a localized string similar to Translation is currently disabled because the selected translation engine still needs to be configured. Open the configuration window and finish the engine setup..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationBlockedByMissingAssetsNotificationText">
+            <summary>
+              Looks up a localized string similar to Translation is currently disabled because the selected language requires extra font assets. Open the configuration window to download or validate the required files..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationBlockedByMissingAssetsStatusText">
+            <summary>
+              Looks up a localized string similar to Waiting for required font assets.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LanguageAssetsPopupBodyFormat">
+            <summary>
+              Looks up a localized string similar to {0} requires one or more external font assets before Echoglossian can translate safely..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LanguageAssetsPopupAutoDownloadHint">
+            <summary>
+              Looks up a localized string similar to An automatic background download was triggered when possible. If it fails, use the controls below to place the files manually and recheck them..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LanguageAssetsPopupFolderLabel">
+            <summary>
+              Looks up a localized string similar to Assets folder:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LanguageAssetsPopupFilesLabel">
+            <summary>
+              Looks up a localized string similar to Required files:.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OpenAssetsFolderButtonText">
+            <summary>
+              Looks up a localized string similar to Open assets folder.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OpenManualDownloadLinksButtonText">
+            <summary>
+              Looks up a localized string similar to Open manual download links.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.RecheckAssetsButtonText">
+            <summary>
+              Looks up a localized string similar to Recheck assets.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.LanguageAssetsTroubleshootingSummaryFormat">
+            <summary>
+              Looks up a localized string similar to The selected language &quot;{0}&quot; depends on downloaded font assets. Manual files should be placed in: {1}.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired">
@@ -20632,6 +20884,17 @@
             </summary>
             <param name="framework">The framework instance.</param>
         </member>
+        <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.ResolveDesktopCredentials(Echoglossian.Config)">
+            <summary>
+                Resolves AWS credentials only from explicit desktop-safe sources and
+                never probes EC2 instance metadata during plugin runtime.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The resolved AWS credentials.</returns>
+            <exception cref="T:System.InvalidOperationException">
+                Thrown when no desktop-safe AWS credentials source is available.
+            </exception>
+        </member>
         <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.Translate(System.String,System.String,System.String)">
             <summary>
                 Synchronously translates the given text from source language to target
@@ -21095,6 +21358,17 @@
             <returns>
             The accepted translated text, or <paramref name="sanitizedText" /> when
             the result is empty or synthetic.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.ShouldBypassTranslationDueToMissingLanguageAssets">
+            <summary>
+            Determines whether the current selected language depends on missing
+            downloaded font assets and should therefore bypass translation work until
+            those assets are available.
+            </summary>
+            <returns>
+            <c>true</c> when translation should be bypassed because required language
+            assets are missing; otherwise, <c>false</c>.
             </returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.CheckTextToTranslate(System.String)">

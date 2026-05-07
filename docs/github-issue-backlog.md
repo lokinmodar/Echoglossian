@@ -42,6 +42,18 @@ highly visible and appear to have a narrow root cause.
   - safe fallback translator so engine init failure no longer prevents plugin load
   - legacy ChatGPT base-url normalization moved into the same migration path
 
+### #183 Align Version numbering to goatcorp standards
+
+- Priority: P0
+- Ease: short/medium
+- Status: urgent enhancement
+- Notes:
+  - This is not a runtime bug, but it can become a release/process blocker.
+  - The version number should stop being fully dynamic and align with the
+    conventions expected by the goatcorp plugin release flow.
+  - Good candidate for a narrow, isolated fix once the release-breakage
+    cluster is stable.
+
 ### #168 The plugin isn't opening
 
 - Priority: P0
@@ -116,6 +128,19 @@ These are still release-quality problems, but they likely need a more careful
   - Remaining symptoms may collapse into `#170` and `#174`.
   - Reassess after the next published build and engine-migration fix.
 
+### #182 Translation inconsistent - quest tracker sometimes doesn't translate
+
+- Priority: P1
+- Ease: medium
+- Status: active regression
+- Notes:
+  - This is a fresh tracker-specific bug report after the recent quest-family
+    stabilization work.
+  - Likely intersects `_ToDoList`, `ScenarioTree`, quest cache reuse, or
+    background prefetch timing.
+  - Treat as a high-value follow-up right after the overlay/settings cluster
+    because it is very visible and likely narrower than the Talk-family work.
+
 ## P2: Release Stabilization, More Involved
 
 These are serious, but they are either more specialized or more likely to
@@ -173,6 +198,19 @@ require careful UI/runtime investigation rather than a narrow config fix.
     compatibility work.
   - Keep this as the structured engineering item; `#173` is the originating
     user bug report and may later be closed as superseded by `#179`.
+
+### #181 Prevent TextNode Flags corruption while reading them
+
+- Priority: P2
+- Ease: hard
+- Status: active deep-runtime investigation
+- Notes:
+  - This likely sits beneath part of the `Talk` and `JournalDetail` layout
+    corruption reports.
+  - The issue is sensitive because the bug appears to happen on read, not only
+    on write, which points to text-node flag handling or access patterns.
+  - Important, but riskier and less likely to be a quick hotfix than `#182`
+    or the remaining overlay/settings items.
 
 ## P3: Important, Not Immediate Release Blockers
 
@@ -253,10 +291,13 @@ work rather than release fallout.
 4. `#169` + `#175` as one overlay cluster
 5. `#174` + `#178` as one cache/settings cluster
 6. reassess `#171` after `#170` and `#174`
-7. release-validate and then close `#170`
-8. release-validate and then close `#180`
-9. `#167`
-10. release-validate the remaining open parts of `#172`
-11. `#173` / `#179`
-12. `#176`
-13. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
+7. `#182`
+8. `#183`
+9. release-validate and then close `#170`
+10. release-validate and then close `#180`
+11. `#167`
+12. release-validate the remaining open parts of `#172`
+13. `#181`
+14. `#173` / `#179`
+15. `#176`
+16. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`

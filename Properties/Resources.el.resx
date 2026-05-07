@@ -738,6 +738,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Εμφάνιση ειδοποιήσεων στο παρασκήνιο της αποστολής</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Ρυθμίστε την επιλεγμένη μηχανή μετάφρασης πριν ενεργοποιήσετε τη μετάφραση.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>Η μετάφραση είναι αυτή τη στιγμή απενεργοποιημένη, επειδή η επιλεγμένη μηχανή μετάφρασης χρειάζεται ακόμη ρύθμιση. Ανοίξτε το παράθυρο ρυθμίσεων και ολοκληρώστε τη ρύθμιση της μηχανής.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>Η μετάφραση είναι αυτή τη στιγμή απενεργοποιημένη, επειδή η επιλεγμένη γλώσσα απαιτεί επιπλέον αρχεία γραμματοσειράς. Ανοίξτε το παράθυρο ρυθμίσεων για να κατεβάσετε ή να ελέγξετε τα απαιτούμενα αρχεία.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Κάθε τύπος τοστ μπορεί να επιλέξει ανεξάρτητα μεταξύ εγγενούς αντικατάστασης και απόδοσης επικάλυψης.</value>
   </data>

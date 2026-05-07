@@ -738,6 +738,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Показывать фоновые уведомления о квестах</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Настройте выбранный движок перевода перед включением перевода.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>Перевод сейчас отключён, потому что выбранный движок перевода ещё не настроен. Откройте окно конфигурации и завершите настройку движка.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>Перевод сейчас отключён, потому что выбранный язык требует дополнительных шрифтовых ресурсов. Откройте окно конфигурации, чтобы скачать или проверить необходимые файлы.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Каждый тип всплывающего уведомления может независимо выбирать между собственной заменой и наложением рендеринга.</value>
   </data>

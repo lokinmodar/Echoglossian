@@ -44,17 +44,6 @@ public static class GeneralTab
             ImGui.SetTooltip(Resources.ConfigTab9CheckboxClipboardTooltipText);
         }
 
-        /*ImGui.Spacing();
-        ImGui.Text(Resources.FontSizeLabel);
-        ImGui.SameLine();
-        changed |= ImGui.SliderInt(string.Empty, ref config.FontSize, 12, 48);*/
-
-        if (changed)
-        {
-            FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
-        }
-
         return changed;
     }
 }

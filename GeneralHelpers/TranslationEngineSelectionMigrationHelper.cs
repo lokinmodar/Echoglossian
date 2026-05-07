@@ -82,29 +82,43 @@ internal static class TranslationEngineSelectionMigrationHelper
   }
 
   /// <summary>
-  ///     Repairs the specific bootstrap failure pattern where a legacy
-  ///     v3.25.x selection of YandexPublic was persisted as id 9 and now
-  ///     resolves to Amazon in v4.
+  ///     Normalizes a selected engine id against the currently supported engine
+  ///     ids for the target language.
   /// </summary>
-  /// <param name="config">The active plugin configuration.</param>
+  /// <param name="selectedEngineId">The currently selected engine id.</param>
+  /// <param name="supportedEngineIds">
+  ///     The supported engine ids for the active
+  ///     target language.
+  /// </param>
   /// <returns>
-  ///     <see langword="true" /> when the selection was repaired in-place;
-  ///     otherwise, <see langword="false" />.
+  ///     The selected engine id when it is supported; otherwise, the first
+  ///     supported concrete engine id, or Google when the language exposes no
+  ///     concrete engine list.
   /// </returns>
-  internal static bool TryRepairLikelyLegacyAmazonCollision(Config config)
+  internal static int ResolveSupportedEngineSelection(
+      int selectedEngineId,
+      IReadOnlyCollection<int>? supportedEngineIds)
   {
-    if (config.ChosenTransEngine != (int)Echoglossian.TransEngines.Amazon)
+    if (supportedEngineIds == null || supportedEngineIds.Count == 0)
     {
-      return false;
+      return (int)Echoglossian.TransEngines.Google;
     }
 
-    if (HasExplicitAmazonConfiguration(config))
+    if (IsConcreteEngineId(selectedEngineId) &&
+        supportedEngineIds.Contains(selectedEngineId))
     {
-      return false;
+      return selectedEngineId;
     }
 
-    config.ChosenTransEngine = (int)Echoglossian.TransEngines.YandexPublic;
-    return true;
+    foreach (var supportedEngineId in supportedEngineIds)
+    {
+      if (IsConcreteEngineId(supportedEngineId))
+      {
+        return supportedEngineId;
+      }
+    }
+
+    return (int)Echoglossian.TransEngines.Google;
   }
 
   /// <summary>
@@ -123,19 +137,4 @@ internal static class TranslationEngineSelectionMigrationHelper
         : chatGptBaseUrl;
   }
 
-  /// <summary>
-  ///     Determines whether the user appears to have explicitly configured the
-  ///     Amazon translator rather than carrying forward a legacy engine id.
-  /// </summary>
-  /// <param name="config">The active plugin configuration.</param>
-  /// <returns>
-  ///     <see langword="true" /> when the config contains explicit Amazon
-  ///     translator setup; otherwise, <see langword="false" />.
-  /// </returns>
-  private static bool HasExplicitAmazonConfiguration(Config config)
-  {
-    return !string.IsNullOrWhiteSpace(config.AwsAccessKey) ||
-           !string.IsNullOrWhiteSpace(config.AwsSecretKey) ||
-           !string.IsNullOrWhiteSpace(config.AmazonPrompt);
-  }
 }

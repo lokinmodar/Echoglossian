@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Components;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.PluginUI.Tabs;
 
 namespace Echoglossian;
@@ -12,34 +13,14 @@ public partial class Echoglossian
 {
   public static bool LangToRemoveDiacritics;
 
-  private readonly List<string> enginesList = new()
-    {
-        "Google",
-        "DeepL",
-        "ChatGPT",
-        "YandexCloud",
-        "GTranslate",
-        "DeepSeek",
-        "Ollama",
-        "LibreTranslate",
-        "Microsoft",
-        "Amazon",
-        "Gemini",
-        "YandexPublic",
-        "OpenRouter",
-        "LmStudio",
-        "Claude",
-    };
-
-  private List<string> languageList;
   public bool SaveConfigValue;
-  private bool showResetPopup = false;
 
   /// <summary>
   ///     Draws the Echoglossian configuration UI.
   /// </summary>
   private void EchoglossianConfigUi()
   {
+    this.SaveConfigValue = false;
     LanguageDropdownHelper.Initialize(this.languagesDictionary);
 
     ImGui.SetNextWindowSizeConstraints(
@@ -49,8 +30,159 @@ public partial class Echoglossian
         $"{Resources.ConfigWindowTitle} - Plugin Version: {this.configuration.PluginVersion}",
         ref this.config);
 
-    // Header
+    this.DrawTranslationStatusHeader();
+    ImGui.Spacing();
     ImGui.BeginGroup();
+
+    if (ImGui.BeginTabBar(
+            "TabBar",
+            ImGuiTabBarFlags.NoCloseWithMiddleMouseButton))
+    {
+      if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
+      {
+        this.SaveConfigValue |= this.DrawTranslationSetupTab();
+        ImGui.EndTabItem();
+      }
+
+      if (ImGui.BeginTabItem(Resources.ConfigTab0Name))
+      {
+        this.SaveConfigValue |= OverlayTab.Draw(this.configuration);
+        ImGui.EndTabItem();
+      }
+
+      if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
+      {
+        this.SaveConfigValue |=
+            TroubleshootingTab.Draw(this.configuration);
+        ImGui.EndTabItem();
+      }
+
+      if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
+      {
+        this.SaveConfigValue |= AboutTab.Draw(
+            this.configuration,
+            this.logo.Handle);
+        ImGui.EndTabItem();
+      }
+
+      ImGui.EndTabBar();
+    }
+
+    ImGui.EndGroup();
+
+    PluginConfigWindowFooter.DrawFooter(
+        ref this.config,
+        ref this.SaveConfigValue,
+        this.pixImage.Handle,
+        this.cryptoImage.Handle);
+
+    this.SaveConfigValue |=
+        PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
+            this.configuration);
+
+    ImGui.End();
+
+    if (this.SaveConfigValue)
+    {
+      SaveConfig(this.configuration);
+      this.SaveConfigValue = false;
+    }
+  }
+
+  /// <summary>
+  /// Draws the compact translation status line that stays outside the tab
+  /// content.
+  /// </summary>
+  private void DrawTranslationStatusHeader()
+  {
+    var blockReason = TranslationActivationGuard.GetBlockReason(
+        this.configuration,
+        SelectedLanguage);
+    var translationBlockedByMissingAssets =
+        blockReason == TranslationActivationGuard.BlockReason
+            .MissingRequiredAssets;
+    var translationBlockedByEngineConfiguration =
+        blockReason == TranslationActivationGuard.BlockReason
+            .EngineConfigurationIncomplete;
+
+    if (translationBlockedByMissingAssets)
+    {
+      ImGui.TextColored(
+          new Vector4(255, 165, 0, 255),
+          Resources.TranslationBlockedByMissingAssetsStatusText);
+      return;
+    }
+
+    if (translationBlockedByEngineConfiguration)
+    {
+      ImGui.TextColored(
+          new Vector4(255, 165, 0, 255),
+          Resources.TranslationBlockedByEngineConfigurationText);
+      return;
+    }
+
+    if (this.configuration.Translate)
+    {
+      ImGui.TextColored(
+          new Vector4(0, 255, 0, 255),
+          Resources.TranslationEnabled);
+      return;
+    }
+
+    ImGui.TextColored(
+        new Vector4(255, 255, 0, 255),
+        Resources.TranslationDisabled);
+  }
+
+  /// <summary>
+  /// Draws the first configuration tab that combines language selection, engine
+  /// configuration, activation, and the legacy general settings.
+  /// </summary>
+  /// <returns><c>true</c> when the configuration changed.</returns>
+  private bool DrawTranslationSetupTab()
+  {
+    var changed = false;
+
+    using var scrollingChild = ImRaii.Child(
+        "TranslationSetupSettings",
+        new Vector2(-1, -100),
+        false,
+        ImGuiWindowFlags.NoBackground);
+
+    if (!scrollingChild)
+    {
+      return false;
+    }
+
+    changed |= this.DrawTranslationLanguageSelectionSection();
+    ImGui.Separator();
+
+    changed |= TranslationEnginesTab.Draw(
+        this.configuration,
+        LanguageInt,
+        LangDict,
+        this.RebuildTranslationServiceSafely);
+
+    ImGui.Separator();
+    changed |= this.DrawTranslationActivationSection();
+
+    ImGui.Separator();
+    ImGui.Text(Resources.ConfigTabGeneralName);
+    ImGui.Spacing();
+    changed |= GeneralTab.Draw(this.configuration);
+
+    return changed;
+  }
+
+  /// <summary>
+  /// Draws the language-selection section and applies the related runtime side
+  /// effects when the target language changes.
+  /// </summary>
+  /// <returns><c>true</c> when the configuration changed.</returns>
+  private bool DrawTranslationLanguageSelectionSection()
+  {
+    var changed = false;
+
     UINewFontHandler.GeneralFontHandle.Push();
 
     LangToRemoveDiacritics = this.configuration.Lang is 24 or 25 or 44 or 60
@@ -79,14 +211,18 @@ public partial class Echoglossian
       this.configuration.OverlayOnlyLanguage = !languageNotSupported &&
           languageOnlySupportedThruOverlay;
 
-      if (!LangDict[LanguageInt].SupportedEngines
-              .Contains(this.configuration.ChosenTransEngine))
+      var normalizedEngineId =
+          TranslationEngineSelectionMigrationHelper
+              .ResolveSupportedEngineSelection(
+                  this.configuration.ChosenTransEngine,
+                  LangDict[LanguageInt].SupportedEngines);
+      if (normalizedEngineId != this.configuration.ChosenTransEngine)
       {
-        this.configuration.ChosenTransEngine = 0;
+        this.configuration.ChosenTransEngine = normalizedEngineId;
         this.RebuildTranslationServiceSafely();
       }
 
-      this.SaveConfigValue = true;
+      changed = true;
       PluginRuntimeLog.Debug(
           "Language selected: " +
           LangDict[this.configuration.Lang].LanguageName);
@@ -121,9 +257,6 @@ public partial class Echoglossian
     if (this.configuration.UnsupportedLanguage)
     {
       ImGui.Text(Resources.LanguageNotSupportedText);
-      this.SaveConfigValue |= AssignIfChanged(
-          ref this.configuration.Translate,
-          false);
     }
 
     if (this.configuration.OverlayOnlyLanguage)
@@ -131,26 +264,64 @@ public partial class Echoglossian
       ImGui.Text(Resources.LanguageOnlySupportedUsingOverlay);
     }
 
-    ImGui.EndGroup();
-    ImGui.Spacing();
+    return changed;
+  }
 
+  /// <summary>
+  /// Draws the translation activation section and blocks activation while the
+  /// selected language or engine is not ready.
+  /// </summary>
+  /// <returns><c>true</c> when the configuration changed.</returns>
+  private bool DrawTranslationActivationSection()
+  {
+    var changed = false;
+
+    var blockReason = TranslationActivationGuard.GetBlockReason(
+        this.configuration,
+        SelectedLanguage);
     var translationBlockedByMissingAssets =
-        AssetsManager.HasMissingRequiredAssets(SelectedLanguage);
+        blockReason == TranslationActivationGuard.BlockReason
+            .MissingRequiredAssets;
+    var translationBlockedByEngineConfiguration =
+        blockReason == TranslationActivationGuard.BlockReason
+            .EngineConfigurationIncomplete;
+    var translationShouldBeBlocked =
+        blockReason != TranslationActivationGuard.BlockReason.None;
+
+    if (translationShouldBeBlocked)
+    {
+      changed |= AssignIfChanged(ref this.configuration.Translate, false);
+    }
 
     if (!this.configuration.UnsupportedLanguage)
     {
-      if (translationBlockedByMissingAssets)
+      if (translationBlockedByMissingAssets ||
+          translationBlockedByEngineConfiguration)
       {
         ImGui.BeginDisabled();
       }
 
-      this.SaveConfigValue |= ImGui.Checkbox(
-          Resources.EnableTranslation,
-          ref this.configuration.Translate);
+      if (ImGui.Checkbox(
+              Resources.EnableTranslation,
+              ref this.configuration.Translate))
+      {
+        changed = true;
+      }
 
-      if (translationBlockedByMissingAssets)
+      if (translationBlockedByMissingAssets ||
+          translationBlockedByEngineConfiguration)
       {
         ImGui.EndDisabled();
+      }
+
+      if ((translationBlockedByMissingAssets ||
+              translationBlockedByEngineConfiguration) &&
+          ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+      {
+        ImGui.SetTooltip(
+            translationBlockedByMissingAssets
+                ? Resources.TranslationRequiresDownloadedAssetsText
+                : Resources.TranslationBlockedByEngineConfigurationText);
       }
     }
 
@@ -160,100 +331,16 @@ public partial class Echoglossian
       ImGui.TextColored(
           new Vector4(255, 165, 0, 255),
           Resources.TranslationBlockedByMissingAssetsStatusText);
-      this.SaveConfigValue |=
-          PluginAssetRequirementUiHelper.DrawInlineWarning(
-              this.configuration);
+      changed |= PluginAssetRequirementUiHelper.DrawInlineWarning(
+          this.configuration);
     }
-    else if (this.configuration.Translate)
+    else if (translationBlockedByEngineConfiguration)
     {
-      ImGui.SameLine();
-      ImGui.TextColored(
-          new Vector4(0, 255, 0, 255),
-          Resources.TranslationEnabled);
-    }
-    else
-    {
-      ImGui.SameLine();
-      ImGui.TextColored(
-          new Vector4(255, 255, 0, 255),
-          Resources.TranslationDisabled);
+      ImGui.TextWrapped(
+          Resources.TranslationBlockedByEngineConfigurationText);
     }
 
-    if (this.configuration.Translate)
-    {
-      ImGui.BeginGroup();
-      ImGui.Text(Resources.WhatToTranslateText);
-      ImGui.EndGroup();
-    }
-
-    ImGui.Spacing();
-    ImGui.BeginGroup();
-
-    if (ImGui.BeginTabBar(
-            "TabBar",
-            ImGuiTabBarFlags.NoCloseWithMiddleMouseButton))
-    {
-      if (ImGui.BeginTabItem(Resources.ConfigTabGeneralName))
-      {
-        this.SaveConfigValue |= GeneralTab.Draw(this.configuration);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab0Name))
-      {
-        this.SaveConfigValue |= OverlayTab.Draw(this.configuration);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
-      {
-        this.SaveConfigValue |= TranslationEnginesTab.Draw(
-            this.configuration,
-            LanguageInt,
-            LanguageDropdownHelper.GetDisplayNames().ToList(),
-            this.enginesList,
-            LangDict,
-            this.RebuildTranslationServiceSafely);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
-      {
-        this.SaveConfigValue |=
-            TroubleshootingTab.Draw(this.configuration);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
-      {
-        this.SaveConfigValue |= AboutTab.Draw(
-            this.configuration,
-            this.logo.Handle);
-        ImGui.EndTabItem();
-      }
-
-      ImGui.EndTabBar();
-    }
-
-    ImGui.EndGroup();
-
-    PluginConfigWindowFooter.DrawFooter(
-        ref this.config,
-        ref this.SaveConfigValue,
-        () => SaveConfig(this.configuration),
-        this.pixImage.Handle,
-        this.cryptoImage.Handle);
-
-    this.SaveConfigValue |=
-        PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
-            this.configuration);
-
-    ImGui.End();
-
-    if (this.SaveConfigValue)
-    {
-      SaveConfig(this.configuration);
-    }
+    return changed;
   }
 
   private bool DisableAllToastTranslations()

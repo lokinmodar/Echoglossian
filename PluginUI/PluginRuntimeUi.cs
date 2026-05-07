@@ -20,6 +20,8 @@ public partial class Echoglossian
     }
 #endif
 
+    this.ApplyPendingRuntimeConfigurationChanges();
+
     if (!this.configuration.Translate)
     {
       return;

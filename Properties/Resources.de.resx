@@ -738,6 +738,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Hintergrundbenachrichtigungen zu Quests anzeigen</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Konfigurieren Sie die ausgewählte Übersetzungs-Engine, bevor Sie die Übersetzung aktivieren.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>Die Übersetzung ist derzeit deaktiviert, weil die ausgewählte Übersetzungs-Engine noch konfiguriert werden muss. Öffnen Sie das Konfigurationsfenster und schließen Sie die Engine-Einrichtung ab.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>Die Übersetzung ist derzeit deaktiviert, weil die ausgewählte Sprache zusätzliche Schriftart-Assets benötigt. Öffnen Sie das Konfigurationsfenster, um die erforderlichen Dateien herunterzuladen oder zu überprüfen.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Jeder Toasttyp kann unabhängig zwischen nativer Ersetzung und Overlay-Rendering wählen.</value>
   </data>

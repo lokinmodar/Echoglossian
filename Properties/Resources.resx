@@ -176,6 +176,12 @@
   <data name="OpenConfigurationButtonLabel" xml:space="preserve">
     <value>Open Configuration</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>Translation is currently disabled because the selected translation engine still needs to be configured. Open the configuration window and finish the engine setup.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>Translation is currently disabled because the selected language requires extra font assets. Open the configuration window to download or validate the required files.</value>
+  </data>
   <data name="ContribText" xml:space="preserve">
     <value>Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</value>
   </data>
@@ -408,6 +414,9 @@
   </data>
   <data name="TranslationRequiresDownloadedAssetsText" xml:space="preserve">
     <value>This language requires extra downloadable font assets before translation can be enabled.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Configure the selected translation engine before enabling translation.</value>
   </data>
   <data name="TranslationBlockedByMissingAssetsStatusText" xml:space="preserve">
     <value>Waiting for required font assets</value>

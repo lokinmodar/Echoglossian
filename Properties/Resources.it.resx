@@ -738,6 +738,15 @@
   <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
     <value>Mostra notifiche sullo sfondo delle missioni</value>
   </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Configura il motore di traduzione selezionato prima di abilitare la traduzione.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>La traduzione è attualmente disabilitata perché il motore di traduzione selezionato deve ancora essere configurato. Apri la finestra di configurazione e completa la configurazione del motore.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>La traduzione è attualmente disabilitata perché la lingua selezionata richiede risorse font aggiuntive. Apri la finestra di configurazione per scaricare o verificare i file necessari.</value>
+  </data>
   <data name="ToastModeDescription" xml:space="preserve">
     <value>Ogni tipo di toast può scegliere in modo indipendente tra la sostituzione nativa e il rendering in sovrapposizione.</value>
   </data>

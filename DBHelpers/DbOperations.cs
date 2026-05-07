@@ -30,6 +30,45 @@ public partial class Echoglossian
   public static GameWindow? FoundGameWindow { get; set; }
 
   /// <summary>
+  ///     Returns the currently loaded live configuration without re-reading the
+  ///     persisted plugin config file from disk.
+  /// </summary>
+  /// <returns>
+  ///     The active configuration instance when the plugin is loaded;
+  ///     otherwise, <see langword="null" />.
+  /// </returns>
+  private static Config? GetActiveConfiguration()
+  {
+    return activeInstance?.configuration;
+  }
+
+  /// <summary>
+  ///     Returns whether DB lookups should filter by translation engine using
+  ///     the current live configuration.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when stored translations should be filtered
+  ///     by engine; otherwise, <see langword="false" />.
+  /// </returns>
+  private static bool ShouldFilterStoredTranslationsByEngine()
+  {
+    return GetActiveConfiguration()?.TranslateAlreadyTranslatedTexts == true;
+  }
+
+  /// <summary>
+  ///     Returns whether translated text should be copied to the clipboard
+  ///     using the current live configuration.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when clipboard copy is enabled; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private static bool ShouldCopyTranslationToClipboard()
+  {
+    return GetActiveConfiguration()?.CopyTranslationToClipboard == true;
+  }
+
+  /// <summary>
   ///     Creates or uses the database, applying any pending migrations.
   /// </summary>
   public void CreateOrUseDb()
@@ -76,11 +115,7 @@ public partial class Echoglossian
   /// <returns>The found <see cref="TalkMessage" />.</returns>
   public TalkMessage? FindAndReturnTalkMessage(TalkMessage talkMessage)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
@@ -88,7 +123,7 @@ public partial class Echoglossian
           t.SenderName == talkMessage.SenderName &&
           t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
           t.TranslationLang == talkMessage.TranslationLang);
-      if (pluginConfig?.TranslateAlreadyTranslatedTexts == true)
+      if (ShouldFilterStoredTranslationsByEngine())
       {
         existingTalkMessage = existingTalkMessage.Where(t =>
             t.TranslationEngine == talkMessage.TranslationEngine);
@@ -279,11 +314,7 @@ public partial class Echoglossian
   public BattleTalkMessage? FindAndReturnBattleTalkMessage(
       BattleTalkMessage battleTalkMessage)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
@@ -295,7 +326,7 @@ public partial class Echoglossian
           t.TranslatedBattleTalkMessage != null &&
           t.TranslatedBattleTalkMessage != string.Empty);
 
-      if (pluginConfig?.TranslateAlreadyTranslatedTexts == true)
+      if (ShouldFilterStoredTranslationsByEngine())
       {
         existingBattleTalkMessage = existingBattleTalkMessage.Where(t =>
             t.TranslationEngine == battleTalkMessage.TranslationEngine);
@@ -755,13 +786,9 @@ public partial class Echoglossian
   /// <returns></returns>
   public static async Task<string> InsertTalkData(TalkMessage talkMessage)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     PluginRuntimeLog.Debug($"TalkMessage to be saved in DB: {talkMessage}");
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
 
     try
     {
@@ -770,7 +797,7 @@ public partial class Echoglossian
         return "No data to save.";
       }
 
-      if (pluginConfig?.CopyTranslationToClipboard == true)
+      if (ShouldCopyTranslationToClipboard())
       {
         ImGui.SetClipboardText(talkMessage.ToString());
       }
@@ -796,11 +823,7 @@ public partial class Echoglossian
   public static string InsertBattleTalkData(
       BattleTalkMessage battleTalkMessage)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
@@ -811,7 +834,7 @@ public partial class Echoglossian
 
       context.BattleTalkMessage.Attach(battleTalkMessage);
 
-      if (pluginConfig?.CopyTranslationToClipboard == true)
+      if (ShouldCopyTranslationToClipboard())
       {
         ImGui.SetClipboardText(battleTalkMessage.ToString());
       }
@@ -834,11 +857,7 @@ public partial class Echoglossian
   public static string InsertTalkSubtitleData(
       TalkSubtitleMessage talkSubtitleMessage)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
@@ -850,7 +869,7 @@ public partial class Echoglossian
 
       context.TalkSubtitleMessage.Attach(talkSubtitleMessage);
 
-      if (pluginConfig?.CopyTranslationToClipboard == true)
+      if (ShouldCopyTranslationToClipboard())
       {
         ImGui.SetClipboardText(talkSubtitleMessage.ToString());
       }
@@ -873,11 +892,7 @@ public partial class Echoglossian
   public static async Task<string> InsertMiniTalkData(
       MiniTalkMessage miniTalkMessage)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
@@ -888,7 +903,7 @@ public partial class Echoglossian
 
       context.MiniTalkMessage.Add(miniTalkMessage);
 
-      if (pluginConfig?.CopyTranslationToClipboard == true)
+      if (ShouldCopyTranslationToClipboard())
       {
         ImGui.SetClipboardText(miniTalkMessage.ToString());
       }
@@ -911,11 +926,7 @@ public partial class Echoglossian
   public static async Task<string> InsertTextGimmickHintData(
       TextGimmickHintMessage textGimmickHintMessage)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
@@ -926,7 +937,7 @@ public partial class Echoglossian
 
       context.TextGimmickHintMessage.Add(textGimmickHintMessage);
 
-      if (pluginConfig?.CopyTranslationToClipboard == true)
+      if (ShouldCopyTranslationToClipboard())
       {
         ImGui.SetClipboardText(textGimmickHintMessage.ToString());
       }
@@ -949,11 +960,7 @@ public partial class Echoglossian
   public static async Task<string> InsertCutSceneSelectStringData(
       SelectString selectString)
   {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-
-    var pluginConfig = PluginInterface.GetPluginConfig() as Config;
+    using var context = new EchoglossianDbContext(ConfigDirectory);
 
     try
     {
@@ -965,7 +972,7 @@ public partial class Echoglossian
 
       context.SelectString.Add(selectString);
 
-      if (pluginConfig?.CopyTranslationToClipboard == true)
+      if (ShouldCopyTranslationToClipboard())
       {
         ImGui.SetClipboardText(selectString.ToString());
       }
