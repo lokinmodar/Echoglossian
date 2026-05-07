@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-06
+Snapshot date: 2026-05-07
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -29,11 +29,27 @@ likely to be the next best use of engineering time right now."
 - `#182` Translation inconsistent - quest tracker sometimes doesn't translate
 - `#183` Align Version numbering to goatcorp standards
 
+## Recently Closed In `4.2600.0605`
+
+- `#178` It isn't translating anything
+
+Notes:
+
+- `4.2600.0605` is the first published release that includes:
+  - hot refresh/runtime reconfig without unload/reload
+  - fix for the config UI save loop
+  - translation activation guard
+  - persistent config-fix notification flow
+  - engine selection / migration fix
+  - Amazon translator hardening
+- This makes `#178` the clearest issue now resolved by a currently published
+  build, rather than only by local code.
+
 ## Fixes Landed In Code, Awaiting Published Validation
 
 - `#186` Randomly stops translating to PT-BR and displays English text instead
-- `#178` It isn't translating anything
 - `#174` Translate already saved translated texts does not work
+- `#181` Prevent TextNode Flags corruption while reading them
 
 Notes:
 
@@ -90,22 +106,14 @@ These are still release-quality problems, but they likely need a more careful
 
 - Priority: P1
 - Ease: medium
-- Status: likely improved in code, still needs published-build confirmation
+- Status: partially improved in published builds, still open
 - Notes:
   - Users expect settings or engine changes to affect already stored rows.
   - Part of this overlapped with dialogue rows persisting unchanged source text
     and being reused as if they were valid translations.
-  - Reassess after the next published build before closing.
-
-### #178 It isn't translating anything
-
-- Priority: P1
-- Ease: medium
-- Status: likely improved in code, still needs published-build confirmation
-- Notes:
-  - This overlapped with the engine-migration, first-launch config, hot-refresh
-    regressions, and the transient-failure / stale-dialogue cluster.
-  - Keep open until users confirm the published build behaves correctly.
+  - `4.2600.0605` addressed the hot-refresh / activation / engine-selection
+    parts of this complaint, but the cached-row semantics still need reassessment
+    before closure.
 
 ### #171 Deepseek translation is not available... mission titles and descriptions are not being translated
 
