@@ -155,16 +155,19 @@ public sealed class TalkHandler : IAddonTranslationHandler
       return;
     }
 
-    var addonPtr = GameGuiInterface.GetAddonByName(TalkAddonName);
-    if (addonPtr.Address != IntPtr.Zero)
+    if (this.ShouldApplyNativeTalkText())
     {
-      var talkAddon = (AtkUnitBase*)addonPtr.Address;
-      if (talkAddon != null && talkAddon->IsVisible)
+      var addonPtr = GameGuiInterface.GetAddonByName(TalkAddonName);
+      if (addonPtr.Address != IntPtr.Zero)
       {
-        var textNode = talkAddon->GetTextNodeById(TextNodeId);
-        if (textNode != null && !textNode->NodeText.IsEmpty)
+        var talkAddon = (AtkUnitBase*)addonPtr.Address;
+        if (talkAddon != null && talkAddon->IsVisible)
         {
-          this.CaptureOriginalTalkTextNodeState(textNode, originalText);
+          var textNode = talkAddon->GetTextNodeById(TextNodeId);
+          if (textNode != null && !textNode->NodeText.IsEmpty)
+          {
+            this.CaptureOriginalTalkTextNodeState(textNode, originalText);
+          }
         }
       }
     }
@@ -262,6 +265,13 @@ public sealed class TalkHandler : IAddonTranslationHandler
     var shouldApplyNativeTalkText = this.ShouldApplyNativeTalkText();
     if (!shouldApplyNativeTalkText)
     {
+      if (this.nativeTalkTextNodeStateDirty)
+      {
+        this.TryRestoreOriginalTalkText(
+            nameNode,
+            textNode);
+      }
+
       return;
     }
 
@@ -406,6 +416,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
     lock (this.stateGate)
     {
       if (!this.nativeTalkTextNodeStateCaptured ||
+          !this.nativeTalkTextNodeStateDirty ||
           this.nativeTalkTextNodeStateCapturedForSourceText != this.currentOriginalText ||
           string.IsNullOrWhiteSpace(this.currentOriginalText))
       {

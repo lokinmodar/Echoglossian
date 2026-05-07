@@ -23,6 +23,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   private readonly Dictionary<string, JournalDetailOriginalSnapshot>
       journalDetailOriginalCache =
           new(StringComparer.Ordinal);
+  private readonly HashSet<string> journalDetailNativeMutationScopes =
+      new(StringComparer.Ordinal);
 
   private string currentJournalDetailScopeKey = string.Empty;
 
@@ -196,6 +198,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     this.currentJournalDetailScopeKey = scopeKey;
     this.journalDetailTextCache.Clear();
+    this.journalDetailNativeMutationScopes.Clear();
     this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
   }
 
@@ -996,6 +999,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       questNameNode->SetText(translatedQuestName);
       descriptionNode->SetText(translatedQuestDescription);
       objectiveNode->SetText(translatedQuestObjective);
+      this.journalDetailNativeMutationScopes.Add(journalDetailScopeKey);
       if (summaryNode != null)
       {
         if (originalSnapshot.SummaryNodeWidth != 0)
@@ -1050,7 +1054,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         }
       }
     }
-    else
+    else if (this.journalDetailNativeMutationScopes.Remove(journalDetailScopeKey))
     {
       questNameNode->SetText(originalQuestName);
       descriptionNode->SetText(originalQuestMessage);
@@ -1404,8 +1408,9 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       {
         questNameNode->SetText(translatedQuestName);
         descriptionNode->SetText(translatedQuestMessage);
+        this.journalDetailNativeMutationScopes.Add(journalDetailScopeKey);
       }
-      else
+      else if (this.journalDetailNativeMutationScopes.Remove(journalDetailScopeKey))
       {
         questNameNode->SetText(originalQuestName);
         descriptionNode->SetText(originalQuestMessage);
@@ -1670,6 +1675,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     this.journalDetailTextCache.Clear();
     this.journalDetailOriginalCache.Clear();
+    this.journalDetailNativeMutationScopes.Clear();
     this.currentJournalDetailScopeKey = string.Empty;
     this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
   }
