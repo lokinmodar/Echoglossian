@@ -119,4 +119,117 @@ public class TranslationEngineSelectionMigrationHelperTests
 
         Assert.Equal((int)Echoglossian.TransEngines.Amazon, resolved);
     }
+
+    /// <summary>
+    ///     Ensures the persisted engine key takes precedence when both the key
+    ///     and the numeric engine id exist.
+    /// </summary>
+    [Fact]
+    public void NormalizeAndSyncSelection_ValidEngineKey_PrefersKey()
+    {
+        var config = new Config
+        {
+            Version = 5,
+            ChosenTransEngine = (int)Echoglossian.TransEngines.Google,
+            ChosenTransEngineKey = nameof(Echoglossian.TransEngines.Claude),
+        };
+
+        var changed = TranslationEngineSelectionMigrationHelper
+            .NormalizeAndSyncSelection(config, 5);
+
+        Assert.True(changed);
+        Assert.Equal((int)Echoglossian.TransEngines.Claude, config.ChosenTransEngine);
+        Assert.Equal(nameof(Echoglossian.TransEngines.Claude), config.ChosenTransEngineKey);
+    }
+
+    /// <summary>
+    ///     Ensures the helper backfills the persisted engine key when only the
+    ///     numeric engine id is present.
+    /// </summary>
+    [Fact]
+    public void NormalizeAndSyncSelection_MissingEngineKey_SynchronizesKey()
+    {
+        var config = new Config
+        {
+            Version = 15,
+            ChosenTransEngine = (int)Echoglossian.TransEngines.Microsoft,
+            ChosenTransEngineKey = string.Empty,
+        };
+
+        var changed = TranslationEngineSelectionMigrationHelper
+            .NormalizeAndSyncSelection(config, 15);
+
+        Assert.True(changed);
+        Assert.Equal((int)Echoglossian.TransEngines.Microsoft, config.ChosenTransEngine);
+        Assert.Equal(nameof(Echoglossian.TransEngines.Microsoft), config.ChosenTransEngineKey);
+    }
+
+    /// <summary>
+    ///     Ensures the helper still normalizes the resolved engine against the
+    ///     active language support list.
+    /// </summary>
+    [Fact]
+    public void NormalizeAndSyncSelection_UnsupportedResolvedEngine_FallsBackToSupported()
+    {
+        var config = new Config
+        {
+            Version = 15,
+            ChosenTransEngine = (int)Echoglossian.TransEngines.Claude,
+            ChosenTransEngineKey = nameof(Echoglossian.TransEngines.Claude),
+        };
+
+        var changed = TranslationEngineSelectionMigrationHelper
+            .NormalizeAndSyncSelection(
+                config,
+                15,
+                new[] { (int)Echoglossian.TransEngines.Google, (int)Echoglossian.TransEngines.Microsoft });
+
+        Assert.True(changed);
+        Assert.Equal((int)Echoglossian.TransEngines.Google, config.ChosenTransEngine);
+        Assert.Equal(nameof(Echoglossian.TransEngines.Google), config.ChosenTransEngineKey);
+    }
+
+    /// <summary>
+    ///     Ensures current-schema configs prefer the concrete numeric engine id
+    ///     when a stale engine key disagrees with it.
+    /// </summary>
+    [Fact]
+    public void NormalizeAndSyncSelection_CurrentSchema_PrefersConcreteEngineId()
+    {
+        var config = new Config
+        {
+            Version = 15,
+            ChosenTransEngine = (int)Echoglossian.TransEngines.Google,
+            ChosenTransEngineKey = nameof(Echoglossian.TransEngines.ChatGPT),
+        };
+
+        var changed = TranslationEngineSelectionMigrationHelper
+            .NormalizeAndSyncSelection(config, 15);
+
+        Assert.True(changed);
+        Assert.Equal((int)Echoglossian.TransEngines.Google, config.ChosenTransEngine);
+        Assert.Equal(nameof(Echoglossian.TransEngines.Google), config.ChosenTransEngineKey);
+    }
+
+    /// <summary>
+    ///     Ensures an explicit user selection updates both persisted engine
+    ///     forms immediately.
+    /// </summary>
+    [Fact]
+    public void ApplyExplicitSelection_SynchronizesEngineIdAndKey()
+    {
+        var config = new Config
+        {
+            Version = 15,
+            ChosenTransEngine = (int)Echoglossian.TransEngines.ChatGPT,
+            ChosenTransEngineKey = nameof(Echoglossian.TransEngines.ChatGPT),
+        };
+
+        TranslationEngineSelectionMigrationHelper.ApplyExplicitSelection(
+            config,
+            (int)Echoglossian.TransEngines.Google);
+
+        Assert.Equal((int)Echoglossian.TransEngines.Google, config.ChosenTransEngine);
+        Assert.Equal(nameof(Echoglossian.TransEngines.Google), config.ChosenTransEngineKey);
+    }
 }

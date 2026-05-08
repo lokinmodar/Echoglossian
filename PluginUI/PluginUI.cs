@@ -211,15 +211,13 @@ public partial class Echoglossian
       this.configuration.OverlayOnlyLanguage = !languageNotSupported &&
           languageOnlySupportedThruOverlay;
 
-      var normalizedEngineId =
-          TranslationEngineSelectionMigrationHelper
-              .ResolveSupportedEngineSelection(
-                  this.configuration.ChosenTransEngine,
-                  LangDict[LanguageInt].SupportedEngines);
-      if (normalizedEngineId != this.configuration.ChosenTransEngine)
+      if (TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
+              this.configuration,
+              this.configuration.Version,
+              LangDict[LanguageInt].SupportedEngines))
       {
-        this.configuration.ChosenTransEngine = normalizedEngineId;
         this.RebuildTranslationServiceSafely();
+        changed = true;
       }
 
       changed = true;

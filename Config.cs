@@ -65,6 +65,13 @@ public class Config : IPluginConfiguration
   /// <summary>Selected translation engine ID (index-based).</summary>
   [DefaultValue(0)] public int ChosenTransEngine = 0;
 
+  /// <summary>
+  ///     Selected translation engine key persisted alongside the numeric
+  ///     engine id so engine selection remains stable across enum-layout
+  ///     changes.
+  /// </summary>
+  [DefaultValue("Google")] public string ChosenTransEngineKey = "Google";
+
   /// <summary>API key for Anthropic Claude usage.</summary>
   [DefaultValue("")] public string ClaudeApiKey = string.Empty;
 

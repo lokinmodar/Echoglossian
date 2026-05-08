@@ -62,14 +62,11 @@ public static class TranslationEnginesTab
             return changed;
         }
 
-        var normalizedEngineId =
-            TranslationEngineSelectionMigrationHelper
-                .ResolveSupportedEngineSelection(
-                    config.ChosenTransEngine,
-                    supportedEngines);
-        if (normalizedEngineId != config.ChosenTransEngine)
+        if (TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
+                config,
+                config.Version,
+                supportedEngines))
         {
-            config.ChosenTransEngine = normalizedEngineId;
             rebuildTranslationService();
             changed = true;
         }
@@ -88,7 +85,13 @@ public static class TranslationEnginesTab
                 engineOptions.Select(option => option.Label).ToArray(),
                 engineOptions.Length))
         {
-            config.ChosenTransEngine = engineOptions[selected].EngineId;
+            TranslationEngineSelectionMigrationHelper.ApplyExplicitSelection(
+                config,
+                engineOptions[selected].EngineId);
+            TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
+                config,
+                config.Version,
+                supportedEngines);
             rebuildTranslationService();
             changed = true;
         }

@@ -406,44 +406,13 @@ public partial class Echoglossian
   /// </param>
   public void MigrateTranslationEngineSelection(int loadedConfigVersion)
   {
-    var changed = false;
-
-    var normalizedChatGptBaseUrl =
-        TranslationEngineSelectionMigrationHelper.NormalizeLegacyChatGptBaseUrl(
-            this.configuration.ChatGPTBaseUrl);
-    if (!string.Equals(
-            normalizedChatGptBaseUrl,
-            this.configuration.ChatGPTBaseUrl,
-            StringComparison.Ordinal))
-    {
-      this.configuration.ChatGPTBaseUrl = normalizedChatGptBaseUrl;
-      changed = true;
-    }
-
-    if (TranslationEngineSelectionMigrationHelper.TryMigrateLegacyV325Selection(
+    var changed = TranslationEngineSelectionMigrationHelper
+        .NormalizeAndSyncSelection(
+            this.configuration,
             loadedConfigVersion,
-            this.configuration.ChosenTransEngine,
-            out var migratedEngineId))
-    {
-      this.configuration.ChosenTransEngine = migratedEngineId;
-      changed = true;
-    }
-
-    if (!TranslationEngineSelectionMigrationHelper.IsConcreteEngineId(
-            this.configuration.ChosenTransEngine))
-    {
-      this.configuration.ChosenTransEngine =
-          (int)TransEngines.Google;
-      changed = true;
-    }
-
-    if (this.configuration.Version <
-        TranslationEngineSelectionMigrationHelper.TranslationEngineSchemaVersion)
-    {
-      this.configuration.Version =
-          TranslationEngineSelectionMigrationHelper.TranslationEngineSchemaVersion;
-      changed = true;
-    }
+            LangDict.TryGetValue(this.configuration.Lang, out var language)
+                ? language.SupportedEngines
+                : null);
 
     if (changed)
     {
@@ -456,6 +425,10 @@ public partial class Echoglossian
   /// </summary>
   public static void SaveConfig(Config config)
   {
+    TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
+        config,
+        config.Version);
+
     try
     {
       PluginInterface.SavePluginConfig(config);
@@ -476,6 +449,12 @@ public partial class Echoglossian
   /// </summary>
   public void RebuildTranslationServiceSafely()
   {
+    TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
+        this.configuration,
+        this.configuration.Version,
+        LangDict.TryGetValue(this.configuration.Lang, out var language)
+            ? language.SupportedEngines
+            : null);
     TranslationService = this.CreateTranslationServiceSafely();
     ChosenTransEngine = this.configuration.ChosenTransEngine;
     transEngineName = ((TransEngines)ChosenTransEngine).ToString();
