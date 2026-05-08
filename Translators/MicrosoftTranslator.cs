@@ -2,13 +2,15 @@
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
+using Echoglossian.Translators.Helpers;
+
 namespace Echoglossian.Translators;
 
 public class MicrosoftTranslator : ITranslator
 {
   private readonly HttpClient? httpClient;
   private readonly IPluginLog pluginLog;
-  private readonly Dictionary<string, string> translationCache = new();
+  private readonly ConcurrentTranslationRequestCache translationCache = new();
   private readonly string apiKey;
   private readonly string region;
   private readonly string endpoint;
@@ -67,6 +69,29 @@ public class MicrosoftTranslator : ITranslator
       return cachedTranslation;
     }
 
+    return await this.translationCache.GetOrAddAsync(
+        cacheKey,
+        () => this.TranslateCoreAsync(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            cacheKey)).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Performs the actual Microsoft Translator request for one cache key.
+  /// </summary>
+  /// <param name="text">The text to translate.</param>
+  /// <param name="sourceLanguage">The source language of the text.</param>
+  /// <param name="targetLanguage">The target language for the translation.</param>
+  /// <param name="cacheKey">The normalized cache key for this request.</param>
+  /// <returns>The translated text or an error placeholder.</returns>
+  private async Task<string?> TranslateCoreAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      string cacheKey)
+  {
     string fixedInputText = Echoglossian.FixText(text);
 
     string requestUrl = BuildRequestUrl(
@@ -112,7 +137,7 @@ public class MicrosoftTranslator : ITranslator
           translatedText = Echoglossian.FixText(translatedText.Trim('"'));
           if (TranslationResultGuard.IsPersistableTranslation(translatedText))
           {
-            this.translationCache[cacheKey] = translatedText;
+            this.translationCache.Remember(cacheKey, translatedText);
           }
 
           return translatedText;

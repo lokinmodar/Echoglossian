@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
@@ -17,7 +18,7 @@ public class LmStudioTranslator : ITranslator
     private readonly IPluginLog pluginLog;
     private readonly string prompt;
     private readonly float temperature;
-    private readonly Dictionary<string, string> translationCache = new();
+    private readonly ConcurrentTranslationRequestCache translationCache = new();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LmStudioTranslator" /> class.
@@ -74,6 +75,29 @@ public class LmStudioTranslator : ITranslator
             return cached;
         }
 
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Performs the actual LM Studio translation request for one cache key.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language of the text.</param>
+    /// <param name="targetLanguage">The target language for the translation.</param>
+    /// <param name="cacheKey">The normalized cache key for this request.</param>
+    /// <returns>The translated text or an error placeholder.</returns>
+    private async Task<string?> TranslateCoreAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey)
+    {
         var fixedText = FixText(text);
         var fullPrompt = this.prompt.Replace("{text}", fixedText)
             .Replace("{sourceLanguage}", sourceLanguage).Replace(
@@ -108,7 +132,7 @@ public class LmStudioTranslator : ITranslator
                 result = FixText(result);
                 if (TranslationResultGuard.IsPersistableTranslation(result))
                 {
-                    this.translationCache[cacheKey] = result;
+                    this.translationCache.Remember(cacheKey, result);
                 }
 
                 return result;

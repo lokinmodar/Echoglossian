@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
@@ -19,7 +20,7 @@ public class OpenRouterTranslator : ITranslator
 
     private readonly string prompt;
     private readonly float temperature;
-    private readonly Dictionary<string, string> translationCache = new();
+    private readonly ConcurrentTranslationRequestCache translationCache = new();
 
     public OpenRouterTranslator(IPluginLog pluginLog, Config config)
     {
@@ -85,6 +86,29 @@ public class OpenRouterTranslator : ITranslator
             return cachedTranslation;
         }
 
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Performs the actual OpenRouter translation request for one cache key.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language of the text.</param>
+    /// <param name="targetLanguage">The target language for the translation.</param>
+    /// <param name="cacheKey">The normalized cache key for this request.</param>
+    /// <returns>The translated text or an error placeholder.</returns>
+    private async Task<string?> TranslateCoreAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey)
+    {
         var request = new
         {
             this.model,
@@ -99,11 +123,11 @@ public class OpenRouterTranslator : ITranslator
         {
             var response = await this.httpClient.PostAsJsonAsync(
                 "chat/completions",
-                request);
+                request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var jsonResponse =
-                await response.Content.ReadFromJsonAsync<OpenRouterResponse>();
+                await response.Content.ReadFromJsonAsync<OpenRouterResponse>().ConfigureAwait(false);
 
             var result =
                 jsonResponse?.Choices?.FirstOrDefault()?.Message?.Content
@@ -115,7 +139,7 @@ public class OpenRouterTranslator : ITranslator
             {
                 if (TranslationResultGuard.IsPersistableTranslation(result))
                 {
-                    this.translationCache[cacheKey] = result;
+                    this.translationCache.Remember(cacheKey, result);
                 }
 
                 return result;

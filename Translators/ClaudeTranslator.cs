@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
@@ -24,7 +25,7 @@ public class ClaudeTranslator : ITranslator
     private readonly IPluginLog pluginLog;
     private readonly string promptTemplate;
     private readonly float temperature;
-    private readonly Dictionary<string, string> translationCache = new();
+    private readonly ConcurrentTranslationRequestCache translationCache = new();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ClaudeTranslator" /> class.
@@ -94,6 +95,29 @@ public class ClaudeTranslator : ITranslator
             return cachedTranslation;
         }
 
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Performs the actual Claude Messages API request for one cache key.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language of the text.</param>
+    /// <param name="targetLanguage">The target language for the translation.</param>
+    /// <param name="cacheKey">The normalized cache key for this request.</param>
+    /// <returns>The translated text or an error placeholder.</returns>
+    private async Task<string?> TranslateCoreAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey)
+    {
         string fullPrompt = this.promptTemplate
             .Replace("{text}", text, StringComparison.Ordinal)
             .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
@@ -144,7 +168,7 @@ public class ClaudeTranslator : ITranslator
                 translatedText = FixText(translatedText);
                 if (TranslationResultGuard.IsPersistableTranslation(translatedText))
                 {
-                    this.translationCache[cacheKey] = translatedText;
+                    this.translationCache.Remember(cacheKey, translatedText);
                 }
 
                 return translatedText;

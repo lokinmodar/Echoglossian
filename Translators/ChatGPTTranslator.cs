@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.ClientModel;
+using Echoglossian.Translators.Helpers;
 using OpenAI;
 using OpenAI.Chat;
 
@@ -15,7 +16,7 @@ public class ChatGPTTranslator : ITranslator
     private readonly string model;
     private readonly IPluginLog pluginLog;
     private readonly float temperature;
-    private readonly Dictionary<string, string> translationCache = new();
+    private readonly ConcurrentTranslationRequestCache translationCache = new();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ChatGPTTranslator" /> class.
@@ -122,6 +123,31 @@ public class ChatGPTTranslator : ITranslator
             return cachedTranslation;
         }
 
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Performs the actual OpenAI chat completion call for a single cache
+    ///     key. Concurrent callers for the same key share the same in-flight
+    ///     task.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language of the text.</param>
+    /// <param name="targetLanguage">The target language for the translation.</param>
+    /// <param name="cacheKey">The normalized cache key for this request.</param>
+    /// <returns>The translated text, or a synthetic error placeholder.</returns>
+    private async Task<string?> TranslateCoreAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey)
+    {
         var prompt =
             @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
@@ -155,7 +181,7 @@ public class ChatGPTTranslator : ITranslator
             ChatCompletion completion =
                 await this.chatClient.CompleteChatAsync(
                     messages,
-                    chatCompletionOptions);
+                    chatCompletionOptions).ConfigureAwait(false);
             var translatedText = completion.Content[0].Text.Trim();
 
             translatedText = translatedText.Trim('"');
@@ -164,7 +190,7 @@ public class ChatGPTTranslator : ITranslator
             {
                 if (TranslationResultGuard.IsPersistableTranslation(translatedText))
                 {
-                    this.translationCache[cacheKey] = translatedText;
+                    this.translationCache.Remember(cacheKey, translatedText);
                 }
 
                 return translatedText;

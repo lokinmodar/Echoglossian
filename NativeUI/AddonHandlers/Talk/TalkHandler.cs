@@ -750,20 +750,33 @@ public sealed class TalkHandler : IAddonTranslationHandler
                 LangDict[LanguageInt].Code)
             : string.Empty;
 
-        var translatedTalkData = new TalkMessage(
-            originalName,
-            originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
-            ClientStateInterface.ClientLanguage.Humanize(),
-            translatedName,
-            translatedText,
-            LangDict[LanguageInt].Code,
-            this.config.ChosenTransEngine,
-            rtlLangTranslationImageData: null,
-            DateTime.Now,
-            DateTime.Now);
+        var existingTranslatedTalkMessage = this.findTalkMessage(lookup);
+        if (!string.IsNullOrWhiteSpace(
+                existingTranslatedTalkMessage?.TranslatedTalkMessage))
+        {
+          translatedName = this.ShouldTranslateTalkNpcNames()
+              ? existingTranslatedTalkMessage.TranslatedSenderName ?? string.Empty
+              : string.Empty;
+          translatedText =
+              existingTranslatedTalkMessage.TranslatedTalkMessage ?? string.Empty;
+        }
+        else
+        {
+          var translatedTalkData = new TalkMessage(
+              originalName,
+              originalText,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              ClientStateInterface.ClientLanguage.Humanize(),
+              translatedName,
+              translatedText,
+              LangDict[LanguageInt].Code,
+              this.config.ChosenTransEngine,
+              rtlLangTranslationImageData: null,
+              DateTime.Now,
+              DateTime.Now);
 
-        await this.insertTalkMessageAsync(translatedTalkData);
+          await this.insertTalkMessageAsync(translatedTalkData);
+        }
       }
 
       lock (this.stateGate)

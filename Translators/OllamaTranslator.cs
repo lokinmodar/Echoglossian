@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
@@ -14,7 +15,7 @@ public class OllamaTranslator : ITranslator
     private readonly string model;
     private readonly IPluginLog pluginLog;
     private readonly float temperature;
-    private readonly Dictionary<string, string> translationCache = new();
+    private readonly ConcurrentTranslationRequestCache translationCache = new();
 
     public OllamaTranslator(IPluginLog pluginLog, Config config)
     {
@@ -52,6 +53,29 @@ public class OllamaTranslator : ITranslator
             return cached;
         }
 
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Performs the actual Ollama translation request for one cache key.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language of the text.</param>
+    /// <param name="targetLanguage">The target language for the translation.</param>
+    /// <param name="cacheKey">The normalized cache key for this request.</param>
+    /// <returns>The translated text or an error placeholder.</returns>
+    private async Task<string?> TranslateCoreAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey)
+    {
         var fixedText = FixText(text);
         var prompt =
             $"Translate the following Final Fantasy XIV dialogue from {sourceLanguage} to {targetLanguage}. Keep it localized and immersive:\n\n\"{fixedText}\"";
@@ -79,7 +103,7 @@ public class OllamaTranslator : ITranslator
                 var cleaned = FixText(output.Trim('"'));
                 if (TranslationResultGuard.IsPersistableTranslation(cleaned))
                 {
-                    this.translationCache[cacheKey] = cleaned;
+                    this.translationCache.Remember(cacheKey, cleaned);
                 }
 
                 return cleaned;

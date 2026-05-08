@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Translators.Helpers;
+
 namespace Echoglossian.Translators;
 
 public class DeepSeekTranslator : ITranslator
@@ -13,7 +15,7 @@ public class DeepSeekTranslator : ITranslator
     private readonly string model;
     private readonly IPluginLog pluginLog;
     private readonly float temperature = 0.1f;
-    private readonly Dictionary<string, string> translationCache = new();
+    private readonly ConcurrentTranslationRequestCache translationCache = new();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="DeepSeekTranslator" /> class.
@@ -91,6 +93,29 @@ public class DeepSeekTranslator : ITranslator
             return cachedTranslation;
         }
 
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Performs the actual DeepSeek translation request for one cache key.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="sourceLanguage">The source language of the text.</param>
+    /// <param name="targetLanguage">The target language for the translation.</param>
+    /// <param name="cacheKey">The normalized cache key for this request.</param>
+    /// <returns>The translated text or an error placeholder.</returns>
+    private async Task<string?> TranslateCoreAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey)
+    {
         var prompt =
             @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
@@ -148,7 +173,7 @@ Please provide only the translated text in your response, without any explanatio
                 translatedText = translatedText.Trim('"');
                 if (TranslationResultGuard.IsPersistableTranslation(translatedText))
                 {
-                    this.translationCache[cacheKey] = translatedText;
+                    this.translationCache.Remember(cacheKey, translatedText);
                 }
 
                 return translatedText;
