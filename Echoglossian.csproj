@@ -19,7 +19,7 @@
     <VersionSeries Condition="'$(VersionSeries)' == ''">00</VersionSeries>
     <VersionMinor>$([System.DateTime]::UtcNow.ToString("yy"))$(VersionSeries)</VersionMinor>
     <!-- Keep patch and revision manual so release numbering only changes when explicitly updated. -->
-    <VersionPatch Condition="'$(VersionPatch)' == ''">0506</VersionPatch>
+    <VersionPatch Condition="'$(VersionPatch)' == ''">0705</VersionPatch>
     <VersionRevision Condition="'$(VersionRevision)' == ''">2144</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>

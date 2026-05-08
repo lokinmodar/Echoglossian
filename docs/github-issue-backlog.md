@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-07
+Snapshot date: 2026-05-08
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -50,6 +50,7 @@ Notes:
 - `#186` Randomly stops translating to PT-BR and displays English text instead
 - `#174` Translate already saved translated texts does not work
 - `#181` Prevent TextNode Flags corruption while reading them
+- `#191` Talk text is translated multiple time
 
 Notes:
 
@@ -59,18 +60,34 @@ Notes:
   different languages are now ignored on lookup and skipped on save.
 - This should reduce sticky English fallbacks and stale "no translation"
   behavior without requiring DB cleanup in normal cases.
+- `#191` also has a branch fix now:
+  - translator-local LLM caches were hardened to use a shared concurrent
+    request cache instead of raw `Dictionary<string, string>`
+  - `TalkHandler` now rechecks the DB before inserting, which should reduce
+    duplicate `TalkMessage` rows for the same source line
 
 ## P0: Urgent and Likely Short Fix
 
 These are the best immediate targets because they are blocking, widespread, or
 highly visible and appear to have a narrow root cause.
 
+### #190 Seleção de mecanismo de tradução não está funcionando corretamente
+
+- Priority: P0
+- Ease: medium
+- Status: active regression with fresh user confirmations
+- Why it is first:
+  - Reports say the selected engine does not match the engine actually used.
+  - Users are seeing "API key not configured" for providers they did not pick.
+  - A new comment suggests the symptom is broader than Google-only and may
+    still affect OpenAI/ChatGPT selection as well.
+
 ### #169 Overlay doesn't appear
 
 - Priority: P0
 - Ease: medium
 - Status: active regression
-- Why it is first:
+- Notes:
   - The plugin can appear "dead" even when translation itself is working.
   - This is one of the most visible remaining post-release failures.
   - It likely affects both `#175` and part of the perceived "nothing works"
@@ -125,6 +142,27 @@ These are still release-quality problems, but they likely need a more careful
   - Remaining symptoms may collapse into `#170` and `#174`.
   - Reassess after the next published build and engine-migration fix.
 
+### #189 Barra de Próxima MSQ e Janela de Missão sem tradução
+
+- Priority: P1
+- Ease: medium
+- Status: fresh regression report
+- Notes:
+  - This looks like missing translation coverage on quest-facing HUD windows
+    that users expected from prior releases.
+  - Likely intersects `ScenarioTree`, quest tracker, or game-window coverage,
+    but should be treated as a visible release regression until verified.
+
+### #188 Translated texts that go beyond the small dialogue boxes
+
+- Priority: P1
+- Ease: medium/hard
+- Status: active layout bug
+- Notes:
+  - This is the dense small-dialogue layout family rather than generic overlay
+    failure.
+  - Closely related to `#187` and likely shares the same native reflow gap.
+
 ## P2: Release Stabilization, More Involved
 
 These are serious, but they are either more specialized or more likely to
@@ -150,7 +188,16 @@ require careful UI/runtime investigation rather than a narrow config fix.
   - Remaining risk is the NPC dialogue/native layout path and possibly
     selection-dialog sizing.
 
-### #180 Remove need for downloaded font assets for languages that donot use them
+### #187 MiniTalk text extrapolates balloon size when using Native UI replacement
+
+- Priority: P2
+- Ease: medium/hard
+- Status: active native-layout bug
+- Notes:
+  - This is the explicit `MiniTalk` variant of the same "translated text no
+    longer fits the native box" problem.
+  - Keep paired with `#188` until we know whether a shared reflow strategy can
+    handle both surfaces.
 
 ### #173 Plugin function incompatibility: Character panel refined
 
@@ -260,18 +307,22 @@ work rather than release fallout.
 ## Recommended Execution Order
 
 1. `#170`
-2. verify published release outcome for `#168`
-3. verify published release outcome for `#177`
-4. `#169` + `#175` as one overlay cluster
-5. `#174` + `#178` as one cache/settings cluster
-6. reassess `#171` after `#170` and `#174`
-7. `#182`
-8. `#183`
-9. release-validate and then close `#170`
-10. release-validate and then close `#180`
-11. `#167`
-12. release-validate the remaining open parts of `#172`
-13. `#181`
-14. `#173` / `#179`
-15. `#176`
-16. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
+2. `#190`
+3. verify published release outcome for `#168`
+4. verify published release outcome for `#177`
+5. `#169` + `#175` as one overlay cluster
+6. `#174` + `#178` as one cache/settings cluster
+7. reassess `#171` after `#170` and `#174`
+8. `#189`
+9. `#188` + `#187` as one native-dialogue sizing cluster
+10. `#182`
+11. `#183`
+12. release-validate and then close `#170`
+13. release-validate and then close `#180`
+14. release-validate `#191`
+15. `#167`
+16. release-validate the remaining open parts of `#172`
+17. `#181`
+18. `#173` / `#179`
+19. `#176`
+20. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`

@@ -1224,6 +1224,13 @@
         <member name="F:Echoglossian.Config.ChosenTransEngine">
             <summary>Selected translation engine ID (index-based).</summary>
         </member>
+        <member name="F:Echoglossian.Config.ChosenTransEngineKey">
+            <summary>
+                Selected translation engine key persisted alongside the numeric
+                engine id so engine selection remains stable across enum-layout
+                changes.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.ClaudeApiKey">
             <summary>API key for Anthropic Claude usage.</summary>
         </member>
@@ -1914,6 +1921,11 @@
                 payloads.
             </summary>
             <summary>
+                Handles the quest probe command used to inspect the complete quest data
+                shape from Lumina, the live quest progress resolver, and the current
+                QuestPlate database rows.
+            </summary>
+            <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
                 <see cref="E:Dalamud.Plugin.Services.IToastGui.QuestToast" /> instead of the addon-handler
                 registrar.
@@ -2352,6 +2364,11 @@
             Holds the database editor window instance.
             </summary>
         </member>
+        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
+            <summary>
+            Holds the currently active addon structure probe watch, if any.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2464,6 +2481,11 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
+            <summary>
+                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -3806,6 +3828,21 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log so we can
+            inspect its live node tree, component roots, and likely overlay anchors.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
+            <summary>
+            Parses the addon probe command arguments into an addon name and optional index.
+            </summary>
+            <param name="args">The raw command arguments.</param>
+            <returns>The addon name and index to probe.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -4067,6 +4104,102 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
+            <summary>
+                Handles the quest probe command.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
+            <summary>
+                Tries to resolve the quest probe target from either a quest id or a
+                quest name.
+            </summary>
+            <param name="input">The command argument.</param>
+            <param name="questIdText">The resolved quest id as text.</param>
+            <param name="questName">The resolved quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>True when the quest could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the quest data structure for inspection.
+            </summary>
+            <param name="questIdText">The quest id as text.</param>
+            <param name="questName">The quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the raw Lumina quest row properties.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs all rows from the quest text sheet, not just the live todo
+                entries, so we can inspect the full structure of the quest sheet.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
+            <summary>
+                Logs the QuestPlate rows currently stored for the quest.
+            </summary>
+            <param name="questIdText">The quest id text.</param>
+            <param name="questName">The quest name.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Logs the resolved live quest progression snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves a human-readable quest name from a quest row.
+            </summary>
+            <param name="questRow">The quest row.</param>
+            <returns>The resolved quest name, if available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
+            <summary>
+                Converts quest text to a readable string for probe output.
+            </summary>
+            <param name="text">The quest text.</param>
+            <returns>The evaluated text string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
+            <summary>
+                Formats a probe value for log output.
+            </summary>
+            <param name="value">The value to format.</param>
+            <returns>A human-readable value string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Builds the raw quest sheet name used by the game files.
+            </summary>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>The quest text sheet name, if it can be derived.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest row id as text through reflection so the probe
+                stays compatible with generated sheet shapes.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest row id as text, or an empty string if unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest sheet identifier used to mount the quest text
+                sheet path.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -8900,6 +9033,18 @@
                 engine ordering contract.
             </summary>
         </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.TryResolveEngineKey(System.String,System.Int32@)">
+            <summary>
+                Tries to resolve a persisted engine key to one concrete runtime engine
+                id.
+            </summary>
+            <param name="engineKey">The persisted engine key.</param>
+            <param name="engineId">The resolved concrete engine id when successful.</param>
+            <returns>
+                <see langword="true" /> when the key resolved to one concrete engine;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.TryMigrateLegacyV325Selection(System.Int32,System.Int32,System.Int32@)">
             <summary>
                 Tries to migrate a legacy persisted engine id from the v3.25.x layout
@@ -8943,6 +9088,31 @@
                 concrete engine list.
             </returns>
         </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(Echoglossian.Config,System.Int32,System.Collections.Generic.IReadOnlyCollection{System.Int32})">
+            <summary>
+                Normalizes and synchronizes the persisted translation engine
+                selection, preferring the persisted engine key when available and
+                keeping the numeric and string forms aligned.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="loadedConfigVersion">
+                The config version loaded from disk before
+                migrations.
+            </param>
+            <param name="supportedEngineIds">
+                The supported engine ids for the active target
+                language, when that constraint should be applied.
+            </param>
+            <returns><see langword="true" /> when the config changed.</returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.ApplyExplicitSelection(Echoglossian.Config,System.Int32)">
+            <summary>
+                Applies an explicit user-selected engine to both persisted selection
+                forms so later normalization cannot silently revert the choice.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="selectedEngineId">The explicitly selected concrete engine id.</param>
+        </member>
         <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.NormalizeLegacyChatGptBaseUrl(System.String)">
             <summary>
                 Normalizes the legacy ChatGPT base URL that pointed directly at the
@@ -8950,6 +9120,19 @@
             </summary>
             <param name="chatGptBaseUrl">The configured ChatGPT base URL.</param>
             <returns>The normalized base URL.</returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.ResolvePersistedEngineSelection(System.Int32,System.Int32,System.String)">
+            <summary>
+                Resolves the effective persisted engine selection from the available
+                persisted forms.
+            </summary>
+            <param name="loadedConfigVersion">
+                The config version loaded from disk before
+                migrations.
+            </param>
+            <param name="chosenEngineId">The persisted numeric engine id.</param>
+            <param name="chosenEngineKey">The persisted engine key.</param>
+            <returns>The resolved concrete engine id.</returns>
         </member>
         <member name="T:Echoglossian.TranslationPersistenceGuard">
             <summary>
@@ -12366,7 +12549,7 @@
             <param name="snapshot">The cached original snapshot.</param>
             <returns>True when the scope already has an original snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailOriginalSnapshot(System.String,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailOriginalSnapshot(System.String,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
                 Remembers the original JournalDetail texts for the current quest
                 scope so mode switches can restore native UI state correctly.
@@ -12376,6 +12559,8 @@
             <param name="questMessage">The original quest description.</param>
             <param name="objectiveText">The original visible objective text.</param>
             <param name="summaryText">The original visible summary text.</param>
+            <param name="descriptionNode">The live description text node.</param>
+            <param name="objectiveNode">The live objective text node, if any.</param>
             <param name="summaryNode">The live primary summary text node, if any.</param>
             <param name="summaryContainerNode">
                 The live summary container node, if any.
@@ -12386,6 +12571,76 @@
             <param name="additionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.MergeJournalDetailOriginalSnapshotAdditionalNodes(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,System.Collections.Generic.IReadOnlyList{System.IntPtr})">
+            <summary>
+                Merges newly discovered supplemental summary nodes into the existing
+                JournalDetail original snapshot so later native restores and hover
+                bounds stay stable even if the addon exposes more summary nodes on a
+                later repaint.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="originalSnapshot">The original snapshot for that scope.</param>
+            <param name="visibleAdditionalSummaryNodes">
+                The supplemental summary nodes visible on the current repaint.
+            </param>
+            <returns>The merged snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ApplyJournalDetailNativeTextNodePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.String)">
+            <summary>
+                Applies the native multiline presentation used by JournalDetail body
+                nodes when translated text is written into the game UI.
+            </summary>
+            <param name="textNode">The target text node.</param>
+            <param name="originalWidth">The original node width.</param>
+            <param name="originalTextFlags">The original text flags.</param>
+            <param name="originalFontSize">The original font size.</param>
+            <param name="text">The translated text to render.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RestoreJournalDetailTextNodePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.String)">
+            <summary>
+                Restores the original JournalDetail presentation for a body text
+                node after leaving native translation mode.
+            </summary>
+            <param name="textNode">The target text node.</param>
+            <param name="originalWidth">The original node width.</param>
+            <param name="originalTextFlags">The original text flags.</param>
+            <param name="originalFontSize">The original font size.</param>
+            <param name="text">The original text to restore.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureTextNodeLayout(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Captures the current layout metadata of a visible JournalDetail text
+                node so native mode can restore both presentation and position.
+            </summary>
+            <param name="textNode">The text node to snapshot.</param>
+            <returns>The captured layout, or <c>null</c> when the node is unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureVisibleTextNodeLayouts(System.Collections.Generic.IEnumerable{System.IntPtr})">
+            <summary>
+                Captures the current layout metadata of the supplied text-node
+                addresses in their current display order.
+            </summary>
+            <param name="nodes">The visible text-node addresses.</param>
+            <returns>The captured node layouts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ApplyJournalDetailNativeSummaryFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Applies the translated JournalDetail summary block to the primary
+                summary node while clearing the supplemental summary nodes that would
+                otherwise leak original text underneath the native translation.
+            </summary>
+            <param name="originalSnapshot">The original quest-detail snapshot.</param>
+            <param name="summaryContainerNode">The live summary container node, if any.</param>
+            <param name="translatedSections">The translated summary sections in order.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RestoreJournalDetailOriginalSummaryFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Restores the original JournalDetail summary-node positions,
+                presentation, and texts after leaving native translation mode.
+            </summary>
+            <param name="originalSnapshot">The original quest-detail snapshot.</param>
+            <param name="summaryContainerNode">The live summary container node, if any.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
             <summary>
@@ -12439,15 +12694,43 @@
             <param name="sections">The summary sections to join.</param>
             <returns>A deduplicated summary block for the JournalDetail body.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.NormalizeJournalDetailSummaryCandidateText(System.String)">
+            <summary>
+                Normalizes JournalDetail summary text for stable node-content
+                matching across live addon refreshes and native writes.
+            </summary>
+            <param name="text">The summary text to normalize.</param>
+            <returns>The normalized summary text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailSummaryTextCandidates(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+                Builds the set of summary texts that should be considered part of the
+                active JournalDetail summary block on the current repaint.
+            </summary>
+            <param name="summarySections">The known summary sections.</param>
+            <returns>The normalized summary text candidates.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.MatchesJournalDetailSummaryCandidate(System.String,System.Collections.Generic.IReadOnlyCollection{System.String})">
+            <summary>
+                Gets whether a visible JournalDetail text node looks like one of the
+                known summary paragraphs for the active quest.
+            </summary>
+            <param name="visibleText">The current visible text of the node.</param>
+            <param name="summaryTextCandidates">The known summary texts.</param>
+            <returns><c>true</c> when the node text matches the summary set.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyCollection{System.String})">
             <summary>
                 Collects the visible JournalDetail supplemental summary nodes in their
                 current display order.
             </summary>
-            <param name="journalBox">The live JournalDetail box component.</param>
+            <param name="journalBox">The live JournalDetail body component.</param>
             <param name="descriptionNode">The live description text node.</param>
             <param name="objectiveNode">The live objective text node.</param>
             <param name="summaryNode">The live primary summary text node, if any.</param>
+            <param name="summaryTextCandidates">
+                The normalized summary texts expected for the active quest.
+            </param>
             <returns>The visible supplemental summary text nodes.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureVisibleTextNodeTexts(System.Collections.Generic.IEnumerable{System.IntPtr})">
@@ -12564,6 +12847,20 @@
             <param name="AdditionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
+            <param name="DescriptionNodeWidth">The original description-node width.</param>
+            <param name="DescriptionNodeTextFlags">
+                The original description-node text flags.
+            </param>
+            <param name="DescriptionNodeFontSize">
+                The original description-node font size.
+            </param>
+            <param name="ObjectiveNodeWidth">The original objective-node width.</param>
+            <param name="ObjectiveNodeTextFlags">
+                The original objective-node text flags.
+            </param>
+            <param name="ObjectiveNodeFontSize">
+                The original objective-node font size.
+            </param>
             <param name="SummaryNodeWidth">The original primary summary node width.</param>
             <param name="SummaryContainerHeight">
                 The original summary container height.
@@ -12574,8 +12871,14 @@
             <param name="SummaryNodeFontSize">
                 The original primary summary node font size.
             </param>
+            <param name="SummaryNodeLayout">
+                The original primary summary node layout.
+            </param>
+            <param name="AdditionalSummaryNodeLayouts">
+                The original supplemental summary node layouts.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout})">
             <summary>
                 Stores the original JournalDetail texts for a single visible quest
                 scope so mode changes can restore native UI state and drive swap
@@ -12591,6 +12894,20 @@
             <param name="AdditionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
+            <param name="DescriptionNodeWidth">The original description-node width.</param>
+            <param name="DescriptionNodeTextFlags">
+                The original description-node text flags.
+            </param>
+            <param name="DescriptionNodeFontSize">
+                The original description-node font size.
+            </param>
+            <param name="ObjectiveNodeWidth">The original objective-node width.</param>
+            <param name="ObjectiveNodeTextFlags">
+                The original objective-node text flags.
+            </param>
+            <param name="ObjectiveNodeFontSize">
+                The original objective-node font size.
+            </param>
             <param name="SummaryNodeWidth">The original primary summary node width.</param>
             <param name="SummaryContainerHeight">
                 The original summary container height.
@@ -12600,6 +12917,12 @@
             </param>
             <param name="SummaryNodeFontSize">
                 The original primary summary node font size.
+            </param>
+            <param name="SummaryNodeLayout">
+                The original primary summary node layout.
+            </param>
+            <param name="AdditionalSummaryNodeLayouts">
+                The original supplemental summary node layouts.
             </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.QuestName">
@@ -12624,6 +12947,32 @@
                 The original visible supplemental summary texts.
             </summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeWidth">
+            <summary>The original description-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeTextFlags">
+            <summary>
+                The original description-node text flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeFontSize">
+            <summary>
+                The original description-node font size.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeWidth">
+            <summary>The original objective-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeTextFlags">
+            <summary>
+                The original objective-node text flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeFontSize">
+            <summary>
+                The original objective-node font size.
+            </summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeWidth">
             <summary>The original primary summary node width.</summary>
         </member>
@@ -12641,6 +12990,63 @@
             <summary>
                 The original primary summary node font size.
             </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeLayout">
+            <summary>
+                The original primary summary node layout.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.AdditionalSummaryNodeLayouts">
+            <summary>
+                The original supplemental summary node layouts.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout">
+            <summary>
+                Captures the original layout state for a JournalDetail body text
+                node.
+            </summary>
+            <param name="NodeAddress">The live text-node address.</param>
+            <param name="X">The original local X position.</param>
+            <param name="Y">The original local Y position.</param>
+            <param name="Width">The original node width.</param>
+            <param name="Height">The original node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte)">
+            <summary>
+                Captures the original layout state for a JournalDetail body text
+                node.
+            </summary>
+            <param name="NodeAddress">The live text-node address.</param>
+            <param name="X">The original local X position.</param>
+            <param name="Y">The original local Y position.</param>
+            <param name="Width">The original node width.</param>
+            <param name="Height">The original node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.NodeAddress">
+            <summary>The live text-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.X">
+            <summary>The original local X position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Y">
+            <summary>The original local Y position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Width">
+            <summary>The original node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Height">
+            <summary>The original node height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.TextFlags">
+            <summary>The original text flags.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.FontSize">
+            <summary>The original font size.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler">
             <summary>
@@ -20979,6 +21385,18 @@
                 task result contains the translated text.
             </returns>
         </member>
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual OpenAI chat completion call for a single cache
+                key. Concurrent callers for the same key share the same in-flight
+                task.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text, or a synthetic error placeholder.</returns>
+        </member>
         <member name="T:Echoglossian.Translators.ClaudeTranslator">
             <summary>
                 Translator implementation for Anthropic Claude using the Messages API.
@@ -20996,6 +21414,16 @@
         </member>
         <member name="M:Echoglossian.Translators.ClaudeTranslator.TranslateAsync(System.String,System.String,System.String)">
             <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual Claude Messages API request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
         </member>
         <member name="T:Echoglossian.Translators.Claude.ClaudeModelManager">
             <summary>
@@ -21147,6 +21575,26 @@
             <param name="pluginLog">The plugin log instance for logging purposes.</param>
             <param name="config">The configuration settings for the DeepSeekTranslator.</param>
         </member>
+        <member name="M:Echoglossian.Translators.DeepSeekTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual DeepSeek translation request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.GeminiTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual Gemini translation request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
+        </member>
         <member name="T:Echoglossian.Translators.GoogleTranslator">
             <summary>
                 Provides translation services using Google Translate APIs.
@@ -21212,6 +21660,46 @@
                 translated string as the result.
             </returns>
         </member>
+        <member name="T:Echoglossian.Translators.Helpers.ConcurrentTranslationRequestCache">
+            <summary>
+                Provides a small per-translator cache that keeps accepted translations in
+                memory and coalesces concurrent in-flight requests for the same source
+                key.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.ConcurrentTranslationRequestCache.TryGetValue(System.String,System.String@)">
+            <summary>
+                Tries to get a completed cached translation for the supplied key.
+            </summary>
+            <param name="cacheKey">The normalized translation cache key.</param>
+            <param name="translatedText">Receives the cached translated text.</param>
+            <returns>
+                <see langword="true" /> when a completed cached translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.ConcurrentTranslationRequestCache.Remember(System.String,System.String)">
+            <summary>
+                Stores a completed translated text for the supplied key.
+            </summary>
+            <param name="cacheKey">The normalized translation cache key.</param>
+            <param name="translatedText">The translated text to remember.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.ConcurrentTranslationRequestCache.GetOrAddAsync(System.String,System.Func{System.Threading.Tasks.Task{System.String}})">
+            <summary>
+                Returns a shared in-flight task for the supplied key or creates one
+                when no equivalent translation request is currently running.
+            </summary>
+            <param name="cacheKey">The normalized translation cache key.</param>
+            <param name="factory">
+                Factory used to create the translation task when no request is
+                already in flight for the key.
+            </param>
+            <returns>
+                The completed translated text for the shared request, or
+                <see langword="null" /> when the request produced no translation.
+            </returns>
+        </member>
         <member name="T:Echoglossian.Translators.ITranslator">
             <summary>
             Interface for translating text between different languages.
@@ -21270,6 +21758,16 @@
         <member name="M:Echoglossian.Translators.LmStudioTranslator.TranslateAsync(System.String,System.String,System.String)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.Translators.LmStudioTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual LM Studio translation request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
+        </member>
         <member name="T:Echoglossian.Translators.LmStudio.LmStudioModelManager">
             <summary>
                 Manages dynamic model fetching for LM Studio.
@@ -21297,6 +21795,36 @@
             <summary>
                 Predefined LM Studio-compatible models for offline use.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.MicrosoftTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual Microsoft Translator request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.OllamaTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual Ollama translation request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenRouterTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual OpenRouter translation request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
         </member>
         <member name="T:Echoglossian.Translators.TranslationFailureKey">
             <summary>

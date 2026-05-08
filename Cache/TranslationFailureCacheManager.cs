@@ -28,8 +28,9 @@ public static class TranslationFailureCacheManager
             using var context = new EchoglossianDbContext(configDir);
             var allRows = context.Set<TranslationFailure>()
                 .AsNoTracking()
+                .Where(row => !string.IsNullOrWhiteSpace(row.SourceTextHash))
+                .AsEnumerable()
                 .Where(row =>
-                    !string.IsNullOrWhiteSpace(row.SourceTextHash) &&
                     TranslationPersistenceGuard.IsPersistentFailureReason(
                         row.FailureReason))
                 .ToList();

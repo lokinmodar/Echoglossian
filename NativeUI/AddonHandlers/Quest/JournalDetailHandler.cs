@@ -80,10 +80,20 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   ///     Whether the translated payload required by the current mode is ready.
   /// </param>
   /// <returns><c>true</c> when the hover tooltip may be rendered.</returns>
-  private bool CanRenderJournalDetailHoverTooltip(bool translatedPayloadReady) =>
-      QuestAddonModeHelpers.CanRenderHoverTooltip(
-          this.Config.JournalDetailTranslationDisplayMode,
-          translatedPayloadReady);
+  private bool CanRenderJournalDetailHoverTooltip(bool translatedPayloadReady)
+  {
+    if (!this.JournalDetailUsesHoverTooltips)
+    {
+      return false;
+    }
+
+    if (this.JournalDetailHoverShowsOriginal)
+    {
+      return true;
+    }
+
+    return translatedPayloadReady;
+  }
 
   /// <summary>
   ///     Gets whether translated JournalDetail text should be normalized before
@@ -233,6 +243,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="questMessage">The original quest description.</param>
   /// <param name="objectiveText">The original visible objective text.</param>
   /// <param name="summaryText">The original visible summary text.</param>
+  /// <param name="descriptionNode">The live description text node.</param>
+  /// <param name="objectiveNode">The live objective text node, if any.</param>
   /// <param name="summaryNode">The live primary summary text node, if any.</param>
   /// <param name="summaryContainerNode">
   ///     The live summary container node, if any.
@@ -249,6 +261,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string questMessage,
       string objectiveText,
       string summaryText,
+      AtkTextNode* descriptionNode,
+      AtkTextNode* objectiveNode,
       AtkTextNode* summaryNode,
       AtkResNode* summaryContainerNode,
       IReadOnlyList<nint> additionalSummaryNodeAddresses,
@@ -267,10 +281,331 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             summaryText,
             additionalSummaryNodeAddresses,
             additionalSummaryTexts,
+            descriptionNode != null ? descriptionNode->GetWidth() : (ushort)0,
+            descriptionNode != null ? descriptionNode->TextFlags : default,
+            descriptionNode != null ? descriptionNode->FontSize : (byte)0,
+            objectiveNode != null ? objectiveNode->GetWidth() : (ushort)0,
+            objectiveNode != null ? objectiveNode->TextFlags : default,
+            objectiveNode != null ? objectiveNode->FontSize : (byte)0,
             summaryNode != null ? summaryNode->GetWidth() : (ushort)0,
             summaryContainerNode != null ? summaryContainerNode->GetHeight() : (ushort)0,
             summaryNode != null ? summaryNode->TextFlags : default,
-            summaryNode != null ? summaryNode->FontSize : (byte)0);
+            summaryNode != null ? summaryNode->FontSize : (byte)0,
+            CaptureTextNodeLayout(summaryNode),
+            CaptureVisibleTextNodeLayouts(additionalSummaryNodeAddresses));
+  }
+
+  /// <summary>
+  ///     Merges newly discovered supplemental summary nodes into the existing
+  ///     JournalDetail original snapshot so later native restores and hover
+  ///     bounds stay stable even if the addon exposes more summary nodes on a
+  ///     later repaint.
+  /// </summary>
+  /// <param name="scopeKey">The current quest-detail scope key.</param>
+  /// <param name="originalSnapshot">The original snapshot for that scope.</param>
+  /// <param name="visibleAdditionalSummaryNodes">
+  ///     The supplemental summary nodes visible on the current repaint.
+  /// </param>
+  /// <returns>The merged snapshot.</returns>
+  private unsafe JournalDetailOriginalSnapshot
+      MergeJournalDetailOriginalSnapshotAdditionalNodes(
+          string scopeKey,
+          JournalDetailOriginalSnapshot originalSnapshot,
+          IReadOnlyList<nint> visibleAdditionalSummaryNodes)
+  {
+    if (string.IsNullOrWhiteSpace(scopeKey) ||
+        visibleAdditionalSummaryNodes.Count == 0)
+    {
+      return originalSnapshot;
+    }
+
+    var existingSummaryNodes = new HashSet<nint>(
+        originalSnapshot.AdditionalSummaryNodeAddresses);
+    List<nint> newlyDiscoveredSummaryNodes = [];
+    foreach (var visibleAdditionalSummaryNode in visibleAdditionalSummaryNodes)
+    {
+      if (existingSummaryNodes.Add(visibleAdditionalSummaryNode))
+      {
+        newlyDiscoveredSummaryNodes.Add(visibleAdditionalSummaryNode);
+      }
+    }
+
+    if (newlyDiscoveredSummaryNodes.Count == 0)
+    {
+      return originalSnapshot;
+    }
+
+    var mergedSnapshot = originalSnapshot with
+    {
+      AdditionalSummaryNodeAddresses =
+          originalSnapshot.AdditionalSummaryNodeAddresses
+              .Concat(newlyDiscoveredSummaryNodes)
+              .ToArray(),
+      AdditionalSummaryTexts =
+          originalSnapshot.AdditionalSummaryTexts
+              .Concat(
+                  CaptureVisibleTextNodeTexts(
+                      newlyDiscoveredSummaryNodes))
+              .ToArray(),
+      AdditionalSummaryNodeLayouts =
+          originalSnapshot.AdditionalSummaryNodeLayouts
+              .Concat(
+                  CaptureVisibleTextNodeLayouts(
+                      newlyDiscoveredSummaryNodes))
+              .ToArray(),
+    };
+
+    this.journalDetailOriginalCache[scopeKey] = mergedSnapshot;
+    return mergedSnapshot;
+  }
+
+  /// <summary>
+  ///     Applies the native multiline presentation used by JournalDetail body
+  ///     nodes when translated text is written into the game UI.
+  /// </summary>
+  /// <param name="textNode">The target text node.</param>
+  /// <param name="originalWidth">The original node width.</param>
+  /// <param name="originalTextFlags">The original text flags.</param>
+  /// <param name="originalFontSize">The original font size.</param>
+  /// <param name="text">The translated text to render.</param>
+  private unsafe void ApplyJournalDetailNativeTextNodePresentation(
+      AtkTextNode* textNode,
+      ushort originalWidth,
+      TextFlags originalTextFlags,
+      byte originalFontSize,
+      string? text)
+  {
+    if (textNode == null)
+    {
+      return;
+    }
+
+    if (originalWidth != 0)
+    {
+      textNode->SetWidth(originalWidth);
+    }
+
+    if (originalFontSize != 0)
+    {
+      textNode->FontSize = originalFontSize;
+    }
+
+    textNode->TextFlags =
+        originalTextFlags |
+        TextFlags.WordWrap |
+        TextFlags.MultiLine |
+        TextFlags.AutoAdjustNodeSize;
+    textNode->SetText(text ?? string.Empty);
+    textNode->ResizeNodeForCurrentText();
+  }
+
+  /// <summary>
+  ///     Restores the original JournalDetail presentation for a body text
+  ///     node after leaving native translation mode.
+  /// </summary>
+  /// <param name="textNode">The target text node.</param>
+  /// <param name="originalWidth">The original node width.</param>
+  /// <param name="originalTextFlags">The original text flags.</param>
+  /// <param name="originalFontSize">The original font size.</param>
+  /// <param name="text">The original text to restore.</param>
+  private unsafe void RestoreJournalDetailTextNodePresentation(
+      AtkTextNode* textNode,
+      ushort originalWidth,
+      TextFlags originalTextFlags,
+      byte originalFontSize,
+      string? text)
+  {
+    if (textNode == null)
+    {
+      return;
+    }
+
+    if (originalWidth != 0)
+    {
+      textNode->SetWidth(originalWidth);
+    }
+
+    if (originalFontSize != 0)
+    {
+      textNode->FontSize = originalFontSize;
+    }
+
+    textNode->TextFlags = originalTextFlags;
+    textNode->SetText(text ?? string.Empty);
+    textNode->ResizeNodeForCurrentText();
+  }
+
+  /// <summary>
+  ///     Captures the current layout metadata of a visible JournalDetail text
+  ///     node so native mode can restore both presentation and position.
+  /// </summary>
+  /// <param name="textNode">The text node to snapshot.</param>
+  /// <returns>The captured layout, or <c>null</c> when the node is unavailable.</returns>
+  private static unsafe JournalDetailTextNodeLayout? CaptureTextNodeLayout(
+      AtkTextNode* textNode)
+  {
+    if (textNode == null)
+    {
+      return null;
+    }
+
+    return new JournalDetailTextNodeLayout(
+        (nint)textNode,
+        (short)Math.Clamp(
+            Math.Round(textNode->X),
+            short.MinValue,
+            short.MaxValue),
+        (short)Math.Clamp(
+            Math.Round(textNode->Y),
+            short.MinValue,
+            short.MaxValue),
+        textNode->GetWidth(),
+        textNode->GetHeight(),
+        textNode->TextFlags,
+        textNode->FontSize);
+  }
+
+  /// <summary>
+  ///     Captures the current layout metadata of the supplied text-node
+  ///     addresses in their current display order.
+  /// </summary>
+  /// <param name="nodes">The visible text-node addresses.</param>
+  /// <returns>The captured node layouts.</returns>
+  private static unsafe List<JournalDetailTextNodeLayout>
+      CaptureVisibleTextNodeLayouts(IEnumerable<nint> nodes)
+  {
+    List<JournalDetailTextNodeLayout> layouts = [];
+    foreach (var nodeAddress in nodes)
+    {
+      var nodeLayout = CaptureTextNodeLayout((AtkTextNode*)nodeAddress);
+      if (nodeLayout != null)
+      {
+        layouts.Add(nodeLayout);
+      }
+    }
+
+    return layouts;
+  }
+
+  /// <summary>
+  ///     Applies the translated JournalDetail summary block to the primary
+  ///     summary node while clearing the supplemental summary nodes that would
+  ///     otherwise leak original text underneath the native translation.
+  /// </summary>
+  /// <param name="originalSnapshot">The original quest-detail snapshot.</param>
+  /// <param name="summaryContainerNode">The live summary container node, if any.</param>
+  /// <param name="translatedSections">The translated summary sections in order.</param>
+  private unsafe void ApplyJournalDetailNativeSummaryFlow(
+      JournalDetailOriginalSnapshot originalSnapshot,
+      AtkResNode* summaryContainerNode,
+      IReadOnlyList<string> translatedSections)
+  {
+    var translatedSummaryDisplayText = BuildQuestPlateSummarySection(
+        translatedSections);
+    if (originalSnapshot.SummaryNodeLayout != null)
+    {
+      var summaryTextNode =
+          (AtkTextNode*)originalSnapshot.SummaryNodeLayout.NodeAddress;
+      if (summaryTextNode != null)
+      {
+        summaryTextNode->SetPositionShort(
+            originalSnapshot.SummaryNodeLayout.X,
+            originalSnapshot.SummaryNodeLayout.Y);
+        this.ApplyJournalDetailNativeTextNodePresentation(
+            summaryTextNode,
+            originalSnapshot.SummaryNodeLayout.Width,
+            originalSnapshot.SummaryNodeLayout.TextFlags,
+            originalSnapshot.SummaryNodeLayout.FontSize,
+            translatedSummaryDisplayText);
+
+        if (summaryContainerNode != null &&
+            originalSnapshot.SummaryContainerHeight != 0)
+        {
+          var desiredSummaryContainerHeight = (ushort)Math.Clamp(
+              Math.Ceiling(
+                  Math.Max(
+                      originalSnapshot.SummaryContainerHeight,
+                      summaryTextNode->GetHeight() + 12f)),
+              ushort.MinValue,
+              ushort.MaxValue);
+          summaryContainerNode->SetHeight(desiredSummaryContainerHeight);
+        }
+      }
+    }
+
+    foreach (var layout in originalSnapshot.AdditionalSummaryNodeLayouts)
+    {
+      var summaryTextNode = (AtkTextNode*)layout.NodeAddress;
+      if (summaryTextNode == null)
+      {
+        continue;
+      }
+
+      summaryTextNode->SetPositionShort(layout.X, layout.Y);
+      this.RestoreJournalDetailTextNodePresentation(
+          summaryTextNode,
+          layout.Width,
+          layout.TextFlags,
+          layout.FontSize,
+          string.Empty);
+    }
+  }
+
+  /// <summary>
+  ///     Restores the original JournalDetail summary-node positions,
+  ///     presentation, and texts after leaving native translation mode.
+  /// </summary>
+  /// <param name="originalSnapshot">The original quest-detail snapshot.</param>
+  /// <param name="summaryContainerNode">The live summary container node, if any.</param>
+  private unsafe void RestoreJournalDetailOriginalSummaryFlow(
+      JournalDetailOriginalSnapshot originalSnapshot,
+      AtkResNode* summaryContainerNode)
+  {
+    if (originalSnapshot.SummaryNodeLayout != null)
+    {
+      var summaryTextNode =
+          (AtkTextNode*)originalSnapshot.SummaryNodeLayout.NodeAddress;
+      if (summaryTextNode != null)
+      {
+        summaryTextNode->SetPositionShort(
+            originalSnapshot.SummaryNodeLayout.X,
+            originalSnapshot.SummaryNodeLayout.Y);
+        this.RestoreJournalDetailTextNodePresentation(
+            summaryTextNode,
+            originalSnapshot.SummaryNodeLayout.Width,
+            originalSnapshot.SummaryNodeLayout.TextFlags,
+            originalSnapshot.SummaryNodeLayout.FontSize,
+            originalSnapshot.SummaryText);
+      }
+    }
+
+    for (var i = 0; i < originalSnapshot.AdditionalSummaryNodeLayouts.Count; i++)
+    {
+      var layout = originalSnapshot.AdditionalSummaryNodeLayouts[i];
+      var summaryTextNode = (AtkTextNode*)layout.NodeAddress;
+      if (summaryTextNode == null)
+      {
+        continue;
+      }
+
+      var originalAdditionalSummaryText =
+          i < originalSnapshot.AdditionalSummaryTexts.Count
+              ? originalSnapshot.AdditionalSummaryTexts[i]
+              : string.Empty;
+      summaryTextNode->SetPositionShort(layout.X, layout.Y);
+      this.RestoreJournalDetailTextNodePresentation(
+          summaryTextNode,
+          layout.Width,
+          layout.TextFlags,
+          layout.FontSize,
+          originalAdditionalSummaryText);
+    }
+
+    if (summaryContainerNode != null &&
+        originalSnapshot.SummaryContainerHeight != 0)
+    {
+      summaryContainerNode->SetHeight(originalSnapshot.SummaryContainerHeight);
+    }
   }
 
   /// <summary>
@@ -462,21 +797,121 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Normalizes JournalDetail summary text for stable node-content
+  ///     matching across live addon refreshes and native writes.
+  /// </summary>
+  /// <param name="text">The summary text to normalize.</param>
+  /// <returns>The normalized summary text.</returns>
+  private static string NormalizeJournalDetailSummaryCandidateText(
+      string? text)
+  {
+    if (string.IsNullOrWhiteSpace(text))
+    {
+      return string.Empty;
+    }
+
+    return string.Join(
+        " ",
+        text.Split(
+            ["\r", "\n"],
+            StringSplitOptions.RemoveEmptyEntries |
+            StringSplitOptions.TrimEntries));
+  }
+
+  /// <summary>
+  ///     Builds the set of summary texts that should be considered part of the
+  ///     active JournalDetail summary block on the current repaint.
+  /// </summary>
+  /// <param name="summarySections">The known summary sections.</param>
+  /// <returns>The normalized summary text candidates.</returns>
+  private static HashSet<string> BuildJournalDetailSummaryTextCandidates(
+      IEnumerable<string?> summarySections)
+  {
+    HashSet<string> summaryTextCandidates = new(StringComparer.Ordinal);
+    foreach (var summarySection in summarySections)
+    {
+      var normalizedSummarySection =
+          NormalizeJournalDetailSummaryCandidateText(summarySection);
+      if (!string.IsNullOrWhiteSpace(normalizedSummarySection))
+      {
+        summaryTextCandidates.Add(normalizedSummarySection);
+      }
+    }
+
+    return summaryTextCandidates;
+  }
+
+  /// <summary>
+  ///     Gets whether a visible JournalDetail text node looks like one of the
+  ///     known summary paragraphs for the active quest.
+  /// </summary>
+  /// <param name="visibleText">The current visible text of the node.</param>
+  /// <param name="summaryTextCandidates">The known summary texts.</param>
+  /// <returns><c>true</c> when the node text matches the summary set.</returns>
+  private static bool MatchesJournalDetailSummaryCandidate(
+      string? visibleText,
+      IReadOnlyCollection<string> summaryTextCandidates)
+  {
+    if (summaryTextCandidates.Count == 0)
+    {
+      return false;
+    }
+
+    var normalizedVisibleText =
+        NormalizeJournalDetailSummaryCandidateText(visibleText);
+    if (string.IsNullOrWhiteSpace(normalizedVisibleText))
+    {
+      return false;
+    }
+
+    if (summaryTextCandidates.Contains(normalizedVisibleText))
+    {
+      return true;
+    }
+
+    foreach (var summaryTextCandidate in summaryTextCandidates)
+    {
+      if (summaryTextCandidate.Length < 24 &&
+          normalizedVisibleText.Length < 24)
+      {
+        continue;
+      }
+
+      if (summaryTextCandidate.Contains(
+              normalizedVisibleText,
+              StringComparison.Ordinal) ||
+          normalizedVisibleText.Contains(
+              summaryTextCandidate,
+              StringComparison.Ordinal))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
   ///     Collects the visible JournalDetail supplemental summary nodes in their
   ///     current display order.
   /// </summary>
-  /// <param name="journalBox">The live JournalDetail box component.</param>
+  /// <param name="journalBox">The live JournalDetail body component.</param>
   /// <param name="descriptionNode">The live description text node.</param>
   /// <param name="objectiveNode">The live objective text node.</param>
   /// <param name="summaryNode">The live primary summary text node, if any.</param>
+  /// <param name="summaryTextCandidates">
+  ///     The normalized summary texts expected for the active quest.
+  /// </param>
   /// <returns>The visible supplemental summary text nodes.</returns>
   private unsafe List<nint> CollectVisibleAdditionalSummaryNodes(
       AtkComponentBase* journalBox,
       AtkTextNode* descriptionNode,
       AtkTextNode* objectiveNode,
-      AtkTextNode* summaryNode)
+      AtkTextNode* summaryNode,
+      IReadOnlyCollection<string> summaryTextCandidates)
   {
     List<nint> summaryNodes = [];
+    HashSet<nint> seenSummaryNodes = [];
     var descriptionNodeAddress = (nint)descriptionNode;
     var objectiveNodeAddress = (nint)objectiveNode;
     var summaryNodeAddress = (nint)summaryNode;
@@ -486,60 +921,84 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         ? Math.Max(1f, summaryNode->GetWidth())
         : 0f;
 
-    for (var i = 0; i < journalBox->UldManager.NodeListCount; i++)
+    void ConsiderSummaryTextNode(AtkTextNode* summaryTextNode)
     {
-      var node = journalBox->UldManager.NodeList[i];
-      if (node == null ||
-          !node->IsVisible())
+      if (summaryTextNode == null || !summaryTextNode->IsVisible())
       {
-        continue;
-      }
-
-      var summaryItemNode = node->GetAsAtkComponentNode();
-      if (summaryItemNode == null || summaryItemNode->Component == null)
-      {
-        continue;
-      }
-
-      var summaryTextResNode =
-          summaryItemNode->Component->UldManager.SearchNodeById(2);
-      if (summaryTextResNode == null ||
-          summaryTextResNode->Type != NodeType.Text ||
-          !summaryTextResNode->IsVisible())
-      {
-        continue;
-      }
-
-      var summaryTextNode = summaryTextResNode->GetAsAtkTextNode();
-      if (summaryTextNode == null)
-      {
-        continue;
+        return;
       }
 
       var summaryTextNodeAddress = (nint)summaryTextNode;
       if (summaryTextNodeAddress == descriptionNodeAddress ||
           summaryTextNodeAddress == objectiveNodeAddress ||
-          summaryTextNodeAddress == summaryNodeAddress)
+          summaryTextNodeAddress == summaryNodeAddress ||
+          !seenSummaryNodes.Add(summaryTextNodeAddress))
       {
-        continue;
+        return;
       }
 
       var matchesLegacySummaryRange =
-          node->NodeId >= 480700 && node->NodeId <= 481200;
+          summaryTextNode->NodeId >= 480700 && summaryTextNode->NodeId <= 481200;
+      var summaryTextValue = summaryTextNode->NodeText.IsEmpty
+          ? string.Empty
+          : MemoryHelper.ReadSeStringAsString(
+              out _,
+              (nint)summaryTextNode->NodeText.StringPtr.Value);
+      var matchesSummaryText =
+          MatchesJournalDetailSummaryCandidate(
+              summaryTextValue,
+              summaryTextCandidates);
       var matchesSummaryLayout = summaryNode != null &&
-                                 summaryTextNode->ScreenY >= summaryAnchorY - 4f &&
-                                 summaryTextNode->ScreenX >= summaryAnchorX - 24f &&
-                                 summaryTextNode->ScreenX <= summaryAnchorX + 64f &&
-                                 Math.Abs(
-                                     Math.Max(1f, summaryTextNode->GetWidth()) -
-                                     summaryAnchorWidth) <=
-                                 Math.Max(96f, summaryAnchorWidth * 0.75f);
-      if (!matchesLegacySummaryRange && !matchesSummaryLayout)
+                                 summaryTextNode->ScreenY >= summaryAnchorY - 6f &&
+                                 summaryTextNode->ScreenX >= summaryAnchorX - 72f &&
+                                 summaryTextNode->ScreenX <=
+                                 summaryAnchorX + Math.Max(120f, summaryAnchorWidth + 96f) &&
+                                 Math.Max(1f, summaryTextNode->GetWidth()) >=
+                                 Math.Max(48f, summaryAnchorWidth * 0.35f);
+      var shouldIncludeSummaryNode =
+          matchesLegacySummaryRange ||
+          matchesSummaryText ||
+          (summaryTextCandidates.Count == 0 && matchesSummaryLayout);
+      if (!shouldIncludeSummaryNode)
       {
-        continue;
+        return;
       }
 
-      summaryNodes.Add((nint)summaryTextNode);
+      summaryNodes.Add(summaryTextNodeAddress);
+    }
+
+    void CollectVisibleSummaryTextNodesFromComponent(AtkComponentBase* component)
+    {
+      if (component == null)
+      {
+        return;
+      }
+
+      for (var childIndex = 0; childIndex < component->UldManager.NodeListCount; childIndex++)
+      {
+        var childNode = component->UldManager.NodeList[childIndex];
+        if (childNode == null || !childNode->IsVisible())
+        {
+          continue;
+        }
+
+        if (childNode->Type == NodeType.Text)
+        {
+          ConsiderSummaryTextNode(childNode->GetAsAtkTextNode());
+          continue;
+        }
+
+        var componentNode = childNode->GetAsAtkComponentNode();
+        if (componentNode != null && componentNode->Component != null)
+        {
+          CollectVisibleSummaryTextNodesFromComponent(componentNode->Component);
+        }
+      }
+    }
+
+    if (journalBox != null)
+    {
+      CollectVisibleSummaryTextNodesFromComponent(journalBox);
     }
 
     summaryNodes.Sort(
@@ -783,17 +1242,55 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         ? []
         : questCanonicalData.EnumerateObjectiveRowKeysByText(objectiveText).ToArray();
     this.EnsureJournalDetailScope(journalDetailScopeKey);
+    var canonicalSummaryRows = this.BuildCanonicalSummaryRows(
+        foundQuestPlate,
+        questCanonicalData,
+        journalDetailScopeKey);
+    var summaryTextCandidates = BuildJournalDetailSummaryTextCandidates(
+        canonicalSummaryRows
+            .SelectMany(
+                summary => new[]
+                {
+                  summary.OriginalText,
+                  summary.TranslatedText,
+                })
+            .Append(summaryText));
+
+    var hasOriginalSnapshot = this.TryGetJournalDetailOriginalSnapshot(
+        journalDetailScopeKey,
+        out var originalSnapshot);
+    if (hasOriginalSnapshot)
+    {
+      foreach (var originalAdditionalSummaryText
+               in originalSnapshot.AdditionalSummaryTexts)
+      {
+        var normalizedAdditionalSummaryText =
+            NormalizeJournalDetailSummaryCandidateText(
+                originalAdditionalSummaryText);
+        if (!string.IsNullOrWhiteSpace(normalizedAdditionalSummaryText))
+        {
+          summaryTextCandidates.Add(normalizedAdditionalSummaryText);
+        }
+      }
+
+      var normalizedOriginalSummaryText =
+          NormalizeJournalDetailSummaryCandidateText(
+              originalSnapshot.SummaryText);
+      if (!string.IsNullOrWhiteSpace(normalizedOriginalSummaryText))
+      {
+        summaryTextCandidates.Add(normalizedOriginalSummaryText);
+      }
+    }
 
     var visibleAdditionalSummaryNodes =
         this.CollectVisibleAdditionalSummaryNodes(
             journalBox,
             descriptionNode,
             objectiveNode,
-            summaryNode);
+            summaryNode,
+            summaryTextCandidates);
 
-    if (!this.TryGetJournalDetailOriginalSnapshot(
-            journalDetailScopeKey,
-            out var originalSnapshot))
+    if (!hasOriginalSnapshot)
     {
       var capturedAdditionalSummaryTexts =
           CaptureVisibleTextNodeTexts(visibleAdditionalSummaryNodes);
@@ -804,20 +1301,38 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           summaryText,
           visibleAdditionalSummaryNodes,
           capturedAdditionalSummaryTexts,
+          descriptionNode != null ? descriptionNode->GetWidth() : (ushort)0,
+          descriptionNode != null ? descriptionNode->TextFlags : default,
+          descriptionNode != null ? descriptionNode->FontSize : (byte)0,
+          objectiveNode != null ? objectiveNode->GetWidth() : (ushort)0,
+          objectiveNode != null ? objectiveNode->TextFlags : default,
+          objectiveNode != null ? objectiveNode->FontSize : (byte)0,
           summaryNode != null ? summaryNode->GetWidth() : (ushort)0,
           summaryContainerNode != null ? summaryContainerNode->GetHeight() : (ushort)0,
           summaryNode != null ? summaryNode->TextFlags : default,
-          summaryNode != null ? summaryNode->FontSize : (byte)0);
+          summaryNode != null ? summaryNode->FontSize : (byte)0,
+          CaptureTextNodeLayout(summaryNode),
+          CaptureVisibleTextNodeLayouts(visibleAdditionalSummaryNodes));
       this.RememberJournalDetailOriginalSnapshot(
           journalDetailScopeKey,
           questName,
           questMessage,
           objectiveText,
           summaryText,
+          descriptionNode,
+          objectiveNode,
           summaryNode,
           summaryContainerNode,
           visibleAdditionalSummaryNodes,
           capturedAdditionalSummaryTexts);
+    }
+    else
+    {
+      originalSnapshot =
+          this.MergeJournalDetailOriginalSnapshotAdditionalNodes(
+              journalDetailScopeKey,
+              originalSnapshot,
+              visibleAdditionalSummaryNodes);
     }
 
     var originalQuestName = originalSnapshot.QuestName;
@@ -841,10 +1356,6 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     var translatedQuestDescriptionReady =
         string.IsNullOrWhiteSpace(originalQuestDescription);
 
-    var canonicalSummaryRows = this.BuildCanonicalSummaryRows(
-        foundQuestPlate,
-        questCanonicalData,
-        journalDetailScopeKey);
     var primaryCanonicalSummary = canonicalSummaryRows.FirstOrDefault();
     var additionalCanonicalSummaryRows = canonicalSummaryRows
         .Skip(1)
@@ -996,102 +1507,43 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     if (this.JournalDetailWritesNativeTranslation)
     {
-      questNameNode->SetText(translatedQuestName);
-      descriptionNode->SetText(translatedQuestDescription);
-      objectiveNode->SetText(translatedQuestObjective);
+      questNameNode->SetText(translatedQuestName ?? string.Empty);
+      this.ApplyJournalDetailNativeTextNodePresentation(
+          descriptionNode,
+          originalSnapshot.DescriptionNodeWidth,
+          originalSnapshot.DescriptionNodeTextFlags,
+          originalSnapshot.DescriptionNodeFontSize,
+          translatedQuestDescription);
+      this.ApplyJournalDetailNativeTextNodePresentation(
+          objectiveNode,
+          originalSnapshot.ObjectiveNodeWidth,
+          originalSnapshot.ObjectiveNodeTextFlags,
+          originalSnapshot.ObjectiveNodeFontSize,
+          translatedQuestObjective);
       this.journalDetailNativeMutationScopes.Add(journalDetailScopeKey);
-      if (summaryNode != null)
-      {
-        if (originalSnapshot.SummaryNodeWidth != 0)
-        {
-          summaryNode->SetWidth(originalSnapshot.SummaryNodeWidth);
-        }
-
-        if (originalSnapshot.SummaryNodeFontSize != 0)
-        {
-          summaryNode->FontSize = originalSnapshot.SummaryNodeFontSize;
-        }
-
-        summaryNode->TextFlags =
-            originalSnapshot.SummaryNodeTextFlags |
-            TextFlags.WordWrap |
-            TextFlags.MultiLine |
-            TextFlags.AutoAdjustNodeSize;
-        summaryNode->SetText(translatedSummaryDisplayText ?? string.Empty);
-        summaryNode->ResizeNodeForCurrentText();
-
-        if (summaryContainerNode != null && originalSnapshot.SummaryContainerHeight != 0)
-        {
-          var desiredSummaryContainerHeight = (ushort)Math.Max(
-              originalSnapshot.SummaryContainerHeight,
-              summaryNode->GetHeight() + 12f);
-          summaryContainerNode->SetHeight(desiredSummaryContainerHeight);
-        }
-
-        foreach (var additionalSummaryNodeAddress in additionalSummaryNodeAddresses)
-        {
-          var additionalSummaryNode =
-              (AtkTextNode*)additionalSummaryNodeAddress;
-          additionalSummaryNode->SetText(string.Empty);
-          additionalSummaryNode->ResizeNodeForCurrentText();
-        }
-      }
-      else
-      {
-        for (var i = 0; i < additionalSummaryNodeAddresses.Count; i++)
-        {
-          var additionalSummaryNode =
-              (AtkTextNode*)additionalSummaryNodeAddresses[i];
-          if (i < additionalCanonicalSummaryRows.Length)
-          {
-            additionalSummaryNode->SetText(
-                additionalCanonicalSummaryRows[i].TranslatedText ?? string.Empty);
-          }
-          else
-          {
-            additionalSummaryNode->SetText(string.Empty);
-          }
-        }
-      }
+      this.ApplyJournalDetailNativeSummaryFlow(
+          originalSnapshot,
+          summaryContainerNode,
+          translatedSummarySections);
     }
     else if (this.journalDetailNativeMutationScopes.Remove(journalDetailScopeKey))
     {
-      questNameNode->SetText(originalQuestName);
-      descriptionNode->SetText(originalQuestMessage);
-      objectiveNode->SetText(originalObjectiveText);
-      if (summaryNode != null)
-      {
-        if (originalSnapshot.SummaryNodeWidth != 0)
-        {
-          summaryNode->SetWidth(originalSnapshot.SummaryNodeWidth);
-        }
-
-        if (originalSnapshot.SummaryNodeFontSize != 0)
-        {
-          summaryNode->FontSize = originalSnapshot.SummaryNodeFontSize;
-        }
-
-        summaryNode->TextFlags = originalSnapshot.SummaryNodeTextFlags;
-        summaryNode->SetText(originalSummaryText ?? string.Empty);
-        summaryNode->ResizeNodeForCurrentText();
-
-        if (summaryContainerNode != null && originalSnapshot.SummaryContainerHeight != 0)
-        {
-          summaryContainerNode->SetHeight(originalSnapshot.SummaryContainerHeight);
-        }
-      }
-
-      for (var i = 0; i < additionalSummaryNodeAddresses.Count; i++)
-      {
-        var additionalSummaryNode =
-            (AtkTextNode*)additionalSummaryNodeAddresses[i];
-        var originalAdditionalSummaryText = i < originalAdditionalSummaryTexts.Count
-            ? originalAdditionalSummaryTexts[i]
-            : string.Empty;
-        additionalSummaryNode->SetText(
-            originalAdditionalSummaryText ?? string.Empty);
-        additionalSummaryNode->ResizeNodeForCurrentText();
-      }
+      questNameNode->SetText(originalQuestName ?? string.Empty);
+      this.RestoreJournalDetailTextNodePresentation(
+          descriptionNode,
+          originalSnapshot.DescriptionNodeWidth,
+          originalSnapshot.DescriptionNodeTextFlags,
+          originalSnapshot.DescriptionNodeFontSize,
+          originalQuestMessage);
+      this.RestoreJournalDetailTextNodePresentation(
+          objectiveNode,
+          originalSnapshot.ObjectiveNodeWidth,
+          originalSnapshot.ObjectiveNodeTextFlags,
+          originalSnapshot.ObjectiveNodeFontSize,
+          originalObjectiveText);
+      this.RestoreJournalDetailOriginalSummaryFlow(
+          originalSnapshot,
+          summaryContainerNode);
     }
 
     this.RememberJournalDetailCachedText(
@@ -1172,7 +1624,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
               ref bodyTopLeft,
               ref bodyBottomRight,
               summaryNode);
-          foreach (var additionalSummaryNode in visibleAdditionalSummaryNodes)
+          foreach (var additionalSummaryNode in additionalSummaryNodeAddresses)
           {
             ExpandQuestPlateHoverBoundsForTextNode(
                 ref bodyTopLeft,
@@ -1223,7 +1675,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             ExpandBodyBounds(summaryNode);
           }
 
-          foreach (var additionalSummaryNode in visibleAdditionalSummaryNodes)
+          foreach (var additionalSummaryNode in additionalSummaryNodeAddresses)
           {
             ExpandBodyBounds((AtkTextNode*)additionalSummaryNode);
           }
@@ -1349,16 +1801,26 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             string.Empty,
             Array.Empty<nint>(),
             Array.Empty<string>(),
+            descriptionNode != null ? descriptionNode->GetWidth() : (ushort)0,
+            descriptionNode != null ? descriptionNode->TextFlags : default,
+            descriptionNode != null ? descriptionNode->FontSize : (byte)0,
+            0,
+            default,
+            0,
             0,
             0,
             default,
-            0);
+            0,
+            null,
+            Array.Empty<JournalDetailTextNodeLayout>());
         this.RememberJournalDetailOriginalSnapshot(
             journalDetailScopeKey,
             questName,
             questMessage,
             string.Empty,
             string.Empty,
+            descriptionNode,
+            null,
             null,
             null,
             Array.Empty<nint>(),
@@ -1406,14 +1868,24 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
       if (this.JournalDetailWritesNativeTranslation)
       {
-        questNameNode->SetText(translatedQuestName);
-        descriptionNode->SetText(translatedQuestMessage);
+        questNameNode->SetText(translatedQuestName ?? string.Empty);
+        this.ApplyJournalDetailNativeTextNodePresentation(
+            descriptionNode,
+            originalSnapshot.DescriptionNodeWidth,
+            originalSnapshot.DescriptionNodeTextFlags,
+            originalSnapshot.DescriptionNodeFontSize,
+            translatedQuestMessage);
         this.journalDetailNativeMutationScopes.Add(journalDetailScopeKey);
       }
       else if (this.journalDetailNativeMutationScopes.Remove(journalDetailScopeKey))
       {
-        questNameNode->SetText(originalQuestName);
-        descriptionNode->SetText(originalQuestMessage);
+        questNameNode->SetText(originalQuestName ?? string.Empty);
+        this.RestoreJournalDetailTextNodePresentation(
+            descriptionNode,
+            originalSnapshot.DescriptionNodeWidth,
+            originalSnapshot.DescriptionNodeTextFlags,
+            originalSnapshot.DescriptionNodeFontSize,
+            originalQuestMessage);
       }
 
       this.RememberJournalDetailCachedText(
@@ -1695,6 +2167,20 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="AdditionalSummaryTexts">
   ///     The original visible supplemental summary texts.
   /// </param>
+  /// <param name="DescriptionNodeWidth">The original description-node width.</param>
+  /// <param name="DescriptionNodeTextFlags">
+  ///     The original description-node text flags.
+  /// </param>
+  /// <param name="DescriptionNodeFontSize">
+  ///     The original description-node font size.
+  /// </param>
+  /// <param name="ObjectiveNodeWidth">The original objective-node width.</param>
+  /// <param name="ObjectiveNodeTextFlags">
+  ///     The original objective-node text flags.
+  /// </param>
+  /// <param name="ObjectiveNodeFontSize">
+  ///     The original objective-node font size.
+  /// </param>
   /// <param name="SummaryNodeWidth">The original primary summary node width.</param>
   /// <param name="SummaryContainerHeight">
   ///     The original summary container height.
@@ -1705,6 +2191,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="SummaryNodeFontSize">
   ///     The original primary summary node font size.
   /// </param>
+  /// <param name="SummaryNodeLayout">
+  ///     The original primary summary node layout.
+  /// </param>
+  /// <param name="AdditionalSummaryNodeLayouts">
+  ///     The original supplemental summary node layouts.
+  /// </param>
   private sealed record JournalDetailOriginalSnapshot(
       string QuestName,
       string QuestMessage,
@@ -1712,8 +2204,36 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string SummaryText,
       IReadOnlyList<nint> AdditionalSummaryNodeAddresses,
       IReadOnlyList<string> AdditionalSummaryTexts,
+      ushort DescriptionNodeWidth,
+      TextFlags DescriptionNodeTextFlags,
+      byte DescriptionNodeFontSize,
+      ushort ObjectiveNodeWidth,
+      TextFlags ObjectiveNodeTextFlags,
+      byte ObjectiveNodeFontSize,
       ushort SummaryNodeWidth,
       ushort SummaryContainerHeight,
       TextFlags SummaryNodeTextFlags,
-      byte SummaryNodeFontSize);
+      byte SummaryNodeFontSize,
+      JournalDetailTextNodeLayout? SummaryNodeLayout,
+      IReadOnlyList<JournalDetailTextNodeLayout> AdditionalSummaryNodeLayouts);
+
+  /// <summary>
+  ///     Captures the original layout state for a JournalDetail body text
+  ///     node.
+  /// </summary>
+  /// <param name="NodeAddress">The live text-node address.</param>
+  /// <param name="X">The original local X position.</param>
+  /// <param name="Y">The original local Y position.</param>
+  /// <param name="Width">The original node width.</param>
+  /// <param name="Height">The original node height.</param>
+  /// <param name="TextFlags">The original text flags.</param>
+  /// <param name="FontSize">The original font size.</param>
+  private sealed record JournalDetailTextNodeLayout(
+      nint NodeAddress,
+      short X,
+      short Y,
+      ushort Width,
+      ushort Height,
+      TextFlags TextFlags,
+      byte FontSize);
 }
