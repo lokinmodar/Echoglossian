@@ -22,6 +22,11 @@
 
 Enable the desired translations and configure the various options through the Configuration Window.
 
+For an up-to-date inventory of what can be translated, which mode family each
+surface uses, and which surfaces are temporarily hidden or disabled in the
+current release, see
+[docs/translation-surface-support-matrix.md](docs/translation-surface-support-matrix.md).
+
 ## Official Repo AI Disclosure
 
 For work intended for the official Dalamud plugin repository, AI usage beyond

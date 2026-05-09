@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-08
+Snapshot date: 2026-05-09
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -47,40 +47,47 @@ Notes:
 
 ## Fixes Landed In Code, Awaiting Published Validation
 
+- `#190` Seleção de mecanismo de tradução não está funcionando corretamente
+- `#191` Talk text is translated multiple time
 - `#186` Randomly stops translating to PT-BR and displays English text instead
 - `#174` Translate already saved translated texts does not work
-- `#181` Prevent TextNode Flags corruption while reading them
-- `#191` Talk text is translated multiple time
 
 Notes:
 
+- `#190` now has a code-side stabilization pass that keeps
+  `ChosenTransEngine` and `ChosenTransEngineKey` synchronized and prevents a
+  stale key from silently overriding a newer explicit engine choice.
+- `#191` now has a code-side concurrency fix:
+  - translator-local LLM caches were hardened to use a shared concurrent
+    request cache instead of raw `Dictionary<string, string>`
+  - `TalkHandler` now rechecks the DB before inserting, which should reduce
+    duplicate `TalkMessage` rows for the same source line
 - The current fix for this cluster stops persisting transient exact-failure
   rows such as `empty-result` / synthetic translation-error placeholders.
 - Dialogue-family DB rows that merely echo the original source text across
   different languages are now ignored on lookup and skipped on save.
 - This should reduce sticky English fallbacks and stale "no translation"
   behavior without requiring DB cleanup in normal cases.
-- `#191` also has a branch fix now:
-  - translator-local LLM caches were hardened to use a shared concurrent
-    request cache instead of raw `Dictionary<string, string>`
-  - `TalkHandler` now rechecks the DB before inserting, which should reduce
-    duplicate `TalkMessage` rows for the same source line
 
-## P0: Urgent and Likely Short Fix
+## P0: Urgent and Likely Next Targets
 
 These are the best immediate targets because they are blocking, widespread, or
 highly visible and appear to have a narrow root cause.
 
-### #190 Seleção de mecanismo de tradução não está funcionando corretamente
+### #189 Barra de Próxima MSQ e Janela de Missão sem tradução
 
 - Priority: P0
 - Ease: medium
-- Status: active regression with fresh user confirmations
+- Status: active regression
 - Why it is first:
-  - Reports say the selected engine does not match the engine actually used.
-  - Users are seeing "API key not configured" for providers they did not pick.
-  - A new comment suggests the symptom is broader than Google-only and may
-    still affect OpenAI/ChatGPT selection as well.
+  - This is a visible quest-facing regression in one of the most commonly seen
+    gameplay surfaces.
+  - If coverage regressed for the next-MSQ bar / mission window cluster, users
+    read that as "quest translation is broken" even when deeper systems still
+    work.
+  - It likely intersects `ScenarioTree`, quest tracker, or game-window
+    coverage, but is still narrow enough to investigate as a concrete release
+    bug.
 
 ### #169 Overlay doesn't appear
 
@@ -108,6 +115,29 @@ highly visible and appear to have a narrow root cause.
 These are still release-quality problems, but they likely need a more careful
  runtime pass than the P0 items above.
 
+### #188 Translated texts that go beyond the small dialogue boxes
+
+- Priority: P1
+- Ease: medium/hard
+- Status: active layout bug
+- Notes:
+  - This is now clearly part of the native reflow/layout family rather than a
+    generic overlay failure.
+  - The current `JournalDetail` probe work shows that these surfaces need
+    explicit wrapper/container/scroll reflow, not only text-node resizing.
+  - Keep paired with `#187` until a shared reflow helper lands on both.
+
+### #187 MiniTalk text extrapolates balloon size when using Native UI replacement
+
+- Priority: P1
+- Ease: medium/hard
+- Status: active native-layout bug
+- Notes:
+  - This is the explicit `MiniTalk` variant of the same "translated text no
+    longer fits the native box" problem.
+  - The new native text-flow reflow helper was introduced with `JournalDetail`
+    specifically so `MiniTalk` can reuse that strategy next.
+
 ### #186 Randomly stops translating to PT-BR and displays English text instead
 
 - Priority: P1
@@ -118,6 +148,28 @@ These are still release-quality problems, but they likely need a more careful
     transient-failure persistence cluster affecting `#178` and `#174`.
   - Keep open until the published build confirms the English fallback no longer
     becomes sticky for exact dialogue lines.
+
+### #190 Seleção de mecanismo de tradução não está funcionando corretamente
+
+- Priority: P1
+- Ease: medium
+- Status: fixed in code, awaiting published-build confirmation
+- Notes:
+  - Reports said the selected engine did not match the engine actually used.
+  - The current branch fix rewires engine selection to keep the persisted id
+    and stable key aligned, but this still needs user confirmation in a
+    published build before closure.
+
+### #191 Talk text is translated multiple time
+
+- Priority: P1
+- Ease: medium
+- Status: fixed in code, awaiting published-build confirmation
+- Notes:
+  - The current branch fix hardens per-translator caches against concurrent
+    access and coalesces identical in-flight requests.
+  - The `Talk` save path also rechecks the DB before inserting, which should
+    reduce duplicate rows for the same dialogue line.
 
 ### #174 Translate already saved translated texts does not work
 
@@ -141,27 +193,6 @@ These are still release-quality problems, but they likely need a more careful
   - The persisted `[Translation Error: ...]` path was already fixed in code.
   - Remaining symptoms may collapse into `#170` and `#174`.
   - Reassess after the next published build and engine-migration fix.
-
-### #189 Barra de Próxima MSQ e Janela de Missão sem tradução
-
-- Priority: P1
-- Ease: medium
-- Status: fresh regression report
-- Notes:
-  - This looks like missing translation coverage on quest-facing HUD windows
-    that users expected from prior releases.
-  - Likely intersects `ScenarioTree`, quest tracker, or game-window coverage,
-    but should be treated as a visible release regression until verified.
-
-### #188 Translated texts that go beyond the small dialogue boxes
-
-- Priority: P1
-- Ease: medium/hard
-- Status: active layout bug
-- Notes:
-  - This is the dense small-dialogue layout family rather than generic overlay
-    failure.
-  - Closely related to `#187` and likely shares the same native reflow gap.
 
 ## P2: Release Stabilization, More Involved
 
@@ -187,17 +218,6 @@ require careful UI/runtime investigation rather than a narrow config fix.
     code and need release validation.
   - Remaining risk is the NPC dialogue/native layout path and possibly
     selection-dialog sizing.
-
-### #187 MiniTalk text extrapolates balloon size when using Native UI replacement
-
-- Priority: P2
-- Ease: medium/hard
-- Status: active native-layout bug
-- Notes:
-  - This is the explicit `MiniTalk` variant of the same "translated text no
-    longer fits the native box" problem.
-  - Keep paired with `#188` until we know whether a shared reflow strategy can
-    handle both surfaces.
 
 ### #173 Plugin function incompatibility: Character panel refined
 
@@ -226,12 +246,14 @@ require careful UI/runtime investigation rather than a narrow config fix.
 - Ease: hard
 - Status: active deep-runtime investigation
 - Notes:
-  - This likely sits beneath part of the `Talk` and `JournalDetail` layout
-    corruption reports.
-  - The issue is sensitive because the bug appears to happen on read, not only
-    on write, which points to text-node flag handling or access patterns.
-  - Important, but riskier and less likely to be a quick hotfix than `#182`
-    or the remaining overlay/settings items.
+  - Part of the read-only mutation issue has already been narrowed and fixed:
+    overlay-only / tooltip-only paths no longer rewrite native text just to
+    "restore" state they never changed.
+  - The remaining active problem has shifted toward native-mode layout/reflow,
+    especially in `JournalDetail`, where verbose translations require wrapper
+    and container growth rather than isolated text-node resizing.
+  - Keep this open until the native reflow family is stable enough that the
+    original-text corruption and overlapping layout reports stop reproducing.
 
 ## P3: Important, Not Immediate Release Blockers
 
@@ -244,6 +266,17 @@ require careful UI/runtime investigation rather than a narrow config fix.
   - This needs investigation across capture latency, request overhead,
     prompt size, and presentation timing.
   - Important, but not more urgent than bootstrap/load/overlay failures.
+
+### #192 Add example images for the Game UI elements possible to be translated to each configuration window panel option
+
+- Priority: P3
+- Ease: easy/medium
+- Status: valid UX/documentation enhancement
+- Notes:
+  - This is useful for onboarding and configuration clarity, but it is not a
+    release-stability blocker.
+  - The new translation-surface support matrix can serve as the canonical
+    textual inventory alongside any future example-image work.
 
 ## Long-Term Product Backlog
 
@@ -306,23 +339,18 @@ work rather than release fallout.
 
 ## Recommended Execution Order
 
-1. `#170`
-2. `#190`
-3. verify published release outcome for `#168`
-4. verify published release outcome for `#177`
-5. `#169` + `#175` as one overlay cluster
-6. `#174` + `#178` as one cache/settings cluster
-7. reassess `#171` after `#170` and `#174`
-8. `#189`
-9. `#188` + `#187` as one native-dialogue sizing cluster
-10. `#182`
-11. `#183`
-12. release-validate and then close `#170`
-13. release-validate and then close `#180`
-14. release-validate `#191`
-15. `#167`
-16. release-validate the remaining open parts of `#172`
-17. `#181`
-18. `#173` / `#179`
-19. `#176`
-20. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
+1. `#189`
+2. `#169` + `#175` as one overlay cluster
+3. `#188` + `#187` as one native-dialogue sizing cluster
+4. release-validate and close `#190` if confirmed
+5. release-validate and close `#191` if confirmed
+6. release-validate and then close `#186`
+7. reassess / release-validate `#174`
+8. reassess `#171` after the engine-selection and stale-failure fixes are published
+9. `#167`
+10. release-validate the remaining open parts of `#172`
+11. `#181`
+12. `#173` / `#179`
+13. `#176`
+14. `#192`
+15. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
