@@ -16,6 +16,8 @@
 ## Chat Commands
 
 ***/eglo*** : Opens the Plugin Configuration Window
+  
+***/eglodbmanager*** : Opens the Plugin Database Manager Window
 
 
 ## Usage
@@ -26,6 +28,23 @@ For an up-to-date inventory of what can be translated, which mode family each
 surface uses, and which surfaces are temporarily hidden or disabled in the
 current release, see
 [docs/translation-surface-support-matrix.md](docs/translation-surface-support-matrix.md).
+
+Localized versions of that document:
+
+- [English](docs/translation-surface-support-matrix.md)
+- [Brazilian Portuguese](docs/translation-surface-support-matrix.pt-BR.md)
+- [Portuguese](docs/translation-surface-support-matrix.pt.md)
+- [German](docs/translation-surface-support-matrix.de.md)
+- [Danish](docs/translation-surface-support-matrix.da.md)
+- [Greek](docs/translation-surface-support-matrix.el.md)
+- [Spanish](docs/translation-surface-support-matrix.es.md)
+- [Basque](docs/translation-surface-support-matrix.eu.md)
+- [French](docs/translation-surface-support-matrix.fr.md)
+- [Italian](docs/translation-surface-support-matrix.it.md)
+- [Russian](docs/translation-surface-support-matrix.ru.md)
+- [Vietnamese](docs/translation-surface-support-matrix.vi.md)
+- [Simplified Chinese](docs/translation-surface-support-matrix.zh-CN.md)
+- [Traditional Chinese (Taiwan)](docs/translation-surface-support-matrix.zh-TW.md)
 
 ## Official Repo AI Disclosure
 
