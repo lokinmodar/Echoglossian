@@ -991,7 +991,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
     }
 
-    if (this.JournalDetailWritesNativeTranslation)
+    var translatedQuestBodyReady =
+        translatedQuestDescriptionReady &&
+        translatedQuestObjectiveReady &&
+        translatedQuestSummaryReady;
+    var translatedQuestNativeReady =
+        translatedQuestNameReady &&
+        translatedQuestBodyReady;
+
+    if (this.JournalDetailWritesNativeTranslation &&
+        translatedQuestNativeReady)
     {
       questNameNode->SetText(translatedQuestName);
       descriptionNode->SetText(translatedQuestDescription);
@@ -1128,10 +1137,6 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           swapEnabled: this.JournalDetailHoverShowsOriginal,
           forceEnabled: true,
           denseHitbox: true);
-      var translatedQuestBodyReady =
-          translatedQuestDescriptionReady &&
-          translatedQuestObjectiveReady &&
-          translatedQuestSummaryReady;
       var originalQuestSummaryBody = originalSummaryDisplayText;
       var translatedQuestSummaryBody = translatedSummaryDisplayText;
       var originalQuestBody = BuildQuestPlateHoverBody(
@@ -1400,7 +1405,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             translatedQuestMessage ?? string.Empty);
       }
 
-      if (this.JournalDetailWritesNativeTranslation)
+      var translatedCompletedQuestReady =
+          translatedQuestNameReady &&
+          translatedQuestMessageReady;
+
+      if (this.JournalDetailWritesNativeTranslation &&
+          translatedCompletedQuestReady)
       {
         questNameNode->SetText(translatedQuestName);
         descriptionNode->SetText(translatedQuestMessage);
