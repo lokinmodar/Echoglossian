@@ -146,6 +146,105 @@ public class ActionTooltipCacheManagerTests
     }
 
     /// <summary>
+    ///     Ensures a same-hash translation from an older concrete game
+    ///     version can be recovered for promotion into the current version.
+    /// </summary>
+    [Fact]
+    public void TryFindHistoricalCanonicalMatch_ReturnsPreviousVersionSameHashRow()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 1,
+                ActionId = 15998,
+                ActionName = "Technical Step",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-exact",
+            });
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 2,
+                ActionId = 15998,
+                ActionName = "Technical Step",
+                TranslatedActionName = "Passo Técnico",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.2",
+                SourceContentHash = "hash-exact",
+            });
+
+            var found = ActionTooltipCacheManager.TryFindHistoricalCanonicalMatch(
+                15998,
+                "pt-BR",
+                0,
+                "7.3",
+                "hash-exact");
+
+            Assert.NotNull(found);
+            Assert.Equal("7.2", found.GameVersion);
+            Assert.Equal("Passo Técnico", found.TranslatedActionName);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures an untranslated current-version placeholder does not hide a
+    ///     reusable translated row with the same source hash.
+    /// </summary>
+    [Fact]
+    public void TryFindCanonicalMatch_PrefersTranslatedReusableRowOverCurrentPlaceholder()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 1,
+                ActionId = 15998,
+                ActionName = "Technical Step",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-exact",
+            });
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 2,
+                ActionId = 15998,
+                ActionName = "Technical Step",
+                TranslatedActionName = "Passo Técnico",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = null,
+                SourceContentHash = "hash-exact",
+            });
+
+            var found = ActionTooltipCacheManager.TryFindCanonicalMatch(
+                15998,
+                "pt-BR",
+                0,
+                "7.3",
+                "hash-exact");
+
+            Assert.NotNull(found);
+            Assert.Equal("Passo Técnico", found.TranslatedActionName);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures reverse lookup resolves a canonical original text from an
     ///     exact translated action name.
     /// </summary>
