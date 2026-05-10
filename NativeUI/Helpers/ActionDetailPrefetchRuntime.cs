@@ -41,7 +41,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     private void TickActionDetailPrefetch()
     {
-        if (!this.ShouldPrefetchStructuredTooltips() ||
+        if (!this.ShouldPrefetchActionAdjacentCanonicalTooltips() ||
             DateTime.UtcNow - this.actionDetailPrefetchLastTickUtc <
             ActionDetailPrefetchTickInterval)
         {
@@ -118,7 +118,7 @@ public unsafe partial class Echoglossian
         byte currentClassJobId)
     {
         if (actionId == 0 ||
-            !this.ShouldPrefetchStructuredTooltips() ||
+            !this.ShouldPrefetchActionAdjacentCanonicalTooltips() ||
             !TryBuildActionTooltipCanonicalPayload(
                 actionId,
                 currentClassJobId,

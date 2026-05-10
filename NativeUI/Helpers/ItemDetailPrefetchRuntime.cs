@@ -157,6 +157,19 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Gets whether action-adjacent canonical tooltip rows should be
+    ///     prefetched for consumers such as <c>ActionMenu</c>.
+    /// </summary>
+    /// <returns>True when action-adjacent canonical prefetch should run.</returns>
+    private bool ShouldPrefetchActionAdjacentCanonicalTooltips()
+    {
+        return this.configuration.Translate &&
+               ClientStateInterface.IsLoggedIn &&
+               (this.configuration.TranslateTooltips ||
+                this.configuration.TranslateActionMenuWindow);
+    }
+
+    /// <summary>
     ///     Prefetches one canonical item-tooltip payload and any missing translations.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>

@@ -119,13 +119,68 @@ public static class TraitCacheManager
             return null;
         }
 
-        return rows.FirstOrDefault(row =>
-            row.TranslationLang == lang &&
-            row.TranslationEngine == engine &&
-            GameVersionLookupHelper.MatchesStoredVersion(
-                row.GameVersion,
-                gameVersion) &&
-            row.SourceContentHash == sourceContentHash);
+        return rows
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    row.GameVersion,
+                    gameVersion) &&
+                row.SourceContentHash == sourceContentHash)
+            .OrderByDescending(row => ComputeCanonicalMatchScore(
+                row,
+                gameVersion))
+            .ThenByDescending(row => row.UpdatedDate)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    ///     Tries to find one historical version-specific canonical trait row
+    ///     whose source hash still matches the current payload.
+    /// </summary>
+    /// <param name="traitId">The trait row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="requestedGameVersion">The current game version.</param>
+    /// <param name="sourceContentHash">The stable source-content hash.</param>
+    /// <returns>The best matching historical row, or <see langword="null" />.</returns>
+    public static Trait? TryFindHistoricalCanonicalMatch(
+        uint traitId,
+        string lang,
+        int engine,
+        string? requestedGameVersion,
+        string sourceContentHash)
+    {
+        if (traitId == 0 ||
+            string.IsNullOrWhiteSpace(lang) ||
+            string.IsNullOrWhiteSpace(requestedGameVersion) ||
+            string.IsNullOrWhiteSpace(sourceContentHash))
+        {
+            return null;
+        }
+
+        if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
+        {
+            return null;
+        }
+
+        return rows
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                row.SourceContentHash == sourceContentHash &&
+                !string.IsNullOrWhiteSpace(row.GameVersion) &&
+                !string.Equals(
+                    row.GameVersion,
+                    requestedGameVersion,
+                    StringComparison.Ordinal))
+            .OrderByDescending(static row => HasAnyTranslatedContent(row))
+            .ThenByDescending(row => row.UpdatedDate)
+            .FirstOrDefault();
     }
 
     /// <summary>
@@ -658,6 +713,58 @@ public static class TraitCacheManager
         }
 
         return score;
+    }
+
+    /// <summary>
+    ///     Computes one ordering score for exact source-hash matches so fully
+    ///     translated reusable rows beat current-version placeholders.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <returns>The ordering score.</returns>
+    private static int ComputeCanonicalMatchScore(
+        Trait row,
+        string? gameVersion)
+    {
+        var score = 0;
+
+        if (HasCompleteTranslation(row))
+        {
+            score += 10_000;
+        }
+        else if (HasAnyTranslatedContent(row))
+        {
+            score += 1_000;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion) &&
+            string.Equals(
+                row.GameVersion,
+                gameVersion,
+                StringComparison.Ordinal))
+        {
+            score += 100;
+        }
+
+        if (string.IsNullOrWhiteSpace(row.GameVersion))
+        {
+            score += 10;
+        }
+
+        return score;
+    }
+
+    /// <summary>
+    ///     Gets whether the row carries any translated canonical payload that
+    ///     can be promoted to a newer game version.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>True when the row contains translated content.</returns>
+    private static bool HasAnyTranslatedContent(Trait row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedTraitName) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedTraitDescription) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedTooltipText);
     }
 
     /// <summary>

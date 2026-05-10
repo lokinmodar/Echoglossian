@@ -32,7 +32,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     private void TickTraitDetailPrefetch()
     {
-        if (!this.ShouldPrefetchStructuredTooltips() ||
+        if (!this.ShouldPrefetchActionAdjacentCanonicalTooltips() ||
             DateTime.UtcNow - this.traitDetailPrefetchLastTickUtc <
             TraitDetailPrefetchTickInterval)
         {

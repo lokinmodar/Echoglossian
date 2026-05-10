@@ -36,7 +36,22 @@ public partial class Echoglossian
             probe.SourceContentHash);
         if (cached != null)
         {
+            if (!HasTranslatedActionTooltipContent(cached))
+            {
+                var promotedCached = this.TryPromoteHistoricalActionTooltip(probe);
+                if (promotedCached != null)
+                {
+                    return promotedCached;
+                }
+            }
+
             return cached;
+        }
+
+        var historical = this.TryPromoteHistoricalActionTooltip(probe);
+        if (historical != null)
+        {
+            return historical;
         }
 
         var row = ActionTooltipPersistenceHelper.FindActionTooltip(
@@ -86,7 +101,22 @@ public partial class Echoglossian
             probe.SourceContentHash);
         if (cached != null)
         {
+            if (!HasTranslatedTraitContent(cached))
+            {
+                var promotedCached = this.TryPromoteHistoricalTrait(probe);
+                if (promotedCached != null)
+                {
+                    return promotedCached;
+                }
+            }
+
             return cached;
+        }
+
+        var historical = this.TryPromoteHistoricalTrait(probe);
+        if (historical != null)
+        {
+            return historical;
         }
 
         var row = TraitPersistenceHelper.FindTrait(
@@ -136,7 +166,22 @@ public partial class Echoglossian
             probe.SourceContentHash);
         if (cached != null)
         {
+            if (!HasTranslatedItemTooltipContent(cached))
+            {
+                var promotedCached = this.TryPromoteHistoricalItemTooltip(probe);
+                if (promotedCached != null)
+                {
+                    return promotedCached;
+                }
+            }
+
             return cached;
+        }
+
+        var historical = this.TryPromoteHistoricalItemTooltip(probe);
+        if (historical != null)
+        {
+            return historical;
         }
 
         var row = ItemTooltipPersistenceHelper.FindItemTooltip(
@@ -161,5 +206,232 @@ public partial class Echoglossian
             ConfigDirectory,
             row,
             ItemTooltipCacheManager.Update);
+    }
+
+    /// <summary>
+    ///     Promotes one translated historical action-tooltip row to the
+    ///     current game version when the original payload hash still matches.
+    /// </summary>
+    /// <param name="probe">The current-version probe row.</param>
+    /// <returns>The promoted row, or <see langword="null" />.</returns>
+    private ActionTooltip? TryPromoteHistoricalActionTooltip(ActionTooltip probe)
+    {
+        if (!GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion))
+        {
+            return null;
+        }
+
+        var translationLang = probe.TranslationLang!;
+        var sourceContentHash = probe.SourceContentHash!;
+        var historical = ActionTooltipCacheManager.TryFindHistoricalCanonicalMatch(
+            probe.ActionId,
+            translationLang,
+            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            probe.GameVersion,
+            sourceContentHash);
+        if (historical == null || !HasTranslatedActionTooltipContent(historical))
+        {
+            return null;
+        }
+
+        var promoted = CloneActionTooltipForGameVersion(historical, probe.GameVersion);
+        this.InsertActionTooltip(promoted);
+        return promoted;
+    }
+
+    /// <summary>
+    ///     Promotes one translated historical trait row to the current game
+    ///     version when the original payload hash still matches.
+    /// </summary>
+    /// <param name="probe">The current-version probe row.</param>
+    /// <returns>The promoted row, or <see langword="null" />.</returns>
+    private Trait? TryPromoteHistoricalTrait(Trait probe)
+    {
+        if (!GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion))
+        {
+            return null;
+        }
+
+        var translationLang = probe.TranslationLang!;
+        var sourceContentHash = probe.SourceContentHash!;
+        var historical = TraitCacheManager.TryFindHistoricalCanonicalMatch(
+            probe.TraitId,
+            translationLang,
+            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            probe.GameVersion,
+            sourceContentHash);
+        if (historical == null || !HasTranslatedTraitContent(historical))
+        {
+            return null;
+        }
+
+        var promoted = CloneTraitForGameVersion(historical, probe.GameVersion);
+        this.InsertTrait(promoted);
+        return promoted;
+    }
+
+    /// <summary>
+    ///     Promotes one translated historical item-tooltip row to the current
+    ///     game version when the original payload hash still matches.
+    /// </summary>
+    /// <param name="probe">The current-version probe row.</param>
+    /// <returns>The promoted row, or <see langword="null" />.</returns>
+    private ItemTooltip? TryPromoteHistoricalItemTooltip(ItemTooltip probe)
+    {
+        if (!GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion))
+        {
+            return null;
+        }
+
+        var translationLang = probe.TranslationLang!;
+        var sourceContentHash = probe.SourceContentHash!;
+        var historical = ItemTooltipCacheManager.TryFindHistoricalCanonicalMatch(
+            probe.ItemId,
+            translationLang,
+            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            probe.GameVersion,
+            sourceContentHash);
+        if (historical == null || !HasTranslatedItemTooltipContent(historical))
+        {
+            return null;
+        }
+
+        var promoted = CloneItemTooltipForGameVersion(historical, probe.GameVersion);
+        this.InsertItemTooltip(promoted);
+        return promoted;
+    }
+
+    /// <summary>
+    ///     Clones one canonical action-tooltip row for a newer game version.
+    /// </summary>
+    /// <param name="source">The historical row.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <returns>The cloned row.</returns>
+    private static ActionTooltip CloneActionTooltipForGameVersion(
+        ActionTooltip source,
+        string? gameVersion)
+    {
+        return new ActionTooltip
+        {
+            ActionId = source.ActionId,
+            IconId = source.IconId,
+            ActionCategoryId = source.ActionCategoryId,
+            ClassJobId = source.ClassJobId,
+            ClassJobCategoryId = source.ClassJobCategoryId,
+            ActionName = source.ActionName,
+            ActionDescription = source.ActionDescription,
+            OriginalTooltipText = source.OriginalTooltipText,
+            OriginalLang = source.OriginalLang,
+            TranslatedActionName = source.TranslatedActionName,
+            TranslatedActionDescription = source.TranslatedActionDescription,
+            TranslatedTooltipText = source.TranslatedTooltipText,
+            TranslationLang = source.TranslationLang,
+            TranslationEngine = source.TranslationEngine,
+            GameVersion = gameVersion,
+            SourceContentHash = source.SourceContentHash,
+            CanonicalPayloadAsText = source.CanonicalPayloadAsText,
+        };
+    }
+
+    /// <summary>
+    ///     Clones one canonical trait row for a newer game version.
+    /// </summary>
+    /// <param name="source">The historical row.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <returns>The cloned row.</returns>
+    private static Trait CloneTraitForGameVersion(
+        Trait source,
+        string? gameVersion)
+    {
+        return new Trait
+        {
+            TraitId = source.TraitId,
+            IconId = source.IconId,
+            ClassJobId = source.ClassJobId,
+            ClassJobCategoryId = source.ClassJobCategoryId,
+            TraitName = source.TraitName,
+            TraitDescription = source.TraitDescription,
+            OriginalTooltipText = source.OriginalTooltipText,
+            OriginalLang = source.OriginalLang,
+            TranslatedTraitName = source.TranslatedTraitName,
+            TranslatedTraitDescription = source.TranslatedTraitDescription,
+            TranslatedTooltipText = source.TranslatedTooltipText,
+            TranslationLang = source.TranslationLang,
+            TranslationEngine = source.TranslationEngine,
+            GameVersion = gameVersion,
+            SourceContentHash = source.SourceContentHash,
+            CanonicalPayloadAsText = source.CanonicalPayloadAsText,
+        };
+    }
+
+    /// <summary>
+    ///     Clones one canonical item-tooltip row for a newer game version.
+    /// </summary>
+    /// <param name="source">The historical row.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <returns>The cloned row.</returns>
+    private static ItemTooltip CloneItemTooltipForGameVersion(
+        ItemTooltip source,
+        string? gameVersion)
+    {
+        return new ItemTooltip
+        {
+            ItemId = source.ItemId,
+            IconId = source.IconId,
+            ItemActionId = source.ItemActionId,
+            ItemUiCategoryId = source.ItemUiCategoryId,
+            ClassJobCategoryId = source.ClassJobCategoryId,
+            ItemName = source.ItemName,
+            ItemDescription = source.ItemDescription,
+            OriginalTooltipText = source.OriginalTooltipText,
+            OriginalLang = source.OriginalLang,
+            TranslatedItemName = source.TranslatedItemName,
+            TranslatedItemDescription = source.TranslatedItemDescription,
+            TranslatedTooltipText = source.TranslatedTooltipText,
+            TranslationLang = source.TranslationLang,
+            TranslationEngine = source.TranslationEngine,
+            GameVersion = gameVersion,
+            SourceContentHash = source.SourceContentHash,
+            CanonicalPayloadAsText = source.CanonicalPayloadAsText,
+        };
+    }
+
+    /// <summary>
+    ///     Gets whether one action-tooltip row already contains translated
+    ///     canonical content.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>True when the row contains translated content.</returns>
+    private static bool HasTranslatedActionTooltipContent(ActionTooltip row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedActionName) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedActionDescription) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedTooltipText);
+    }
+
+    /// <summary>
+    ///     Gets whether one trait row already contains translated canonical
+    ///     content.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>True when the row contains translated content.</returns>
+    private static bool HasTranslatedTraitContent(Trait row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedTraitName) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedTraitDescription) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedTooltipText);
+    }
+
+    /// <summary>
+    ///     Gets whether one item-tooltip row already contains translated
+    ///     canonical content.
+    /// </summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>True when the row contains translated content.</returns>
+    private static bool HasTranslatedItemTooltipContent(ItemTooltip row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedItemName) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedItemDescription) ||
+               !string.IsNullOrWhiteSpace(row.TranslatedTooltipText);
     }
 }
