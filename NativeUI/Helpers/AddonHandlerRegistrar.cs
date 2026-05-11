@@ -75,8 +75,6 @@ public static class AddonHandlerRegistrar
         {
             addonLifecycle.UnregisterListener(evt, new[] { addonName }, del);
         }
-
-        StableHandlerDelegates.Remove(handler);
     }
 
     /// <summary>

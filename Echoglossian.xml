@@ -2047,11 +2047,6 @@
                 payloads.
             </summary>
             <summary>
-                Handles the quest probe command used to inspect the complete quest data
-                shape from Lumina, the live quest progress resolver, and the current
-                QuestPlate database rows.
-            </summary>
-            <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
                 <see cref="E:Dalamud.Plugin.Services.IToastGui.QuestToast" /> instead of the addon-handler
                 registrar.
@@ -2562,11 +2557,6 @@
             Holds the database editor window instance.
             </summary>
         </member>
-        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
-            <summary>
-            Holds the currently active addon structure probe watch, if any.
-            </summary>
-        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2679,11 +2669,6 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
-            <summary>
-                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -4033,21 +4018,6 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name and optional index.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name and index to probe.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -4316,102 +4286,6 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
-            <summary>
-                Handles the quest probe command.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
-            <summary>
-                Tries to resolve the quest probe target from either a quest id or a
-                quest name.
-            </summary>
-            <param name="input">The command argument.</param>
-            <param name="questIdText">The resolved quest id as text.</param>
-            <param name="questName">The resolved quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>True when the quest could be resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the quest data structure for inspection.
-            </summary>
-            <param name="questIdText">The quest id as text.</param>
-            <param name="questName">The quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the raw Lumina quest row properties.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs all rows from the quest text sheet, not just the live todo
-                entries, so we can inspect the full structure of the quest sheet.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
-            <summary>
-                Logs the QuestPlate rows currently stored for the quest.
-            </summary>
-            <param name="questIdText">The quest id text.</param>
-            <param name="questName">The quest name.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Logs the resolved live quest progression snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves a human-readable quest name from a quest row.
-            </summary>
-            <param name="questRow">The quest row.</param>
-            <returns>The resolved quest name, if available.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
-            <summary>
-                Converts quest text to a readable string for probe output.
-            </summary>
-            <param name="text">The quest text.</param>
-            <returns>The evaluated text string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
-            <summary>
-                Formats a probe value for log output.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>A human-readable value string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Builds the raw quest sheet name used by the game files.
-            </summary>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>The quest text sheet name, if it can be derived.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest row id as text through reflection so the probe
-                stays compatible with generated sheet shapes.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest row id as text, or an empty string if unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest sheet identifier used to mount the quest text
-                sheet path.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -6842,7 +6716,152 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor">
             <summary>
-             Initializes a new instance of the <see cref="Tels.EventActionText.ToString">
+             Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage"/> class.
+             </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslatedSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslatedSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.BgcArmyActionText">
+            <summary>
+                Represents one canonical DB-first BgcArmyAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.BgcArmyActionText.BgcArmyActionId">
+            <summary>
+                Gets or sets the BgcArmyAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BgcArmyActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.BuddyActionText">
+            <summary>
+                Represents one canonical DB-first BuddyAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.BuddyActionText.BuddyActionId">
+            <summary>
+                Gets or sets the BuddyAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BuddyActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.CompanyActionText">
+            <summary>
+                Represents one canonical DB-first CompanyAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.CompanyActionText.CompanyActionId">
+            <summary>
+                Gets or sets the CompanyAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.CompanyActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.CraftActionText">
+            <summary>
+                Represents one canonical DB-first CraftAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.CraftActionText.CraftActionId">
+            <summary>
+                Gets or sets the CraftAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.CraftActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText">
+            <summary>
+                Represents one canonical DB-first DeepDungeonItem payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText.DeepDungeonItemId">
+            <summary>
+                Gets or sets the DeepDungeonItem row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.EurekaMagiaActionText">
+            <summary>
+                Represents one canonical DB-first EurekaMagiaAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.EurekaMagiaActionText.EurekaMagiaActionId">
+            <summary>
+                Gets or sets the EurekaMagiaAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.EurekaMagiaActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.EventActionText">
+            <summary>
+                Represents one canonical DB-first EventAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.EventActionText.EventActionId">
+            <summary>
+                Gets or sets the EventAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.EventActionText.ToString">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.EventItemText">
@@ -9704,103 +9723,6 @@
             <param name="engine">The translation engine identifier.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">The persisted fallback lookup.</param>
-            <param name="translatedText">The resolved translated text.</param>
-            <returns>
-                <see langword="true" /> when a translated text was resolved;
-                otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareOriginalText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
-            <summary>
-                Tries to resolve one canonical original text by reversing only the
-                visible action name when the translated text ends with a trailing
-                level token.
-            </summary>
-            <param name="visibleText">The visible translated text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="fallbackLookup">The persisted reverse lookup.</param>
-            <param name="originalText">The resolved canonical original text.</param>
-            <returns>
-                <see langword="true" /> when an original text was resolved;
-                otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedBaseText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
-            <summary>
-                Resolves one translated text without applying any level-token
-                decomposition.
-            </summary>
-            <param name="originalText">The original text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="fallbackLookup">The persisted fallback lookup.</param>
-            <returns>The resolved translated text, or the original text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveOriginalBaseText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
-            <summary>
-                Resolves one canonical original text without applying any
-                level-token decomposition.
-            </summary>
-            <param name="visibleText">The translated text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="fallbackLookup">The persisted reverse lookup.</param>
-            <returns>The resolved original text, or the visible text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryParseTrailingLevelToken(System.String,System.String@,System.String@,System.String@,System.String@)">
-            <summary>
-                Tries to parse one text into a visible prefix, separator, and
-                trailing level token.
-            </summary>
-            <param name="text">The text to parse.</param>
-            <param name="prefix">The visible text before the level token.</param>
-            <param name="separator">The separator before the level token.</param>
-            <param name="levelLabel">The level label prefix.</param>
-            <param name="levelNumber">The trailing level number.</param>
-            <returns>
-                <see langword="true" /> when the text contains one trailing level
-                token; otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeTranslatedLevelToken(System.String,System.String,System.String)">
-            <summary>
-                Normalizes one translated level token for the target language.
-            </summary>
-            <param name="levelLabel">The source level label.</param>
-            <param name="levelNumber">The trailing level number.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <returns>The normalized translated level token.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeOriginalLevelToken(System.String,System.String)">
-            <summary>
-                Normalizes one translated level token back to the canonical English
-                source token.
-            </summary>
-            <param name="levelLabel">The visible translated level label.</param>
-            <param name="levelNumber">The trailing level number.</param>
-            <returns>The canonical English level token.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedLevelSeparator(System.String)">
-            <summary>
-                Normalizes one resolved level separator so malformed payloads that
-                collapsed the separator can still be rewritten into readable text.
-            </summary>
-            <param name="separator">The captured separator.</param>
-            <returns>The separator to use in one rebuilt level-aware label.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeTranslatedIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
-            <summary>
-                Merges one integer-keyed translated payload map with canonical
-                translations derived from repo-local sources.
-            </summary>
-            <param name="originalValues">The original values.</param>
-            <param name="resolvedTranslatedValues">The resolved translated values.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <para fallback lookup.</param>
             <param name="translatedText">The resolved translated text.</param>
             <returns>
                 <see langword="true" /> when a translated text was resolved;
@@ -14531,7 +14453,120 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryLoadStoredTranslation(System.String,System.String@,System.String@)">
             <summary>
-            .NativeUI.AddonHandlers.SingleText.MiniTalkHandler.NormalizeForComparison(System.String)">
+                Attempts to load a stored MiniTalk translation from the database.
+            </summary>
+            <param name="originalText">The source MiniTalk text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when a stored translation exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryGetCurrentResolvedTranslation(System.IntPtr,System.String@,System.String@,System.String@)">
+            <summary>
+                Returns the active resolved translation currently held by the handler
+                state.
+            </summary>
+            <param name="originalText">Receives the active original text.</param>
+            <param name="translatedText">Receives the translated text.</param>
+            <param name="replacementText">Receives the normalized replacement text.</param>
+            <returns>
+                <see langword="true" /> when the handler already has a translated line;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryQueueTranslation(System.IntPtr,System.String,System.Int32@)">
+            <summary>
+                Starts a new translation request when the visible source line changes or
+                when the current line still has no cached translation.
+            </summary>
+            <param name="originalText">The source MiniTalk text.</param>
+            <param name="requestId">Receives the active request identifier.</param>
+            <returns>
+                <see langword="true" /> when a new translation task should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.SetResolvedState(System.IntPtr,System.String,System.String,System.String)">
+            <summary>
+                Sets the resolved in-memory state for the current MiniTalk line.
+            </summary>
+            <param name="originalText">The original MiniTalk text.</param>
+            <param name="translatedText">The translated MiniTalk text.</param>
+            <param name="replacementText">The translated text normalized for native replacement.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.PublishOverlay(System.IntPtr,System.String,System.String,System.String)">
+            <summary>
+                Publishes translated MiniTalk content to the configured overlay when
+                overlay mode is enabled.
+            </summary>
+            <param name="originalText">The original MiniTalk text.</param>
+            <param name="translatedText">The translated MiniTalk text.</param>
+            <param name="trigger">The log trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ShouldUseOverlay">
+            <summary>
+                Determines whether this MiniTalk request should render through the
+                overlay path.
+            </summary>
+            <returns>
+                <see langword="true" /> when the overlay path is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ShouldApplyNativeText">
+            <summary>
+                Determines whether the MiniTalk addon should receive translated text
+                directly in the game UI.
+            </summary>
+            <returns>
+                <see langword="true" /> when the addon should be replaced natively;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ShouldSwapTexts">
+            <summary>
+                Determines whether the overlay should currently show the original text
+                while the native addon receives the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when overlay swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.BuildLookupMessage(System.String)">
+            <summary>
+                Builds a lookup entity matching the MiniTalk database schema.
+            </summary>
+            <param name="originalText">The original MiniTalk text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> suitable for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated MiniTalk text before native replacement when the
+                active config requests diacritic stripping.
+            </summary>
+            <param name="text">The translated MiniTalk text to normalize.</param>
+            <returns>The text that should be written back into the native addon.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the current string value from a MiniTalk text node.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The visible node text, or an empty string when unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TextMatches(System.String,System.String)">
+            <summary>
+                Compares two rendered text values after normalizing spacing and the
+                optional diacritic removal rules used for native replacement.
+            </summary>
+            <param name="left">The first text value.</param>
+            <param name="right">The second text value.</param>
+            <returns><see langword="true" /> when the texts should be considered equal.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.NormalizeForComparison(System.String)">
             <summary>
                 Normalizes text for comparison against native node values.
             </summary>
@@ -16631,124 +16666,6 @@
         <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.GetStableEventHandlers(Echoglossian.NativeUI.Handlers.IAddonTranslationHandler)">
             <summary>
                 Returns one stable event-handler map for the lifetime of the supplied
-                addon handler instance so       </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.ClassJobCategoryId">
-            <summary>
-                Gets or sets the class-job-category row identifier.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Name">
-            <summary>
-                Gets or sets the original action name.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Description">
-            <summary>
-                Gets or sets the original action description.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.TranslatedName">
-            <summary>
-                Gets or sets the translated action name.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.TranslatedDescription">
-            <summary>
-                Gets or sets the translated action description.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.HasCompleteTranslation">
-            <summary>
-                Gets whether the canonical payload has every translated field required for UI usage.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Serialize">
-            <summary>
-                Serializes the payload using a stable JSON shape.
-            </summary>
-            <returns>The serialized payload.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.ComputeSourceContentHash">
-            <summary>
-                Computes a stable source-content hash using only original source semantics.
-            </summary>
-            <returns>The stable source hash.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.BuildOriginalTooltipText">
-            <summary>
-                Builds the fully assembled original tooltip text.
-            </summary>
-            <returns>The original tooltip text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.BuildTranslatedTooltipText">
-            <summary>
-                Builds the fully assembled translated tooltip text when complete.
-            </summary>
-            <returns>The translated tooltip text, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Deserialize(System.String)">
-            <summary>
-                Deserializes a canonical action-tooltip payload.
-            </summary>
-            <param name="serializedPayload">The serialized payload.</param>
-            <returns>The deserialized payload, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.BuildTooltipText(System.String,System.String)">
-            <summary>
-                Builds one tooltip text block from title and body.
-            </summary>
-            <param name="title">The title line.</param>
-            <param name="body">The body text.</param>
-            <returns>The combined tooltip text.</returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar">
-            <summary>
-                Utility for registering and unregistering addon translation handlers.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.Register(System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler,Dalamud.Plugin.Services.IAddonLifecycle)">
-            <summary>
-                Registers an addon translation handler with the specified addon lifecycle.
-            </summary>
-            <param name="addonName">The name of the addon to register the handler for.</param>
-            <param name="handler">The handler responsible for addon translation.</param>
-            <param name="addonLifecycle">The lifecycle manager for the addon.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.RegisterMany(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}},Dalamud.Plugin.Services.IAddonLifecycle)">
-            <summary>
-                Registers multiple addon translation handlers with the specified addon
-                lifecycle.
-            </summary>
-            <param name="handlers">
-                A collection of addon names and their corresponding
-                handlers.
-            </param>
-            <param name="addonLifecycle">The lifecycle manager for the addons.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.Unregister(System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler,Dalamud.Plugin.Services.IAddonLifecycle)">
-            <summary>
-                Unregisters an addon translation handler from the specified addon
-                lifecycle.
-            </summary>
-            <param name="addonName">The name of the addon to unregister the handler for.</param>
-            <param name="handler">The handler responsible for addon translation.</param>
-            <param name="addonLifecycle">The lifecycle manager for the addon.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.UnregisterMany(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}},Dalamud.Plugin.Services.IAddonLifecycle)">
-            <summary>
-                Unregisters multiple addon translation handlers from the specified addon
-                lifecycle.
-            </summary>
-            <param name="handlers">
-                A collection of addon names and their corresponding
-                handlers.
-            </param>
-            <param name="addonLifecycle">The lifecycle manager for the addons.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonHandlerRegistrar.GetStableEventHandlers(Echoglossian.NativeUI.Handlers.IAddonTranslationHandler)">
-            <summary>
-                Returns one stable event-handler map for the lifetime of the supplied
                 addon handler instance so register and unregister use the same
                 delegate instances.
             </summary>
@@ -16767,7 +16684,91 @@
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.LogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String,System.Collections.Generic.IReadOnlyCollection{Dalamud.Game.Addon.Lifecycle.AddonEvent})">
             <summary>
-            Registers a logger as a listener for kewatch instance.</returns>
+            Registers a logger as a listener for key lifecycle events of the specified addon.
+            </summary>
+            <remarks>This method attaches a logger to several important lifecycle events, enabling logging for
+            setup, refresh, event reception, requested updates, and finalization phases of the addon. This can assist in
+            monitoring and debugging addon behavior throughout its lifecycle.</remarks>
+            <param name="addonLifecycle">The addon lifecycle manager used to register event listeners.</param>
+            <param name="addonName">The name of the addon for which lifecycle event listeners are registered.</param>
+            <param name="events">Optional lifecycle event set to log. Defaults to the full event set.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.Logger(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+            Writes a debug log entry for the specified add-on event and its associated arguments.
+            </summary>
+            <param name="type">The event type that triggered the logging operation.</param>
+            <param name="args">The arguments containing details about the add-on, including its name and context.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonLifecycleExtensions.UnLogAddon(Dalamud.Plugin.Services.IAddonLifecycle,System.String,System.Collections.Generic.IReadOnlyCollection{Dalamud.Game.Addon.Lifecycle.AddonEvent})">
+            <summary>
+            Removes logging event listeners for the specified add-on from the provided add-on lifecycle instance.
+            </summary>
+            <remarks>This method unregisters logging listeners for several key lifecycle events, ensuring that log
+            output related to the specified add-on is no longer generated. Use this method when you want to stop logging
+            activity for an add-on without affecting its other event listeners.</remarks>
+            <param name="addonLifecycle">The add-on lifecycle instance from which logging event listeners will be removed. Cannot be null.</param>
+            <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
+            <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
+            <summary>
+            Provides a generic recursive addon probe for live UI inspection.
+            </summary>
+            <remarks>
+            The traversal pattern is intentionally generic and was inspired by the
+            recursive addon walk used in SimpleTweaksPlugin's UIDebug helper and the
+            addon inspection approach used by HaselDebug. The goal here is to keep the
+            probe passive, reusable, and focused on structural logging rather than a
+            dedicated UI panel.
+            </remarks>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.ProbeAddon(Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log.
+            </summary>
+            <param name="gameGui">The game GUI service used to resolve the addon.</param>
+            <param name="pluginLog">The plugin log used to emit the probe output.</param>
+            <param name="addonName">The addon name to inspect.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="maxDepth">Maximum recursion depth for the probe.</param>
+            <param name="maxNodes">Maximum number of visited nodes before aborting.</param>
+            <returns><see langword="true" /> if the addon was found and probed; otherwise <see langword="false" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.ProbeAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.String,System.Int32,System.Int32)">
+            <summary>
+            Dumps a recursive probe for an already-resolved addon pointer.
+            </summary>
+            <param name="addon">The resolved addon pointer to inspect.</param>
+            <param name="pluginLog">The plugin log used to emit the probe output.</param>
+            <param name="addonName">The addon name to inspect.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="trigger">Optional trigger label used in the logs.</param>
+            <param name="maxDepth">Maximum recursion depth for the probe.</param>
+            <param name="maxNodes">Maximum number of visited nodes before aborting.</param>
+            <returns><see langword="true" /> if the addon pointer was valid and probed; otherwise <see langword="false" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.TryResolveAddonPointer(Dalamud.Plugin.Services.IGameGui,System.String,System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+            Attempts to resolve an addon pointer by name and optional index.
+            </summary>
+            <param name="gameGui">The game GUI service used for the initial lookup.</param>
+            <param name="addonName">The addon name to resolve.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="addon">The resolved addon pointer, when found.</param>
+            <returns><see langword="true" /> when the addon was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.StartWatch(Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.Nullable{System.TimeSpan})">
+            <summary>
+            Starts a one-minute addon watch that polls for the addon and captures a
+            complete structural dump as soon as the addon becomes live.
+            </summary>
+            <param name="gameGui">The game GUI service used to resolve the addon.</param>
+            <param name="pluginLog">The plugin log used to emit the probe output.</param>
+            <param name="addonName">The addon name to watch.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay active.</param>
+            <returns>The active watch instance.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.TryGetLatestSnapshot(System.String,System.Int32,Echoglossian.NativeUI.Helpers.AddonStructureProbe.AddonStructureProbeSnapshot@)">
             <summary>
@@ -20781,131 +20782,6 @@
               Looks up a localized string similar to This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips..
             </summary>
         </member>
-        <member name="P:Echoglosshoglossian.Properties.Resources.TranslateToastToggle">
-            <summary>
-              Looks up a localized string similar to Translate Toast Messages.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslateToastToggleText">
-            <summary>
-              Looks up a localized string similar to Translate in-game Toast Messages.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslateYesNoScreenLabel">
-            <summary>
-              Looks up a localized string similar to Translate Yes/No Screen.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslationDisabled">
-            <summary>
-              Looks up a localized string similar to Translations are Disabled!.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslationEnabled">
-            <summary>
-              Looks up a localized string similar to Translations are Enabled!.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslationEngineChoose">
-            <summary>
-              Looks up a localized string similar to Choose the translation engine.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslationEngineSettingsNotRequired">
-            <summary>
-              Looks up a localized string similar to This translation engine does not require any special settings..
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslationError">
-            <summary>
-              Looks up a localized string similar to Translation Error:.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslationsEnabled">
-            <summary>
-              Looks up a localized string similar to Translations are Enabled!.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.UnableToLoadEntityForEditing">
-            <summary>
-              Looks up a localized string similar to Unable to load entity for editing..
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.UseAuthentication">
-            <summary>
-              Looks up a localized string similar to Use Authentication.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.UseImGuiForToastsToggle">
-            <summary>
-              Looks up a localized string similar to Use overlay to show Toasts translations (WIP).
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.AddonProbeHelpMessage">
-            <summary>
-              Looks up a localized string similar to Awaiting translation....
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.QuestProbeHelpMessage">
-            <summary>
-              Looks up a localized string similar to Dumps a full quest data probe to the log. Usage: /egloquestprobe &lt;quest name or quest id&gt;.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.AcceptedQuestPrefetchStartedNotification">
-            <summary>
-              Looks up a localized string similar to Background quest pre-translation started for {0} accepted quests..
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.AcceptedQuestPrefetchCompletedNotification">
-            <summary>
-              Looks up a localized string similar to Background quest pre-translation finished for {0} accepted quests..
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.ToDoListAwaitingQuestDataNotification">
-            <summary>
-              Looks up a localized string similar to ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready..
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.ScenarioTreeAwaitingQuestDataNotification">
-            <summary>
-              Looks up a localized string similar to ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready..
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.ShowQuestProgressNotificationsDescription">
-            <summary>
-              Looks up a localized string similar to Shows informational notifications when background quest pre-translation starts or when quest windows are still waiting for stored quest data. Disabled by default to avoid noisy popups during normal gameplay..
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.ShowQuestProgressNotificationsToggle">
-            <summary>
-              Looks up a localized string similar to Show quest background notifications.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslation">
-            <summary>
-              Looks up a localized string similar to Native UI translation.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeTooltipTranslationOnly">
-            <summary>
-              Looks up a localized string similar to Tooltip translation only.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeNativeUiTranslationWithOriginalTooltips">
-            <summary>
-              Looks up a localized string similar to Native UI translation + original tooltips.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeLabel">
-            <summary>
-              Looks up a localized string similar to Quest display mode.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.QuestDisplayModeDescription">
-            <summary>
-              Looks up a localized string similar to This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips..
-            </summary>
-        </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateJournalAcceptToggle">
             <summary>
               Looks up a localized string similar to Translate JournalAccept.
@@ -21093,7 +20969,165 @@
         </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayBackgroundOpacityLabel">
             <summary>
-              Looks up a localized string similar to glossian.Properties.Resources.OverlayWindowTitleAreaToastTranslation">
+              Looks up a localized string similar to Background opacity.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayBackgroundOpacityTooltip">
+            <summary>
+              Looks up a localized string similar to Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.WhatToTranslateText">
+            <summary>
+              Looks up a localized string similar to Select what kind of text you want to be translated in the corresponding tab below!.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslate">
+            <summary>
+              Looks up a localized string similar to Select which kind of in-game message toasts to translate.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.YandexCloudApiKey">
+            <summary>
+              Looks up a localized string similar to YandexCloud Api Key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.YandexCloudFolderId">
+            <summary>
+              Looks up a localized string similar to Folder ID.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.YesReset">
+            <summary>
+              Looks up a localized string similar to Yes, reset.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ActionAndItemTooltipsSectionLabel">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ActionAndItemTooltipsDisplayModeLabel">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ActionAndItemTooltipsDisplayModeDescription">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipAppearanceSectionLabel">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipAppearanceDescription">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipTextColorLabel">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipBackgroundColorLabel">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipBackgroundOpacityLabel">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateMainCommandWindow">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateActionMenuWindow">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateHudWindows">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateOperationGuideWindow">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateAddonContextMenuTitleWindow">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayDisplayModeDescription">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayDisplayModeOverlayTranslationOnly">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayDisplayModeNativeUiTranslationWithOriginalOverlay">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayOnlyLanguageModeDescription">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleTalkTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleBattleTalkTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleTalkSubtitleTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleMiniTalkTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleCutSceneSelectStringTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleTextGimmickHintTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleWideTextToastTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleErrorToastTranslation">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleAreaToastTranslation">
             <summary>
               Looks up a localized string.
             </summary>
@@ -21744,74 +21778,68 @@
             <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
             <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
             <returns>
-                A task that representy.
-            </summary>
-            <param name="text">The text to translate.</param>
-            <param name="sourceLanguage">The source language of the text.</param>
-            <param name="targetLanguage">The target language for the translation.</param>
-            <param name="cacheKey">The normalized cache key for this request.</param>
-            <returns>The translated text or an error placeholder.</returns>
+                A task that represents the asynchronous operation. The task result
+                contains the translated text as a string.
+            </returns>
         </member>
-        <member name="M:Echoglossian.Translators.OllamaTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Translators.TranslationService.AcceptTranslatedResultOrFallback(System.String,System.String,System.String,System.String,System.String,System.String)">
             <summary>
-                Performs the actual Ollama translation request for one cache key.
+            Accepts a translated result only when it is safe to treat as a real
+            translation; otherwise records the failure and falls back to the
+            sanitized source text.
             </summary>
-            <param name="text">The text to translate.</param>
-            <param name="sourceLanguage">The source language of the text.</param>
-            <param name="targetLanguage">The target language for the translation.</param>
-            <param name="cacheKey">The normalized cache key for this request.</param>
-            <returns>The translated text or an error placeholder.</returns>
+            <param name="translatedText">The translated text candidate.</param>
+            <param name="parsedText">The parsed source text sent to the translator.</param>
+            <param name="sanitizedText">The sanitized source text shown on fallback.</param>
+            <param name="normalizedSourceLanguage">The normalized source language code.</param>
+            <param name="normalizedTargetLanguage">The normalized target language code.</param>
+            <param name="resolvedOriginContext">The resolved origin context for diagnostics.</param>
+            <returns>
+            The accepted translated text, or <paramref name="sanitizedText" /> when
+            the result is empty or synthetic.
+            </returns>
         </member>
-        <member name="M:Echoglossian.Translators.OpenRouterTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Translators.TranslationService.ShouldBypassTranslationDueToMissingLanguageAssets">
             <summary>
-                Performs the actual OpenRouter translation request for one cache key.
+            Determines whether the current selected language depends on missing
+            downloaded font assets and should therefore bypass translation work until
+            those assets are available.
             </summary>
-            <param name="text">The text to translate.</param>
-            <param name="sourceLanguage">The source language of the text.</param>
-            <param name="targetLanguage">The target language for the translation.</param>
-            <param name="cacheKey">The normalized cache key for this request.</param>
-            <returns>The translated text or an error placeholder.</returns>
+            <returns>
+            <c>true</c> when translation should be bypassed because required language
+            assets are missing; otherwise, <c>false</c>.
+            </returns>
         </member>
-        <member name="T:Echoglossian.Translators.TranslationFailureKey">
+        <member name="M:Echoglossian.Translators.TranslationService.CheckTextToTranslate(System.String)">
             <summary>
-                Builds stable keys for exact translation-failure tracking.
+            Determines whether the specified text should be translated and returns a sanitized version of the text.
             </summary>
+            <param name="text">The text to be checked and potentially sanitized for translation.</param>
+            <returns>A tuple containing the sanitized text and a boolean indicating whether the text should be translated. The
+            sanitized text is an empty string if the input text is null or empty, or if the sanitized result is equivalent to
+            specific non-translatable patterns. The boolean is <see langword="true"/> if the text should be translated;
+            otherwise, <see langword="false"/>.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.TranslationFailureKey.ComputeSourceTextHash(System.String)">
+        <member name="M:Echoglossian.Translators.TranslationService.IsKnownFailedTranslation(System.String,System.String,System.String)">
             <summary>
-                Computes a short stable hash for one exact source text.
+                Determines whether the given exact translation request is already
+                known to fail for the current engine and language pair.
             </summary>
             <param name="sourceText">The exact sanitized source text.</param>
-            <returns>The stable lowercase hash.</returns>
+            <param name="sourceLanguage">The normalized source language code.</param>
+            <param name="targetLanguage">The normalized target language code.</param>
+            <returns>
+                <see langword="true" /> when the request should be skipped because it
+                is already cached as a known failure; otherwise <see langword="false" />.
+            </returns>
         </member>
-        <member name="M:Echoglossian.Translators.TranslationFailureKey.BuildLookupKey(System.String,System.String,System.String,System.Int32)">
+        <member name="M:Echoglossian.Translators.TranslationService.RecordFailedTranslation(System.String,System.String,System.String,System.String,System.String)">
             <summary>
-                Builds the in-memory lookup key for one source/target language pair
-                and translation engine.
+                Records one exact translation request as a known failure for the
+                current engine and language pair.
             </summary>
-            <param name="sourceTextHash">The stable source-text hash.</param>
-            <param name="sourceLanguage">The source language code.</param>
-            <param name="targetLanguage">The target language code.</param>
-            <param name="translationEngine">The translation-engine identifier.</param>
-            <returns>The stable lookup key.</returns>
-        </member>
-        <member name="T:Echoglossian.Translators.TranslationService">
-            <summary>
-                Provides translation services using various translation engines.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Translators.TranslationService.#ctor(Echoglossian.Config,Dalamud.Plugin.Services.IPluginLog,Dalamud.Game.Text.Sanitizer.Sanitizer)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.Translators.TranslationService" /> class.
-            </summary>
-            <param name="config">The configuration settings for the translation service.</param>
-            <param name="pluginLog">The plugin logger for logging purposes.</param>
-            <param name="sanitizer">
-                The sanitizer used to clean input text before
-                translation.
-            </param>
-        </member>
-        <member name="M: code.</param>
+            <param name="sourceText">The exact sanitized source text.</param>
+            <param name="sourceLanguage">The normalized source language code.</param>
             <param name="targetLanguage">The normalized target language code.</param>
             <param name="originContext">The origin context associated with the request.</param>
         </member>
@@ -21974,114 +22002,6 @@
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForBattleTalk(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for battle talk translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigTalkSubtitle(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for talk subtitle translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForMiniTalk(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for MiniTalk translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForCutSceneSelectString(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for CutSceneSelectString overlays.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTextGimmickHint(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for text gimmick hint translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForWideTextToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for Screen Info (_WideText) toast
-            translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForErrorToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for error toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForAreaToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for area toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForClassChangeToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for class/job change toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForQuestToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for quest toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForChatBubble(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for chat bubble translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="T:TextTextureGenerator">
-            <summary>
-            Generates textures from text using a specified font and size.
-            </summary>
-        </member>
-        <member name="M:TextTextureGenerator.#ctor(Dalamud.Plugin.Services.ITextureProvider)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TextTextureGenerator"/> class.
-            </summary>
-            <param name="textureProvider"></param>
-        </member>
-        <member name="M:TextTextureGenerator.CreateTextTextureAsync(System.String,System.String,System.Single,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Drawing.FontStyle,System.Nullable{System.Int32})">
-            <summary>
-            Creates a texture from the specified text using the given font and size.
-            </summary>
-            <param name="text"></param>
-            <param name="fontPath"></param>
-            <param name="fontSize"></param>
-            <param name="textColor"></param>
-            <param name="backgroundColor"></param>
-            <param name="fontStyle"></param>
-            <parame cref="T:Echoglossian.Config"/> for battle talk translations.
             </summary>
             <param name="config"></param>
             <returns></returns>
