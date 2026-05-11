@@ -5,11 +5,18 @@
 
 namespace Echoglossian.NativeUI.Helpers;
 
+using System.Runtime.CompilerServices;
+
 /// <summary>
 ///     Utility for registering and unregistering addon translation handlers.
 /// </summary>
 public static class AddonHandlerRegistrar
 {
+    private static readonly ConditionalWeakTable<
+        IAddonTranslationHandler,
+        Dictionary<AddonEvent, IAddonLifecycle.AddonEventDelegate>>
+        StableHandlerDelegates = new();
+
     /// <summary>
     ///     Registers an addon translation handler with the specified addon lifecycle.
     /// </summary>
@@ -21,7 +28,7 @@ public static class AddonHandlerRegistrar
         IAddonTranslationHandler handler,
         IAddonLifecycle addonLifecycle)
     {
-        foreach (var (evt, del) in handler.GetEventHandlers())
+        foreach (var (evt, del) in GetStableEventHandlers(handler))
         {
             addonLifecycle.RegisterListener(evt, new[] { addonName }, del);
         }
@@ -59,10 +66,17 @@ public static class AddonHandlerRegistrar
         IAddonTranslationHandler handler,
         IAddonLifecycle addonLifecycle)
     {
-        foreach (var (evt, del) in handler.GetEventHandlers())
+        if (!StableHandlerDelegates.TryGetValue(handler, out var eventHandlers))
+        {
+            return;
+        }
+
+        foreach (var (evt, del) in eventHandlers)
         {
             addonLifecycle.UnregisterListener(evt, new[] { addonName }, del);
         }
+
+        StableHandlerDelegates.Remove(handler);
     }
 
     /// <summary>
@@ -83,5 +97,20 @@ public static class AddonHandlerRegistrar
         {
             Unregister(addonName, handler, addonLifecycle);
         }
+    }
+
+    /// <summary>
+    ///     Returns one stable event-handler map for the lifetime of the supplied
+    ///     addon handler instance so register and unregister use the same
+    ///     delegate instances.
+    /// </summary>
+    /// <param name="handler">The addon handler instance.</param>
+    /// <returns>The stable event-handler map for that handler instance.</returns>
+    private static Dictionary<AddonEvent, IAddonLifecycle.AddonEventDelegate>
+        GetStableEventHandlers(IAddonTranslationHandler handler)
+    {
+        return StableHandlerDelegates.GetValue(
+            handler,
+            static addonHandler => addonHandler.GetEventHandlers());
     }
 }

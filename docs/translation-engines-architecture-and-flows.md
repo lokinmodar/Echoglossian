@@ -239,6 +239,12 @@ For requested-but-not-yet-implemented engine candidates, see:
 
 - [translation-engine-backlog.md](/C:/Dante/_dalamud/Echoglossian/docs/translation-engine-backlog.md)
 
+For planned improvements specific to LLM-backed engines, including compact
+prompting, surface-group engine routing, and optional short-lived dialogue
+session context, see:
+
+- [llm-translation-improvements-plan.md](/C:/Dante/_dalamud/Echoglossian/docs/llm-translation-improvements-plan.md)
+
 ## Governance Reminder
 
 Development-time AI usage disclosure for official repository submissions is a

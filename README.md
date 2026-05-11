@@ -29,6 +29,13 @@ surface uses, and which surfaces are temporarily hidden or disabled in the
 current release, see
 [docs/translation-surface-support-matrix.md](docs/translation-surface-support-matrix.md).
 
+For current translation-engine architecture and future LLM-specific
+improvements such as surface-group engine routing and optional dialogue
+session context, see:
+
+- [docs/translation-engines-architecture-and-flows.md](docs/translation-engines-architecture-and-flows.md)
+- [docs/llm-translation-improvements-plan.md](docs/llm-translation-improvements-plan.md)
+
 Localized versions of that document:
 
 - [English](docs/translation-surface-support-matrix.md)
