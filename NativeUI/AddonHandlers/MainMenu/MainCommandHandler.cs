@@ -39,11 +39,11 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
             hoverTooltipManager: hoverTooltipManager,
             translationService: translationService,
             enabledSelector: static configuration =>
-                configuration.TranslateMainCommandWindow,
+                configuration.TranslateGameMainMenu,
             useAtkValues: true,
             useTextNodes: false,
             displayModeSelector: static configuration =>
-                configuration.MainCommandWindowTranslationDisplayMode)
+                configuration.GameMainMenuWindowTranslationDisplayMode)
     {
         this.config = config;
     }
@@ -187,7 +187,7 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
         }
 
         var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
-            this.config.MainCommandWindowTranslationDisplayMode,
+            this.config.GameMainMenuWindowTranslationDisplayMode,
             this.config.OverlayOnlyLanguage);
 
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))

@@ -68,7 +68,7 @@
     <comment>Shown in plugin install window</comment>
   </data>
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Juster de indstillinger, der er relateret til oversættelsesoverlejringen:</value>
+    <value>Juster de indstillinger, der er relateret til Plugin Overlay:</value>
   </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>Sproget kunne ikke identificeres med en acceptabel grad af sikkerhed</value>
@@ -77,7 +77,7 @@
     <value>Det valgte sprog understøttes ikke af den aktuelt tilgængelige oversættelses-backend</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>Det valgte sprog understøttes kun ved hjælp af plugin-overlejringer på grund af begrænsningerne i det oprindelige spil Font</value>
+    <value>Det valgte sprog understøttes kun ved hjælp af Plugin Overlay på grund af begrænsningerne i det oprindelige spil Font</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>Hvilket sprog du skal oversætte de in-game dialogbokse til.</value>
@@ -89,25 +89,25 @@
     <value>Den ikke-udtømmende liste over spørgsmål og TODO'er er tilgængelig i linket nedenfor:</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Juster placeringen, hvis overlejringen ikke er centreret i forhold til spillets tekstboks til brugergrænsefladen.</value>
+    <value>Juster placeringen, hvis Plugin Overlay ikke er centreret i forhold til spillets tekstboks til brugergrænsefladen.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
     <value>OverlayColorSelect</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Klik her for at vælge skriftfarven overlejring</value>
+    <value>Klik her for at vælge skriftfarven Plugin Overlay</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Justere skriftskalaen Overlejring</value>
+    <value>Justere skriftskalaen Plugin Overlay</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
-    <value>Overlejring af skriftstørrelse</value>
+    <value>Plugin Overlay af skriftstørrelse</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Vælge skriftstørrelsen for tekstoverlejringen</value>
+    <value>Vælge skriftstørrelsen for tekstPlugin Overlay</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Multiplikator for overlejring af oversættelsesoverlejring</value>
+    <value>Multiplikator for Plugin Overlay af Plugin Overlay</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Battle talk (Enenies dialog linjer) oversættelse</value>
@@ -117,13 +117,13 @@
     <value>Positionsjustering</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Vis oversat tekstoverlejring over tekstboksen i brugergrænsefladen i spillet i stedet for at erstatte teksten med oversættelsen</value>
+    <value>Vis oversat tekstPlugin Overlay over tekstboksen i brugergrænsefladen i spillet i stedet for at erstatte teksten med oversættelsen</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Juster bredden af overlejring af oversættelse</value>
+    <value>Juster bredden af Plugin Overlay af oversættelse</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplikator for overlejring af oversættelsesoverlejring</value>
+    <value>Multiplikator for Plugin Overlay af Plugin Overlay</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Absolut sti til Echoglossian mappe (inde XIVLauncher -&gt; pluginConfigs mappe)</value>
@@ -159,13 +159,13 @@
     <value>Indstillinger for Google Translate:</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Vis original dialogtekst i Overlejring og Oversat i dialogboksen Spilgrænseflade</value>
+    <value>Vis original dialogtekst i Plugin Overlay og Oversat i dialogboksen Spilgrænseflade</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Juster bredden af overlejring af toastoversættelse</value>
+    <value>Juster bredden af Plugin Overlay af toastoversættelse</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplikator for toastoverlejringsbredde</value>
+    <value>Multiplikator for Plugin Overlay</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
     <value>TODOs Liste på Github</value>
@@ -210,7 +210,7 @@
     <value>Oversættelser aktiveret!</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Brug overlejring til at vise Toasts-oversættelser</value>
+    <value>Brug Plugin Overlay til at vise Toasts-oversættelser</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Afventer oversættelse...</value>
@@ -618,10 +618,10 @@
     <value>Detaljevisningstilstand</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer overfladerne ActionDetail og ItemDetail. Native UI skriver den oversatte detaljetekst ind i spiltilføjelsen, kun overlejring holder den oprindelige tilføjelse intakt og bruger Echoglossian overlejringer, og native-med-original-overlejring skriver indbygget oversættelse, mens originalen vises i vores overlejring.</value>
+    <value>Denne tilstand styrer ActionDetail- og ItemDetail-overfladerne. Native UI skriver den oversatte detaljetekst ind i spiltilføjelsen, Plugin Overlay translation only holder den oprindelige tilføjelse intakt og bruger Plugin Overlays, og Native UI translation + original Plugin Overlay skriver oversættelsen nativt, mens originalen vises i vores Plugin Overlay.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Aktiver oversættelse af handlings-/elementdetaljer og delte værktøjstip til svævemarkering</value>
+    <value>Aktiver oversættelse af handlings-/elementdetaljer og delte Plugin Tooltips</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Kunne ikke hente modeller. Kører Ollama lokalt?</value>
@@ -633,46 +633,46 @@
     <value>Spil vinduer</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Disse farver gælder for Echoglossian hover værktøjstip, der bruges af quest og DB-first UI overflader.</value>
+    <value>Disse farver gælder for Plugin Tooltips, der bruges af quest- og DB-first-UI-overflader.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Hover værktøjstip udseende</value>
+    <value>Hover Plugin Tooltip udseende</value>
   </data>
   <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
-    <value>Værktøjstip baggrundsfarve</value>
+    <value>Plugin Tooltip baggrundsfarve</value>
   </data>
   <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
-    <value>Værktøjstip baggrundsopacitet</value>
+    <value>Plugin Tooltip baggrundsopacitet</value>
   </data>
   <data name="HoverTooltipTextColorLabel" xml:space="preserve">
-    <value>Værktøjstip tekstfarve</value>
+    <value>Plugin Tooltip tekstfarve</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept og JournalResult. Værktøjstip for svævejournal følger denne tilstand direkte; det globale værktøjstip-skift påvirker kun andre oversatte brugergrænseflader.</value>
+    <value>Denne tilstand styrer Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept og JournalResult. Journal Plugin Tooltips følger denne tilstand direkte; det globale Plugin Tooltip-skift påvirker kun anden oversat UI.</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
     <value>Visningstilstand for Journal quest</value>
   </data>
   <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
-    <value>Indbygget erstatningstilstand er aktiv for denne toasttype. Overlay-stilkontroller bruges ikke i denne tilstand.</value>
+    <value>Indbygget erstatningstilstand er aktiv for denne toasttype. Plugin Overlay-stilkontroller bruges ikke i denne tilstand.</value>
   </data>
   <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer, hvordan den oversatte tekst præsenteres. Native UI skriver direkte ind i spiltilføjelsen, kun overlejring lader den native tilføjelse være urørt, og native-med-original-overlay skriver oversættelse native, mens originalen vises i overlejringen.</value>
+    <value>Denne tilstand styrer, hvordan den oversatte tekst præsenteres. Native UI skriver direkte ind i spiltilføjelsen, kun Plugin Overlay lader den native tilføjelse være urørt, og Native UI translation + original Plugin Overlay skriver oversættelse native, mens originalen vises i Plugin Overlay.</value>
   </data>
   <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Native UI oversættelse + original overlejring</value>
+    <value>Native UI oversættelse + original Plugin Overlay</value>
   </data>
   <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
-    <value>Kun overlejringsoversættelse</value>
+    <value>Kun Plugin Overlay</value>
   </data>
   <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
-    <value>Vis overlejringstitellinje med højttalernavn, når det er tilgængeligt</value>
+    <value>Vis Plugin Overlay med højttalernavn, når det er tilgængeligt</value>
   </data>
   <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>Kun overlejringssprog er aktivt, så alle toasttyper gengives gennem overlejringer.</value>
+    <value>Kun Plugin Overlay er aktivt, så alle toasttyper gengives gennem Plugin Overlay.</value>
   </data>
   <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>Det valgte sprog understøtter ikke den oprindelige spilskrifttype, så denne overflade er begrænset til Echoglossian overlejringer og brugerdefinerede værktøjstip.</value>
+    <value>Det valgte sprog understøtter ikke den oprindelige spilskrifttype, så denne overflade er begrænset til Plugin Overlays og Plugin Tooltips.</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -681,7 +681,7 @@
     <value>MiniTalk</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer, hvordan dette questvindue præsenteres. Native UI skriver oversættelsen til tilføjelsen, kun værktøjstip holder tilføjelsen intakt, og native-med-original-værktøjstip skriver oversættelse native, mens originalen vises i værktøjstip.</value>
+    <value>Denne tilstand styrer, hvordan dette questvindue præsenteres. Native UI skriver oversættelsen til tilføjelsen, Plugin Tooltip translation only holder tilføjelsen intakt, og Native UI translation + original Plugin Tooltips skriver oversættelsen nativt, mens originalen vises i Plugin Tooltips.</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
     <value>Quest-visningstilstand</value>
@@ -690,10 +690,10 @@
     <value>Native UI oversættelse</value>
   </data>
   <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Native UI oversættelse + originale værktøjstip</value>
+    <value>Native UI oversættelse + originale Plugin Tooltip</value>
   </data>
   <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
-    <value>Kun oversættelse af værktøjstip</value>
+    <value>Kun oversættelse af Plugin Tooltip</value>
   </data>
   <data name="QuestWindowsTabTitle" xml:space="preserve">
     <value>Quest vinduer</value>
@@ -720,10 +720,10 @@
     <value>Oversættelse er i øjeblikket deaktiveret, fordi det valgte sprog kræver ekstra skrifttypeaktiver. Åbn konfigurationsvinduet for at downloade eller validere de nødvendige filer.</value>
   </data>
   <data name="ToastModeDescription" xml:space="preserve">
-    <value>Hver toasttype kan vælge uafhængigt mellem native erstatning og overlay-gengivelse.</value>
+    <value>Hver toasttype kan vælge uafhængigt mellem native erstatning og Plugin Overlay-gengivelse.</value>
   </data>
   <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Når en toasttype bruger overlejringstilstand, kan du også bytte tekster, så overlejringen beholder den oprindelige linje, mens den oprindelige toast viser oversættelsen.</value>
+    <value>Når en toasttype bruger Plugin Overlay, kan du også bytte tekster, så Plugin Overlay beholder den oprindelige linje, mens den oprindelige toast viser oversættelsen.</value>
   </data>
   <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
     <value>Område Toast</value>
@@ -732,7 +732,7 @@
     <value>Baggrundens uigennemsigtighed</value>
   </data>
   <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
-    <value>Styrer, hvor uigennemsigtig toast-overlay-baggrunden skal være. Brug 0 for en fuldstændig gennemsigtig baggrund.</value>
+    <value>Styrer, hvor uigennemsigtig Plugin Overlay-baggrunden skal være. Brug 0 for en fuldstændig gennemsigtig baggrund.</value>
   </data>
   <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
     <value>Klasse / Job Skift Toast</value>
@@ -795,7 +795,7 @@
     <value>Oversæt JournalResult</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Oversæt Main Command</value>
+      <value>Oversæt spillets hovedmenu</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Oversæt MiniTalk</value>

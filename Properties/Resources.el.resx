@@ -89,7 +89,7 @@
     <value>Ενεργοποιήστε τη μετάφραση κειμένου παιχνιδιού σε πραγματικό χρόνο</value>
   </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
-    <value>Χρώμα γραμματοσειράς επικάλυψης:</value>
+    <value>Χρώμα γραμματοσειράς Plugin Overlay:</value>
   </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Ανοίγει το παράθυρο ρύθμισης παραμέτρων Echoglossian</value>
@@ -99,7 +99,7 @@
     <value>(?)</value>
   </data>
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Προσαρμόστε τις επιλογές που σχετίζονται με την επικάλυψη μετάφρασης:</value>
+    <value>Προσαρμόστε τις επιλογές που σχετίζονται με την Plugin Overlay μετάφρασης:</value>
   </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>Η γλώσσα δεν μπορούσε να προσδιοριστεί με αποδεκτό βαθμό βεβαιότητας</value>
@@ -108,7 +108,7 @@
     <value>Η επιλεγμένη γλώσσα δεν υποστηρίζεται από το τρέχον διαθέσιμο backend μετάφρασης</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>Η επιλεγμένη γλώσσα υποστηρίζεται μόνο χρησιμοποιώντας τις επικαλύψεις plugin λόγω περιορισμών της εγγενούς γραμματοσειράς παιχνιδιού</value>
+    <value>Η επιλεγμένη γλώσσα υποστηρίζεται μόνο χρησιμοποιώντας τις Plugin Overlay λόγω περιορισμών της εγγενούς γραμματοσειράς παιχνιδιού</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>Σε ποια γλώσσα θα μεταφραστούν τα πλαίσια διαλόγου εντός του παιχνιδιού.</value>
@@ -129,25 +129,25 @@
     <value>Ο μη εξαντλητικός κατάλογος θεμάτων και TODO είναι διαθέσιμος στον παρακάτω σύνδεσμο:</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Προσαρμόστε τη θέση εάν η επικάλυψη δεν είναι κεντραρισμένη σε σχέση με το πλαίσιο κειμένου διεπαφής χρήστη του παιχνιδιού.</value>
+    <value>Προσαρμόστε τη θέση εάν η Plugin Overlay δεν είναι κεντραρισμένη σε σχέση με το πλαίσιο κειμένου διεπαφής χρήστη του παιχνιδιού.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
     <value>ΕπικάλυψηΧρώμαΕπιλογή</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Κάντε κλικ για να επιλέξετε το χρώμα γραμματοσειράς επικάλυψης</value>
+    <value>Κάντε κλικ για να επιλέξετε το χρώμα γραμματοσειράς Plugin Overlay</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Προσαρμογή της κλίμακας γραμματοσειράς επικάλυψης</value>
+    <value>Προσαρμογή της κλίμακας γραμματοσειράς Plugin Overlay</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
-    <value>Μέγεθος γραμματοσειράς επικάλυψης</value>
+    <value>Μέγεθος γραμματοσειράς Plugin Overlay</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Επιλέξτε το μέγεθος γραμματοσειράς για την επικάλυψη κειμένου</value>
+    <value>Επιλέξτε το μέγεθος γραμματοσειράς για την Plugin Overlay κειμένου</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Πολλαπλασιαστής ύψους επικάλυψης μετάφρασης</value>
+    <value>Πολλαπλασιαστής ύψους Plugin Overlay μετάφρασης</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Ομιλία μάχης (γραμμές διαλόγου Enenies) μετάφραση</value>
@@ -157,13 +157,13 @@
     <value>Ρύθμιση θέσης</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Εμφάνιση επικάλυψης μεταφρασμένου κειμένου πάνω από το πλαίσιο κειμένου περιβάλλοντος εργασίας χρήστη παιχνιδιού αντί να αντικαταστήσετε το κείμενό του με τη μετάφραση</value>
+    <value>Εμφάνιση Plugin Overlay μεταφρασμένου κειμένου πάνω από το πλαίσιο κειμένου περιβάλλοντος εργασίας χρήστη παιχνιδιού αντί να αντικαταστήσετε το κείμενό του με τη μετάφραση</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Προσαρμογή πλάτους επικάλυψης μετάφρασης</value>
+    <value>Προσαρμογή πλάτους Plugin Overlay μετάφρασης</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Πολλαπλασιαστής πλάτους επικάλυψης μετάφρασης</value>
+    <value>Πολλαπλασιαστής πλάτους Plugin Overlay μετάφρασης</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Απόλυτη διαδρομή προς το φάκελο Echoglossian (μέσα στο φάκελο XIVLauncher -&gt; pluginConfigs)</value>
@@ -211,13 +211,13 @@
     <value>Echoglossian ρυθμίσεις επαναφορά στην προεπιλογή με επιτυχία!</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Εμφάνιση κειμένου διαλόγου "Πρωτότυπο" στην "Επικάλυψη" και "Μεταφρασμένο" στο παράθυρο διαλόγου "Περιβάλλον εργασίας χρήστη παιχνιδιού"</value>
+    <value>Εμφάνιση κειμένου διαλόγου "Πρωτότυπο" στην "Plugin Overlay" και "Μεταφρασμένο" στο παράθυρο διαλόγου "Περιβάλλον εργασίας χρήστη παιχνιδιού"</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Προσαρμογή πλάτους επικάλυψης αναδυόμενης μετάφρασης</value>
+    <value>Προσαρμογή πλάτους Plugin Overlay αναδυόμενης μετάφρασης</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Πολλαπλασιαστής πλάτους επικάλυψης τοστ</value>
+    <value>Πολλαπλασιαστής πλάτους Plugin Overlay τοστ</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
     <value>Λίστα TODO στο Github</value>
@@ -262,7 +262,7 @@
     <value>Οι μεταφράσεις είναι ενεργοποιημένες!</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Χρήση επικάλυψης για εμφάνιση αναδυόμενων μεταφράσεων (WIP)</value>
+    <value>Χρήση Plugin Overlay για εμφάνιση αναδυόμενων μεταφράσεων (WIP)</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Εν αναμονή μετάφρασης...</value>
@@ -646,10 +646,10 @@
     <value>Λειτουργία εμφάνισης λεπτομερειών</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Αυτή η λειτουργία ελέγχει τις επιφάνειες ActionDetail και ItemDetail. Το Native UI γράφει το μεταφρασμένο κείμενο λεπτομερειών στο πρόσθετο του παιχνιδιού, μόνο με επικάλυψη διατηρεί ανέπαφο το εγγενές πρόσθετο και χρησιμοποιεί επικαλύψεις Echoglossian και το εγγενές-με-πρωτότυπο-επικάλυψη γράφει μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στην επικάλυψη μας.</value>
+    <value>Αυτή η λειτουργία ελέγχει τις επιφάνειες ActionDetail και ItemDetail. Το Native UI γράφει το μεταφρασμένο κείμενο λεπτομερειών στο πρόσθετο του παιχνιδιού, το Plugin Overlay translation only διατηρεί ανέπαφο το εγγενές πρόσθετο και χρησιμοποιεί Plugin Overlays, και το Native UI translation + original Plugin Overlay γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στο Plugin Overlay μας.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Ενεργοποιήστε τη μετάφραση λεπτομερειών δράσης/αντικειμένου και κοινές συμβουλές εργαλείων τοποθέτησης του δείκτη</value>
+    <value>Ενεργοποιήστε τη μετάφραση λεπτομερειών δράσης/αντικειμένου και τα κοινά Plugin Tooltips</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Δεν ήταν δυνατή η ανάκτηση μοντέλων. Το Ollama εκτελείται τοπικά;</value>
@@ -661,7 +661,7 @@
     <value>Παράθυρα παιχνιδιών</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Αυτά τα χρώματα ισχύουν για Echoglossian συμβουλές εργαλείων αιώρησης που χρησιμοποιούνται από επιφάνειες διεπαφής χρήστη quest και DB-first.</value>
+    <value>Αυτά τα χρώματα ισχύουν για τα Plugin Tooltips που χρησιμοποιούνται από τις επιφάνειες UI quest και DB-first.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
     <value>Εμφάνιση επεξήγησης εργαλείου με το δείκτη του ποντικιού</value>
@@ -676,31 +676,31 @@
     <value>Χρώμα κειμένου επεξήγησης εργαλείου</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Αυτή η λειτουργία ελέγχει το Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept και JournalResult. Οι συμβουλές εργαλείων αιώρησης περιοδικών ακολουθούν αυτήν τη λειτουργία απευθείας. η καθολική εναλλαγή επεξήγησης εργαλείου επηρεάζει μόνο άλλες μεταφρασμένες διεπαφές.</value>
+    <value>Αυτή η λειτουργία ελέγχει το Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept και JournalResult. Τα Plugin Tooltips του Journal ακολουθούν αυτήν τη λειτουργία άμεσα· η global εναλλαγή Plugin Tooltip επηρεάζει μόνο άλλη μεταφρασμένη UI.</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
     <value>Λειτουργία εμφάνισης αναζήτησης περιοδικού</value>
   </data>
   <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
-    <value>Η λειτουργία εγγενούς αντικατάστασης είναι ενεργή για αυτόν τον τύπο τοστ. Τα στοιχεία ελέγχου στυλ επικάλυψης δεν χρησιμοποιούνται σε αυτήν τη λειτουργία.</value>
+    <value>Η λειτουργία εγγενούς αντικατάστασης είναι ενεργή για αυτόν τον τύπο τοστ. Τα στοιχεία ελέγχου στυλ Plugin Overlay δεν χρησιμοποιούνται σε αυτήν τη λειτουργία.</value>
   </data>
   <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Αυτή η λειτουργία ελέγχει τον τρόπο παρουσίασης του μεταφρασμένου κειμένου. Το Native UI γράφει απευθείας στο πρόσθετο του παιχνιδιού, η επικάλυψη μόνο αφήνει ανέγγιχτο το εγγενές πρόσθετο και το εγγενές πρόσθετο-με-πρωτότυπο-επικάλυψη γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στην επικάλυψη.</value>
+    <value>Αυτή η λειτουργία ελέγχει τον τρόπο παρουσίασης του μεταφρασμένου κειμένου. Το Native UI γράφει απευθείας στο πρόσθετο του παιχνιδιού, η Plugin Overlay μόνο αφήνει ανέγγιχτο το εγγενές πρόσθετο και το εγγενές πρόσθετο-με-πρωτότυπο-Plugin Overlay γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στην Plugin Overlay.</value>
   </data>
   <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Native UI μετάφραση + πρωτότυπη επικάλυψη</value>
+    <value>Native UI μετάφραση + πρωτότυπη Plugin Overlay</value>
   </data>
   <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
-    <value>Μόνο μετάφραση επικάλυψης</value>
+    <value>Μόνο μετάφραση Plugin Overlay</value>
   </data>
   <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
-    <value>Εμφάνιση γραμμής τίτλου επικάλυψης με όνομα ηχείου όταν είναι διαθέσιμο</value>
+    <value>Εμφάνιση γραμμής τίτλου Plugin Overlay με όνομα ηχείου όταν είναι διαθέσιμο</value>
   </data>
   <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>Η γλώσσα μόνο για επικάλυψη είναι ενεργή, επομένως όλοι οι τύποι τοστ θα αποδίδονται μέσω επικαλύψεων.</value>
+    <value>Η γλώσσα μόνο για Plugin Overlay είναι ενεργή, επομένως όλοι οι τύποι τοστ θα αποδίδονται μέσω επικαλύψεων.</value>
   </data>
   <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>Η επιλεγμένη γλώσσα δεν υποστηρίζει την εγγενή γραμματοσειρά του παιχνιδιού, επομένως αυτή η επιφάνεια περιορίζεται σε Echoglossian επικαλύψεις και προσαρμοσμένες συμβουλές εργαλείων.</value>
+    <value>Η επιλεγμένη γλώσσα δεν υποστηρίζει την εγγενή γραμματοσειρά του παιχνιδιού, επομένως αυτή η επιφάνεια περιορίζεται σε Plugin Overlays και Plugin Tooltips.</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -709,7 +709,7 @@
     <value>MiniTalk</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Αυτή η λειτουργία ελέγχει τον τρόπο με τον οποίο παρουσιάζεται αυτό το παράθυρο αποστολής. Το Native UI γράφει τη μετάφραση στο πρόσθετο, το tooltip-only διατηρεί το πρόσθετο ανέπαφο και το native-with-original-tooltips γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στις επεξηγήσεις εργαλείων.</value>
+    <value>Αυτή η λειτουργία ελέγχει τον τρόπο με τον οποίο παρουσιάζεται αυτό το παράθυρο αποστολής. Το Native UI γράφει τη μετάφραση στο πρόσθετο, το Plugin Tooltip translation only διατηρεί το πρόσθετο ανέπαφο και το Native UI translation + original Plugin Tooltips γράφει τη μετάφραση εγγενώς ενώ εμφανίζει το πρωτότυπο στα Plugin Tooltips.</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
     <value>Λειτουργία εμφάνισης αναζήτησης</value>
@@ -718,7 +718,7 @@
     <value>Native UI μετάφραση</value>
   </data>
   <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Native UI μετάφραση + πρωτότυπες συμβουλές εργαλείων</value>
+    <value>Native UI μετάφραση + πρωτότυπες Plugin Tooltip</value>
   </data>
   <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
     <value>Μόνο μετάφραση επεξήγησης εργαλείου</value>
@@ -748,10 +748,10 @@
     <value>Η μετάφραση είναι αυτή τη στιγμή απενεργοποιημένη, επειδή η επιλεγμένη γλώσσα απαιτεί επιπλέον αρχεία γραμματοσειράς. Ανοίξτε το παράθυρο ρυθμίσεων για να κατεβάσετε ή να ελέγξετε τα απαιτούμενα αρχεία.</value>
   </data>
   <data name="ToastModeDescription" xml:space="preserve">
-    <value>Κάθε τύπος τοστ μπορεί να επιλέξει ανεξάρτητα μεταξύ εγγενούς αντικατάστασης και απόδοσης επικάλυψης.</value>
+    <value>Κάθε τύπος τοστ μπορεί να επιλέξει ανεξάρτητα μεταξύ εγγενούς αντικατάστασης και απόδοσης Plugin Overlay.</value>
   </data>
   <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Όταν ένας τύπος τοστ χρησιμοποιεί λειτουργία επικάλυψης, μπορείτε επίσης να ανταλλάξετε τα κείμενα έτσι ώστε η επικάλυψη να διατηρεί την αρχική γραμμή ενώ το εγγενές τοστ δείχνει τη μετάφραση.</value>
+    <value>Όταν ένας τύπος τοστ χρησιμοποιεί λειτουργία Plugin Overlay, μπορείτε επίσης να ανταλλάξετε τα κείμενα έτσι ώστε η Plugin Overlay να διατηρεί την αρχική γραμμή ενώ το εγγενές τοστ δείχνει τη μετάφραση.</value>
   </data>
   <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
     <value>Τοστ περιοχής</value>
@@ -760,7 +760,7 @@
     <value>Αδιαφάνεια φόντου</value>
   </data>
   <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
-    <value>Ελέγχει πόσο αδιαφανές θα πρέπει να είναι το φόντο της επικάλυψης του τοστ. Χρησιμοποιήστε το 0 για ένα πλήρως διαφανές φόντο.</value>
+    <value>Ελέγχει πόσο αδιαφανές θα πρέπει να είναι το φόντο της Plugin Overlay του τοστ. Χρησιμοποιήστε το 0 για ένα πλήρως διαφανές φόντο.</value>
   </data>
   <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
     <value>Τοστ αλλαγής τάξης / εργασίας</value>
@@ -823,7 +823,7 @@
     <value>Μετάφραση JournalResult</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Μετάφραση Main Command</value>
+      <value>Μετάφραση κύριου μενού του παιχνιδιού</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Μετάφραση MiniTalk</value>

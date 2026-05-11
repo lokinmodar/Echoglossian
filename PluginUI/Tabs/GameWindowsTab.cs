@@ -25,11 +25,7 @@ public static class GameWindowsTab
             Resources.TranslateCharacterWindow,
             ref config.TranslateCharacterWindow,
             ref config.CharacterWindowTranslationDisplayMode);
-        changed |= DrawWindowSection(
-            config,
-            Resources.TranslateMainCommandWindow,
-            ref config.TranslateMainCommandWindow,
-            ref config.MainCommandWindowTranslationDisplayMode);
+        changed |= DrawGameMainMenuSection(config);
         changed |= DrawWindowSection(
             config,
             Resources.TranslateActionMenuWindow,
@@ -45,12 +41,6 @@ public static class GameWindowsTab
             Resources.TranslateOperationGuideWindow,
             ref config.TranslateOperationGuideWindow,
             ref config.OperationGuideTranslationDisplayMode);
-        changed |= DrawWindowSection(
-            config,
-            Resources.TranslateAddonContextMenuTitleWindow,
-            ref config.TranslateAddonContextMenuTitle,
-            ref config.AddonContextMenuTitleTranslationDisplayMode);
-
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
@@ -58,6 +48,38 @@ public static class GameWindowsTab
         }
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Draws the unified game-main-menu section that controls both
+    ///     <c>_MainCommand</c> and <c>AddonContextMenuTitle</c>.
+    /// </summary>
+    /// <param name="config">The current plugin configuration.</param>
+    /// <returns><c>true</c> when a setting changed.</returns>
+    private static bool DrawGameMainMenuSection(Config config)
+    {
+        var enabled = config.TranslateGameMainMenu;
+        var displayMode = config.GameMainMenuWindowTranslationDisplayMode;
+        var changed = false;
+
+        ImGui.Spacing();
+        ImGui.TextUnformatted(Resources.TranslateMainCommandWindow);
+        ImGui.Separator();
+
+        changed |= ImGui.Checkbox(Resources.TranslateMainCommandWindow, ref enabled);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            Resources.TranslateMainCommandWindow,
+            ref displayMode,
+            config.OverlayOnlyLanguage);
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        return config.SetGameMainMenuTranslationSettings(
+            enabled,
+            displayMode);
     }
 
     /// <summary>

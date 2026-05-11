@@ -81,7 +81,7 @@
     <value>(?)</value>
   </data>
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Passen Sie die Optionen für das Übersetzungs-Overlay an:</value>
+    <value>Passen Sie die Optionen für das Plugin Overlay an:</value>
   </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>Die Sprache konnte nicht mit einem akzeptablen Grad an Sicherheit identifiziert werden.</value>
@@ -90,7 +90,7 @@
     <value>Die ausgewählte Sprache wird vom aktuell verfügbaren Übersetzungs-Backend nicht unterstützt.</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>Die gewählte Sprache wird aufgrund von Einschränkungen der nativen Spielschrift nur über die Plugin-Overlays unterstützt</value>
+    <value>Die gewählte Sprache wird aufgrund von Einschränkungen der nativen Spielschrift nur über die Plugin Overlay unterstützt</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>In welche Sprache die Dialogfelder im Spiel übersetzt werden sollen.</value>
@@ -111,25 +111,25 @@
     <value>Die nicht erschöpfende Liste der Probleme und TODOs finden Sie unter dem folgenden Link:</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Bitte passen Sie die Position an, wenn Ihr Overlay nicht relativ zum UI-Textfeld des Spiels zentriert ist.</value>
+    <value>Bitte passen Sie die Position an, wenn Ihr Plugin Overlay nicht relativ zum UI-Textfeld des Spiels zentriert ist.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
     <value>OverlayColorSelect</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Klicken Sie hier, um die Overlay-Schriftfarbe auszuwählen</value>
+    <value>Klicken Sie hier, um die Plugin Overlay-Schriftfarbe auszuwählen</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Anpassen der Überlagerungs-Schriftskala</value>
+    <value>Anpassen der Plugin Overlay-Schriftskala</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
     <value>Schriftgrad überlagern</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Auswählen der Schriftgröße für die Textüberlagerung</value>
+    <value>Auswählen der Schriftgröße für die TextPlugin Overlay</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Multiplikator für die Höhe der Übersetzungsüberlagerung</value>
+    <value>Multiplikator für die Höhe der ÜbersetzungsPlugin Overlay</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Schlachtgespräch (Enenies-Dialogzeilen) Übersetzung</value>
@@ -139,13 +139,13 @@
     <value>Positionsverstellung</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Übersetzte Textüberlagerung über dem Textfeld der Spielbenutzeroberfläche anzeigen, anstatt den Text durch die Übersetzung zu ersetzen</value>
+    <value>Übersetzte TextPlugin Overlay über dem Textfeld der Spielbenutzeroberfläche anzeigen, anstatt den Text durch die Übersetzung zu ersetzen</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Überlagerungsbreite der Übersetzung anpassen</value>
+    <value>Plugin Overlay der Übersetzung anpassen</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplikator der Übersetzungs-Overlay-Breite</value>
+    <value>Multiplikator der Plugin Overlay-Breite</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Absoluter Pfad zum Echoglossian-Ordner (innerhalb von XIVLauncher -&gt; pluginConfigs-Ordner)</value>
@@ -190,10 +190,10 @@
     <value>Original-Dialogtext im Dialogfeld "Überlagern" und "Übersetzt" im Dialogfeld "Spiel-UI" anzeigen</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Anpassen der Overlaybreite für die Popupübersetzung</value>
+    <value>Anpassen der Plugin Overlay für die Popupübersetzung</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplikator für die Breite der Popupüberlagerung</value>
+    <value>Multiplikator für die Breite der Plugin Overlay</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
     <value>TODOs-Liste auf Github</value>
@@ -238,7 +238,7 @@
     <value>Übersetzungen aktiviert!</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Verwenden von Overlay zum Anzeigen von Popups-Übersetzungen</value>
+    <value>Verwenden von Plugin Overlay zum Anzeigen von Popups-Übersetzungen</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Warten auf Übersetzung...</value>
@@ -646,10 +646,10 @@
     <value>Detailanzeigemodus</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Dieser Modus steuert die Oberflächen ActionDetail und ItemDetail. Native UI schreibt den übersetzten Detailtext in das Spiel-Add-on, „Overlay-only“ behält das native Add-on intakt und verwendet Echoglossian-Overlays, und „native-with-original-overlay“ schreibt die Übersetzung nativ, während das Original in unserem Overlay angezeigt wird.</value>
+    <value>Dieser Modus steuert die Oberflächen ActionDetail und ItemDetail. Native UI schreibt den übersetzten Detailtext in das Spiel-Add-on, Plugin Overlay translation only behält das native Add-on intakt und verwendet Plugin Overlays, und Native UI translation + original Plugin Overlay schreibt die Übersetzung nativ, während das Original in unserem Plugin Overlay angezeigt wird.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Aktivieren Sie die Übersetzung von Aktions-/Elementdetails und gemeinsame Hover-Tooltips</value>
+    <value>Aktivieren Sie die Übersetzung von Aktions-/Elementdetails und gemeinsame Plugin Tooltips</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Modelle konnten nicht abgerufen werden. Läuft Ollama lokal?</value>
@@ -661,46 +661,46 @@
     <value>Spielfenster</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Diese Farben gelten für Echoglossian Hover-Tooltips, die von Quest- und DB-First-UI-Oberflächen verwendet werden.</value>
+    <value>Diese Farben gelten für Plugin Tooltips, die von Quest- und DB-First-UI-Oberflächen verwendet werden.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Erscheinungsbild des Hover-Tooltips</value>
+    <value>Erscheinungsbild des Plugin Tooltip</value>
   </data>
   <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
-    <value>Tooltip-Hintergrundfarbe</value>
+    <value>Plugin Tooltip-Hintergrundfarbe</value>
   </data>
   <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
-    <value>Tooltip-Hintergrundopazität</value>
+    <value>Plugin Tooltip-Hintergrundopazität</value>
   </data>
   <data name="HoverTooltipTextColorLabel" xml:space="preserve">
-    <value>Farbe des Tooltip-Textes</value>
+    <value>Farbe des Plugin Tooltip-Textes</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Dieser Modus steuert Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept und JournalResult. Journal-Hover-Tooltips folgen direkt diesem Modus; Die globale Tooltip-Umschaltung betrifft nur andere übersetzte Benutzeroberflächen.</value>
+    <value>Dieser Modus steuert Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept und JournalResult. Journal Plugin Tooltips folgen diesem Modus direkt; die globale Plugin Tooltip-Umschaltung betrifft nur andere übersetzte UI.</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
     <value>Anzeigemodus für Journalquests</value>
   </data>
   <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
-    <value>Für diesen Toasttyp ist der native Ersetzungsmodus aktiv. In diesem Modus werden keine Steuerelemente für den Overlay-Stil verwendet.</value>
+    <value>Für diesen Toasttyp ist der native Ersetzungsmodus aktiv. In diesem Modus werden keine Steuerelemente für den Plugin Overlay-Stil verwendet.</value>
   </data>
   <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Dieser Modus steuert, wie der übersetzte Text dargestellt wird. Native UI schreibt direkt in das Spiel-Add-on, „overlay-only“ lässt das native Add-on unberührt und „native-with-original-overlay“ schreibt die Übersetzung nativ, während das Original im Overlay angezeigt wird.</value>
+    <value>Dieser Modus steuert, wie der übersetzte Text dargestellt wird. Native UI schreibt direkt in das Spiel-Add-on, „Plugin Overlay translation only“ lässt das native Add-on unberührt und „Native UI translation + original Plugin Overlay“ schreibt die Übersetzung nativ, während das Original im Plugin Overlay angezeigt wird.</value>
   </data>
   <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Native UI Übersetzung + Original-Overlay</value>
+    <value>Native UI Übersetzung + Original-Plugin Overlay</value>
   </data>
   <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
-    <value>Nur Overlay-Übersetzung</value>
+    <value>Nur Plugin Overlay-Übersetzung</value>
   </data>
   <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
-    <value>Overlay-Titelleiste mit Sprechernamen anzeigen, sofern verfügbar</value>
+    <value>Plugin Overlay-Titelleiste mit Sprechernamen anzeigen, sofern verfügbar</value>
   </data>
   <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>Die Nur-Overlay-Sprache ist aktiv, sodass alle Toasttypen über Overlays gerendert werden.</value>
+    <value>Die Nur-Plugin Overlay-Sprache ist aktiv, sodass alle Toasttypen über Plugin Overlay gerendert werden.</value>
   </data>
   <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>Die ausgewählte Sprache unterstützt die native Spielschriftart nicht, daher ist diese Oberfläche auf Echoglossian-Overlays und benutzerdefinierte Tooltips beschränkt.</value>
+    <value>Die ausgewählte Sprache unterstützt die native Spielschriftart nicht, daher ist diese Oberfläche auf Plugin Overlays und Plugin Tooltips beschränkt.</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -709,7 +709,7 @@
     <value>MiniTalk</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Dieser Modus steuert, wie dieses Questfenster dargestellt wird. Native UI schreibt die Übersetzung in das Add-on, „tooltip-only“ hält das Add-on intakt und „native-with-original-tooltips“ schreibt die Übersetzung nativ, während das Original in den Tooltips angezeigt wird.</value>
+    <value>Dieser Modus steuert, wie dieses Questfenster dargestellt wird. Native UI schreibt die Übersetzung in das Add-on, Plugin Tooltip translation only hält das Add-on intakt, und Native UI translation + original Plugin Tooltips schreibt die Übersetzung nativ, während das Original in Plugin Tooltips angezeigt wird.</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
     <value>Quest-Anzeigemodus</value>
@@ -718,10 +718,10 @@
     <value>Native UI Übersetzung</value>
   </data>
   <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Native UI Übersetzung + Original-Tooltips</value>
+    <value>Native UI Übersetzung + Original-Plugin Tooltip</value>
   </data>
   <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
-    <value>Nur Tooltip-Übersetzung</value>
+    <value>Nur Plugin Tooltip-Übersetzung</value>
   </data>
   <data name="QuestWindowsTabTitle" xml:space="preserve">
     <value>Questfenster</value>
@@ -748,10 +748,10 @@
     <value>Die Übersetzung ist derzeit deaktiviert, weil die ausgewählte Sprache zusätzliche Schriftart-Assets benötigt. Öffnen Sie das Konfigurationsfenster, um die erforderlichen Dateien herunterzuladen oder zu überprüfen.</value>
   </data>
   <data name="ToastModeDescription" xml:space="preserve">
-    <value>Jeder Toasttyp kann unabhängig zwischen nativer Ersetzung und Overlay-Rendering wählen.</value>
+    <value>Jeder Toasttyp kann unabhängig zwischen nativer Ersetzung und Plugin Overlay-Rendering wählen.</value>
   </data>
   <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Wenn ein Toasttyp den Overlay-Modus verwendet, können Sie die Texte auch austauschen, sodass das Overlay die ursprüngliche Zeile beibehält, während der native Toast die Übersetzung anzeigt.</value>
+    <value>Wenn ein Toasttyp den Plugin Overlay-Modus verwendet, können Sie die Texte auch austauschen, sodass das Plugin Overlay die ursprüngliche Zeile beibehält, während der native Toast die Übersetzung anzeigt.</value>
   </data>
   <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
     <value>Flächentoast</value>
@@ -760,7 +760,7 @@
     <value>Hintergrundopazität</value>
   </data>
   <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
-    <value>Steuert, wie undurchsichtig der Toast-Overlay-Hintergrund sein soll. Verwenden Sie 0 für einen vollständig transparenten Hintergrund.</value>
+    <value>Steuert, wie undurchsichtig der Toast-Plugin Overlay-Hintergrund sein soll. Verwenden Sie 0 für einen vollständig transparenten Hintergrund.</value>
   </data>
   <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
     <value>Toast auf Klassen-/Jobwechsel</value>
@@ -823,7 +823,7 @@
     <value>Übersetzen Sie JournalResult</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Übersetzen Sie Main Command</value>
+      <value>Spielhauptmenü übersetzen</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Übersetzen Sie MiniTalk</value>
