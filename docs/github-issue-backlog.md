@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-09
+Snapshot date: 2026-05-11
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -45,29 +45,26 @@ Notes:
 - This makes `#178` the clearest issue now resolved by a currently published
   build, rather than only by local code.
 
-## Fixes Landed In Code, Awaiting Published Validation
+## Resolved In Submitted `4.2600.1105.x`
 
+- `#186` Randomly stops translating to PT-BR and displays English text instead
 - `#190` Seleção de mecanismo de tradução não está funcionando corretamente
 - `#191` Talk text is translated multiple time
-- `#186` Randomly stops translating to PT-BR and displays English text instead
-- `#174` Translate already saved translated texts does not work
+- `#195` Translation stuck on Gemini engine regardless of configuration settings
 
 Notes:
 
-- `#190` now has a code-side stabilization pass that keeps
-  `ChosenTransEngine` and `ChosenTransEngineKey` synchronized and prevents a
-  stale key from silently overriding a newer explicit engine choice.
-- `#191` now has a code-side concurrency fix:
-  - translator-local LLM caches were hardened to use a shared concurrent
-    request cache instead of raw `Dictionary<string, string>`
-  - `TalkHandler` now rechecks the DB before inserting, which should reduce
-    duplicate `TalkMessage` rows for the same source line
-- The current fix for this cluster stops persisting transient exact-failure
-  rows such as `empty-result` / synthetic translation-error placeholders.
-- Dialogue-family DB rows that merely echo the original source text across
-  different languages are now ignored on lookup and skipped on save.
-- This should reduce sticky English fallbacks and stale "no translation"
-  behavior without requiring DB cleanup in normal cases.
+- `4.2600.1105.x` is the current submitted release package and is tracked in
+  the official repo submission
+  [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626).
+- This package includes:
+  - engine-selection stabilization that keeps `ChosenTransEngine` and
+    `ChosenTransEngineKey` synchronized
+  - translator-local concurrency hardening for the LLM cache path
+  - `TalkHandler` DB recheck-before-insert behavior to reduce duplicate talk
+    rows
+  - transient dialogue-failure persistence guards so exact-failure placeholders
+    and cross-language original-text echoes stop becoming sticky fallbacks
 
 ## P0: Urgent and Likely Next Targets
 
@@ -137,39 +134,6 @@ These are still release-quality problems, but they likely need a more careful
     longer fits the native box" problem.
   - The new native text-flow reflow helper was introduced with `JournalDetail`
     specifically so `MiniTalk` can reuse that strategy next.
-
-### #186 Randomly stops translating to PT-BR and displays English text instead
-
-- Priority: P1
-- Ease: medium
-- Status: fixed in code, awaiting published-build confirmation
-- Notes:
-  - This was treated as the visible edge of the same stale-cache / stale-DB /
-    transient-failure persistence cluster affecting `#178` and `#174`.
-  - Keep open until the published build confirms the English fallback no longer
-    becomes sticky for exact dialogue lines.
-
-### #190 Seleção de mecanismo de tradução não está funcionando corretamente
-
-- Priority: P1
-- Ease: medium
-- Status: fixed in code, awaiting published-build confirmation
-- Notes:
-  - Reports said the selected engine did not match the engine actually used.
-  - The current branch fix rewires engine selection to keep the persisted id
-    and stable key aligned, but this still needs user confirmation in a
-    published build before closure.
-
-### #191 Talk text is translated multiple time
-
-- Priority: P1
-- Ease: medium
-- Status: fixed in code, awaiting published-build confirmation
-- Notes:
-  - The current branch fix hardens per-translator caches against concurrent
-    access and coalesces identical in-flight requests.
-  - The `Talk` save path also rechecks the DB before inserting, which should
-    reduce duplicate rows for the same dialogue line.
 
 ### #174 Translate already saved translated texts does not work
 
@@ -249,6 +213,9 @@ require careful UI/runtime investigation rather than a narrow config fix.
   - Part of the read-only mutation issue has already been narrowed and fixed:
     overlay-only / tooltip-only paths no longer rewrite native text just to
     "restore" state they never changed.
+  - The unstable native `JournalDetail` reflow work is intentionally isolated
+    on `issue-181-journaldetail-reflow` / draft PR `#193`, outside the current
+    release branch.
   - The remaining active problem has shifted toward native-mode layout/reflow,
     especially in `JournalDetail`, where verbose translations require wrapper
     and container growth rather than isolated text-node resizing.
@@ -342,15 +309,12 @@ work rather than release fallout.
 1. `#189`
 2. `#169` + `#175` as one overlay cluster
 3. `#188` + `#187` as one native-dialogue sizing cluster
-4. release-validate and close `#190` if confirmed
-5. release-validate and close `#191` if confirmed
-6. release-validate and then close `#186`
-7. reassess / release-validate `#174`
-8. reassess `#171` after the engine-selection and stale-failure fixes are published
-9. `#167`
-10. release-validate the remaining open parts of `#172`
-11. `#181`
-12. `#173` / `#179`
-13. `#176`
-14. `#192`
-15. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
+4. reassess / release-validate `#174`
+5. reassess `#171` after the engine-selection and stale-failure fixes are published
+6. `#167`
+7. release-validate the remaining open parts of `#172`
+8. `#181`
+9. `#173` / `#179`
+10. `#176`
+11. `#192`
+12. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`

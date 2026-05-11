@@ -7,10 +7,11 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Current Development After Official `v4.2600.x`
+## Submitted Release `v4.2600.1105.x`
 
-This branch is the follow-up line after the first official `API15` / `4.x`
-release and its immediate first-launch hotfix.
+This is the current post-`4.2600.0605.x` stabilization package submitted to
+the official plugin repo in
+[PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626).
 
 Highlights:
 
@@ -18,17 +19,17 @@ Highlights:
   language, engine, and activation without unloading or reloading the plugin
 - added runtime config refresh so engine, language, and addon-toggle changes
   apply in-session instead of requiring plugin reloads
-- hardened engine selection migration and Amazon translator bootstrap behavior
-  to avoid broken persisted engine ids and provider-chain stalls
-- added a shared translation-activation guard that blocks invalid
-  language/engine states, emits a persistent configuration notification, and
-  localizes the related UI/status text across all repo `resx` languages
+- hardened engine selection migration and translator routing so stale engine
+  ids or keys stop silently rebuilding the wrong translator
+- fixed translator-local concurrency issues in multiple LLM engines and reduced
+  duplicate `Talk` saves for the same dialogue line
+- stopped persisting transient dialogue failure placeholders and ignored stale
+  cross-language original-text echoes that could cause sticky English fallback
 - made downloaded font-asset requirements language-aware and added recovery UI
   plus recheck/download guidance for CJK-target languages
-- fixed repeated config-save hot paths and narrowed `CharacterStatus`
-  framework-update registration to active deferred passes only
-- improved quest-tracker consistency, translation-error persistence guards, and
-  issue/backlog hygiene for the post-release stabilization cycle
+- improved canonical translation reuse between game versions when the original
+  content hash did not change, especially for action-, item-, trait-, and
+  reference-text-backed surfaces
 - temporarily kept structured tooltip translation disabled for release builds
   while `ActionDetail` and `ItemDetail` remain under stabilization
 
