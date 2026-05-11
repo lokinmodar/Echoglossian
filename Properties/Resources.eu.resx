@@ -646,10 +646,10 @@
     <value>Xehetasun bistaratzeko modua</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Modu honek ActionDetail eta ItemDetail gainazalak kontrolatzen ditu. Native UI-k itzulitako xehetasun-testua idazten du jokoaren gehigarrian, gainjartzeak soilik jatorrizko gehigarria mantentzen du oso-osorik eta Echoglossian gainjartzeak erabiltzen ditu, eta jatorrizkoak-jatorrizko gainjarrizketak jatorrizkoan idazten du itzulpena gure gainjartzean jatorrizkoa erakusten duen bitartean.</value>
+    <value>Modu honek ActionDetail eta ItemDetail gainazalak kontrolatzen ditu. Native UI-k itzulitako xehetasun-testua jokoaren gehigarrian idazten du, Plugin Overlay translation only aukerak jatorrizko gehigarria oso-osorik mantentzen du eta Plugin Overlays erabiltzen ditu, eta Native UI translation + original Plugin Overlay aukerak itzulpena berez idazten du jatorrizkoa gure Plugin Overlay-n erakusten duen bitartean.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Gaitu ekintzen/elementuen xehetasunen itzulpena eta pasatzeko tresna-informazio partekatuak</value>
+    <value>Gaitu ekintza/elementu xehetasunen itzulpena eta partekatutako Plugin Tooltips</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Ezin izan dira modeloak eskuratu. Ollama lokalean exekutatzen al da?</value>
@@ -661,7 +661,7 @@
     <value>Joko leihoak</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Kolore hauek bilaketak eta DB-first UI gainazalek erabiltzen dituzten Echoglossian pasabiderako argibideei aplikatzen zaizkie.</value>
+    <value>Kolore hauek quest eta DB-first UI gainazalek erabiltzen dituzten Plugin Tooltips-ei aplikatzen zaizkie.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
     <value>Pasatu pasatzean tresna-informazioaren itxura</value>
@@ -676,7 +676,7 @@
     <value>Tresna-informazioa testuaren kolorea</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Modu honek Aldizkaria, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept eta JournalResult kontrolatzen ditu. Egunkaria pasatzeko tresna-informazioek zuzenean jarraitzen diote modu honi; tresna-informazio globalaren txandakatzaileak itzulitako beste interfaze bat baino ez du eragiten.</value>
+    <value>Modu honek Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept eta JournalResult kontrolatzen ditu. Journal Plugin Tooltips-ek modu hau zuzenean jarraitzen dute; Plugin Tooltip globalaren etengailuak beste UI itzulietan bakarrik eragiten du.</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
     <value>Aldizkaria bilatzea bistaratzeko modua</value>
@@ -700,7 +700,7 @@
     <value>Gainjartze-lengoaia soilik aktibo dago, beraz, tostada mota guztiak gainjarri bidez errendatuko dira.</value>
   </data>
   <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>Hautatutako hizkuntzak ez du onartzen jatorrizko jokoaren letra-tipoa; beraz, azalera hau Echoglossian gainjarrietara eta tresna-aholku pertsonalizatuetara mugatuta dago.</value>
+    <value>Hautatutako hizkuntzak ez du jokoaren jatorrizko letra-tipoa onartzen; beraz, azalera hau Plugin Overlays eta Plugin Tooltips-etara mugatuta dago.</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -709,7 +709,7 @@
     <value>MiniTalk</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Modu honek bilaketa-leiho hau nola aurkezten den kontrolatzen du. Native UI-k itzulpena gehigarrian idazten du, tooltip-ak bakarrik mantentzen du gehigarria oso-osorik, eta native-with-original-tooltips itzulpena jatorrizkoan idazten du, jatorrizkoa tresna-aholkuetan erakusten duen bitartean.</value>
+    <value>Modu honek bilaketa-leiho hau nola aurkezten den kontrolatzen du. Native UI-k itzulpena gehigarrian idazten du, Plugin Tooltip translation only aukerak gehigarria oso-osorik mantentzen du, eta Native UI translation + original Plugin Tooltips aukerak itzulpena berez idazten du jatorrizkoa Plugin Tooltips-en erakusten duen bitartean.</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
     <value>Quest bistaratzeko modua</value>
@@ -718,7 +718,7 @@
     <value>Native UI itzulpena</value>
   </data>
   <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Native UI itzulpena + jatorrizko tresna-aholkuak</value>
+    <value>Native UI itzulpena + jatorrizko Plugin Tooltip</value>
   </data>
   <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
     <value>Tresna-informazioen itzulpena soilik</value>
@@ -823,7 +823,7 @@
     <value>Itzuli JournalResult</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Itzuli Main Command</value>
+      <value>Itzuli jokoaren menu nagusia</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Itzuli MiniTalk</value>

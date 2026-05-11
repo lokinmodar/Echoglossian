@@ -30,11 +30,11 @@ public class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
             hoverTooltipManager: hoverTooltipManager,
             translationService: translationService,
             enabledSelector: static configuration =>
-                configuration.TranslateAddonContextMenuTitle,
+                configuration.TranslateGameMainMenu,
             useAtkValues: false,
             useTextNodes: true,
             displayModeSelector: static configuration =>
-                configuration.AddonContextMenuTitleTranslationDisplayMode)
+                configuration.GameMainMenuWindowTranslationDisplayMode)
     {
     }
 

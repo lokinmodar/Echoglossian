@@ -614,6 +614,156 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode ActionMenuWindowTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>
+  /// Gets a value indicating whether the game main menu scope is enabled.
+  /// </summary>
+  [JsonIgnore]
+  public bool TranslateGameMainMenu =>
+      this.TranslateMainCommandWindow ||
+      this.TranslateAddonContextMenuTitle;
+
+  /// <summary>
+  /// Gets the unified display mode for the game main menu scope.
+  /// </summary>
+  [JsonIgnore]
+  public JournalTranslationDisplayMode GameMainMenuWindowTranslationDisplayMode =>
+      this.ResolveGameMainMenuTranslationDisplayMode();
+
+  /// <summary>
+  /// Synchronizes the legacy MainCommand and AddonContextMenuTitle toggles so
+  /// they behave as one combined game-main-menu scope.
+  /// </summary>
+  /// <returns>
+  /// <see langword="true" /> when one or more values changed; otherwise
+  /// <see langword="false" />.
+  /// </returns>
+  public bool NormalizeGameMainMenuTranslationSettings()
+  {
+    var changed = false;
+    var unifiedEnabled = this.TranslateGameMainMenu;
+    var unifiedDisplayMode = this.ResolveGameMainMenuTranslationDisplayMode();
+
+    if (this.TranslateMainCommandWindow != unifiedEnabled)
+    {
+      this.TranslateMainCommandWindow = unifiedEnabled;
+      changed = true;
+    }
+
+    if (this.TranslateAddonContextMenuTitle != unifiedEnabled)
+    {
+      this.TranslateAddonContextMenuTitle = unifiedEnabled;
+      changed = true;
+    }
+
+    if (this.MainCommandWindowTranslationDisplayMode != unifiedDisplayMode)
+    {
+      this.MainCommandWindowTranslationDisplayMode = unifiedDisplayMode;
+      changed = true;
+    }
+
+    if (this.AddonContextMenuTitleTranslationDisplayMode != unifiedDisplayMode)
+    {
+      this.AddonContextMenuTitleTranslationDisplayMode = unifiedDisplayMode;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  /// <summary>
+  /// Sets the unified game-main-menu scope toggle and display mode.
+  /// </summary>
+  /// <param name="enabled">Whether translation is enabled for the scope.</param>
+  /// <param name="displayMode">The unified display mode.</param>
+  /// <returns>
+  /// <see langword="true" /> when one or more values changed; otherwise
+  /// <see langword="false" />.
+  /// </returns>
+  public bool SetGameMainMenuTranslationSettings(
+      bool enabled,
+      JournalTranslationDisplayMode displayMode)
+  {
+    var changed = false;
+
+    if (this.TranslateMainCommandWindow != enabled)
+    {
+      this.TranslateMainCommandWindow = enabled;
+      changed = true;
+    }
+
+    if (this.TranslateAddonContextMenuTitle != enabled)
+    {
+      this.TranslateAddonContextMenuTitle = enabled;
+      changed = true;
+    }
+
+    if (this.MainCommandWindowTranslationDisplayMode != displayMode)
+    {
+      this.MainCommandWindowTranslationDisplayMode = displayMode;
+      changed = true;
+    }
+
+    if (this.AddonContextMenuTitleTranslationDisplayMode != displayMode)
+    {
+      this.AddonContextMenuTitleTranslationDisplayMode = displayMode;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  /// <summary>
+  /// Resolves the unified display mode for the combined game main menu scope.
+  /// </summary>
+  /// <returns>The resolved unified display mode.</returns>
+  private JournalTranslationDisplayMode ResolveGameMainMenuTranslationDisplayMode()
+  {
+    if (this.AddonContextMenuTitleTranslationDisplayMode ==
+        this.MainCommandWindowTranslationDisplayMode)
+    {
+      return this.AddonContextMenuTitleTranslationDisplayMode;
+    }
+
+    if (this.TranslateAddonContextMenuTitle &&
+        !this.TranslateMainCommandWindow)
+    {
+      return this.AddonContextMenuTitleTranslationDisplayMode;
+    }
+
+    if (this.TranslateMainCommandWindow &&
+        !this.TranslateAddonContextMenuTitle)
+    {
+      return this.MainCommandWindowTranslationDisplayMode;
+    }
+
+    var mainCommandUsesDefault =
+        this.MainCommandWindowTranslationDisplayMode ==
+        JournalTranslationDisplayMode.NativeUiTranslation;
+    var addonContextUsesDefault =
+        this.AddonContextMenuTitleTranslationDisplayMode ==
+        JournalTranslationDisplayMode.NativeUiTranslation;
+
+    if (!this.AddonContextMenuTitleTranslationDisplayMode.Equals(
+            this.MainCommandWindowTranslationDisplayMode))
+    {
+      if (!this.AddonContextMenuTitleTranslationDisplayMode.Equals(
+              JournalTranslationDisplayMode.NativeUiTranslation) &&
+          mainCommandUsesDefault)
+      {
+        return this.AddonContextMenuTitleTranslationDisplayMode;
+      }
+
+      if (!this.MainCommandWindowTranslationDisplayMode.Equals(
+              JournalTranslationDisplayMode.NativeUiTranslation) &&
+          addonContextUsesDefault)
+      {
+        return this.MainCommandWindowTranslationDisplayMode;
+      }
+    }
+
+    return this.AddonContextMenuTitleTranslationDisplayMode;
+  }
+
   /// <summary>Translate HUD window text surfaces backed by StringArrayData.</summary>
   [DefaultValue(false)] public bool TranslateHudWindow = false;
 

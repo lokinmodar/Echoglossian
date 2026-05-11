@@ -18,16 +18,6 @@ public partial class Echoglossian
         [
         ];
 
-    if (this.configuration.TranslateAddonContextMenuTitle)
-    {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "AddonContextMenuTitle",
-              Handler: new AddonContextMenuTitleHandler(
-                  this.configuration,
-                  this.hoverTooltipManager,
-                  TranslationService)));
-    }
-
     if (this.configuration.TranslateOperationGuideWindow)
     {
       this.registeredAddonHandlers.Add(
@@ -54,8 +44,14 @@ public partial class Echoglossian
                   TranslationService)));
     }
 
-    if (this.configuration.TranslateMainCommandWindow)
+    if (this.configuration.TranslateGameMainMenu)
     {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "AddonContextMenuTitle",
+              Handler: new AddonContextMenuTitleHandler(
+                  this.configuration,
+                  this.hoverTooltipManager,
+                  TranslationService)));
       this.registeredAddonHandlers.Add(
           (AddonName: "_MainCommand",
               Handler: new MainCommandHandler(

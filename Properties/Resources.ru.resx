@@ -89,7 +89,7 @@
     <value>Активируйте перевод игрового текста в реальном времени</value>
   </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
-    <value>Цвет шрифта наложения:</value>
+    <value>Цвет шрифта Plugin Overlay:</value>
   </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Открывает окно конфигурации Echoglossian</value>
@@ -135,7 +135,7 @@
     <value>OverlayColorSelect (НаложениеColorSelect)</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Нажмите, чтобы выбрать цвет шрифта наложения</value>
+    <value>Нажмите, чтобы выбрать цвет шрифта Plugin Overlay</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
     <value>Настройка масштаба шрифта Наложение</value>
@@ -144,10 +144,10 @@
     <value>Размер наложенного шрифта</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Выберите размер шрифта для наложения текста</value>
+    <value>Выберите размер шрифта для Plugin Overlay текста</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Множитель высоты наложения перевода</value>
+    <value>Множитель высоты Plugin Overlay перевода</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Перевод разговора о битве (диалоговые строки Энениса)</value>
@@ -157,13 +157,13 @@
     <value>Регулировка положения</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Отображение наложения переведенного текста над текстовым полем игрового интерфейса вместо замены его текста переводом</value>
+    <value>Отображение Plugin Overlay переведенного текста над текстовым полем игрового интерфейса вместо замены его текста переводом</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Настройка ширины наложения перевода</value>
+    <value>Настройка ширины Plugin Overlay перевода</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Множитель ширины наложения перевода</value>
+    <value>Множитель ширины Plugin Overlay перевода</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Абсолютный путь к папке Echoglossian (внутри XIVLauncher -&gt; папка pluginConfigs)</value>
@@ -214,10 +214,10 @@
     <value>Показать исходный текст диалога в оверлее и переведенный в диалоговом окне пользовательского интерфейса игры</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Настройка ширины наложения перевода всплывающих уведомлений</value>
+    <value>Настройка ширины Plugin Overlay перевода всплывающих уведомлений</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Множитель ширины наложения тоста</value>
+    <value>Множитель ширины Plugin Overlay тоста</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
     <value>Список TODO на Github</value>
@@ -262,7 +262,7 @@
     <value>Переводы включены!</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Использование наложения для отображения переводов всплывающих уведомлений (WIP)</value>
+    <value>Использование Plugin Overlay для отображения переводов всплывающих уведомлений (WIP)</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>В ожидании перевода...</value>
@@ -646,10 +646,10 @@
     <value>Подробный режим отображения</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Этот режим управляет поверхностями ActionDetail и ItemDetail. Native UI записывает переведенный подробный текст в дополнение к игре, overlay-only сохраняет родное дополнение нетронутым и использует оверлеи Echoglossian, а Native-with-original-overlay записывает перевод изначально, показывая оригинал в нашем наложении.</value>
+    <value>Этот режим управляет поверхностями ActionDetail и ItemDetail. Native UI записывает переведённый подробный текст в дополнение к игре, Plugin Overlay translation only сохраняет родное дополнение нетронутым и использует Plugin Overlays, а Native UI translation + original Plugin Overlay записывает перевод нативно, показывая оригинал в нашем Plugin Overlay.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Включить перевод сведений о действии/элементе и общие подсказки при наведении</value>
+    <value>Включить перевод сведений о действии/элементе и общие Plugin Tooltips</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Не удалось получить модели. Ollama работает локально?</value>
@@ -661,31 +661,31 @@
     <value>Игровые окна</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Эти цвета применяются к всплывающим подсказкам Echoglossian, используемым в квестах и ​​поверхностях пользовательского интерфейса DB-first.</value>
+    <value>Эти цвета применяются к Plugin Tooltips, используемым в квестах и поверхностях пользовательского интерфейса DB-first.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Внешний вид всплывающей подсказки при наведении</value>
+    <value>Внешний вид всплывающей Plugin Tooltip при наведении</value>
   </data>
   <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
-    <value>Цвет фона подсказки</value>
+    <value>Цвет фона Plugin Tooltip</value>
   </data>
   <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
-    <value>Непрозрачность фона подсказки</value>
+    <value>Непрозрачность фона Plugin Tooltip</value>
   </data>
   <data name="HoverTooltipTextColorLabel" xml:space="preserve">
-    <value>Цвет текста подсказки</value>
+    <value>Цвет текста Plugin Tooltip</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Этот режим управляет журналом, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept и JournalResult. Подсказки при наведении на журнал напрямую следуют этому режиму; глобальный переключатель всплывающей подсказки влияет только на другой переведенный пользовательский интерфейс.</value>
+    <value>Этот режим управляет Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept и JournalResult. Plugin Tooltips Journal напрямую следуют этому режиму; global переключатель Plugin Tooltip влияет только на другой переведённый UI.</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
     <value>Режим отображения квестов журнала</value>
   </data>
   <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
-    <value>Для этого типа всплывающего уведомления активен режим собственной замены. В этом режиме элементы управления стилем наложения не используются.</value>
+    <value>Для этого типа всплывающего уведомления активен режим собственной замены. В этом режиме элементы управления стилем Plugin Overlay не используются.</value>
   </data>
   <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Этот режим контролирует представление переведенного текста. Native UI записывает перевод непосредственно в аддон игры, Overlay-only оставляет родной аддон нетронутым, а Native-with-original-overlay записывает перевод изначально, показывая оригинал в наложении.</value>
+    <value>Этот режим контролирует представление переведенного текста. Native UI записывает перевод непосредственно в аддон игры, Plugin Overlay translation only оставляет родной аддон нетронутым, а Native UI translation + original Plugin Overlay записывает перевод изначально, показывая оригинал в наложении.</value>
   </data>
   <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
     <value>Native UI перевод + оригинальное наложение</value>
@@ -697,10 +697,10 @@
     <value>Показывать наложенную строку заголовка с именем докладчика, если она доступна</value>
   </data>
   <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>Язык только наложений активен, поэтому все типы всплывающих уведомлений будут отображаться через наложения.</value>
+    <value>Язык только наложений активен, поэтому все типы всплывающих уведомлений будут отображаться через Plugin Overlay.</value>
   </data>
   <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>Выбранный язык не поддерживает собственный шрифт игры, поэтому эта поверхность ограничена наложениями Echoglossian и пользовательскими подсказками.</value>
+    <value>Выбранный язык не поддерживает собственный шрифт игры, поэтому эта поверхность ограничена Plugin Overlays и Plugin Tooltips.</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -709,7 +709,7 @@
     <value>MiniTalk</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Этот режим управляет отображением этого окна квеста. Native UI записывает перевод в дополнение, Tooltip-only сохраняет дополнение нетронутым, а Native-with-Original-ToolTips записывает перевод изначально, отображая оригинал во всплывающих подсказках.</value>
+    <value>Этот режим управляет отображением этого окна квеста. Native UI записывает перевод в дополнение, Plugin Tooltip translation only сохраняет дополнение нетронутым, а Native UI translation + original Plugin Tooltips записывает перевод нативно, показывая оригинал в Plugin Tooltips.</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
     <value>Режим отображения квеста</value>
@@ -718,10 +718,10 @@
     <value>Native UI перевод</value>
   </data>
   <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Native UI перевод + оригинальные подсказки</value>
+    <value>Native UI перевод + оригинальные Plugin Tooltip</value>
   </data>
   <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
-    <value>Только перевод подсказки</value>
+    <value>Только перевод Plugin Tooltip</value>
   </data>
   <data name="QuestWindowsTabTitle" xml:space="preserve">
     <value>Окна квестов</value>
@@ -751,7 +751,7 @@
     <value>Каждый тип всплывающего уведомления может независимо выбирать между собственной заменой и наложением рендеринга.</value>
   </data>
   <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Если тип всплывающего уведомления использует режим наложения, вы также можете поменять местами тексты, чтобы наложение сохраняло исходную строку, а собственное всплывающее уведомление отображало перевод.</value>
+    <value>Если тип всплывающего уведомления использует режим Plugin Overlay, вы также можете поменять местами тексты, чтобы наложение сохраняло исходную строку, а собственное всплывающее уведомление отображало перевод.</value>
   </data>
   <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
     <value>Тост за площадь</value>
@@ -760,7 +760,7 @@
     <value>Непрозрачность фона</value>
   </data>
   <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
-    <value>Управляет тем, насколько непрозрачным должен быть фон наложения всплывающего уведомления. Используйте 0 для полностью прозрачного фона.</value>
+    <value>Управляет тем, насколько непрозрачным должен быть фон Plugin Overlay всплывающего уведомления. Используйте 0 для полностью прозрачного фона.</value>
   </data>
   <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
     <value>Тост о смене класса/работы</value>
@@ -823,7 +823,7 @@
     <value>Перевести JournalResult</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Перевести Main Command</value>
+      <value>Переводить главное меню игры</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Перевести MiniTalk</value>

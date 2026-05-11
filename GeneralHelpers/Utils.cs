@@ -421,10 +421,24 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Migrates legacy separate MainCommand and AddonContextMenuTitle
+  ///     translation settings into one unified game-main-menu scope while
+  ///     preserving the existing persisted config fields.
+  /// </summary>
+  public void MigrateGameMainMenuTranslationSettings()
+  {
+    if (this.configuration.NormalizeGameMainMenuTranslationSettings())
+    {
+      SaveConfig(this.configuration);
+    }
+  }
+
+  /// <summary>
   ///     Saves the current configuration to the plugin config file.
   /// </summary>
   public static void SaveConfig(Config config)
   {
+    config.NormalizeGameMainMenuTranslationSettings();
     TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
         config,
         config.Version);
@@ -449,6 +463,7 @@ public partial class Echoglossian
   /// </summary>
   public void RebuildTranslationServiceSafely()
   {
+    this.configuration.NormalizeGameMainMenuTranslationSettings();
     TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
         this.configuration,
         this.configuration.Version,

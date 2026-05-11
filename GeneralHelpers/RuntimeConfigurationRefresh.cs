@@ -163,10 +163,9 @@ public partial class Echoglossian
     return JsonConvert.SerializeObject(
         new
         {
-          this.configuration.TranslateAddonContextMenuTitle,
           this.configuration.TranslateOperationGuideWindow,
           this.configuration.TranslateHudWindow,
-          this.configuration.TranslateMainCommandWindow,
+          this.configuration.TranslateGameMainMenu,
           this.configuration.TranslateActionMenuWindow,
           this.configuration.TranslateCharacterWindow,
           this.configuration.TranslateTalk,

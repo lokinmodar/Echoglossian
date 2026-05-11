@@ -108,7 +108,7 @@
     <value>La lingua selezionata non è supportata dal backend di traduzione attualmente disponibile</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>La lingua selezionata è supportata solo utilizzando le sovrapposizioni del plug-in a causa delle limitazioni del carattere nativo del gioco</value>
+    <value>La lingua selezionata è supportata solo utilizzando le Plugin Overlay del plug-in a causa delle limitazioni del carattere nativo del gioco</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>In quale lingua tradurre le finestre di dialogo del gioco.</value>
@@ -646,10 +646,10 @@
     <value>Modalità di visualizzazione dei dettagli</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Questa modalità controlla le superfici ActionDetail e ItemDetail. Native UI scrive il testo dettagliato tradotto nel componente aggiuntivo del gioco, solo overlay mantiene intatto il componente aggiuntivo nativo e utilizza gli overlay Echoglossian e native-with-original-overlay scrive la traduzione in modo nativo mentre mostra l'originale nel nostro overlay.</value>
+    <value>Questa modalità controlla le superfici ActionDetail e ItemDetail. Native UI scrive il testo dettagliato tradotto nel componente aggiuntivo del gioco, Plugin Overlay translation only mantiene intatto il componente aggiuntivo nativo e usa Plugin Overlays, e Native UI translation + original Plugin Overlay scrive la traduzione in modo nativo mostrando l’originale nel nostro Plugin Overlay.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Abilita la traduzione dei dettagli di azioni/elementi e le descrizioni comandi condivise al passaggio del mouse</value>
+    <value>Abilita la traduzione dei dettagli di azioni/oggetti e i Plugin Tooltips condivisi</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Impossibile recuperare i modelli. Ollama è in esecuzione localmente?</value>
@@ -661,7 +661,7 @@
     <value>Finestre di gioco</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Questi colori si applicano alle descrizioni comandi al passaggio del mouse di Echoglossian utilizzate dalle missioni e dalle superfici dell'interfaccia utente DB-first.</value>
+    <value>Questi colori si applicano ai Plugin Tooltips usati dalle superfici UI quest e DB-first.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
     <value>Aspetto della descrizione comando al passaggio del mouse</value>
@@ -676,7 +676,7 @@
     <value>Colore del testo della descrizione comando</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Questa modalità controlla il diario, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept e JournalResult. I suggerimenti al passaggio del mouse sul diario seguono direttamente questa modalità; l'attivazione/disattivazione della descrizione comando globale influisce solo sull'altra interfaccia utente tradotta.</value>
+    <value>Questa modalità controlla Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept e JournalResult. I Plugin Tooltips del Journal seguono direttamente questa modalità; l’interruttore globale di Plugin Tooltip influisce solo su altre UI tradotte.</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
     <value>Modalità di visualizzazione delle missioni del diario</value>
@@ -685,7 +685,7 @@
     <value>La modalità di sostituzione nativa è attiva per questo tipo di toast. I controlli dello stile di sovrapposizione non vengono utilizzati in questa modalità.</value>
   </data>
   <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Questa modalità controlla come viene presentato il testo tradotto. Native UI scrive direttamente nel componente aggiuntivo del gioco, solo overlay lascia intatto il componente aggiuntivo nativo e native-with-original-overlay scrive la traduzione in modo nativo mostrando l'originale nell'overlay.</value>
+    <value>Questa modalità controlla come viene presentato il testo tradotto. Native UI scrive direttamente nel componente aggiuntivo del gioco, solo Plugin Overlay lascia intatto il componente aggiuntivo nativo e Native UI translation + original Plugin Overlay scrive la traduzione in modo nativo mostrando l'originale nell'Plugin Overlay.</value>
   </data>
   <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
     <value>Native UI traduzione + sovrapposizione originale</value>
@@ -697,10 +697,10 @@
     <value>Mostra la barra del titolo in sovrapposizione con il nome dell'oratore, se disponibile</value>
   </data>
   <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>La lingua di solo overlay è attiva, quindi tutti i tipi di toast verranno visualizzati tramite overlay.</value>
+    <value>La lingua di solo Plugin Overlay è attiva, quindi tutti i tipi di toast verranno visualizzati tramite Plugin Overlay.</value>
   </data>
   <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>La lingua selezionata non supporta il carattere nativo del gioco, quindi questa superficie è limitata a sovrapposizioni Echoglossian e descrizioni comandi personalizzate.</value>
+    <value>La lingua selezionata non supporta il carattere nativo del gioco, quindi questa superficie è limitata a Plugin Overlays e Plugin Tooltips.</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -709,7 +709,7 @@
     <value>MiniTalk</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Questa modalità controlla come viene presentata la finestra della missione. Native UI scrive la traduzione nel componente aggiuntivo, tooltip-only mantiene intatto il componente aggiuntivo e native-with-original-tooltips scrive la traduzione in modo nativo mostrando l'originale nei tooltip.</value>
+    <value>Questa modalità controlla come viene presentata questa finestra di missione. Native UI scrive la traduzione nel componente aggiuntivo, Plugin Tooltip translation only mantiene intatto il componente aggiuntivo e Native UI translation + original Plugin Tooltips scrive la traduzione in modo nativo mostrando l’originale nei Plugin Tooltips.</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
     <value>Modalità di visualizzazione delle missioni</value>
@@ -718,10 +718,10 @@
     <value>Native UI traduzione</value>
   </data>
   <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Native UI traduzione + tooltip originali</value>
+    <value>Native UI traduzione + Plugin Tooltip originali</value>
   </data>
   <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
-    <value>Solo traduzione delle descrizioni comandi</value>
+    <value>Solo traduzione delle Plugin Tooltip</value>
   </data>
   <data name="QuestWindowsTabTitle" xml:space="preserve">
     <value>Finestre delle missioni</value>
@@ -751,7 +751,7 @@
     <value>Ogni tipo di toast può scegliere in modo indipendente tra la sostituzione nativa e il rendering in sovrapposizione.</value>
   </data>
   <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Quando un tipo di toast utilizza la modalità overlay, puoi anche scambiare i testi in modo che l'overlay mantenga la riga originale mentre il toast nativo mostri la traduzione.</value>
+    <value>Quando un tipo di toast utilizza la modalità Plugin Overlay, puoi anche scambiare i testi in modo che l'Plugin Overlay mantenga la riga originale mentre il toast nativo mostri la traduzione.</value>
   </data>
   <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
     <value>Pane tostato della zona</value>
@@ -823,7 +823,7 @@
     <value>Traduci JournalResult</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Traduci Main Command</value>
+      <value>Traduci il menu principale del gioco</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Traduci MiniTalk</value>

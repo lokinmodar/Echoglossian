@@ -71,7 +71,7 @@
     <value>Activer la traduction de texte de jeu en temps réel</value>
   </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
-    <value>Couleur de police de superposition :</value>
+    <value>Couleur de police de Plugin Overlay :</value>
   </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Ouvre la fenêtre de configuration Echoglossian</value>
@@ -81,7 +81,7 @@
     <value>(?)</value>
   </data>
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Ajustez les options liées à la superposition de traduction :</value>
+    <value>Ajustez les options liées à la Plugin Overlay de traduction :</value>
   </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>La langue n’a pas pu être identifiée avec un degré de certitude acceptable</value>
@@ -90,7 +90,7 @@
     <value>La langue sélectionnée n’est pas prise en charge par le backend de traduction actuellement disponible</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>La langue sélectionnée n’est prise en charge qu’à l’aide des superpositions de plugins en raison des limitations du jeu natif Font</value>
+    <value>La langue sélectionnée n’est prise en charge qu’à l’aide des Plugin Overlay de plugins en raison des limitations du jeu natif Font</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>Dans quelle langue traduire les boîtes de dialogue du jeu.</value>
@@ -111,25 +111,25 @@
     <value>La liste non exhaustive des problèmes et des TODO est disponible dans le lien ci-dessous:</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Veuillez ajuster la position si votre superposition n’est pas centrée par rapport à la zone de texte de l’interface utilisateur du jeu.</value>
+    <value>Veuillez ajuster la position si votre Plugin Overlay n’est pas centrée par rapport à la zone de texte de l’interface utilisateur du jeu.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
     <value>OverlayColorSelect</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Cliquez pour choisir la couleur de police de superposition</value>
+    <value>Cliquez pour choisir la couleur de police de Plugin Overlay</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Ajuster l’échelle de police de superposition</value>
+    <value>Ajuster l’échelle de police de Plugin Overlay</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
-    <value>Taille de police de superposition</value>
+    <value>Taille de police de Plugin Overlay</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Sélectionnez la taille de police pour la superposition de texte</value>
+    <value>Sélectionnez la taille de police pour la Plugin Overlay de texte</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Multiplicateur de hauteur de superposition de translation</value>
+    <value>Multiplicateur de hauteur de Plugin Overlay de translation</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Battle talk (lignes de dialogue Enenies) traduction</value>
@@ -139,13 +139,13 @@
     <value>Réglage de la position</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Afficher la superposition de texte traduit au-dessus de la zone de texte de l’interface utilisateur du jeu au lieu de remplacer son texte par la traduction</value>
+    <value>Afficher la Plugin Overlay de texte traduit au-dessus de la zone de texte de l’interface utilisateur du jeu au lieu de remplacer son texte par la traduction</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Ajuster la largeur de superposition de traduction</value>
+    <value>Ajuster la largeur de Plugin Overlay de traduction</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicateur de largeur de superposition de traduction</value>
+    <value>Multiplicateur de largeur de Plugin Overlay de traduction</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Chemin absolu vers le dossier Echoglossian (dans le dossier XIVLauncher -&gt; pluginConfigs)</value>
@@ -187,13 +187,13 @@
     <value>Paramètres de Google Traduction :</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Afficher le texte de dialogue d’origine dans superposition et traduit dans la boîte de dialogue de l’interface utilisateur du jeu</value>
+    <value>Afficher le texte de dialogue d’origine dans Plugin Overlay et traduit dans la boîte de dialogue de l’interface utilisateur du jeu</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Ajuster la largeur de superposition de translation toast</value>
+    <value>Ajuster la largeur de Plugin Overlay de translation toast</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicateur de largeur de superposition toast</value>
+    <value>Multiplicateur de largeur de Plugin Overlay toast</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
     <value>Liste des TODO sur Github</value>
@@ -238,7 +238,7 @@
     <value>Traductions activées !</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Utiliser la superposition pour afficher les traductions toasts</value>
+    <value>Utiliser la Plugin Overlay pour afficher les traductions toasts</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>En attente de traduction...</value>
@@ -646,10 +646,10 @@
     <value>Mode d'affichage détaillé</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle les surfaces ActionDetail et ItemDetail. Native UI écrit le texte détaillé traduit dans le module complémentaire du jeu, la superposition uniquement conserve le module complémentaire natif intact et utilise les superpositions Echoglossian, et la superposition native avec l'original écrit la traduction de manière native tout en affichant l'original dans notre superposition.</value>
+    <value>Ce mode contrôle les surfaces ActionDetail et ItemDetail. Native UI écrit le texte de détail traduit dans l’addon du jeu, Plugin Overlay translation only laisse l’addon natif intact et utilise des Plugin Overlays, et Native UI translation + original Plugin Overlay écrit la traduction nativement tout en affichant l’original dans notre Plugin Overlay.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Activer la traduction des détails des actions/éléments et les info-bulles de survol partagées</value>
+    <value>Activer la traduction des détails d’action/objet et les Plugin Tooltips partagés</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Impossible de récupérer les modèles. Ollama s'exécute-t-il localement ?</value>
@@ -661,7 +661,7 @@
     <value>Fenêtres de jeu</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Ces couleurs s'appliquent aux info-bulles de survol Echoglossian utilisées par les surfaces d'interface utilisateur de quête et de base de données.</value>
+    <value>Ces couleurs s’appliquent aux Plugin Tooltips utilisées par les surfaces UI de quête et DB-first.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
     <value>Apparition de l'info-bulle de survol</value>
@@ -676,31 +676,31 @@
     <value>Couleur du texte de l'info-bulle</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept et JournalResult. Les info-bulles de survol du journal suivent directement ce mode ; la bascule globale de l'info-bulle n'affecte que les autres interfaces utilisateur traduites.</value>
+    <value>Ce mode contrôle Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept et JournalResult. Les Plugin Tooltips du Journal suivent directement ce mode ; le basculement global de Plugin Tooltip n’affecte que les autres UI traduites.</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
     <value>Mode d'affichage des quêtes du journal</value>
   </data>
   <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
-    <value>Le mode de remplacement natif est actif pour ce type de toast. Les contrôles de style de superposition ne sont pas utilisés dans ce mode.</value>
+    <value>Le mode de remplacement natif est actif pour ce type de toast. Les contrôles de style de Plugin Overlay ne sont pas utilisés dans ce mode.</value>
   </data>
   <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle la façon dont le texte traduit est présenté. Native UI écrit directement dans le module complémentaire du jeu, la superposition uniquement laisse le module complémentaire natif intact et la superposition native avec l'original écrit la traduction de manière native tout en affichant l'original dans la superposition.</value>
+    <value>Ce mode contrôle la façon dont le texte traduit est présenté. Native UI écrit directement dans le module complémentaire du jeu, la Plugin Overlay uniquement laisse le module complémentaire natif intact et la Plugin Overlay native avec l'original écrit la traduction de manière native tout en affichant l'original dans la Plugin Overlay.</value>
   </data>
   <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Traduction Native UI + superposition originale</value>
+    <value>Traduction Native UI + Plugin Overlay originale</value>
   </data>
   <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
     <value>Traduction superposée uniquement</value>
   </data>
   <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
-    <value>Afficher la barre de titre en superposition avec le nom de l'orateur lorsqu'elle est disponible</value>
+    <value>Afficher la barre de titre en Plugin Overlay avec le nom de l'orateur lorsqu'elle est disponible</value>
   </data>
   <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>Le langage de superposition uniquement est actif, donc tous les types de toast seront rendus via des superpositions.</value>
+    <value>Le langage de Plugin Overlay uniquement est actif, donc tous les types de toast seront rendus via des Plugin Overlay.</value>
   </data>
   <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>La langue sélectionnée ne prend pas en charge la police native du jeu, cette surface est donc limitée aux superpositions Echoglossian et aux info-bulles personnalisées.</value>
+    <value>La langue sélectionnée ne prend pas en charge la police native du jeu, cette surface est donc limitée aux Plugin Overlays et aux Plugin Tooltips.</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -709,7 +709,7 @@
     <value>MiniTalk</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle la façon dont cette fenêtre de quête est présentée. Native UI écrit la traduction dans le module complémentaire, l'info-bulle uniquement conserve le module complémentaire intact et les info-bulles natives avec l'original écrivent la traduction de manière native tout en affichant l'original dans les info-bulles.</value>
+    <value>Ce mode contrôle la façon dont cette fenêtre de quête est présentée. Native UI écrit la traduction dans l’addon, Plugin Tooltip translation only laisse l’addon intact, et Native UI translation + original Plugin Tooltips écrit la traduction nativement tout en affichant l’original dans les Plugin Tooltips.</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
     <value>Mode d'affichage des quêtes</value>
@@ -748,10 +748,10 @@
     <value>La traduction est actuellement désactivée, car la langue sélectionnée nécessite des ressources de police supplémentaires. Ouvrez la fenêtre de configuration pour télécharger ou valider les fichiers requis.</value>
   </data>
   <data name="ToastModeDescription" xml:space="preserve">
-    <value>Chaque type de toast peut choisir indépendamment entre le remplacement natif et le rendu par superposition.</value>
+    <value>Chaque type de toast peut choisir indépendamment entre le remplacement natif et le rendu par Plugin Overlay.</value>
   </data>
   <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Lorsqu'un type de toast utilise le mode superposition, vous pouvez également échanger les textes afin que la superposition conserve la ligne d'origine tandis que le toast natif affiche la traduction.</value>
+    <value>Lorsqu'un type de toast utilise le mode Plugin Overlay, vous pouvez également échanger les textes afin que la Plugin Overlay conserve la ligne d'origine tandis que le toast natif affiche la traduction.</value>
   </data>
   <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
     <value>Toast de zone</value>
@@ -760,7 +760,7 @@
     <value>Opacité de l'arrière-plan</value>
   </data>
   <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
-    <value>Contrôle l'opacité de l'arrière-plan de superposition de toast. Utilisez 0 pour un arrière-plan entièrement transparent.</value>
+    <value>Contrôle l'opacité de l'arrière-plan de Plugin Overlay de toast. Utilisez 0 pour un arrière-plan entièrement transparent.</value>
   </data>
   <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
     <value>Toast de changement de classe/d'emploi</value>
@@ -823,7 +823,7 @@
     <value>Traduire JournalResult</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Traduire Main Command</value>
+      <value>Traduire le menu principal du jeu</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Traduire MiniTalk</value>
