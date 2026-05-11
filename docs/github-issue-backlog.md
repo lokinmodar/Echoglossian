@@ -82,30 +82,11 @@ highly visible and appear to have a narrow root cause.
   - If coverage regressed for the next-MSQ bar / mission window cluster, users
     read that as "quest translation is broken" even when deeper systems still
     work.
-  - It likely intersects `ScenarioTree`, quest tracker, or game-window
-    coverage, but is still narrow enough to investigate as a concrete release
-    bug.
-
-### #169 Overlay doesn't appear
-
-- Priority: P0
-- Ease: medium
-- Status: active regression
-- Notes:
-  - The plugin can appear "dead" even when translation itself is working.
-  - This is one of the most visible remaining post-release failures.
-  - It likely affects both `#175` and part of the perceived "nothing works"
-    cluster after clean installs.
-
-### #175 Overlay problem
-
-- Priority: P0
-- Ease: medium
-- Status: likely same cluster as `#169`
-- Notes:
-  - Keep linked to `#169` until proven distinct.
-  - Reports point to translation working while overlay rendering or visibility
-    fails.
+  - A new follow-up comment narrows this down to the quest-family surfaces
+    around `ScenarioTree`, `Recommendations`, `JournalAccept`, and related
+    mission-window coverage.
+  - This is now better scoped as a concrete quest-surface coverage regression,
+    not a generic "plugin stopped translating" report.
 
 ## P1: Urgent but Medium Investigation
 
@@ -134,6 +115,22 @@ These are still release-quality problems, but they likely need a more careful
     longer fits the native box" problem.
   - The new native text-flow reflow helper was introduced with `JournalDetail`
     specifically so `MiniTalk` can reuse that strategy next.
+  - A fresh follow-up confirms this also reproduces in Spanish, which makes it
+    clearly language-agnostic rather than a PT-BR-specific edge case.
+
+### #175 Overlay problem
+
+- Priority: P1
+- Ease: medium
+- Status: remaining open overlay-startup symptom
+- Notes:
+  - `#169` is no longer open, so this is now the only active overlay-visibility
+    report left in the release-fallout cluster.
+  - The body still points to "translation works but the overlay does not show"
+    after reinstall.
+  - The only follow-up comment is a user workaround that involves saving config
+    and toggling the plugin, which suggests this may overlap with activation /
+    refresh timing rather than a pure overlay renderer failure.
 
 ### #174 Translate already saved translated texts does not work
 
@@ -152,11 +149,16 @@ These are still release-quality problems, but they likely need a more careful
 
 - Priority: P1
 - Ease: medium
-- Status: partly addressed, partly still active
+- Status: mixed umbrella issue, partly addressed
 - Notes:
-  - The persisted `[Translation Error: ...]` path was already fixed in code.
-  - Remaining symptoms may collapse into `#170` and `#174`.
-  - Reassess after the next published build and engine-migration fix.
+  - The original report mixes at least two clusters:
+    - engine / API-error behavior on DeepSeek
+    - mission-title / description coverage and layout failures on other engines
+  - A follow-up comment adds Google/Spanish screenshots of text overflowing
+    dialogue boxes, which is better categorized with the `#188` / `#187`
+    native-layout cluster than with translator-engine availability.
+  - Keep this open for now, but treat it as an umbrella report that likely
+    decomposes into `#189`, `#174`, and the small-native-box reflow work.
 
 ## P2: Release Stabilization, More Involved
 
@@ -176,12 +178,19 @@ require careful UI/runtime investigation rather than a narrow config fix.
 
 - Priority: P2
 - Ease: medium/hard
-- Status: partially addressed in code, still open
+- Status: mixed umbrella issue, partially decomposed
 - Notes:
-  - Dynamic quest objective updates and slot text reuse were already fixed in
-    code and need release validation.
-  - Remaining risk is the NPC dialogue/native layout path and possibly
-    selection-dialog sizing.
+  - The dynamic quest objective `0/3` update bug and wrong-quest slot reuse
+    comments match the quest-tracker bug family that was already addressed in
+    code and previously tracked through `#182`.
+  - A later follow-up comment adds a distinct "selection dialogs line is cut
+    off" symptom, which points at a separate small-native-box layout problem.
+  - The original body also includes the "original English text gets too many
+    line breaks" symptom, which aligns with the `#181` read-only/native-state
+    corruption investigation.
+  - Treat this as a decomposed umbrella issue rather than a single root cause:
+    remaining live parts appear to split across selection-dialog sizing and the
+    broader `#181` native-layout/runtime-state work.
 
 ### #173 Plugin function incompatibility: Character panel refined
 
@@ -232,6 +241,10 @@ require careful UI/runtime investigation rather than a narrow config fix.
 - Notes:
   - This needs investigation across capture latency, request overhead,
     prompt size, and presentation timing.
+  - The follow-up comment and reply also suggest a second angle beyond raw
+    latency: reducing unnecessary context and potentially reusing a single
+    ongoing local-LLM conversation/session instead of sending the same large
+    fixed prompt every time.
   - Important, but not more urgent than bootstrap/load/overlay failures.
 
 ### #192 Add example images for the Game UI elements possible to be translated to each configuration window panel option
@@ -249,6 +262,15 @@ require careful UI/runtime investigation rather than a narrow config fix.
 
 These remain open on purpose and still represent real feature or architecture
 work rather than release fallout.
+
+### #196 Add Custom OpenAI-Compatible API Support
+
+- Status: keep open
+- Scope:
+  - custom OpenAI-compatible endpoint support
+  - engine/provider configuration expansion
+  - likely intersects the broader custom-provider direction already mentioned
+    in `#148`
 
 ### #148 Structured input and output for glossary and metadata
 
@@ -307,14 +329,14 @@ work rather than release fallout.
 ## Recommended Execution Order
 
 1. `#189`
-2. `#169` + `#175` as one overlay cluster
-3. `#188` + `#187` as one native-dialogue sizing cluster
+2. `#188` + `#187` as one native-dialogue sizing cluster
+3. `#175`
 4. reassess / release-validate `#174`
-5. reassess `#171` after the engine-selection and stale-failure fixes are published
+5. reassess `#171` only after `#189` and the small-native-box cluster are clearer
 6. `#167`
-7. release-validate the remaining open parts of `#172`
+7. release-validate / decompose the remaining live parts of `#172`
 8. `#181`
 9. `#173` / `#179`
 10. `#176`
 11. `#192`
-12. long-term backlog `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
+12. long-term backlog `#196`, `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
