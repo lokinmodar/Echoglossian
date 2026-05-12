@@ -111,6 +111,7 @@ public class TranslationServiceTests
         {
             SyncResult = "should-not-be-used",
         };
+        TranslationRequestMetricOutcome? recordedOutcome = null;
 
         var service = new TranslationService(
             text => text,
@@ -120,12 +121,19 @@ public class TranslationServiceTests
                 text == "hello" &&
                 source == "en" &&
                 target == "pt-BR" &&
-                engine == 8);
+                engine == 8,
+            recordTranslationMetric: (engine, outcome, latency, failureReason) =>
+            {
+                recordedOutcome = outcome;
+            });
 
         var result = service.Translate("hello", "English", "pt");
 
         Assert.Equal("hello", result);
         Assert.Equal(0, translator.SyncCalls);
+        Assert.Equal(
+            TranslationRequestMetricOutcome.ShortCircuited,
+            recordedOutcome);
     }
 
     /// <summary>
@@ -356,10 +364,15 @@ public class TranslationServiceTests
             SyncResult = Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey,
         };
         TranslationFailureClassification? reportedClassification = null;
+        TranslationRequestMetricOutcome? recordedOutcome = null;
         var service = new TranslationService(
             text => text,
             translator,
             translationEngine: (int)Echoglossian.TransEngines.ChatGPT,
+            recordTranslationMetric: (engine, outcome, latency, failureReason) =>
+            {
+                recordedOutcome = outcome;
+            },
             reportTranslationFailure: (engine, classification) =>
             {
                 reportedClassification = classification;
@@ -372,6 +385,9 @@ public class TranslationServiceTests
         Assert.Equal(
             TranslationFailureKind.EngineUnavailable,
             reportedClassification!.Kind);
+        Assert.Equal(
+            TranslationRequestMetricOutcome.Failure,
+            recordedOutcome);
     }
 
     /// <summary>

@@ -167,3 +167,41 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - add the first pass of the `Translator Debugger and Metrics` runtime
     foundation, keeping metrics aggregated and out of the hot-path log
+
+## Iteration 4 - Aggregated Translator Metrics Foundation
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - create the first runtime metrics foundation for the future
+    `Translator Debugger and Metrics` window
+  - keep metrics aggregated in memory and out of hot-path logs
+- Files touched:
+  - `Translators/TranslatorMetricsCollector.cs`
+  - `Translators/TranslationService.cs`
+  - `Echoglossian.Tests/TranslatorMetricsCollectorTests.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added an in-memory aggregated metrics collector keyed by translation engine
+  - introduced aggregated outcome kinds for:
+    - live success
+    - live failure
+    - request short-circuit before live translation
+  - instrumented `TranslationService` to record:
+    - live request latency
+    - success/failure outcome
+    - known-failure-cache short-circuits
+  - added tests for both:
+    - the collector aggregation behavior
+    - `TranslationService` metrics signaling
+- Behavior-sensitive risks:
+  - this is aggregate-only telemetry, not per-request tracing
+  - no UI is attached yet in this iteration; this commit only builds the data
+    source for the debugger window
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - add the command and window for `Translator Debugger and Metrics`, backed by
+    these snapshots and a local clear/reset action

@@ -5,6 +5,7 @@
 
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Echoglossian.Translators;
@@ -19,6 +20,7 @@ public class TranslationService
   private readonly Action<string>? debugLog;
   private readonly Func<string, string, string, int, bool>? isKnownFailedTranslation;
   private readonly Action<string, string, string, int, string, string?>? recordFailedTranslation;
+  private readonly Action<int, TranslationRequestMetricOutcome, TimeSpan, string?>? recordTranslationMetric;
   private readonly Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation;
   private readonly Action<int, TranslationFailureClassification>? reportTranslationFailure;
   private readonly Func<string, string> sanitizeText;
@@ -65,6 +67,13 @@ public class TranslationService
                 translationEngine,
                 failureReason,
                 ttl);
+    this.recordTranslationMetric =
+        (translationEngine, outcome, latency, failureReason) =>
+            TranslatorMetricsCollector.Record(
+                translationEngine,
+                outcome,
+                latency,
+                failureReason);
     this.reportTranslationFailure =
         Echoglossian.ReportRuntimeTranslationFailure;
 
@@ -91,6 +100,7 @@ public class TranslationService
       int translationEngine = (int)Echoglossian.TransEngines.Google,
       Func<string, string, string, int, bool>? isKnownFailedTranslation = null,
       Action<string, string, string, int, string, string?>? recordFailedTranslation = null,
+      Action<int, TranslationRequestMetricOutcome, TimeSpan, string?>? recordTranslationMetric = null,
       Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation = null,
       Action<int, TranslationFailureClassification>? reportTranslationFailure = null)
   {
@@ -100,6 +110,7 @@ public class TranslationService
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
     this.recordFailedTranslation = recordFailedTranslation;
+    this.recordTranslationMetric = recordTranslationMetric;
     this.recordTransientFailedTranslation = recordTransientFailedTranslation;
     this.reportTranslationFailure = reportTranslationFailure;
   }
@@ -159,20 +170,29 @@ public class TranslationService
             normalizedSourceLanguage,
             normalizedTargetLanguage))
     {
+      this.recordTranslationMetric?.Invoke(
+          this.translationEngineId,
+          TranslationRequestMetricOutcome.ShortCircuited,
+          TimeSpan.Zero,
+          "known-failure-cache");
       return sanitizedText;
     }
 
+    var stopwatch = Stopwatch.StartNew();
     var finalDialogueText = this.translator.Translate(
         parsedText,
         sourceLanguage,
         targetLanguage);
-    finalDialogueText = this.AcceptTranslatedResultOrFallback(
+    var acceptanceResult = this.AcceptTranslatedResultOrFallback(
         finalDialogueText,
         parsedText,
         sanitizedText,
         normalizedSourceLanguage,
         normalizedTargetLanguage,
         resolvedOriginContext);
+    stopwatch.Stop();
+    this.RecordTranslationMetric(acceptanceResult, stopwatch.Elapsed);
+    finalDialogueText = acceptanceResult.Text;
 
     return string.IsNullOrEmpty(startingEllipsis) ||
            string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
@@ -235,20 +255,29 @@ public class TranslationService
             normalizedSourceLanguage,
             normalizedTargetLanguage))
     {
+      this.recordTranslationMetric?.Invoke(
+          this.translationEngineId,
+          TranslationRequestMetricOutcome.ShortCircuited,
+          TimeSpan.Zero,
+          "known-failure-cache");
       return sanitizedText;
     }
 
+    var stopwatch = Stopwatch.StartNew();
     var finalDialogueText = await this.translator.TranslateAsync(
         parsedText,
         sourceLanguage,
         targetLanguage);
-    finalDialogueText = this.AcceptTranslatedResultOrFallback(
+    var acceptanceResult = this.AcceptTranslatedResultOrFallback(
         finalDialogueText,
         parsedText,
         sanitizedText,
         normalizedSourceLanguage,
         normalizedTargetLanguage,
         resolvedOriginContext);
+    stopwatch.Stop();
+    this.RecordTranslationMetric(acceptanceResult, stopwatch.Elapsed);
+    finalDialogueText = acceptanceResult.Text;
 
     return string.IsNullOrEmpty(startingEllipsis) ||
            string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
@@ -268,10 +297,10 @@ public class TranslationService
   /// <param name="normalizedTargetLanguage">The normalized target language code.</param>
   /// <param name="resolvedOriginContext">The resolved origin context for diagnostics.</param>
   /// <returns>
-  /// The accepted translated text, or <paramref name="sanitizedText" /> when
-  /// the result is empty or synthetic.
+  /// The accepted translated text plus the aggregated success or failure
+  /// outcome used by runtime metrics.
   /// </returns>
-  private string AcceptTranslatedResultOrFallback(
+  private TranslationAcceptanceResult AcceptTranslatedResultOrFallback(
       string? translatedText,
       string parsedText,
       string sanitizedText,
@@ -281,7 +310,10 @@ public class TranslationService
   {
     if (TranslationResultGuard.IsPersistableTranslation(translatedText))
     {
-      return translatedText!;
+      return new TranslationAcceptanceResult(
+          translatedText!,
+          true,
+          null);
     }
 
     if (TranslationFailureTextClassifier.TryClassify(
@@ -311,19 +343,26 @@ public class TranslationService
             classification.FailureReason);
       }
 
-      return sanitizedText;
+      return new TranslationAcceptanceResult(
+          sanitizedText,
+          false,
+          classification.FailureReason);
     }
 
+    var failureReason = string.IsNullOrWhiteSpace(translatedText)
+        ? EmptyResultFailureReason
+        : TranslationResultGuard.SyntheticErrorFailureReason;
     this.RecordFailedTranslation(
         parsedText,
         normalizedSourceLanguage,
         normalizedTargetLanguage,
-        string.IsNullOrWhiteSpace(translatedText)
-            ? EmptyResultFailureReason
-            : TranslationResultGuard.SyntheticErrorFailureReason,
+        failureReason,
         resolvedOriginContext);
 
-    return sanitizedText;
+    return new TranslationAcceptanceResult(
+        sanitizedText,
+        false,
+        failureReason);
   }
 
   /// <summary>
@@ -475,6 +514,24 @@ public class TranslationService
   }
 
   /// <summary>
+  ///     Records one aggregated translation-service metrics outcome.
+  /// </summary>
+  /// <param name="acceptanceResult">The accepted translation outcome.</param>
+  /// <param name="elapsed">The elapsed live translation latency.</param>
+  private void RecordTranslationMetric(
+      TranslationAcceptanceResult acceptanceResult,
+      TimeSpan elapsed)
+  {
+    this.recordTranslationMetric?.Invoke(
+        this.translationEngineId,
+        acceptanceResult.Succeeded
+            ? TranslationRequestMetricOutcome.Success
+            : TranslationRequestMetricOutcome.Failure,
+        elapsed,
+        acceptanceResult.FailureReason);
+  }
+
+  /// <summary>
   ///     Resolves the origin context that should be persisted for one failed
   ///     translation request.
   /// </summary>
@@ -511,4 +568,9 @@ public class TranslationService
 
     return $"{callerFileName}.{callerMemberName}";
   }
+
+  private readonly record struct TranslationAcceptanceResult(
+      string Text,
+      bool Succeeded,
+      string? FailureReason);
 }
