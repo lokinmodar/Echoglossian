@@ -66,6 +66,26 @@ Notes:
   - transient dialogue-failure persistence guards so exact-failure placeholders
     and cross-language original-text echoes stop becoming sticky fallbacks
 
+## Fixed In Code, Awaiting Published Validation
+
+These issues already have fixes merged into `v4-series`, but should stay open
+until a published Dalamud release confirms the behavior in the field.
+
+### #198 Texts are translated multiple times when OpenAI model is changed
+
+- Priority: tracked
+- Ease: done in code
+- Status: fix landed in `v4-series`, not yet validated in a published release
+- Notes:
+  - The newer reproduction steps narrow this down to runtime-refresh listener
+    accumulation, not translator-local dictionary concurrency.
+  - The first follow-up fix stabilized register/unregister delegate identity.
+  - A second review follow-up fixed the shared-handler case where the same
+    handler instance is registered for multiple addon names and only the first
+    unregister used to succeed.
+  - Keep this open until the next published build confirms that repeated model
+    changes no longer multiply live talk translations or token usage.
+
 ## P0: Urgent and Likely Next Targets
 
 These are the best immediate targets because they are blocking, widespread, or
@@ -104,6 +124,8 @@ These are still release-quality problems, but they likely need a more careful
   - The current `JournalDetail` probe work shows that these surfaces need
     explicit wrapper/container/scroll reflow, not only text-node resizing.
   - Keep paired with `#187` until a shared reflow helper lands on both.
+  - This is the clearest user-facing umbrella for the small native boxes that
+    cannot accommodate more verbose translated text.
 
 ### #187 MiniTalk text extrapolates balloon size when using Native UI replacement
 
@@ -117,6 +139,8 @@ These are still release-quality problems, but they likely need a more careful
     specifically so `MiniTalk` can reuse that strategy next.
   - A fresh follow-up confirms this also reproduces in Spanish, which makes it
     clearly language-agnostic rather than a PT-BR-specific edge case.
+  - Treat this as the first downstream consumer of whatever stable reflow model
+    we settle on for `JournalDetail`.
 
 ### #175 Overlay problem
 
@@ -144,6 +168,8 @@ These are still release-quality problems, but they likely need a more careful
   - `4.2600.0605` addressed the hot-refresh / activation / engine-selection
     parts of this complaint, but the cached-row semantics still need reassessment
     before closure.
+  - Recent comments keep pointing at DB reuse semantics and lack of a clear
+    operator workflow for forcing retranslation after translator experiments.
 
 ### #171 Deepseek translation is not available... mission titles and descriptions are not being translated
 
@@ -228,6 +254,9 @@ require careful UI/runtime investigation rather than a narrow config fix.
   - The remaining active problem has shifted toward native-mode layout/reflow,
     especially in `JournalDetail`, where verbose translations require wrapper
     and container growth rather than isolated text-node resizing.
+  - No new issue comments changed scope here, but the current `JournalDetail`
+    investigation now clearly serves as the foundation for later `MiniTalk`
+    and small-dialog native reflow fixes.
   - Keep this open until the native reflow family is stable enough that the
     original-text corruption and overlapping layout reports stop reproducing.
 
