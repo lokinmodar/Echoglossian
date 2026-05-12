@@ -17,6 +17,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
   private const string JournalDetailHoverPrefix = "JournalDetail-";
 
+  private const uint JournalDetailSummaryLabelTextId = 476;
+
+  private const uint JournalDetailDescriptionLabelTextId = 543;
+
+  private static readonly uint[] JournalDetailObjectiveLabelTextIds =
+  [
+    462,
+    3160,
+  ];
+
   private readonly Dictionary<string, string> journalDetailTextCache =
       new(StringComparer.Ordinal);
 
@@ -244,7 +254,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="objectiveText">The original visible objective text.</param>
   /// <param name="summaryText">The original visible summary text.</param>
   /// <param name="descriptionNode">The live description text node.</param>
-  /// <param name="objectiveNode">The live objective text node, if any.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The live visible objective text nodes in order.
+  /// </param>
+  /// <param name="objectiveTexts">
+  ///     The original visible objective texts in order.
+  /// </param>
   /// <param name="summaryNode">The live primary summary text node, if any.</param>
   /// <param name="summaryContainerNode">
   ///     The live summary container node, if any.
@@ -263,7 +278,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string objectiveText,
       string summaryText,
       AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
+      IReadOnlyList<nint> objectiveNodeAddresses,
+      IReadOnlyList<string> objectiveTexts,
       AtkTextNode* summaryNode,
       AtkResNode* summaryContainerNode,
       IReadOnlyList<nint> additionalSummaryNodeAddresses,
@@ -282,7 +298,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             objectiveText,
             summaryText,
             descriptionNode,
-            objectiveNode,
+            objectiveNodeAddresses,
+            objectiveTexts,
             summaryNode,
             summaryContainerNode,
             additionalSummaryNodeAddresses,
@@ -297,6 +314,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="scopeKey">The current quest-detail scope key.</param>
   /// <param name="originalSnapshot">The original snapshot for that scope.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The currently visible objective text nodes.
+  /// </param>
+  /// <param name="objectiveTexts">
+  ///     The currently visible objective texts.
+  /// </param>
   /// <param name="visibleAdditionalSummaryNodes">
   ///     The supplemental summary nodes visible on the current repaint.
   /// </param>
@@ -307,13 +330,13 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           string scopeKey,
           JournalDetailOriginalSnapshot originalSnapshot,
           AtkTextNode* descriptionNode,
-          AtkTextNode* objectiveNode,
+          IReadOnlyList<nint> objectiveNodeAddresses,
+          IReadOnlyList<string> objectiveTexts,
           AtkTextNode* summaryNode,
           AtkResNode* summaryContainerNode,
           IReadOnlyList<nint> visibleAdditionalSummaryNodes)
   {
-    if (string.IsNullOrWhiteSpace(scopeKey) ||
-        visibleAdditionalSummaryNodes.Count == 0)
+    if (string.IsNullOrWhiteSpace(scopeKey))
     {
       return originalSnapshot;
     }
@@ -327,11 +350,6 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       {
         newlyDiscoveredSummaryNodes.Add(visibleAdditionalSummaryNode);
       }
-    }
-
-    if (newlyDiscoveredSummaryNodes.Count == 0)
-    {
-      return originalSnapshot;
     }
 
     var mergedSnapshot = originalSnapshot with
@@ -361,7 +379,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         mergedSnapshot.ObjectiveText,
         mergedSnapshot.SummaryText,
         descriptionNode,
-        objectiveNode,
+        objectiveNodeAddresses,
+        objectiveTexts,
         summaryNode,
         summaryContainerNode,
         mergedSnapshot.AdditionalSummaryNodeAddresses,
@@ -381,7 +400,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="objectiveText">The original visible objective text.</param>
   /// <param name="summaryText">The original visible summary text.</param>
   /// <param name="descriptionNode">The live description text node.</param>
-  /// <param name="objectiveNode">The live objective text node, if any.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The live visible objective text nodes in order.
+  /// </param>
+  /// <param name="objectiveTexts">
+  ///     The original visible objective texts in order.
+  /// </param>
   /// <param name="summaryNode">The live primary summary text node, if any.</param>
   /// <param name="summaryContainerNode">The live summary container node, if any.</param>
   /// <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
@@ -394,12 +418,17 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string objectiveText,
       string summaryText,
       AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
+      IReadOnlyList<nint> objectiveNodeAddresses,
+      IReadOnlyList<string> objectiveTexts,
       AtkTextNode* summaryNode,
       AtkResNode* summaryContainerNode,
       IReadOnlyList<nint> additionalSummaryNodeAddresses,
       IReadOnlyList<string> additionalSummaryTexts)
   {
+    var objectiveNode =
+        objectiveNodeAddresses.Count != 0
+            ? (AtkTextNode*)objectiveNodeAddresses[0]
+            : null;
     var flowRoot = journalBox != null
         ? journalBox->UldManager.RootNode
         : null;
@@ -407,7 +436,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         this.CollectVisibleJournalDetailFlowTextNodes(
             journalBox,
             descriptionNode,
-            objectiveNode,
+            objectiveNodeAddresses,
             summaryNode,
             additionalSummaryNodeAddresses);
     var nativeFlowBlocks = flowRoot != null
@@ -425,6 +454,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         questMessage,
         objectiveText,
         summaryText,
+        objectiveNodeAddresses,
+        objectiveTexts,
         additionalSummaryNodeAddresses,
         additionalSummaryTexts,
         descriptionNode != null ? descriptionNode->GetWidth() : (ushort)0,
@@ -699,8 +730,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="originalSnapshot">The original quest-detail snapshot.</param>
   /// <param name="descriptionNode">The live description text node.</param>
   /// <param name="translatedDescriptionText">The translated description text.</param>
-  /// <param name="objectiveNode">The live objective text node.</param>
-  /// <param name="translatedObjectiveText">The translated objective text.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The live visible objective text nodes in order.
+  /// </param>
+  /// <param name="translatedObjectiveTexts">
+  ///     The translated objective texts in visible order.
+  /// </param>
   /// <param name="summaryNode">The live primary summary text node.</param>
   /// <param name="translatedSummarySections">The translated summary sections.</param>
   /// <returns><c>true</c> when the shared reflow helper handled the body flow.</returns>
@@ -708,8 +743,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       JournalDetailOriginalSnapshot originalSnapshot,
       AtkTextNode* descriptionNode,
       string translatedDescriptionText,
-      AtkTextNode* objectiveNode,
-      string translatedObjectiveText,
+      IReadOnlyList<nint> objectiveNodeAddresses,
+      IReadOnlyList<string> translatedObjectiveTexts,
       AtkTextNode* summaryNode,
       IReadOnlyList<string> translatedSummarySections)
   {
@@ -721,8 +756,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     var translatedFlowTexts = BuildJournalDetailNativeFlowTextMap(
         descriptionNode,
         translatedDescriptionText,
-        objectiveNode,
-        translatedObjectiveText,
+        objectiveNodeAddresses,
+        translatedObjectiveTexts,
         summaryNode,
         originalSnapshot.AdditionalSummaryNodeAddresses,
         translatedSummarySections);
@@ -740,13 +775,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="originalSnapshot">The original quest-detail snapshot.</param>
   /// <param name="descriptionNode">The live description text node.</param>
-  /// <param name="objectiveNode">The live objective text node.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The live visible objective text nodes in order.
+  /// </param>
   /// <param name="summaryNode">The live primary summary text node.</param>
   /// <returns><c>true</c> when the shared reflow helper handled the restore.</returns>
   private unsafe bool TryRestoreJournalDetailOriginalBodyFlow(
       JournalDetailOriginalSnapshot originalSnapshot,
       AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
+      IReadOnlyList<nint> objectiveNodeAddresses,
       AtkTextNode* summaryNode)
   {
     if (originalSnapshot.NativeFlowBlocks.Count == 0)
@@ -757,8 +794,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     var originalFlowTexts = BuildJournalDetailNativeFlowTextMap(
         descriptionNode,
         originalSnapshot.QuestMessage,
-        objectiveNode,
-        originalSnapshot.ObjectiveText,
+        objectiveNodeAddresses,
+        originalSnapshot.ObjectiveTexts,
         summaryNode,
         originalSnapshot.AdditionalSummaryNodeAddresses,
         originalSnapshot.AdditionalSummaryTexts
@@ -1209,19 +1246,418 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Builds the visible JournalDetail objective block text for hover and
+  ///     native-payload readiness checks.
+  /// </summary>
+  /// <param name="objectiveSections">The visible objective sections in order.</param>
+  /// <returns>The combined objective text.</returns>
+  private static string BuildJournalDetailObjectiveDisplayText(
+      IEnumerable<string> objectiveSections)
+  {
+    return string.Join(
+        Environment.NewLine,
+        objectiveSections.Where(
+            static section => !string.IsNullOrWhiteSpace(section)));
+  }
+
+  /// <summary>
+  ///     Resolves the currently visible JournalDetail body sections from the
+  ///     active body flow instead of relying on ambiguous repeated node ids.
+  /// </summary>
+  /// <param name="journalBox">The live JournalDetail body component.</param>
+  /// <param name="descriptionNode">The resolved description text node.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The resolved visible objective text nodes in order.
+  /// </param>
+  /// <param name="summaryContainerNode">
+  ///     The resolved summary section container node.
+  /// </param>
+  /// <param name="summaryNode">The resolved primary summary text node.</param>
+  /// <param name="additionalSummaryNodeAddresses">
+  ///     The resolved supplemental summary text nodes in order.
+  /// </param>
+  /// <returns><c>true</c> when the visible body sections were resolved.</returns>
+  private static unsafe bool TryResolveJournalDetailActiveBodyNodes(
+      AtkComponentBase* journalBox,
+      out AtkTextNode* descriptionNode,
+      out List<nint> objectiveNodeAddresses,
+      out AtkResNode* summaryContainerNode,
+      out AtkTextNode* summaryNode,
+      out List<nint> additionalSummaryNodeAddresses)
+  {
+    descriptionNode = null;
+    objectiveNodeAddresses = [];
+    summaryContainerNode = null;
+    summaryNode = null;
+    additionalSummaryNodeAddresses = [];
+    if (journalBox == null)
+    {
+      return false;
+    }
+
+    var flowRoot = journalBox->UldManager.RootNode;
+    var viewportNode = flowRoot;
+    if (flowRoot != null && flowRoot->ParentNode != null)
+    {
+      viewportNode = flowRoot->ParentNode;
+    }
+    var viewportTop = viewportNode != null
+        ? viewportNode->ScreenY - 4f
+        : float.MinValue;
+    var viewportBottom = viewportNode != null
+        ? viewportNode->ScreenY + Math.Max(1f, viewportNode->GetHeight()) + 4f
+        : float.MaxValue;
+
+    if (!TryResolveVisibleJournalDetailSection(
+            journalBox,
+            [JournalDetailDescriptionLabelTextId],
+            viewportTop,
+            viewportBottom,
+            out _,
+            out var descriptionLabelNode,
+            out var descriptionBodyNodes) ||
+        descriptionBodyNodes.Count == 0)
+    {
+      return false;
+    }
+
+    descriptionNode = (AtkTextNode*)descriptionBodyNodes[0];
+
+    if (!TryResolveVisibleJournalDetailSection(
+            journalBox,
+            JournalDetailObjectiveLabelTextIds,
+            viewportTop,
+            viewportBottom,
+            out _,
+            out _,
+            out objectiveNodeAddresses) ||
+        objectiveNodeAddresses.Count == 0)
+    {
+      return false;
+    }
+
+    if (!TryResolveVisibleJournalDetailSection(
+            journalBox,
+            [JournalDetailSummaryLabelTextId],
+            viewportTop,
+            viewportBottom,
+            out summaryContainerNode,
+            out _,
+            out var summaryBodyNodes) ||
+        summaryBodyNodes.Count == 0)
+    {
+      return false;
+    }
+
+    summaryNode = (AtkTextNode*)summaryBodyNodes[0];
+    additionalSummaryNodeAddresses = summaryBodyNodes.Skip(1).ToList();
+    return descriptionLabelNode != null;
+  }
+
+  /// <summary>
+  ///     Resolves one visible JournalDetail section by its label text id and
+  ///     returns the visible body text nodes that belong to that section.
+  /// </summary>
+  /// <param name="journalBox">The live JournalDetail body component.</param>
+  /// <param name="labelTextIds">The section label text ids.</param>
+  /// <param name="viewportTop">The visible viewport top.</param>
+  /// <param name="viewportBottom">The visible viewport bottom.</param>
+  /// <param name="sectionContainerNode">The resolved section container.</param>
+  /// <param name="labelNode">The resolved visible label node.</param>
+  /// <param name="bodyNodeAddresses">The resolved visible body text nodes.</param>
+  /// <returns><c>true</c> when the section was resolved.</returns>
+  private static unsafe bool TryResolveVisibleJournalDetailSection(
+      AtkComponentBase* journalBox,
+      IReadOnlyCollection<uint> labelTextIds,
+      float viewportTop,
+      float viewportBottom,
+      out AtkResNode* sectionContainerNode,
+      out AtkTextNode* labelNode,
+      out List<nint> bodyNodeAddresses)
+  {
+    sectionContainerNode = null;
+    labelNode = null;
+    bodyNodeAddresses = [];
+    if (journalBox == null || labelTextIds.Count == 0)
+    {
+      return false;
+    }
+
+    var flowRoot = journalBox->UldManager.RootNode;
+    if (flowRoot == null)
+    {
+      return false;
+    }
+
+    var candidateLabelNodes = CollectVisibleJournalDetailLabelTextNodes(
+        flowRoot,
+        labelTextIds,
+        viewportTop,
+        viewportBottom);
+    if (candidateLabelNodes.Count == 0)
+    {
+      return false;
+    }
+
+    foreach (var candidateLabelNodeAddress in candidateLabelNodes)
+    {
+      var candidateLabelNode = (AtkTextNode*)candidateLabelNodeAddress;
+      var candidateSectionContainerNode =
+          ResolveJournalDetailSectionContainerNode(
+              flowRoot,
+              candidateLabelNode);
+      if (candidateSectionContainerNode == null)
+      {
+        continue;
+      }
+
+      var candidateBodyNodes = CollectVisibleJournalDetailSectionBodyTextNodes(
+          candidateSectionContainerNode,
+          candidateLabelNode,
+          viewportTop,
+          viewportBottom);
+      if (candidateBodyNodes.Count == 0)
+      {
+        continue;
+      }
+
+      sectionContainerNode = candidateSectionContainerNode;
+      labelNode = candidateLabelNode;
+      bodyNodeAddresses = candidateBodyNodes;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Collects the visible JournalDetail section label text nodes inside
+  ///     the active body flow and sorts them by on-screen order.
+  /// </summary>
+  /// <param name="rootNode">The candidate section subtree root.</param>
+  /// <param name="labelTextIds">The accepted label text ids.</param>
+  /// <param name="viewportTop">The visible viewport top.</param>
+  /// <param name="viewportBottom">The visible viewport bottom.</param>
+  /// <returns>The resolved visible label text nodes in screen order.</returns>
+  private static unsafe List<nint>
+      CollectVisibleJournalDetailLabelTextNodes(
+      AtkResNode* rootNode,
+      IReadOnlyCollection<uint> labelTextIds,
+      float viewportTop,
+      float viewportBottom)
+  {
+    List<nint> resolvedLabelNodes = [];
+    HashSet<nint> visitedNodes = [];
+
+    void Traverse(AtkResNode* node)
+    {
+      if (node == null || !visitedNodes.Add((nint)node))
+      {
+        return;
+      }
+
+      if (node->Type == NodeType.Text)
+      {
+        var textNode = node->GetAsAtkTextNode();
+        if (textNode != null &&
+            textNode->IsVisible() &&
+            labelTextIds.Contains(textNode->TextId) &&
+            IsJournalDetailNodeWithinViewport(
+                node,
+                viewportTop,
+                viewportBottom))
+        {
+          if (!resolvedLabelNodes.Contains((nint)textNode))
+          {
+            resolvedLabelNodes.Add((nint)textNode);
+          }
+        }
+      }
+
+      var componentNode = node->GetAsAtkComponentNode();
+      if (componentNode != null && componentNode->Component != null)
+      {
+        for (var childIndex = 0;
+             childIndex < componentNode->Component->UldManager.NodeListCount;
+             childIndex++)
+        {
+          Traverse(componentNode->Component->UldManager.NodeList[childIndex]);
+        }
+      }
+
+      Traverse(node->ChildNode);
+      Traverse(node->NextSiblingNode);
+    }
+
+    Traverse(rootNode);
+    resolvedLabelNodes.Sort(
+        static (left, right) =>
+        {
+          var leftNode = (AtkTextNode*)left;
+          var rightNode = (AtkTextNode*)right;
+          var verticalComparison = leftNode->ScreenY.CompareTo(rightNode->ScreenY);
+          return verticalComparison != 0
+              ? verticalComparison
+              : leftNode->ScreenX.CompareTo(rightNode->ScreenX);
+        });
+    return resolvedLabelNodes;
+  }
+
+  /// <summary>
+  ///     Resolves the narrowest useful JournalDetail section container for one
+  ///     visible section label inside the live body flow.
+  /// </summary>
+  /// <param name="flowRoot">The live JournalDetail body flow root.</param>
+  /// <param name="labelNode">The resolved visible section label node.</param>
+  /// <returns>The section container that owns the label and body flow.</returns>
+  private static unsafe AtkResNode* ResolveJournalDetailSectionContainerNode(
+      AtkResNode* flowRoot,
+      AtkTextNode* labelNode)
+  {
+    if (flowRoot == null || labelNode == null)
+    {
+      return null;
+    }
+
+    var currentNode = (AtkResNode*)labelNode;
+    while (currentNode != null &&
+           currentNode->ParentNode != null &&
+           currentNode->ParentNode != flowRoot)
+    {
+      currentNode = currentNode->ParentNode;
+    }
+
+    return currentNode;
+  }
+
+  /// <summary>
+  ///     Collects the visible body text nodes that belong to one resolved
+  ///     JournalDetail section.
+  /// </summary>
+  /// <param name="sectionContainerNode">The section container subtree root.</param>
+  /// <param name="labelNode">The resolved label node for that section.</param>
+  /// <param name="viewportTop">The visible viewport top.</param>
+  /// <param name="viewportBottom">The visible viewport bottom.</param>
+  /// <returns>The visible body text nodes in display order.</returns>
+  private static unsafe List<nint> CollectVisibleJournalDetailSectionBodyTextNodes(
+      AtkResNode* sectionContainerNode,
+      AtkTextNode* labelNode,
+      float viewportTop,
+      float viewportBottom)
+  {
+    List<nint> bodyNodeAddresses = [];
+    HashSet<nint> seenBodyNodes = [];
+    if (sectionContainerNode == null || labelNode == null)
+    {
+      return bodyNodeAddresses;
+    }
+
+    HashSet<nint> visitedNodes = [];
+
+    void Traverse(AtkResNode* node)
+    {
+      if (node == null || !visitedNodes.Add((nint)node))
+      {
+        return;
+      }
+
+      if (node->Type == NodeType.Text)
+      {
+        var textNode = node->GetAsAtkTextNode();
+        if (textNode != null &&
+            textNode != labelNode &&
+            textNode->IsVisible() &&
+            textNode->TextId == 0 &&
+            textNode->ScreenY >= labelNode->ScreenY - 6f &&
+            IsJournalDetailNodeWithinViewport(
+                node,
+                viewportTop,
+                viewportBottom))
+        {
+          var bodyText = textNode->NodeText.IsEmpty
+              ? string.Empty
+              : MemoryHelper.ReadSeStringAsString(
+                  out _,
+                  (nint)textNode->NodeText.StringPtr.Value);
+          if (!string.IsNullOrWhiteSpace(bodyText) &&
+              seenBodyNodes.Add((nint)textNode))
+          {
+            bodyNodeAddresses.Add((nint)textNode);
+          }
+        }
+      }
+
+      var componentNode = node->GetAsAtkComponentNode();
+      if (componentNode != null && componentNode->Component != null)
+      {
+        for (var childIndex = 0;
+             childIndex < componentNode->Component->UldManager.NodeListCount;
+             childIndex++)
+        {
+          Traverse(componentNode->Component->UldManager.NodeList[childIndex]);
+        }
+      }
+
+      for (var childNode = node->ChildNode;
+           childNode != null;
+           childNode = childNode->NextSiblingNode)
+      {
+        Traverse(childNode);
+      }
+    }
+
+    Traverse(sectionContainerNode);
+    bodyNodeAddresses.Sort(
+        static (left, right) =>
+        {
+          var leftNode = (AtkTextNode*)left;
+          var rightNode = (AtkTextNode*)right;
+          var verticalComparison = leftNode->ScreenY.CompareTo(rightNode->ScreenY);
+          return verticalComparison != 0
+              ? verticalComparison
+              : leftNode->ScreenX.CompareTo(rightNode->ScreenX);
+        });
+    return bodyNodeAddresses;
+  }
+
+  /// <summary>
+  ///     Gets whether one node intersects the visible JournalDetail viewport.
+  /// </summary>
+  /// <param name="node">The node to evaluate.</param>
+  /// <param name="viewportTop">The visible viewport top.</param>
+  /// <param name="viewportBottom">The visible viewport bottom.</param>
+  /// <returns><c>true</c> when the node intersects the viewport.</returns>
+  private static unsafe bool IsJournalDetailNodeWithinViewport(
+      AtkResNode* node,
+      float viewportTop,
+      float viewportBottom)
+  {
+    if (node == null)
+    {
+      return false;
+    }
+
+    var nodeTop = node->ScreenY;
+    var nodeBottom = node->ScreenY + Math.Max(1f, node->GetHeight());
+    return nodeBottom >= viewportTop && nodeTop <= viewportBottom;
+  }
+
+  /// <summary>
   ///     Collects the visible JournalDetail body-flow text nodes that should
   ///     participate in native vertical reflow.
   /// </summary>
   /// <param name="journalBox">The live JournalDetail body component.</param>
   /// <param name="descriptionNode">The live description text node.</param>
-  /// <param name="objectiveNode">The live objective text node, if any.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The live visible objective text nodes in order.
+  /// </param>
   /// <param name="summaryNode">The live primary summary text node, if any.</param>
   /// <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
   /// <returns>The ordered text-node addresses that belong to the body flow.</returns>
   private unsafe List<nint> CollectVisibleJournalDetailFlowTextNodes(
       AtkComponentBase* journalBox,
       AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
+      IReadOnlyList<nint> objectiveNodeAddresses,
       AtkTextNode* summaryNode,
       IReadOnlyList<nint> additionalSummaryNodeAddresses)
   {
@@ -1233,14 +1669,14 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         : null;
     var targetNodeAddresses = new HashSet<nint>(
         additionalSummaryNodeAddresses);
+    foreach (var objectiveNodeAddress in objectiveNodeAddresses)
+    {
+      targetNodeAddresses.Add(objectiveNodeAddress);
+    }
+
     if (descriptionNode != null)
     {
       targetNodeAddresses.Add((nint)descriptionNode);
-    }
-
-    if (objectiveNode != null)
-    {
-      targetNodeAddresses.Add((nint)objectiveNode);
     }
 
     if (summaryNode != null)
@@ -1254,9 +1690,13 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       flowAnchorNodes.Add((nint)descriptionNode);
     }
 
-    if (objectiveNode != null && objectiveNode->IsVisible())
+    foreach (var objectiveNodeAddress in objectiveNodeAddresses)
     {
-      flowAnchorNodes.Add((nint)objectiveNode);
+      var objectiveNode = (AtkTextNode*)objectiveNodeAddress;
+      if (objectiveNode != null && objectiveNode->IsVisible())
+      {
+        flowAnchorNodes.Add(objectiveNodeAddress);
+      }
     }
 
     if (summaryNode != null && summaryNode->IsVisible())
@@ -1389,12 +1829,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
-  ///     Captures the container chain that should grow together with the
-  ///     JournalDetail native body flow.
+  ///     Captures the JournalDetail container state that should grow together
+  ///     with the native body flow.
   /// </summary>
   /// <param name="flowRoot">The JournalDetail body-flow root node.</param>
   /// <param name="flowBlocks">The captured ordered body-flow blocks.</param>
-  /// <returns>The captured container chain snapshots.</returns>
+  /// <returns>The captured container snapshots.</returns>
   private static unsafe List<NativeTextFlowContainerSnapshot>
       CaptureJournalDetailNativeFlowContainers(
           AtkResNode* flowRoot,
@@ -1406,29 +1846,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       return containerSnapshots;
     }
 
-    HashSet<nint> seenContainers = [];
-    var currentContainer = flowRoot;
-    var currentFlowOriginY = 0f;
-    for (var depth = 0; currentContainer != null && depth < 4; depth++)
+    // JournalDetail keeps the outer viewport fixed and only grows the
+    // internal scroll content root when the body text becomes more verbose.
+    var flowContainerSnapshot =
+        NativeTextFlowReflowHelper.CaptureContainerSnapshot(
+            flowRoot,
+            0,
+            flowBlocks);
+    if (flowContainerSnapshot != null)
     {
-      if (seenContainers.Add((nint)currentContainer))
-      {
-        var containerSnapshot =
-            NativeTextFlowReflowHelper.CaptureContainerSnapshot(
-                currentContainer,
-                (short)Math.Clamp(
-                    Math.Round(currentFlowOriginY),
-                    short.MinValue,
-                    short.MaxValue),
-                flowBlocks);
-        if (containerSnapshot != null)
-        {
-          containerSnapshots.Add(containerSnapshot);
-        }
-      }
-
-      currentFlowOriginY += currentContainer->Y;
-      currentContainer = currentContainer->ParentNode;
+      containerSnapshots.Add(flowContainerSnapshot);
     }
 
     return containerSnapshots;
@@ -1440,8 +1867,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="descriptionNode">The description text node.</param>
   /// <param name="descriptionText">The description text to render.</param>
-  /// <param name="objectiveNode">The objective text node.</param>
-  /// <param name="objectiveText">The objective text to render.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The visible objective text nodes in order.
+  /// </param>
+  /// <param name="objectiveTexts">The objective texts to render in order.</param>
   /// <param name="summaryNode">The primary summary text node.</param>
   /// <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
   /// <param name="summarySections">The summary sections in display order.</param>
@@ -1449,8 +1878,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   private static unsafe Dictionary<nint, string> BuildJournalDetailNativeFlowTextMap(
       AtkTextNode* descriptionNode,
       string descriptionText,
-      AtkTextNode* objectiveNode,
-      string objectiveText,
+      IReadOnlyList<nint> objectiveNodeAddresses,
+      IReadOnlyList<string> objectiveTexts,
       AtkTextNode* summaryNode,
       IReadOnlyList<nint> additionalSummaryNodeAddresses,
       IReadOnlyList<string> summarySections)
@@ -1462,9 +1891,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       flowTexts[(nint)descriptionNode] = descriptionText ?? string.Empty;
     }
 
-    if (objectiveNode != null)
+    var objectiveNodeTexts = BuildJournalDetailObjectiveNodeTextAssignments(
+        objectiveNodeAddresses,
+        objectiveTexts);
+    foreach (var objectiveNodeText in objectiveNodeTexts)
     {
-      flowTexts[(nint)objectiveNode] = objectiveText ?? string.Empty;
+      flowTexts[objectiveNodeText.Key] = objectiveNodeText.Value;
     }
 
     var summaryNodeTexts = BuildJournalDetailSummaryNodeTextAssignments(
@@ -1477,6 +1909,62 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     }
 
     return flowTexts;
+  }
+
+  /// <summary>
+  ///     Distributes JournalDetail objective sections across the currently
+  ///     visible native objective nodes.
+  /// </summary>
+  /// <param name="objectiveNodeAddresses">
+  ///     The visible objective text nodes in order.
+  /// </param>
+  /// <param name="objectiveSections">The objective sections in display order.</param>
+  /// <returns>The objective text payload keyed by node address.</returns>
+  private static Dictionary<nint, string> BuildJournalDetailObjectiveNodeTextAssignments(
+      IReadOnlyList<nint> objectiveNodeAddresses,
+      IReadOnlyList<string> objectiveSections)
+  {
+    Dictionary<nint, string> assignedObjectiveTexts = new();
+    if (objectiveNodeAddresses.Count == 0)
+    {
+      return assignedObjectiveTexts;
+    }
+
+    if (objectiveSections.Count == 0)
+    {
+      foreach (var objectiveNodeAddress in objectiveNodeAddresses)
+      {
+        assignedObjectiveTexts[objectiveNodeAddress] = string.Empty;
+      }
+
+      return assignedObjectiveTexts;
+    }
+
+    for (var nodeIndex = 0; nodeIndex < objectiveNodeAddresses.Count; nodeIndex++)
+    {
+      if (nodeIndex < objectiveSections.Count - 1 &&
+          nodeIndex < objectiveNodeAddresses.Count - 1)
+      {
+        assignedObjectiveTexts[objectiveNodeAddresses[nodeIndex]] =
+            objectiveSections[nodeIndex] ?? string.Empty;
+        continue;
+      }
+
+      if (nodeIndex >= objectiveSections.Count)
+      {
+        assignedObjectiveTexts[objectiveNodeAddresses[nodeIndex]] = string.Empty;
+        continue;
+      }
+
+      assignedObjectiveTexts[objectiveNodeAddresses[nodeIndex]] =
+          string.Join(
+              Environment.NewLine,
+              objectiveSections.Skip(nodeIndex).Select(
+                  static section => section ?? string.Empty));
+      break;
+    }
+
+    return assignedObjectiveTexts;
   }
 
   /// <summary>
@@ -1584,6 +2072,81 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     if (foundQuestPlate != null &&
         foundQuestPlate.TryGetTranslatedSummaryText(
             rowKey,
+            sourceText,
+            out translatedText))
+    {
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          sourceText,
+          translatedText);
+      return true;
+    }
+
+    translatedText = sourceText;
+    return false;
+  }
+
+  /// <summary>
+  ///     Resolves one translated objective row from the JournalDetail cache or
+  ///     the persisted quest plate.
+  /// </summary>
+  /// <param name="foundQuestPlate">The persisted quest plate, if any.</param>
+  /// <param name="questCanonicalData">The canonical quest payload, if any.</param>
+  /// <param name="journalDetailScopeKey">The current JournalDetail scope key.</param>
+  /// <param name="sourceText">The visible source objective text.</param>
+  /// <param name="translatedText">The translated objective text.</param>
+  /// <returns>True when the translated objective row is ready.</returns>
+  private bool TryResolveTranslatedObjectiveText(
+      QuestPlate? foundQuestPlate,
+      QuestCanonicalData? questCanonicalData,
+      string journalDetailScopeKey,
+      string sourceText,
+      out string translatedText)
+  {
+    translatedText = sourceText;
+    if (string.IsNullOrWhiteSpace(sourceText))
+    {
+      return true;
+    }
+
+    if (this.TryGetJournalDetailCachedText(
+            journalDetailScopeKey,
+            sourceText,
+            out translatedText))
+    {
+      return true;
+    }
+
+    if (foundQuestPlate == null)
+    {
+      translatedText = sourceText;
+      return false;
+    }
+
+    var rowKeys = questCanonicalData?.EnumerateObjectiveRowKeysByText(sourceText)
+                      .Where(static rowKey => !string.IsNullOrWhiteSpace(rowKey))
+                      .Distinct(StringComparer.Ordinal)
+                      .ToArray() ??
+                  [];
+    foreach (var rowKey in rowKeys)
+    {
+      if (!foundQuestPlate.TryGetTranslatedObjectiveText(
+              rowKey,
+              sourceText,
+              out translatedText))
+      {
+        continue;
+      }
+
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          sourceText,
+          translatedText);
+      return true;
+    }
+
+    if (foundQuestPlate.TryGetTranslatedObjectiveText(
+            null,
             sourceText,
             out translatedText))
     {
@@ -1715,7 +2278,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="summaryText">The summary text.</param>
   /// <param name="questNameNode">The quest-name text node.</param>
   /// <param name="descriptionNode">The description text node.</param>
-  /// <param name="objectiveNode">The objective text node.</param>
+  /// <param name="objectiveNodeAddresses">
+  ///     The visible objective text nodes in order.
+  /// </param>
+  /// <param name="objectiveTexts">
+  ///     The visible objective texts in order.
+  /// </param>
   /// <param name="summaryContainerNode">The summary container node, if any.</param>
   /// <param name="summaryNode">The optional summary text node.</param>
   private unsafe void TranslateQuestOnJournalBox(
@@ -1728,14 +2296,18 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string summaryText,
       AtkTextNode* questNameNode,
       AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
+      IReadOnlyList<nint> objectiveNodeAddresses,
+      IReadOnlyList<string> objectiveTexts,
       AtkResNode* summaryContainerNode,
       AtkTextNode* summaryNode)
   {
     string translatedQuestName = questName;
-    string translatedQuestObjective = objectiveText;
+    string translatedQuestObjective = BuildJournalDetailObjectiveDisplayText(
+        objectiveTexts);
     var translatedQuestNameReady = false;
-    var translatedQuestObjectiveReady = string.IsNullOrWhiteSpace(objectiveText);
+    var translatedQuestObjectiveReady = objectiveTexts.Count == 0 ||
+                                        objectiveTexts.All(
+                                            static text => string.IsNullOrWhiteSpace(text));
     var journalDetailScopeKey = BuildJournalDetailScopeKey(
         questProgressSnapshot,
         questName,
@@ -1745,9 +2317,6 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             questProgressSnapshot.Value,
             GetGameVersion())
         : null;
-    var objectiveRowKeys = questCanonicalData == null
-        ? []
-        : questCanonicalData.EnumerateObjectiveRowKeysByText(objectiveText).ToArray();
     this.EnsureJournalDetailScope(journalDetailScopeKey);
     var canonicalSummaryRows = this.BuildCanonicalSummaryRows(
         foundQuestPlate,
@@ -1789,11 +2358,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
     }
 
+    var primaryObjectiveNode =
+        objectiveNodeAddresses.Count != 0
+            ? (AtkTextNode*)objectiveNodeAddresses[0]
+            : null;
     var visibleAdditionalSummaryNodes =
         this.CollectVisibleAdditionalSummaryNodes(
             journalBox,
             descriptionNode,
-            objectiveNode,
+            primaryObjectiveNode,
             summaryNode,
             summaryTextCandidates);
 
@@ -1808,7 +2381,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           objectiveText,
           summaryText,
           descriptionNode,
-          objectiveNode,
+          objectiveNodeAddresses,
+          objectiveTexts,
           summaryNode,
           summaryContainerNode,
           visibleAdditionalSummaryNodes,
@@ -1821,7 +2395,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           objectiveText,
           summaryText,
           descriptionNode,
-          objectiveNode,
+          objectiveNodeAddresses,
+          objectiveTexts,
           summaryNode,
           summaryContainerNode,
           visibleAdditionalSummaryNodes,
@@ -1835,7 +2410,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
               journalDetailScopeKey,
               originalSnapshot,
               descriptionNode,
-              objectiveNode,
+              objectiveNodeAddresses,
+              objectiveTexts,
               summaryNode,
               summaryContainerNode,
               visibleAdditionalSummaryNodes);
@@ -1844,6 +2420,9 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     var originalQuestName = originalSnapshot.QuestName;
     var originalQuestMessage = originalSnapshot.QuestMessage;
     var originalObjectiveText = originalSnapshot.ObjectiveText;
+    var originalObjectiveTexts = originalSnapshot.ObjectiveTexts;
+    var originalObjectiveDisplayText = BuildJournalDetailObjectiveDisplayText(
+        originalObjectiveTexts);
     var originalSummaryText = originalSnapshot.SummaryText;
     var additionalSummaryNodeAddresses =
         originalSnapshot.AdditionalSummaryNodeAddresses.Count != 0
@@ -1851,6 +2430,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             : visibleAdditionalSummaryNodes;
     var originalAdditionalSummaryTexts =
         originalSnapshot.AdditionalSummaryTexts;
+    var translatedObjectiveSections = originalObjectiveTexts.ToArray();
+    translatedQuestObjective = BuildJournalDetailObjectiveDisplayText(
+        translatedObjectiveSections);
+    translatedQuestObjectiveReady = translatedObjectiveSections.Length == 0 ||
+                                    translatedObjectiveSections.All(
+                                        static text => string.IsNullOrWhiteSpace(text));
 
     var currentQuestSequenceText = questProgressSnapshot.HasValue
         ? GetCurrentQuestSequenceText(questProgressSnapshot.Value)
@@ -1917,24 +2502,30 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         translatedQuestDescriptionReady = true;
       }
 
-      if (this.TryGetJournalDetailCachedText(
-              journalDetailScopeKey,
-              originalObjectiveText,
-              out translatedQuestObjective))
+      if (originalObjectiveTexts.Count != 0)
       {
+        List<string> resolvedObjectiveSections = [];
         translatedQuestObjectiveReady = true;
-      }
-      else if (foundQuestPlate.TryGetTranslatedObjectiveText(
-                   objectiveRowKeys.FirstOrDefault(),
-                   originalObjectiveText,
-                   out var storedObjectiveText))
-      {
-        translatedQuestObjective = storedObjectiveText;
-        translatedQuestObjectiveReady = true;
-      }
-      else
-      {
-        translatedQuestObjective = objectiveText;
+        foreach (var originalObjectiveSectionText in originalObjectiveTexts)
+        {
+          if (this.TryResolveTranslatedObjectiveText(
+                  foundQuestPlate,
+                  questCanonicalData,
+                  journalDetailScopeKey,
+                  originalObjectiveSectionText,
+                  out var translatedObjectiveSectionText))
+          {
+            resolvedObjectiveSections.Add(translatedObjectiveSectionText);
+            continue;
+          }
+
+          translatedQuestObjectiveReady = false;
+          resolvedObjectiveSections.Add(originalObjectiveSectionText);
+        }
+
+        translatedObjectiveSections = resolvedObjectiveSections.ToArray();
+        translatedQuestObjective = BuildJournalDetailObjectiveDisplayText(
+            translatedObjectiveSections);
       }
 
       if (primaryCanonicalSummary == null &&
@@ -1965,7 +2556,9 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     {
       translatedQuestName = originalQuestName;
       translatedQuestDescription = originalQuestDescription;
-      translatedQuestObjective = originalObjectiveText;
+      translatedObjectiveSections = originalObjectiveTexts.ToArray();
+      translatedQuestObjective = BuildJournalDetailObjectiveDisplayText(
+          translatedObjectiveSections);
       translatedPrimarySummaryText = originalPrimarySummaryText;
     }
 
@@ -1999,10 +2592,17 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           translatedQuestName ?? string.Empty);
       translatedQuestDescription = this.NormalizeQuestText(
           translatedQuestDescription ?? string.Empty);
-      translatedQuestObjective = this.NormalizeQuestText(
-          translatedQuestObjective ?? string.Empty);
       translatedPrimarySummaryText = this.NormalizeQuestText(
           translatedPrimarySummaryText ?? string.Empty);
+
+      for (var i = 0; i < translatedObjectiveSections.Length; i++)
+      {
+        translatedObjectiveSections[i] = this.NormalizeQuestText(
+            translatedObjectiveSections[i] ?? string.Empty);
+      }
+
+      translatedQuestObjective = BuildJournalDetailObjectiveDisplayText(
+          translatedObjectiveSections);
 
       for (var i = 0; i < translatedSummarySections.Length; i++)
       {
@@ -2028,8 +2628,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
               originalSnapshot,
               descriptionNode,
               translatedQuestDescription,
-              objectiveNode,
-              translatedQuestObjective,
+              objectiveNodeAddresses,
+              translatedObjectiveSections,
               summaryNode,
               translatedSummarySections))
       {
@@ -2039,12 +2639,17 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             originalSnapshot.DescriptionNodeTextFlags,
             originalSnapshot.DescriptionNodeFontSize,
             translatedQuestDescription);
-        this.ApplyJournalDetailNativeTextNodePresentation(
-            objectiveNode,
-            originalSnapshot.ObjectiveNodeWidth,
-            originalSnapshot.ObjectiveNodeTextFlags,
-            originalSnapshot.ObjectiveNodeFontSize,
-            translatedQuestObjective);
+        if (objectiveNodeAddresses.Count != 0)
+        {
+          var fallbackObjectiveNode = (AtkTextNode*)objectiveNodeAddresses[0];
+          this.ApplyJournalDetailNativeTextNodePresentation(
+              fallbackObjectiveNode,
+              originalSnapshot.ObjectiveNodeWidth,
+              originalSnapshot.ObjectiveNodeTextFlags,
+              originalSnapshot.ObjectiveNodeFontSize,
+              translatedQuestObjective);
+        }
+
         this.ApplyJournalDetailNativeSummaryFlow(
             originalSnapshot,
             summaryContainerNode,
@@ -2057,7 +2662,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       if (!this.TryRestoreJournalDetailOriginalBodyFlow(
               originalSnapshot,
               descriptionNode,
-              objectiveNode,
+              objectiveNodeAddresses,
               summaryNode))
       {
         this.RestoreJournalDetailTextNodePresentation(
@@ -2066,12 +2671,17 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             originalSnapshot.DescriptionNodeTextFlags,
             originalSnapshot.DescriptionNodeFontSize,
             originalQuestMessage);
-        this.RestoreJournalDetailTextNodePresentation(
-            objectiveNode,
-            originalSnapshot.ObjectiveNodeWidth,
-            originalSnapshot.ObjectiveNodeTextFlags,
-            originalSnapshot.ObjectiveNodeFontSize,
-            originalObjectiveText);
+        if (objectiveNodeAddresses.Count != 0)
+        {
+          var fallbackObjectiveNode = (AtkTextNode*)objectiveNodeAddresses[0];
+          this.RestoreJournalDetailTextNodePresentation(
+              fallbackObjectiveNode,
+              originalSnapshot.ObjectiveNodeWidth,
+              originalSnapshot.ObjectiveNodeTextFlags,
+              originalSnapshot.ObjectiveNodeFontSize,
+              originalObjectiveText);
+        }
+
         this.RestoreJournalDetailOriginalSummaryFlow(
             originalSnapshot,
             summaryContainerNode);
@@ -2091,10 +2701,21 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           translatedQuestDescription);
     }
 
-    this.RememberJournalDetailCachedText(
-        journalDetailScopeKey,
-        originalObjectiveText,
-        translatedQuestObjective);
+    for (var objectiveIndex = 0;
+         objectiveIndex < originalObjectiveTexts.Count &&
+         objectiveIndex < translatedObjectiveSections.Length;
+         objectiveIndex++)
+    {
+      if (string.IsNullOrWhiteSpace(originalObjectiveTexts[objectiveIndex]))
+      {
+        continue;
+      }
+
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          originalObjectiveTexts[objectiveIndex],
+          translatedObjectiveSections[objectiveIndex]);
+    }
     if (primaryCanonicalSummary == null &&
         originalSummaryText != string.Empty)
     {
@@ -2120,7 +2741,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       var translatedQuestSummaryBody = translatedSummaryDisplayText;
       var originalQuestBody = BuildQuestPlateHoverBody(
           originalQuestDescription,
-          originalObjectiveText,
+          originalObjectiveDisplayText,
           originalQuestSummaryBody);
       var translatedQuestBody = BuildQuestPlateHoverBody(
           translatedQuestDescription,
@@ -2147,7 +2768,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           ExpandQuestPlateHoverBoundsForTextNode(
               ref bodyTopLeft,
               ref bodyBottomRight,
-              objectiveNode);
+              primaryObjectiveNode);
           ExpandQuestPlateHoverBoundsForTextNode(
               ref bodyTopLeft,
               ref bodyBottomRight,
@@ -2197,7 +2818,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
                 node->ScreenY + Math.Max(1f, node->GetHeight()));
           }
 
-          ExpandBodyBounds(objectiveNode);
+          foreach (var objectiveNodeAddress in objectiveNodeAddresses)
+          {
+            ExpandBodyBounds((AtkTextNode*)objectiveNodeAddress);
+          }
           if (summaryNode != null)
           {
             ExpandBodyBounds(summaryNode);
@@ -2329,6 +2953,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             string.Empty,
             Array.Empty<nint>(),
             Array.Empty<string>(),
+            Array.Empty<nint>(),
+            Array.Empty<string>(),
             descriptionNode != null ? descriptionNode->GetWidth() : (ushort)0,
             descriptionNode != null ? descriptionNode->TextFlags : default,
             descriptionNode != null ? descriptionNode->FontSize : (byte)0,
@@ -2351,7 +2977,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             string.Empty,
             string.Empty,
             descriptionNode,
-            null,
+            Array.Empty<nint>(),
+            Array.Empty<string>(),
             null,
             null,
             Array.Empty<nint>(),
@@ -2528,49 +3155,38 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
 
       var journalBox = journalDetail->GetNodeById(43)->GetComponent();
-      var description = journalBox->UldManager.SearchNodeById(8);
-      if (description == null || description->Type != NodeType.Text)
+      if (!TryResolveJournalDetailActiveBodyNodes(
+              journalBox,
+              out var descriptionNode,
+              out var objectiveNodeAddresses,
+              out var summaryContainerNode,
+              out var summaryNode,
+              out _))
       {
+        this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
         return false;
       }
 
-      var objectiveResNode =
-          journalBox->UldManager.SearchNodeById(12)->GetComponent()->
-              UldManager.SearchNodeById(3);
-      if (objectiveResNode == null ||
-          objectiveResNode->Type != NodeType.Text)
+      var objectiveTexts = CaptureVisibleTextNodeTexts(objectiveNodeAddresses);
+      if (objectiveTexts.Count == 0)
       {
+        this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
         return true;
       }
 
-      var summaryText = string.Empty;
-      AtkTextNode* summaryNode = null;
-      var summaryBox = journalBox->UldManager.SearchNodeById(52);
-      if (summaryBox != null && summaryBox->IsVisible())
-      {
-        var summaryResNode =
-            summaryBox->GetComponent()->UldManager.SearchNodeById(2);
-        if (summaryResNode != null &&
-            summaryResNode->Type == NodeType.Text)
-        {
-          summaryNode = summaryResNode->GetAsAtkTextNode();
-          summaryText = MemoryHelper.ReadSeStringAsString(
+      var summaryText = summaryNode != null && !summaryNode->NodeText.IsEmpty
+          ? MemoryHelper.ReadSeStringAsString(
               out _,
-              (nint)summaryNode->NodeText.StringPtr.Value);
-        }
-      }
+              (nint)summaryNode->NodeText.StringPtr.Value)
+          : string.Empty;
 
       var liveQuestName = MemoryHelper.ReadSeStringAsString(
           out _,
           (nint)questNameNode->NodeText.StringPtr.Value);
-      var descriptionNode = description->GetAsAtkTextNode();
       var liveQuestMessage = MemoryHelper.ReadSeStringAsString(
           out _,
           (nint)descriptionNode->NodeText.StringPtr.Value);
-      var objectiveNode = objectiveResNode->GetAsAtkTextNode();
-      var liveObjectiveText = MemoryHelper.ReadSeStringAsString(
-          out _,
-          (nint)objectiveNode->NodeText.StringPtr.Value);
+      var liveObjectiveText = objectiveTexts[0];
       var questName = liveQuestName;
       var questMessage = liveQuestMessage;
       var objectiveText = liveObjectiveText;
@@ -2628,8 +3244,9 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           summaryText,
           questNameNode,
           descriptionNode,
-          objectiveNode,
-          summaryBox,
+          objectiveNodeAddresses,
+          objectiveTexts,
+          summaryContainerNode,
           summaryNode);
     }
     catch (Exception e)
@@ -2745,6 +3362,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string QuestMessage,
       string ObjectiveText,
       string SummaryText,
+      IReadOnlyList<nint> ObjectiveNodeAddresses,
+      IReadOnlyList<string> ObjectiveTexts,
       IReadOnlyList<nint> AdditionalSummaryNodeAddresses,
       IReadOnlyList<string> AdditionalSummaryTexts,
       ushort DescriptionNodeWidth,

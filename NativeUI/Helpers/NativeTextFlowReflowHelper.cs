@@ -166,9 +166,10 @@ internal static unsafe class NativeTextFlowReflowHelper
         continue;
       }
 
+      var wrapperY = block.WrapperY + cumulativeDelta;
       wrapperNode->SetPositionShort(
           block.WrapperX,
-          ClampToShort(block.WrapperY + cumulativeDelta));
+          ClampToShort(wrapperY));
       wrapperNode->SetHeight(block.WrapperHeight);
 
       if (block.WrapperNodeAddress != block.TextNodeAddress)
@@ -201,10 +202,10 @@ internal static unsafe class NativeTextFlowReflowHelper
           ushort.MaxValue);
       wrapperNode->SetHeight(clampedWrapperHeight);
 
-      cumulativeDelta += clampedWrapperHeight - block.WrapperHeight;
       finalBottom = Math.Max(
           finalBottom,
-          block.WrapperY + cumulativeDelta + clampedWrapperHeight);
+          wrapperY + clampedWrapperHeight);
+      cumulativeDelta += clampedWrapperHeight - block.WrapperHeight;
     }
 
     ApplyContainerHeights(
@@ -291,21 +292,21 @@ internal static unsafe class NativeTextFlowReflowHelper
       return (AtkResNode*)textNode;
     }
 
-    var currentNode = (AtkResNode*)textNode;
-    var candidate = currentNode;
-    while (currentNode != null && currentNode->ParentNode != null)
+    var textResNode = (AtkResNode*)textNode;
+    var parentNode = textResNode->ParentNode;
+    if (parentNode == null)
     {
-      if (currentNode->ParentNode == flowRoot)
-      {
-        candidate = currentNode;
-        break;
-      }
-
-      candidate = currentNode;
-      currentNode = currentNode->ParentNode;
+      return textResNode;
     }
 
-    return candidate;
+    if (parentNode == flowRoot)
+    {
+      return textResNode;
+    }
+
+    return IsDescendantOf(parentNode, flowRoot)
+        ? parentNode
+        : textResNode;
   }
 
   /// <summary>
@@ -328,6 +329,31 @@ internal static unsafe class NativeTextFlowReflowHelper
     }
 
     return offset;
+  }
+
+  /// <summary>
+  ///     Gets whether one node belongs to the subtree rooted at the supplied
+  ///     ancestor node.
+  /// </summary>
+  /// <param name="node">The node to test.</param>
+  /// <param name="ancestorNode">The ancestor node.</param>
+  /// <returns><c>true</c> when the node belongs to the ancestor subtree.</returns>
+  private static bool IsDescendantOf(
+      AtkResNode* node,
+      AtkResNode* ancestorNode)
+  {
+    var currentNode = node;
+    while (currentNode != null)
+    {
+      if (currentNode == ancestorNode)
+      {
+        return true;
+      }
+
+      currentNode = currentNode->ParentNode;
+    }
+
+    return false;
   }
 
   /// <summary>
