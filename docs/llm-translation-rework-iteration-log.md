@@ -245,3 +245,46 @@ turning into an opaque pile of partial changes.
   - revisit `#176` with engine-specific runtime cost reductions beyond prompt
     size alone, likely around local-LLM request behavior and later dialogue
     session context
+
+## Iteration 6 - Align Cloud LLM Prompt Wiring To Existing Prompt Templates
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - stop duplicating the long cloud-LLM prompt inline across multiple
+    translators
+  - make the existing per-engine prompt editors actually control the runtime
+    path for the OpenAI-style LLM family
+  - fix `OpenRouter` sending an unrendered prompt template instead of a prompt
+    with substituted placeholders
+- Files touched:
+  - `PluginUI/Helpers/PromptTemplateManager.cs`
+  - `Translators/ChatGPTTranslator.cs`
+  - `Translators/DeepSeekTranslator.cs`
+  - `Translators/GeminiTranslator.cs`
+  - `Translators/OpenRouterTranslator.cs`
+  - `Translators/TranslatorFactory.cs`
+  - `Echoglossian.Tests/PromptTemplateManagerTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a shared static prompt renderer in `PromptTemplateManager`
+  - made `ChatGPT`, `DeepSeek`, `Gemini`, and `OpenRouter` resolve their
+    prompt template from config with built-in defaults when blank
+  - removed duplicated inline long-form prompt assembly from those translators
+  - made `OpenRouter` render `{text}`, `{sourceLanguage}`, and
+    `{targetLanguage}` before sending the request
+  - switched `ChatGPTTranslator` factory construction to use the full `Config`
+    object so it can follow the same prompt path as the other LLM engines
+- Behavior-sensitive risks:
+  - this intentionally changes the runtime meaning of saved prompt templates
+    for `ChatGPT`, `DeepSeek`, and `Gemini` from "UI-only field" to "live
+    runtime input"
+  - `OpenRouter` users with a blank custom prompt now fall back to the shared
+    default prompt instead of sending an empty template
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - start shaping engine-specific runtime metrics beyond aggregate latency,
+    likely provider/model metadata in the debugger window before touching
+    dialogue session context

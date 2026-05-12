@@ -48,4 +48,22 @@ public class PromptTemplateManagerTests
 
     Assert.Equal(PromptTemplateManager.DefaultPrompt, prompt);
   }
+
+  /// <summary>
+  ///     Ensures prompt rendering applies the standard placeholders used by
+  ///     the LLM translator family.
+  /// </summary>
+  [Fact]
+  public void RenderPrompt_ReplacesAllStandardPlaceholders()
+  {
+    var rendered = PromptTemplateManager.RenderPrompt(
+        "Translate {text} from {sourceLanguage} to {targetLanguage}.",
+        "Pray return",
+        "English",
+        "Portuguese (Brazil)");
+
+    Assert.Equal(
+        "Translate Pray return from English to Portuguese (Brazil).",
+        rendered);
+  }
 }

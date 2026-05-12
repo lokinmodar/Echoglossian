@@ -35,12 +35,7 @@ public static class TranslatorFactory
                     config.DeeplTranslatorUsingApiKey,
                     config.DeeplTranslatorApiKey),
             Echoglossian.TransEngines.ChatGPT =>
-                new ChatGPTTranslator(
-                    pluginLog,
-                    config.ChatGPTBaseUrl,
-                    config.ChatGptApiKey,
-                    config.OpenAILlmModel,
-                    config.ChatGptTemperature),
+                new ChatGPTTranslator(pluginLog, config),
             Echoglossian.TransEngines.YandexCloud =>
                 new YandexTranslator(pluginLog, config),
             Echoglossian.TransEngines.GTranslate =>

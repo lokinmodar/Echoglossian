@@ -68,10 +68,23 @@ Please provide only the translated text in your response, without any explanatio
 
   public string ApplyPromptVariables(string template, string text, string sourceLang, string targetLang)
   {
+    return RenderPrompt(template, text, sourceLang, targetLang);
+  }
+
+  /// <summary>
+  /// Applies standard translation prompt placeholders to a prompt template.
+  /// </summary>
+  /// <param name="template">The template containing prompt placeholders.</param>
+  /// <param name="text">The source text to translate.</param>
+  /// <param name="sourceLang">The source language display name.</param>
+  /// <param name="targetLang">The target language display name.</param>
+  /// <returns>The rendered prompt.</returns>
+  public static string RenderPrompt(string template, string text, string sourceLang, string targetLang)
+  {
     return template
-      .Replace("{text}", text)
-      .Replace("{sourceLanguage}", sourceLang)
-      .Replace("{targetLanguage}", targetLang);
+      .Replace("{text}", text, StringComparison.Ordinal)
+      .Replace("{sourceLanguage}", sourceLang, StringComparison.Ordinal)
+      .Replace("{targetLanguage}", targetLang, StringComparison.Ordinal);
   }
 
   public string? GetPrompt(Echoglossian.PromptType type)

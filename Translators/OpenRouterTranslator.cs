@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -18,7 +19,7 @@ public class OpenRouterTranslator : ITranslator
     private readonly string openRouterUrl;
     private readonly IPluginLog pluginLog;
 
-    private readonly string prompt;
+    private readonly string promptTemplate;
     private readonly float temperature;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
 
@@ -33,7 +34,9 @@ public class OpenRouterTranslator : ITranslator
         this.openRouterUrl = string.IsNullOrWhiteSpace(config.OpenRouterBaseUrl)
             ? DefaultOpenRouterUrl
             : config.OpenRouterBaseUrl!;
-        this.prompt = config.OpenRouterPrompt ?? string.Empty;
+        this.promptTemplate = string.IsNullOrWhiteSpace(config.OpenRouterPrompt)
+            ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.OpenRouter)
+            : config.OpenRouterPrompt;
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {
@@ -109,12 +112,18 @@ public class OpenRouterTranslator : ITranslator
         string targetLanguage,
         string cacheKey)
     {
+        var prompt = PromptTemplateManager.RenderPrompt(
+            this.promptTemplate,
+            FixText(text),
+            sourceLanguage,
+            targetLanguage);
+
         var request = new
         {
             this.model,
             messages = new[]
             {
-                new { role = "user", content = this.prompt },
+                new { role = "user", content = prompt },
             },
             this.temperature,
         };
