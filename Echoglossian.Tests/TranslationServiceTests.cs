@@ -375,6 +375,43 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures transient LLM failures are recorded in the runtime-only
+    ///     failure path instead of the persistent failure path.
+    /// </summary>
+    [Fact]
+    public void Translate_QuotaFailure_RecordsTransientFailure()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "[Translation Error: OpenAI: insufficient_quota]",
+        };
+        string? persistentReason = null;
+        string? transientReason = null;
+        TimeSpan? transientTtl = null;
+
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.ChatGPT,
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                persistentReason = reason;
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                transientReason = reason;
+                transientTtl = ttl;
+            });
+
+        var result = service.Translate("hello", "en", "pt-BR");
+
+        Assert.Equal("hello", result);
+        Assert.Null(persistentReason);
+        Assert.Equal("llm-quota-or-rate-limit", transientReason);
+        Assert.Equal(TimeSpan.FromSeconds(30), transientTtl);
+    }
+
+    /// <summary>
     ///     Minimal fake translator for pipeline tests.
     /// </summary>
     private sealed class RecordingTranslator : ITranslator

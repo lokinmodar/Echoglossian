@@ -15,9 +15,11 @@ namespace Echoglossian.Translators;
 public class TranslationService
 {
   private const string EmptyResultFailureReason = "empty-result";
+  private static readonly TimeSpan TransientFailureTtl = TimeSpan.FromSeconds(30);
   private readonly Action<string>? debugLog;
   private readonly Func<string, string, string, int, bool>? isKnownFailedTranslation;
   private readonly Action<string, string, string, int, string, string?>? recordFailedTranslation;
+  private readonly Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation;
   private readonly Action<int, TranslationFailureClassification>? reportTranslationFailure;
   private readonly Func<string, string> sanitizeText;
   private readonly int translationEngineId = -1;
@@ -54,6 +56,15 @@ public class TranslationService
                 failureReason,
                 originContext,
                 TranslationFailureCacheManager.Update);
+    this.recordTransientFailedTranslation =
+        (sourceText, sourceLanguage, targetLanguage, translationEngine, failureReason, ttl) =>
+            TranslationFailureCacheManager.RememberTransientFailure(
+                sourceText,
+                sourceLanguage,
+                targetLanguage,
+                translationEngine,
+                failureReason,
+                ttl);
     this.reportTranslationFailure =
         Echoglossian.ReportRuntimeTranslationFailure;
 
@@ -80,6 +91,7 @@ public class TranslationService
       int translationEngine = (int)Echoglossian.TransEngines.Google,
       Func<string, string, string, int, bool>? isKnownFailedTranslation = null,
       Action<string, string, string, int, string, string?>? recordFailedTranslation = null,
+      Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation = null,
       Action<int, TranslationFailureClassification>? reportTranslationFailure = null)
   {
     this.debugLog = null;
@@ -88,6 +100,7 @@ public class TranslationService
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
     this.recordFailedTranslation = recordFailedTranslation;
+    this.recordTransientFailedTranslation = recordTransientFailedTranslation;
     this.reportTranslationFailure = reportTranslationFailure;
   }
 
@@ -279,12 +292,25 @@ public class TranslationService
       this.reportTranslationFailure?.Invoke(
           this.translationEngineId,
           classification);
-      this.RecordFailedTranslation(
-          parsedText,
-          normalizedSourceLanguage,
-          normalizedTargetLanguage,
-          classification.FailureReason,
-          resolvedOriginContext);
+      if (TranslationPersistenceGuard.IsPersistentFailureReason(
+              classification.FailureReason))
+      {
+        this.RecordFailedTranslation(
+            parsedText,
+            normalizedSourceLanguage,
+            normalizedTargetLanguage,
+            classification.FailureReason,
+            resolvedOriginContext);
+      }
+      else
+      {
+        this.RecordTransientFailedTranslation(
+            parsedText,
+            normalizedSourceLanguage,
+            normalizedTargetLanguage,
+            classification.FailureReason);
+      }
+
       return sanitizedText;
     }
 
@@ -415,6 +441,37 @@ public class TranslationService
         this.translationEngineId,
         failureReason,
         originContext);
+  }
+
+  /// <summary>
+  ///     Records one exact translation request as a transient runtime-only
+  ///     failure for the current engine and language pair.
+  /// </summary>
+  /// <param name="sourceText">The exact sanitized source text.</param>
+  /// <param name="sourceLanguage">The normalized source language code.</param>
+  /// <param name="targetLanguage">The normalized target language code.</param>
+  /// <param name="failureReason">The normalized failure reason.</param>
+  private void RecordTransientFailedTranslation(
+      string sourceText,
+      string sourceLanguage,
+      string targetLanguage,
+      string failureReason)
+  {
+    if (this.translationEngineId < 0 ||
+        this.recordTransientFailedTranslation == null ||
+        string.IsNullOrWhiteSpace(sourceText) ||
+        string.IsNullOrWhiteSpace(failureReason))
+    {
+      return;
+    }
+
+    this.recordTransientFailedTranslation(
+        sourceText,
+        sourceLanguage,
+        targetLanguage,
+        this.translationEngineId,
+        failureReason,
+        TransientFailureTtl);
   }
 
   /// <summary>

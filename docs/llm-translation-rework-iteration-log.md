@@ -88,3 +88,41 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - add short-lived runtime suppression for repeated transient LLM failures so
     endpoint/quota outages do not keep re-requesting the same text every frame
+
+## Iteration 2 - Runtime-Only Suppression For Repeated Transient LLM Failures
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - stop repeated identical LLM failures from being retried on every repaint
+  - keep transient provider failures out of the DB while still letting the
+    runtime short-circuit repeated requests for a while
+- Files touched:
+  - `Cache/TranslationFailureCacheManager.cs`
+  - `GeneralHelpers/TranslationPersistenceGuard.cs`
+  - `Translators/TranslationService.cs`
+  - `Echoglossian.Tests/TranslationFailureCacheManagerTests.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a transient exact-failure cache path in
+    `TranslationFailureCacheManager`
+  - wired `TranslationService` to send non-persistent LLM/runtime failure
+    reasons into that transient cache with a short TTL
+  - made `TranslationFailureCacheManager.Contains(...)` honor both:
+    - persistent DB-backed failure rows
+    - runtime-only transient failures
+  - marked `llm-*` failure reasons as non-persistent so they never become
+    cross-session DB truth
+- Behavior-sensitive risks:
+  - this is an in-memory suppression layer only; it is intentionally not a DB
+    migration and does not redefine the persistent failure model
+  - the first TTL is fixed and conservative; tuning may still be needed after
+    in-game validation
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - start isolating per-engine prompt compaction work, beginning with the local
+    LLM family and the smallest prompt-builder extraction that does not fork
+    the translation pipeline

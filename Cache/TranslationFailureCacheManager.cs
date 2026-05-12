@@ -16,6 +16,8 @@ public static class TranslationFailureCacheManager
 {
     private static readonly Dictionary<string, List<TranslationFailure>> Cache =
         new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, List<TransientTranslationFailure>> TransientCache =
+        new(StringComparer.Ordinal);
 
     /// <summary>
     ///     Loads all persisted translation-failure rows into memory.
@@ -40,10 +42,13 @@ public static class TranslationFailureCacheManager
             {
                 IndexRecord(row);
             }
+
+            TransientCache.Clear();
         }
         catch (Exception ex)
         {
             Cache.Clear();
+            TransientCache.Clear();
             PluginRuntimeLog.Error(
                 $"[TranslationFailureCacheManager] Failed to preload cache: {ex}");
         }
@@ -111,16 +116,72 @@ public static class TranslationFailureCacheManager
             translationEngine);
         if (!Cache.TryGetValue(lookupKey, out var rows) || rows.Count == 0)
         {
-            return false;
+            return ContainsTransientFailure(
+                lookupKey,
+                sourceText);
         }
 
-        return rows.Any(row =>
+        if (rows.Any(row =>
             TranslationPersistenceGuard.IsPersistentFailureReason(
                 row.FailureReason) &&
             string.Equals(
                 row.SourceText,
                 sourceText,
+                StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        return ContainsTransientFailure(
+            lookupKey,
+            sourceText);
+    }
+
+    /// <summary>
+    ///     Remembers one exact translation request as a transient runtime
+    ///     failure without persisting it to the database.
+    /// </summary>
+    /// <param name="sourceText">The exact sanitized source text.</param>
+    /// <param name="sourceLanguage">The source language code.</param>
+    /// <param name="targetLanguage">The target language code.</param>
+    /// <param name="translationEngine">The translation engine identifier.</param>
+    /// <param name="failureReason">The normalized failure reason.</param>
+    /// <param name="ttl">The in-memory lifetime of the transient failure.</param>
+    public static void RememberTransientFailure(
+        string sourceText,
+        string sourceLanguage,
+        string targetLanguage,
+        int translationEngine,
+        string failureReason,
+        TimeSpan ttl)
+    {
+        if (string.IsNullOrWhiteSpace(sourceText) ||
+            string.IsNullOrWhiteSpace(failureReason) ||
+            ttl <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        var hash = TranslationFailureKey.ComputeSourceTextHash(sourceText);
+        var bucket = GetTransientBucket(
+            hash,
+            sourceLanguage,
+            targetLanguage,
+            translationEngine);
+        var existing = bucket.FirstOrDefault(entry =>
+            string.Equals(
+                entry.SourceText,
+                sourceText,
                 StringComparison.Ordinal));
+        if (existing != null)
+        {
+            bucket.Remove(existing);
+        }
+
+        bucket.Add(new TransientTranslationFailure(
+            sourceText,
+            failureReason,
+            DateTime.UtcNow.Add(ttl)));
     }
 
     /// <summary>
@@ -129,6 +190,7 @@ public static class TranslationFailureCacheManager
     public static void Clear()
     {
         Cache.Clear();
+        TransientCache.Clear();
         PluginRuntimeLog.Debug("[TranslationFailureCacheManager] Cleared translation-failure cache.");
     }
 
@@ -160,6 +222,56 @@ public static class TranslationFailureCacheManager
 
         return rows;
     }
+
+    private static bool ContainsTransientFailure(
+        string lookupKey,
+        string sourceText)
+    {
+        if (!TransientCache.TryGetValue(lookupKey, out var entries) ||
+            entries.Count == 0)
+        {
+            return false;
+        }
+
+        var now = DateTime.UtcNow;
+        entries.RemoveAll(entry => entry.ExpiresAtUtc <= now);
+        if (entries.Count == 0)
+        {
+            TransientCache.Remove(lookupKey);
+            return false;
+        }
+
+        return entries.Any(entry =>
+            string.Equals(
+                entry.SourceText,
+                sourceText,
+                StringComparison.Ordinal));
+    }
+
+    private static List<TransientTranslationFailure> GetTransientBucket(
+        string sourceTextHash,
+        string? sourceLanguage,
+        string? targetLanguage,
+        int translationEngine)
+    {
+        var key = TranslationFailureKey.BuildLookupKey(
+            sourceTextHash,
+            sourceLanguage,
+            targetLanguage,
+            translationEngine);
+        if (!TransientCache.TryGetValue(key, out var rows))
+        {
+            rows = [];
+            TransientCache[key] = rows;
+        }
+
+        return rows;
+    }
+
+    private sealed record TransientTranslationFailure(
+        string SourceText,
+        string FailureReason,
+        DateTime ExpiresAtUtc);
 }
 
 
