@@ -103,7 +103,7 @@ public partial class Echoglossian
   /// <summary>
   ///     Fully resets the plugin configuration to its default values,
   ///     including all fields and properties. Prompts are explicitly assigned
-  ///     from <see cref="PromptTemplateManager.DefaultPrompt" />.
+  ///     from their engine-specific built-in defaults.
   ///     Metadata like
   ///     <c>PluginVersion</c> and <c>FontChangeTime</c> are preserved or refreshed.
   /// </summary>
@@ -140,27 +140,27 @@ public partial class Echoglossian
       prop.SetValue(config, prop.GetValue(defaultConfig));
     }
 
-    // Manually assign prompts with fallback to PromptTemplateManager.DefaultPrompt
-    void SetPromptIfEmpty(string fieldName)
+    // Manually assign prompts with fallback to each engine's built-in default.
+    void SetPromptIfEmpty(string fieldName, PromptType promptType)
     {
       var field = configType.GetField(fieldName);
       if (field is { } f &&
           string.IsNullOrWhiteSpace(f.GetValue(config) as string))
       {
-        f.SetValue(config, PromptTemplateManager.DefaultPrompt);
+        f.SetValue(config, PromptTemplateManager.GetDefaultPrompt(promptType));
       }
     }
 
-    SetPromptIfEmpty(nameof(Config.ChatGptPrompt));
-    SetPromptIfEmpty(nameof(Config.ClaudePrompt));
-    SetPromptIfEmpty(nameof(Config.DeepSeekPrompt));
-    SetPromptIfEmpty(nameof(Config.GeminiPrompt));
-    SetPromptIfEmpty(nameof(Config.OpenRouterPrompt));
-    SetPromptIfEmpty(nameof(Config.MicrosoftTranslatorPrompt));
-    SetPromptIfEmpty(nameof(Config.AmazonPrompt));
-    SetPromptIfEmpty(nameof(Config.YandexCloudPrompt));
-    SetPromptIfEmpty(nameof(Config.OllamaPrompt));
-    SetPromptIfEmpty(nameof(Config.LmStudioPrompt));
+    SetPromptIfEmpty(nameof(Config.ChatGptPrompt), PromptType.ChatGPT);
+    SetPromptIfEmpty(nameof(Config.ClaudePrompt), PromptType.Claude);
+    SetPromptIfEmpty(nameof(Config.DeepSeekPrompt), PromptType.DeepSeek);
+    SetPromptIfEmpty(nameof(Config.GeminiPrompt), PromptType.Gemini);
+    SetPromptIfEmpty(nameof(Config.OpenRouterPrompt), PromptType.OpenRouter);
+    SetPromptIfEmpty(nameof(Config.MicrosoftTranslatorPrompt), PromptType.Microsoft);
+    SetPromptIfEmpty(nameof(Config.AmazonPrompt), PromptType.Amazon);
+    SetPromptIfEmpty(nameof(Config.YandexCloudPrompt), PromptType.YandexCloud);
+    SetPromptIfEmpty(nameof(Config.OllamaPrompt), PromptType.Ollama);
+    SetPromptIfEmpty(nameof(Config.LmStudioPrompt), PromptType.LmStudio);
 
     // Restore runtime-mutable metadata
     config.FontChangeTime = DateTime.Now.Ticks;

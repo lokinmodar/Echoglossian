@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -14,6 +15,7 @@ public class OllamaTranslator : ITranslator
     private readonly HttpClient httpClient;
     private readonly string model;
     private readonly IPluginLog pluginLog;
+    private readonly string promptTemplate;
     private readonly float temperature;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
 
@@ -23,6 +25,9 @@ public class OllamaTranslator : ITranslator
         this.endpoint =
             config.OllamaUrl?.TrimEnd('/') ?? "http://localhost:11434";
         this.model = config.OllamaModel ?? "llama3";
+        this.promptTemplate = string.IsNullOrWhiteSpace(config.OllamaPrompt)
+            ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Ollama)
+            : config.OllamaPrompt;
         this.temperature = config.OllamaTemperature;
 
         this.httpClient = new HttpClient
@@ -77,8 +82,10 @@ public class OllamaTranslator : ITranslator
         string cacheKey)
     {
         var fixedText = FixText(text);
-        var prompt =
-            $"Translate the following Final Fantasy XIV dialogue from {sourceLanguage} to {targetLanguage}. Keep it localized and immersive:\n\n\"{fixedText}\"";
+        var prompt = this.promptTemplate
+            .Replace("{text}", fixedText)
+            .Replace("{sourceLanguage}", sourceLanguage)
+            .Replace("{targetLanguage}", targetLanguage);
 
         var request = new
         {

@@ -126,3 +126,44 @@ turning into an opaque pile of partial changes.
   - start isolating per-engine prompt compaction work, beginning with the local
     LLM family and the smallest prompt-builder extraction that does not fork
     the translation pipeline
+
+## Iteration 3 - Local LLM Prompt Compaction Defaults
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - reduce avoidable prompt overhead for the first local LLM engines without
+    refactoring the entire translator stack
+  - keep custom per-engine prompts intact while making empty/default local
+    prompts cheaper than the shared cloud-LLM template
+- Files touched:
+  - `PluginUI/Helpers/PromptTemplateManager.cs`
+  - `GeneralHelpers/Utils.cs`
+  - `Translators/LmStudioTranslator.cs`
+  - `Translators/OllamaTranslator.cs`
+  - `PluginUI/EngineConfigUI/LmStudioEngineUI.cs`
+  - `PluginUI/EngineConfigUI/OllamaEngineUI.cs`
+  - `Echoglossian.Tests/PromptTemplateManagerTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added compact built-in prompt defaults dedicated to:
+    - `LM Studio`
+    - `Ollama`
+  - added `PromptTemplateManager.GetDefaultPrompt(...)` so engine-specific
+    defaults stay centralized instead of hardcoded in each callsite
+  - made `LM Studio` and `Ollama` runtime translators fall back to those
+    compact defaults when their saved prompt is empty
+  - aligned reset-to-default and config-reset behavior so local LLM engines
+    keep their own compact defaults instead of being repopulated with the
+    larger cloud-LLM template
+- Behavior-sensitive risks:
+  - this changes only the built-in default prompt path for local LLM engines;
+    user-customized prompts are intentionally preserved
+  - this does not yet add session reuse or request-shape telemetry; it is only
+    the first prompt-overhead cut for `#176`
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - add the first pass of the `Translator Debugger and Metrics` runtime
+    foundation, keeping metrics aggregated and out of the hot-path log

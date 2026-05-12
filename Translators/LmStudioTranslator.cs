@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -30,7 +31,9 @@ public class LmStudioTranslator : ITranslator
         this.pluginLog = pluginLog;
         this.model = config.LmStudioModel;
         this.temperature = config.LmStudioTemperature;
-        this.prompt = config.LmStudioPrompt;
+        this.prompt = string.IsNullOrWhiteSpace(config.LmStudioPrompt)
+            ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.LmStudio)
+            : config.LmStudioPrompt;
 
         var baseUrl = config.LmStudioBaseUrl?.TrimEnd('/') ??
                       "http://localhost:1234/v1";

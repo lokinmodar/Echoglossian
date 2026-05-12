@@ -91,7 +91,7 @@ public static class LmStudioEngineUI
         PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.LmStudio,
-            PromptTemplateManager.DefaultPrompt,
+            PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.LmStudio),
             Echoglossian.TransEngines.LmStudio.ToString());
 
         if (changed)

@@ -70,7 +70,7 @@ public static class OllamaEngineUI
         PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Ollama,
-            PromptTemplateManager.DefaultPrompt,
+            PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Ollama),
             Echoglossian.TransEngines.Ollama.ToString());
 
         if (changed)
