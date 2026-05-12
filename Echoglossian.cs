@@ -341,7 +341,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.RegisterOverlays();
 
     this.dbEditorWindow = new DbEditorWindow(new EchoglossianDbContext(ConfigDirectory));
-    this.translatorMetricsWindow = new TranslatorMetricsWindow();
+    this.translatorMetricsWindow = new TranslatorMetricsWindow(
+        this.RetranslateVisibleDialogueAndPersistAsync);
     // Subscribe to draw it:
     PluginInterface.UiBuilder.Draw += this.DrawDbEditorWindow;
     PluginInterface.UiBuilder.Draw += this.DrawTranslatorMetricsWindow;

@@ -14,6 +14,28 @@ namespace Echoglossian;
 /// </summary>
 public sealed class TranslatorMetricsWindow
 {
+  private readonly Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
+      retranslateVisibleDialogueAsync;
+  private Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>?
+      activeRetranslationTask;
+  private string? lastRetranslationMessage;
+  private bool? lastRetranslationSucceeded;
+
+  /// <summary>
+  ///     Initializes a new instance of the <see cref="TranslatorMetricsWindow" />
+  ///     class.
+  /// </summary>
+  /// <param name="retranslateVisibleDialogueAsync">
+  ///     Delegate used to explicitly retranslate the currently visible dialogue
+  ///     line and persist the refreshed result.
+  /// </param>
+  public TranslatorMetricsWindow(
+      Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
+          retranslateVisibleDialogueAsync)
+  {
+    this.retranslateVisibleDialogueAsync = retranslateVisibleDialogueAsync;
+  }
+
   /// <summary>
   ///     Gets or sets a value indicating whether the metrics window is open.
   /// </summary>
@@ -46,9 +68,47 @@ public sealed class TranslatorMetricsWindow
         "Aggregated runtime metrics for translator activity in this session.");
     ImGui.Separator();
 
+    this.ResolveCompletedRetranslationTask();
+
+    var isRetranslationRunning = this.activeRetranslationTask is { IsCompleted: false };
+    if (isRetranslationRunning)
+    {
+      ImGui.BeginDisabled();
+    }
+
+    if (ImGui.Button("Retranslate Visible Dialogue And Persist"))
+    {
+      this.lastRetranslationMessage = null;
+      this.lastRetranslationSucceeded = null;
+      this.activeRetranslationTask = this.retranslateVisibleDialogueAsync();
+    }
+
+    if (isRetranslationRunning)
+    {
+      ImGui.EndDisabled();
+    }
+
+    ImGui.SameLine();
     if (ImGui.Button("Clear Metrics"))
     {
       TranslatorMetricsCollector.Clear();
+    }
+
+    if (isRetranslationRunning)
+    {
+      ImGui.Spacing();
+      ImGui.TextWrapped(
+          "Retranslating the currently visible dialogue line...");
+    }
+    else if (!string.IsNullOrWhiteSpace(this.lastRetranslationMessage))
+    {
+      var messageColor = this.lastRetranslationSucceeded == true
+          ? new Vector4(0.45f, 0.9f, 0.55f, 1f)
+          : new Vector4(0.95f, 0.6f, 0.35f, 1f);
+      ImGui.Spacing();
+      ImGui.PushStyleColor(ImGuiCol.Text, messageColor);
+      ImGui.TextWrapped(this.lastRetranslationMessage);
+      ImGui.PopStyleColor();
     }
 
     var snapshots = TranslatorMetricsCollector.GetSnapshots();
@@ -129,5 +189,39 @@ public sealed class TranslatorMetricsWindow
     }
 
     ImGui.End();
+  }
+
+  /// <summary>
+  ///     Resolves a completed visible-dialogue retranslation task into the
+  ///     session-scoped status message shown by the debugger window.
+  /// </summary>
+  private void ResolveCompletedRetranslationTask()
+  {
+    if (this.activeRetranslationTask is not { IsCompleted: true } completedTask)
+    {
+      return;
+    }
+
+    this.activeRetranslationTask = null;
+
+    if (completedTask.IsFaulted)
+    {
+      this.lastRetranslationSucceeded = false;
+      this.lastRetranslationMessage =
+          "Visible dialogue retranslation failed unexpectedly before a result could be reported.";
+      return;
+    }
+
+    if (completedTask.IsCanceled)
+    {
+      this.lastRetranslationSucceeded = false;
+      this.lastRetranslationMessage =
+          "Visible dialogue retranslation was canceled before completion.";
+      return;
+    }
+
+    var result = completedTask.GetAwaiter().GetResult();
+    this.lastRetranslationSucceeded = result.Success;
+    this.lastRetranslationMessage = result.Message;
   }
 }

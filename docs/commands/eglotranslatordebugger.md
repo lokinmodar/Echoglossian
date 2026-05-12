@@ -14,3 +14,21 @@ window.
 
 The window is session-scoped and uses in-memory aggregates only. It does not
 create hot-path per-request logs.
+
+## Operator Action
+
+The window also exposes an explicit `Retranslate Visible Dialogue And Persist`
+button.
+
+Current first-pass scope:
+
+- `Talk`
+- `BattleTalk`
+
+Behavior:
+
+- forces a fresh live translation for the currently visible dialogue line
+- persists the refreshed result through the dialogue DB path
+- prefers the refreshed row on later lookups by making it the newest matching
+  dialogue row
+- keeps session-aware runtime dialogue context out of the persisted row

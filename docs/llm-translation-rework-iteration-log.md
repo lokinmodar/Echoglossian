@@ -482,3 +482,43 @@ turning into an opaque pile of partial changes.
   - wire the explicit visible-dialogue retranslation action into the
     `Translator Debugger and Metrics` window with session-scoped status
     reporting
+
+## Iteration 12 - Translator Debugger Retranslation Control
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - expose the first operator-facing `retranslate visible text and persist`
+    control in the `Translator Debugger and Metrics` window
+  - keep the action discoverable for engine troubleshooting without moving it
+    into the main config UI
+- Files touched:
+  - `Echoglossian.cs`
+  - `PluginUI/PluginRuntimeUi.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `docs/commands/eglotranslatordebugger.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - injected the visible-dialogue retranslation callback into
+    `TranslatorMetricsWindow`
+  - added a `Retranslate Visible Dialogue And Persist` button with:
+    - in-flight disable state
+    - session-scoped outcome message
+    - success/failure coloring
+  - added plugin-side routing that scans the registered addon handlers and
+    invokes the first visible `Talk` or `BattleTalk` retranslation handler
+  - documented the first-pass scope and persistence semantics in the command
+    doc
+- Behavior-sensitive risks:
+  - the first pass deliberately only targets `Talk` and `BattleTalk`
+  - if both were somehow visible at once, the current handler registration
+    order would prefer `Talk`
+  - this is still an operator/debugger workflow, not a broad end-user config
+    action
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - verify the in-game UX of the retranslation control and then decide whether
+    the next step should deepen `#174` semantics or extend runtime-only
+    context to another LLM family
