@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-11
+Snapshot date: 2026-05-12
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -261,6 +261,34 @@ require careful UI/runtime investigation rather than a narrow config fix.
     original-text corruption and overlapping layout reports stop reproducing.
 
 ## P3: Important, Not Immediate Release Blockers
+
+## LLM / AI Translation Engine Cluster
+
+If engineering focus shifts from UI/layout regressions toward translation-engine
+quality and LLM usability, this is the best internal order:
+
+1. `#201` visible user feedback for LLM quota / endpoint / usage-limit failures
+2. `#176` local-LLM latency, prompt overhead, and session or context reuse
+3. `#196` custom OpenAI-compatible provider support
+4. `#148` structured input/output, glossary, and metadata shaping
+5. `#174` adjacent DB/cache semantics for retranslation after translator experiments
+
+Notes:
+
+- `#201` is the narrowest, safest LLM-facing improvement with immediate user
+  value. It does not need a broad architecture rewrite and directly addresses
+  the current "silent fallback to original text" confusion when quota or
+  endpoint failures happen.
+- `#176` is the best next technical target if the goal is to materially improve
+  local LLM usage. It naturally connects with the existing design discussion
+  around compact prompts, persistent HTTP/session reuse, and short-lived
+  conversation context for dialogue surfaces.
+- `#196` and `#148` are larger engine-platform steps rather than hotfixes.
+  They are best treated as deliberate architecture work after the narrower UX
+  and latency problems are under control.
+- `#174` is not a pure LLM issue, but current comments show it is part of the
+  same user workflow: experimenting with multiple translators, retranslation,
+  and wanting better control over stored rows and DB reuse semantics.
 
 ### #176 [Performance] Overhead de ~1s entre captura do texto e exibição da tradução com LLM local
 
