@@ -18,6 +18,7 @@ public class TranslationService
   private readonly Action<string>? debugLog;
   private readonly Func<string, string, string, int, bool>? isKnownFailedTranslation;
   private readonly Action<string, string, string, int, string, string?>? recordFailedTranslation;
+  private readonly Action<int, TranslationFailureClassification>? reportTranslationFailure;
   private readonly Func<string, string> sanitizeText;
   private readonly int translationEngineId = -1;
   private readonly ITranslator translator = null!;
@@ -53,6 +54,8 @@ public class TranslationService
                 failureReason,
                 originContext,
                 TranslationFailureCacheManager.Update);
+    this.reportTranslationFailure =
+        Echoglossian.ReportRuntimeTranslationFailure;
 
     if (chosenEngine == Echoglossian.TransEngines.All)
     {
@@ -76,7 +79,8 @@ public class TranslationService
       ITranslator translator,
       int translationEngine = (int)Echoglossian.TransEngines.Google,
       Func<string, string, string, int, bool>? isKnownFailedTranslation = null,
-      Action<string, string, string, int, string, string?>? recordFailedTranslation = null)
+      Action<string, string, string, int, string, string?>? recordFailedTranslation = null,
+      Action<int, TranslationFailureClassification>? reportTranslationFailure = null)
   {
     this.debugLog = null;
     this.sanitizeText = sanitizeText;
@@ -84,6 +88,7 @@ public class TranslationService
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
     this.recordFailedTranslation = recordFailedTranslation;
+    this.reportTranslationFailure = reportTranslationFailure;
   }
 
   /// <summary>
@@ -264,6 +269,23 @@ public class TranslationService
     if (TranslationResultGuard.IsPersistableTranslation(translatedText))
     {
       return translatedText!;
+    }
+
+    if (TranslationFailureTextClassifier.TryClassify(
+            translatedText,
+            out var classification) &&
+        classification != null)
+    {
+      this.reportTranslationFailure?.Invoke(
+          this.translationEngineId,
+          classification);
+      this.RecordFailedTranslation(
+          parsedText,
+          normalizedSourceLanguage,
+          normalizedTargetLanguage,
+          classification.FailureReason,
+          resolvedOriginContext);
+      return sanitizedText;
     }
 
     this.RecordFailedTranslation(

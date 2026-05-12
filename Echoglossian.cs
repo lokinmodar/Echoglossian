@@ -119,6 +119,8 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly IDalamudTextureWrap talkImage;
   private static Echoglossian? activeInstance;
   private string? addonHandlerRegistrationSignature;
+  private readonly Dictionary<string, DateTime> runtimeTranslationFailureNotificationTimes =
+      new(StringComparer.Ordinal);
   private string? translationActivationBlockedNotificationSignature;
   private string? translationRuntimeSignature;
   private bool runtimeConfigurationDirty;

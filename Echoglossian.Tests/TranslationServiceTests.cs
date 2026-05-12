@@ -344,6 +344,37 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures known localized engine-unavailable messages do not become
+    ///     accepted translated output and are reported to the runtime
+    ///     feedback path.
+    /// </summary>
+    [Fact]
+    public void Translate_UnavailableMessage_FallsBackAndReportsFailure()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey,
+        };
+        TranslationFailureClassification? reportedClassification = null;
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.ChatGPT,
+            reportTranslationFailure: (engine, classification) =>
+            {
+                reportedClassification = classification;
+            });
+
+        var result = service.Translate("hello", "en", "pt-BR");
+
+        Assert.Equal("hello", result);
+        Assert.NotNull(reportedClassification);
+        Assert.Equal(
+            TranslationFailureKind.EngineUnavailable,
+            reportedClassification!.Kind);
+    }
+
+    /// <summary>
     ///     Minimal fake translator for pipeline tests.
     /// </summary>
     private sealed class RecordingTranslator : ITranslator

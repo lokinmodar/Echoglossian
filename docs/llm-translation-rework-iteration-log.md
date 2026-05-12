@@ -43,3 +43,48 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - implement iteration 1 as a narrow `#201` slice:
     normalized LLM failure classification plus visible operator feedback
+
+## Iteration 1 - LLM Failure Classification and Visible Feedback Foundation
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - stop known LLM failure texts from being accepted as valid translations
+  - normalize failure categories for the runtime
+  - surface actionable LLM runtime failures through deduplicated Dalamud
+    notifications
+- Files touched:
+  - `GeneralHelpers/TranslationFailureTextClassifier.cs`
+  - `GeneralHelpers/TranslationResultGuard.cs`
+  - `GeneralHelpers/TranslationFailureNotifications.cs`
+  - `Translators/TranslationService.cs`
+  - `Echoglossian.cs`
+  - `Echoglossian.Tests/TranslationFailureTextClassifierTests.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+- What changed:
+  - added a shared classifier for:
+    - unavailable-provider messages caused by missing credentials/config
+    - quota/rate-limit failures
+    - authentication failures
+    - endpoint/connection failures
+    - timeout failures
+    - generic provider failures
+  - made the shared translated-result guard reject known unavailable-provider
+    messages in addition to synthetic `[Translation Error: ...]` placeholders
+  - taught `TranslationService` to classify failed translator output and report
+    actionable LLM issues to the runtime feedback path
+  - added a deduplicated LLM runtime notification path in the plugin with an
+    `Open Configuration` button
+- Behavior-sensitive risks:
+  - this is intentionally the first-pass notification foundation, not the full
+    retry/cooldown rework yet
+  - quota/endpoint failures are now visible, but transient retry pacing is
+    still governed by the existing translator/runtime behavior
+  - non-LLM engines are intentionally excluded from this first-pass operator
+    feedback path
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - add short-lived runtime suppression for repeated transient LLM failures so
+    endpoint/quota outages do not keep re-requesting the same text every frame
