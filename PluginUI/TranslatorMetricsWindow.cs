@@ -70,13 +70,15 @@ public sealed class TranslatorMetricsWindow
 
     if (ImGui.BeginTable(
             "##TranslatorMetricsTable",
-            10,
+            12,
             ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg |
             ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY |
             ImGuiTableFlags.SizingStretchProp,
             new Vector2(-1f, -1f)))
     {
       ImGui.TableSetupColumn("Engine");
+      ImGui.TableSetupColumn("Provider");
+      ImGui.TableSetupColumn("Model");
       ImGui.TableSetupColumn("Live Requests");
       ImGui.TableSetupColumn("Successes");
       ImGui.TableSetupColumn("Failures");
@@ -93,6 +95,10 @@ public sealed class TranslatorMetricsWindow
         ImGui.TableNextRow();
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(snapshot.EngineName);
+        ImGui.TableNextColumn();
+        ImGui.TextUnformatted(snapshot.ProviderName ?? "-");
+        ImGui.TableNextColumn();
+        ImGui.TextWrapped(snapshot.ModelName ?? "-");
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(snapshot.LiveRequestCount.ToString(CultureInfo.InvariantCulture));
         ImGui.TableNextColumn();

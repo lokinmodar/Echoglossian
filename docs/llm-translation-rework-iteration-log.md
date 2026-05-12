@@ -288,3 +288,36 @@ turning into an opaque pile of partial changes.
   - start shaping engine-specific runtime metrics beyond aggregate latency,
     likely provider/model metadata in the debugger window before touching
     dialogue session context
+
+## Iteration 7 - Expose Provider and Model Context In Translator Metrics
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - make the translator debugger more useful for real LLM diagnosis by showing
+    which provider and model are associated with each engine bucket
+  - keep this purely aggregate and session-scoped, without adding hot-path
+    trace noise
+- Files touched:
+  - `Translators/TranslatorMetricsCollector.cs`
+  - `Translators/TranslationService.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `Echoglossian.Tests/TranslatorMetricsCollectorTests.cs`
+  - `docs/commands/eglotranslatordebugger.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added optional provider/model metadata to metrics snapshots
+  - taught `TranslationService` to describe the active engine bucket from
+    config at runtime-refresh time
+  - expanded the debugger window with `Provider` and `Model` columns
+  - updated metrics tests to cover metadata retention in the collector
+- Behavior-sensitive risks:
+  - this records only the latest provider/model description per engine id in
+    the current session; it is not a historical audit trail
+  - the metadata is configuration-derived, not scraped from provider responses
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - consider the first runtime-only dialogue session scaffolding for `Talk`,
+    while keeping `BattleTalk` isolated on the same infrastructure

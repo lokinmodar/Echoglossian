@@ -36,6 +36,8 @@ public enum TranslationRequestMetricOutcome
 /// </summary>
 /// <param name="EngineId">The persisted translation engine id.</param>
 /// <param name="EngineName">The displayable engine name.</param>
+/// <param name="ProviderName">The provider family or service label.</param>
+/// <param name="ModelName">The active model label when applicable.</param>
 /// <param name="LiveRequestCount">The number of live translator requests issued.</param>
 /// <param name="SuccessCount">The number of successful translated results.</param>
 /// <param name="FailureCount">The number of live requests that fell back.</param>
@@ -52,6 +54,8 @@ public enum TranslationRequestMetricOutcome
 public readonly record struct TranslatorMetricsSnapshot(
     int EngineId,
     string EngineName,
+    string? ProviderName,
+    string? ModelName,
     long LiveRequestCount,
     long SuccessCount,
     long FailureCount,
@@ -92,6 +96,19 @@ public static class TranslatorMetricsCollector
   }
 
   /// <summary>
+  ///     Updates display metadata for one translation engine so the debugger
+  ///     window can show the active provider and model labels.
+  /// </summary>
+  /// <param name="engineId">The translation engine id.</param>
+  /// <param name="providerName">The provider family or service label.</param>
+  /// <param name="modelName">The active model label when applicable.</param>
+  public static void DescribeEngine(int engineId, string? providerName, string? modelName)
+  {
+    var bucket = Buckets.GetOrAdd(engineId, _ => new TranslatorMetricsBucket());
+    bucket.Describe(providerName, modelName);
+  }
+
+  /// <summary>
   ///     Gets immutable snapshots for every engine with observed activity.
   /// </summary>
   /// <returns>The ordered metrics snapshot list.</returns>
@@ -125,6 +142,17 @@ public static class TranslatorMetricsCollector
     private long shortCircuitCount;
     private long successCount;
     private double totalLatencyMs;
+    private string? modelName;
+    private string? providerName;
+
+    public void Describe(string? providerName, string? modelName)
+    {
+      lock (this.syncRoot)
+      {
+        this.providerName = string.IsNullOrWhiteSpace(providerName) ? null : providerName;
+        this.modelName = string.IsNullOrWhiteSpace(modelName) ? null : modelName;
+      }
+    }
 
     public void Record(
         TranslationRequestMetricOutcome outcome,
@@ -179,6 +207,8 @@ public static class TranslatorMetricsCollector
         return new TranslatorMetricsSnapshot(
             engineId,
             engineName,
+            this.providerName,
+            this.modelName,
             this.liveRequestCount,
             this.successCount,
             this.failureCount,

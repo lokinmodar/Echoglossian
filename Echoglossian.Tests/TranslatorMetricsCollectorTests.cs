@@ -22,6 +22,10 @@ public class TranslatorMetricsCollectorTests
   {
     TranslatorMetricsCollector.Clear();
     var observedAtUtc = new DateTime(2026, 05, 12, 12, 0, 0, DateTimeKind.Utc);
+    TranslatorMetricsCollector.DescribeEngine(
+        (int)Echoglossian.TransEngines.Ollama,
+        "Ollama",
+        "llama3");
 
     TranslatorMetricsCollector.Record(
         (int)Echoglossian.TransEngines.Ollama,
@@ -44,6 +48,8 @@ public class TranslatorMetricsCollectorTests
     var snapshot = Assert.Single(TranslatorMetricsCollector.GetSnapshots());
 
     Assert.Equal((int)Echoglossian.TransEngines.Ollama, snapshot.EngineId);
+    Assert.Equal("Ollama", snapshot.ProviderName);
+    Assert.Equal("llama3", snapshot.ModelName);
     Assert.Equal(2, snapshot.LiveRequestCount);
     Assert.Equal(1, snapshot.SuccessCount);
     Assert.Equal(1, snapshot.FailureCount);

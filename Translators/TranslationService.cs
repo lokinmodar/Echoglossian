@@ -82,6 +82,11 @@ public class TranslationService
       return;
     }
 
+    TranslatorMetricsCollector.DescribeEngine(
+        this.translationEngineId,
+        ResolveMetricsProviderName(chosenEngine),
+        ResolveMetricsModelName(chosenEngine, config));
+
     this.translator = TranslatorFactory.Create(
         chosenEngine,
         config,
@@ -529,6 +534,54 @@ public class TranslationService
             : TranslationRequestMetricOutcome.Failure,
         elapsed,
         acceptanceResult.FailureReason);
+  }
+
+  /// <summary>
+  ///     Resolves the provider label shown by the translator metrics debugger.
+  /// </summary>
+  /// <param name="engine">The configured translation engine.</param>
+  /// <returns>The provider family label.</returns>
+  private static string ResolveMetricsProviderName(Echoglossian.TransEngines engine)
+  {
+    return engine switch
+    {
+      Echoglossian.TransEngines.ChatGPT => "OpenAI",
+      Echoglossian.TransEngines.Claude => "Anthropic",
+      Echoglossian.TransEngines.DeepSeek => "DeepSeek",
+      Echoglossian.TransEngines.Gemini => "Google Gemini",
+      Echoglossian.TransEngines.OpenRouter => "OpenRouter",
+      Echoglossian.TransEngines.LmStudio => "LM Studio",
+      Echoglossian.TransEngines.Ollama => "Ollama",
+      _ => engine.ToString(),
+    };
+  }
+
+  /// <summary>
+  ///     Resolves the configured model label shown by the translator metrics
+  ///     debugger.
+  /// </summary>
+  /// <param name="engine">The configured translation engine.</param>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The configured model label, or <see langword="null" /> when not applicable.</returns>
+  private static string? ResolveMetricsModelName(
+      Echoglossian.TransEngines engine,
+      Config config)
+  {
+    return engine switch
+    {
+      Echoglossian.TransEngines.ChatGPT => config.OpenAILlmModel,
+      Echoglossian.TransEngines.Claude => config.ClaudeModel,
+      Echoglossian.TransEngines.DeepSeek => config.DeepSeekModel,
+      Echoglossian.TransEngines.Gemini => string.IsNullOrWhiteSpace(config.GeminiModelId)
+          ? config.GeminiModel
+          : config.GeminiModelId,
+      Echoglossian.TransEngines.OpenRouter => config.OpenRouterModel,
+      Echoglossian.TransEngines.LmStudio => config.LmStudioModel,
+      Echoglossian.TransEngines.Ollama => config.OllamaModel,
+      Echoglossian.TransEngines.Amazon => config.AwsTranslateModel,
+      Echoglossian.TransEngines.Microsoft => config.MicrosoftTranslatorModel,
+      _ => null,
+    };
   }
 
   /// <summary>
