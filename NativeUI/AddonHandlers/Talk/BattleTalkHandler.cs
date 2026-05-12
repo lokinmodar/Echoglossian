@@ -453,6 +453,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
             originalText,
             DialogueSessionHistoryLimit,
             DialogueSessionTtl);
+        var usesRuntimeOnlyDialogueContext =
+            this.translationService.WillUseDialogueContext(dialogueContext);
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
@@ -477,20 +479,23 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
           }
         }
 
-        var translatedBattleTalkData = new BattleTalkMessage(
-            originalName,
-            originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
-            ClientStateInterface.ClientLanguage.Humanize(),
-            translatedName,
-            translatedText,
-            LangDict[LanguageInt].Code,
-            this.config.ChosenTransEngine,
-            rtlLangTranslationImageData: null,
-            DateTime.Now,
-            DateTime.Now);
+        if (!usesRuntimeOnlyDialogueContext)
+        {
+          var translatedBattleTalkData = new BattleTalkMessage(
+              originalName,
+              originalText,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              ClientStateInterface.ClientLanguage.Humanize(),
+              translatedName,
+              translatedText,
+              LangDict[LanguageInt].Code,
+              this.config.ChosenTransEngine,
+              rtlLangTranslationImageData: null,
+              DateTime.Now,
+              DateTime.Now);
 
-        await this.insertBattleTalkMessageAsync(translatedBattleTalkData);
+          await this.insertBattleTalkMessageAsync(translatedBattleTalkData);
+        }
       }
 
       lock (this.stateGate)

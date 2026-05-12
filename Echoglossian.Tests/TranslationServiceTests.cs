@@ -329,6 +329,27 @@ public class TranslationServiceTests
         Assert.Equal(1, translator.ContextAwareAsyncCalls);
         Assert.Equal(0, translator.AsyncCalls);
         Assert.Equal("Talk", translator.LastDialogueContext?.SessionNamespace);
+        Assert.True(service.WillUseDialogueContext(dialogueContext));
+    }
+
+    /// <summary>
+    ///     Ensures empty runtime-only dialogue context does not switch the
+    ///     translation service into the context-aware path.
+    /// </summary>
+    [Fact]
+    public void WillUseDialogueContext_RequiresPriorTurns()
+    {
+        var translator = new ContextAwareRecordingTranslator();
+        var service = new TranslationService(
+            text => text,
+            translator);
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "Krile|engine:8|target:pt-BR",
+            "Krile",
+            []);
+
+        Assert.False(service.WillUseDialogueContext(dialogueContext));
     }
 
     /// <summary>

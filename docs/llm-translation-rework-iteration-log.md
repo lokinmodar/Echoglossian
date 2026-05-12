@@ -367,3 +367,41 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - teach one narrow LLM path to consume the runtime-only dialogue context
     without persisting session-influenced output
+
+## Iteration 9 - First Runtime-Only Dialogue Context Consumer
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - teach one real LLM path to consume the runtime-only dialogue context
+  - prevent session-aware dialogue output from being persisted into the Talk
+    and BattleTalk DB rows
+- Files touched:
+  - `Translators/ChatGPTTranslator.cs`
+  - `Translators/TranslationService.cs`
+  - `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
+  - `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - made `ChatGPTTranslator` implement the optional
+    `IDialogueContextAwareTranslator` path
+  - added context-aware prompt composition that appends prior dialogue turns
+    only when prior history actually exists
+  - added `TranslationService.WillUseDialogueContext(...)` so callers can know
+    whether the runtime will really switch to the context-aware path
+  - updated `Talk` and `BattleTalk` to skip DB insertion when the live
+    translation used runtime-only dialogue context
+- Behavior-sensitive risks:
+  - this is intentionally a single-engine first pass and does not yet cover
+    the other LLM families
+  - session-aware output remains cacheable in-memory for the current session,
+    but not persistable to the DB
+  - first-seen lines without prior history still follow the normal non-context
+    path and therefore keep their existing persistence behavior
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether the next consumer should be another OpenAI-style engine or
+    whether to focus on translator-debugger metrics for the new context path

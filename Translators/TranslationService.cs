@@ -302,14 +302,15 @@ public class TranslationService
       return sanitizedText;
     }
 
+    var useDialogueContext = this.WillUseDialogueContext(dialogueContext);
     var stopwatch = Stopwatch.StartNew();
-    var finalDialogueText = dialogueContext.HasValue &&
+    var finalDialogueText = useDialogueContext &&
                             this.translator is IDialogueContextAwareTranslator contextAwareTranslator
         ? await contextAwareTranslator.TranslateAsync(
             parsedText,
             sourceLanguage,
             targetLanguage,
-            dialogueContext.Value).ConfigureAwait(false)
+            dialogueContext!.Value).ConfigureAwait(false)
         : await this.translator.TranslateAsync(
             parsedText,
             sourceLanguage,
@@ -409,6 +410,23 @@ public class TranslationService
         sanitizedText,
         false,
         failureReason);
+  }
+
+  /// <summary>
+  ///     Determines whether the active translator will actually consume the
+  ///     supplied runtime-only short-lived dialogue context.
+  /// </summary>
+  /// <param name="dialogueContext">The optional dialogue context.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the active translator supports dialogue
+  ///     context and at least one prior turn is available; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  internal bool WillUseDialogueContext(DialogueTranslationContext? dialogueContext)
+  {
+    return dialogueContext.HasValue &&
+           dialogueContext.Value.PriorTurns.Count > 0 &&
+           this.translator is IDialogueContextAwareTranslator;
   }
 
   /// <summary>

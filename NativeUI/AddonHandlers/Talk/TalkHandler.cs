@@ -762,6 +762,8 @@ public sealed class TalkHandler : IAddonTranslationHandler
             originalText,
             DialogueSessionHistoryLimit,
             DialogueSessionTtl);
+        var usesRuntimeOnlyDialogueContext =
+            this.translationService.WillUseDialogueContext(dialogueContext);
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
@@ -786,7 +788,7 @@ public sealed class TalkHandler : IAddonTranslationHandler
           translatedText =
               existingTranslatedTalkMessage.TranslatedTalkMessage ?? string.Empty;
         }
-        else
+        else if (!usesRuntimeOnlyDialogueContext)
         {
           var translatedTalkData = new TalkMessage(
               originalName,
