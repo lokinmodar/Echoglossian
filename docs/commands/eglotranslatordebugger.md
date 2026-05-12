@@ -6,6 +6,7 @@ window.
 ## What It Shows
 
 - aggregated live translator request counts
+- aggregated context-aware live request counts
 - provider and configured model labels per engine
 - successes, failures, and short-circuits per engine
 - average, max, and last observed live request latency

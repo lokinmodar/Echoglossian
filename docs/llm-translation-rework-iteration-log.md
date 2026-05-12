@@ -405,3 +405,35 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether the next consumer should be another OpenAI-style engine or
     whether to focus on translator-debugger metrics for the new context path
+
+## Iteration 10 - Context-Aware Request Visibility In Translator Metrics
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - expose whether runtime translator traffic is actually using short-lived
+    dialogue context
+  - keep this aggregated and session-scoped, with no hot-path trace logging
+- Files touched:
+  - `Translators/TranslatorMetricsCollector.cs`
+  - `Translators/TranslationService.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `Echoglossian.Tests/TranslatorMetricsCollectorTests.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+  - `docs/commands/eglotranslatordebugger.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added aggregated `ContextAwareRequestCount` tracking per engine
+  - taught `TranslationService` to mark whether a live request actually used
+    dialogue context
+  - surfaced the new context-aware count in the debugger summary and table
+  - updated tests and command docs accordingly
+- Behavior-sensitive risks:
+  - this shows only aggregate counts, not which exact lines used context
+  - short-circuited requests do not count as context-aware live requests
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - either expand runtime-only dialogue context to another LLM family or begin
+    the first operator-facing retranslation control from the rework plan

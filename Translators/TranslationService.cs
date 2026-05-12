@@ -20,7 +20,7 @@ public class TranslationService
   private readonly Action<string>? debugLog;
   private readonly Func<string, string, string, int, bool>? isKnownFailedTranslation;
   private readonly Action<string, string, string, int, string, string?>? recordFailedTranslation;
-  private readonly Action<int, TranslationRequestMetricOutcome, TimeSpan, string?>? recordTranslationMetric;
+  private readonly Action<int, TranslationRequestMetricOutcome, TimeSpan, string?, bool>? recordTranslationMetric;
   private readonly Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation;
   private readonly Action<int, TranslationFailureClassification>? reportTranslationFailure;
   private readonly Func<string, string> sanitizeText;
@@ -68,12 +68,13 @@ public class TranslationService
                 failureReason,
                 ttl);
     this.recordTranslationMetric =
-        (translationEngine, outcome, latency, failureReason) =>
+        (translationEngine, outcome, latency, failureReason, usedDialogueContext) =>
             TranslatorMetricsCollector.Record(
                 translationEngine,
                 outcome,
                 latency,
-                failureReason);
+                failureReason,
+                usedDialogueContext);
     this.reportTranslationFailure =
         Echoglossian.ReportRuntimeTranslationFailure;
 
@@ -105,7 +106,7 @@ public class TranslationService
       int translationEngine = (int)Echoglossian.TransEngines.Google,
       Func<string, string, string, int, bool>? isKnownFailedTranslation = null,
       Action<string, string, string, int, string, string?>? recordFailedTranslation = null,
-      Action<int, TranslationRequestMetricOutcome, TimeSpan, string?>? recordTranslationMetric = null,
+      Action<int, TranslationRequestMetricOutcome, TimeSpan, string?, bool>? recordTranslationMetric = null,
       Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation = null,
       Action<int, TranslationFailureClassification>? reportTranslationFailure = null)
   {
@@ -179,7 +180,8 @@ public class TranslationService
           this.translationEngineId,
           TranslationRequestMetricOutcome.ShortCircuited,
           TimeSpan.Zero,
-          "known-failure-cache");
+          "known-failure-cache",
+          false);
       return sanitizedText;
     }
 
@@ -196,7 +198,10 @@ public class TranslationService
         normalizedTargetLanguage,
         resolvedOriginContext);
     stopwatch.Stop();
-    this.RecordTranslationMetric(acceptanceResult, stopwatch.Elapsed);
+    this.RecordTranslationMetric(
+        acceptanceResult,
+        stopwatch.Elapsed,
+        false);
     finalDialogueText = acceptanceResult.Text;
 
     return string.IsNullOrEmpty(startingEllipsis) ||
@@ -298,7 +303,8 @@ public class TranslationService
           this.translationEngineId,
           TranslationRequestMetricOutcome.ShortCircuited,
           TimeSpan.Zero,
-          "known-failure-cache");
+          "known-failure-cache",
+          false);
       return sanitizedText;
     }
 
@@ -323,7 +329,10 @@ public class TranslationService
         normalizedTargetLanguage,
         resolvedOriginContext);
     stopwatch.Stop();
-    this.RecordTranslationMetric(acceptanceResult, stopwatch.Elapsed);
+    this.RecordTranslationMetric(
+        acceptanceResult,
+        stopwatch.Elapsed,
+        useDialogueContext);
     finalDialogueText = acceptanceResult.Text;
 
     return string.IsNullOrEmpty(startingEllipsis) ||
@@ -582,9 +591,13 @@ public class TranslationService
   /// </summary>
   /// <param name="acceptanceResult">The accepted translation outcome.</param>
   /// <param name="elapsed">The elapsed live translation latency.</param>
+  /// <param name="usedDialogueContext">
+  /// Whether the live request consumed runtime-only short-lived dialogue context.
+  /// </param>
   private void RecordTranslationMetric(
       TranslationAcceptanceResult acceptanceResult,
-      TimeSpan elapsed)
+      TimeSpan elapsed,
+      bool usedDialogueContext)
   {
     this.recordTranslationMetric?.Invoke(
         this.translationEngineId,
@@ -592,7 +605,8 @@ public class TranslationService
             ? TranslationRequestMetricOutcome.Success
             : TranslationRequestMetricOutcome.Failure,
         elapsed,
-        acceptanceResult.FailureReason);
+        acceptanceResult.FailureReason,
+        usedDialogueContext);
   }
 
   /// <summary>

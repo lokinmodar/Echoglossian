@@ -31,6 +31,7 @@ public class TranslatorMetricsCollectorTests
         (int)Echoglossian.TransEngines.Ollama,
         TranslationRequestMetricOutcome.Success,
         TimeSpan.FromMilliseconds(120),
+        usedDialogueContext: true,
         observedAtUtc: observedAtUtc);
     TranslatorMetricsCollector.Record(
         (int)Echoglossian.TransEngines.Ollama,
@@ -51,6 +52,7 @@ public class TranslatorMetricsCollectorTests
     Assert.Equal("Ollama", snapshot.ProviderName);
     Assert.Equal("llama3", snapshot.ModelName);
     Assert.Equal(2, snapshot.LiveRequestCount);
+    Assert.Equal(1, snapshot.ContextAwareRequestCount);
     Assert.Equal(1, snapshot.SuccessCount);
     Assert.Equal(1, snapshot.FailureCount);
     Assert.Equal(1, snapshot.ShortCircuitCount);

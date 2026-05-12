@@ -39,6 +39,9 @@ public enum TranslationRequestMetricOutcome
 /// <param name="ProviderName">The provider family or service label.</param>
 /// <param name="ModelName">The active model label when applicable.</param>
 /// <param name="LiveRequestCount">The number of live translator requests issued.</param>
+/// <param name="ContextAwareRequestCount">
+/// The number of live translator requests that consumed runtime-only short-lived dialogue context.
+/// </param>
 /// <param name="SuccessCount">The number of successful translated results.</param>
 /// <param name="FailureCount">The number of live requests that fell back.</param>
 /// <param name="ShortCircuitCount">
@@ -57,6 +60,7 @@ public readonly record struct TranslatorMetricsSnapshot(
     string? ProviderName,
     string? ModelName,
     long LiveRequestCount,
+    long ContextAwareRequestCount,
     long SuccessCount,
     long FailureCount,
     long ShortCircuitCount,
@@ -83,16 +87,25 @@ public static class TranslatorMetricsCollector
   /// <param name="outcome">The aggregated outcome kind.</param>
   /// <param name="latency">The live request latency, or <see cref="TimeSpan.Zero" /> for short-circuits.</param>
   /// <param name="failureReason">Optional failure detail.</param>
+  /// <param name="usedDialogueContext">
+  /// Whether the live request consumed runtime-only short-lived dialogue context.
+  /// </param>
   /// <param name="observedAtUtc">Optional explicit observation time for tests.</param>
   public static void Record(
       int engineId,
       TranslationRequestMetricOutcome outcome,
       TimeSpan latency,
       string? failureReason = null,
+      bool usedDialogueContext = false,
       DateTime? observedAtUtc = null)
   {
     var bucket = Buckets.GetOrAdd(engineId, _ => new TranslatorMetricsBucket());
-    bucket.Record(outcome, latency, failureReason, observedAtUtc ?? DateTime.UtcNow);
+    bucket.Record(
+        outcome,
+        latency,
+        failureReason,
+        usedDialogueContext,
+        observedAtUtc ?? DateTime.UtcNow);
   }
 
   /// <summary>
@@ -131,6 +144,7 @@ public static class TranslatorMetricsCollector
   private sealed class TranslatorMetricsBucket
   {
     private readonly Lock syncRoot = new();
+    private long contextAwareRequestCount;
     private long failureCount;
     private DateTime? lastFailureAtUtc;
     private string? lastFailureReason;
@@ -158,6 +172,7 @@ public static class TranslatorMetricsCollector
         TranslationRequestMetricOutcome outcome,
         TimeSpan latency,
         string? failureReason,
+        bool usedDialogueContext,
         DateTime observedAtUtc)
     {
       lock (this.syncRoot)
@@ -174,6 +189,11 @@ public static class TranslatorMetricsCollector
 
         var latencyMs = latency.TotalMilliseconds;
         this.liveRequestCount++;
+        if (usedDialogueContext)
+        {
+          this.contextAwareRequestCount++;
+        }
+
         this.lastLatencyMs = latencyMs;
         this.totalLatencyMs += latencyMs;
         if (latencyMs > this.maxLatencyMs)
@@ -210,6 +230,7 @@ public static class TranslatorMetricsCollector
             this.providerName,
             this.modelName,
             this.liveRequestCount,
+            this.contextAwareRequestCount,
             this.successCount,
             this.failureCount,
             this.shortCircuitCount,

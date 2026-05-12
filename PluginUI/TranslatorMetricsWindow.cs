@@ -63,14 +63,15 @@ public sealed class TranslatorMetricsWindow
 
     ImGui.Spacing();
     var totalLiveRequests = snapshots.Sum(snapshot => snapshot.LiveRequestCount);
+    var totalContextAwareRequests = snapshots.Sum(snapshot => snapshot.ContextAwareRequestCount);
     var totalFailures = snapshots.Sum(snapshot => snapshot.FailureCount);
     var totalShortCircuits = snapshots.Sum(snapshot => snapshot.ShortCircuitCount);
     ImGui.Text(
-        $"Engines: {snapshots.Count}  |  Live requests: {totalLiveRequests}  |  Failures: {totalFailures}  |  Short circuits: {totalShortCircuits}");
+        $"Engines: {snapshots.Count}  |  Live requests: {totalLiveRequests}  |  Context-aware: {totalContextAwareRequests}  |  Failures: {totalFailures}  |  Short circuits: {totalShortCircuits}");
 
     if (ImGui.BeginTable(
             "##TranslatorMetricsTable",
-            12,
+            13,
             ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg |
             ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY |
             ImGuiTableFlags.SizingStretchProp,
@@ -80,6 +81,7 @@ public sealed class TranslatorMetricsWindow
       ImGui.TableSetupColumn("Provider");
       ImGui.TableSetupColumn("Model");
       ImGui.TableSetupColumn("Live Requests");
+      ImGui.TableSetupColumn("Context-Aware");
       ImGui.TableSetupColumn("Successes");
       ImGui.TableSetupColumn("Failures");
       ImGui.TableSetupColumn("Short Circuits");
@@ -101,6 +103,8 @@ public sealed class TranslatorMetricsWindow
         ImGui.TextWrapped(snapshot.ModelName ?? "-");
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(snapshot.LiveRequestCount.ToString(CultureInfo.InvariantCulture));
+        ImGui.TableNextColumn();
+        ImGui.TextUnformatted(snapshot.ContextAwareRequestCount.ToString(CultureInfo.InvariantCulture));
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(snapshot.SuccessCount.ToString(CultureInfo.InvariantCulture));
         ImGui.TableNextColumn();

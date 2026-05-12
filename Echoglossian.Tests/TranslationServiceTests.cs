@@ -122,7 +122,7 @@ public class TranslationServiceTests
                 source == "en" &&
                 target == "pt-BR" &&
                 engine == 8,
-            recordTranslationMetric: (engine, outcome, latency, failureReason) =>
+            recordTranslationMetric: (engine, outcome, latency, failureReason, usedDialogueContext) =>
             {
                 recordedOutcome = outcome;
             });
@@ -429,7 +429,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: (int)Echoglossian.TransEngines.ChatGPT,
-            recordTranslationMetric: (engine, outcome, latency, failureReason) =>
+            recordTranslationMetric: (engine, outcome, latency, failureReason, usedDialogueContext) =>
             {
                 recordedOutcome = outcome;
             },
