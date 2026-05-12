@@ -437,3 +437,48 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - either expand runtime-only dialogue context to another LLM family or begin
     the first operator-facing retranslation control from the rework plan
+
+## Iteration 11 - Deterministic Dialogue Retranslation Persistence Foundation
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - prepare the first explicit `retranslate visible text and persist` control
+    without yet wiring it into the debugger window
+  - make refreshed dialogue rows deterministic enough that a manual
+    retranslation really becomes the preferred stored result on the next lookup
+- Files touched:
+  - `DBHelpers/DbOperations.cs`
+  - `NativeUI/AddonHandlers/Talk/IVisibleDialogueRetranslationHandler.cs`
+  - `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
+  - `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
+  - `Echoglossian.Tests/DbOperationsTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added an explicit runtime contract for retranslating the currently visible
+    dialogue line and reporting the outcome back to UI
+  - taught `TalkHandler` and `BattleTalkHandler` how to:
+    - capture the current visible source line
+    - force a fresh live translation without dialogue-session persistence
+    - persist the refreshed result through a dedicated upsert path
+    - update the current in-memory resolved state and overlay when the line is
+      still current
+  - added `UpsertTalkDataAsync(...)` and `UpsertBattleTalkDataAsync(...)`
+  - made dialogue DB lookups prefer the most recently refreshed row when
+    multiple historical rows exist for the same source line
+  - added DB tests covering:
+    - Talk upsert refresh
+    - BattleTalk upsert refresh
+    - "most recent row wins" lookup ordering for Talk
+- Behavior-sensitive risks:
+  - this is foundation only; there is still no user-facing button invoking the
+    path yet
+  - lookups now intentionally prefer the newest dialogue row, which is meant
+    to make explicit retranslation win without deleting older engine history
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - wire the explicit visible-dialogue retranslation action into the
+    `Translator Debugger and Metrics` window with session-scoped status
+    reporting

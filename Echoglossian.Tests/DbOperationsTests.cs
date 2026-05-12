@@ -6,6 +6,7 @@
 using Xunit;
 
 using PluginEntry = Echoglossian.Echoglossian;
+using Echoglossian.EFCoreSqlite.Models;
 
 namespace Echoglossian.Tests;
 
@@ -136,6 +137,193 @@ public class DbOperationsTests
         var isPersistent = TranslationPersistenceGuard.IsPersistentFailureReason(reason);
 
         Assert.False(isPersistent);
+    }
+
+    /// <summary>
+    ///     Ensures explicit Talk retranslation persistence updates the existing
+    ///     row for the same source line and engine instead of growing duplicate
+    ///     exact-engine history.
+    /// </summary>
+    [Fact]
+    public async Task UpsertTalkDataAsync_RefreshesExistingExactEngineRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.TalkMessage.Add(new TalkMessage(
+                    senderName: "Krile",
+                    originalTalkMessage: "The plan remains unchanged.",
+                    originalTalkMessageLang: "en",
+                    originalSenderNameLang: "en",
+                    translatedSenderName: "Krile",
+                    translatedTalkMessage: "O plano permanece inalterado.",
+                    translationLang: "pt-BR",
+                    translationEngine: 14,
+                    rtlLangTranslationImageData: null,
+                    createdDate: new DateTime(2026, 5, 12, 8, 0, 0, DateTimeKind.Local),
+                    updatedDate: new DateTime(2026, 5, 12, 8, 0, 0, DateTimeKind.Local)));
+                context.SaveChanges();
+            }
+
+            await PluginEntry.UpsertTalkDataAsync(new TalkMessage(
+                senderName: "Krile",
+                originalTalkMessage: "The plan remains unchanged.",
+                originalTalkMessageLang: "en",
+                originalSenderNameLang: "en",
+                translatedSenderName: "Krile",
+                translatedTalkMessage: "O plano continua o mesmo.",
+                translationLang: "pt-BR",
+                translationEngine: 14,
+                rtlLangTranslationImageData: null,
+                createdDate: new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Local),
+                updatedDate: new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Local)));
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                var rows = context.TalkMessage
+                    .Where(t =>
+                        t.SenderName == "Krile" &&
+                        t.OriginalTalkMessage == "The plan remains unchanged." &&
+                        t.TranslationLang == "pt-BR" &&
+                        t.TranslationEngine == 14)
+                    .ToList();
+
+                Assert.Single(rows);
+                Assert.Equal("O plano continua o mesmo.", rows[0].TranslatedTalkMessage);
+            }
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the dialogue lookup ordering prefers the most recently
+    ///     refreshed Talk row when multiple historical rows exist for the same
+    ///     source line.
+    /// </summary>
+    [Fact]
+    public void OrderTalkMessageLookupQuery_PrefersNewestUpdatedRow()
+    {
+        var olderRow = new TalkMessage(
+            senderName: "Zero",
+            originalTalkMessage: "We move at dawn.",
+            originalTalkMessageLang: "en",
+            originalSenderNameLang: "en",
+            translatedSenderName: "Zero",
+            translatedTalkMessage: "Partimos ao amanhecer.",
+            translationLang: "pt-BR",
+            translationEngine: 14,
+            rtlLangTranslationImageData: null,
+            createdDate: new DateTime(2026, 5, 12, 8, 0, 0),
+            updatedDate: new DateTime(2026, 5, 12, 8, 0, 0))
+        {
+            Id = 1,
+        };
+        var newerRow = new TalkMessage(
+            senderName: "Zero",
+            originalTalkMessage: "We move at dawn.",
+            originalTalkMessageLang: "en",
+            originalSenderNameLang: "en",
+            translatedSenderName: "Zero",
+            translatedTalkMessage: "Seguimos ao amanhecer.",
+            translationLang: "pt-BR",
+            translationEngine: 8,
+            rtlLangTranslationImageData: null,
+            createdDate: new DateTime(2026, 5, 12, 9, 0, 0),
+            updatedDate: new DateTime(2026, 5, 12, 9, 0, 0))
+        {
+            Id = 2,
+        };
+
+        var preferredRow = PluginEntry.OrderTalkMessageLookupQuery(
+                new[] { olderRow, newerRow }.AsQueryable())
+            .First();
+
+        Assert.Equal(2, preferredRow.Id);
+        Assert.Equal("Seguimos ao amanhecer.", preferredRow.TranslatedTalkMessage);
+    }
+
+    /// <summary>
+    ///     Ensures explicit BattleTalk retranslation persistence updates the
+    ///     existing row for the same source line and engine instead of growing
+    ///     duplicate exact-engine history.
+    /// </summary>
+    [Fact]
+    public async Task UpsertBattleTalkDataAsync_RefreshesExistingExactEngineRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.BattleTalkMessage.Add(new BattleTalkMessage(
+                    senderName: "Alphinaud",
+                    originalBattleTalkMessage: "Hold the line!",
+                    originalBattleTalkMessageLang: "en",
+                    originalSenderNameLang: "en",
+                    translatedSenderName: "Alphinaud",
+                    translatedBattleTalkMessage: "Segurem a linha!",
+                    translationLang: "pt-BR",
+                    translationEngine: 14,
+                    rtlLangTranslationImageData: null,
+                    createdDate: new DateTime(2026, 5, 12, 8, 0, 0, DateTimeKind.Local),
+                    updatedDate: new DateTime(2026, 5, 12, 8, 0, 0, DateTimeKind.Local)));
+                context.SaveChanges();
+            }
+
+            await PluginEntry.UpsertBattleTalkDataAsync(new BattleTalkMessage(
+                senderName: "Alphinaud",
+                originalBattleTalkMessage: "Hold the line!",
+                originalBattleTalkMessageLang: "en",
+                originalSenderNameLang: "en",
+                translatedSenderName: "Alphinaud",
+                translatedBattleTalkMessage: "Mantenham a formação!",
+                translationLang: "pt-BR",
+                translationEngine: 14,
+                rtlLangTranslationImageData: null,
+                createdDate: new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Local),
+                updatedDate: new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Local)));
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                var rows = context.BattleTalkMessage
+                    .Where(t =>
+                        t.SenderName == "Alphinaud" &&
+                        t.OriginalBattleTalkMessage == "Hold the line!" &&
+                        t.TranslationLang == "pt-BR" &&
+                        t.TranslationEngine == 14)
+                    .ToList();
+
+                Assert.Single(rows);
+                Assert.Equal("Mantenham a formação!", rows[0].TranslatedBattleTalkMessage);
+            }
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
     }
 
     private static void TryDeleteDirectory(string path)
