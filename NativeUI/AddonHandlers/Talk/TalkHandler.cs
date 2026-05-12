@@ -12,6 +12,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 /// </summary>
 public sealed class TalkHandler : IAddonTranslationHandler
 {
+  private static readonly TimeSpan DialogueSessionTtl = TimeSpan.FromSeconds(30);
+  private const int DialogueSessionHistoryLimit = 3;
   private const string TalkAddonName = "Talk";
   private const int NameNodeId = 2;
   private const int TextNodeId = 3;
@@ -649,6 +651,21 @@ public sealed class TalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Builds the normalized runtime session key used by Talk dialogue
+  ///     session history.
+  /// </summary>
+  /// <param name="originalName">The visible speaker name.</param>
+  /// <returns>The normalized session key.</returns>
+  private string BuildDialogueSessionKey(string originalName)
+  {
+    var normalizedSpeaker = string.IsNullOrWhiteSpace(originalName)
+        ? "(anonymous)"
+        : originalName.Trim();
+    return
+        $"{normalizedSpeaker}|engine:{this.config.ChosenTransEngine}|target:{LangDict[LanguageInt].Code}";
+  }
+
+  /// <summary>
   ///     Reads a string value from a Talk ATK value.
   /// </summary>
   /// <param name="atkValue">The ATK value to inspect.</param>
@@ -738,16 +755,25 @@ public sealed class TalkHandler : IAddonTranslationHandler
       }
       else
       {
+        var dialogueContext = DialogueTranslationSessionStore.BuildContext(
+            TalkAddonName,
+            this.BuildDialogueSessionKey(originalName),
+            originalName,
+            originalText,
+            DialogueSessionHistoryLimit,
+            DialogueSessionTtl);
+
         translatedText = await this.translationService.TranslateAsync(
             originalText,
             ClientStateInterface.ClientLanguage.Humanize(),
-            LangDict[LanguageInt].Code);
+            LangDict[LanguageInt].Code,
+            dialogueContext).ConfigureAwait(false);
 
         translatedName = this.ShouldTranslateTalkNpcNames() && !originalName.IsNullOrEmpty()
             ? await this.translationService.TranslateAsync(
                 originalName,
                 ClientStateInterface.ClientLanguage.Humanize(),
-                LangDict[LanguageInt].Code)
+                LangDict[LanguageInt].Code).ConfigureAwait(false)
             : string.Empty;
 
         var existingTranslatedTalkMessage = this.findTalkMessage(lookup);

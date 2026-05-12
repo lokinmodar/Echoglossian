@@ -227,6 +227,40 @@ public class TranslationService
       [CallerMemberName] string callerMemberName = "",
       [CallerFilePath] string callerFilePath = "")
   {
+    return await this.TranslateAsync(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        null,
+        originContext,
+        callerMemberName,
+        callerFilePath).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates the given text from the source language to the target language
+  ///     asynchronously with optional runtime-only short-lived dialogue context.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="dialogueContext">Optional runtime-only short-lived dialogue context.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>
+  ///     A task that represents the asynchronous operation. The task result
+  ///     contains the translated text as a string.
+  /// </returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
     var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
     if (!shouldTranslate)
     {
@@ -269,10 +303,17 @@ public class TranslationService
     }
 
     var stopwatch = Stopwatch.StartNew();
-    var finalDialogueText = await this.translator.TranslateAsync(
-        parsedText,
-        sourceLanguage,
-        targetLanguage);
+    var finalDialogueText = dialogueContext.HasValue &&
+                            this.translator is IDialogueContextAwareTranslator contextAwareTranslator
+        ? await contextAwareTranslator.TranslateAsync(
+            parsedText,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext.Value).ConfigureAwait(false)
+        : await this.translator.TranslateAsync(
+            parsedText,
+            sourceLanguage,
+            targetLanguage).ConfigureAwait(false);
     var acceptanceResult = this.AcceptTranslatedResultOrFallback(
         finalDialogueText,
         parsedText,

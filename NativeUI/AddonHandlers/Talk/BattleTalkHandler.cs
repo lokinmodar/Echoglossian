@@ -12,7 +12,9 @@ namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 /// </summary>
 public sealed class BattleTalkHandler : IAddonTranslationHandler
 {
+  private static readonly TimeSpan DialogueSessionTtl = TimeSpan.FromSeconds(30);
   private const string BattleTalkAddonName = "_BattleTalk";
+  private const int DialogueSessionHistoryLimit = 3;
   private const int HideResetDelayMilliseconds = 5000;
   private const int NameNodeId = 4;
   private const int TextNodeId = 6;
@@ -394,6 +396,21 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Builds the normalized runtime session key used by BattleTalk
+  ///     dialogue session history.
+  /// </summary>
+  /// <param name="originalName">The visible speaker name.</param>
+  /// <returns>The normalized session key.</returns>
+  private string BuildDialogueSessionKey(string originalName)
+  {
+    var normalizedSpeaker = string.IsNullOrWhiteSpace(originalName)
+        ? "(anonymous)"
+        : originalName.Trim();
+    return
+        $"{normalizedSpeaker}|engine:{this.config.ChosenTransEngine}|target:{LangDict[LanguageInt].Code}";
+  }
+
+  /// <summary>
   ///     Resolves a BattleTalk translation from cache or external translation and
   ///     stores the result as the current translation state.
   /// </summary>
@@ -429,10 +446,19 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
       }
       else
       {
+        var dialogueContext = DialogueTranslationSessionStore.BuildContext(
+            BattleTalkAddonName,
+            this.BuildDialogueSessionKey(originalName),
+            originalName,
+            originalText,
+            DialogueSessionHistoryLimit,
+            DialogueSessionTtl);
+
         translatedText = await this.translationService.TranslateAsync(
             originalText,
             ClientStateInterface.ClientLanguage.Humanize(),
-            LangDict[LanguageInt].Code);
+            LangDict[LanguageInt].Code,
+            dialogueContext).ConfigureAwait(false);
 
         translatedName = string.Empty;
         if (this.ShouldTranslateBattleTalkNpcNames() && !originalName.IsNullOrEmpty())
@@ -442,7 +468,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
             translatedName = await this.translationService.TranslateAsync(
                 originalName,
                 ClientStateInterface.ClientLanguage.Humanize(),
-                LangDict[LanguageInt].Code);
+                LangDict[LanguageInt].Code).ConfigureAwait(false);
           }
           catch (Exception ex)
           {

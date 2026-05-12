@@ -293,6 +293,45 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures the async service path dispatches runtime-only short-lived
+    ///     dialogue context to translators that explicitly support it.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Fact]
+    public async Task TranslateAsync_WithDialogueContext_UsesContextAwareTranslator()
+    {
+        var translator = new ContextAwareRecordingTranslator
+        {
+            AsyncResult = "translated-with-context",
+        };
+
+        var service = new TranslationService(
+            text => text,
+            translator);
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "Krile|engine:8|target:pt-BR",
+            "Krile",
+            [
+                new DialogueTranslationTurn(
+                    "Krile",
+                    "Pray return.",
+                    new DateTime(2026, 05, 12, 15, 20, 0, DateTimeKind.Utc)),
+            ]);
+
+        var result = await service.TranslateAsync(
+            "We must press on.",
+            "English",
+            "pt-BR",
+            dialogueContext);
+
+        Assert.Equal("translated-with-context", result);
+        Assert.Equal(1, translator.ContextAwareAsyncCalls);
+        Assert.Equal(0, translator.AsyncCalls);
+        Assert.Equal("Talk", translator.LastDialogueContext?.SessionNamespace);
+    }
+
+    /// <summary>
     ///     Ensures a known failed request keeps the sanitized original text
     ///     instead of collapsing to an empty string.
     /// </summary>
@@ -430,7 +469,7 @@ public class TranslationServiceTests
     /// <summary>
     ///     Minimal fake translator for pipeline tests.
     /// </summary>
-    private sealed class RecordingTranslator : ITranslator
+    private class RecordingTranslator : ITranslator
     {
         /// <summary>
         ///     Gets or sets the synchronous result.
@@ -475,6 +514,35 @@ public class TranslationServiceTests
         {
             this.AsyncCalls++;
             this.LastAsyncText = text;
+            return Task.FromResult(this.AsyncResult);
+        }
+    }
+
+    /// <summary>
+    ///     Minimal fake translator that also records runtime-only short-lived
+    ///     dialogue context dispatch.
+    /// </summary>
+    private sealed class ContextAwareRecordingTranslator : RecordingTranslator, IDialogueContextAwareTranslator
+    {
+        /// <summary>
+        ///     Gets the number of context-aware async calls.
+        /// </summary>
+        public int ContextAwareAsyncCalls { get; private set; }
+
+        /// <summary>
+        ///     Gets the last dialogue context seen by the context-aware path.
+        /// </summary>
+        public DialogueTranslationContext? LastDialogueContext { get; private set; }
+
+        /// <inheritdoc/>
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage,
+            DialogueTranslationContext dialogueContext)
+        {
+            this.ContextAwareAsyncCalls++;
+            this.LastDialogueContext = dialogueContext;
             return Task.FromResult(this.AsyncResult);
         }
     }

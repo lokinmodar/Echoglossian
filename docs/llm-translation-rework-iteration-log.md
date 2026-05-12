@@ -321,3 +321,49 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - consider the first runtime-only dialogue session scaffolding for `Talk`,
     while keeping `BattleTalk` isolated on the same infrastructure
+
+## Iteration 8 - Runtime-Only Dialogue Session Scaffolding
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - add shared runtime-only short-lived dialogue session plumbing for future
+    context-aware LLM translation
+  - keep `Talk` and `BattleTalk` isolated while preserving the current DB and
+    cache semantics
+- Files touched:
+  - `Translators/DialogueTranslationTurn.cs`
+  - `Translators/DialogueTranslationContext.cs`
+  - `Translators/DialogueTranslationSessionStore.cs`
+  - `Translators/IDialogueContextAwareTranslator.cs`
+  - `Translators/TranslationService.cs`
+  - `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
+  - `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
+  - `Echoglossian.Tests/DialogueTranslationSessionStoreTests.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a bounded runtime-only session store with:
+    - namespace isolation
+    - TTL expiry pruning
+    - prior-turn history trimming
+  - introduced `DialogueTranslationContext` plus an optional
+    `IDialogueContextAwareTranslator` extension point
+  - extended `TranslationService.TranslateAsync(...)` with an overload that
+    dispatches context only when the active translator explicitly opts in
+  - wired `Talk` and `BattleTalk` to build short-lived session context for
+    live line translation while keeping those namespaces isolated from each
+    other
+  - added tests for session reuse, namespace isolation, TTL expiry, and
+    service-level context dispatch
+- Behavior-sensitive risks:
+  - no translator consumes the context yet; this iteration is scaffolding only
+  - session history remains source-side, runtime-only, and non-persistent by
+    design
+  - existing translation persistence behavior remains unchanged
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - teach one narrow LLM path to consume the runtime-only dialogue context
+    without persisting session-influenced output
