@@ -7,7 +7,7 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2600.1205.x`
+## Submitted Release `v4.2601.0512.x`
 
 This is the current post-`4.2600.1105.x` hotfix package prepared for the
 official plugin repo.
