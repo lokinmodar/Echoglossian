@@ -156,6 +156,14 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Draws the translator debugger and metrics window.
+  /// </summary>
+  private void DrawTranslatorMetricsWindow()
+  {
+    this.translatorMetricsWindow?.Draw();
+  }
+
+  /// <summary>
   /// Open the Echoglossian DB Editor window when the command is executed.
   /// </summary>
   /// <param name="command">Command name.</param>
@@ -163,6 +171,19 @@ public partial class Echoglossian
   private void OnEgloDbEditorCommand(string command, string args)
   {
     this.dbEditorWindow?.IsOpen = true;
+  }
+
+  /// <summary>
+  /// Opens the translator debugger and metrics window when the command is executed.
+  /// </summary>
+  /// <param name="command">Command name.</param>
+  /// <param name="args">Command arguments.</param>
+  private void OnEgloTranslatorDebuggerCommand(string command, string args)
+  {
+    if (this.translatorMetricsWindow is not null)
+    {
+      this.translatorMetricsWindow.IsOpen = true;
+    }
   }
 
   /// <summary>

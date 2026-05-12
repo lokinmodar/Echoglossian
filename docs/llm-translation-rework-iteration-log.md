@@ -205,3 +205,43 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - add the command and window for `Translator Debugger and Metrics`, backed by
     these snapshots and a local clear/reset action
+
+## Iteration 5 - Translator Debugger and Metrics Command and Window
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - expose the aggregated translator runtime metrics through a dedicated
+    command and inspectable UI window
+- Files touched:
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `Echoglossian.cs`
+  - `PluginUI/PluginRuntimeUi.cs`
+  - `docs/commands/eglotranslatordebugger.md`
+  - `docs/commands/README.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added the dedicated command:
+    - `/eglotranslatordebugger`
+  - added a dedicated window that shows per-engine aggregated metrics:
+    - live requests
+    - successes
+    - failures
+    - short-circuits
+    - average, max, and last latency
+    - last failure reason
+  - wired the window lifecycle alongside the existing plugin draw hooks and
+    command registration/disposal path
+  - documented the command under `docs/commands`
+- Behavior-sensitive risks:
+  - this window is intentionally diagnostic and currently uses concise English
+    labels rather than full localized resources
+  - metrics remain session-scoped and in-memory only; there is still no
+    persistence or historical export in this first pass
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - revisit `#176` with engine-specific runtime cost reductions beyond prompt
+    size alone, likely around local-LLM request behavior and later dialogue
+    session context
