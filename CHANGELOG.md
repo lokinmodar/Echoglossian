@@ -7,31 +7,18 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2600.1105.x`
+## Submitted Release `v4.2600.1205.x`
 
-This is the current post-`4.2600.0605.x` stabilization package submitted to
-the official plugin repo in
-[PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626).
+This is the current post-`4.2600.1105.x` hotfix package prepared for the
+official plugin repo.
 
 Highlights:
 
-- stabilized translation setup and activation flow so users can configure
-  language, engine, and activation without unloading or reloading the plugin
-- added runtime config refresh so engine, language, and addon-toggle changes
-  apply in-session instead of requiring plugin reloads
-- hardened engine selection migration and translator routing so stale engine
-  ids or keys stop silently rebuilding the wrong translator
-- fixed translator-local concurrency issues in multiple LLM engines and reduced
-  duplicate `Talk` saves for the same dialogue line
-- stopped persisting transient dialogue failure placeholders and ignored stale
-  cross-language original-text echoes that could cause sticky English fallback
-- made downloaded font-asset requirements language-aware and added recovery UI
-  plus recheck/download guidance for CJK-target languages
-- improved canonical translation reuse between game versions when the original
-  content hash did not change, especially for action-, item-, trait-, and
-  reference-text-backed surfaces
-- temporarily kept structured tooltip translation disabled for release builds
-  while `ActionDetail` and `ItemDetail` remain under stabilization
+- fixed duplicate addon-handler registrations surviving runtime refreshes,
+  which could cause repeated translation requests after changing engine or
+  model settings
+- completed the follow-up unregister fix for handlers that serve more than one
+  addon name, preventing stale listeners from surviving partial teardown
 
 ## Official DalamudPluginsD17 Release Timeline
 
@@ -74,6 +61,7 @@ repository workflow.
 | 2025-12-22 | [PR #7523](https://github.com/goatcorp/DalamudPluginsD17/pull/7523) `v3.25.x` | `API14` bump |
 | 2026-05-04 | [PR #8510](https://github.com/goatcorp/DalamudPluginsD17/pull/8510) `v4.2600.x` | first official `4.x` / `API15` release |
 | 2026-05-04 | [PR #8522](https://github.com/goatcorp/DalamudPluginsD17/pull/8522) `v4.2600.x` hotfix | first-launch config creation fix |
+| 2026-05-12 | [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626) `v4.2600.1105.x` | setup, engine selection, cache-concurrency, and version-reuse stabilization |
 
 ## Pre-Official History
 
