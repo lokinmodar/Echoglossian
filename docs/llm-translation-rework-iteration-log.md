@@ -661,3 +661,37 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - continue the same runtime-only path for `Gemini`, then `Claude`, to finish
     the first pass over the remaining remote LLM engines
+
+## Iteration 17 - Gemini Runtime-Only Dialogue Context
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - extend runtime-only dialogue-session support to `Gemini`
+  - keep the remote LLM family aligned on dialogue-context behavior while
+    preserving the existing retry policy and DB semantics
+- Files touched:
+  - `Translators/GeminiTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - made `GeminiTranslator` implement
+    `IDialogueContextAwareTranslator`
+  - added a context-aware translation overload that:
+    - falls back to the existing path when no prior turns exist
+    - uses a distinct cache key when prior dialogue history exists
+  - factored prompt composition so prior turns are appended only for the
+    runtime-only context path
+  - preserved the current `Gemini` retry/backoff request behavior while
+    reusing the existing `TranslationService` path that prevents DB persistence
+    for context-influenced `Talk` / `BattleTalk` output
+- Behavior-sensitive risks:
+  - dialogue-history-aware cache keys increase per-session cache cardinality
+    for `Gemini` in the same way as the other context-aware paths
+  - the context-aware path still inherits the current retry model, so failures
+    under prior-turn context can hold the request longer than the other engines
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - finish the first remote-LLM pass by carrying the same runtime-only
+    dialogue-context path into `Claude`

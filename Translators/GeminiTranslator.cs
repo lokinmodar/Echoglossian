@@ -8,7 +8,7 @@ using Echoglossian.PluginUI.Helpers;
 
 namespace Echoglossian.Translators;
 
-public class GeminiTranslator : ITranslator
+public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private readonly string apiKey;
     private readonly HttpClient? httpClient;
@@ -96,6 +96,48 @@ public class GeminiTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (this.httpClient == null)
+        {
+            return Resources.GeminiTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        if (!HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        var cacheKey = this.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(
+                cacheKey,
+                out var cachedTranslation))
+        {
+            return cachedTranslation;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual Gemini translation request for one cache key.
     /// </summary>
@@ -108,13 +150,14 @@ public class GeminiTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        var prompt = PromptTemplateManager.RenderPrompt(
-            this.promptTemplate,
-            FixText(text),
+        var prompt = this.BuildPrompt(
+            text,
             sourceLanguage,
-            targetLanguage);
+            targetLanguage,
+            dialogueContext);
 
         for (var retry = 0; retry <= this.maxRetries; retry++)
         {
@@ -233,5 +276,53 @@ public class GeminiTranslator : ITranslator
         }
 
         return string.Empty;
+    }
+
+    private static bool HasUsableDialogueContext(DialogueTranslationContext dialogueContext)
+    {
+        return dialogueContext.PriorTurns.Count > 0;
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        var prompt = PromptTemplateManager.RenderPrompt(
+            this.promptTemplate,
+            FixText(text),
+            sourceLanguage,
+            targetLanguage);
+
+        if (!dialogueContext.HasValue ||
+            !HasUsableDialogueContext(dialogueContext.Value))
+        {
+            return prompt;
+        }
+
+        var priorTurns = string.Join(
+            Environment.NewLine,
+            dialogueContext.Value.PriorTurns.Select(
+                (turn, index) =>
+                    $"[{index + 1}] {turn.SpeakerName}: {FixText(turn.SourceText)}"));
+
+        return
+            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}Current speaker: {dialogueContext.Value.SpeakerName}{Environment.NewLine}{priorTurns}";
+    }
+
+    private string BuildDialogueContextCacheKey(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        var historyKey = string.Join(
+            "|",
+            dialogueContext.PriorTurns.Select(
+                turn => $"{turn.SpeakerName}:{turn.SourceText}"));
+
+        return
+            $"dialogue|{dialogueContext.SessionNamespace}|{dialogueContext.SessionKey}|{historyKey}|{text}_{sourceLanguage}_{targetLanguage}";
     }
 }
