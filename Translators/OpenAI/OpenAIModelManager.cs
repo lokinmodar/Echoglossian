@@ -75,13 +75,14 @@ public static class OpenAIModelManager
       string providerName)
   {
     var observedAtUtc = DateTime.UtcNow;
+    var normalizedBaseUrl = baseUrl.Trim().TrimEnd('/');
     if (string.IsNullOrWhiteSpace(apiKey))
     {
       ResetToDefault();
       UpdateRefreshState(
           observedAtUtc,
           providerName,
-          baseUrl,
+          normalizedBaseUrl,
           false,
           "Missing API key.");
       return false;
@@ -89,7 +90,6 @@ public static class OpenAIModelManager
 
     try
     {
-      var normalizedBaseUrl = baseUrl.TrimEnd('/');
       if (string.IsNullOrWhiteSpace(normalizedBaseUrl))
       {
         ResetToDefault();
@@ -205,7 +205,7 @@ public static class OpenAIModelManager
       UpdateRefreshState(
           observedAtUtc,
           providerName,
-          baseUrl,
+          normalizedBaseUrl,
           false,
           $"{ex.GetType().Name}: {ex.Message}");
     }

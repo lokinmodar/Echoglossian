@@ -372,20 +372,34 @@ public static class ChatGPTEngineUI
         if (variant == OpenAiProviderVariant.CustomOpenAICompatible)
         {
             customLiveModelFetchAttempted = true;
-            _ = Task.Run(async () =>
-            {
-                customLiveModelFetchSucceeded =
-                    await OpenAIModelManager.RefreshAsync(
-                        config.CustomOpenAiCompatibleApiKey ?? string.Empty,
-                        config.CustomOpenAiCompatibleBaseUrl ?? string.Empty,
-                        "OpenAI-Compatible");
-            });
+            string apiKey = config.CustomOpenAiCompatibleApiKey ?? string.Empty;
+            string baseUrl = config.CustomOpenAiCompatibleBaseUrl ?? string.Empty;
+            _ = RefreshCustomLiveModelsAsync(
+                apiKey,
+                baseUrl);
         }
         else
         {
-            _ = Task.Run(() =>
-                OpenAIModelManager.RefreshAsync(config.ChatGptApiKey ?? string.Empty));
+            string apiKey = config.ChatGptApiKey ?? string.Empty;
+            _ = OpenAIModelManager.RefreshAsync(apiKey);
         }
+    }
+
+    /// <summary>
+    ///     Refreshes the custom OpenAI-compatible live model list and captures
+    ///     the outcome for provider-specific UI feedback.
+    /// </summary>
+    /// <param name="apiKey">The custom provider API key.</param>
+    /// <param name="baseUrl">The custom provider base URL.</param>
+    private static async Task RefreshCustomLiveModelsAsync(
+        string apiKey,
+        string baseUrl)
+    {
+        customLiveModelFetchSucceeded =
+            await OpenAIModelManager.RefreshAsync(
+                apiKey,
+                baseUrl,
+                "OpenAI-Compatible");
     }
 
     /// <summary>

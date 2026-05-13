@@ -1394,3 +1394,38 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - reassess the remaining PR `#202` review items and decide whether this
     branch is ready for another review pass
+
+## Iteration 35 - Review Follow-Up: OpenAI Refresh Input Hygiene
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - address the next PR `#202` review cluster around custom-provider live model
+    refresh by:
+    - normalizing whitespace around the configured endpoint
+    - removing the ambiguous `Task<Task<bool>>` refresh scheduling pattern
+- Files touched:
+  - `Translators/OpenAI/OpenAIModelManager.cs`
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - normalized provider endpoints with `Trim().TrimEnd('/')` before:
+    - building the `/models` URL
+    - reporting refresh failures
+  - replaced the `Task.Run(() => RefreshAsync(...))` official-provider path
+    with direct async invocation
+  - replaced the custom-provider `Task.Run(async () => ...)` branch with a
+    dedicated async helper so the scheduled work is a single task with clearer
+    intent and the custom fetch result still updates the UI flags
+- Behavior-sensitive risks:
+  - endpoint strings with leading/trailing spaces now normalize instead of
+    failing later in the HTTP stack
+  - live model refresh remains fire-and-forget from the UI, but the code path
+    is now less ambiguous and easier to reason about during review/debugging
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - move the translator debugger command help text into `Resources` so the
+    command registry stays localizable and consistent with the rest of the
+    plugin command help
