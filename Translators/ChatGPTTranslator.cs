@@ -20,6 +20,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
     private readonly string promptTemplate;
     private readonly float temperature;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
+    private readonly string unavailableMessage;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ChatGPTTranslator" /> class.
@@ -39,6 +40,9 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         var baseUrl = providerSettings.BaseUrl;
         var apiKey = providerSettings.ApiKey;
         this.model = providerSettings.Model;
+        this.unavailableMessage =
+            OpenAiProviderVariantHelper.ResolveUnavailableMessage(
+                providerSettings.Variant);
 
         if (string.IsNullOrWhiteSpace(apiKey) ||
             string.IsNullOrWhiteSpace(baseUrl) ||
@@ -46,8 +50,8 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         {
             PluginRuntimeLog.Warning(
                 this.pluginLog,
-                Resources
-                    .APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable);
+                OpenAiProviderVariantHelper.ResolveConfigurationWarning(
+                    providerSettings.Variant));
             this.chatClient = null;
         }
         else
@@ -117,7 +121,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
     {
         if (this.chatClient == null)
         {
-            return Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+            return this.unavailableMessage;
         }
 
         var cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
@@ -154,7 +158,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
 
         if (this.chatClient == null)
         {
-            return Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+            return this.unavailableMessage;
         }
 
         var cacheKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(

@@ -224,6 +224,10 @@ internal static class TranslationFailureTextClassifier
           culture);
       AddUnavailableMessage(
           messages,
+          nameof(Resources.OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration),
+          culture);
+      AddUnavailableMessage(
+          messages,
           nameof(Resources.ClaudeTranslationUnavailablePleaseCheckYourAPIKey),
           culture);
       AddUnavailableMessage(

@@ -106,6 +106,15 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to OpenAI-compatible provider configuration is incomplete. Translation will not be available until endpoint, API key, and model are filled..
+        /// </summary>
+        public static string OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable {
+            get {
+                return ResourceManager.GetString("OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to API Key is empty or invalid. Claude translation will not be available..
         /// </summary>
         public static string APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable {
@@ -255,6 +264,15 @@ namespace Echoglossian.Properties {
         public static string ChatGPTTranslationUnavailablePleaseCheckYourAPIKey {
             get {
                 return ResourceManager.GetString("ChatGPTTranslationUnavailablePleaseCheckYourAPIKey", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to [OpenAI-compatible translation unavailable. Please check the endpoint, API key, and model settings.].
+        /// </summary>
+        public static string OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration {
+            get {
+                return ResourceManager.GetString("OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration", resourceCulture);
             }
         }
 

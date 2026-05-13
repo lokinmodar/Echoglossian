@@ -55,4 +55,31 @@ internal static class OpenAiProviderVariantHelper
             config.OpenAILlmModel,
             config.UseLiveOpenAIModelList);
   }
+
+  /// <summary>
+  ///     Resolves the user-facing unavailable message for the selected
+  ///     OpenAI-family provider variant.
+  /// </summary>
+  /// <param name="variant">The selected provider variant.</param>
+  /// <returns>The localized unavailable message for that variant.</returns>
+  internal static string ResolveUnavailableMessage(OpenAiProviderVariant variant)
+  {
+    return variant == OpenAiProviderVariant.CustomOpenAICompatible
+        ? Resources.OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration
+        : Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+  }
+
+  /// <summary>
+  ///     Resolves the startup or initialization warning used when the selected
+  ///     OpenAI-family provider variant is not configured enough to create a
+  ///     translator client safely.
+  /// </summary>
+  /// <param name="variant">The selected provider variant.</param>
+  /// <returns>The localized configuration warning message.</returns>
+  internal static string ResolveConfigurationWarning(OpenAiProviderVariant variant)
+  {
+    return variant == OpenAiProviderVariant.CustomOpenAICompatible
+        ? Resources.OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable
+        : Resources.APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable;
+  }
 }

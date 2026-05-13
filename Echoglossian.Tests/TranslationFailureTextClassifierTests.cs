@@ -36,6 +36,30 @@ public class TranslationFailureTextClassifierTests
   }
 
   /// <summary>
+  ///     Ensures the custom OpenAI-compatible unavailable message is also
+  ///     treated as an engine-unavailable failure instead of a real
+  ///     translation.
+  /// </summary>
+  [Fact]
+  public void TryClassify_OpenAiCompatibleUnavailableMessage_ReturnsEngineUnavailable()
+  {
+    var message =
+        Resources.OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration;
+
+    var classified = TranslationFailureTextClassifier.TryClassify(
+        message,
+        out var classification);
+
+    Assert.True(classified);
+    Assert.NotNull(classification);
+    Assert.Equal(
+        TranslationFailureKind.EngineUnavailable,
+        classification!.Kind);
+    Assert.False(classification.ShouldNotifyOperator);
+    Assert.Equal(message, classification.UserFacingMessage);
+  }
+
+  /// <summary>
   ///     Ensures quota-like synthetic provider errors are normalized into the
   ///     quota-or-rate-limit category.
   /// </summary>

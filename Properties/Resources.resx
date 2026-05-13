@@ -520,6 +520,12 @@
   <data name="ChatGPTTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
     <value>[ChatGPT translation unavailable. Please check your API key.]</value>
   </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[OpenAI-compatible translation unavailable. Please check the endpoint, API key, and model settings.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>OpenAI-compatible provider configuration is incomplete. Translation will not be available until endpoint, API key, and model are filled.</value>
+  </data>
   <data name="SettingsForClaudeText" xml:space="preserve">
     <value>Settings for Claude</value>
   </data>

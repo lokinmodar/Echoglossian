@@ -1127,3 +1127,49 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether to keep deepening `#196` with provider-specific polish or
     move back to broader LLM routing / retraduction work
+
+## Iteration 28 - OpenAI-Compatible Provider Unavailable Messaging
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - make the OpenAI-compatible provider path fail with provider-aware
+    configuration and unavailable messages instead of reusing the official
+    OpenAI API-key-only wording
+  - cover the active configuration gate and failure classification with narrow
+    tests
+- Files touched:
+  - `Translators/OpenAI/OpenAiProviderVariantHelper.cs`
+  - `Translators/ChatGPTTranslator.cs`
+  - `GeneralHelpers/TranslationFailureTextClassifier.cs`
+  - `Properties/Resources.resx`
+  - `Echoglossian.Tests/OpenAiProviderConfigurationTests.cs`
+  - `Echoglossian.Tests/TranslationFailureTextClassifierTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added provider-aware OpenAI-family helper methods for:
+    - configuration warning text
+    - unavailable translation text
+  - `ChatGPTTranslator` now returns the custom OpenAI-compatible unavailable
+    message when the selected provider profile cannot build a client
+  - startup warnings for the custom provider now mention the real missing scope
+    (`endpoint`, `API key`, and `model`) rather than only the API key
+  - the shared translation-failure classifier now recognizes the custom
+    OpenAI-compatible unavailable message as an `EngineUnavailable` failure
+  - added tests proving:
+    - the custom provider configuration gate succeeds only when the custom
+      endpoint/key/model are present
+    - the custom provider unavailable message is returned by the translator
+    - that unavailable message is classified as an engine-unavailable failure
+- Behavior-sensitive risks:
+  - this changes only the user-facing unavailable text for the custom
+    OpenAI-compatible provider path; the official OpenAI wording remains
+    untouched
+  - localized `Resources.*.resx` files still need follow-up and currently fall
+    back to the base English text for the new provider-specific strings
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - reassess whether `#196` is complete enough to stop here and pivot back to
+    the broader LLM rework backlog
