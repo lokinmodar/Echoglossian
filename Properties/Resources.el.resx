@@ -951,4 +951,28 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Μοντέλο υψηλότερης βαθμίδας Claude όταν θέλετε τη μέγιστη ποιότητα.</value>
   </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[Η μετάφραση OpenAI-compatible δεν είναι διαθέσιμη. Ελέγξτε το endpoint, το API key και τις ρυθμίσεις μοντέλου.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Η διαμόρφωση του OpenAI-compatible provider είναι ελλιπής. Η μετάφραση δεν θα είναι διαθέσιμη μέχρι να συμπληρωθούν το endpoint, το API key και το μοντέλο.</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Πάροχος</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Ρυθμίστε ένα OpenAI-compatible endpoint, ένα API key και ένα μοντέλο. Η ζωντανή ανάκτηση μοντέλων είναι προαιρετική· αν ο πάροχος δεν εκθέτει σωστά το /models, χρησιμοποιήστε χειροκίνητο model ID.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Δεν ήταν δυνατή η ανάκτηση μοντέλων από τον ρυθμισμένο OpenAI-compatible provider. Κρατήστε ένα χειροκίνητο model ID ή ελέγξτε το endpoint και τα διαπιστευτήρια.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Χρησιμοποιήστε το ακριβές model ID που εκθέτει ο OpenAI-compatible provider σας όταν η ζωντανή λίστα μοντέλων δεν είναι διαθέσιμη ή είναι απενεργοποιημένη.</value>
+  </data>
 </root>

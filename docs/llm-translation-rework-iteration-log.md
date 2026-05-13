@@ -1173,3 +1173,46 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - reassess whether `#196` is complete enough to stop here and pivot back to
     the broader LLM rework backlog
+
+## Iteration 29 - OpenAI-Compatible Provider Localization Coverage
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - close the remaining localization gap for the custom OpenAI-compatible
+    provider flow so the new `#196` UI and failure text do not silently fall
+    back to base English in localized builds
+- Files touched:
+  - `Properties/Resources.da.resx`
+  - `Properties/Resources.de.resx`
+  - `Properties/Resources.el.resx`
+  - `Properties/Resources.es.resx`
+  - `Properties/Resources.eu.resx`
+  - `Properties/Resources.fr.resx`
+  - `Properties/Resources.it.resx`
+  - `Properties/Resources.pt-BR.resx`
+  - `Properties/Resources.pt.resx`
+  - `Properties/Resources.ru.resx`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - localized the custom-provider strings already introduced in the base
+    `Resources.resx`, including:
+    - provider-variant labels
+    - provider description text
+    - live-model fetch failure hint
+    - manual model hint
+    - provider-specific unavailable/configuration warnings
+  - kept `Official OpenAI` and `Custom OpenAI-Compatible` as product labels
+    while translating the surrounding operational text so localized UIs remain
+    semantically correct without renaming provider families
+- Behavior-sensitive risks:
+  - this is text-only and does not alter provider selection, routing, or model
+    refresh behavior
+  - the custom-provider diagnostics shown in the debugger remain English-only
+    for now because that window still uses hardcoded operator-facing text
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - polish the provider-specific UI wording so the custom provider does not
+    keep reusing `ChatGPT API Key` labeling in the main engine configuration
