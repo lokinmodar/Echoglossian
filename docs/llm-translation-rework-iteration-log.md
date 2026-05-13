@@ -522,3 +522,39 @@ turning into an opaque pile of partial changes.
   - verify the in-game UX of the retranslation control and then decide whether
     the next step should deepen `#174` semantics or extend runtime-only
     context to another LLM family
+
+## Iteration 13 - LM Studio Runtime-Only Dialogue Context
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - extend the runtime-only dialogue-session path to the first local LLM
+    engine
+  - keep the existing local-LLM prompt flow intact while allowing prior turns
+    to improve consistency for live dialogue
+- Files touched:
+  - `Translators/LmStudioTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - made `LmStudioTranslator` implement
+    `IDialogueContextAwareTranslator`
+  - added a context-aware translation overload that:
+    - falls back to the normal path when no prior turns exist
+    - builds a distinct cache key when prior dialogue context exists
+  - introduced prompt composition that appends bounded prior dialogue turns
+    only for the live context-aware path
+  - preserved the existing runtime-only persistence semantics by relying on the
+    already-wired `TranslationService.WillUseDialogueContext(...)` and the
+    `Talk` / `BattleTalk` DB skip path
+- Behavior-sensitive risks:
+  - context-aware cache keys are intentionally distinct from the base local
+    cache key, which can increase memory use for repeated variant dialogue
+    histories within a session
+  - the first pass adds context only when prior turns actually exist; first
+    lines still follow the old deterministic path
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - apply the same runtime-only dialogue-session path to `Ollama` so the local
+    LLM family behaves consistently
