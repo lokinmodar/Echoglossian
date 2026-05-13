@@ -94,6 +94,12 @@ public sealed class TranslatorMetricsWindow
       TranslatorMetricsCollector.Clear();
     }
 
+    ImGui.SameLine();
+    if (ImGui.Button("Clear Dialogue Sessions"))
+    {
+      DialogueTranslationSessionStore.Clear();
+    }
+
     if (isRetranslationRunning)
     {
       ImGui.Spacing();
@@ -126,8 +132,19 @@ public sealed class TranslatorMetricsWindow
     var totalContextAwareRequests = snapshots.Sum(snapshot => snapshot.ContextAwareRequestCount);
     var totalFailures = snapshots.Sum(snapshot => snapshot.FailureCount);
     var totalShortCircuits = snapshots.Sum(snapshot => snapshot.ShortCircuitCount);
+    var dialogueSessionSnapshots = DialogueTranslationSessionStore.GetSnapshots();
     ImGui.Text(
         $"Engines: {snapshots.Count}  |  Live requests: {totalLiveRequests}  |  Context-aware: {totalContextAwareRequests}  |  Failures: {totalFailures}  |  Short circuits: {totalShortCircuits}");
+    ImGui.Text(
+        $"Dialogue sessions: {dialogueSessionSnapshots.Count}");
+
+    var availableHeight = ImGui.GetContentRegionAvail().Y;
+    var dialogueTableHeight = dialogueSessionSnapshots.Count == 0
+        ? 0f
+        : 150f;
+    var metricsTableHeight = Math.Max(
+        availableHeight - dialogueTableHeight - (dialogueSessionSnapshots.Count == 0 ? 0f : 36f),
+        180f);
 
     if (ImGui.BeginTable(
             "##TranslatorMetricsTable",
@@ -135,7 +152,7 @@ public sealed class TranslatorMetricsWindow
             ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg |
             ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY |
             ImGuiTableFlags.SizingStretchProp,
-            new Vector2(-1f, -1f)))
+            new Vector2(-1f, metricsTableHeight)))
     {
       ImGui.TableSetupColumn("Engine");
       ImGui.TableSetupColumn("Provider");
@@ -186,6 +203,48 @@ public sealed class TranslatorMetricsWindow
       }
 
       ImGui.EndTable();
+    }
+
+    if (dialogueSessionSnapshots.Count > 0)
+    {
+      ImGui.Spacing();
+      ImGui.TextWrapped(
+          "Runtime-only dialogue sessions currently retained for context-aware translation.");
+      if (ImGui.BeginTable(
+              "##DialogueSessionTable",
+              5,
+              ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg |
+              ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY |
+              ImGuiTableFlags.SizingStretchProp,
+              new Vector2(-1f, dialogueTableHeight)))
+      {
+        ImGui.TableSetupColumn("Namespace");
+        ImGui.TableSetupColumn("Session Key");
+        ImGui.TableSetupColumn("Last Speaker");
+        ImGui.TableSetupColumn("Retained Turns");
+        ImGui.TableSetupColumn("Last Observed UTC");
+        ImGui.TableHeadersRow();
+
+        foreach (var sessionSnapshot in dialogueSessionSnapshots)
+        {
+          ImGui.TableNextRow();
+          ImGui.TableNextColumn();
+          ImGui.TextUnformatted(sessionSnapshot.SessionNamespace);
+          ImGui.TableNextColumn();
+          ImGui.TextWrapped(sessionSnapshot.SessionKey);
+          ImGui.TableNextColumn();
+          ImGui.TextUnformatted(string.IsNullOrWhiteSpace(sessionSnapshot.LastSpeakerName)
+              ? "-"
+              : sessionSnapshot.LastSpeakerName);
+          ImGui.TableNextColumn();
+          ImGui.TextUnformatted(sessionSnapshot.RetainedTurnCount.ToString(CultureInfo.InvariantCulture));
+          ImGui.TableNextColumn();
+          ImGui.TextUnformatted(
+              sessionSnapshot.LastObservedAtUtc.ToString("u", CultureInfo.InvariantCulture));
+        }
+
+        ImGui.EndTable();
+      }
     }
 
     ImGui.End();

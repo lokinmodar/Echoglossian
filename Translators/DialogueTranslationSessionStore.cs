@@ -6,6 +6,21 @@
 namespace Echoglossian.Translators;
 
 /// <summary>
+///     Represents one immutable snapshot of a runtime-only dialogue session.
+/// </summary>
+/// <param name="SessionNamespace">The isolated session namespace.</param>
+/// <param name="SessionKey">The runtime session key.</param>
+/// <param name="LastSpeakerName">The most recently observed speaker.</param>
+/// <param name="RetainedTurnCount">The number of retained prior turns in memory.</param>
+/// <param name="LastObservedAtUtc">The last observed activity time.</param>
+public readonly record struct DialogueTranslationSessionSnapshot(
+    string SessionNamespace,
+    string SessionKey,
+    string LastSpeakerName,
+    int RetainedTurnCount,
+    DateTime LastObservedAtUtc);
+
+/// <summary>
 ///     Maintains short-lived, runtime-only dialogue turn history for future
 ///     session-aware LLM translation requests.
 /// </summary>
@@ -80,6 +95,23 @@ public static class DialogueTranslationSessionStore
     }
   }
 
+  /// <summary>
+  ///     Gets immutable snapshots for the currently retained runtime-only
+  ///     dialogue sessions.
+  /// </summary>
+  /// <returns>The ordered dialogue session snapshots.</returns>
+  public static IReadOnlyList<DialogueTranslationSessionSnapshot> GetSnapshots()
+  {
+    lock (SyncRoot)
+    {
+      return Sessions
+          .Select(kvp => CreateSnapshot(kvp.Key, kvp.Value))
+          .OrderBy(static snapshot => snapshot.SessionNamespace, StringComparer.Ordinal)
+          .ThenBy(static snapshot => snapshot.SessionKey, StringComparer.Ordinal)
+          .ToList();
+    }
+  }
+
   private static string ComposeSessionMapKey(string sessionNamespace, string sessionKey)
   {
     return $"{sessionNamespace}\u001F{sessionKey}";
@@ -112,6 +144,24 @@ public static class DialogueTranslationSessionStore
     }
 
     turns.RemoveRange(0, turns.Count - effectiveHistoryLimit);
+  }
+
+  private static DialogueTranslationSessionSnapshot CreateSnapshot(
+      string composedKey,
+      DialogueSessionEntry entry)
+  {
+    string[] parts = composedKey.Split('\u001F', 2);
+    string sessionNamespace = parts.Length > 0 ? parts[0] : string.Empty;
+    string sessionKey = parts.Length > 1 ? parts[1] : string.Empty;
+    string lastSpeakerName = entry.Turns.Count == 0
+        ? string.Empty
+        : entry.Turns[^1].SpeakerName;
+    return new DialogueTranslationSessionSnapshot(
+        sessionNamespace,
+        sessionKey,
+        lastSpeakerName,
+        entry.Turns.Count,
+        entry.LastObservedAtUtc);
   }
 
   private sealed class DialogueSessionEntry

@@ -11,9 +11,13 @@ window.
 - successes, failures, and short-circuits per engine
 - average, max, and last observed live request latency
 - last observed failure reason per engine
+- runtime-only retained dialogue sessions for context-aware translation
 
 The window is session-scoped and uses in-memory aggregates only. It does not
 create hot-path per-request logs.
+
+It also exposes a `Clear Dialogue Sessions` action that clears the retained
+runtime-only `Talk` / `BattleTalk` history used for context-aware translation.
 
 ## Operator Action
 

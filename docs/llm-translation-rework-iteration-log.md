@@ -771,3 +771,37 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide between the next operator-facing LLM routing/config piece and
     deeper metrics/debugger work on top of the now-shared context-aware path
+
+## Iteration 20 - Dialogue Session Visibility In Translator Debugger
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - make the runtime-only dialogue-context path inspectable by operators
+  - expose retained `Talk` / `BattleTalk` session state without adding hot-path
+    logging
+- Files touched:
+  - `Translators/DialogueTranslationSessionStore.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `Echoglossian.Tests/DialogueTranslationSessionStoreTests.cs`
+  - `docs/commands/eglotranslatordebugger.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added immutable dialogue session snapshots to the runtime-only session
+    store
+  - exposed current retained session count and a dedicated dialogue session
+    table in `Translator Debugger and Metrics`
+  - added a `Clear Dialogue Sessions` button that clears only the in-memory
+    runtime-only context store
+  - added a narrow session-store test for the snapshot shape
+- Behavior-sensitive risks:
+  - this remains session-scoped and in-memory only; it does not touch DB data
+    or persisted translation history
+  - the new table uses current retained turn counts, not original full
+    conversation history beyond the existing bounded session limit
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - move to the next operator-facing configuration/routing piece of the LLM
+    rework, now that the context path is both implemented and inspectable

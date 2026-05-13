@@ -106,4 +106,30 @@ public class DialogueTranslationSessionStoreTests
 
     Assert.Empty(freshContext.PriorTurns);
   }
+
+  /// <summary>
+  ///     Ensures snapshots expose retained runtime-only session metadata.
+  /// </summary>
+  [Fact]
+  public void GetSnapshots_ShouldExposeRetainedSessionState()
+  {
+    DialogueTranslationSessionStore.Clear();
+    var observedAtUtc = new DateTime(2026, 05, 12, 15, 15, 0, DateTimeKind.Utc);
+
+    DialogueTranslationSessionStore.BuildContext(
+        "Talk",
+        "Krile|engine:8|target:pt-BR",
+        "Krile",
+        "Stay with me.",
+        3,
+        TimeSpan.FromSeconds(30),
+        observedAtUtc);
+
+    var snapshot = Assert.Single(DialogueTranslationSessionStore.GetSnapshots());
+    Assert.Equal("Talk", snapshot.SessionNamespace);
+    Assert.Equal("Krile|engine:8|target:pt-BR", snapshot.SessionKey);
+    Assert.Equal("Krile", snapshot.LastSpeakerName);
+    Assert.Equal(1, snapshot.RetainedTurnCount);
+    Assert.Equal(observedAtUtc, snapshot.LastObservedAtUtc);
+  }
 }
