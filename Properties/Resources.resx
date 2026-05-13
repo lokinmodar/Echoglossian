@@ -1198,6 +1198,66 @@
   <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
     <value>Use the exact model id exposed by your OpenAI-compatible provider when live model listing is unavailable or disabled.</value>
   </data>
+  <data name="TranslatorDebuggerDialogueOverridePrimaryAndEffective" xml:space="preserve">
+    <value>Primary engine: {0}  |  Effective dialogue engine: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideDisabled" xml:space="preserve">
+    <value>Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideMatchesPrimary" xml:space="preserve">
+    <value>Dialogue LLM override is enabled, but it currently matches the primary engine selection.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideActive" xml:space="preserve">
+    <value>Dialogue LLM override is active and routes dialogue-family surfaces through {0}.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideInactiveFallback" xml:space="preserve">
+    <value>Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideNotConfigured" xml:space="preserve">
+    <value>Dialogue LLM override is enabled, but {0} is not fully configured yet. Dialogue-family surfaces keep using the primary engine.</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiProviderSummary" xml:space="preserve">
+    <value>OpenAI-family provider: {0}  |  Variant: {1}  |  Configured: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiEndpoint" xml:space="preserve">
+    <value>Endpoint: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiModelSummary" xml:space="preserve">
+    <value>Model: {0}  |  Live models: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshSummary" xml:space="preserve">
+    <value>Last model refresh: {0}  |  Provider: {1}  |  Current model count: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshUtc" xml:space="preserve">
+    <value>Last refresh UTC: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshEndpoint" xml:space="preserve">
+    <value>Refresh endpoint: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshFailure" xml:space="preserve">
+    <value>Last model refresh failure: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerYes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="TranslatorDebuggerNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="TranslatorDebuggerEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="TranslatorDebuggerDisabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="TranslatorDebuggerSucceeded" xml:space="preserve">
+    <value>Succeeded</value>
+  </data>
+  <data name="TranslatorDebuggerFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="TranslatorDebuggerNeverAttempted" xml:space="preserve">
+    <value>Never attempted</value>
+  </data>
   <data name="GeminiModelTooltipPro" xml:space="preserve">
     <value>🔷 Legacy Gemini Pro model (default)</value>
   </data>

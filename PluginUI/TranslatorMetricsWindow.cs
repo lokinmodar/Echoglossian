@@ -301,12 +301,20 @@ public sealed class TranslatorMetricsWindow
   {
     var state = LlmSurfaceGroupRoutingPolicy.GetDialogueOverrideState(this.config);
     ImGui.TextWrapped(
-        $"Primary engine: {state.PrimaryEngine}  |  Effective dialogue engine: {state.EffectiveDialogueEngine}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText(
+                "TranslatorDebuggerDialogueOverridePrimaryAndEffective",
+                "Primary engine: {0}  |  Effective dialogue engine: {1}"),
+            state.PrimaryEngine,
+            state.EffectiveDialogueEngine));
 
     if (!state.OverrideEnabled)
     {
       ImGui.TextWrapped(
-          "Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine.");
+          GetText(
+              "TranslatorDebuggerDialogueOverrideDisabled",
+              "Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine."));
       return;
     }
 
@@ -315,11 +323,25 @@ public sealed class TranslatorMetricsWindow
         : new Vector4(0.95f, 0.6f, 0.35f, 1f);
     var statusMessage = state.OverrideActive
         ? state.SelectedOverrideEngine == state.PrimaryEngine
-            ? "Dialogue LLM override is enabled, but it currently matches the primary engine selection."
-            : $"Dialogue LLM override is active and routes dialogue-family surfaces through {state.SelectedOverrideEngine}."
+            ? GetText(
+                "TranslatorDebuggerDialogueOverrideMatchesPrimary",
+                "Dialogue LLM override is enabled, but it currently matches the primary engine selection.")
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                GetText(
+                    "TranslatorDebuggerDialogueOverrideActive",
+                    "Dialogue LLM override is active and routes dialogue-family surfaces through {0}."),
+                state.SelectedOverrideEngine)
         : state.OverrideConfigured
-            ? "Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine."
-            : $"Dialogue LLM override is enabled, but {state.SelectedOverrideEngine} is not fully configured yet. Dialogue-family surfaces keep using the primary engine.";
+            ? GetText(
+                "TranslatorDebuggerDialogueOverrideInactiveFallback",
+                "Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine.")
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                GetText(
+                    "TranslatorDebuggerDialogueOverrideNotConfigured",
+                    "Dialogue LLM override is enabled, but {0} is not fully configured yet. Dialogue-family surfaces keep using the primary engine."),
+                state.SelectedOverrideEngine);
 
     ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
     ImGui.TextWrapped(statusMessage);
@@ -337,36 +359,101 @@ public sealed class TranslatorMetricsWindow
         this.config,
         Echoglossian.TransEngines.ChatGPT);
     var refreshSnapshot = OpenAIModelManager.GetRefreshSnapshot();
+    var providerVariantDisplayName = ResolveProviderVariantDisplayName(settings.Variant);
 
     ImGui.TextWrapped(
-        $"OpenAI-family provider: {settings.ProviderName}  |  Variant: {settings.Variant}  |  Configured: {(isConfigured ? "Yes" : "No")}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText(
+                "TranslatorDebuggerOpenAiProviderSummary",
+                "OpenAI-family provider: {0}  |  Variant: {1}  |  Configured: {2}"),
+            settings.ProviderName,
+            providerVariantDisplayName,
+            isConfigured
+                ? GetText("TranslatorDebuggerYes", "Yes")
+                : GetText("TranslatorDebuggerNo", "No")));
     ImGui.TextWrapped(
-        $"Endpoint: {(string.IsNullOrWhiteSpace(settings.BaseUrl) ? "-" : settings.BaseUrl)}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText("TranslatorDebuggerOpenAiEndpoint", "Endpoint: {0}"),
+            string.IsNullOrWhiteSpace(settings.BaseUrl) ? "-" : settings.BaseUrl));
     ImGui.TextWrapped(
-        $"Model: {(string.IsNullOrWhiteSpace(settings.Model) ? "-" : settings.Model)}  |  Live models: {(settings.UseLiveModelList ? "Enabled" : "Disabled")}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText("TranslatorDebuggerOpenAiModelSummary", "Model: {0}  |  Live models: {1}"),
+            string.IsNullOrWhiteSpace(settings.Model) ? "-" : settings.Model,
+            settings.UseLiveModelList
+                ? GetText("TranslatorDebuggerEnabled", "Enabled")
+                : GetText("TranslatorDebuggerDisabled", "Disabled")));
 
     var refreshStatus = refreshSnapshot.LastRefreshSucceeded switch
     {
-      true => "Succeeded",
-      false => "Failed",
-      _ => "Never attempted",
+      true => GetText("TranslatorDebuggerSucceeded", "Succeeded"),
+      false => GetText("TranslatorDebuggerFailed", "Failed"),
+      _ => GetText("TranslatorDebuggerNeverAttempted", "Never attempted"),
     };
     ImGui.TextWrapped(
-        $"Last model refresh: {refreshStatus}  |  Provider: {refreshSnapshot.LastRefreshProviderName ?? "-"}  |  Current model count: {refreshSnapshot.CurrentModelCount}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText(
+                "TranslatorDebuggerOpenAiRefreshSummary",
+                "Last model refresh: {0}  |  Provider: {1}  |  Current model count: {2}"),
+            refreshStatus,
+            refreshSnapshot.LastRefreshProviderName ?? "-",
+            refreshSnapshot.CurrentModelCount));
     ImGui.TextWrapped(
-        $"Last refresh UTC: {refreshSnapshot.LastRefreshObservedAtUtc?.ToString("u", CultureInfo.InvariantCulture) ?? "-"}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText("TranslatorDebuggerOpenAiRefreshUtc", "Last refresh UTC: {0}"),
+            refreshSnapshot.LastRefreshObservedAtUtc?.ToString("u", CultureInfo.InvariantCulture) ?? "-"));
 
     if (!string.IsNullOrWhiteSpace(refreshSnapshot.LastRefreshUrl))
     {
-      ImGui.TextWrapped($"Refresh endpoint: {refreshSnapshot.LastRefreshUrl}");
+      ImGui.TextWrapped(
+          string.Format(
+              CultureInfo.CurrentCulture,
+              GetText("TranslatorDebuggerOpenAiRefreshEndpoint", "Refresh endpoint: {0}"),
+              refreshSnapshot.LastRefreshUrl));
     }
 
     if (!string.IsNullOrWhiteSpace(refreshSnapshot.LastRefreshFailureDetail))
     {
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.95f, 0.6f, 0.35f, 1f));
       ImGui.TextWrapped(
-          $"Last model refresh failure: {refreshSnapshot.LastRefreshFailureDetail}");
+          string.Format(
+              CultureInfo.CurrentCulture,
+              GetText("TranslatorDebuggerOpenAiRefreshFailure", "Last model refresh failure: {0}"),
+              refreshSnapshot.LastRefreshFailureDetail));
       ImGui.PopStyleColor();
     }
+  }
+
+  /// <summary>
+  ///     Resolves a localized display name for the selected OpenAI-family
+  ///     provider variant.
+  /// </summary>
+  /// <param name="variant">The provider variant.</param>
+  /// <returns>The localized display name.</returns>
+  private static string ResolveProviderVariantDisplayName(OpenAiProviderVariant variant)
+  {
+    return variant == OpenAiProviderVariant.CustomOpenAICompatible
+        ? GetText(
+            "OpenAiProviderVariantCustomOpenAiCompatible",
+            "Custom OpenAI-Compatible")
+        : GetText(
+            "OpenAiProviderVariantOfficialOpenAi",
+            "Official OpenAI");
+  }
+
+  /// <summary>
+  ///     Resolves a localized text resource with a fallback.
+  /// </summary>
+  /// <param name="key">The resource key.</param>
+  /// <param name="fallback">The fallback text.</param>
+  /// <returns>The localized string or the fallback.</returns>
+  private static string GetText(string key, string fallback)
+  {
+    return Resources.ResourceManager.GetString(key, Resources.Culture) ??
+           fallback;
   }
 }

@@ -945,4 +945,64 @@
   <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
     <value>Use o ID exato do modelo exposto pelo seu provedor OpenAI-compatible quando a lista de modelos ao vivo não estiver disponível ou estiver desativada.</value>
   </data>
+  <data name="TranslatorDebuggerDialogueOverridePrimaryAndEffective" xml:space="preserve">
+    <value>Mecanismo primário: {0}  |  Mecanismo efetivo de diálogo: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideDisabled" xml:space="preserve">
+    <value>O override LLM de diálogo está desativado no momento. As superfícies da família de diálogo usam o mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideMatchesPrimary" xml:space="preserve">
+    <value>O override LLM de diálogo está ativado, mas no momento corresponde à seleção do mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideActive" xml:space="preserve">
+    <value>O override LLM de diálogo está ativo e roteia as superfícies da família de diálogo por {0}.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideInactiveFallback" xml:space="preserve">
+    <value>O override LLM de diálogo está ativado, mas não está ativo no momento. As superfícies da família de diálogo continuam usando o mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideNotConfigured" xml:space="preserve">
+    <value>O override LLM de diálogo está ativado, mas {0} ainda não está totalmente configurado. As superfícies da família de diálogo continuam usando o mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiProviderSummary" xml:space="preserve">
+    <value>Provedor da família OpenAI: {0}  |  Variante: {1}  |  Configurado: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiEndpoint" xml:space="preserve">
+    <value>Endpoint: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiModelSummary" xml:space="preserve">
+    <value>Modelo: {0}  |  Modelos ao vivo: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshSummary" xml:space="preserve">
+    <value>Última atualização de modelos: {0}  |  Provedor: {1}  |  Total de modelos atual: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshUtc" xml:space="preserve">
+    <value>Última atualização UTC: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshEndpoint" xml:space="preserve">
+    <value>Endpoint de atualização: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshFailure" xml:space="preserve">
+    <value>Última falha ao atualizar modelos: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerYes" xml:space="preserve">
+    <value>Sim</value>
+  </data>
+  <data name="TranslatorDebuggerNo" xml:space="preserve">
+    <value>Não</value>
+  </data>
+  <data name="TranslatorDebuggerEnabled" xml:space="preserve">
+    <value>Ativado</value>
+  </data>
+  <data name="TranslatorDebuggerDisabled" xml:space="preserve">
+    <value>Desativado</value>
+  </data>
+  <data name="TranslatorDebuggerSucceeded" xml:space="preserve">
+    <value>Concluída</value>
+  </data>
+  <data name="TranslatorDebuggerFailed" xml:space="preserve">
+    <value>Falhou</value>
+  </data>
+  <data name="TranslatorDebuggerNeverAttempted" xml:space="preserve">
+    <value>Nunca tentada</value>
+  </data>
 </root>

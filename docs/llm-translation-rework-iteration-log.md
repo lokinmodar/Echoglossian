@@ -1246,3 +1246,45 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether `#196` is complete enough for PR review or whether to do a
     dedicated follow-up for debugger localization and operator wording
+
+## Iteration 31 - Translator Debugger Provider Localization
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - remove the remaining English-only operator text from the
+    `Translator Debugger and Metrics` window for the dialogue override and
+    OpenAI-compatible provider status flow
+- Files touched:
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `Properties/Resources.resx`
+  - `Properties/Resources.pt-BR.resx`
+  - `Properties/Resources.pt.resx`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - moved the debugger text for:
+    - dialogue override status
+    - provider summary
+    - endpoint/model/live-model status
+    - model refresh status/failure lines
+    into resource-backed keys with fallbacks
+  - localized those debugger strings for:
+    - base English
+    - `pt-BR`
+    - `pt`
+  - stopped showing the raw `OpenAiProviderVariant` enum in the debugger and
+    now render the localized provider-variant label instead
+  - deliberately used `ResourceManager.GetString(...)` with fallbacks in the
+    debugger window so this narrow pass did not require a broader regeneration
+    sweep in `Resources.Designer.cs`
+- Behavior-sensitive risks:
+  - this is wording-only and does not change routing, provider validation, or
+    model refresh behavior
+  - locales other than `pt-BR` and `pt` still fall back to base English for
+    these new debugger-only strings
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether `#196` is now complete enough for PR review or whether to
+    keep polishing debugger/operator UX before leaving this branch
