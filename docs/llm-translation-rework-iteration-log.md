@@ -1324,3 +1324,36 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - address the remaining review comments about thread safety in runtime
     failure tracking and translation-failure caches
+
+## Iteration 33 - Review Follow-Up: Failure Cache Thread Safety
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - address the actionable PR `#202` review comments about unsynchronized
+    access to shared runtime failure-deduplication state
+- Files touched:
+  - `Echoglossian.cs`
+  - `GeneralHelpers/TranslationFailureNotifications.cs`
+  - `Cache/TranslationFailureCacheManager.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a dedicated lock for runtime translation-failure notification
+    deduplication on the plugin instance
+  - made the prune/check/update sequence for notification cooldowns atomic so
+    concurrent async failures do not race through the dedupe map
+  - added a shared lock to `TranslationFailureCacheManager` and serialized
+    cache preload, update, lookup, transient-failure remember, and clear
+    operations against the in-memory dictionaries
+- Behavior-sensitive risks:
+  - this does not change translation failure semantics or persistence rules;
+    it only removes undefined concurrent access to the in-memory structures
+  - lookups now briefly contend on a lock during failure-cache access, which is
+    preferable to corrupting shared runtime state
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - address the remaining review follow-up on dialogue-context cache key
+    robustness so context-aware translation requests cannot collide on
+    delimiter-heavy source text

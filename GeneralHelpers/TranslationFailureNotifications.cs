@@ -49,16 +49,19 @@ public partial class Echoglossian
     var signature =
         $"{translationEngine}:{classification.FailureReason}:{classification.UserFacingMessage}";
     var now = DateTime.UtcNow;
-    this.PruneRuntimeTranslationFailureNotificationTimes(now);
-    if (this.runtimeTranslationFailureNotificationTimes.TryGetValue(
-            signature,
-            out var lastShownAt) &&
-        now - lastShownAt < RuntimeTranslationFailureNotificationCooldown)
+    lock (this.runtimeTranslationFailureNotificationLock)
     {
-      return;
-    }
+      this.PruneRuntimeTranslationFailureNotificationTimes(now);
+      if (this.runtimeTranslationFailureNotificationTimes.TryGetValue(
+              signature,
+              out var lastShownAt) &&
+          now - lastShownAt < RuntimeTranslationFailureNotificationCooldown)
+      {
+        return;
+      }
 
-    this.runtimeTranslationFailureNotificationTimes[signature] = now;
+      this.runtimeTranslationFailureNotificationTimes[signature] = now;
+    }
 
     var engineName =
         Enum.IsDefined(typeof(TransEngines), translationEngine)
