@@ -1357,3 +1357,40 @@ turning into an opaque pile of partial changes.
   - address the remaining review follow-up on dialogue-context cache key
     robustness so context-aware translation requests cannot collide on
     delimiter-heavy source text
+
+## Iteration 34 - Review Follow-Up: Dialogue Context Cache Key Robustness
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - remove delimiter-driven ambiguity from context-aware dialogue cache keys
+    so different session/history combinations cannot collide when source text
+    contains `|`, `:`, or `_`
+- Files touched:
+  - `Translators/Helpers/DialogueContextPromptHelper.cs`
+  - `Echoglossian.Tests/DialogueContextPromptHelperTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - replaced the hand-concatenated context cache key with a serialized payload
+    containing:
+    - session namespace
+    - session key
+    - current text
+    - source/target languages
+    - prior-turn speaker/text pairs
+  - updated helper tests to:
+    - use explicit deterministic turn timestamps
+    - verify the serialized key shape
+    - cover a delimiter-heavy collision scenario that now stays distinct
+- Behavior-sensitive risks:
+  - existing in-memory context-aware cache entries from the previous key format
+    will naturally miss after restart or hot reload, which is acceptable for a
+    runtime-only cache
+  - persistence semantics remain unchanged because these keys are not stored in
+    the database
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - reassess the remaining PR `#202` review items and decide whether this
+    branch is ready for another review pass

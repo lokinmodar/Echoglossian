@@ -15,6 +15,9 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class DialogueContextPromptHelperTests
 {
+    private static readonly DateTime FixedObservedAtUtc =
+        new(2026, 5, 13, 12, 0, 0, DateTimeKind.Utc);
+
     /// <summary>
     ///     Ensures usable context is detected only when prior turns exist.
     /// </summary>
@@ -30,7 +33,7 @@ public class DialogueContextPromptHelperTests
             "Talk",
             "speaker",
             "Krile",
-            [new DialogueTranslationTurn("Krile", "Stay alert.")]);
+            [CreateTurn("Krile", "Stay alert.")]);
 
         DialogueContextPromptHelper.HasUsableDialogueContext(emptyContext).Should().BeFalse();
         DialogueContextPromptHelper.HasUsableDialogueContext(populatedContext).Should().BeTrue();
@@ -47,8 +50,8 @@ public class DialogueContextPromptHelperTests
             "quest-1",
             "Krile",
             [
-                new DialogueTranslationTurn("Krile", "Stay alert."),
-                new DialogueTranslationTurn("Thancred", "We move now."),
+                CreateTurn("Krile", "Stay alert."),
+                CreateTurn("Thancred", "We move now."),
             ]);
 
         string result = DialogueContextPromptHelper.AppendDialogueContext(
@@ -63,7 +66,8 @@ public class DialogueContextPromptHelperTests
     }
 
     /// <summary>
-    ///     Ensures the cache key is namespaced by session and history.
+    ///     Ensures the cache key is namespaced by session and serialized with
+    ///     content instead of delimiter-sensitive concatenation.
     /// </summary>
     [Fact]
     public void BuildDialogueContextCacheKey_ShouldIncludeSessionAndHistory()
@@ -72,7 +76,7 @@ public class DialogueContextPromptHelperTests
             "BattleTalk",
             "battle-1",
             "Alphinaud",
-            [new DialogueTranslationTurn("Alphinaud", "Hold the line.")]);
+            [CreateTurn("Alphinaud", "Hold the line.")]);
 
         string key = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
             "Advance.",
@@ -80,8 +84,64 @@ public class DialogueContextPromptHelperTests
             "Portuguese",
             context);
 
-        key.Should().Contain("dialogue|BattleTalk|battle-1|");
-        key.Should().Contain("Alphinaud:Hold the line.");
-        key.Should().EndWith("|Advance._English_Portuguese");
+        key.Should().Contain("\"Scope\":\"dialogue\"");
+        key.Should().Contain("\"SessionNamespace\":\"BattleTalk\"");
+        key.Should().Contain("\"SessionKey\":\"battle-1\"");
+        key.Should().Contain("\"Text\":\"Advance.\"");
+        key.Should().Contain("\"SpeakerName\":\"Alphinaud\"");
+        key.Should().Contain("\"SourceText\":\"Hold the line.\"");
+    }
+
+    /// <summary>
+    ///     Ensures the cache key remains distinct even when dialogue text
+    ///     contains characters that previously acted as delimiters.
+    /// </summary>
+    [Fact]
+    public void BuildDialogueContextCacheKey_ShouldAvoidDelimiterDrivenCollisions()
+    {
+        DialogueTranslationContext firstContext = new(
+            "Talk",
+            "alpha|beta",
+            "Krile",
+            [
+                CreateTurn("Alpha:Beta", "One|Two"),
+            ]);
+        DialogueTranslationContext secondContext = new(
+            "Talk|alpha",
+            "beta",
+            "Krile",
+            [
+                CreateTurn("Alpha", "Beta:One|Two"),
+            ]);
+
+        string firstKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Current|Text",
+            "English",
+            "Portuguese",
+            firstContext);
+        string secondKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Current|Text",
+            "English",
+            "Portuguese",
+            secondContext);
+
+        firstKey.Should().NotBe(secondKey);
+    }
+
+    /// <summary>
+    ///     Creates one deterministic prior dialogue turn for cache-key and
+    ///     prompt-helper tests.
+    /// </summary>
+    /// <param name="speakerName">The turn speaker name.</param>
+    /// <param name="sourceText">The turn source text.</param>
+    /// <returns>A deterministic dialogue translation turn.</returns>
+    private static DialogueTranslationTurn CreateTurn(
+        string speakerName,
+        string sourceText)
+    {
+        return new DialogueTranslationTurn(
+            speakerName,
+            sourceText,
+            FixedObservedAtUtc);
     }
 }

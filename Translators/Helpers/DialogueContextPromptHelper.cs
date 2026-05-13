@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Newtonsoft.Json;
+
 namespace Echoglossian.Translators.Helpers;
 
 /// <summary>
@@ -40,13 +42,20 @@ public static class DialogueContextPromptHelper
         string targetLanguage,
         DialogueTranslationContext dialogueContext)
     {
-        string historyKey = string.Join(
-            "|",
-            dialogueContext.PriorTurns.Select(
-                turn => $"{turn.SpeakerName}:{turn.SourceText}"));
-
-        return
-            $"dialogue|{dialogueContext.SessionNamespace}|{dialogueContext.SessionKey}|{historyKey}|{text}_{sourceLanguage}_{targetLanguage}";
+        return JsonConvert.SerializeObject(new
+        {
+            Scope = "dialogue",
+            dialogueContext.SessionNamespace,
+            dialogueContext.SessionKey,
+            Text = text,
+            SourceLanguage = sourceLanguage,
+            TargetLanguage = targetLanguage,
+            PriorTurns = dialogueContext.PriorTurns.Select(turn => new
+            {
+                turn.SpeakerName,
+                turn.SourceText,
+            }),
+        });
     }
 
     /// <summary>
