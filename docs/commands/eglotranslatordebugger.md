@@ -7,6 +7,7 @@ window.
 
 - aggregated live translator request counts
 - aggregated context-aware live request counts
+- current dialogue-family LLM override routing status
 - provider and configured model labels per engine
 - successes, failures, and short-circuits per engine
 - average, max, and last observed live request latency
@@ -18,6 +19,12 @@ create hot-path per-request logs.
 
 It also exposes a `Clear Dialogue Sessions` action that clears the retained
 runtime-only `Talk` / `BattleTalk` history used for context-aware translation.
+
+When the dialogue-family LLM override is enabled, the window also shows:
+
+- the current primary engine
+- the effective engine currently serving dialogue-family surfaces
+- whether the override is active or falling back to the primary engine
 
 ## Operator Action
 

@@ -40,6 +40,62 @@ public class LlmSurfaceGroupRoutingPolicyTests
   }
 
   /// <summary>
+  ///     Ensures the debugger-facing override state reports the effective
+  ///     dialogue engine and active status when the override is configured and
+  ///     enabled.
+  /// </summary>
+  [Fact]
+  public void GetDialogueOverrideState_ConfiguredOverride_IsReportedAsActive()
+  {
+    var config = new Config
+    {
+      ChosenTransEngine = (int)Echoglossian.TransEngines.Google,
+      ChosenTransEngineKey = nameof(Echoglossian.TransEngines.Google),
+      UseDialogueLlmOverride = true,
+      DialogueLlmEngine = (int)Echoglossian.TransEngines.Ollama,
+      DialogueLlmEngineKey = nameof(Echoglossian.TransEngines.Ollama),
+      OllamaUrl = "http://localhost:11434",
+      OllamaModel = "llama3",
+    };
+
+    var state = LlmSurfaceGroupRoutingPolicy.GetDialogueOverrideState(config);
+
+    Assert.True(state.OverrideEnabled);
+    Assert.True(state.OverrideConfigured);
+    Assert.True(state.OverrideActive);
+    Assert.Equal(Echoglossian.TransEngines.Google, state.PrimaryEngine);
+    Assert.Equal(Echoglossian.TransEngines.Ollama, state.SelectedOverrideEngine);
+    Assert.Equal(Echoglossian.TransEngines.Ollama, state.EffectiveDialogueEngine);
+  }
+
+  /// <summary>
+  ///     Ensures the debugger-facing override state reports a fallback to the
+  ///     primary engine when the selected override is not configured enough to
+  ///     be used safely.
+  /// </summary>
+  [Fact]
+  public void GetDialogueOverrideState_IncompleteOverride_FallsBackToPrimary()
+  {
+    var config = new Config
+    {
+      ChosenTransEngine = (int)Echoglossian.TransEngines.Google,
+      ChosenTransEngineKey = nameof(Echoglossian.TransEngines.Google),
+      UseDialogueLlmOverride = true,
+      DialogueLlmEngine = (int)Echoglossian.TransEngines.ChatGPT,
+      DialogueLlmEngineKey = nameof(Echoglossian.TransEngines.ChatGPT),
+      ChatGptApiKey = string.Empty,
+    };
+
+    var state = LlmSurfaceGroupRoutingPolicy.GetDialogueOverrideState(config);
+
+    Assert.True(state.OverrideEnabled);
+    Assert.False(state.OverrideConfigured);
+    Assert.False(state.OverrideActive);
+    Assert.Equal(Echoglossian.TransEngines.ChatGPT, state.SelectedOverrideEngine);
+    Assert.Equal(Echoglossian.TransEngines.Google, state.EffectiveDialogueEngine);
+  }
+
+  /// <summary>
   ///     Ensures dialogue-family requests can route to a configured LLM
   ///     override while the global engine remains the default path.
   /// </summary>

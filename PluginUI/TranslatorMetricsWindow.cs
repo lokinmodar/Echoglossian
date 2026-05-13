@@ -14,6 +14,7 @@ namespace Echoglossian;
 /// </summary>
 public sealed class TranslatorMetricsWindow
 {
+  private readonly Config config;
   private readonly Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
       retranslateVisibleDialogueAsync;
   private Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>?
@@ -25,14 +26,17 @@ public sealed class TranslatorMetricsWindow
   ///     Initializes a new instance of the <see cref="TranslatorMetricsWindow" />
   ///     class.
   /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
   /// <param name="retranslateVisibleDialogueAsync">
   ///     Delegate used to explicitly retranslate the currently visible dialogue
   ///     line and persist the refreshed result.
   /// </param>
   public TranslatorMetricsWindow(
+      Config config,
       Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
           retranslateVisibleDialogueAsync)
   {
+    this.config = config;
     this.retranslateVisibleDialogueAsync = retranslateVisibleDialogueAsync;
   }
 
@@ -66,6 +70,8 @@ public sealed class TranslatorMetricsWindow
 
     ImGui.TextWrapped(
         "Aggregated runtime metrics for translator activity in this session.");
+    ImGui.Separator();
+    this.DrawDialogueOverrideStatus();
     ImGui.Separator();
 
     this.ResolveCompletedRetranslationTask();
@@ -282,5 +288,37 @@ public sealed class TranslatorMetricsWindow
     var result = completedTask.GetAwaiter().GetResult();
     this.lastRetranslationSucceeded = result.Success;
     this.lastRetranslationMessage = result.Message;
+  }
+
+  /// <summary>
+  ///     Draws the current dialogue-family LLM override routing state.
+  /// </summary>
+  private void DrawDialogueOverrideStatus()
+  {
+    var state = LlmSurfaceGroupRoutingPolicy.GetDialogueOverrideState(this.config);
+    ImGui.TextWrapped(
+        $"Primary engine: {state.PrimaryEngine}  |  Effective dialogue engine: {state.EffectiveDialogueEngine}");
+
+    if (!state.OverrideEnabled)
+    {
+      ImGui.TextWrapped(
+          "Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine.");
+      return;
+    }
+
+    var statusColor = state.OverrideActive
+        ? new Vector4(0.45f, 0.9f, 0.55f, 1f)
+        : new Vector4(0.95f, 0.6f, 0.35f, 1f);
+    var statusMessage = state.OverrideActive
+        ? state.SelectedOverrideEngine == state.PrimaryEngine
+            ? "Dialogue LLM override is enabled, but it currently matches the primary engine selection."
+            : $"Dialogue LLM override is active and routes dialogue-family surfaces through {state.SelectedOverrideEngine}."
+        : state.OverrideConfigured
+            ? "Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine."
+            : $"Dialogue LLM override is enabled, but {state.SelectedOverrideEngine} is not fully configured yet. Dialogue-family surfaces keep using the primary engine.";
+
+    ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
+    ImGui.TextWrapped(statusMessage);
+    ImGui.PopStyleColor();
   }
 }

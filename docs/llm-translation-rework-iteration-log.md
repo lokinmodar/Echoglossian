@@ -946,3 +946,43 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether to keep widening the operator-facing override work or move
     back to metrics / controls for the same LLM routing path
+
+## Iteration 24 - Show Dialogue Override State In The Translator Debugger
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - expose the effective runtime state of the dialogue-family LLM override in
+    the existing debugger window
+  - let operators see when the override is active versus silently falling back
+    to the primary engine, without relying on logs
+- Files touched:
+  - `Translators/LlmSurfaceGroupRoutingPolicy.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `Echoglossian.cs`
+  - `Echoglossian.Tests/LlmSurfaceGroupRoutingPolicyTests.cs`
+  - `docs/commands/eglotranslatordebugger.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a debugger-facing `DialogueOverrideState` snapshot to the shared LLM
+    routing policy
+  - `Translator Debugger and Metrics` now shows:
+    - current primary engine
+    - current effective dialogue engine
+    - whether the override is active or falling back to the primary engine
+    - whether the selected override engine is not yet configured enough to be
+      used safely
+  - added narrow tests for:
+    - active configured override state
+    - incomplete override fallback state
+- Behavior-sensitive risks:
+  - this is informational only; it does not change routing behavior by itself
+  - the debugger snapshot normalizes the persisted override selection before
+    reading it, which is consistent with the new UI path but means malformed
+    manual JSON edits will present as the normalized state
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - move to the next routing/product slice of the LLM rework, now that both
+    configuration and runtime observability of the dialogue override exist

@@ -14,6 +14,35 @@ namespace Echoglossian.Translators;
 internal static class LlmSurfaceGroupRoutingPolicy
 {
   /// <summary>
+  ///     Describes the current operator-facing state of the first-pass
+  ///     dialogue-family LLM override routing.
+  /// </summary>
+  /// <param name="PrimaryEngine">The globally selected primary engine.</param>
+  /// <param name="OverrideEnabled">Whether the dialogue override toggle is on.</param>
+  /// <param name="SelectedOverrideEngine">
+  ///     The normalized LLM override engine selection.
+  /// </param>
+  /// <param name="OverrideConfigured">
+  ///     Whether the selected override engine is
+  ///     configured enough to be used safely.
+  /// </param>
+  /// <param name="OverrideActive">
+  ///     Whether dialogue-family requests are actively
+  ///     routing through the override engine.
+  /// </param>
+  /// <param name="EffectiveDialogueEngine">
+  ///     The engine currently used for
+  ///     dialogue-family requests.
+  /// </param>
+  internal readonly record struct DialogueOverrideState(
+      Echoglossian.TransEngines PrimaryEngine,
+      bool OverrideEnabled,
+      Echoglossian.TransEngines SelectedOverrideEngine,
+      bool OverrideConfigured,
+      bool OverrideActive,
+      Echoglossian.TransEngines EffectiveDialogueEngine);
+
+  /// <summary>
   ///     Normalizes the persisted dialogue override selection so its numeric
   ///     and string forms stay aligned and only LLM-backed engines remain
   ///     valid for the first-pass override path.
@@ -72,6 +101,38 @@ internal static class LlmSurfaceGroupRoutingPolicy
     }
 
     return (Echoglossian.TransEngines)config.ChosenTransEngine;
+  }
+
+  /// <summary>
+  ///     Gets a debugger-friendly snapshot of the current dialogue override
+  ///     routing state.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The current dialogue override routing state.</returns>
+  internal static DialogueOverrideState GetDialogueOverrideState(Config config)
+  {
+    NormalizeDialogueOverrideSelection(config);
+
+    var primaryEngine = (Echoglossian.TransEngines)config.ChosenTransEngine;
+    var selectedOverrideEngine =
+        (Echoglossian.TransEngines)config.DialogueLlmEngine;
+    var overrideConfigured =
+        TranslationEngineConfigurationHelper.IsConfigured(
+            config,
+            selectedOverrideEngine);
+    var overrideActive = TryResolveDialogueOverrideEngine(
+        config,
+        out var effectiveOverrideEngine);
+
+    return new DialogueOverrideState(
+        primaryEngine,
+        config.UseDialogueLlmOverride,
+        selectedOverrideEngine,
+        overrideConfigured,
+        overrideActive,
+        overrideActive
+            ? effectiveOverrideEngine
+            : primaryEngine);
   }
 
   /// <summary>
