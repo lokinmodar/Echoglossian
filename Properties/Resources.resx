@@ -757,6 +757,9 @@
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Opens the Echoglossian DB Editor.</value>
   </data>
+  <data name="OpensTheTranslatorDebuggerAndMetricsWindow" xml:space="preserve">
+    <value>Opens the Translator Debugger and Metrics window.</value>
+  </data>
   <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
     <value>Scan the QR Code to send cryptocurrency. Any amount is appreciated :)</value>
   </data>

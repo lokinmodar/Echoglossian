@@ -1429,3 +1429,35 @@ turning into an opaque pile of partial changes.
   - move the translator debugger command help text into `Resources` so the
     command registry stays localizable and consistent with the rest of the
     plugin command help
+
+## Iteration 36 - Review Follow-Up: Translator Debugger Command Localization
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - close the last open PR `#202` review item by moving the
+    `/eglotranslatordebugger` command help text out of hardcoded code and into
+    `Resources`
+- Files touched:
+  - `Echoglossian.cs`
+  - `Properties/Resources.resx`
+  - `Properties/Resources.pt-BR.resx`
+  - `Properties/Resources.pt.resx`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - replaced the hardcoded translator-debugger command help text with a
+    `Resources.ResourceManager` lookup plus safe English fallback
+  - added the new help string to:
+    - base English resources
+    - `pt-BR`
+    - `pt`
+- Behavior-sensitive risks:
+  - this is command help text only; command registration and debugger behavior
+    are unchanged
+  - locales without a specific translation still fall back to base English
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - reassess PR `#202` review state and resolve the remaining open threads if
+    the reviewer comments are fully covered

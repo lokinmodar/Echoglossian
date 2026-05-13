@@ -552,6 +552,9 @@
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Abre o Editor de banco de dados ecoglossiano.</value>
   </data>
+  <data name="OpensTheTranslatorDebuggerAndMetricsWindow" xml:space="preserve">
+    <value>Abre a janela de Depuração e Métricas do Tradutor.</value>
+  </data>
   <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
     <value>Digitalize o QR Code para enviar criptomoeda. Qualquer valor é apreciado :)</value>
   </data>

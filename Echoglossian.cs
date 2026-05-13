@@ -186,7 +186,10 @@ public partial class Echoglossian : IDalamudPlugin
         TranslatorDebuggerWindowCommand,
         new CommandInfo(this.OnEgloTranslatorDebuggerCommand)
         {
-          HelpMessage = "Opens the Translator Debugger and Metrics window.",
+          HelpMessage = Resources.ResourceManager.GetString(
+                            "OpensTheTranslatorDebuggerAndMetricsWindow",
+                            this.cultureInfo) ??
+                        "Opens the Translator Debugger and Metrics window.",
         });
 
 #if DEBUG
