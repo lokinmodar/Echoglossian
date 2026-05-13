@@ -25,8 +25,14 @@ public static class ChatGPTEngineUI
     public static bool Draw(Config config, PromptTemplateManager promptManager)
     {
         var changed = false;
+        var settings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
 
-        ImGui.TextWrapped(Resources.SettingsForChatGptTransText);
+        ImGui.TextWrapped(
+            settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible
+                ? GetText(
+                    "OpenAiProviderVariantCustomOpenAiCompatible",
+                    "Custom OpenAI-Compatible")
+                : Resources.SettingsForChatGptTransText);
         ImGui.Spacing();
 
         changed |= DrawProviderVariantSelector(config);
@@ -44,7 +50,7 @@ public static class ChatGPTEngineUI
                 });
         }
 
-        var settings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
+        settings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
         if (settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible)
         {
             ImGui.TextWrapped(GetText(
@@ -161,13 +167,16 @@ public static class ChatGPTEngineUI
     private static bool DrawApiKeyField(Config config, OpenAiProviderVariant variant)
     {
         var changed = false;
+        var label = variant == OpenAiProviderVariant.CustomOpenAICompatible
+            ? Resources.APIKey
+            : Resources.ChatGptApiKey;
         var value = variant == OpenAiProviderVariant.CustomOpenAICompatible
             ? config.CustomOpenAiCompatibleApiKey
             : config.ChatGptApiKey;
 
         bool isInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
-            Resources.ChatGptApiKey,
+            label,
             ref value,
             400,
             out isInvalid);

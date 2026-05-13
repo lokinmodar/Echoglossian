@@ -1216,3 +1216,33 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - polish the provider-specific UI wording so the custom provider does not
     keep reusing `ChatGPT API Key` labeling in the main engine configuration
+
+## Iteration 30 - OpenAI-Compatible Provider UI Wording Polish
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - remove the most visible ChatGPT-specific wording leak from the custom
+    OpenAI-compatible provider path so the engine configuration reads
+    correctly when the operator is not using the official provider
+- Files touched:
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - the engine settings header now reflects the active provider variant:
+    - official variant keeps `Settings for ChatGPT`
+    - custom variant shows the localized `Custom OpenAI-Compatible` label
+  - the API key field now uses:
+    - `ChatGPT API Key` for the official variant
+    - the generic localized `API Key` label for the custom provider
+- Behavior-sensitive risks:
+  - this is wording-only and does not alter how provider settings are stored,
+    validated, or used to create the runtime client
+  - the debugger still uses English operator-facing status text, which is a
+    separate observability concern and not part of this UI wording pass
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether `#196` is complete enough for PR review or whether to do a
+    dedicated follow-up for debugger localization and operator wording
