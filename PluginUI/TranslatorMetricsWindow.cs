@@ -3,7 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators;
+using Echoglossian.Translators.OpenAI;
 using System.Globalization;
 
 namespace Echoglossian;
@@ -72,6 +74,8 @@ public sealed class TranslatorMetricsWindow
         "Aggregated runtime metrics for translator activity in this session.");
     ImGui.Separator();
     this.DrawDialogueOverrideStatus();
+    ImGui.Separator();
+    this.DrawOpenAiProviderStatus();
     ImGui.Separator();
 
     this.ResolveCompletedRetranslationTask();
@@ -320,5 +324,49 @@ public sealed class TranslatorMetricsWindow
     ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
     ImGui.TextWrapped(statusMessage);
     ImGui.PopStyleColor();
+  }
+
+  /// <summary>
+  ///     Draws the current OpenAI-family provider configuration and live model
+  ///     refresh status for operator inspection.
+  /// </summary>
+  private void DrawOpenAiProviderStatus()
+  {
+    var settings = OpenAiProviderVariantHelper.ResolveActiveSettings(this.config);
+    var isConfigured = TranslationEngineConfigurationHelper.IsConfigured(
+        this.config,
+        Echoglossian.TransEngines.ChatGPT);
+    var refreshSnapshot = OpenAIModelManager.GetRefreshSnapshot();
+
+    ImGui.TextWrapped(
+        $"OpenAI-family provider: {settings.ProviderName}  |  Variant: {settings.Variant}  |  Configured: {(isConfigured ? "Yes" : "No")}");
+    ImGui.TextWrapped(
+        $"Endpoint: {(string.IsNullOrWhiteSpace(settings.BaseUrl) ? "-" : settings.BaseUrl)}");
+    ImGui.TextWrapped(
+        $"Model: {(string.IsNullOrWhiteSpace(settings.Model) ? "-" : settings.Model)}  |  Live models: {(settings.UseLiveModelList ? "Enabled" : "Disabled")}");
+
+    var refreshStatus = refreshSnapshot.LastRefreshSucceeded switch
+    {
+      true => "Succeeded",
+      false => "Failed",
+      _ => "Never attempted",
+    };
+    ImGui.TextWrapped(
+        $"Last model refresh: {refreshStatus}  |  Provider: {refreshSnapshot.LastRefreshProviderName ?? "-"}  |  Current model count: {refreshSnapshot.CurrentModelCount}");
+    ImGui.TextWrapped(
+        $"Last refresh UTC: {refreshSnapshot.LastRefreshObservedAtUtc?.ToString("u", CultureInfo.InvariantCulture) ?? "-"}");
+
+    if (!string.IsNullOrWhiteSpace(refreshSnapshot.LastRefreshUrl))
+    {
+      ImGui.TextWrapped($"Refresh endpoint: {refreshSnapshot.LastRefreshUrl}");
+    }
+
+    if (!string.IsNullOrWhiteSpace(refreshSnapshot.LastRefreshFailureDetail))
+    {
+      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.95f, 0.6f, 0.35f, 1f));
+      ImGui.TextWrapped(
+          $"Last model refresh failure: {refreshSnapshot.LastRefreshFailureDetail}");
+      ImGui.PopStyleColor();
+    }
   }
 }

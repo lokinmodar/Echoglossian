@@ -10,8 +10,44 @@ public static class OpenAIModelManager
   private const string DefaultOpenAiModelsBaseUrl = "https://api.openai.com/v1";
   private static readonly HttpClient HttpClient = new();
   private static readonly object SyncLock = new();
+  private static string? lastRefreshFailureDetail;
+  private static DateTime? lastRefreshObservedAtUtc;
+  private static string? lastRefreshProviderName;
+  private static bool? lastRefreshSucceeded;
+  private static string? lastRefreshUrl;
 
   public static List<LlmTextModel> CurrentModelList { get; private set; } = OpenAITextModelDefaults.PredefinedModels;
+
+  /// <summary>
+  ///     Describes the last observed live model refresh state for the
+  ///     OpenAI-family model manager.
+  /// </summary>
+  /// <param name="LastRefreshObservedAtUtc">
+  ///     The timestamp of the last refresh attempt.
+  /// </param>
+  /// <param name="LastRefreshSucceeded">
+  ///     Whether the last refresh attempt succeeded.
+  /// </param>
+  /// <param name="LastRefreshProviderName">
+  ///     The provider label used by the last refresh attempt.
+  /// </param>
+  /// <param name="LastRefreshUrl">
+  ///     The normalized base URL used by the last refresh attempt.
+  /// </param>
+  /// <param name="CurrentModelCount">
+  ///     The current model count retained by the shared model manager.
+  /// </param>
+  /// <param name="LastRefreshFailureDetail">
+  ///     The last observed refresh failure detail when the most recent attempt
+  ///     failed.
+  /// </param>
+  public readonly record struct OpenAiModelRefreshSnapshot(
+      DateTime? LastRefreshObservedAtUtc,
+      bool? LastRefreshSucceeded,
+      string? LastRefreshProviderName,
+      string? LastRefreshUrl,
+      int CurrentModelCount,
+      string? LastRefreshFailureDetail);
 
   public static void ResetToDefault()
   {
@@ -38,9 +74,16 @@ public static class OpenAIModelManager
       string baseUrl,
       string providerName)
   {
+    var observedAtUtc = DateTime.UtcNow;
     if (string.IsNullOrWhiteSpace(apiKey))
     {
       ResetToDefault();
+      UpdateRefreshState(
+          observedAtUtc,
+          providerName,
+          baseUrl,
+          false,
+          "Missing API key.");
       return false;
     }
 
@@ -50,6 +93,12 @@ public static class OpenAIModelManager
       if (string.IsNullOrWhiteSpace(normalizedBaseUrl))
       {
         ResetToDefault();
+        UpdateRefreshState(
+            observedAtUtc,
+            providerName,
+            normalizedBaseUrl,
+            false,
+            "Missing model endpoint.");
         return false;
       }
 
@@ -63,6 +112,12 @@ public static class OpenAIModelManager
       if (!response.IsSuccessStatusCode)
       {
         ResetToDefault();
+        UpdateRefreshState(
+            observedAtUtc,
+            providerName,
+            normalizedBaseUrl,
+            false,
+            $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
         return false;
       }
 
@@ -72,6 +127,12 @@ public static class OpenAIModelManager
       if (data == null)
       {
         ResetToDefault();
+        UpdateRefreshState(
+            observedAtUtc,
+            providerName,
+            normalizedBaseUrl,
+            false,
+            "Provider response did not include a models data array.");
         return false;
       }
 
@@ -120,17 +181,86 @@ public static class OpenAIModelManager
         if (models.Count > 0)
         {
           CurrentModelList = models;
+          UpdateRefreshState(
+              observedAtUtc,
+              providerName,
+              normalizedBaseUrl,
+              true,
+              null);
           return true;
         }
       }
 
       ResetToDefault();
+      UpdateRefreshState(
+          observedAtUtc,
+          providerName,
+          normalizedBaseUrl,
+          false,
+          "Provider returned no supported text models.");
     }
-    catch
+    catch (Exception ex)
     {
       ResetToDefault();
+      UpdateRefreshState(
+          observedAtUtc,
+          providerName,
+          baseUrl,
+          false,
+          $"{ex.GetType().Name}: {ex.Message}");
     }
 
     return false;
+  }
+
+  /// <summary>
+  ///     Gets the current shared OpenAI-family live model refresh snapshot for
+  ///     debugger inspection.
+  /// </summary>
+  /// <returns>The current live model refresh snapshot.</returns>
+  public static OpenAiModelRefreshSnapshot GetRefreshSnapshot()
+  {
+    lock (SyncLock)
+    {
+      return new OpenAiModelRefreshSnapshot(
+          lastRefreshObservedAtUtc,
+          lastRefreshSucceeded,
+          lastRefreshProviderName,
+          lastRefreshUrl,
+          CurrentModelList.Count,
+          lastRefreshFailureDetail);
+    }
+  }
+
+  /// <summary>
+  ///     Updates the shared refresh snapshot after one live model-list
+  ///     attempt.
+  /// </summary>
+  /// <param name="observedAtUtc">The observation timestamp.</param>
+  /// <param name="providerName">The provider label.</param>
+  /// <param name="baseUrl">The provider base URL.</param>
+  /// <param name="succeeded">Whether the refresh succeeded.</param>
+  /// <param name="failureDetail">The failure detail when the refresh failed.</param>
+  private static void UpdateRefreshState(
+      DateTime observedAtUtc,
+      string? providerName,
+      string? baseUrl,
+      bool succeeded,
+      string? failureDetail)
+  {
+    lock (SyncLock)
+    {
+      lastRefreshObservedAtUtc = observedAtUtc;
+      lastRefreshSucceeded = succeeded;
+      lastRefreshProviderName = string.IsNullOrWhiteSpace(providerName)
+          ? null
+          : providerName;
+      lastRefreshUrl = string.IsNullOrWhiteSpace(baseUrl)
+          ? null
+          : baseUrl.TrimEnd('/');
+      lastRefreshFailureDetail = succeeded || string.IsNullOrWhiteSpace(failureDetail)
+          ? null
+          : failureDetail;
+    }
   }
 }

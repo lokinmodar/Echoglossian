@@ -1080,3 +1080,50 @@ turning into an opaque pile of partial changes.
   - validate the operator-facing custom-provider flow in-game and then decide
     whether the next `#196` slice should be provider-specific diagnostics or
     broader LLM routing work
+
+## Iteration 27 - OpenAI-Compatible Provider Debugger Diagnostics
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - make the custom OpenAI-compatible provider path observable in the
+    `Translator Debugger and Metrics` window without requiring log inspection
+  - surface enough provider and `/models` refresh state to troubleshoot the
+    NanoGPT-style endpoint flow from `#196`
+- Files touched:
+  - `Translators/OpenAI/OpenAIModelManager.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `docs/commands/eglotranslatordebugger.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added an in-memory OpenAI-family live model refresh snapshot covering:
+    - last refresh UTC
+    - last provider label
+    - last normalized endpoint
+    - success or failure state
+    - current shared model count
+    - last failure detail
+  - the model manager now updates that snapshot for:
+    - missing key / endpoint validation failures
+    - HTTP failures
+    - malformed provider responses
+    - zero supported text-model results
+    - successful refreshes
+  - `Translator Debugger and Metrics` now shows:
+    - active OpenAI-family provider variant
+    - active endpoint
+    - active model
+    - whether the active profile is configured
+    - whether live model listing is enabled
+    - the last live model refresh result and failure detail when applicable
+- Behavior-sensitive risks:
+  - this is observability-only; it does not change translation routing or
+    provider selection behavior
+  - the OpenAI-family live model snapshot is session-scoped and resets only as
+    part of runtime lifecycle, not by clearing general translator metrics
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether to keep deepening `#196` with provider-specific polish or
+    move back to broader LLM routing / retraduction work

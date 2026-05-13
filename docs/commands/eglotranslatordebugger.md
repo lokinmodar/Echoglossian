@@ -8,6 +8,8 @@ window.
 - aggregated live translator request counts
 - aggregated context-aware live request counts
 - current dialogue-family LLM override routing status
+- current OpenAI-family provider variant, endpoint, model, and readiness state
+- last OpenAI-family live model refresh outcome and failure detail
 - provider and configured model labels per engine
 - successes, failures, and short-circuits per engine
 - average, max, and last observed live request latency
