@@ -592,3 +592,38 @@ turning into an opaque pile of partial changes.
   - decide whether to extend the same runtime-only context path to more
     OpenAI-style engines next or pivot to the next operator-facing piece of
     `#174`
+
+## Iteration 15 - OpenRouter Runtime-Only Dialogue Context
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - extend runtime-only dialogue-session support to the next OpenAI-style LLM
+    engine after `ChatGPT`
+  - keep dialogue-context behavior aligned across the remote LLM family without
+    changing persistence semantics
+- Files touched:
+  - `Translators/OpenRouterTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - made `OpenRouterTranslator` implement
+    `IDialogueContextAwareTranslator`
+  - added a context-aware translation overload that:
+    - falls back to the existing path when no prior turns exist
+    - uses a distinct cache key when prior dialogue history exists
+  - factored prompt composition so prior turns are appended only for the
+    live runtime-only context path
+  - preserved the current `Talk` / `BattleTalk` no-DB-persist behavior for
+    context-influenced output by reusing the existing `TranslationService`
+    detection path
+- Behavior-sensitive risks:
+  - dialogue-history-aware cache keys increase per-session cache cardinality
+    for this engine in the same way as the other context-aware paths
+  - first lines without prior turns still follow the old deterministic
+    no-context path
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - continue the same runtime-only path for the remaining OpenAI-style LLM
+    engines or pivot back to the next visible operator-facing gap in `#174`
