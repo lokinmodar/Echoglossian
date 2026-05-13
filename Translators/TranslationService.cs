@@ -5,6 +5,7 @@
 
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -17,15 +18,19 @@ public class TranslationService
 {
   private const string EmptyResultFailureReason = "empty-result";
   private static readonly TimeSpan TransientFailureTtl = TimeSpan.FromSeconds(30);
+  private readonly ConcurrentDictionary<int, byte> describedMetricEngines = new();
+  private readonly ConcurrentDictionary<int, ITranslator> translatorsByEngine = new();
   private readonly Action<string>? debugLog;
   private readonly Func<string, string, string, int, bool>? isKnownFailedTranslation;
   private readonly Action<string, string, string, int, string, string?>? recordFailedTranslation;
   private readonly Action<int, TranslationRequestMetricOutcome, TimeSpan, string?, bool>? recordTranslationMetric;
   private readonly Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation;
   private readonly Action<int, TranslationFailureClassification>? reportTranslationFailure;
+  private readonly Config? runtimeConfig;
+  private readonly IPluginLog? runtimePluginLog;
   private readonly Func<string, string> sanitizeText;
   private readonly int translationEngineId = -1;
-  private readonly ITranslator translator = null!;
+  private readonly Func<TranslationSurfaceGroup, TranslatorResolution> translatorResolver;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="TranslationService" /> class.
@@ -80,6 +85,9 @@ public class TranslationService
 
     if (chosenEngine == Echoglossian.TransEngines.All)
     {
+      this.translatorResolver = _ => new TranslatorResolution(
+          this.translationEngineId,
+          new UnavailableTranslator());
       return;
     }
 
@@ -88,10 +96,12 @@ public class TranslationService
         ResolveMetricsProviderName(chosenEngine),
         ResolveMetricsModelName(chosenEngine, config));
 
-    this.translator = TranslatorFactory.Create(
-        chosenEngine,
-        config,
-        pluginLog);
+    this.runtimeConfig = config;
+    this.runtimePluginLog = pluginLog;
+    this.translatorsByEngine[this.translationEngineId] =
+        this.CreateTranslatorSafely(chosenEngine);
+    this.describedMetricEngines.TryAdd(this.translationEngineId, 0);
+    this.translatorResolver = this.ResolveConfiguredTranslator;
   }
 
   /// <summary>
@@ -108,17 +118,21 @@ public class TranslationService
       Action<string, string, string, int, string, string?>? recordFailedTranslation = null,
       Action<int, TranslationRequestMetricOutcome, TimeSpan, string?, bool>? recordTranslationMetric = null,
       Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation = null,
-      Action<int, TranslationFailureClassification>? reportTranslationFailure = null)
+      Action<int, TranslationFailureClassification>? reportTranslationFailure = null,
+      Func<TranslationSurfaceGroup, TranslatorResolution>? translatorResolver = null)
   {
     this.debugLog = null;
     this.sanitizeText = sanitizeText;
-    this.translator = translator;
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
     this.recordFailedTranslation = recordFailedTranslation;
     this.recordTranslationMetric = recordTranslationMetric;
     this.recordTransientFailedTranslation = recordTransientFailedTranslation;
     this.reportTranslationFailure = reportTranslationFailure;
+    this.translatorResolver = translatorResolver ??
+                              (_ => new TranslatorResolution(
+                                  this.translationEngineId,
+                                  translator));
   }
 
   /// <summary>
@@ -140,8 +154,39 @@ public class TranslationService
       [CallerMemberName] string callerMemberName = "",
       [CallerFilePath] string callerFilePath = "")
   {
+    return this.Translate(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        TranslationSurfaceGroup.Default,
+        originContext,
+        callerMemberName,
+        callerFilePath);
+  }
+
+  /// <summary>
+  ///     Translates the given text from the source language to the target
+  ///     language synchronously using the specified translation surface group.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>The translated text as a string.</returns>
+  public string Translate(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      TranslationSurfaceGroup surfaceGroup,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
     this.debugLog?.Invoke(
-        $"TranslationService: Translate called with text: {text}, sourceLanguage: {sourceLanguage}, targetLanguage: {targetLanguage}");
+        $"TranslationService: Translate called with text: {text}, sourceLanguage: {sourceLanguage}, targetLanguage: {targetLanguage}, surfaceGroup: {surfaceGroup}");
 
     var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
     if (!shouldTranslate)
@@ -171,13 +216,15 @@ public class TranslationService
         originContext,
         callerMemberName,
         callerFilePath);
+    var translatorResolution = this.ResolveTranslator(surfaceGroup);
     if (this.IsKnownFailedTranslation(
             parsedText,
             normalizedSourceLanguage,
-            normalizedTargetLanguage))
+            normalizedTargetLanguage,
+            translatorResolution.TranslationEngineId))
     {
       this.recordTranslationMetric?.Invoke(
-          this.translationEngineId,
+          translatorResolution.TranslationEngineId,
           TranslationRequestMetricOutcome.ShortCircuited,
           TimeSpan.Zero,
           "known-failure-cache",
@@ -186,7 +233,7 @@ public class TranslationService
     }
 
     var stopwatch = Stopwatch.StartNew();
-    var finalDialogueText = this.translator.Translate(
+    var finalDialogueText = translatorResolution.Translator.Translate(
         parsedText,
         sourceLanguage,
         targetLanguage);
@@ -196,12 +243,14 @@ public class TranslationService
         sanitizedText,
         normalizedSourceLanguage,
         normalizedTargetLanguage,
-        resolvedOriginContext);
+        resolvedOriginContext,
+        translatorResolution.TranslationEngineId);
     stopwatch.Stop();
     this.RecordTranslationMetric(
         acceptanceResult,
         stopwatch.Elapsed,
-        false);
+        false,
+        translatorResolution.TranslationEngineId);
     finalDialogueText = acceptanceResult.Text;
 
     return string.IsNullOrEmpty(startingEllipsis) ||
@@ -237,6 +286,42 @@ public class TranslationService
         sourceLanguage,
         targetLanguage,
         null,
+        TranslationSurfaceGroup.Default,
+        originContext,
+        callerMemberName,
+        callerFilePath).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates the given text from the source language to the target
+  ///     language asynchronously using the specified translation surface group.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>
+  ///     A task that represents the asynchronous operation. The task result
+  ///     contains the translated text as a string.
+  /// </returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      TranslationSurfaceGroup surfaceGroup,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsync(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        null,
+        surfaceGroup,
         originContext,
         callerMemberName,
         callerFilePath).ConfigureAwait(false);
@@ -262,6 +347,44 @@ public class TranslationService
       string sourceLanguage,
       string targetLanguage,
       DialogueTranslationContext? dialogueContext,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsync(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        dialogueContext,
+        TranslationSurfaceGroup.Default,
+        originContext,
+        callerMemberName,
+        callerFilePath).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates the given text from the source language to the target
+  ///     language asynchronously with optional runtime-only short-lived
+  ///     dialogue context and a coarse surface-group routing hint.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="dialogueContext">Optional runtime-only short-lived dialogue context.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>
+  ///     A task that represents the asynchronous operation. The task result
+  ///     contains the translated text as a string.
+  /// </returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      TranslationSurfaceGroup surfaceGroup,
       string? originContext = null,
       [CallerMemberName] string callerMemberName = "",
       [CallerFilePath] string callerFilePath = "")
@@ -294,13 +417,15 @@ public class TranslationService
         originContext,
         callerMemberName,
         callerFilePath);
+    var translatorResolution = this.ResolveTranslator(surfaceGroup);
     if (this.IsKnownFailedTranslation(
             parsedText,
             normalizedSourceLanguage,
-            normalizedTargetLanguage))
+            normalizedTargetLanguage,
+            translatorResolution.TranslationEngineId))
     {
       this.recordTranslationMetric?.Invoke(
-          this.translationEngineId,
+          translatorResolution.TranslationEngineId,
           TranslationRequestMetricOutcome.ShortCircuited,
           TimeSpan.Zero,
           "known-failure-cache",
@@ -308,16 +433,18 @@ public class TranslationService
       return sanitizedText;
     }
 
-    var useDialogueContext = this.WillUseDialogueContext(dialogueContext);
+    var useDialogueContext = this.WillUseDialogueContext(
+        dialogueContext,
+        surfaceGroup);
     var stopwatch = Stopwatch.StartNew();
     var finalDialogueText = useDialogueContext &&
-                            this.translator is IDialogueContextAwareTranslator contextAwareTranslator
+                            translatorResolution.Translator is IDialogueContextAwareTranslator contextAwareTranslator
         ? await contextAwareTranslator.TranslateAsync(
             parsedText,
             sourceLanguage,
             targetLanguage,
             dialogueContext!.Value).ConfigureAwait(false)
-        : await this.translator.TranslateAsync(
+        : await translatorResolution.Translator.TranslateAsync(
             parsedText,
             sourceLanguage,
             targetLanguage).ConfigureAwait(false);
@@ -327,12 +454,14 @@ public class TranslationService
         sanitizedText,
         normalizedSourceLanguage,
         normalizedTargetLanguage,
-        resolvedOriginContext);
+        resolvedOriginContext,
+        translatorResolution.TranslationEngineId);
     stopwatch.Stop();
     this.RecordTranslationMetric(
         acceptanceResult,
         stopwatch.Elapsed,
-        useDialogueContext);
+        useDialogueContext,
+        translatorResolution.TranslationEngineId);
     finalDialogueText = acceptanceResult.Text;
 
     return string.IsNullOrEmpty(startingEllipsis) ||
@@ -362,7 +491,8 @@ public class TranslationService
       string sanitizedText,
       string normalizedSourceLanguage,
       string normalizedTargetLanguage,
-      string? resolvedOriginContext)
+      string? resolvedOriginContext,
+      int translationEngineId)
   {
     if (TranslationResultGuard.IsPersistableTranslation(translatedText))
     {
@@ -378,7 +508,7 @@ public class TranslationService
         classification != null)
     {
       this.reportTranslationFailure?.Invoke(
-          this.translationEngineId,
+          translationEngineId,
           classification);
       if (TranslationPersistenceGuard.IsPersistentFailureReason(
               classification.FailureReason))
@@ -388,7 +518,8 @@ public class TranslationService
             normalizedSourceLanguage,
             normalizedTargetLanguage,
             classification.FailureReason,
-            resolvedOriginContext);
+            resolvedOriginContext,
+            translationEngineId);
       }
       else
       {
@@ -396,7 +527,8 @@ public class TranslationService
             parsedText,
             normalizedSourceLanguage,
             normalizedTargetLanguage,
-            classification.FailureReason);
+            classification.FailureReason,
+            translationEngineId);
       }
 
       return new TranslationAcceptanceResult(
@@ -413,7 +545,8 @@ public class TranslationService
         normalizedSourceLanguage,
         normalizedTargetLanguage,
         failureReason,
-        resolvedOriginContext);
+        resolvedOriginContext,
+        translationEngineId);
 
     return new TranslationAcceptanceResult(
         sanitizedText,
@@ -431,11 +564,26 @@ public class TranslationService
   ///     context and at least one prior turn is available; otherwise,
   ///     <see langword="false" />.
   /// </returns>
-  internal bool WillUseDialogueContext(DialogueTranslationContext? dialogueContext)
+  internal bool WillUseDialogueContext(
+      DialogueTranslationContext? dialogueContext,
+      TranslationSurfaceGroup surfaceGroup = TranslationSurfaceGroup.Default)
   {
+    var translatorResolution = this.ResolveTranslator(surfaceGroup);
     return dialogueContext.HasValue &&
            dialogueContext.Value.PriorTurns.Count > 0 &&
-           this.translator is IDialogueContextAwareTranslator;
+           translatorResolution.Translator is IDialogueContextAwareTranslator;
+  }
+
+  /// <summary>
+  ///     Resolves the effective translation engine identifier for one surface
+  ///     group under the active routing policy.
+  /// </summary>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <returns>The effective translation engine identifier.</returns>
+  public int GetEffectiveTranslationEngineId(
+      TranslationSurfaceGroup surfaceGroup = TranslationSurfaceGroup.Default)
+  {
+    return this.ResolveTranslator(surfaceGroup).TranslationEngineId;
   }
 
   /// <summary>
@@ -508,9 +656,10 @@ public class TranslationService
   private bool IsKnownFailedTranslation(
       string sourceText,
       string sourceLanguage,
-      string targetLanguage)
+      string targetLanguage,
+      int translationEngineId)
   {
-    if (this.translationEngineId < 0 ||
+    if (translationEngineId < 0 ||
         this.isKnownFailedTranslation == null ||
         string.IsNullOrWhiteSpace(sourceText))
     {
@@ -521,7 +670,7 @@ public class TranslationService
         sourceText,
         sourceLanguage,
         targetLanguage,
-        this.translationEngineId);
+        translationEngineId);
   }
 
   /// <summary>
@@ -537,9 +686,10 @@ public class TranslationService
       string sourceLanguage,
       string targetLanguage,
       string failureReason,
-      string? originContext)
+      string? originContext,
+      int translationEngineId)
   {
-    if (this.translationEngineId < 0 ||
+    if (translationEngineId < 0 ||
         this.recordFailedTranslation == null ||
         string.IsNullOrWhiteSpace(sourceText))
     {
@@ -550,7 +700,7 @@ public class TranslationService
         sourceText,
         sourceLanguage,
         targetLanguage,
-        this.translationEngineId,
+        translationEngineId,
         failureReason,
         originContext);
   }
@@ -567,9 +717,10 @@ public class TranslationService
       string sourceText,
       string sourceLanguage,
       string targetLanguage,
-      string failureReason)
+      string failureReason,
+      int translationEngineId)
   {
-    if (this.translationEngineId < 0 ||
+    if (translationEngineId < 0 ||
         this.recordTransientFailedTranslation == null ||
         string.IsNullOrWhiteSpace(sourceText) ||
         string.IsNullOrWhiteSpace(failureReason))
@@ -581,7 +732,7 @@ public class TranslationService
         sourceText,
         sourceLanguage,
         targetLanguage,
-        this.translationEngineId,
+        translationEngineId,
         failureReason,
         TransientFailureTtl);
   }
@@ -597,10 +748,11 @@ public class TranslationService
   private void RecordTranslationMetric(
       TranslationAcceptanceResult acceptanceResult,
       TimeSpan elapsed,
-      bool usedDialogueContext)
+      bool usedDialogueContext,
+      int translationEngineId)
   {
     this.recordTranslationMetric?.Invoke(
-        this.translationEngineId,
+        translationEngineId,
         acceptanceResult.Succeeded
             ? TranslationRequestMetricOutcome.Success
             : TranslationRequestMetricOutcome.Failure,
@@ -699,4 +851,106 @@ public class TranslationService
       string Text,
       bool Succeeded,
       string? FailureReason);
+
+  /// <summary>
+  ///     Resolves the effective translator and engine id for one request.
+  /// </summary>
+  /// <param name="surfaceGroup">The incoming translation surface group.</param>
+  /// <returns>The translator resolution for the request.</returns>
+  private TranslatorResolution ResolveTranslator(TranslationSurfaceGroup surfaceGroup)
+  {
+    return this.translatorResolver(surfaceGroup);
+  }
+
+  /// <summary>
+  ///     Resolves the configured translator path for one surface group using
+  ///     the active routing policy.
+  /// </summary>
+  /// <param name="surfaceGroup">The incoming translation surface group.</param>
+  /// <returns>The translator resolution for the request.</returns>
+  private TranslatorResolution ResolveConfiguredTranslator(
+      TranslationSurfaceGroup surfaceGroup)
+  {
+    if (this.runtimeConfig == null)
+    {
+      return new TranslatorResolution(
+          this.translationEngineId,
+          new UnavailableTranslator());
+    }
+
+    var resolvedEngine =
+        LlmSurfaceGroupRoutingPolicy.ResolveEngine(
+            this.runtimeConfig,
+            surfaceGroup);
+    var resolvedEngineId = (int)resolvedEngine;
+    this.DescribeMetricsEngineIfNeeded(resolvedEngine);
+    var translator = this.translatorsByEngine.GetOrAdd(
+        resolvedEngineId,
+        _ => this.CreateTranslatorSafely(resolvedEngine));
+    return new TranslatorResolution(
+        resolvedEngineId,
+        translator);
+  }
+
+  /// <summary>
+  ///     Describes the specified engine to the translator metrics collector one
+  ///     time per runtime translation service instance.
+  /// </summary>
+  /// <param name="engine">The engine to describe.</param>
+  private void DescribeMetricsEngineIfNeeded(Echoglossian.TransEngines engine)
+  {
+    if (this.runtimeConfig == null)
+    {
+      return;
+    }
+
+    var engineId = (int)engine;
+    if (!this.describedMetricEngines.TryAdd(engineId, 0))
+    {
+      return;
+    }
+
+    TranslatorMetricsCollector.DescribeEngine(
+        engineId,
+        ResolveMetricsProviderName(engine),
+        ResolveMetricsModelName(engine, this.runtimeConfig));
+  }
+
+  /// <summary>
+  ///     Creates one translator instance for the specified engine while
+  ///     keeping the shared service alive if one engine constructor fails.
+  /// </summary>
+  /// <param name="engine">The engine to instantiate.</param>
+  /// <returns>The created translator, or a safe unavailable translator.</returns>
+  private ITranslator CreateTranslatorSafely(Echoglossian.TransEngines engine)
+  {
+    if (this.runtimeConfig == null || this.runtimePluginLog == null)
+    {
+      return new UnavailableTranslator();
+    }
+
+    try
+    {
+      return TranslatorFactory.Create(
+          engine,
+          this.runtimeConfig,
+          this.runtimePluginLog);
+    }
+    catch (Exception ex)
+    {
+      PluginRuntimeLog.Error(
+          $"Failed to initialize translator for engine {engine}: {ex}");
+      return new UnavailableTranslator();
+    }
+  }
+
+  /// <summary>
+  ///     Holds the per-request effective engine and translator selected by the
+  ///     routing policy.
+  /// </summary>
+  /// <param name="TranslationEngineId">The effective translation engine identifier.</param>
+  /// <param name="Translator">The effective translator instance.</param>
+  internal readonly record struct TranslatorResolution(
+      int TranslationEngineId,
+      ITranslator Translator);
 }

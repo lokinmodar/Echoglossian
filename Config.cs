@@ -72,6 +72,24 @@ public class Config : IPluginConfiguration
   /// </summary>
   [DefaultValue("Google")] public string ChosenTransEngineKey = "Google";
 
+  /// <summary>
+  ///     Enables the first-pass dialogue-family LLM override routing.
+  /// </summary>
+  [DefaultValue(false)] public bool UseDialogueLlmOverride = false;
+
+  /// <summary>
+  ///     Selected LLM override engine for dialogue-family surfaces.
+  /// </summary>
+  [DefaultValue((int)Echoglossian.TransEngines.ChatGPT)]
+  public int DialogueLlmEngine = (int)Echoglossian.TransEngines.ChatGPT;
+
+  /// <summary>
+  ///     Selected dialogue-family LLM override key persisted alongside the
+  ///     numeric engine id so the override remains stable across enum-layout
+  ///     changes.
+  /// </summary>
+  [DefaultValue("ChatGPT")] public string DialogueLlmEngineKey = "ChatGPT";
+
   /// <summary>API key for Anthropic Claude usage.</summary>
   [DefaultValue("")] public string ClaudeApiKey = string.Empty;
 

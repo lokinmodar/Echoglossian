@@ -333,6 +333,90 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures dialogue-family requests can route to a different engine
+    ///     than the global default without creating a second translation
+    ///     service.
+    /// </summary>
+    [Fact]
+    public async Task TranslateAsync_DialogueSurface_UsesRoutedTranslator()
+    {
+        var defaultTranslator = new RecordingTranslator
+        {
+            AsyncResult = "default-path",
+        };
+        var dialogueTranslator = new RecordingTranslator
+        {
+            AsyncResult = "dialogue-path",
+        };
+        var service = new TranslationService(
+            text => text,
+            defaultTranslator,
+            translationEngine: (int)Echoglossian.TransEngines.Google,
+            translatorResolver: surfaceGroup => surfaceGroup == TranslationSurfaceGroup.Dialogue
+                ? new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.ChatGPT,
+                    dialogueTranslator)
+                : new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.Google,
+                    defaultTranslator));
+
+        var result = await service.TranslateAsync(
+            "hello",
+            "English",
+            "pt-BR",
+            TranslationSurfaceGroup.Dialogue);
+
+        Assert.Equal("dialogue-path", result);
+        Assert.Equal(0, defaultTranslator.AsyncCalls);
+        Assert.Equal(1, dialogueTranslator.AsyncCalls);
+        Assert.Equal(
+            (int)Echoglossian.TransEngines.ChatGPT,
+            service.GetEffectiveTranslationEngineId(
+                TranslationSurfaceGroup.Dialogue));
+    }
+
+    /// <summary>
+    ///     Ensures dialogue-context routing checks the translator selected for
+    ///     the specific surface group instead of only the global default path.
+    /// </summary>
+    [Fact]
+    public void WillUseDialogueContext_DialogueSurface_UsesRoutedTranslator()
+    {
+        var defaultTranslator = new RecordingTranslator();
+        var dialogueTranslator = new ContextAwareRecordingTranslator();
+        var service = new TranslationService(
+            text => text,
+            defaultTranslator,
+            translationEngine: (int)Echoglossian.TransEngines.Google,
+            translatorResolver: surfaceGroup => surfaceGroup == TranslationSurfaceGroup.Dialogue
+                ? new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.ChatGPT,
+                    dialogueTranslator)
+                : new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.Google,
+                    defaultTranslator));
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "Krile|engine:2|target:pt-BR",
+            "Krile",
+            [
+                new DialogueTranslationTurn(
+                    "Krile",
+                    "Pray return.",
+                    new DateTime(2026, 05, 12, 15, 20, 0, DateTimeKind.Utc)),
+            ]);
+
+        Assert.True(
+            service.WillUseDialogueContext(
+                dialogueContext,
+                TranslationSurfaceGroup.Dialogue));
+        Assert.False(
+            service.WillUseDialogueContext(
+                dialogueContext,
+                TranslationSurfaceGroup.Default));
+    }
+
+    /// <summary>
     ///     Ensures empty runtime-only dialogue context does not switch the
     ///     translation service into the context-aware path.
     /// </summary>

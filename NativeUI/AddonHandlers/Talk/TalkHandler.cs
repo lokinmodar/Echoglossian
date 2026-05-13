@@ -138,14 +138,19 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
           ClientStateInterface.ClientLanguage.Humanize(),
-          LangDict[LanguageInt].Code).ConfigureAwait(false);
+          LangDict[LanguageInt].Code,
+          TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
       var translatedName = this.ShouldTranslateTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
               originalName,
               ClientStateInterface.ClientLanguage.Humanize(),
-              LangDict[LanguageInt].Code).ConfigureAwait(false)
+              LangDict[LanguageInt].Code,
+              TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
           : string.Empty;
+      var dialogueTranslationEngine =
+          this.translationService.GetEffectiveTranslationEngineId(
+              TranslationSurfaceGroup.Dialogue);
 
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
@@ -176,7 +181,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
           translatedName,
           translatedText,
           LangDict[LanguageInt].Code,
-          this.config.ChosenTransEngine,
+          dialogueTranslationEngine,
           rtlLangTranslationImageData: null,
           DateTime.Now,
           DateTime.Now);
@@ -608,6 +613,9 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       string originalName,
       string originalText)
   {
+    var dialogueTranslationEngine =
+        this.translationService.GetEffectiveTranslationEngineId(
+            TranslationSurfaceGroup.Dialogue);
     return new TalkMessage(
         originalName,
         originalText,
@@ -616,7 +624,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         string.Empty,
         string.Empty,
         LangDict[LanguageInt].Code,
-        this.config.ChosenTransEngine,
+        dialogueTranslationEngine,
         rtlLangTranslationImageData: null,
         DateTime.Now,
         DateTime.Now);
@@ -812,8 +820,11 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     var normalizedSpeaker = string.IsNullOrWhiteSpace(originalName)
         ? "(anonymous)"
         : originalName.Trim();
+    var dialogueTranslationEngine =
+        this.translationService.GetEffectiveTranslationEngineId(
+            TranslationSurfaceGroup.Dialogue);
     return
-        $"{normalizedSpeaker}|engine:{this.config.ChosenTransEngine}|target:{LangDict[LanguageInt].Code}";
+        $"{normalizedSpeaker}|engine:{dialogueTranslationEngine}|target:{LangDict[LanguageInt].Code}";
   }
 
   /// <summary>
@@ -963,19 +974,23 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
             DialogueSessionHistoryLimit,
             DialogueSessionTtl);
         var usesRuntimeOnlyDialogueContext =
-            this.translationService.WillUseDialogueContext(dialogueContext);
+            this.translationService.WillUseDialogueContext(
+                dialogueContext,
+                TranslationSurfaceGroup.Dialogue);
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
             ClientStateInterface.ClientLanguage.Humanize(),
             LangDict[LanguageInt].Code,
-            dialogueContext).ConfigureAwait(false);
+            dialogueContext,
+            TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
 
         translatedName = this.ShouldTranslateTalkNpcNames() && !originalName.IsNullOrEmpty()
             ? await this.translationService.TranslateAsync(
                 originalName,
                 ClientStateInterface.ClientLanguage.Humanize(),
-                LangDict[LanguageInt].Code).ConfigureAwait(false)
+                LangDict[LanguageInt].Code,
+                TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
             : string.Empty;
 
         var existingTranslatedTalkMessage = this.findTalkMessage(lookup);
@@ -990,6 +1005,9 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         }
         else if (!usesRuntimeOnlyDialogueContext)
         {
+          var dialogueTranslationEngine =
+              this.translationService.GetEffectiveTranslationEngineId(
+                  TranslationSurfaceGroup.Dialogue);
           var translatedTalkData = new TalkMessage(
               originalName,
               originalText,
@@ -998,7 +1016,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
               translatedName,
               translatedText,
               LangDict[LanguageInt].Code,
-              this.config.ChosenTransEngine,
+              dialogueTranslationEngine,
               rtlLangTranslationImageData: null,
               DateTime.Now,
               DateTime.Now);

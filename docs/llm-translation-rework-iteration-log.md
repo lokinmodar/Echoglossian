@@ -805,3 +805,66 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - move to the next operator-facing configuration/routing piece of the LLM
     rework, now that the context path is both implemented and inspectable
+
+## Iteration 21 - LLM-Only Dialogue Routing Foundation
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - introduce the first routing foundation for LLM-only surface-group
+    overrides without forking the shared `TranslationService`
+  - make `Talk` and `BattleTalk` the first real dialogue-family consumers so
+    routing affects the places where runtime-only context already exists
+- Files touched:
+  - `Config.cs`
+  - `Translators/TranslationSurfaceGroup.cs`
+  - `Translators/LlmSurfaceGroupRoutingPolicy.cs`
+  - `Translators/TranslationService.cs`
+  - `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
+  - `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
+  - `Echoglossian.Tests/LlmSurfaceGroupRoutingPolicyTests.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added first-pass config fields for a dialogue-family LLM override:
+    - `UseDialogueLlmOverride`
+    - `DialogueLlmEngine`
+    - `DialogueLlmEngineKey`
+  - added `TranslationSurfaceGroup` so requests can carry a coarse routing
+    hint without creating a parallel translation service
+  - added `LlmSurfaceGroupRoutingPolicy`:
+    - global engine remains the default path
+    - only LLM-backed override selections are accepted
+    - incomplete override configs fall back safely to the global engine
+  - refactored `TranslationService` so request resolution now happens per
+    surface group:
+    - effective engine id is now used consistently for:
+      - known-failure cache lookups
+      - runtime failure feedback
+      - aggregated translator metrics
+    - translator instances are cached per engine inside the same shared
+      service
+  - updated `Talk` and `BattleTalk` to use the dialogue surface group for:
+    - live translation requests
+    - runtime-only dialogue-context checks
+    - dialogue-session keys
+    - DB lookup / persistence engine ids
+  - added narrow tests for:
+    - routing-policy resolution
+    - per-surface translator selection inside `TranslationService`
+- Behavior-sensitive risks:
+  - this first routing pass only updates `Talk` and `BattleTalk`; other
+    dialogue-adjacent surfaces such as `TalkSubtitle` and `MiniTalk` still use
+    the global engine path for now
+  - there is no dedicated UI for these new config fields yet, so this is a
+    backend/foundation pass first
+  - DB reuse for `Talk` and `BattleTalk` is now intentionally keyed to the
+    effective routed engine, which is correct but means the first use of a new
+    dialogue override will not reuse rows created under the old global engine
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether the next pass should widen dialogue routing to
+    `TalkSubtitle` / `MiniTalk` or add the first operator-facing UI for the
+    dialogue override path
