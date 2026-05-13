@@ -102,13 +102,13 @@ public static class OpenAIModelManager
         return false;
       }
 
-      var request = new HttpRequestMessage(
+      using var request = new HttpRequestMessage(
           HttpMethod.Get,
           $"{normalizedBaseUrl}/models");
       request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
       request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-      var response = await HttpClient.SendAsync(request);
+      using var response = await HttpClient.SendAsync(request);
       if (!response.IsSuccessStatusCode)
       {
         ResetToDefault();

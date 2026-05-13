@@ -1288,3 +1288,39 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether `#196` is now complete enough for PR review or whether to
     keep polishing debugger/operator UX before leaving this branch
+
+## Iteration 32 - Review Follow-Up: OpenAI Provider Runtime Refresh
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - address the first actionable PR `#202` review cluster around the
+    OpenAI-family runtime by:
+    - rebuilding the translation runtime when the custom provider changes
+    - making debug masking safe for short API keys
+    - disposing model-refresh HTTP objects correctly
+- Files touched:
+  - `GeneralHelpers/RuntimeConfigurationRefresh.cs`
+  - `Translators/ChatGPTTranslator.cs`
+  - `Translators/OpenAI/OpenAIModelManager.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - expanded the translation runtime signature so switching between
+    `Official OpenAI` and `Custom OpenAI-Compatible`, or editing only the
+    custom provider fields, now forces a runtime translator rebuild
+  - replaced the unsafe debug log slicing in `ChatGPTTranslator` with a
+    length-safe API-key masker that works for short local/custom tokens
+  - wrapped the OpenAI-family model refresh request/response in `using`
+    declarations so refresh attempts do not leak disposable HTTP objects
+- Behavior-sensitive risks:
+  - editing custom-provider settings now rebuilds the translation runtime
+    immediately, which is the intended fix but may make misconfiguration more
+    visible during active testing
+  - the API-key masker is debug-only and does not alter provider auth
+  - model refresh behavior is unchanged apart from correct disposal
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - address the remaining review comments about thread safety in runtime
+    failure tracking and translation-failure caches

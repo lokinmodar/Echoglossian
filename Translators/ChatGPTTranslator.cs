@@ -60,7 +60,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             {
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"ChatGPTTranslator: provider={providerSettings.ProviderName}, {baseUrl}, {apiKey[..20]}***{apiKey[^5..]}, {this.temperature}");
+                    $"ChatGPTTranslator: provider={providerSettings.ProviderName}, {baseUrl}, {MaskApiKeyForDebugLog(apiKey)}, {this.temperature}");
 
                 var clientOptions = new OpenAIClientOptions
                 {
@@ -84,6 +84,29 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.chatClient = null;
             }
         }
+    }
+
+    /// <summary>
+    ///     Masks an API key for debug logging without assuming a minimum key
+    ///     length.
+    /// </summary>
+    /// <param name="apiKey">The API key to mask.</param>
+    /// <returns>A masked representation safe for debug logs.</returns>
+    private static string MaskApiKeyForDebugLog(string apiKey)
+    {
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            return "<empty>";
+        }
+
+        if (apiKey.Length <= 8)
+        {
+            return $"{apiKey[0]}***{apiKey[^1]}";
+        }
+
+        var prefixLength = Math.Min(20, Math.Max(1, apiKey.Length - 5));
+        var suffixLength = Math.Min(5, Math.Max(1, apiKey.Length - prefixLength));
+        return $"{apiKey[..prefixLength]}***{apiKey[^suffixLength..]}";
     }
 
     /// <summary>
