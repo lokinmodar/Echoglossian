@@ -695,3 +695,39 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - finish the first remote-LLM pass by carrying the same runtime-only
     dialogue-context path into `Claude`
+
+## Iteration 18 - Claude Runtime-Only Dialogue Context
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - complete the first remote-LLM pass by extending runtime-only
+    dialogue-session support to `Claude`
+  - keep `Claude` aligned with the other context-aware engines without
+    redefining its existing request or persistence model
+- Files touched:
+  - `Translators/ClaudeTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - made `ClaudeTranslator` implement
+    `IDialogueContextAwareTranslator`
+  - added a context-aware translation overload that:
+    - falls back to the existing path when no prior turns exist
+    - uses a distinct cache key when prior dialogue history exists
+  - factored prompt composition so prior turns are appended only for the
+    runtime-only context path
+  - preserved the current `Talk` / `BattleTalk` no-DB-persist behavior for
+    context-influenced output by reusing the existing `TranslationService`
+    detection path
+- Behavior-sensitive risks:
+  - dialogue-history-aware cache keys increase per-session cache cardinality
+    for `Claude` in the same way as the other context-aware paths
+  - this intentionally leaves `Claude` on its current prompt-base path rather
+    than mixing additional prompt cleanup into the same iteration
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether the next step should consolidate shared context-aware prompt
+    helpers or pivot back to the next operator-facing and routing pieces of
+    the LLM rework plan

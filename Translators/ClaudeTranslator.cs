@@ -11,7 +11,7 @@ namespace Echoglossian.Translators;
 /// <summary>
 ///     Translator implementation for Anthropic Claude using the Messages API.
 /// </summary>
-public class ClaudeTranslator : ITranslator
+public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private const string AnthropicVersion = "2023-06-01";
     private const string DefaultBaseUrl = "https://api.anthropic.com";
@@ -104,6 +104,46 @@ public class ClaudeTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc/>
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (this.httpClient is null)
+        {
+            return Resources.ClaudeTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        if (!HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        string cacheKey = this.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(cacheKey, out string? cachedTranslation))
+        {
+            return cachedTranslation;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual Claude Messages API request for one cache key.
     /// </summary>
@@ -116,12 +156,14 @@ public class ClaudeTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        string fullPrompt = this.promptTemplate
-            .Replace("{text}", text, StringComparison.Ordinal)
-            .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
-            .Replace("{targetLanguage}", targetLanguage, StringComparison.Ordinal);
+        string fullPrompt = this.BuildPrompt(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
 
         var requestData = new
         {
@@ -191,5 +233,52 @@ public class ClaudeTranslator : ITranslator
         }
 
         return string.Empty;
+    }
+
+    private static bool HasUsableDialogueContext(DialogueTranslationContext dialogueContext)
+    {
+        return dialogueContext.PriorTurns.Count > 0;
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        string prompt = this.promptTemplate
+            .Replace("{text}", text, StringComparison.Ordinal)
+            .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
+            .Replace("{targetLanguage}", targetLanguage, StringComparison.Ordinal);
+
+        if (!dialogueContext.HasValue ||
+            !HasUsableDialogueContext(dialogueContext.Value))
+        {
+            return prompt;
+        }
+
+        string priorTurns = string.Join(
+            Environment.NewLine,
+            dialogueContext.Value.PriorTurns.Select(
+                (turn, index) =>
+                    $"[{index + 1}] {turn.SpeakerName}: {FixText(turn.SourceText)}"));
+
+        return
+            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}Current speaker: {dialogueContext.Value.SpeakerName}{Environment.NewLine}{priorTurns}";
+    }
+
+    private string BuildDialogueContextCacheKey(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        string historyKey = string.Join(
+            "|",
+            dialogueContext.PriorTurns.Select(
+                turn => $"{turn.SpeakerName}:{turn.SourceText}"));
+
+        return
+            $"dialogue|{dialogueContext.SessionNamespace}|{dialogueContext.SessionKey}|{historyKey}|{text}_{sourceLanguage}_{targetLanguage}";
     }
 }
