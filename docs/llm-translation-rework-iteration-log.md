@@ -986,3 +986,56 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - move to the next routing/product slice of the LLM rework, now that both
     configuration and runtime observability of the dialogue override exist
+
+## Iteration 25 - OpenAI-Compatible Provider Variant Foundation
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - turn custom OpenAI-compatible support into an explicit variant of the
+    existing OpenAI-family engine instead of relying on an implicit loose base
+    URL field
+  - centralize active OpenAI-family provider resolution so translator runtime,
+    configuration validation, and metrics all agree on the same provider
+    profile
+- Files touched:
+  - `Config.cs`
+  - `Translators/OpenAI/OpenAiProviderVariantHelper.cs`
+  - `Translators/OpenAI/OpenAIModelManager.cs`
+  - `Translators/ChatGPTTranslator.cs`
+  - `Translators/TranslationService.cs`
+  - `PluginUI/Helpers/TranslationEngineConfigurationHelper.cs`
+  - `Echoglossian.Tests/OpenAiProviderVariantHelperTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added explicit config for the OpenAI-family provider variant:
+    - `OpenAiProviderVariant`
+    - `CustomOpenAiCompatibleApiKey`
+    - `CustomOpenAiCompatibleBaseUrl`
+    - `CustomOpenAiCompatibleModel`
+    - `UseLiveCustomOpenAiCompatibleModelList`
+  - added `OpenAiProviderVariantHelper` to resolve the active OpenAI-family
+    provider profile in one place
+  - updated `ChatGPTTranslator` to use the resolved provider profile instead
+    of assuming the official OpenAI path
+  - updated OpenAI-family configuration readiness checks to validate the active
+    provider profile, including the active model
+  - generalized `OpenAIModelManager` so live model fetch can target any
+    OpenAI-compatible base URL and provider label
+  - updated translator metrics metadata so the debugger can distinguish
+    `OpenAI` from `OpenAI-Compatible`
+  - added narrow tests for official and custom provider-profile resolution
+- Behavior-sensitive risks:
+  - this foundation does not yet expose the custom provider variant in the
+    operator-facing engine UI; existing users continue on the official OpenAI
+    profile by default
+  - custom provider profiles now require an explicit model to be considered
+    configured, which is correct but may disable translation until the UI path
+    lands and the field is filled intentionally
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - expose the OpenAI-family provider variant and custom-provider fields in
+    `ChatGptEngineUI`, including live-model fetch against the configured custom
+    endpoint

@@ -6,6 +6,7 @@
 using System.ClientModel;
 using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
+using Echoglossian.Translators.OpenAI;
 using OpenAI;
 using OpenAI.Chat;
 
@@ -28,16 +29,20 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
     public ChatGPTTranslator(IPluginLog pluginLog, Config config)
     {
         this.pluginLog = pluginLog;
-        this.model = config.OpenAILlmModel;
         this.temperature = config.ChatGptTemperature;
         this.promptTemplate = string.IsNullOrWhiteSpace(config.ChatGptPrompt)
             ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.ChatGPT)
             : config.ChatGptPrompt;
 
-        var baseUrl = config.ChatGPTBaseUrl;
-        var apiKey = config.ChatGptApiKey;
+        var providerSettings =
+            OpenAiProviderVariantHelper.ResolveActiveSettings(config);
+        var baseUrl = providerSettings.BaseUrl;
+        var apiKey = providerSettings.ApiKey;
+        this.model = providerSettings.Model;
 
-        if (string.IsNullOrWhiteSpace(apiKey))
+        if (string.IsNullOrWhiteSpace(apiKey) ||
+            string.IsNullOrWhiteSpace(baseUrl) ||
+            string.IsNullOrWhiteSpace(this.model))
         {
             PluginRuntimeLog.Warning(
                 this.pluginLog,
@@ -51,7 +56,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             {
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"ChatGPTTranslator: {baseUrl}, {apiKey[..20]}***{apiKey[^5..]}, {this.temperature}");
+                    $"ChatGPTTranslator: provider={providerSettings.ProviderName}, {baseUrl}, {apiKey[..20]}***{apiKey[^5..]}, {this.temperature}");
 
                 var clientOptions = new OpenAIClientOptions
                 {

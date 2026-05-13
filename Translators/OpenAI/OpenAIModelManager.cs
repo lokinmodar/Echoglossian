@@ -7,6 +7,7 @@ namespace Echoglossian.Translators.OpenAI;
 
 public static class OpenAIModelManager
 {
+  private const string DefaultOpenAiModelsBaseUrl = "https://api.openai.com/v1";
   private static readonly HttpClient HttpClient = new();
   private static readonly object SyncLock = new();
 
@@ -22,6 +23,21 @@ public static class OpenAIModelManager
 
   public static async Task RefreshAsync(string apiKey)
   {
+    await RefreshAsync(apiKey, DefaultOpenAiModelsBaseUrl, "OpenAI");
+  }
+
+  /// <summary>
+  ///     Refreshes the model list from the specified OpenAI-compatible
+  ///     provider endpoint.
+  /// </summary>
+  /// <param name="apiKey">The API key used by the provider.</param>
+  /// <param name="baseUrl">The provider base URL.</param>
+  /// <param name="providerName">The displayable provider label.</param>
+  public static async Task RefreshAsync(
+      string apiKey,
+      string baseUrl,
+      string providerName)
+  {
     if (string.IsNullOrWhiteSpace(apiKey))
     {
       return;
@@ -29,7 +45,15 @@ public static class OpenAIModelManager
 
     try
     {
-      var request = new HttpRequestMessage(HttpMethod.Get, "https://api.openai.com/v1/models");
+      var normalizedBaseUrl = baseUrl.TrimEnd('/');
+      if (string.IsNullOrWhiteSpace(normalizedBaseUrl))
+      {
+        return;
+      }
+
+      var request = new HttpRequestMessage(
+          HttpMethod.Get,
+          $"{normalizedBaseUrl}/models");
       request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
       request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -84,7 +108,7 @@ public static class OpenAIModelManager
           IsTurbo: isTurbo,
           IsMini: isMini,
           IsDefault: false,
-          EngineName: "OpenAI"));
+          EngineName: providerName));
       }
 
       lock (SyncLock)

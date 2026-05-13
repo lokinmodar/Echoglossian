@@ -5,6 +5,7 @@
 
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
+using Echoglossian.Translators.OpenAI;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -93,7 +94,7 @@ public class TranslationService
 
     TranslatorMetricsCollector.DescribeEngine(
         this.translationEngineId,
-        ResolveMetricsProviderName(chosenEngine),
+        ResolveMetricsProviderName(chosenEngine, config),
         ResolveMetricsModelName(chosenEngine, config));
 
     this.runtimeConfig = config;
@@ -766,11 +767,14 @@ public class TranslationService
   /// </summary>
   /// <param name="engine">The configured translation engine.</param>
   /// <returns>The provider family label.</returns>
-  private static string ResolveMetricsProviderName(Echoglossian.TransEngines engine)
+  private static string ResolveMetricsProviderName(
+      Echoglossian.TransEngines engine,
+      Config config)
   {
     return engine switch
     {
-      Echoglossian.TransEngines.ChatGPT => "OpenAI",
+      Echoglossian.TransEngines.ChatGPT =>
+          OpenAiProviderVariantHelper.ResolveActiveSettings(config).ProviderName,
       Echoglossian.TransEngines.Claude => "Anthropic",
       Echoglossian.TransEngines.DeepSeek => "DeepSeek",
       Echoglossian.TransEngines.Gemini => "Google Gemini",
@@ -794,7 +798,8 @@ public class TranslationService
   {
     return engine switch
     {
-      Echoglossian.TransEngines.ChatGPT => config.OpenAILlmModel,
+      Echoglossian.TransEngines.ChatGPT =>
+          OpenAiProviderVariantHelper.ResolveActiveSettings(config).Model,
       Echoglossian.TransEngines.Claude => config.ClaudeModel,
       Echoglossian.TransEngines.DeepSeek => config.DeepSeekModel,
       Echoglossian.TransEngines.Gemini => string.IsNullOrWhiteSpace(config.GeminiModelId)
@@ -912,7 +917,7 @@ public class TranslationService
 
     TranslatorMetricsCollector.DescribeEngine(
         engineId,
-        ResolveMetricsProviderName(engine),
+        ResolveMetricsProviderName(engine, this.runtimeConfig),
         ResolveMetricsModelName(engine, this.runtimeConfig));
   }
 
