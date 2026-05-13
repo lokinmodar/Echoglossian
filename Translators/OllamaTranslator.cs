@@ -9,7 +9,7 @@ using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
-public class OllamaTranslator : ITranslator
+public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private readonly string endpoint;
     private readonly HttpClient httpClient;
@@ -67,6 +67,41 @@ public class OllamaTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (!HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        var cacheKey = this.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(cacheKey, out var cached))
+        {
+            return cached;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual Ollama translation request for one cache key.
     /// </summary>
@@ -79,13 +114,14 @@ public class OllamaTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        var fixedText = FixText(text);
-        var prompt = this.promptTemplate
-            .Replace("{text}", fixedText)
-            .Replace("{sourceLanguage}", sourceLanguage)
-            .Replace("{targetLanguage}", targetLanguage);
+        var prompt = this.BuildPrompt(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
 
         var request = new
         {
@@ -125,5 +161,53 @@ public class OllamaTranslator : ITranslator
             PluginRuntimeLog.Error(this.pluginLog, $"OllamaTranslator failed: {ex.Message}");
             return $"[{Resources.TranslationError} Ollama error: {ex.Message}]";
         }
+    }
+
+    private static bool HasUsableDialogueContext(DialogueTranslationContext dialogueContext)
+    {
+        return dialogueContext.PriorTurns.Count > 0;
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        var fixedText = FixText(text);
+        var prompt = this.promptTemplate
+            .Replace("{text}", fixedText)
+            .Replace("{sourceLanguage}", sourceLanguage)
+            .Replace("{targetLanguage}", targetLanguage);
+
+        if (!dialogueContext.HasValue ||
+            !HasUsableDialogueContext(dialogueContext.Value))
+        {
+            return prompt;
+        }
+
+        var priorTurns = string.Join(
+            Environment.NewLine,
+            dialogueContext.Value.PriorTurns.Select(
+                (turn, index) =>
+                    $"[{index + 1}] {turn.SpeakerName}: {FixText(turn.SourceText)}"));
+
+        return
+            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}Current speaker: {dialogueContext.Value.SpeakerName}{Environment.NewLine}{priorTurns}";
+    }
+
+    private string BuildDialogueContextCacheKey(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        var historyKey = string.Join(
+            "|",
+            dialogueContext.PriorTurns.Select(
+                turn => $"{turn.SpeakerName}:{turn.SourceText}"));
+
+        return
+            $"dialogue|{dialogueContext.SessionNamespace}|{dialogueContext.SessionKey}|{historyKey}|{text}_{sourceLanguage}_{targetLanguage}";
     }
 }

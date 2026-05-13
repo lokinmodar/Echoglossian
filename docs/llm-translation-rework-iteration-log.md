@@ -558,3 +558,37 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - apply the same runtime-only dialogue-session path to `Ollama` so the local
     LLM family behaves consistently
+
+## Iteration 14 - Ollama Runtime-Only Dialogue Context
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - bring the same runtime-only dialogue-session behavior to `Ollama`
+  - keep local LLM dialogue consistency behavior aligned across the first
+    local-engine family without changing DB persistence
+- Files touched:
+  - `Translators/OllamaTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - made `OllamaTranslator` implement `IDialogueContextAwareTranslator`
+  - added a context-aware translation overload that:
+    - falls back to the existing path when no prior turns exist
+    - uses a distinct cache key when prior dialogue history exists
+  - factored prompt composition so bounded prior dialogue turns are appended
+    only in the context-aware runtime path
+  - preserved the current runtime-only semantics by reusing the existing
+    `TranslationService` dialogue-context detection and the handler-side DB
+    persistence skip
+- Behavior-sensitive risks:
+  - as with `LM Studio`, dialogue-history-aware cache keys can increase
+    per-session cache cardinality for repeated variant histories
+  - first lines without prior turns still go through the old deterministic
+    no-context path
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether to extend the same runtime-only context path to more
+    OpenAI-style engines next or pivot to the next operator-facing piece of
+    `#174`
