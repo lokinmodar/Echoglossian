@@ -425,7 +425,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       translatedText = await this.translationService.TranslateAsync(
           originalText,
           ClientStateInterface.ClientLanguage.Humanize(),
-          LangDict[LanguageInt].Code) ?? string.Empty;
+          LangDict[LanguageInt].Code,
+          TranslationSurfaceGroup.Dialogue) ?? string.Empty;
     }
     catch (Exception ex)
     {
@@ -462,7 +463,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         ClientStateInterface.ClientLanguage.Humanize(),
         translatedText,
         LangDict[LanguageInt].Code,
-        this.config.ChosenTransEngine,
+        this.GetDialogueTranslationEngineId(),
         DateTime.Now,
         DateTime.Now);
 
@@ -744,9 +745,20 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         ClientStateInterface.ClientLanguage.Humanize(),
         string.Empty,
         LangDict[LanguageInt].Code,
-        this.config.ChosenTransEngine,
+        this.GetDialogueTranslationEngineId(),
         DateTime.Now,
         DateTime.Now);
+  }
+
+  /// <summary>
+  ///     Resolves the effective translation engine identifier for the current
+  ///     dialogue-family routing path.
+  /// </summary>
+  /// <returns>The effective dialogue-family translation engine identifier.</returns>
+  private int GetDialogueTranslationEngineId()
+  {
+    return this.translationService.GetEffectiveTranslationEngineId(
+        TranslationSurfaceGroup.Dialogue);
   }
 
   /// <summary>

@@ -866,5 +866,40 @@ turning into an opaque pile of partial changes.
   - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
 - Next cut:
   - decide whether the next pass should widen dialogue routing to
-    `TalkSubtitle` / `MiniTalk` or add the first operator-facing UI for the
-    dialogue override path
+  `TalkSubtitle` / `MiniTalk` or add the first operator-facing UI for the
+  dialogue override path
+
+## Iteration 22 - Extend Dialogue Routing To Subtitle And MiniTalk
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - widen the first dialogue-family routing pass beyond `Talk` and
+    `BattleTalk`
+  - keep `TalkSubtitle` and `MiniTalk` aligned with the effective dialogue
+    engine so DB lookup and persistence semantics stay coherent
+- Files touched:
+  - `NativeUI/AddonHandlers/Talk/TalkSubtitleHandler.cs`
+  - `NativeUI/AddonHandlers/SingleText/MiniTalkHandler.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - updated `TalkSubtitleHandler` to send live translation requests through
+    `TranslationSurfaceGroup.Dialogue`
+  - updated `TalkSubtitleHandler` DB lookup and persistence rows to use the
+    effective routed dialogue engine id instead of the global engine id
+  - updated `MiniTalkHandler` to send live translation requests through
+    `TranslationSurfaceGroup.Dialogue`
+  - updated `MiniTalkHandler` DB lookup and persistence rows to use the
+    effective routed dialogue engine id instead of the global engine id
+- Behavior-sensitive risks:
+  - `TalkSubtitle` and `MiniTalk` still do not use runtime-only session
+    context; this pass only aligns their engine routing and DB semantics
+  - existing rows saved under the old global engine remain intentionally
+    isolated from rows created under a dialogue override engine
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - add the first operator-facing UI for the dialogue override path so this
+    routing foundation becomes configurable without editing the persisted
+    config by hand
