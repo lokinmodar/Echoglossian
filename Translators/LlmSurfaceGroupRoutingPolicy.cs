@@ -14,6 +14,48 @@ namespace Echoglossian.Translators;
 internal static class LlmSurfaceGroupRoutingPolicy
 {
   /// <summary>
+  ///     Normalizes the persisted dialogue override selection so its numeric
+  ///     and string forms stay aligned and only LLM-backed engines remain
+  ///     valid for the first-pass override path.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>
+  ///     <see langword="true" /> when one or more persisted fields changed;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  internal static bool NormalizeDialogueOverrideSelection(Config config)
+  {
+    var normalizedEngine = Echoglossian.TransEngines.ChatGPT;
+    if (TryResolvePersistedOverrideEngine(
+            config.DialogueLlmEngine,
+            config.DialogueLlmEngineKey,
+            out var resolvedEngine) &&
+        IsLlmEngine(resolvedEngine))
+    {
+      normalizedEngine = resolvedEngine;
+    }
+
+    var changed = false;
+    if (config.DialogueLlmEngine != (int)normalizedEngine)
+    {
+      config.DialogueLlmEngine = (int)normalizedEngine;
+      changed = true;
+    }
+
+    var normalizedKey = normalizedEngine.ToString();
+    if (!string.Equals(
+            config.DialogueLlmEngineKey,
+            normalizedKey,
+            StringComparison.Ordinal))
+    {
+      config.DialogueLlmEngineKey = normalizedKey;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  /// <summary>
   ///     Resolves the effective engine for the given surface group.
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>

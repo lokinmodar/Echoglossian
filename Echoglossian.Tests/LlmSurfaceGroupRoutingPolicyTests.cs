@@ -15,6 +15,31 @@ namespace Echoglossian.Tests;
 public class LlmSurfaceGroupRoutingPolicyTests
 {
   /// <summary>
+  ///     Ensures the persisted dialogue override selection is normalized to a
+  ///     valid LLM-backed engine when the stored values drift.
+  /// </summary>
+  [Fact]
+  public void NormalizeDialogueOverrideSelection_RewritesInvalidOverrideToDefaultLlm()
+  {
+    var config = new Config
+    {
+      DialogueLlmEngine = (int)Echoglossian.TransEngines.Microsoft,
+      DialogueLlmEngineKey = nameof(Echoglossian.TransEngines.Microsoft),
+    };
+
+    var changed = LlmSurfaceGroupRoutingPolicy.NormalizeDialogueOverrideSelection(
+        config);
+
+    Assert.True(changed);
+    Assert.Equal(
+        Echoglossian.TransEngines.ChatGPT,
+        (Echoglossian.TransEngines)config.DialogueLlmEngine);
+    Assert.Equal(
+        nameof(Echoglossian.TransEngines.ChatGPT),
+        config.DialogueLlmEngineKey);
+  }
+
+  /// <summary>
   ///     Ensures dialogue-family requests can route to a configured LLM
   ///     override while the global engine remains the default path.
   /// </summary>

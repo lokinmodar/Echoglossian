@@ -475,6 +475,24 @@
   <data name="TranslationEngineChoose" xml:space="preserve">
     <value>Choose the translation engine</value>
   </data>
+  <data name="DialogueLlmOverrideSectionLabel" xml:space="preserve">
+    <value>Dialogue LLM override</value>
+  </data>
+  <data name="DialogueLlmOverrideDescription" xml:space="preserve">
+    <value>Route Talk, BattleTalk, TalkSubtitle, and MiniTalk through a dedicated LLM without changing the primary engine used elsewhere.</value>
+  </data>
+  <data name="UseDialogueLlmOverrideLabel" xml:space="preserve">
+    <value>Use a dedicated LLM for dialogue-family surfaces</value>
+  </data>
+  <data name="DialogueLlmEngineLabel" xml:space="preserve">
+    <value>Dialogue LLM engine</value>
+  </data>
+  <data name="DialogueLlmOverrideNeedsConfigurationText" xml:space="preserve">
+    <value>The selected dialogue LLM override is not fully configured yet. Dialogue-family surfaces will keep using the primary engine until the override is ready.</value>
+  </data>
+  <data name="DialogueLlmOverrideMatchesPrimaryText" xml:space="preserve">
+    <value>Dialogue-family surfaces currently reuse the same engine configuration selected above.</value>
+  </data>
   <data name="DeepLTransAPIKey" xml:space="preserve">
     <value>Use API Key (recommended)</value>
   </data>

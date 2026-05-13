@@ -3,6 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators;
+
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
@@ -71,6 +74,12 @@ public static class TranslationEnginesTab
             changed = true;
         }
 
+        if (LlmSurfaceGroupRoutingPolicy.NormalizeDialogueOverrideSelection(config))
+        {
+            rebuildTranslationService();
+            changed = true;
+        }
+
         var selected = Array.FindIndex(
             engineOptions,
             option => option.EngineId == config.ChosenTransEngine);
@@ -100,7 +109,32 @@ public static class TranslationEnginesTab
         ImGui.BeginGroup();
 
         var engine = (Echoglossian.TransEngines)config.ChosenTransEngine;
+        changed |= DrawEngineConfiguration(config, promptManager, engine);
 
+        ImGui.EndGroup();
+        ImGui.Separator();
+        changed |= DrawDialogueOverrideSection(
+            config,
+            promptManager,
+            engine,
+            rebuildTranslationService);
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the settings UI for one specific translation engine.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="promptManager">The shared prompt template manager.</param>
+    /// <param name="engine">The engine whose configuration should be shown.</param>
+    /// <returns><see langword="true" /> when the configuration changed.</returns>
+    private static bool DrawEngineConfiguration(
+        Config config,
+        PromptTemplateManager promptManager,
+        Echoglossian.TransEngines engine)
+    {
+        var changed = false;
         switch (engine)
         {
             case Echoglossian.TransEngines.Google:
@@ -166,9 +200,128 @@ public static class TranslationEnginesTab
                 break;
         }
 
-        ImGui.EndGroup();
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the first-pass operator-facing LLM-only routing override for
+    ///     dialogue-family surfaces.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="promptManager">The shared prompt template manager.</param>
+    /// <param name="primaryEngine">The currently selected global engine.</param>
+    /// <param name="rebuildTranslationService">
+    ///     The action used to rebuild runtime
+    ///     translator instances immediately after routing changes.
+    /// </param>
+    /// <returns><see langword="true" /> when the configuration changed.</returns>
+    private static bool DrawDialogueOverrideSection(
+        Config config,
+        PromptTemplateManager promptManager,
+        Echoglossian.TransEngines primaryEngine,
+        Action rebuildTranslationService)
+    {
+        var changed = false;
+        ImGui.TextUnformatted(
+            GetUiString(
+                "DialogueLlmOverrideSectionLabel",
+                "Dialogue LLM override"));
+        ImGui.TextWrapped(
+            GetUiString(
+                "DialogueLlmOverrideDescription",
+                "Route Talk, BattleTalk, TalkSubtitle, and MiniTalk through a dedicated LLM without changing the primary engine used elsewhere."));
+
+        var overrideToggleChanged = ImGui.Checkbox(
+            GetUiString(
+                "UseDialogueLlmOverrideLabel",
+                "Use a dedicated LLM for dialogue-family surfaces"),
+            ref config.UseDialogueLlmOverride);
+        changed |= overrideToggleChanged;
+        if (overrideToggleChanged)
+        {
+            rebuildTranslationService();
+        }
+
+        var llmEngineOptions = Enum.GetValues<Echoglossian.TransEngines>()
+            .Where(LlmSurfaceGroupRoutingPolicy.IsLlmEngine)
+            .Select(engine => new TranslationEngineOption(
+                (int)engine,
+                GetDisplayName(engine)))
+            .ToArray();
+
+        var selected = Array.FindIndex(
+            llmEngineOptions,
+            option => option.EngineId == config.DialogueLlmEngine);
+        if (selected < 0 && llmEngineOptions.Length > 0)
+        {
+            selected = 0;
+        }
+
+        ImGui.BeginDisabled(!config.UseDialogueLlmOverride);
+        if (ImGui.Combo(
+                GetUiString(
+                    "DialogueLlmEngineLabel",
+                    "Dialogue LLM engine"),
+                ref selected,
+                llmEngineOptions.Select(option => option.Label).ToArray(),
+                llmEngineOptions.Length))
+        {
+            config.DialogueLlmEngine = llmEngineOptions[selected].EngineId;
+            config.DialogueLlmEngineKey =
+                ((Echoglossian.TransEngines)config.DialogueLlmEngine).ToString();
+            rebuildTranslationService();
+            changed = true;
+        }
+
+        if (config.UseDialogueLlmOverride)
+        {
+            var overrideEngine =
+                (Echoglossian.TransEngines)config.DialogueLlmEngine;
+            var overrideConfigured =
+                TranslationEngineConfigurationHelper.IsConfigured(
+                    config,
+                    overrideEngine);
+            if (!overrideConfigured)
+            {
+                ImGui.TextColored(
+                    new Vector4(1f, 0.4f, 0.4f, 1f),
+                    GetUiString(
+                        "DialogueLlmOverrideNeedsConfigurationText",
+                        "The selected dialogue LLM override is not fully configured yet. Dialogue-family surfaces will keep using the primary engine until the override is ready."));
+            }
+            else if (overrideEngine == primaryEngine)
+            {
+                ImGui.TextWrapped(
+                    GetUiString(
+                        "DialogueLlmOverrideMatchesPrimaryText",
+                        "Dialogue-family surfaces currently reuse the same engine configuration selected above."));
+            }
+            else
+            {
+                ImGui.Separator();
+                changed |= DrawEngineConfiguration(
+                    config,
+                    promptManager,
+                    overrideEngine);
+            }
+        }
+
+        ImGui.EndDisabled();
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Resolves one UI-facing localized string, falling back to a bundled
+    ///     English literal until the localized resources catch up.
+    /// </summary>
+    /// <param name="resourceName">The resource key to resolve.</param>
+    /// <param name="fallback">The fallback text used when the key is absent.</param>
+    /// <returns>The localized text or the supplied fallback.</returns>
+    private static string GetUiString(string resourceName, string fallback)
+    {
+        return Resources.ResourceManager.GetString(resourceName, Resources.Culture) ??
+               fallback;
     }
 
     /// <summary>

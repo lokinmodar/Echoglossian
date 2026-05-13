@@ -903,3 +903,46 @@ turning into an opaque pile of partial changes.
   - add the first operator-facing UI for the dialogue override path so this
     routing foundation becomes configurable without editing the persisted
     config by hand
+
+## Iteration 23 - Expose Dialogue LLM Override In Engine Settings
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - add the first operator-facing control for dialogue-family LLM routing
+  - keep the new override selection aligned with the persisted id/key pair so
+    it does not drift the way the primary engine selection used to
+- Files touched:
+  - `PluginUI/Tabs/TranslationEnginesTab.cs`
+  - `Translators/LlmSurfaceGroupRoutingPolicy.cs`
+  - `Properties/Resources.resx`
+  - `Echoglossian.Tests/LlmSurfaceGroupRoutingPolicyTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a first-pass `Dialogue LLM override` section to the translation
+    engine settings tab
+  - users can now:
+    - enable or disable the dialogue-family override
+    - choose one LLM-backed override engine
+    - configure that override engine in the same tab when it differs from the
+      primary engine
+  - added normalization for `DialogueLlmEngine` and
+    `DialogueLlmEngineKey` so only valid LLM-backed engines remain selectable
+    in this first-pass path
+  - added a narrow policy test proving invalid non-LLM persisted override
+    values normalize back to the default LLM fallback
+- Behavior-sensitive risks:
+  - this is still LLM-only by design; non-LLM engines remain intentionally
+    excluded from the dialogue override list
+  - localized `Resources.*.resx` files do not yet carry these new UI strings,
+    so localized clients will temporarily fall back to the bundled English
+    text for this new section
+  - when the override engine matches the primary engine, the tab intentionally
+    reuses the primary configuration UI instead of drawing the same settings
+    twice
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether to keep widening the operator-facing override work or move
+    back to metrics / controls for the same LLM routing path
