@@ -21,9 +21,9 @@ public static class OpenAIModelManager
     }
   }
 
-  public static async Task RefreshAsync(string apiKey)
+  public static async Task<bool> RefreshAsync(string apiKey)
   {
-    await RefreshAsync(apiKey, DefaultOpenAiModelsBaseUrl, "OpenAI");
+    return await RefreshAsync(apiKey, DefaultOpenAiModelsBaseUrl, "OpenAI");
   }
 
   /// <summary>
@@ -33,14 +33,15 @@ public static class OpenAIModelManager
   /// <param name="apiKey">The API key used by the provider.</param>
   /// <param name="baseUrl">The provider base URL.</param>
   /// <param name="providerName">The displayable provider label.</param>
-  public static async Task RefreshAsync(
+  public static async Task<bool> RefreshAsync(
       string apiKey,
       string baseUrl,
       string providerName)
   {
     if (string.IsNullOrWhiteSpace(apiKey))
     {
-      return;
+      ResetToDefault();
+      return false;
     }
 
     try
@@ -48,7 +49,8 @@ public static class OpenAIModelManager
       var normalizedBaseUrl = baseUrl.TrimEnd('/');
       if (string.IsNullOrWhiteSpace(normalizedBaseUrl))
       {
-        return;
+        ResetToDefault();
+        return false;
       }
 
       var request = new HttpRequestMessage(
@@ -60,7 +62,8 @@ public static class OpenAIModelManager
       var response = await HttpClient.SendAsync(request);
       if (!response.IsSuccessStatusCode)
       {
-        return;
+        ResetToDefault();
+        return false;
       }
 
       string json = await response.Content.ReadAsStringAsync();
@@ -68,7 +71,8 @@ public static class OpenAIModelManager
       var data = root["data"] as JArray;
       if (data == null)
       {
-        return;
+        ResetToDefault();
+        return false;
       }
 
       var models = new List<LlmTextModel>();
@@ -116,12 +120,17 @@ public static class OpenAIModelManager
         if (models.Count > 0)
         {
           CurrentModelList = models;
+          return true;
         }
       }
+
+      ResetToDefault();
     }
     catch
     {
       ResetToDefault();
     }
+
+    return false;
   }
 }

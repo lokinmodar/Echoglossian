@@ -1174,6 +1174,24 @@
   <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
     <value>⚡ GPT-4o Mini - fast and compact</value>
   </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Configure an OpenAI-compatible endpoint, API key, and model. Live model fetch is optional; if the provider does not expose /models cleanly, keep a manual model id.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Could not fetch models from the configured OpenAI-compatible provider. Keep a manual model id or verify the endpoint and credentials.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Use the exact model id exposed by your OpenAI-compatible provider when live model listing is unavailable or disabled.</value>
+  </data>
   <data name="GeminiModelTooltipPro" xml:space="preserve">
     <value>🔷 Legacy Gemini Pro model (default)</value>
   </data>

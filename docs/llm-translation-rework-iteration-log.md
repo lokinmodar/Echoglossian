@@ -1039,3 +1039,44 @@ turning into an opaque pile of partial changes.
   - expose the OpenAI-family provider variant and custom-provider fields in
     `ChatGptEngineUI`, including live-model fetch against the configured custom
     endpoint
+
+## Iteration 26 - OpenAI-Compatible Provider UI
+
+- Date: 2026-05-13
+- Branch: `llm-translation-rework`
+- Goal:
+  - expose the new OpenAI-family provider variant directly in the ChatGPT
+    engine settings UI
+  - make custom OpenAI-compatible providers usable without creating a separate
+    engine family or polluting the official OpenAI profile
+- Files touched:
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `Translators/OpenAI/OpenAIModelManager.cs`
+  - `Properties/Resources.resx`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a provider selector to the ChatGPT/OpenAI engine settings:
+    - `Official OpenAI`
+    - `Custom OpenAI-Compatible`
+  - routed API key, endpoint, and model editing to the active provider
+    profile instead of always mutating the official OpenAI fields
+  - added custom-provider guidance text and a safe manual-model fallback when
+    a provider does not expose a usable `/models` response
+  - added `Reload` support for live model fetch so operators do not need to
+    toggle live fetch off and on after editing credentials or endpoint fields
+  - hardened `OpenAIModelManager` so failed refresh attempts reset the shared
+    model list instead of leaving stale provider models behind
+- Behavior-sensitive risks:
+  - the OpenAI-family model manager is still shared between the official and
+    custom variants, so the UI explicitly resets the model list when the
+    variant changes to avoid cross-provider list bleed
+  - only `Resources.resx` was updated in this iteration; localized
+    `Resources.*.resx` files still need follow-up and currently fall back to
+    bundled English for the new provider strings
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - validate the operator-facing custom-provider flow in-game and then decide
+    whether the next `#196` slice should be provider-specific diagnostics or
+    broader LLM routing work
