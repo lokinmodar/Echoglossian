@@ -116,7 +116,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             return Resources.ClaudeTranslationUnavailablePleaseCheckYourAPIKey;
         }
 
-        if (!HasUsableDialogueContext(dialogueContext))
+        if (!DialogueContextPromptHelper.HasUsableDialogueContext(dialogueContext))
         {
             return await this.TranslateAsync(
                 text,
@@ -124,7 +124,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 targetLanguage).ConfigureAwait(false);
         }
 
-        string cacheKey = this.BuildDialogueContextCacheKey(
+        string cacheKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
             text,
             sourceLanguage,
             targetLanguage,
@@ -235,11 +235,6 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
         return string.Empty;
     }
 
-    private static bool HasUsableDialogueContext(DialogueTranslationContext dialogueContext)
-    {
-        return dialogueContext.PriorTurns.Count > 0;
-    }
-
     private string BuildPrompt(
         string text,
         string sourceLanguage,
@@ -251,34 +246,14 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
             .Replace("{targetLanguage}", targetLanguage, StringComparison.Ordinal);
 
-        if (!dialogueContext.HasValue ||
-            !HasUsableDialogueContext(dialogueContext.Value))
+        if (!dialogueContext.HasValue)
         {
             return prompt;
         }
 
-        string priorTurns = string.Join(
-            Environment.NewLine,
-            dialogueContext.Value.PriorTurns.Select(
-                (turn, index) =>
-                    $"[{index + 1}] {turn.SpeakerName}: {FixText(turn.SourceText)}"));
-
-        return
-            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}Current speaker: {dialogueContext.Value.SpeakerName}{Environment.NewLine}{priorTurns}";
-    }
-
-    private string BuildDialogueContextCacheKey(
-        string text,
-        string sourceLanguage,
-        string targetLanguage,
-        DialogueTranslationContext dialogueContext)
-    {
-        string historyKey = string.Join(
-            "|",
-            dialogueContext.PriorTurns.Select(
-                turn => $"{turn.SpeakerName}:{turn.SourceText}"));
-
-        return
-            $"dialogue|{dialogueContext.SessionNamespace}|{dialogueContext.SessionKey}|{historyKey}|{text}_{sourceLanguage}_{targetLanguage}";
+        return DialogueContextPromptHelper.AppendDialogueContext(
+            prompt,
+            dialogueContext.Value,
+            FixText);
     }
 }

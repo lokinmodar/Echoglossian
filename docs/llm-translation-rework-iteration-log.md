@@ -731,3 +731,43 @@ turning into an opaque pile of partial changes.
   - decide whether the next step should consolidate shared context-aware prompt
     helpers or pivot back to the next operator-facing and routing pieces of
     the LLM rework plan
+
+## Iteration 19 - Shared Dialogue Context Prompt Helper
+
+- Date: 2026-05-12
+- Branch: `llm-translation-rework`
+- Goal:
+  - remove the repeated runtime-only dialogue-context boilerplate now that the
+    first engine pass is complete
+  - keep behavior identical while centralizing the shared prompt and cache-key
+    rules
+- Files touched:
+  - `Translators/Helpers/DialogueContextPromptHelper.cs`
+  - `Translators/ChatGPTTranslator.cs`
+  - `Translators/LmStudioTranslator.cs`
+  - `Translators/OllamaTranslator.cs`
+  - `Translators/OpenRouterTranslator.cs`
+  - `Translators/DeepSeekTranslator.cs`
+  - `Translators/GeminiTranslator.cs`
+  - `Translators/ClaudeTranslator.cs`
+  - `Echoglossian.Tests/DialogueContextPromptHelperTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added `DialogueContextPromptHelper` for:
+    - usable-context detection
+    - context-aware cache-key generation
+    - prompt enrichment with prior-turn history
+  - updated all current context-aware translators to use the helper instead of
+    carrying duplicated private methods and string literals
+  - added narrow tests for the helper behavior
+- Behavior-sensitive risks:
+  - this is an internal consolidation pass only; no translator-specific prompt
+    semantics were intentionally changed
+  - any future tweak to the shared context wording now affects all
+    context-aware engines, which is the intended tradeoff of this refactor
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide between the next operator-facing LLM routing/config piece and
+    deeper metrics/debugger work on top of the now-shared context-aware path
