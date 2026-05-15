@@ -1712,3 +1712,38 @@ turning into an opaque pile of partial changes.
   - extend the same structured path shape to the next OpenAI-family-compatible
     translator after in-game validation confirms the fallback behavior is
     stable
+
+## Iteration 44 - Issue 148 OpenRouter Structured Dialogue Path
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - extend the first live structured dialogue path to the next
+    OpenAI-compatible HTTP provider without changing the legacy fallback
+    behavior for incompatible upstreams
+- Files touched:
+  - `Translators/OpenRouterTranslator.cs`
+  - `Translators/Helpers/StructuredDialogueOpenAiCompatiblePayloadHelper.cs`
+  - `Echoglossian.Tests/StructuredDialogueOpenAiCompatiblePayloadHelperTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added one small shared helper for OpenAI-compatible HTTP JSON payloads that:
+    - exposes the structured function-parameter schema as a JSON element
+    - extracts matching `tool_calls[*].function.arguments`
+    - falls back to `message.content` when tool calling is ignored
+  - updated `OpenRouterTranslator` so the dialogue-context path now:
+    - tries one forced function-tool request first
+    - validates the returned structured payload via the shared validator
+    - falls back automatically to the old plain-text request path when the
+      upstream provider ignores tool calling, returns malformed JSON, or fails
+- Behavior-sensitive risks:
+  - some routed upstream models behind OpenRouter may partially support tool
+    calling; this cut intentionally treats any malformed or missing structured
+    payload as a soft failure and runs the legacy path instead
+  - only the dialogue-context path attempts structured output
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - carry the same OpenAI-compatible structured path to `DeepSeek` or
+    `LM Studio`, reusing the same JSON helper
