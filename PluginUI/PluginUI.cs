@@ -154,24 +154,48 @@ public partial class Echoglossian
       return false;
     }
 
+    this.DrawTranslationSetupSectionHeader(Resources.LanguageSelectLabelText);
     changed |= this.DrawTranslationLanguageSelectionSection();
-    ImGui.Separator();
+    this.DrawTranslationSetupSectionBreak();
 
+    this.DrawTranslationSetupSectionHeader(Resources.TranslationEngineChoose);
     changed |= TranslationEnginesTab.Draw(
         this.configuration,
         LanguageInt,
         LangDict,
         this.RebuildTranslationServiceSafely);
 
-    ImGui.Separator();
+    this.DrawTranslationSetupSectionBreak();
+    this.DrawTranslationSetupSectionHeader(Resources.EnableTranslation);
     changed |= this.DrawTranslationActivationSection();
 
-    ImGui.Separator();
-    ImGui.Text(Resources.ConfigTabGeneralName);
-    ImGui.Spacing();
+    this.DrawTranslationSetupSectionBreak();
+    this.DrawTranslationSetupSectionHeader(Resources.ConfigTabGeneralName);
     changed |= GeneralTab.Draw(this.configuration);
 
     return changed;
+  }
+
+  /// <summary>
+  /// Draws the compact heading used to visually separate groups inside the
+  /// translation setup tab.
+  /// </summary>
+  /// <param name="title">The section title to render.</param>
+  private void DrawTranslationSetupSectionHeader(string title)
+  {
+    ImGui.TextDisabled(title);
+    ImGui.Separator();
+    ImGui.Spacing();
+  }
+
+  /// <summary>
+  /// Draws extra vertical spacing between setup-tab option groups so the first
+  /// configuration page reads less densely.
+  /// </summary>
+  private void DrawTranslationSetupSectionBreak()
+  {
+    ImGui.Spacing();
+    ImGui.Spacing();
   }
 
   /// <summary>

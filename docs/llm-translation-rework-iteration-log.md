@@ -1493,3 +1493,36 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - verify in-game that all LLM override engines now expose their own
     configuration UI directly from the dialogue override section
+
+## Iteration 38 - Translation Setup Tab Spacing Pass
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - improve the readability of the main translation setup tab by adding clearer
+    visual separation between its top-level option groups without changing any
+    configuration behavior
+- Files touched:
+  - `PluginUI/PluginUI.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a narrow section-header helper for the setup tab that renders:
+    - a muted section title
+    - a separator line
+    - spacing below the separator
+  - applied that section treatment to the four top-level groups:
+    - target language
+    - translation engine
+    - translation activation
+    - general settings
+  - added extra vertical break spacing between those groups so the first tab
+    no longer reads as one dense uninterrupted block
+- Behavior-sensitive risks:
+  - this is layout-only in the config UI and does not alter translation
+    routing, activation, persistence, or runtime behavior
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - verify in-game that the added separation improves readability without
+    making the first tab feel too tall or repetitive
