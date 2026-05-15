@@ -33,6 +33,9 @@ than "prompt optimization":
 This is a design-direction document, not a promise that every item here should
 land in one branch or one release.
 
+For the dedicated follow-up plan for structured glossary and metadata support,
+see [Issue 148 Structured LLM Glossary and Metadata Plan](issue-148-structured-llm-plan.md).
+
 ## Problem Summary
 
 Today, Echoglossian mostly treats LLM-backed engines as stateless

@@ -1556,3 +1556,34 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - verify in-game whether the first tab now has enough breathing room without
     forcing too much extra scrolling on smaller window sizes
+
+## Iteration 40 - Issue 148 Structured LLM Plan
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - turn issue `#148` into a dedicated implementation document that separates
+    structured glossary/metadata work from the broader umbrella LLM rework
+- Files touched:
+  - `docs/issue-148-structured-llm-plan.md`
+  - `docs/llm-translation-improvements-plan.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - created a dedicated `#148` plan document covering:
+    - structured request/response contracts
+    - glossary strategy
+    - dialogue metadata strategy
+    - provider capability modes
+    - persistence guardrails
+    - phased rollout
+  - linked the umbrella LLM plan to the new dedicated `#148` plan so the
+    structured-quality work has an explicit home
+- Behavior-sensitive risks:
+  - documentation only
+  - no runtime, persistence, or UI behavior changed in this iteration
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - start phase `148.1` by introducing the shared structured request/response
+    contracts and the first validation helper for structured dialogue output
