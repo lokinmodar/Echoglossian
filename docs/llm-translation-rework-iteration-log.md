@@ -1775,3 +1775,33 @@ turning into an opaque pile of partial changes.
   - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
 - Next cut:
   - carry the same OpenAI-compatible structured path to `DeepSeek`
+
+## Iteration 46 - Issue 148 DeepSeek Structured Dialogue Path
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - carry the same OpenAI-compatible structured dialogue path to `DeepSeek`
+    while preserving the existing plain-text fallback semantics
+- Files touched:
+  - `Translators/DeepSeekTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - updated `DeepSeekTranslator` so the dialogue-context path now:
+    - tries one forced function-tool request first
+    - reuses the shared structured request prompt helper, the OpenAI-compatible
+      JSON extraction helper, and the structured response validator
+    - falls back automatically to the old plain-text request path when the
+      upstream provider ignores tool calling, returns malformed JSON, or fails
+- Behavior-sensitive risks:
+  - some DeepSeek-compatible models may only partially support strict tool
+    calling; this cut treats any malformed or missing structured payload as a
+    soft failure and reruns the legacy path
+  - only the dialogue-context path attempts structured output
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - verify in-game across the currently wired structured providers before
+    deciding whether to extend the same pattern to additional dialogue-family
+    engines

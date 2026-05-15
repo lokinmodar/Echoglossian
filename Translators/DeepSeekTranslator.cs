@@ -165,6 +165,21 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
         string cacheKey,
         DialogueTranslationContext? dialogueContext = null)
     {
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation =
+                await this.TryTranslateStructuredDialogueAsync(
+                    text,
+                    sourceLanguage,
+                    targetLanguage,
+                    cacheKey,
+                    dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
+
         var prompt = this.BuildPrompt(
             text,
             sourceLanguage,
@@ -239,6 +254,139 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
         }
 
         return string.Empty;
+    }
+
+    /// <summary>
+    ///     Attempts the OpenAI-compatible structured dialogue path for
+    ///     DeepSeek and falls back to the legacy plain-text request on any
+    ///     incompatibility or malformed provider output.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The normalized request cache key.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the legacy path can run.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.DeepSeek) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
+
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest =
+                StructuredDialogueTranslationRequestBuilder.Build(
+                    normalizedText,
+                    sourceLanguage,
+                    targetLanguage,
+                    TranslationSurfaceGroup.Dialogue,
+                    dialogueContext);
+            var structuredPrompt =
+                StructuredDialogueOpenAiToolHelper.BuildUserPrompt(
+                    PromptTemplateManager.RenderPrompt(
+                        this.promptTemplate,
+                        normalizedText,
+                        sourceLanguage,
+                        targetLanguage),
+                    structuredRequest);
+            var requestData = new
+            {
+                this.model,
+                messages = new[]
+                {
+                    new
+                    {
+                        role = "user",
+                        content = structuredPrompt,
+                    },
+                },
+                this.temperature,
+                tools = new[]
+                {
+                    new
+                    {
+                        type = "function",
+                        function = new
+                        {
+                            name = StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                            description = StructuredDialogueOpenAiToolHelper.ToolFunctionDescription,
+                            parameters = JObject.Parse(
+                                StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                            strict = true,
+                        },
+                    },
+                },
+                tool_choice = new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                    },
+                },
+            };
+
+            var jsonContent = JsonConvert.SerializeObject(requestData);
+            var httpContent = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await this.httpClient!.PostAsync(
+                "chat/completions",
+                httpContent).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var responseString =
+                await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var rawStructuredPayload =
+                StructuredDialogueOpenAiCompatiblePayloadHelper.ExtractRawStructuredPayload(
+                    responseString,
+                    StructuredDialogueOpenAiToolHelper.ToolFunctionName);
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"DeepSeek structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                this.translationCache.Remember(
+                    cacheKey,
+                    translatedText);
+                return translatedText;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"DeepSeek structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
     }
 
     private string BuildPrompt(
