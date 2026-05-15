@@ -1461,3 +1461,35 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - reassess PR `#202` review state and resolve the remaining open threads if
     the reviewer comments are fully covered
+
+## Iteration 37 - Dialogue Override Configuration UI Availability
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - fix the dialogue-family LLM override UI so operators can configure the
+    selected override engine directly from the override section even when that
+    engine is not configured yet
+- Files touched:
+  - `PluginUI/Tabs/TranslationEnginesTab.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - stopped gating override-engine configuration rendering on
+    `overrideConfigured`
+  - the override section now:
+    - still shows the warning when the selected override is not configured
+    - still shows the “matches primary” note when the override engine is the
+      same as the primary engine
+    - but renders the selected override engine UI whenever it differs from the
+      primary engine, so missing credentials/endpoint/model fields are actually
+      reachable from the override workflow
+- Behavior-sensitive risks:
+  - this changes only the config UI flow for the dialogue override section
+  - runtime routing, activation gating, and fallback-to-primary behavior remain
+    unchanged; unconfigured overrides still do not become active until ready
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - verify in-game that all LLM override engines now expose their own
+    configuration UI directly from the dialogue override section

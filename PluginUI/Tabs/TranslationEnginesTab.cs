@@ -289,7 +289,8 @@ public static class TranslationEnginesTab
                         "DialogueLlmOverrideNeedsConfigurationText",
                         "The selected dialogue LLM override is not fully configured yet. Dialogue-family surfaces will keep using the primary engine until the override is ready."));
             }
-            else if (overrideEngine == primaryEngine)
+
+            if (overrideEngine == primaryEngine)
             {
                 ImGui.TextWrapped(
                     GetUiString(
