@@ -9840,9 +9840,9 @@
             </list>
             </para>
             <remarks>
-            - Vendor sets reflect their official language pages as of 2025-10-09.
+            - Vendor sets reflect official public endpoints or official language pages as of 2026-05-15.
             - GTranslate follows Google’s language set; we mirror Google for that engine.
-            - LibreTranslate’s list can vary by instance; we use the canonical set exposed in docs.
+            - LibreTranslate’s list can vary by instance; we use the canonical list exposed by the public upstream instance.
             - Region normalization is applied per engine (e.g., <c>pt-PT</c>, <c>pt-BR</c>, <c>zh-CN</c>, <c>zh-TW</c>).
             - Manual-inclusion hook retains niche codes you already use (e.g., <c>klingon</c>, <c>nqo</c>).
             </remarks>
@@ -9889,28 +9889,29 @@
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetDeepLCodes">
             <summary>
-            DeepL supported languages (2025 set including Hebrew, Vietnamese, Thai, Indonesian, Chinese).
-            Variants included where relevant (EN-GB/EN-US, PT-BR/PT-PT, ZH, etc.).
+            DeepL translation target languages from the official supported-languages documentation.
+            Includes current beta target languages and target-only regional variants where relevant.
             </summary>
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetMicrosoftCodes">
             <summary>
-            Microsoft Translator (Azure) language codes covering the plugin’s common set.
+            Microsoft Translator language codes from the official public languages endpoint.
             </summary>
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetAmazonCodes">
             <summary>
-            Amazon Translate supported codes (mainstream coverage used in your plugin).
+            Amazon Translate supported language codes from the official Developer Guide page.
             </summary>
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetYandexCloudCodes">
             <summary>
-            Yandex Cloud Translate language codes (official list).
+            Yandex Translate language codes from the current official supported-languages page.
+            The page notes that exact live API results require the authenticated ListLanguages method.
             </summary>
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetLibreTranslateCodes">
             <summary>
-            LibreTranslate canonical codes (can vary per instance; upstream commonly lists these).
+            LibreTranslate codes from the current public upstream instance.
             </summary>
         </member>
         <member name="T:Echoglossian.LanguagesHandling.LanguageInfo">

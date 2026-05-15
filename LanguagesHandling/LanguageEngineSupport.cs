@@ -30,9 +30,9 @@ namespace Echoglossian.LanguagesHandling
     /// </list>
     /// </para>
     /// <remarks>
-    /// - Vendor sets reflect their official language pages as of 2025-10-09.
+    /// - Vendor sets reflect official public endpoints or official language pages as of 2026-05-15.
     /// - GTranslate follows Google’s language set; we mirror Google for that engine.
-    /// - LibreTranslate’s list can vary by instance; we use the canonical set exposed in docs.
+    /// - LibreTranslate’s list can vary by instance; we use the canonical list exposed by the public upstream instance.
     /// - Region normalization is applied per engine (e.g., <c>pt-PT</c>, <c>pt-BR</c>, <c>zh-CN</c>, <c>zh-TW</c>).
     /// - Manual-inclusion hook retains niche codes you already use (e.g., <c>klingon</c>, <c>nqo</c>).
     /// </remarks>
@@ -244,6 +244,8 @@ namespace Echoglossian.LanguagesHandling
                     if (lower is "zh" or "zh-cn" or "zh-tw" or "zh-hans" or "zh-hant")
                     {
                         result.Add("zh");
+                        result.Add("ZH-HANS");
+                        result.Add("ZH-HANT");
                         result.Add("zh-CN");
                         result.Add("zh-TW");
                     }
@@ -253,7 +255,58 @@ namespace Echoglossian.LanguagesHandling
 
                 case Microsoft:
                 {
-                    // Azure table commonly uses base codes; defaults above suffice.
+                    if (lower is "zh" or "zh-cn" or "zh-hans")
+                    {
+                        result.Add("zh-Hans");
+                    }
+
+                    if (lower is "zh" or "zh-tw" or "zh-hant")
+                    {
+                        result.Add("zh-Hant");
+                    }
+
+                    if (lower is "nb" or "nn" or "no")
+                    {
+                        result.Add("nb");
+                    }
+
+                    if (lower == "sr")
+                    {
+                        result.Add("sr-Cyrl");
+                        result.Add("sr-Latn");
+                    }
+
+                    if (lower is "tl" or "fil")
+                    {
+                        result.Add("fil");
+                    }
+
+                    if (lower == "klingon")
+                    {
+                        result.Add("tlh-Latn");
+                        result.Add("tlh-Piqd");
+                    }
+
+                    break;
+                }
+
+                case LibreTranslate:
+                {
+                    if (lower is "zh" or "zh-cn" or "zh-hans")
+                    {
+                        result.Add("zh-Hans");
+                    }
+
+                    if (lower is "zh" or "zh-tw" or "zh-hant")
+                    {
+                        result.Add("zh-Hant");
+                    }
+
+                    if (lower is "nb" or "nn" or "no")
+                    {
+                        result.Add("nb");
+                    }
+
                     break;
                 }
 
@@ -399,62 +452,147 @@ namespace Echoglossian.LanguagesHandling
         }
 
         /// <summary>
-        /// DeepL supported languages (2025 set including Hebrew, Vietnamese, Thai, Indonesian, Chinese).
-        /// Variants included where relevant (EN-GB/EN-US, PT-BR/PT-PT, ZH, etc.).
+        /// DeepL translation target languages from the official supported-languages documentation.
+        /// Includes current beta target languages and target-only regional variants where relevant.
         /// </summary>
         private static IEnumerable<string> GetDeepLCodes()
         {
+            yield return "ACE";
+            yield return "AF";
+            yield return "AN";
+            yield return "AR";
+            yield return "AS";
+            yield return "AY";
+            yield return "AZ";
+            yield return "BA";
+            yield return "BE";
             yield return "bg";
+            yield return "BHO";
+            yield return "BN";
+            yield return "BR";
+            yield return "BS";
+            yield return "CA";
+            yield return "CEB";
+            yield return "CKB";
             yield return "cs";
+            yield return "CY";
             yield return "da";
             yield return "de";
             yield return "el";
             yield return "en";
             yield return "EN-GB";
             yield return "EN-US";
+            yield return "EO";
             yield return "es";
+            yield return "ES-419";
             yield return "et";
+            yield return "EU";
+            yield return "FA";
             yield return "fi";
             yield return "fr";
+            yield return "GA";
+            yield return "GL";
+            yield return "GN";
+            yield return "GOM";
+            yield return "GU";
+            yield return "HA";
             yield return "hu";
+            yield return "HE";
+            yield return "HI";
+            yield return "HR";
+            yield return "HT";
+            yield return "HY";
             yield return "id";
+            yield return "IG";
             yield return "it";
             yield return "ja";
+            yield return "JV";
+            yield return "KA";
+            yield return "KK";
+            yield return "KMR";
             yield return "ko";
+            yield return "KY";
+            yield return "LA";
+            yield return "LB";
+            yield return "LMO";
+            yield return "LN";
             yield return "lt";
             yield return "lv";
+            yield return "MAI";
+            yield return "MG";
+            yield return "MI";
+            yield return "MK";
+            yield return "ML";
+            yield return "MN";
+            yield return "MR";
+            yield return "MS";
+            yield return "MT";
+            yield return "MY";
             yield return "nb";
+            yield return "NE";
             yield return "nl";
+            yield return "OC";
+            yield return "OM";
+            yield return "PA";
+            yield return "PAG";
+            yield return "PAM";
             yield return "pl";
+            yield return "PRS";
+            yield return "PS";
             yield return "pt";
             yield return "pt-BR";
             yield return "pt-PT";
+            yield return "QU";
             yield return "ro";
             yield return "ru";
+            yield return "SA";
+            yield return "SCN";
             yield return "sk";
             yield return "sl";
+            yield return "SQ";
+            yield return "SR";
+            yield return "ST";
+            yield return "SU";
             yield return "sv";
+            yield return "SW";
+            yield return "TA";
+            yield return "TE";
+            yield return "TG";
             yield return "tr";
+            yield return "TK";
+            yield return "TL";
+            yield return "TN";
+            yield return "TS";
+            yield return "TT";
             yield return "uk";
+            yield return "UR";
+            yield return "UZ";
             yield return "zh";
+            yield return "ZH-HANS";
+            yield return "ZH-HANT";
             yield return "he";
             yield return "th";
             yield return "vi";
+            yield return "WO";
+            yield return "XH";
+            yield return "YI";
+            yield return "YUE";
+            yield return "ZU";
         }
 
         /// <summary>
-        /// Microsoft Translator (Azure) language codes covering the plugin’s common set.
+        /// Microsoft Translator language codes from the official public languages endpoint.
         /// </summary>
         private static IEnumerable<string> GetMicrosoftCodes()
         {
             var codes = new[]
             {
-                "af", "am", "ar", "az", "ba", "be", "bg", "bn", "bs", "ca", "ceb", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "eu", "fa", "fi", "fil", "fr", "ga", "gd", "gl",
-                "gu", "ha", "haw", "he", "hi", "hr", "ht", "hu", "hy", "id", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "ku", "ky", "la", "lb", "lo", "lt", "lv", "mk", "ml",
-                "mn", "mr", "ms", "mt", "my", "ne", "nl", "no", "nb", "nn", "ny", "or", "pa", "pl", "ps", "pt", "pt-BR", "pt-PT", "ro", "ru", "rw", "si", "sk", "sl", "sm", "sn", "so",
-                "sq", "sr", "st", "su", "sv", "sw", "ta", "te", "tg", "th", "tl", "tr", "tt", "uk", "ur", "uz", "vi", "xh", "yi", "yo", "zh", "zh-CN", "zh-TW", "zu",
-                // Long tail you had under Microsoft:
-                "ace", "ady", "alt", "arn", "az-Latn", "brx", "chr", "ckb", "doi", "dv", "dz", "ff", "gsw", "gom", "inh", "kab", "sah", "sat", "sr-Latn", "ti", "tzm",
+                "af", "am", "ar", "as", "az", "ba", "be", "bg", "bho", "bn", "bo", "brx", "bs", "ca", "cs", "cy", "da", "de", "doi", "dsb", "dv", "el", "en", "es", "et", "eu", "fa",
+                "fi", "fil", "fj", "fo", "fr", "fr-CA", "ga", "gl", "gom", "gu", "ha", "he", "hi", "hne", "hr", "hsb", "ht", "hu", "hy", "id", "ig", "ikt", "is", "it", "iu",
+                "iu-Latn", "ja", "ka", "kk", "km", "kmr", "kn", "ko", "ks", "ku", "ky", "lb", "ln", "lo", "lt", "lug", "lv", "lzh", "mai", "mg", "mi", "mk", "ml", "mn-Cyrl",
+                "mn-Mong", "mni", "mr", "ms", "mt", "mww", "my", "nb", "ne", "nl", "nso", "nya", "or", "otq", "pa", "pl", "prs", "ps", "pt", "pt-PT", "ro", "ru", "run", "rw",
+                "sd", "si", "sk", "sl", "sm", "sn", "so", "sq", "sr-Cyrl", "sr-Latn", "st", "sv", "sw", "ta", "te", "th", "ti", "tk", "tlh-Latn", "tlh-Piqd", "tn", "to", "tr",
+                "tt", "ty", "ug", "uk", "ur", "uz", "vi", "xh", "yo", "yua", "yue", "zh-Hans", "zh-Hant", "zu",
             };
 
             foreach (var x in codes)
@@ -464,14 +602,15 @@ namespace Echoglossian.LanguagesHandling
         }
 
         /// <summary>
-        /// Amazon Translate supported codes (mainstream coverage used in your plugin).
+        /// Amazon Translate supported language codes from the official Developer Guide page.
         /// </summary>
         private static IEnumerable<string> GetAmazonCodes()
         {
             var codes = new[]
             {
-                "ar", "de", "en", "es", "fr", "it", "ja", "ko", "pt", "pt-BR", "pt-PT", "ru", "zh", "zh-CN", "zh-TW", "nl", "sv", "tr", "hi", "fa", "pl", "cs", "da", "fi", "no", "ro",
-                "he", "id", "ms", "vi", "th", "uk",
+                "af", "am", "ar", "az", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "es", "es-MX", "et", "fa", "fa-AF", "fi", "fr", "fr-CA", "ga", "gu", "ha", "he",
+                "hi", "hr", "ht", "hu", "hy", "id", "is", "it", "ja", "ka", "kk", "kn", "ko", "lt", "lv", "mk", "ml", "mn", "mr", "ms", "mt", "nl", "no", "pa", "pl", "ps", "pt",
+                "pt-PT", "ro", "ru", "si", "sk", "sl", "so", "sq", "sr", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "uz", "vi", "zh", "zh-TW",
             };
 
             foreach (var x in codes)
@@ -481,16 +620,18 @@ namespace Echoglossian.LanguagesHandling
         }
 
         /// <summary>
-        /// Yandex Cloud Translate language codes (official list).
+        /// Yandex Translate language codes from the current official supported-languages page.
+        /// The page notes that exact live API results require the authenticated ListLanguages method.
         /// </summary>
         private static IEnumerable<string> GetYandexCloudCodes()
         {
             var codes = new[]
             {
-                "af", "am", "ar", "az", "ba", "be", "bg", "bn", "bs", "ca", "ceb", "cs", "cv", "cy", "da", "de", "el", "en", "eo", "es", "et", "eu", "fa", "fi", "fr", "gl", "gu", "ha",
-                "haw", "he", "hi", "hr", "ht", "hu", "hy", "id", "ig", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "ku", "ky", "la", "lb", "lo", "lt", "lv", "mk", "ml", "mn",
-                "mr", "ms", "mt", "my", "ne", "nl", "no", "oc", "pa", "pl", "ps", "pt", "ro", "ru", "rw", "sd", "si", "sk", "sl", "sm", "sn", "so", "sq", "sr", "st", "su", "sv", "sw",
-                "ta", "te", "tg", "th", "tl", "tr", "tt", "uk", "ur", "uz", "vi", "xh", "yi", "yo", "zh", "zh-CN", "zh-TW", "zu", "emj",
+                "af", "am", "ar", "az", "ba", "be", "bg", "bn", "bs", "bua", "ca", "ceb", "cs", "cv", "cy", "da", "de", "el", "emj", "en", "eo", "es", "et", "eu", "fa", "fi", "fr",
+                "ga", "gd", "gl", "gu", "he", "hi", "hr", "ht", "hu", "hy", "id", "is", "it", "ja", "jv", "ka", "kazlat", "kbd", "kk", "km", "kn", "ko", "krc", "kv", "ky", "la",
+                "lb", "lo", "lt", "lv", "mdf", "mg", "mhr", "mi", "mk", "ml", "mn", "mr", "mrj", "ms", "mt", "my", "myv", "ne", "nl", "no", "os", "pa", "pap", "pl", "pt-BR", "pt",
+                "ro", "ru", "sah", "si", "sk", "sl", "sq", "sr-Latn", "sr", "su", "sv", "sw", "ta", "te", "tg", "th", "tl", "tr", "tt", "tyv", "udm", "uk", "ur", "uz", "uzbcyr",
+                "vi", "xh", "yi", "zh", "zu",
             };
 
             foreach (var x in codes)
@@ -500,13 +641,14 @@ namespace Echoglossian.LanguagesHandling
         }
 
         /// <summary>
-        /// LibreTranslate canonical codes (can vary per instance; upstream commonly lists these).
+        /// LibreTranslate codes from the current public upstream instance.
         /// </summary>
         private static IEnumerable<string> GetLibreTranslateCodes()
         {
             var codes = new[]
             {
-                "en", "ar", "zh", "fr", "de", "it", "ja", "pt", "ru", "es", "pl", "bg", "ca", "cs", "nl", "eo", "eu", "gd", "hu", "ga", "kab", "ko", "uk",
+                "en", "sq", "ar", "az", "eu", "bn", "bg", "ca", "zh-Hans", "zh-Hant", "cs", "da", "nl", "eo", "et", "fi", "fr", "gl", "de", "el", "he", "hi", "hu", "id", "ga", "it",
+                "ja", "ko", "ky", "lv", "lt", "ms", "nb", "fa", "pl", "pt", "pt-BR", "ro", "ru", "sr", "sk", "sl", "es", "sv", "tl", "th", "tr", "uk", "ur", "vi",
             };
 
             foreach (var x in codes)

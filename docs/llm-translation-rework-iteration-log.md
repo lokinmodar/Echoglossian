@@ -2183,3 +2183,49 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether the debugger should expose per-engine live model refresh
     status beyond the current OpenAI-family diagnostics
+
+## Iteration 57 - Refresh Engine Language Support Tables
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - refresh the per-language engine compatibility tables so the vendor-backed
+    engines reflect their currently documented or publicly exposed language
+    support instead of the older mixed hardcoded sets
+- Files touched:
+  - `LanguagesHandling/LanguageEngineSupport.cs`
+  - `Echoglossian.Tests/LanguageEngineSupportTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - updated the `Microsoft` engine language set to the current official public
+    `Translator Text` languages endpoint result
+  - updated the `Amazon` engine language set to the current official Developer
+    Guide language table, including newer targets such as `cy`, `es-MX`,
+    `fr-CA`, and `fa-AF`
+  - updated the `LibreTranslate` engine language set to the current public
+    upstream instance list, including `he`, `hi`, `id`, `lt`, `lv`, `ms`,
+    `th`, `ur`, and variant-specific Chinese codes
+  - updated the `YandexCloud` / `YandexPublic` language table to the current
+    official supported-languages page, including newer documented codes such as
+    `gd`, `bua`, `kazlat`, `kbd`, `krc`, `kv`, `mdf`, `mhr`, `mrj`, `myv`,
+    `tyv`, `udm`, and `uzbcyr`
+  - refreshed the `DeepL` target language set to the broader current official
+    supported-languages documentation, including the newer beta target
+    languages and current regional variants
+  - added normalization aliases so official vendor codes such as `zh-Hans`,
+    `zh-Hant`, `fil`, `nb`, `sr-Cyrl`, and `tlh-Latn` still match the plugin's
+    existing language codes
+  - added regression tests for new vendor-backed support cases across DeepL,
+    Microsoft, Amazon, LibreTranslate, and Yandex
+- Behavior-sensitive risks:
+  - some languages will now lose engines that are no longer in the current
+    official vendor language tables
+  - Microsoft and LibreTranslate support for Chinese variants now depends on
+    the new normalization aliases instead of legacy duplicate hardcoded codes
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - consider whether Google's explicitly tracked common-code list should also
+    be refreshed even though Google/GTranslate are still treated as broad
+    support for rare variants
