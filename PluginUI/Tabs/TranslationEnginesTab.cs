@@ -172,7 +172,7 @@ public static class TranslationEnginesTab
                         $"OllamaEngineUI failed: {ex.Message}, {ex.StackTrace}");
                     ImGui.TextColored(
                         new Vector4(1f, 0.4f, 0.4f, 1f),
-                        GetUiString("OllamaEngineUiFailedToRender"));
+                        Resources.OllamaEngineUiFailedToRender);
                 }
 
                 break;
@@ -228,12 +228,12 @@ public static class TranslationEnginesTab
     {
         var changed = false;
         DrawSubsectionHeader(
-            GetUiString("DialogueLlmOverrideSectionLabel"));
+            Resources.DialogueLlmOverrideSectionLabel);
         ImGui.TextWrapped(
-            GetUiString("DialogueLlmOverrideDescription"));
+            Resources.DialogueLlmOverrideDescription);
 
         var overrideToggleChanged = ImGui.Checkbox(
-            GetUiString("UseDialogueLlmOverrideLabel"),
+            Resources.UseDialogueLlmOverrideLabel,
             ref config.UseDialogueLlmOverride);
         changed |= overrideToggleChanged;
         if (overrideToggleChanged)
@@ -258,7 +258,7 @@ public static class TranslationEnginesTab
 
         ImGui.BeginDisabled(!config.UseDialogueLlmOverride);
         if (ImGui.Combo(
-                GetUiString("DialogueLlmEngineLabel"),
+                Resources.DialogueLlmEngineLabel,
                 ref selected,
                 llmEngineOptions.Select(option => option.Label).ToArray(),
                 llmEngineOptions.Length))
@@ -282,13 +282,13 @@ public static class TranslationEnginesTab
             {
                 ImGui.TextColored(
                     new Vector4(1f, 0.4f, 0.4f, 1f),
-                    GetUiString("DialogueLlmOverrideNeedsConfigurationText"));
+                    Resources.DialogueLlmOverrideNeedsConfigurationText);
             }
 
             if (overrideEngine == primaryEngine)
             {
                 ImGui.TextWrapped(
-                    GetUiString("DialogueLlmOverrideMatchesPrimaryText"));
+                    Resources.DialogueLlmOverrideMatchesPrimaryText);
             }
             else
             {
@@ -316,16 +316,16 @@ public static class TranslationEnginesTab
         var changed = false;
         var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
         DrawSubsectionHeader(
-            GetUiString("DialogueGlossarySectionLabel"));
+            Resources.DialogueGlossarySectionLabel);
         ImGui.TextWrapped(
-            GetUiString("DialogueGlossaryDescription"));
+            Resources.DialogueGlossaryDescription);
 
         changed |= ImGui.Checkbox(
-            GetUiString("EnableDialogueGlossaryInjectionLabel"),
+            Resources.EnableDialogueGlossaryInjectionLabel,
             ref config.EnableDialogueGlossaryInjection);
 
         ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);
-        var glossaryPathLabel = GetUiString("DialogueGlossaryFilePathLabel");
+        var glossaryPathLabel = Resources.DialogueGlossaryFilePathLabel;
         changed |= FieldValidationHelper.ValidatedInputText(
             glossaryPathLabel,
             ref config.DialogueGlossaryFilePath,
@@ -333,7 +333,7 @@ public static class TranslationEnginesTab
             out _);
 
         if (ImGui.Button(
-                GetUiString("ReloadDialogueGlossaryButtonLabel")))
+                Resources.ReloadDialogueGlossaryButtonLabel))
         {
             StructuredDialogueGlossaryStore.Refresh(
                 config.DialogueGlossaryFilePath);
@@ -343,7 +343,7 @@ public static class TranslationEnginesTab
 
         ImGui.SameLine();
         if (ImGui.Button(
-                GetUiString("ClearDialogueGlossaryButtonLabel")))
+                Resources.ClearDialogueGlossaryButtonLabel))
         {
             StructuredDialogueGlossaryStore.Clear();
         }
@@ -362,18 +362,14 @@ public static class TranslationEnginesTab
     {
         var statusText = snapshot.LastLoadSucceeded switch
         {
-            true => GetUiString(
-                "DialogueGlossaryStatusLoaded"),
-            false => GetUiString(
-                "DialogueGlossaryStatusFailed"),
-            _ => GetUiString(
-                "DialogueGlossaryStatusIdle"),
+            true => Resources.DialogueGlossaryStatusLoaded,
+            false => Resources.DialogueGlossaryStatusFailed,
+            _ => Resources.DialogueGlossaryStatusIdle,
         };
         ImGui.TextWrapped(
             string.Format(
                 CultureInfo.CurrentCulture,
-                GetUiString(
-                    "DialogueGlossarySnapshotSummary"),
+                Resources.DialogueGlossarySnapshotSummary,
                 statusText,
                 snapshot.EntryCount,
                 snapshot.SkippedEntryCount));
@@ -383,8 +379,7 @@ public static class TranslationEnginesTab
             ImGui.TextWrapped(
                 string.Format(
                     CultureInfo.CurrentCulture,
-                    GetUiString(
-                        "DialogueGlossarySnapshotPath"),
+                    Resources.DialogueGlossarySnapshotPath,
                     snapshot.LastLoadPath));
         }
 
@@ -393,8 +388,7 @@ public static class TranslationEnginesTab
             ImGui.TextWrapped(
                 string.Format(
                     CultureInfo.CurrentCulture,
-                    GetUiString(
-                        "DialogueGlossarySnapshotUtc"),
+                    Resources.DialogueGlossarySnapshotUtc,
                     snapshot.LastLoadObservedAtUtc.Value.ToString(
                         "u",
                         CultureInfo.InvariantCulture)));
@@ -406,8 +400,7 @@ public static class TranslationEnginesTab
             ImGui.TextWrapped(
                 string.Format(
                     CultureInfo.CurrentCulture,
-                    GetUiString(
-                        "DialogueGlossarySnapshotFailure"),
+                    Resources.DialogueGlossarySnapshotFailure,
                     snapshot.LastLoadFailureDetail));
             ImGui.PopStyleColor();
         }
@@ -423,17 +416,6 @@ public static class TranslationEnginesTab
         ImGui.TextDisabled(title);
         ImGui.Separator();
         ImGui.Spacing();
-    }
-
-    /// <summary>
-    ///     Resolves one UI-facing localized string.
-    /// </summary>
-    /// <param name="resourceName">The resource key to resolve.</param>
-    /// <returns>The localized text or the key when missing.</returns>
-    private static string GetUiString(string resourceName)
-    {
-        return Resources.ResourceManager.GetString(resourceName, Resources.Culture) ??
-               resourceName;
     }
 
     /// <summary>

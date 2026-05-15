@@ -2098,3 +2098,40 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - expand the new glossary/debugger resource keys into the remaining localized
     `.resx` files if we want parity beyond base fallback + Portuguese
+
+## Iteration 55 - Enforce Direct Resource Access In UI
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - remove the remaining ad hoc UI text wrapper pattern from the branch work
+    so plugin UI and notifications use `Resources.Key` directly, matching the
+    repo rule and avoiding hidden fallback literals
+- Files touched:
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `PluginUI/Tabs/TranslationEnginesTab.cs`
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `PluginUI/Components/ModelDropdownUI.cs`
+  - `PluginUI/Tabs/TooltipTab.cs`
+  - `Properties/Resources.Designer.cs`
+  - `Echoglossian.xml`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - removed the branch-local `GetText` / `GetUiString` helper usage from the
+    LLM debugger, OpenAI-compatible provider UI, model dropdown, tooltip tab,
+    and dialogue override UI paths
+  - switched those call sites to direct `Resources.Key` access
+  - regenerated `Resources.Designer.cs` so the new and existing keys are
+    available through the strongly typed resource surface
+  - kept `Echoglossian.xml` in sync with the validated code change so the
+    committed XML documentation output matches the branch state
+- Behavior-sensitive risks:
+  - this cut is still presentation-only, but any missing strongly typed
+    resource property would now fail at build time instead of silently falling
+    back to inline English
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - make every selectable LLM engine use dynamic model-list refresh
+    consistently when live model fetching is enabled

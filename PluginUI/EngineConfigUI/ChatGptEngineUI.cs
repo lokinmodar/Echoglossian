@@ -29,8 +29,7 @@ public static class ChatGPTEngineUI
 
         ImGui.TextWrapped(
             settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible
-                ? GetText(
-                    "OpenAiProviderVariantCustomOpenAiCompatible")
+                ? Resources.OpenAiProviderVariantCustomOpenAiCompatible
                 : Resources.SettingsForChatGptTransText);
         ImGui.Spacing();
 
@@ -52,8 +51,7 @@ public static class ChatGPTEngineUI
         settings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
         if (settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible)
         {
-            ImGui.TextWrapped(GetText(
-                "OpenAiCompatibleProviderDescription"));
+            ImGui.TextWrapped(Resources.OpenAiCompatibleProviderDescription);
             ImGui.Spacing();
         }
 
@@ -99,22 +97,18 @@ public static class ChatGPTEngineUI
         var changed = false;
         var selectedVariant = config.OpenAiProviderVariant;
         var preview = selectedVariant == OpenAiProviderVariant.CustomOpenAICompatible
-            ? GetText(
-                "OpenAiProviderVariantCustomOpenAiCompatible")
-            : GetText(
-                "OpenAiProviderVariantOfficialOpenAi");
+            ? Resources.OpenAiProviderVariantCustomOpenAiCompatible
+            : Resources.OpenAiProviderVariantOfficialOpenAi;
 
         if (ImGui.BeginCombo(
-                GetText("OpenAiProviderVariantLabel"),
+                Resources.OpenAiProviderVariantLabel,
                 preview))
         {
             foreach (var variant in Enum.GetValues<OpenAiProviderVariant>())
             {
                 var label = variant == OpenAiProviderVariant.CustomOpenAICompatible
-                    ? GetText(
-                        "OpenAiProviderVariantCustomOpenAiCompatible")
-                    : GetText(
-                        "OpenAiProviderVariantOfficialOpenAi");
+                    ? Resources.OpenAiProviderVariantCustomOpenAiCompatible
+                    : Resources.OpenAiProviderVariantOfficialOpenAi;
                 var isSelected = variant == selectedVariant;
                 if (ImGui.Selectable(label, isSelected))
                 {
@@ -265,8 +259,7 @@ public static class ChatGPTEngineUI
             customLiveModelFetchAttempted &&
             !customLiveModelFetchSucceeded)
         {
-            ImGui.TextWrapped(GetText(
-                "OpenAiCompatibleLiveModelFetchFailed"));
+            ImGui.TextWrapped(Resources.OpenAiCompatibleLiveModelFetchFailed);
         }
 
         return changed;
@@ -324,8 +317,7 @@ public static class ChatGPTEngineUI
                 200,
                 out isInvalid);
             config.CustomOpenAiCompatibleModel = modelValue;
-            ImGui.TextWrapped(GetText(
-                "OpenAiCompatibleManualModelHint"));
+            ImGui.TextWrapped(Resources.OpenAiCompatibleManualModelHint);
         }
 
         return changed;
@@ -402,23 +394,12 @@ public static class ChatGPTEngineUI
     {
         return new Dictionary<string, string>
         {
-            ["gpt-3.5-turbo"] = GetText("ChatGptModelTooltipGpt35Turbo"),
-            ["gpt-3.5-turbo-16k"] = GetText("ChatGptModelTooltipGpt35Turbo16k"),
-            ["gpt-4"] = GetText("ChatGptModelTooltipGpt4"),
-            ["gpt-4-turbo"] = GetText("ChatGptModelTooltipGpt4Turbo"),
-            ["gpt-4o"] = GetText("ChatGptModelTooltipGpt4o"),
-            ["gpt-4o-mini"] = GetText("ChatGptModelTooltipGpt4oMini"),
+            ["gpt-3.5-turbo"] = Resources.ChatGptModelTooltipGpt35Turbo,
+            ["gpt-3.5-turbo-16k"] = Resources.ChatGptModelTooltipGpt35Turbo16k,
+            ["gpt-4"] = Resources.ChatGptModelTooltipGpt4,
+            ["gpt-4-turbo"] = Resources.ChatGptModelTooltipGpt4Turbo,
+            ["gpt-4o"] = Resources.ChatGptModelTooltipGpt4o,
+            ["gpt-4o-mini"] = Resources.ChatGptModelTooltipGpt4oMini,
         };
-    }
-
-    /// <summary>
-    /// Resolves a resource string.
-    /// </summary>
-    /// <param name="key">The resource key.</param>
-    /// <returns>The localized string or the key when missing.</returns>
-    private static string GetText(string key)
-    {
-        return Resources.ResourceManager.GetString(key, Resources.Culture) ??
-               key;
     }
 }
