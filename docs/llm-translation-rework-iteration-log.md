@@ -1526,3 +1526,33 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - verify in-game that the added separation improves readability without
     making the first tab feel too tall or repetitive
+
+## Iteration 39 - Translation Setup Group Spacing Follow-up
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - reduce the remaining crowding in the main setup tab and make the dialogue
+    override block read like its own nested option group inside the engine
+    section
+- Files touched:
+  - `PluginUI/PluginUI.cs`
+  - `PluginUI/Tabs/TranslationEnginesTab.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - increased the vertical break spacing between top-level groups in the first
+    setup tab
+  - added extra spacing before the `Dialogue LLM override` block inside the
+    translation engine section
+  - converted the `Dialogue LLM override` label into the same muted
+    header-plus-separator treatment used by the main setup groups so the block
+    reads as a distinct nested section
+- Behavior-sensitive risks:
+  - this is still configuration-layout-only and does not alter engine routing,
+    translation activation, or persistence behavior
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - verify in-game whether the first tab now has enough breathing room without
+    forcing too much extra scrolling on smaller window sizes

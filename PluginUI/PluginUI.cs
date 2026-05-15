@@ -196,6 +196,7 @@ public partial class Echoglossian
   {
     ImGui.Spacing();
     ImGui.Spacing();
+    ImGui.Spacing();
   }
 
   /// <summary>

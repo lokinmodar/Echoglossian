@@ -113,6 +113,7 @@ public static class TranslationEnginesTab
 
         ImGui.EndGroup();
         ImGui.Separator();
+        ImGui.Spacing();
         changed |= DrawDialogueOverrideSection(
             config,
             promptManager,
@@ -222,7 +223,7 @@ public static class TranslationEnginesTab
         Action rebuildTranslationService)
     {
         var changed = false;
-        ImGui.TextUnformatted(
+        DrawSubsectionHeader(
             GetUiString(
                 "DialogueLlmOverrideSectionLabel",
                 "Dialogue LLM override"));
@@ -310,6 +311,18 @@ public static class TranslationEnginesTab
         ImGui.EndDisabled();
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Draws a muted subsection header used to visually separate nested
+    ///     configuration groups inside the translation engine section.
+    /// </summary>
+    /// <param name="title">The subsection title to render.</param>
+    private static void DrawSubsectionHeader(string title)
+    {
+        ImGui.TextDisabled(title);
+        ImGui.Separator();
+        ImGui.Spacing();
     }
 
     /// <summary>
