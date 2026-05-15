@@ -1747,3 +1747,31 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - carry the same OpenAI-compatible structured path to `DeepSeek` or
     `LM Studio`, reusing the same JSON helper
+
+## Iteration 45 - Issue 148 LM Studio Structured Dialogue Path
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - carry the same OpenAI-compatible structured dialogue path to the first
+    local LLM backend without changing the legacy fallback semantics
+- Files touched:
+  - `Translators/LmStudioTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - updated `LmStudioTranslator` so the dialogue-context path now:
+    - tries one forced function-tool request first
+    - reuses the shared OpenAI-compatible JSON helper and structured response
+      validator
+    - falls back automatically to the old plain-text request path when the
+      local backend ignores tool calling, returns malformed JSON, or fails
+- Behavior-sensitive risks:
+  - some local OpenAI-compatible servers may only partially support strict tool
+    calling; this cut treats any malformed or missing structured payload as a
+    soft failure and reruns the legacy path
+  - only the dialogue-context path attempts structured output
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - carry the same OpenAI-compatible structured path to `DeepSeek`
