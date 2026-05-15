@@ -2135,3 +2135,51 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - make every selectable LLM engine use dynamic model-list refresh
     consistently when live model fetching is enabled
+
+## Iteration 56 - Refresh Live LLM Model Lists Dynamically
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - make every selectable LLM engine refresh its live model catalog
+    consistently from the provider API when live model fetching is enabled,
+    instead of leaving some UIs stuck on predefined defaults
+- Files touched:
+  - `PluginUI/EngineConfigUI/LiveModelRefreshCoordinator.cs`
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `PluginUI/EngineConfigUI/ClaudeEngineUI.cs`
+  - `PluginUI/EngineConfigUI/DeepSeekEngineUI.cs`
+  - `PluginUI/EngineConfigUI/GeminiEngineUI.cs`
+  - `PluginUI/EngineConfigUI/LibreTranslateEngineUI.cs`
+  - `PluginUI/EngineConfigUI/LmStudioEngineUI.cs`
+  - `PluginUI/EngineConfigUI/OllamaEngineUI.cs`
+  - `PluginUI/EngineConfigUI/OpenRouterEngineUI.cs`
+  - `PluginUI/Helpers/FieldValidationHelper.cs`
+  - `PluginUI/Helpers/UIWarningHelpers.cs`
+  - `Translators/LmStudio/LmStudioModelManager.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a shared coordinator so live model refreshes trigger once per input
+    signature instead of every frame
+  - `Gemini` now actually binds its dropdown to `GeminiModelManager`
+    whenever `Fetch live models` is enabled
+  - `ChatGPT/OpenAI-family`, `Claude`, `DeepSeek`, `OpenRouter`, `Ollama`,
+    and `LM Studio` now auto-refresh on first enable and when the relevant
+    API key or endpoint changes, while still exposing `Reload`
+  - `LM Studio` gained the same `ResetToDefault()` fallback surface already
+    used by the other managers
+  - removed the remaining `ResourceManager.GetString(... ) ?? ...` UI
+    fallbacks found during the sweep so the branch stays aligned with direct
+    `Resources.Key` usage
+- Behavior-sensitive risks:
+  - live model refresh is now more eager when credentials or endpoints change,
+    so transient provider errors will show up sooner instead of waiting for a
+    manual reload
+  - the predefined static model lists remain as the fallback path when live
+    fetch is disabled or a provider refresh fails
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether the debugger should expose per-engine live model refresh
+    status beyond the current OpenAI-family diagnostics

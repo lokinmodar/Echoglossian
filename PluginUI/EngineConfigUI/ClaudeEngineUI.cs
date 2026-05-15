@@ -13,6 +13,8 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class ClaudeEngineUI
 {
+    private const string LiveModelRefreshScope = "Claude";
+
     /// <summary>
     ///     Draws the Claude configuration panel.
     /// </summary>
@@ -26,11 +28,7 @@ public static class ClaudeEngineUI
         ImGui.TextWrapped(Resources.SettingsForClaudeText);
         ImGui.Spacing();
 
-        if (ImGui.Button(
-                Resources.ResourceManager.GetString(
-                    "OpenAnthropicApiKeys",
-                    Resources.Culture) ??
-                "Open Anthropic API Keys"))
+        if (ImGui.Button(Resources.OpenAnthropicApiKeys))
         {
             Process.Start(
                 new ProcessStartInfo
@@ -60,26 +58,48 @@ public static class ClaudeEngineUI
             changed = true;
             if (config.UseLiveClaudeModelList && !previous)
             {
-                _ = Task.Run(() => ClaudeModelManager.RefreshAsync(
-                    config.ClaudeApiKey,
-                    config.ClaudeBaseUrl));
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => ClaudeModelManager.RefreshAsync(
+                        config.ClaudeApiKey,
+                        config.ClaudeBaseUrl));
             }
             else if (!config.UseLiveClaudeModelList)
             {
                 ClaudeModelManager.ResetToDefault();
+                LiveModelRefreshCoordinator.Clear(LiveModelRefreshScope);
             }
         }
 
+        if (config.UseLiveClaudeModelList)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(Resources.Reload))
+            {
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => ClaudeModelManager.RefreshAsync(
+                        config.ClaudeApiKey,
+                        config.ClaudeBaseUrl));
+            }
+        }
+
+        LiveModelRefreshCoordinator.RequestIfNeeded(
+            LiveModelRefreshScope,
+            config.UseLiveClaudeModelList,
+            BuildLiveModelRefreshSignature(config),
+            () => ClaudeModelManager.RefreshAsync(
+                config.ClaudeApiKey,
+                config.ClaudeBaseUrl));
+
         var tooltips = new Dictionary<string, string>
         {
-            ["claude-sonnet-4-20250514"] = Resources.ResourceManager.GetString("ClaudeModelTooltipSonnet4", Resources.Culture) ??
-                                           "Balanced quality, latency, and cost for general translation.",
-            ["claude-3-7-sonnet-latest"] = Resources.ResourceManager.GetString("ClaudeModelTooltipSonnet37", Resources.Culture) ??
-                                           "Strong general-purpose Claude alias with broad capability.",
-            ["claude-3-5-haiku-latest"] = Resources.ResourceManager.GetString("ClaudeModelTooltipHaiku35", Resources.Culture) ??
-                                          "Fastest Claude tier for lower latency and lower cost.",
-            ["claude-opus-4-1-20250805"] = Resources.ResourceManager.GetString("ClaudeModelTooltipOpus41", Resources.Culture) ??
-                                           "Highest-tier Claude model when you want maximum quality.",
+            ["claude-sonnet-4-20250514"] = Resources.ClaudeModelTooltipSonnet4,
+            ["claude-3-7-sonnet-latest"] = Resources.ClaudeModelTooltipSonnet37,
+            ["claude-3-5-haiku-latest"] = Resources.ClaudeModelTooltipHaiku35,
+            ["claude-opus-4-1-20250805"] = Resources.ClaudeModelTooltipOpus41,
         };
 
         var models = config.UseLiveClaudeModelList
@@ -113,5 +133,10 @@ public static class ClaudeEngineUI
         }
 
         return changed;
+    }
+
+    private static string BuildLiveModelRefreshSignature(Config config)
+    {
+        return $"apiKey={config.ClaudeApiKey?.Trim()}|baseUrl={config.ClaudeBaseUrl?.Trim()}";
     }
 }

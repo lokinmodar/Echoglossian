@@ -19619,9 +19619,17 @@
             <param name="variant">The provider variant being edited.</param>
             <param name="enabled">Whether live model listing is enabled.</param>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.RequestLiveModelRefresh(Echoglossian.Config,Echoglossian.OpenAiProviderVariant)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.ForceLiveModelRefresh(Echoglossian.Config,Echoglossian.OpenAiProviderVariant)">
             <summary>
-            Starts a live model refresh for the selected provider variant.
+                Forces a live model refresh for the selected provider variant.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="variant">The provider variant being refreshed.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.RequestLiveModelRefreshIfNeeded(Echoglossian.Config,Echoglossian.OpenAiProviderVariant)">
+            <summary>
+                Requests a refresh only when the active provider inputs changed
+                while live model fetching remains enabled.
             </summary>
             <param name="config">The active plugin configuration.</param>
             <param name="variant">The provider variant being refreshed.</param>
@@ -19633,6 +19641,29 @@
             </summary>
             <param name="apiKey">The custom provider API key.</param>
             <param name="baseUrl">The custom provider base URL.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.RefreshLiveModelsAsync(Echoglossian.Config,Echoglossian.OpenAiProviderVariant)">
+            <summary>
+                Refreshes the live model list for the selected provider variant.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="variant">The provider variant being refreshed.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.BuildLiveModelRefreshSignature(Echoglossian.Config,Echoglossian.OpenAiProviderVariant)">
+            <summary>
+                Builds the refresh signature for the selected provider variant.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="variant">The provider variant being refreshed.</param>
+            <returns>The stable refresh signature.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.GetLiveModelRefreshScope(Echoglossian.OpenAiProviderVariant)">
+            <summary>
+                Resolves the refresh coordinator scope for the selected provider
+                variant.
+            </summary>
+            <param name="variant">The provider variant being refreshed.</param>
+            <returns>The refresh scope key.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.BuildOfficialModelTooltips">
             <summary>
@@ -19674,6 +19705,44 @@
             <summary>
             Renders the configuration UI for GTranslate.
             </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator">
+            <summary>
+                Coordinates one-shot live model refresh requests for engine
+                configuration UIs so refreshes happen when inputs change instead of on
+                every frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.Clear(System.String)">
+            <summary>
+                Clears retained refresh state for the provided UI scope.
+            </summary>
+            <param name="scope">The stable scope key.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.ForceRefresh(System.String,System.String,System.Func{System.Threading.Tasks.Task})">
+            <summary>
+                Forces a refresh for the provided scope with the current signature.
+            </summary>
+            <param name="scope">The stable scope key.</param>
+            <param name="signature">The current refresh signature.</param>
+            <param name="refreshAsync">The refresh work to execute.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RequestIfNeeded(System.String,System.Boolean,System.String,System.Func{System.Threading.Tasks.Task})">
+            <summary>
+                Requests a refresh when live listing is enabled and the input
+                signature differs from the last request for the same scope.
+            </summary>
+            <param name="scope">The stable scope key.</param>
+            <param name="enabled">Whether live model listing is enabled.</param>
+            <param name="signature">The current refresh signature.</param>
+            <param name="refreshAsync">The refresh work to execute.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RunRefreshAsync(System.String,System.Func{System.Threading.Tasks.Task})">
+            <summary>
+                Runs refresh work while releasing the scope lock afterward.
+            </summary>
+            <param name="scope">The stable scope key.</param>
+            <param name="refreshAsync">The refresh work to execute.</param>
         </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI">
             <summary>
@@ -23687,6 +23756,11 @@
         <member name="P:Echoglossian.Translators.LmStudio.LmStudioModelManager.CurrentModelList">
             <summary>
                 Gets the current list of LM Studio models.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.LmStudio.LmStudioModelManager.ResetToDefault">
+            <summary>
+                Restores the committed fallback model list.
             </summary>
         </member>
         <member name="M:Echoglossian.Translators.LmStudio.LmStudioModelManager.RefreshAsync(System.String,System.String)">

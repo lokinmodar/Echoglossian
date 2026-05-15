@@ -10,6 +10,8 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 
 public static class ChatGPTEngineUI
 {
+    private const string CustomLiveModelRefreshScope = "OpenAICompatible";
+    private const string OfficialLiveModelRefreshScope = "OpenAI";
     private static OpenAiProviderVariant lastRenderedVariant =
         OpenAiProviderVariant.OfficialOpenAI;
 
@@ -139,7 +141,7 @@ public static class ChatGPTEngineUI
             var activeSettings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
             if (activeSettings.UseLiveModelList)
             {
-                RequestLiveModelRefresh(config, activeSettings.Variant);
+                ForceLiveModelRefresh(config, activeSettings.Variant);
             }
         }
 
@@ -235,13 +237,14 @@ public static class ChatGPTEngineUI
             SetUseLiveModelToggle(config, settings.Variant, useLiveModels);
             if (useLiveModels && !previousUseLiveModels)
             {
-                RequestLiveModelRefresh(config, settings.Variant);
+                ForceLiveModelRefresh(config, settings.Variant);
             }
             else if (!useLiveModels)
             {
                 OpenAIModelManager.ResetToDefault();
                 customLiveModelFetchAttempted = false;
                 customLiveModelFetchSucceeded = false;
+                LiveModelRefreshCoordinator.Clear(GetLiveModelRefreshScope(settings.Variant));
             }
         }
 
@@ -250,9 +253,11 @@ public static class ChatGPTEngineUI
             ImGui.SameLine();
             if (ImGui.Button(Resources.Reload))
             {
-                RequestLiveModelRefresh(config, settings.Variant);
+                ForceLiveModelRefresh(config, settings.Variant);
             }
         }
+
+        RequestLiveModelRefreshIfNeeded(config, settings.Variant);
 
         if (settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible &&
             useLiveModels &&
@@ -345,28 +350,38 @@ public static class ChatGPTEngineUI
     }
 
     /// <summary>
-    /// Starts a live model refresh for the selected provider variant.
+    ///     Forces a live model refresh for the selected provider variant.
     /// </summary>
     /// <param name="config">The active plugin configuration.</param>
     /// <param name="variant">The provider variant being refreshed.</param>
-    private static void RequestLiveModelRefresh(
+    private static void ForceLiveModelRefresh(
         Config config,
         OpenAiProviderVariant variant)
     {
-        if (variant == OpenAiProviderVariant.CustomOpenAICompatible)
-        {
-            customLiveModelFetchAttempted = true;
-            string apiKey = config.CustomOpenAiCompatibleApiKey ?? string.Empty;
-            string baseUrl = config.CustomOpenAiCompatibleBaseUrl ?? string.Empty;
-            _ = RefreshCustomLiveModelsAsync(
-                apiKey,
-                baseUrl);
-        }
-        else
-        {
-            string apiKey = config.ChatGptApiKey ?? string.Empty;
-            _ = OpenAIModelManager.RefreshAsync(apiKey);
-        }
+        LiveModelRefreshCoordinator.ForceRefresh(
+            GetLiveModelRefreshScope(variant),
+            BuildLiveModelRefreshSignature(config, variant),
+            () => RefreshLiveModelsAsync(config, variant));
+    }
+
+    /// <summary>
+    ///     Requests a refresh only when the active provider inputs changed
+    ///     while live model fetching remains enabled.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="variant">The provider variant being refreshed.</param>
+    private static void RequestLiveModelRefreshIfNeeded(
+        Config config,
+        OpenAiProviderVariant variant)
+    {
+        var useLiveModels = variant == OpenAiProviderVariant.CustomOpenAICompatible
+            ? config.UseLiveCustomOpenAiCompatibleModelList
+            : config.UseLiveOpenAIModelList;
+        LiveModelRefreshCoordinator.RequestIfNeeded(
+            GetLiveModelRefreshScope(variant),
+            useLiveModels,
+            BuildLiveModelRefreshSignature(config, variant),
+            () => RefreshLiveModelsAsync(config, variant));
     }
 
     /// <summary>
@@ -384,6 +399,61 @@ public static class ChatGPTEngineUI
                 apiKey,
                 baseUrl,
                 "OpenAI-Compatible");
+    }
+
+    /// <summary>
+    ///     Refreshes the live model list for the selected provider variant.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="variant">The provider variant being refreshed.</param>
+    private static async Task RefreshLiveModelsAsync(
+        Config config,
+        OpenAiProviderVariant variant)
+    {
+        if (variant == OpenAiProviderVariant.CustomOpenAICompatible)
+        {
+            customLiveModelFetchAttempted = true;
+            string apiKey = config.CustomOpenAiCompatibleApiKey ?? string.Empty;
+            string baseUrl = config.CustomOpenAiCompatibleBaseUrl ?? string.Empty;
+            await RefreshCustomLiveModelsAsync(apiKey, baseUrl);
+            return;
+        }
+
+        string officialApiKey = config.ChatGptApiKey ?? string.Empty;
+        string officialBaseUrl = config.ChatGPTBaseUrl ?? string.Empty;
+        await OpenAIModelManager.RefreshAsync(officialApiKey, officialBaseUrl, "OpenAI");
+    }
+
+    /// <summary>
+    ///     Builds the refresh signature for the selected provider variant.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="variant">The provider variant being refreshed.</param>
+    /// <returns>The stable refresh signature.</returns>
+    private static string BuildLiveModelRefreshSignature(
+        Config config,
+        OpenAiProviderVariant variant)
+    {
+        if (variant == OpenAiProviderVariant.CustomOpenAICompatible)
+        {
+            return
+                $"apiKey={config.CustomOpenAiCompatibleApiKey?.Trim()}|baseUrl={config.CustomOpenAiCompatibleBaseUrl?.Trim()}";
+        }
+
+        return $"apiKey={config.ChatGptApiKey?.Trim()}|baseUrl={config.ChatGPTBaseUrl?.Trim()}";
+    }
+
+    /// <summary>
+    ///     Resolves the refresh coordinator scope for the selected provider
+    ///     variant.
+    /// </summary>
+    /// <param name="variant">The provider variant being refreshed.</param>
+    /// <returns>The refresh scope key.</returns>
+    private static string GetLiveModelRefreshScope(OpenAiProviderVariant variant)
+    {
+        return variant == OpenAiProviderVariant.CustomOpenAICompatible
+            ? CustomLiveModelRefreshScope
+            : OfficialLiveModelRefreshScope;
     }
 
     /// <summary>

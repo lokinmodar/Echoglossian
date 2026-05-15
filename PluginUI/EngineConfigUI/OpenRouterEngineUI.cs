@@ -11,8 +11,7 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 
 public static class OpenRouterEngineUI
 {
-    private static List<LlmTextModel> models =
-        OpenRouterModelManager.CurrentModelList;
+    private const string LiveModelRefreshScope = "OpenRouter";
 
     public static bool Draw(Config config, PromptTemplateManager promptManager)
     {
@@ -39,7 +38,6 @@ public static class OpenRouterEngineUI
             out isBaseUrlInvalid);
         config.OpenRouterBaseUrl = baseUrl;
 
-        // Live model list toggle
         var newToggle = config.UseLiveOpenRouterModelList;
         if (ImGui.Checkbox(Resources.FetchLiveModels, ref newToggle))
         {
@@ -48,22 +46,46 @@ public static class OpenRouterEngineUI
 
             if (newToggle)
             {
-                Task.Run(async () =>
-                {
-                    await OpenRouterModelManager.RefreshAsync(
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => OpenRouterModelManager.RefreshAsync(
                         config.OpenRouterApiKey ?? string.Empty,
-                        config.OpenRouterBaseUrl ?? string.Empty);
-                    models = OpenRouterModelManager.CurrentModelList;
-                });
+                        config.OpenRouterBaseUrl ?? string.Empty));
             }
             else
             {
                 OpenRouterModelManager.ResetToDefault();
-                models = OpenRouterModelManager.CurrentModelList;
+                LiveModelRefreshCoordinator.Clear(LiveModelRefreshScope);
             }
         }
 
-        // Dropdown model selection
+        if (config.UseLiveOpenRouterModelList)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(Resources.Reload))
+            {
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => OpenRouterModelManager.RefreshAsync(
+                        config.OpenRouterApiKey ?? string.Empty,
+                        config.OpenRouterBaseUrl ?? string.Empty));
+            }
+        }
+
+        LiveModelRefreshCoordinator.RequestIfNeeded(
+            LiveModelRefreshScope,
+            config.UseLiveOpenRouterModelList,
+            BuildLiveModelRefreshSignature(config),
+            () => OpenRouterModelManager.RefreshAsync(
+                config.OpenRouterApiKey ?? string.Empty,
+                config.OpenRouterBaseUrl ?? string.Empty));
+
+        var models = config.UseLiveOpenRouterModelList
+            ? OpenRouterModelManager.CurrentModelList
+            : OpenRouterTextModelDefaults.PredefinedModels;
+
         var model = config.OpenRouterModel ?? string.Empty;
         changed |= ModelDropdownUI.Draw(
             Resources.LLMModel,
@@ -92,5 +114,11 @@ public static class OpenRouterEngineUI
         }
 
         return changed;
+    }
+
+    private static string BuildLiveModelRefreshSignature(Config config)
+    {
+        return
+            $"apiKey={config.OpenRouterApiKey?.Trim()}|baseUrl={config.OpenRouterBaseUrl?.Trim()}";
     }
 }

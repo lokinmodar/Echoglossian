@@ -1,0 +1,116 @@
+// <copyright file="LiveModelRefreshCoordinator.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+namespace Echoglossian.PluginUI.EngineConfigUI;
+
+/// <summary>
+///     Coordinates one-shot live model refresh requests for engine
+///     configuration UIs so refreshes happen when inputs change instead of on
+///     every frame.
+/// </summary>
+public static class LiveModelRefreshCoordinator
+{
+    private static readonly HashSet<string> InFlightScopes = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, string> RequestedSignatures = new(StringComparer.Ordinal);
+    private static readonly object SyncLock = new();
+
+    /// <summary>
+    ///     Clears retained refresh state for the provided UI scope.
+    /// </summary>
+    /// <param name="scope">The stable scope key.</param>
+    public static void Clear(string scope)
+    {
+        lock (SyncLock)
+        {
+            InFlightScopes.Remove(scope);
+            RequestedSignatures.Remove(scope);
+        }
+    }
+
+    /// <summary>
+    ///     Forces a refresh for the provided scope with the current signature.
+    /// </summary>
+    /// <param name="scope">The stable scope key.</param>
+    /// <param name="signature">The current refresh signature.</param>
+    /// <param name="refreshAsync">The refresh work to execute.</param>
+    public static void ForceRefresh(
+        string scope,
+        string signature,
+        Func<Task> refreshAsync)
+    {
+        lock (SyncLock)
+        {
+            RequestedSignatures[scope] = signature;
+            if (!InFlightScopes.Add(scope))
+            {
+                return;
+            }
+        }
+
+        _ = RunRefreshAsync(scope, refreshAsync);
+    }
+
+    /// <summary>
+    ///     Requests a refresh when live listing is enabled and the input
+    ///     signature differs from the last request for the same scope.
+    /// </summary>
+    /// <param name="scope">The stable scope key.</param>
+    /// <param name="enabled">Whether live model listing is enabled.</param>
+    /// <param name="signature">The current refresh signature.</param>
+    /// <param name="refreshAsync">The refresh work to execute.</param>
+    public static void RequestIfNeeded(
+        string scope,
+        bool enabled,
+        string signature,
+        Func<Task> refreshAsync)
+    {
+        if (!enabled)
+        {
+            Clear(scope);
+            return;
+        }
+
+        lock (SyncLock)
+        {
+            if (InFlightScopes.Contains(scope))
+            {
+                return;
+            }
+
+            if (RequestedSignatures.TryGetValue(scope, out string? previousSignature) &&
+                string.Equals(previousSignature, signature, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            RequestedSignatures[scope] = signature;
+            InFlightScopes.Add(scope);
+        }
+
+        _ = RunRefreshAsync(scope, refreshAsync);
+    }
+
+    /// <summary>
+    ///     Runs refresh work while releasing the scope lock afterward.
+    /// </summary>
+    /// <param name="scope">The stable scope key.</param>
+    /// <param name="refreshAsync">The refresh work to execute.</param>
+    private static async Task RunRefreshAsync(
+        string scope,
+        Func<Task> refreshAsync)
+    {
+        try
+        {
+            await refreshAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            lock (SyncLock)
+            {
+                InFlightScopes.Remove(scope);
+            }
+        }
+    }
+}

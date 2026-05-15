@@ -10,6 +10,8 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 
 public static class DeepSeekEngineUI
 {
+    private const string LiveModelRefreshScope = "DeepSeek";
+
     public static bool Draw(Config config, PromptTemplateManager promptManager)
     {
         var changed = false;
@@ -34,7 +36,6 @@ public static class DeepSeekEngineUI
             out isEndpointInvalid);
         config.DeepSeekBaseUrl = endpoint;
 
-        // Live model fetch toggle
         var prev = config.UseLiveDeepSeekModelList;
         if (ImGui.Checkbox(
                 Resources.FetchLiveModels,
@@ -43,22 +44,46 @@ public static class DeepSeekEngineUI
             changed = true;
             if (config.UseLiveDeepSeekModelList && !prev)
             {
-                _ = Task.Run(() => DeepSeekModelManager.RefreshAsync(
-                    config.DeepSeekTranslatorApiKey ?? string.Empty,
-                    config.DeepSeekBaseUrl ?? string.Empty));
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => DeepSeekModelManager.RefreshAsync(
+                        config.DeepSeekTranslatorApiKey ?? string.Empty,
+                        config.DeepSeekBaseUrl ?? string.Empty));
             }
             else if (!config.UseLiveDeepSeekModelList)
             {
                 DeepSeekModelManager.ResetToDefault();
+                LiveModelRefreshCoordinator.Clear(LiveModelRefreshScope);
             }
         }
 
+        if (config.UseLiveDeepSeekModelList)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(Resources.Reload))
+            {
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => DeepSeekModelManager.RefreshAsync(
+                        config.DeepSeekTranslatorApiKey ?? string.Empty,
+                        config.DeepSeekBaseUrl ?? string.Empty));
+            }
+        }
+
+        LiveModelRefreshCoordinator.RequestIfNeeded(
+            LiveModelRefreshScope,
+            config.UseLiveDeepSeekModelList,
+            BuildLiveModelRefreshSignature(config),
+            () => DeepSeekModelManager.RefreshAsync(
+                config.DeepSeekTranslatorApiKey ?? string.Empty,
+                config.DeepSeekBaseUrl ?? string.Empty));
+
         var tooltips = new Dictionary<string, string>
         {
-            ["deepseek-chat"] = Resources.ResourceManager.GetString("DeepSeekModelTooltipChat", Resources.Culture) ??
-                                "💬 Optimized for general chat and speed",
-            ["deepseek-reasoner"] = Resources.ResourceManager.GetString("DeepSeekModelTooltipReasoner", Resources.Culture) ??
-                                    "🧠 Reasoning and problem-solving tasks",
+            ["deepseek-chat"] = Resources.DeepSeekModelTooltipChat,
+            ["deepseek-reasoner"] = Resources.DeepSeekModelTooltipReasoner,
         };
 
         var models = config.UseLiveDeepSeekModelList
@@ -87,5 +112,11 @@ public static class DeepSeekEngineUI
         }
 
         return changed;
+    }
+
+    private static string BuildLiveModelRefreshSignature(Config config)
+    {
+        return
+            $"apiKey={config.DeepSeekTranslatorApiKey?.Trim()}|baseUrl={config.DeepSeekBaseUrl?.Trim()}";
     }
 }
