@@ -1805,3 +1805,37 @@ turning into an opaque pile of partial changes.
   - verify in-game across the currently wired structured providers before
     deciding whether to extend the same pattern to additional dialogue-family
     engines
+
+## Iteration 47 - Issue 148 Gemini Structured Dialogue Path
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - add the first Gemini-specific structured dialogue path using the provider's
+    documented JSON schema response format while preserving the current
+    plain-text fallback
+- Files touched:
+  - `Translators/GeminiTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - updated `GeminiTranslator` so the dialogue-context path now:
+    - tries one structured `responseFormat` request first
+    - reuses the shared structured request payload serializer and structured
+      response validator
+    - falls back automatically to the existing plain-text path when Gemini
+      rejects the schema, returns malformed JSON, or otherwise fails
+- Provider notes:
+  - based on the Gemini structured output documentation, this path uses
+    `generationConfig.responseFormat.text.mimeType=application/json` plus the
+    narrow dialogue schema
+  - only the dialogue-context path attempts structured output
+- Behavior-sensitive risks:
+  - some configured Gemini models may claim support but still return malformed
+    JSON or partial content; this cut treats all of that as a soft failure and
+    reruns the legacy path
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - evaluate whether `Ollama` should use its documented schema `format` path
+    or stay on plain-text until there is a stronger in-game need

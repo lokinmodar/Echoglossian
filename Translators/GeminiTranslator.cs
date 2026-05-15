@@ -153,6 +153,21 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
         string cacheKey,
         DialogueTranslationContext? dialogueContext = null)
     {
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation =
+                await this.TryTranslateStructuredDialogueAsync(
+                    text,
+                    sourceLanguage,
+                    targetLanguage,
+                    cacheKey,
+                    dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
+
         var prompt = this.BuildPrompt(
             text,
             sourceLanguage,
@@ -276,6 +291,138 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
         }
 
         return string.Empty;
+    }
+
+    /// <summary>
+    ///     Attempts the Gemini structured dialogue path and falls back to the
+    ///     legacy plain-text request on incompatibility or malformed provider
+    ///     output.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The normalized request cache key.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the legacy path can run.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.Gemini) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
+
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest =
+                StructuredDialogueTranslationRequestBuilder.Build(
+                    normalizedText,
+                    sourceLanguage,
+                    targetLanguage,
+                    TranslationSurfaceGroup.Dialogue,
+                    dialogueContext);
+            var basePrompt = PromptTemplateManager.RenderPrompt(
+                this.promptTemplate,
+                normalizedText,
+                sourceLanguage,
+                targetLanguage);
+            var structuredPrompt =
+                $"{basePrompt}\n\n" +
+                "Return only a JSON object that matches the provided response schema. " +
+                "Do not answer with prose, markdown, or code fences.\n\n" +
+                "Structured dialogue request JSON:\n" +
+                StructuredDialogueOpenAiToolHelper.SerializeRequestPayload(
+                    structuredRequest);
+            var requestData = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new[]
+                        {
+                            new
+                            {
+                                text = structuredPrompt,
+                            },
+                        },
+                    },
+                },
+                generationConfig = new
+                {
+                    this.temperature,
+                    responseFormat = new
+                    {
+                        text = new
+                        {
+                            mimeType = "application/json",
+                            schema = JObject.Parse(
+                                StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                        },
+                    },
+                },
+            };
+
+            var jsonContent = JsonConvert.SerializeObject(requestData);
+            var httpContent = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
+            var baseUrl =
+                $"https://generativelanguage.googleapis.com/v1beta/models/{this.model}:generateContent?key={this.apiKey}";
+
+            var response =
+                await this.httpClient!.PostAsync(baseUrl, httpContent)
+                    .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var responseString =
+                await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var responseObject = JObject.Parse(responseString);
+            var rawStructuredPayload =
+                responseObject["candidates"]?[0]?["content"]?["parts"]?[0]?
+                    ["text"]?.ToString();
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"Gemini structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                this.translationCache.Remember(
+                    cacheKey,
+                    translatedText);
+                return translatedText;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"Gemini structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
     }
 
     private string BuildPrompt(
