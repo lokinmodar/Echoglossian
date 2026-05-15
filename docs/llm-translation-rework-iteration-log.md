@@ -1875,3 +1875,44 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether `Claude` should stay disabled for structured mode until a
     provider-specific contract proves stable enough
+
+## Iteration 49 - Issue 148 Claude Structured Dialogue Path
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - add the first Claude-specific structured dialogue path using Anthropic tool
+    use with `input_schema`, while preserving the current plain-text fallback
+- Files touched:
+  - `Translators/Helpers/StructuredDialogueCapabilityHelper.cs`
+  - `Translators/Helpers/StructuredDialogueAnthropicToolHelper.cs`
+  - `Translators/ClaudeTranslator.cs`
+  - `Echoglossian.Tests/StructuredDialogueAnthropicToolHelperTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - upgraded Claude from `Disabled` to `JsonSchema` in the structured-capability
+    helper
+  - added a narrow Anthropic helper to:
+    - expose the stable tool name/description
+    - reuse the shared structured schema
+    - extract compact JSON from Claude `tool_use` blocks
+  - updated `ClaudeTranslator` so the dialogue-context path now:
+    - sends one tool-use request first with `tools` and `tool_choice`
+    - validates the returned tool input with the shared structured response
+      validator
+    - falls back automatically to the existing plain-text path when no valid
+      `tool_use` payload is returned
+- Provider notes:
+  - this path follows the Anthropic Messages API tool-use contract instead of
+    relying on "JSON in prose"
+  - only the dialogue-context path attempts structured output
+- Behavior-sensitive risks:
+  - some Claude models may still choose odd tool-use behavior or no tool use
+    for some prompts; this cut treats that as a soft failure and reruns the
+    legacy path
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - re-evaluate the issue-148 plan/doc wording now that every major dialogue
+    LLM family in the branch has at least one first structured path

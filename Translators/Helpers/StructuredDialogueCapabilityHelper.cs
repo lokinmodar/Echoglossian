@@ -28,7 +28,7 @@ public static class StructuredDialogueCapabilityHelper
       Echoglossian.TransEngines.LmStudio => StructuredDialogueProviderCapability.JsonSchema,
       Echoglossian.TransEngines.Ollama => StructuredDialogueProviderCapability.JsonSchema,
       Echoglossian.TransEngines.Gemini => StructuredDialogueProviderCapability.JsonSchema,
-      Echoglossian.TransEngines.Claude => StructuredDialogueProviderCapability.Disabled,
+      Echoglossian.TransEngines.Claude => StructuredDialogueProviderCapability.JsonSchema,
       _ => StructuredDialogueProviderCapability.Disabled,
     };
   }
