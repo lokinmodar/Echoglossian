@@ -1587,3 +1587,44 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - start phase `148.1` by introducing the shared structured request/response
     contracts and the first validation helper for structured dialogue output
+
+## Iteration 41 - Issue 148 Structured Contracts Foundation
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - start phase `148.1` with shared structured dialogue contracts and a narrow
+    request-builder foundation that reuses the current runtime-only dialogue
+    context path instead of inventing a parallel pipeline
+- Files touched:
+  - `Translators/StructuredDialogueProviderCapability.cs`
+  - `Translators/StructuredDialogueContextTurn.cs`
+  - `Translators/StructuredDialogueGlossaryEntry.cs`
+  - `Translators/StructuredDialogueTranslationMetadata.cs`
+  - `Translators/StructuredDialogueTranslationRequest.cs`
+  - `Translators/StructuredDialogueTranslationResponse.cs`
+  - `Translators/Helpers/StructuredDialogueCapabilityHelper.cs`
+  - `Translators/Helpers/StructuredDialogueTranslationRequestBuilder.cs`
+  - `Echoglossian.Tests/StructuredDialogueCapabilityHelperTests.cs`
+  - `Echoglossian.Tests/StructuredDialogueTranslationRequestBuilderTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - introduced shared structured request/response record types for
+    dialogue-family LLM work
+  - introduced a provider-capability enum plus a first-pass capability helper
+    for structured dialogue support
+  - added a request builder that projects the existing `DialogueTranslationContext`
+    into the new structured contract, including glossary rows and optional
+    metadata hints
+  - added tests covering the capability mapping and request-builder projection
+- Behavior-sensitive risks:
+  - no live translator behavior changed yet
+  - this is shared foundation only, so any future provider wiring still has to
+    choose where structured mode is attempted and how failures fall back
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - add the first structured dialogue response-validation helper so the future
+    provider wiring has one shared acceptance gate instead of bespoke JSON-mode
+    checks per engine
