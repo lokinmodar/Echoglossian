@@ -172,8 +172,7 @@ public static class TranslationEnginesTab
                         $"OllamaEngineUI failed: {ex.Message}, {ex.StackTrace}");
                     ImGui.TextColored(
                         new Vector4(1f, 0.4f, 0.4f, 1f),
-                        Resources.ResourceManager.GetString("OllamaEngineUiFailedToRender", Resources.Culture) ??
-                        "Ollama engine UI failed to render.");
+                        GetUiString("OllamaEngineUiFailedToRender"));
                 }
 
                 break;
@@ -229,18 +228,12 @@ public static class TranslationEnginesTab
     {
         var changed = false;
         DrawSubsectionHeader(
-            GetUiString(
-                "DialogueLlmOverrideSectionLabel",
-                "Dialogue LLM override"));
+            GetUiString("DialogueLlmOverrideSectionLabel"));
         ImGui.TextWrapped(
-            GetUiString(
-                "DialogueLlmOverrideDescription",
-                "Route Talk, BattleTalk, TalkSubtitle, and MiniTalk through a dedicated LLM without changing the primary engine used elsewhere."));
+            GetUiString("DialogueLlmOverrideDescription"));
 
         var overrideToggleChanged = ImGui.Checkbox(
-            GetUiString(
-                "UseDialogueLlmOverrideLabel",
-                "Use a dedicated LLM for dialogue-family surfaces"),
+            GetUiString("UseDialogueLlmOverrideLabel"),
             ref config.UseDialogueLlmOverride);
         changed |= overrideToggleChanged;
         if (overrideToggleChanged)
@@ -265,9 +258,7 @@ public static class TranslationEnginesTab
 
         ImGui.BeginDisabled(!config.UseDialogueLlmOverride);
         if (ImGui.Combo(
-                GetUiString(
-                    "DialogueLlmEngineLabel",
-                    "Dialogue LLM engine"),
+                GetUiString("DialogueLlmEngineLabel"),
                 ref selected,
                 llmEngineOptions.Select(option => option.Label).ToArray(),
                 llmEngineOptions.Length))
@@ -291,17 +282,13 @@ public static class TranslationEnginesTab
             {
                 ImGui.TextColored(
                     new Vector4(1f, 0.4f, 0.4f, 1f),
-                    GetUiString(
-                        "DialogueLlmOverrideNeedsConfigurationText",
-                        "The selected dialogue LLM override is not fully configured yet. Dialogue-family surfaces will keep using the primary engine until the override is ready."));
+                    GetUiString("DialogueLlmOverrideNeedsConfigurationText"));
             }
 
             if (overrideEngine == primaryEngine)
             {
                 ImGui.TextWrapped(
-                    GetUiString(
-                        "DialogueLlmOverrideMatchesPrimaryText",
-                        "Dialogue-family surfaces currently reuse the same engine configuration selected above."));
+                    GetUiString("DialogueLlmOverrideMatchesPrimaryText"));
             }
             else
             {
@@ -329,24 +316,16 @@ public static class TranslationEnginesTab
         var changed = false;
         var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
         DrawSubsectionHeader(
-            GetUiString(
-                "DialogueGlossarySectionLabel",
-                "Dialogue glossary"));
+            GetUiString("DialogueGlossarySectionLabel"));
         ImGui.TextWrapped(
-            GetUiString(
-                "DialogueGlossaryDescription",
-                "Inject a structured glossary into dialogue-family LLM requests using an operator-managed JSON file."));
+            GetUiString("DialogueGlossaryDescription"));
 
         changed |= ImGui.Checkbox(
-            GetUiString(
-                "EnableDialogueGlossaryInjectionLabel",
-                "Enable dialogue glossary injection"),
+            GetUiString("EnableDialogueGlossaryInjectionLabel"),
             ref config.EnableDialogueGlossaryInjection);
 
         ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);
-        var glossaryPathLabel = GetUiString(
-            "DialogueGlossaryFilePathLabel",
-            "Dialogue glossary file path");
+        var glossaryPathLabel = GetUiString("DialogueGlossaryFilePathLabel");
         changed |= FieldValidationHelper.ValidatedInputText(
             glossaryPathLabel,
             ref config.DialogueGlossaryFilePath,
@@ -354,9 +333,7 @@ public static class TranslationEnginesTab
             out _);
 
         if (ImGui.Button(
-                GetUiString(
-                    "ReloadDialogueGlossaryButtonLabel",
-                    "Reload dialogue glossary")))
+                GetUiString("ReloadDialogueGlossaryButtonLabel")))
         {
             StructuredDialogueGlossaryStore.Refresh(
                 config.DialogueGlossaryFilePath);
@@ -366,9 +343,7 @@ public static class TranslationEnginesTab
 
         ImGui.SameLine();
         if (ImGui.Button(
-                GetUiString(
-                    "ClearDialogueGlossaryButtonLabel",
-                    "Clear loaded glossary")))
+                GetUiString("ClearDialogueGlossaryButtonLabel")))
         {
             StructuredDialogueGlossaryStore.Clear();
         }
@@ -388,21 +363,17 @@ public static class TranslationEnginesTab
         var statusText = snapshot.LastLoadSucceeded switch
         {
             true => GetUiString(
-                "DialogueGlossaryStatusLoaded",
-                "Loaded"),
+                "DialogueGlossaryStatusLoaded"),
             false => GetUiString(
-                "DialogueGlossaryStatusFailed",
-                "Failed"),
+                "DialogueGlossaryStatusFailed"),
             _ => GetUiString(
-                "DialogueGlossaryStatusIdle",
-                "Idle"),
+                "DialogueGlossaryStatusIdle"),
         };
         ImGui.TextWrapped(
             string.Format(
                 CultureInfo.CurrentCulture,
                 GetUiString(
-                    "DialogueGlossarySnapshotSummary",
-                    "Status: {0}  |  Entries: {1}  |  Skipped rows: {2}"),
+                    "DialogueGlossarySnapshotSummary"),
                 statusText,
                 snapshot.EntryCount,
                 snapshot.SkippedEntryCount));
@@ -413,8 +384,7 @@ public static class TranslationEnginesTab
                 string.Format(
                     CultureInfo.CurrentCulture,
                     GetUiString(
-                        "DialogueGlossarySnapshotPath",
-                        "Last path: {0}"),
+                        "DialogueGlossarySnapshotPath"),
                     snapshot.LastLoadPath));
         }
 
@@ -424,8 +394,7 @@ public static class TranslationEnginesTab
                 string.Format(
                     CultureInfo.CurrentCulture,
                     GetUiString(
-                        "DialogueGlossarySnapshotUtc",
-                        "Last load UTC: {0}"),
+                        "DialogueGlossarySnapshotUtc"),
                     snapshot.LastLoadObservedAtUtc.Value.ToString(
                         "u",
                         CultureInfo.InvariantCulture)));
@@ -438,8 +407,7 @@ public static class TranslationEnginesTab
                 string.Format(
                     CultureInfo.CurrentCulture,
                     GetUiString(
-                        "DialogueGlossarySnapshotFailure",
-                        "Last glossary load failure: {0}"),
+                        "DialogueGlossarySnapshotFailure"),
                     snapshot.LastLoadFailureDetail));
             ImGui.PopStyleColor();
         }
@@ -458,16 +426,14 @@ public static class TranslationEnginesTab
     }
 
     /// <summary>
-    ///     Resolves one UI-facing localized string, falling back to a bundled
-    ///     English literal until the localized resources catch up.
+    ///     Resolves one UI-facing localized string.
     /// </summary>
     /// <param name="resourceName">The resource key to resolve.</param>
-    /// <param name="fallback">The fallback text used when the key is absent.</param>
-    /// <returns>The localized text or the supplied fallback.</returns>
-    private static string GetUiString(string resourceName, string fallback)
+    /// <returns>The localized text or the key when missing.</returns>
+    private static string GetUiString(string resourceName)
     {
         return Resources.ResourceManager.GetString(resourceName, Resources.Culture) ??
-               fallback;
+               resourceName;
     }
 
     /// <summary>

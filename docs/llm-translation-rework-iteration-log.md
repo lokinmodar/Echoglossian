@@ -2060,3 +2060,41 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - emit the structured/glossary metrics from the individual structured
     translator paths
+
+## Iteration 54 - Resourceize LLM Debugger And Glossary UI
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - remove user-facing hardcoded literals from the new LLM debugger, glossary,
+    and OpenAI-compatible UI paths so those surfaces resolve through
+    `Resources` instead of inline English strings
+- Files touched:
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `PluginUI/Tabs/TranslationEnginesTab.cs`
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `Properties/Resources.resx`
+  - `Properties/Resources.pt.resx`
+  - `Properties/Resources.pt-BR.resx`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - replaced branch-added debugger window title, button labels, summaries,
+    table headers, and glossary status strings with `Resources` lookups
+  - replaced glossary section literals in the translation engines tab with
+    resource-backed keys
+  - removed fallback English literals from the OpenAI-compatible provider UI
+    path in `ChatGptEngineUI`
+  - added the missing base, `pt`, and `pt-BR` resource entries for the new
+    glossary/debugger strings
+- Behavior-sensitive risks:
+  - non-Portuguese localized resource files still inherit the base resource for
+    the newly added glossary/debugger keys until a broader localization pass is
+    done
+  - this cut does not change routing, persistence, or request semantics; it is
+    strictly UI text plumbing
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - expand the new glossary/debugger resource keys into the remaining localized
+    `.resx` files if we want parity beyond base fallback + Portuguese

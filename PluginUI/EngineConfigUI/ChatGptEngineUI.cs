@@ -30,8 +30,7 @@ public static class ChatGPTEngineUI
         ImGui.TextWrapped(
             settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible
                 ? GetText(
-                    "OpenAiProviderVariantCustomOpenAiCompatible",
-                    "Custom OpenAI-Compatible")
+                    "OpenAiProviderVariantCustomOpenAiCompatible")
                 : Resources.SettingsForChatGptTransText);
         ImGui.Spacing();
 
@@ -54,8 +53,7 @@ public static class ChatGPTEngineUI
         if (settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible)
         {
             ImGui.TextWrapped(GetText(
-                "OpenAiCompatibleProviderDescription",
-                "Configure an OpenAI-compatible endpoint, API key, and model. Live model fetch is optional; if the provider does not expose /models cleanly, keep a manual model id."));
+                "OpenAiCompatibleProviderDescription"));
             ImGui.Spacing();
         }
 
@@ -102,25 +100,21 @@ public static class ChatGPTEngineUI
         var selectedVariant = config.OpenAiProviderVariant;
         var preview = selectedVariant == OpenAiProviderVariant.CustomOpenAICompatible
             ? GetText(
-                "OpenAiProviderVariantCustomOpenAiCompatible",
-                "Custom OpenAI-Compatible")
+                "OpenAiProviderVariantCustomOpenAiCompatible")
             : GetText(
-                "OpenAiProviderVariantOfficialOpenAi",
-                "Official OpenAI");
+                "OpenAiProviderVariantOfficialOpenAi");
 
         if (ImGui.BeginCombo(
-                GetText("OpenAiProviderVariantLabel", "Provider"),
+                GetText("OpenAiProviderVariantLabel"),
                 preview))
         {
             foreach (var variant in Enum.GetValues<OpenAiProviderVariant>())
             {
                 var label = variant == OpenAiProviderVariant.CustomOpenAICompatible
                     ? GetText(
-                        "OpenAiProviderVariantCustomOpenAiCompatible",
-                        "Custom OpenAI-Compatible")
+                        "OpenAiProviderVariantCustomOpenAiCompatible")
                     : GetText(
-                        "OpenAiProviderVariantOfficialOpenAi",
-                        "Official OpenAI");
+                        "OpenAiProviderVariantOfficialOpenAi");
                 var isSelected = variant == selectedVariant;
                 if (ImGui.Selectable(label, isSelected))
                 {
@@ -272,8 +266,7 @@ public static class ChatGPTEngineUI
             !customLiveModelFetchSucceeded)
         {
             ImGui.TextWrapped(GetText(
-                "OpenAiCompatibleLiveModelFetchFailed",
-                "Could not fetch models from the configured OpenAI-compatible provider. Keep a manual model id or verify the endpoint and credentials."));
+                "OpenAiCompatibleLiveModelFetchFailed"));
         }
 
         return changed;
@@ -332,8 +325,7 @@ public static class ChatGPTEngineUI
                 out isInvalid);
             config.CustomOpenAiCompatibleModel = modelValue;
             ImGui.TextWrapped(GetText(
-                "OpenAiCompatibleManualModelHint",
-                "Use the exact model id exposed by your OpenAI-compatible provider when live model listing is unavailable or disabled."));
+                "OpenAiCompatibleManualModelHint"));
         }
 
         return changed;
@@ -410,30 +402,23 @@ public static class ChatGPTEngineUI
     {
         return new Dictionary<string, string>
         {
-            ["gpt-3.5-turbo"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt35Turbo", Resources.Culture) ??
-                                "⚡ Fast and affordable (4k tokens)",
-            ["gpt-3.5-turbo-16k"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt35Turbo16k", Resources.Culture) ??
-                                    "⚡ 16k token context",
-            ["gpt-4"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4", Resources.Culture) ??
-                        "🧠 More capable but slower and costly",
-            ["gpt-4-turbo"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4Turbo", Resources.Culture) ??
-                              "🟢 Faster and cheaper GPT-4 variant",
-            ["gpt-4o"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4o", Resources.Culture) ??
-                         "👁 Multimodal and real-time model",
-            ["gpt-4o-mini"] = Resources.ResourceManager.GetString("ChatGptModelTooltipGpt4oMini", Resources.Culture) ??
-                              "⚡ GPT-4o Mini — fast and compact",
+            ["gpt-3.5-turbo"] = GetText("ChatGptModelTooltipGpt35Turbo"),
+            ["gpt-3.5-turbo-16k"] = GetText("ChatGptModelTooltipGpt35Turbo16k"),
+            ["gpt-4"] = GetText("ChatGptModelTooltipGpt4"),
+            ["gpt-4-turbo"] = GetText("ChatGptModelTooltipGpt4Turbo"),
+            ["gpt-4o"] = GetText("ChatGptModelTooltipGpt4o"),
+            ["gpt-4o-mini"] = GetText("ChatGptModelTooltipGpt4oMini"),
         };
     }
 
     /// <summary>
-    /// Resolves a resource string with a fallback.
+    /// Resolves a resource string.
     /// </summary>
     /// <param name="key">The resource key.</param>
-    /// <param name="fallback">The fallback value.</param>
-    /// <returns>The localized string or the fallback.</returns>
-    private static string GetText(string key, string fallback)
+    /// <returns>The localized string or the key when missing.</returns>
+    private static string GetText(string key)
     {
         return Resources.ResourceManager.GetString(key, Resources.Culture) ??
-               fallback;
+               key;
     }
 }

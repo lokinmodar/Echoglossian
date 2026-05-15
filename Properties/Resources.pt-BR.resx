@@ -948,6 +948,177 @@
   <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
     <value>Use o ID exato do modelo exposto pelo seu provedor OpenAI-compatible quando a lista de modelos ao vivo não estiver disponível ou estiver desativada.</value>
   </data>
+  <data name="DialogueGlossarySectionLabel" xml:space="preserve">
+    <value>Glossário de diálogo</value>
+  </data>
+  <data name="DialogueGlossaryDescription" xml:space="preserve">
+    <value>Injeta um glossário estruturado nas requisições LLM da família de diálogo usando um arquivo JSON gerenciado pelo operador.</value>
+  </data>
+  <data name="EnableDialogueGlossaryInjectionLabel" xml:space="preserve">
+    <value>Ativar injeção de glossário de diálogo</value>
+  </data>
+  <data name="DialogueGlossaryFilePathLabel" xml:space="preserve">
+    <value>Caminho do arquivo do glossário de diálogo</value>
+  </data>
+  <data name="ReloadDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Recarregar glossário de diálogo</value>
+  </data>
+  <data name="ClearDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Limpar glossário carregado</value>
+  </data>
+  <data name="DialogueGlossaryStatusLoaded" xml:space="preserve">
+    <value>Carregado</value>
+  </data>
+  <data name="DialogueGlossaryStatusFailed" xml:space="preserve">
+    <value>Falhou</value>
+  </data>
+  <data name="DialogueGlossaryStatusIdle" xml:space="preserve">
+    <value>Inativo</value>
+  </data>
+  <data name="DialogueGlossarySnapshotSummary" xml:space="preserve">
+    <value>Status: {0}  |  Entradas: {1}  |  Linhas ignoradas: {2}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotPath" xml:space="preserve">
+    <value>Último caminho: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotUtc" xml:space="preserve">
+    <value>Último carregamento UTC: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotFailure" xml:space="preserve">
+    <value>Última falha ao carregar o glossário: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerWindowTitle" xml:space="preserve">
+    <value>Depurador e Métricas do Tradutor</value>
+  </data>
+  <data name="TranslatorDebuggerWindowDescription" xml:space="preserve">
+    <value>Métricas agregadas de tempo de execução para a atividade do tradutor nesta sessão.</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslateVisibleDialogueAndPersist" xml:space="preserve">
+    <value>Retraduzir diálogo visível e persistir</value>
+  </data>
+  <data name="TranslatorDebuggerClearMetrics" xml:space="preserve">
+    <value>Limpar métricas</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueSessions" xml:space="preserve">
+    <value>Limpar sessões de diálogo</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslatingVisibleDialogue" xml:space="preserve">
+    <value>Retraduzindo a linha de diálogo visível no momento...</value>
+  </data>
+  <data name="TranslatorDebuggerNoMetricsRecorded" xml:space="preserve">
+    <value>Ainda não foram registradas métricas do tradutor nesta sessão.</value>
+  </data>
+  <data name="TranslatorDebuggerEngineSummary" xml:space="preserve">
+    <value>Engines: {0}  |  Requisições ao vivo: {1}  |  Com contexto: {2}  |  Falhas: {3}  |  Curto-circuitos: {4}</value>
+  </data>
+  <data name="TranslatorDebuggerStructuredSummary" xml:space="preserve">
+    <value>Tentativas estruturadas: {0}  |  Sucessos estruturados: {1}  |  Assistidas por glossário: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionsCount" xml:space="preserve">
+    <value>Sessões de diálogo: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableEngine" xml:space="preserve">
+    <value>Engine</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableProvider" xml:space="preserve">
+    <value>Provedor</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableModel" xml:space="preserve">
+    <value>Modelo</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLiveRequests" xml:space="preserve">
+    <value>Requisições ao vivo</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableContextAware" xml:space="preserve">
+    <value>Com contexto</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructured" xml:space="preserve">
+    <value>Estruturado</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructuredOk" xml:space="preserve">
+    <value>Estruturado OK</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableGlossary" xml:space="preserve">
+    <value>Glossário</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableSuccesses" xml:space="preserve">
+    <value>Sucessos</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableFailures" xml:space="preserve">
+    <value>Falhas</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableShortCircuits" xml:space="preserve">
+    <value>Curto-circuitos</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableAverageMs" xml:space="preserve">
+    <value>Média ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableMaxMs" xml:space="preserve">
+    <value>Máx. ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastMs" xml:space="preserve">
+    <value>Último ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastRequestUtc" xml:space="preserve">
+    <value>Última requisição UTC</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastFailure" xml:space="preserve">
+    <value>Última falha</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionDescription" xml:space="preserve">
+    <value>Sessões de diálogo somente em tempo de execução atualmente retidas para tradução com contexto.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableNamespace" xml:space="preserve">
+    <value>Namespace</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableSessionKey" xml:space="preserve">
+    <value>Chave da sessão</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastSpeaker" xml:space="preserve">
+    <value>Último falante</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableRetainedTurns" xml:space="preserve">
+    <value>Turnos retidos</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastObservedUtc" xml:space="preserve">
+    <value>Última observação UTC</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossarySummary" xml:space="preserve">
+    <value>Glossário de diálogo ativado: {0}  |  Entradas: {1}  |  Linhas ignoradas: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryPath" xml:space="preserve">
+    <value>Caminho do arquivo configurado: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryLoadStatus" xml:space="preserve">
+    <value>Último carregamento do glossário: {0}  |  Último carregamento UTC: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerReloadDialogueGlossary" xml:space="preserve">
+    <value>Recarregar glossário de diálogo</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueGlossary" xml:space="preserve">
+    <value>Limpar glossário carregado</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryFailure" xml:space="preserve">
+    <value>Última falha ao carregar o glossário: {0}</value>
+  </data>
+  <data name="DialogueLlmOverrideSectionLabel" xml:space="preserve">
+    <value>Override LLM de diálogo</value>
+  </data>
+  <data name="DialogueLlmOverrideDescription" xml:space="preserve">
+    <value>Roteia Talk, BattleTalk, TalkSubtitle e MiniTalk por um LLM dedicado sem alterar a engine principal usada no restante.</value>
+  </data>
+  <data name="UseDialogueLlmOverrideLabel" xml:space="preserve">
+    <value>Usar um LLM dedicado para superfícies da família de diálogo</value>
+  </data>
+  <data name="DialogueLlmEngineLabel" xml:space="preserve">
+    <value>Engine LLM de diálogo</value>
+  </data>
+  <data name="DialogueLlmOverrideNeedsConfigurationText" xml:space="preserve">
+    <value>O override LLM de diálogo selecionado ainda não está totalmente configurado. As superfícies da família de diálogo continuarão usando a engine principal até que o override esteja pronto.</value>
+  </data>
+  <data name="DialogueLlmOverrideMatchesPrimaryText" xml:space="preserve">
+    <value>As superfícies da família de diálogo estão reutilizando no momento a mesma configuração de engine selecionada acima.</value>
+  </data>
   <data name="TranslatorDebuggerDialogueOverridePrimaryAndEffective" xml:space="preserve">
     <value>Mecanismo primário: {0}  |  Mecanismo efetivo de diálogo: {1}</value>
   </data>

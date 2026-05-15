@@ -60,7 +60,7 @@ public sealed class TranslatorMetricsWindow
     ImGui.SetNextWindowSize(new Vector2(1100f, 480f), ImGuiCond.FirstUseEver);
     var isOpen = this.IsOpen;
     if (!ImGui.Begin(
-            "Translator Debugger and Metrics",
+            GetText("TranslatorDebuggerWindowTitle"),
             ref isOpen,
             ImGuiWindowFlags.NoCollapse))
     {
@@ -71,7 +71,7 @@ public sealed class TranslatorMetricsWindow
     this.IsOpen = isOpen;
 
     ImGui.TextWrapped(
-        "Aggregated runtime metrics for translator activity in this session.");
+        GetText("TranslatorDebuggerWindowDescription"));
     ImGui.Separator();
     this.DrawDialogueOverrideStatus();
     ImGui.Separator();
@@ -88,7 +88,9 @@ public sealed class TranslatorMetricsWindow
       ImGui.BeginDisabled();
     }
 
-    if (ImGui.Button("Retranslate Visible Dialogue And Persist"))
+    if (ImGui.Button(
+            GetText(
+                "TranslatorDebuggerRetranslateVisibleDialogueAndPersist")))
     {
       this.lastRetranslationMessage = null;
       this.lastRetranslationSucceeded = null;
@@ -101,13 +103,13 @@ public sealed class TranslatorMetricsWindow
     }
 
     ImGui.SameLine();
-    if (ImGui.Button("Clear Metrics"))
+    if (ImGui.Button(GetText("TranslatorDebuggerClearMetrics")))
     {
       TranslatorMetricsCollector.Clear();
     }
 
     ImGui.SameLine();
-    if (ImGui.Button("Clear Dialogue Sessions"))
+    if (ImGui.Button(GetText("TranslatorDebuggerClearDialogueSessions")))
     {
       DialogueTranslationSessionStore.Clear();
     }
@@ -116,7 +118,7 @@ public sealed class TranslatorMetricsWindow
     {
       ImGui.Spacing();
       ImGui.TextWrapped(
-          "Retranslating the currently visible dialogue line...");
+          GetText("TranslatorDebuggerRetranslatingVisibleDialogue"));
     }
     else if (!string.IsNullOrWhiteSpace(this.lastRetranslationMessage))
     {
@@ -134,7 +136,7 @@ public sealed class TranslatorMetricsWindow
     {
       ImGui.Spacing();
       ImGui.TextWrapped(
-          "No translator metrics have been recorded in this session yet.");
+          GetText("TranslatorDebuggerNoMetricsRecorded"));
       ImGui.End();
       return;
     }
@@ -150,11 +152,26 @@ public sealed class TranslatorMetricsWindow
     var totalShortCircuits = snapshots.Sum(snapshot => snapshot.ShortCircuitCount);
     var dialogueSessionSnapshots = DialogueTranslationSessionStore.GetSnapshots();
     ImGui.Text(
-        $"Engines: {snapshots.Count}  |  Live requests: {totalLiveRequests}  |  Context-aware: {totalContextAwareRequests}  |  Failures: {totalFailures}  |  Short circuits: {totalShortCircuits}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText("TranslatorDebuggerEngineSummary"),
+            snapshots.Count,
+            totalLiveRequests,
+            totalContextAwareRequests,
+            totalFailures,
+            totalShortCircuits));
     ImGui.Text(
-        $"Structured attempts: {totalStructuredRequests}  |  Structured successes: {totalStructuredSuccesses}  |  Glossary-assisted: {totalGlossaryStructuredRequests}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText("TranslatorDebuggerStructuredSummary"),
+            totalStructuredRequests,
+            totalStructuredSuccesses,
+            totalGlossaryStructuredRequests));
     ImGui.Text(
-        $"Dialogue sessions: {dialogueSessionSnapshots.Count}");
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText("TranslatorDebuggerDialogueSessionsCount"),
+            dialogueSessionSnapshots.Count));
 
     var availableHeight = ImGui.GetContentRegionAvail().Y;
     var dialogueTableHeight = dialogueSessionSnapshots.Count == 0
@@ -172,22 +189,22 @@ public sealed class TranslatorMetricsWindow
             ImGuiTableFlags.SizingStretchProp,
             new Vector2(-1f, metricsTableHeight)))
     {
-      ImGui.TableSetupColumn("Engine");
-      ImGui.TableSetupColumn("Provider");
-      ImGui.TableSetupColumn("Model");
-      ImGui.TableSetupColumn("Live Requests");
-      ImGui.TableSetupColumn("Context-Aware");
-      ImGui.TableSetupColumn("Structured");
-      ImGui.TableSetupColumn("Structured OK");
-      ImGui.TableSetupColumn("Glossary");
-      ImGui.TableSetupColumn("Successes");
-      ImGui.TableSetupColumn("Failures");
-      ImGui.TableSetupColumn("Short Circuits");
-      ImGui.TableSetupColumn("Avg ms");
-      ImGui.TableSetupColumn("Max ms");
-      ImGui.TableSetupColumn("Last ms");
-      ImGui.TableSetupColumn("Last Request UTC");
-      ImGui.TableSetupColumn("Last Failure");
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableEngine"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableProvider"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableModel"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableLiveRequests"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableContextAware"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableStructured"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableStructuredOk"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableGlossary"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableSuccesses"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableFailures"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableShortCircuits"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableAverageMs"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableMaxMs"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableLastMs"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableLastRequestUtc"));
+      ImGui.TableSetupColumn(GetText("TranslatorDebuggerMetricsTableLastFailure"));
       ImGui.TableHeadersRow();
 
       foreach (var snapshot in snapshots)
@@ -236,7 +253,7 @@ public sealed class TranslatorMetricsWindow
     {
       ImGui.Spacing();
       ImGui.TextWrapped(
-          "Runtime-only dialogue sessions currently retained for context-aware translation.");
+          GetText("TranslatorDebuggerDialogueSessionDescription"));
       if (ImGui.BeginTable(
               "##DialogueSessionTable",
               5,
@@ -245,11 +262,16 @@ public sealed class TranslatorMetricsWindow
               ImGuiTableFlags.SizingStretchProp,
               new Vector2(-1f, dialogueTableHeight)))
       {
-        ImGui.TableSetupColumn("Namespace");
-        ImGui.TableSetupColumn("Session Key");
-        ImGui.TableSetupColumn("Last Speaker");
-        ImGui.TableSetupColumn("Retained Turns");
-        ImGui.TableSetupColumn("Last Observed UTC");
+        ImGui.TableSetupColumn(
+            GetText("TranslatorDebuggerDialogueSessionTableNamespace"));
+        ImGui.TableSetupColumn(
+            GetText("TranslatorDebuggerDialogueSessionTableSessionKey"));
+        ImGui.TableSetupColumn(
+            GetText("TranslatorDebuggerDialogueSessionTableLastSpeaker"));
+        ImGui.TableSetupColumn(
+            GetText("TranslatorDebuggerDialogueSessionTableRetainedTurns"));
+        ImGui.TableSetupColumn(
+            GetText("TranslatorDebuggerDialogueSessionTableLastObservedUtc"));
         ImGui.TableHeadersRow();
 
         foreach (var sessionSnapshot in dialogueSessionSnapshots)
@@ -320,18 +342,14 @@ public sealed class TranslatorMetricsWindow
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText(
-                "TranslatorDebuggerDialogueOverridePrimaryAndEffective",
-                "Primary engine: {0}  |  Effective dialogue engine: {1}"),
+            GetText("TranslatorDebuggerDialogueOverridePrimaryAndEffective"),
             state.PrimaryEngine,
             state.EffectiveDialogueEngine));
 
     if (!state.OverrideEnabled)
     {
       ImGui.TextWrapped(
-          GetText(
-              "TranslatorDebuggerDialogueOverrideDisabled",
-              "Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine."));
+          GetText("TranslatorDebuggerDialogueOverrideDisabled"));
       return;
     }
 
@@ -340,24 +358,16 @@ public sealed class TranslatorMetricsWindow
         : new Vector4(0.95f, 0.6f, 0.35f, 1f);
     var statusMessage = state.OverrideActive
         ? state.SelectedOverrideEngine == state.PrimaryEngine
-            ? GetText(
-                "TranslatorDebuggerDialogueOverrideMatchesPrimary",
-                "Dialogue LLM override is enabled, but it currently matches the primary engine selection.")
+            ? GetText("TranslatorDebuggerDialogueOverrideMatchesPrimary")
             : string.Format(
                 CultureInfo.CurrentCulture,
-                GetText(
-                    "TranslatorDebuggerDialogueOverrideActive",
-                    "Dialogue LLM override is active and routes dialogue-family surfaces through {0}."),
+                GetText("TranslatorDebuggerDialogueOverrideActive"),
                 state.SelectedOverrideEngine)
         : state.OverrideConfigured
-            ? GetText(
-                "TranslatorDebuggerDialogueOverrideInactiveFallback",
-                "Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine.")
+            ? GetText("TranslatorDebuggerDialogueOverrideInactiveFallback")
             : string.Format(
                 CultureInfo.CurrentCulture,
-                GetText(
-                    "TranslatorDebuggerDialogueOverrideNotConfigured",
-                    "Dialogue LLM override is enabled, but {0} is not fully configured yet. Dialogue-family surfaces keep using the primary engine."),
+                GetText("TranslatorDebuggerDialogueOverrideNotConfigured"),
                 state.SelectedOverrideEngine);
 
     ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
@@ -381,47 +391,43 @@ public sealed class TranslatorMetricsWindow
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText(
-                "TranslatorDebuggerOpenAiProviderSummary",
-                "OpenAI-family provider: {0}  |  Variant: {1}  |  Configured: {2}"),
+            GetText("TranslatorDebuggerOpenAiProviderSummary"),
             settings.ProviderName,
             providerVariantDisplayName,
             isConfigured
-                ? GetText("TranslatorDebuggerYes", "Yes")
-                : GetText("TranslatorDebuggerNo", "No")));
+                ? GetText("TranslatorDebuggerYes")
+                : GetText("TranslatorDebuggerNo")));
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText("TranslatorDebuggerOpenAiEndpoint", "Endpoint: {0}"),
+            GetText("TranslatorDebuggerOpenAiEndpoint"),
             string.IsNullOrWhiteSpace(settings.BaseUrl) ? "-" : settings.BaseUrl));
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText("TranslatorDebuggerOpenAiModelSummary", "Model: {0}  |  Live models: {1}"),
+            GetText("TranslatorDebuggerOpenAiModelSummary"),
             string.IsNullOrWhiteSpace(settings.Model) ? "-" : settings.Model,
             settings.UseLiveModelList
-                ? GetText("TranslatorDebuggerEnabled", "Enabled")
-                : GetText("TranslatorDebuggerDisabled", "Disabled")));
+                ? GetText("TranslatorDebuggerEnabled")
+                : GetText("TranslatorDebuggerDisabled")));
 
     var refreshStatus = refreshSnapshot.LastRefreshSucceeded switch
     {
-      true => GetText("TranslatorDebuggerSucceeded", "Succeeded"),
-      false => GetText("TranslatorDebuggerFailed", "Failed"),
-      _ => GetText("TranslatorDebuggerNeverAttempted", "Never attempted"),
+      true => GetText("TranslatorDebuggerSucceeded"),
+      false => GetText("TranslatorDebuggerFailed"),
+      _ => GetText("TranslatorDebuggerNeverAttempted"),
     };
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText(
-                "TranslatorDebuggerOpenAiRefreshSummary",
-                "Last model refresh: {0}  |  Provider: {1}  |  Current model count: {2}"),
+            GetText("TranslatorDebuggerOpenAiRefreshSummary"),
             refreshStatus,
             refreshSnapshot.LastRefreshProviderName ?? "-",
             refreshSnapshot.CurrentModelCount));
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText("TranslatorDebuggerOpenAiRefreshUtc", "Last refresh UTC: {0}"),
+            GetText("TranslatorDebuggerOpenAiRefreshUtc"),
             refreshSnapshot.LastRefreshObservedAtUtc?.ToString("u", CultureInfo.InvariantCulture) ?? "-"));
 
     if (!string.IsNullOrWhiteSpace(refreshSnapshot.LastRefreshUrl))
@@ -429,7 +435,7 @@ public sealed class TranslatorMetricsWindow
       ImGui.TextWrapped(
           string.Format(
               CultureInfo.CurrentCulture,
-              GetText("TranslatorDebuggerOpenAiRefreshEndpoint", "Refresh endpoint: {0}"),
+              GetText("TranslatorDebuggerOpenAiRefreshEndpoint"),
               refreshSnapshot.LastRefreshUrl));
     }
 
@@ -439,7 +445,7 @@ public sealed class TranslatorMetricsWindow
       ImGui.TextWrapped(
           string.Format(
               CultureInfo.CurrentCulture,
-              GetText("TranslatorDebuggerOpenAiRefreshFailure", "Last model refresh failure: {0}"),
+              GetText("TranslatorDebuggerOpenAiRefreshFailure"),
               refreshSnapshot.LastRefreshFailureDetail));
       ImGui.PopStyleColor();
     }
@@ -455,44 +461,36 @@ public sealed class TranslatorMetricsWindow
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText(
-                "TranslatorDebuggerDialogueGlossarySummary",
-                "Dialogue glossary enabled: {0}  |  Entries: {1}  |  Skipped rows: {2}"),
+            GetText("TranslatorDebuggerDialogueGlossarySummary"),
             this.config.EnableDialogueGlossaryInjection
-                ? GetText("TranslatorDebuggerEnabled", "Enabled")
-                : GetText("TranslatorDebuggerDisabled", "Disabled"),
+                ? GetText("TranslatorDebuggerEnabled")
+                : GetText("TranslatorDebuggerDisabled"),
             snapshot.EntryCount,
             snapshot.SkippedEntryCount));
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText(
-                "TranslatorDebuggerDialogueGlossaryPath",
-                "Configured file path: {0}"),
+            GetText("TranslatorDebuggerDialogueGlossaryPath"),
             string.IsNullOrWhiteSpace(this.config.DialogueGlossaryFilePath)
                 ? "-"
                 : this.config.DialogueGlossaryFilePath));
 
     var loadStatus = snapshot.LastLoadSucceeded switch
     {
-      true => GetText("TranslatorDebuggerSucceeded", "Succeeded"),
-      false => GetText("TranslatorDebuggerFailed", "Failed"),
-      _ => GetText("TranslatorDebuggerNeverAttempted", "Never attempted"),
+      true => GetText("TranslatorDebuggerSucceeded"),
+      false => GetText("TranslatorDebuggerFailed"),
+      _ => GetText("TranslatorDebuggerNeverAttempted"),
     };
     ImGui.TextWrapped(
         string.Format(
             CultureInfo.CurrentCulture,
-            GetText(
-                "TranslatorDebuggerDialogueGlossaryLoadStatus",
-                "Last glossary load: {0}  |  Last load UTC: {1}"),
+            GetText("TranslatorDebuggerDialogueGlossaryLoadStatus"),
             loadStatus,
             snapshot.LastLoadObservedAtUtc?.ToString("u", CultureInfo.InvariantCulture) ??
             "-"));
 
     if (ImGui.Button(
-            GetText(
-                "TranslatorDebuggerReloadDialogueGlossary",
-                "Reload Dialogue Glossary")))
+            GetText("TranslatorDebuggerReloadDialogueGlossary")))
     {
       StructuredDialogueGlossaryStore.Refresh(
           this.config.DialogueGlossaryFilePath);
@@ -500,9 +498,7 @@ public sealed class TranslatorMetricsWindow
 
     ImGui.SameLine();
     if (ImGui.Button(
-            GetText(
-                "TranslatorDebuggerClearDialogueGlossary",
-                "Clear Loaded Glossary")))
+            GetText("TranslatorDebuggerClearDialogueGlossary")))
     {
       StructuredDialogueGlossaryStore.Clear();
     }
@@ -513,9 +509,7 @@ public sealed class TranslatorMetricsWindow
       ImGui.TextWrapped(
           string.Format(
               CultureInfo.CurrentCulture,
-              GetText(
-                  "TranslatorDebuggerDialogueGlossaryFailure",
-                  "Last glossary load failure: {0}"),
+              GetText("TranslatorDebuggerDialogueGlossaryFailure"),
               snapshot.LastLoadFailureDetail));
       ImGui.PopStyleColor();
     }
@@ -530,23 +524,18 @@ public sealed class TranslatorMetricsWindow
   private static string ResolveProviderVariantDisplayName(OpenAiProviderVariant variant)
   {
     return variant == OpenAiProviderVariant.CustomOpenAICompatible
-        ? GetText(
-            "OpenAiProviderVariantCustomOpenAiCompatible",
-            "Custom OpenAI-Compatible")
-        : GetText(
-            "OpenAiProviderVariantOfficialOpenAi",
-            "Official OpenAI");
+        ? GetText("OpenAiProviderVariantCustomOpenAiCompatible")
+        : GetText("OpenAiProviderVariantOfficialOpenAi");
   }
 
   /// <summary>
-  ///     Resolves a localized text resource with a fallback.
+  ///     Resolves a localized text resource.
   /// </summary>
   /// <param name="key">The resource key.</param>
-  /// <param name="fallback">The fallback text.</param>
-  /// <returns>The localized string or the fallback.</returns>
-  private static string GetText(string key, string fallback)
+  /// <returns>The localized string or the key when missing.</returns>
+  private static string GetText(string key)
   {
     return Resources.ResourceManager.GetString(key, Resources.Culture) ??
-           fallback;
+           key;
   }
 }

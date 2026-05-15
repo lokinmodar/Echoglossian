@@ -1201,6 +1201,159 @@
   <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
     <value>Use the exact model id exposed by your OpenAI-compatible provider when live model listing is unavailable or disabled.</value>
   </data>
+  <data name="DialogueGlossarySectionLabel" xml:space="preserve">
+    <value>Dialogue glossary</value>
+  </data>
+  <data name="DialogueGlossaryDescription" xml:space="preserve">
+    <value>Inject a structured glossary into dialogue-family LLM requests using an operator-managed JSON file.</value>
+  </data>
+  <data name="EnableDialogueGlossaryInjectionLabel" xml:space="preserve">
+    <value>Enable dialogue glossary injection</value>
+  </data>
+  <data name="DialogueGlossaryFilePathLabel" xml:space="preserve">
+    <value>Dialogue glossary file path</value>
+  </data>
+  <data name="ReloadDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Reload dialogue glossary</value>
+  </data>
+  <data name="ClearDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Clear loaded glossary</value>
+  </data>
+  <data name="DialogueGlossaryStatusLoaded" xml:space="preserve">
+    <value>Loaded</value>
+  </data>
+  <data name="DialogueGlossaryStatusFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="DialogueGlossaryStatusIdle" xml:space="preserve">
+    <value>Idle</value>
+  </data>
+  <data name="DialogueGlossarySnapshotSummary" xml:space="preserve">
+    <value>Status: {0}  |  Entries: {1}  |  Skipped rows: {2}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotPath" xml:space="preserve">
+    <value>Last path: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotUtc" xml:space="preserve">
+    <value>Last load UTC: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotFailure" xml:space="preserve">
+    <value>Last glossary load failure: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerWindowTitle" xml:space="preserve">
+    <value>Translator Debugger and Metrics</value>
+  </data>
+  <data name="TranslatorDebuggerWindowDescription" xml:space="preserve">
+    <value>Aggregated runtime metrics for translator activity in this session.</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslateVisibleDialogueAndPersist" xml:space="preserve">
+    <value>Retranslate Visible Dialogue And Persist</value>
+  </data>
+  <data name="TranslatorDebuggerClearMetrics" xml:space="preserve">
+    <value>Clear Metrics</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueSessions" xml:space="preserve">
+    <value>Clear Dialogue Sessions</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslatingVisibleDialogue" xml:space="preserve">
+    <value>Retranslating the currently visible dialogue line...</value>
+  </data>
+  <data name="TranslatorDebuggerNoMetricsRecorded" xml:space="preserve">
+    <value>No translator metrics have been recorded in this session yet.</value>
+  </data>
+  <data name="TranslatorDebuggerEngineSummary" xml:space="preserve">
+    <value>Engines: {0}  |  Live requests: {1}  |  Context-aware: {2}  |  Failures: {3}  |  Short circuits: {4}</value>
+  </data>
+  <data name="TranslatorDebuggerStructuredSummary" xml:space="preserve">
+    <value>Structured attempts: {0}  |  Structured successes: {1}  |  Glossary-assisted: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionsCount" xml:space="preserve">
+    <value>Dialogue sessions: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableEngine" xml:space="preserve">
+    <value>Engine</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableProvider" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableModel" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLiveRequests" xml:space="preserve">
+    <value>Live Requests</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableContextAware" xml:space="preserve">
+    <value>Context-Aware</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructured" xml:space="preserve">
+    <value>Structured</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructuredOk" xml:space="preserve">
+    <value>Structured OK</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableGlossary" xml:space="preserve">
+    <value>Glossary</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableSuccesses" xml:space="preserve">
+    <value>Successes</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableFailures" xml:space="preserve">
+    <value>Failures</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableShortCircuits" xml:space="preserve">
+    <value>Short Circuits</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableAverageMs" xml:space="preserve">
+    <value>Avg ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableMaxMs" xml:space="preserve">
+    <value>Max ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastMs" xml:space="preserve">
+    <value>Last ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastRequestUtc" xml:space="preserve">
+    <value>Last Request UTC</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastFailure" xml:space="preserve">
+    <value>Last Failure</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionDescription" xml:space="preserve">
+    <value>Runtime-only dialogue sessions currently retained for context-aware translation.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableNamespace" xml:space="preserve">
+    <value>Namespace</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableSessionKey" xml:space="preserve">
+    <value>Session Key</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastSpeaker" xml:space="preserve">
+    <value>Last Speaker</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableRetainedTurns" xml:space="preserve">
+    <value>Retained Turns</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastObservedUtc" xml:space="preserve">
+    <value>Last Observed UTC</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossarySummary" xml:space="preserve">
+    <value>Dialogue glossary enabled: {0}  |  Entries: {1}  |  Skipped rows: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryPath" xml:space="preserve">
+    <value>Configured file path: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryLoadStatus" xml:space="preserve">
+    <value>Last glossary load: {0}  |  Last load UTC: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerReloadDialogueGlossary" xml:space="preserve">
+    <value>Reload Dialogue Glossary</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueGlossary" xml:space="preserve">
+    <value>Clear Loaded Glossary</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryFailure" xml:space="preserve">
+    <value>Last glossary load failure: {0}</value>
+  </data>
   <data name="TranslatorDebuggerDialogueOverridePrimaryAndEffective" xml:space="preserve">
     <value>Primary engine: {0}  |  Effective dialogue engine: {1}</value>
   </data>
