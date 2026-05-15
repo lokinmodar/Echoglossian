@@ -117,6 +117,21 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
         string cacheKey,
         DialogueTranslationContext? dialogueContext = null)
     {
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation =
+                await this.TryTranslateStructuredDialogueAsync(
+                    text,
+                    sourceLanguage,
+                    targetLanguage,
+                    cacheKey,
+                    dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
+
         var prompt = this.BuildPrompt(
             text,
             sourceLanguage,
@@ -160,6 +175,107 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
         {
             PluginRuntimeLog.Error(this.pluginLog, $"OllamaTranslator failed: {ex.Message}");
             return $"[{Resources.TranslationError} Ollama error: {ex.Message}]";
+        }
+    }
+
+    /// <summary>
+    ///     Attempts the Ollama structured dialogue path and falls back to the
+    ///     legacy plain-text request on incompatibility or malformed provider
+    ///     output.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The normalized request cache key.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the legacy path can run.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.Ollama) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
+
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest =
+                StructuredDialogueTranslationRequestBuilder.Build(
+                    normalizedText,
+                    sourceLanguage,
+                    targetLanguage,
+                    TranslationSurfaceGroup.Dialogue,
+                    dialogueContext);
+            var basePrompt = this.promptTemplate
+                .Replace("{text}", normalizedText)
+                .Replace("{sourceLanguage}", sourceLanguage)
+                .Replace("{targetLanguage}", targetLanguage);
+            var structuredPrompt =
+                $"{basePrompt}\n\n" +
+                "Return only a JSON object that matches the provided response schema. " +
+                "Do not answer with prose, markdown, or code fences.\n\n" +
+                "Structured dialogue request JSON:\n" +
+                StructuredDialogueOpenAiToolHelper.SerializeRequestPayload(
+                    structuredRequest);
+            var request = new
+            {
+                this.model,
+                prompt = structuredPrompt,
+                stream = false,
+                format = JObject.Parse(
+                    StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                options = new
+                {
+                    temperature = this.temperature,
+                },
+            };
+
+            var response =
+                await this.httpClient.PostAsJsonAsync("/api/generate", request)
+                    .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var parsed = JObject.Parse(json);
+            var rawStructuredPayload = parsed["response"]?.ToString();
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"Ollama structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                this.translationCache.Remember(cacheKey, translatedText);
+                return translatedText;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"Ollama structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
         }
     }
 

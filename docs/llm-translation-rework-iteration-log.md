@@ -1839,3 +1839,39 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - evaluate whether `Ollama` should use its documented schema `format` path
     or stay on plain-text until there is a stronger in-game need
+
+## Iteration 48 - Issue 148 Ollama Structured Dialogue Path
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - add the first Ollama-specific structured dialogue path using the official
+    `format` JSON schema support while preserving the current plain-text
+    fallback semantics
+- Files touched:
+  - `Translators/OllamaTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - updated `OllamaTranslator` so the dialogue-context path now:
+    - tries one `/api/generate` request with `format=<json schema>` first
+    - keeps using the existing translator endpoint instead of introducing a
+      parallel chat-only code path
+    - reuses the shared structured request payload serializer and structured
+      response validator
+    - falls back automatically to the existing plain-text path when the model
+      ignores the schema, returns malformed JSON, or fails
+- Provider notes:
+  - this path follows the official Ollama structured output guidance for
+    `format` with a JSON schema object
+  - the structured attempt uses `options.temperature` for the schema request
+- Behavior-sensitive risks:
+  - some local models exposed through Ollama may not honor structured output
+    consistently; this cut treats malformed or missing JSON as a soft failure
+    and reruns the legacy path
+  - only the dialogue-context path attempts structured output
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether `Claude` should stay disabled for structured mode until a
+    provider-specific contract proves stable enough
