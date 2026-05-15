@@ -114,6 +114,18 @@ public class Config : IPluginConfiguration
   /// </summary>
   [DefaultValue("ChatGPT")] public string DialogueLlmEngineKey = "ChatGPT";
 
+  /// <summary>
+  ///     Enables structured dialogue glossary injection for dialogue-family
+  ///     LLM requests.
+  /// </summary>
+  [DefaultValue(false)] public bool EnableDialogueGlossaryInjection = false;
+
+  /// <summary>
+  ///     Operator-managed file path for the structured dialogue glossary
+  ///     document.
+  /// </summary>
+  [DefaultValue("")] public string DialogueGlossaryFilePath = string.Empty;
+
   /// <summary>API key for Anthropic Claude usage.</summary>
   [DefaultValue("")] public string ClaudeApiKey = string.Empty;
 

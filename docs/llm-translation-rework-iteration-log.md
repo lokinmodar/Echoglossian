@@ -1950,3 +1950,46 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - add config, debugger visibility, and a narrow operator-facing control for
     loading the dialogue glossary file
+
+## Iteration 51 - Issue 148 Dialogue Glossary Runtime And Debugger Integration
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - connect the structured dialogue glossary foundation to config, runtime
+    refresh, and operator-facing inspection without changing any provider
+    prompt path yet
+- Files touched:
+  - `Config.cs`
+  - `Echoglossian.cs`
+  - `GeneralHelpers/RuntimeConfigurationRefresh.cs`
+  - `Translators/StructuredDialogueGlossaryStore.cs`
+  - `PluginUI/Tabs/TranslationEnginesTab.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added config fields for:
+    - `EnableDialogueGlossaryInjection`
+    - `DialogueGlossaryFilePath`
+  - added a runtime-only glossary signature so config saves refresh the shared
+    glossary store only when glossary settings change
+  - glossary load and clear now happen safely at startup and during runtime
+    config refresh
+  - hardened glossary refresh against invalid path normalization failures
+  - added a `Dialogue glossary` section in the engines tab with:
+    - enable toggle
+    - file-path input
+    - reload button
+    - clear button
+    - inline snapshot feedback
+  - added debugger visibility and reload/clear controls for glossary state
+- Behavior-sensitive risks:
+  - this cut still does not inject glossary rows into any live provider prompt
+  - the runtime clears the shared glossary store whenever glossary injection is
+    disabled or the path is blank
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - inject active glossary rows into the structured dialogue request path for
+    the LLM providers already using issue-148 structured dialogue

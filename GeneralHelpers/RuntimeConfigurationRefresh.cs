@@ -44,6 +44,16 @@ public partial class Echoglossian
     this.TryShowTranslationActivationBlockedNotification();
     PluginInterface.UiBuilder.DisableCutsceneUiHide =
         this.configuration.ShowInCutscenes;
+    var glossarySignature =
+        this.ComputeStructuredDialogueGlossaryRuntimeSignature();
+    if (!string.Equals(
+            glossarySignature,
+            this.structuredDialogueGlossaryRuntimeSignature,
+            StringComparison.Ordinal))
+    {
+      this.RefreshStructuredDialogueGlossaryRuntime();
+      this.structuredDialogueGlossaryRuntimeSignature = glossarySignature;
+    }
 
     var translationSignature = this.ComputeTranslationRuntimeSignature();
     var translationChanged = !string.Equals(
@@ -156,6 +166,46 @@ public partial class Echoglossian
           this.configuration.UseLiveLmStudioModelList,
           this.configuration.UseLmStudioAuth,
         });
+  }
+
+  /// <summary>
+  ///     Computes a signature for runtime-only structured dialogue glossary
+  ///     settings so glossary reloads happen only when the operator-facing
+  ///     glossary state changes.
+  /// </summary>
+  /// <returns>A stable serialized signature.</returns>
+  private string ComputeStructuredDialogueGlossaryRuntimeSignature()
+  {
+    return JsonConvert.SerializeObject(
+        new
+        {
+          this.configuration.EnableDialogueGlossaryInjection,
+          DialogueGlossaryFilePath =
+              this.configuration.DialogueGlossaryFilePath?.Trim() ??
+              string.Empty,
+        });
+  }
+
+  /// <summary>
+  ///     Refreshes the shared structured dialogue glossary store from the
+  ///     current configuration.
+  /// </summary>
+  private void RefreshStructuredDialogueGlossaryRuntime()
+  {
+    if (!this.configuration.EnableDialogueGlossaryInjection)
+    {
+      StructuredDialogueGlossaryStore.Clear();
+      return;
+    }
+
+    if (string.IsNullOrWhiteSpace(this.configuration.DialogueGlossaryFilePath))
+    {
+      StructuredDialogueGlossaryStore.Clear();
+      return;
+    }
+
+    StructuredDialogueGlossaryStore.Refresh(
+        this.configuration.DialogueGlossaryFilePath);
   }
 
   /// <summary>

@@ -66,27 +66,44 @@ public static class StructuredDialogueGlossaryStore
     public static bool Refresh(string? filePath)
     {
         var observedAtUtc = DateTime.UtcNow;
-        var normalizedPath = string.IsNullOrWhiteSpace(filePath)
-            ? null
-            : Path.GetFullPath(filePath.Trim());
-        var result = StructuredDialogueGlossaryLoader.LoadFromFile(
-            normalizedPath ?? string.Empty);
-
-        lock (SyncLock)
+        try
         {
-            currentEntries = result.Succeeded
-                ? result.Entries.ToList()
-                : [];
-            lastLoadObservedAtUtc = observedAtUtc;
-            lastLoadPath = normalizedPath;
-            lastLoadSucceeded = result.Succeeded;
-            lastSkippedEntryCount = result.SkippedEntryCount;
-            lastFailureDetail = result.Succeeded
+            var normalizedPath = string.IsNullOrWhiteSpace(filePath)
                 ? null
-                : result.FailureDetail;
-        }
+                : Path.GetFullPath(filePath.Trim());
+            var result = StructuredDialogueGlossaryLoader.LoadFromFile(
+                normalizedPath ?? string.Empty);
 
-        return result.Succeeded;
+            lock (SyncLock)
+            {
+                currentEntries = result.Succeeded
+                    ? result.Entries.ToList()
+                    : [];
+                lastLoadObservedAtUtc = observedAtUtc;
+                lastLoadPath = normalizedPath;
+                lastLoadSucceeded = result.Succeeded;
+                lastSkippedEntryCount = result.SkippedEntryCount;
+                lastFailureDetail = result.Succeeded
+                    ? null
+                    : result.FailureDetail;
+            }
+
+            return result.Succeeded;
+        }
+        catch (Exception ex)
+        {
+            lock (SyncLock)
+            {
+                currentEntries = [];
+                lastLoadObservedAtUtc = observedAtUtc;
+                lastLoadPath = filePath;
+                lastLoadSucceeded = false;
+                lastSkippedEntryCount = 0;
+                lastFailureDetail = ex.Message;
+            }
+
+            return false;
+        }
     }
 
     /// <summary>

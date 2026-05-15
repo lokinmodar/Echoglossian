@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Globalization;
+using Echoglossian.Helpers;
 using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators;
 
@@ -119,6 +121,9 @@ public static class TranslationEnginesTab
             promptManager,
             engine,
             rebuildTranslationService);
+        ImGui.Separator();
+        ImGui.Spacing();
+        changed |= DrawDialogueGlossarySection(config);
 
         return changed;
     }
@@ -311,6 +316,133 @@ public static class TranslationEnginesTab
         ImGui.EndDisabled();
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Draws the operator-facing structured dialogue glossary settings used
+    ///     by issue 148.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <returns><see langword="true" /> when the configuration changed.</returns>
+    private static bool DrawDialogueGlossarySection(Config config)
+    {
+        var changed = false;
+        var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
+        DrawSubsectionHeader(
+            GetUiString(
+                "DialogueGlossarySectionLabel",
+                "Dialogue glossary"));
+        ImGui.TextWrapped(
+            GetUiString(
+                "DialogueGlossaryDescription",
+                "Inject a structured glossary into dialogue-family LLM requests using an operator-managed JSON file."));
+
+        changed |= ImGui.Checkbox(
+            GetUiString(
+                "EnableDialogueGlossaryInjectionLabel",
+                "Enable dialogue glossary injection"),
+            ref config.EnableDialogueGlossaryInjection);
+
+        ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);
+        var glossaryPathLabel = GetUiString(
+            "DialogueGlossaryFilePathLabel",
+            "Dialogue glossary file path");
+        changed |= FieldValidationHelper.ValidatedInputText(
+            glossaryPathLabel,
+            ref config.DialogueGlossaryFilePath,
+            1024,
+            out _);
+
+        if (ImGui.Button(
+                GetUiString(
+                    "ReloadDialogueGlossaryButtonLabel",
+                    "Reload dialogue glossary")))
+        {
+            StructuredDialogueGlossaryStore.Refresh(
+                config.DialogueGlossaryFilePath);
+        }
+
+        ImGui.EndDisabled();
+
+        ImGui.SameLine();
+        if (ImGui.Button(
+                GetUiString(
+                    "ClearDialogueGlossaryButtonLabel",
+                    "Clear loaded glossary")))
+        {
+            StructuredDialogueGlossaryStore.Clear();
+        }
+
+        DrawDialogueGlossarySnapshot(snapshot);
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the current shared glossary snapshot inline in the translation
+    ///     engines tab.
+    /// </summary>
+    /// <param name="snapshot">The current glossary snapshot.</param>
+    private static void DrawDialogueGlossarySnapshot(
+        StructuredDialogueGlossaryStore.StructuredDialogueGlossarySnapshot snapshot)
+    {
+        var statusText = snapshot.LastLoadSucceeded switch
+        {
+            true => GetUiString(
+                "DialogueGlossaryStatusLoaded",
+                "Loaded"),
+            false => GetUiString(
+                "DialogueGlossaryStatusFailed",
+                "Failed"),
+            _ => GetUiString(
+                "DialogueGlossaryStatusIdle",
+                "Idle"),
+        };
+        ImGui.TextWrapped(
+            string.Format(
+                CultureInfo.CurrentCulture,
+                GetUiString(
+                    "DialogueGlossarySnapshotSummary",
+                    "Status: {0}  |  Entries: {1}  |  Skipped rows: {2}"),
+                statusText,
+                snapshot.EntryCount,
+                snapshot.SkippedEntryCount));
+
+        if (!string.IsNullOrWhiteSpace(snapshot.LastLoadPath))
+        {
+            ImGui.TextWrapped(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    GetUiString(
+                        "DialogueGlossarySnapshotPath",
+                        "Last path: {0}"),
+                    snapshot.LastLoadPath));
+        }
+
+        if (snapshot.LastLoadObservedAtUtc.HasValue)
+        {
+            ImGui.TextWrapped(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    GetUiString(
+                        "DialogueGlossarySnapshotUtc",
+                        "Last load UTC: {0}"),
+                    snapshot.LastLoadObservedAtUtc.Value.ToString(
+                        "u",
+                        CultureInfo.InvariantCulture)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(snapshot.LastLoadFailureDetail))
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.4f, 0.4f, 1f));
+            ImGui.TextWrapped(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    GetUiString(
+                        "DialogueGlossarySnapshotFailure",
+                        "Last glossary load failure: {0}"),
+                    snapshot.LastLoadFailureDetail));
+            ImGui.PopStyleColor();
+        }
     }
 
     /// <summary>

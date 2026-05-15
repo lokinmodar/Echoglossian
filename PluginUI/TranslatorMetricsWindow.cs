@@ -75,6 +75,8 @@ public sealed class TranslatorMetricsWindow
     ImGui.Separator();
     this.DrawDialogueOverrideStatus();
     ImGui.Separator();
+    this.DrawDialogueGlossaryStatus();
+    ImGui.Separator();
     this.DrawOpenAiProviderStatus();
     ImGui.Separator();
 
@@ -424,6 +426,82 @@ public sealed class TranslatorMetricsWindow
               CultureInfo.CurrentCulture,
               GetText("TranslatorDebuggerOpenAiRefreshFailure", "Last model refresh failure: {0}"),
               refreshSnapshot.LastRefreshFailureDetail));
+      ImGui.PopStyleColor();
+    }
+  }
+
+  /// <summary>
+  ///     Draws the current structured dialogue glossary configuration and load
+  ///     snapshot for operator inspection.
+  /// </summary>
+  private void DrawDialogueGlossaryStatus()
+  {
+    var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
+    ImGui.TextWrapped(
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText(
+                "TranslatorDebuggerDialogueGlossarySummary",
+                "Dialogue glossary enabled: {0}  |  Entries: {1}  |  Skipped rows: {2}"),
+            this.config.EnableDialogueGlossaryInjection
+                ? GetText("TranslatorDebuggerEnabled", "Enabled")
+                : GetText("TranslatorDebuggerDisabled", "Disabled"),
+            snapshot.EntryCount,
+            snapshot.SkippedEntryCount));
+    ImGui.TextWrapped(
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText(
+                "TranslatorDebuggerDialogueGlossaryPath",
+                "Configured file path: {0}"),
+            string.IsNullOrWhiteSpace(this.config.DialogueGlossaryFilePath)
+                ? "-"
+                : this.config.DialogueGlossaryFilePath));
+
+    var loadStatus = snapshot.LastLoadSucceeded switch
+    {
+      true => GetText("TranslatorDebuggerSucceeded", "Succeeded"),
+      false => GetText("TranslatorDebuggerFailed", "Failed"),
+      _ => GetText("TranslatorDebuggerNeverAttempted", "Never attempted"),
+    };
+    ImGui.TextWrapped(
+        string.Format(
+            CultureInfo.CurrentCulture,
+            GetText(
+                "TranslatorDebuggerDialogueGlossaryLoadStatus",
+                "Last glossary load: {0}  |  Last load UTC: {1}"),
+            loadStatus,
+            snapshot.LastLoadObservedAtUtc?.ToString("u", CultureInfo.InvariantCulture) ??
+            "-"));
+
+    if (ImGui.Button(
+            GetText(
+                "TranslatorDebuggerReloadDialogueGlossary",
+                "Reload Dialogue Glossary")))
+    {
+      StructuredDialogueGlossaryStore.Refresh(
+          this.config.DialogueGlossaryFilePath);
+    }
+
+    ImGui.SameLine();
+    if (ImGui.Button(
+            GetText(
+                "TranslatorDebuggerClearDialogueGlossary",
+                "Clear Loaded Glossary")))
+    {
+      StructuredDialogueGlossaryStore.Clear();
+    }
+
+    if (!string.IsNullOrWhiteSpace(snapshot.LastLoadFailureDetail))
+    {
+      ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.95f, 0.6f, 0.35f, 1f));
+      ImGui.TextWrapped(
+          string.Format(
+              CultureInfo.CurrentCulture,
+              GetText(
+                  "TranslatorDebuggerDialogueGlossaryFailure",
+                  "Last glossary load failure: {0}"),
+              snapshot.LastLoadFailureDetail));
       ImGui.PopStyleColor();
     }
   }

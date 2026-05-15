@@ -129,6 +129,7 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly object runtimeTranslationFailureNotificationLock = new();
   private readonly Dictionary<string, DateTime> runtimeTranslationFailureNotificationTimes =
       new(StringComparer.Ordinal);
+  private string? structuredDialogueGlossaryRuntimeSignature;
   private string? translationActivationBlockedNotificationSignature;
   private string? translationRuntimeSignature;
   private bool runtimeConfigurationDirty;
@@ -334,6 +335,7 @@ public partial class Echoglossian : IDalamudPlugin
     TraitCacheManager.Preload(ConfigDirectory);
     ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
     ItemTooltipCacheManager.Preload(ConfigDirectory);
+    this.RefreshStructuredDialogueGlossaryRuntime();
 
     FrameworkInterface.Update += this.Tick;
 
@@ -354,6 +356,8 @@ public partial class Echoglossian : IDalamudPlugin
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
     activeInstance = this;
+    this.structuredDialogueGlossaryRuntimeSignature =
+        this.ComputeStructuredDialogueGlossaryRuntimeSignature();
     this.translationRuntimeSignature =
         this.ComputeTranslationRuntimeSignature();
     this.addonHandlerRegistrationSignature =
