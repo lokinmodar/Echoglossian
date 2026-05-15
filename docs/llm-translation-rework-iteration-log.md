@@ -1671,3 +1671,44 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - wire the first OpenAI-family structured dialogue path behind an explicit
     capability check and keep plain-text fallback in place
+
+## Iteration 43 - Issue 148 First Live OpenAI Structured Dialogue Path
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - wire the first real structured dialogue path into `ChatGPTTranslator`
+    without regressing the existing plain-text path when structured output is
+    unsupported or malformed
+- Files touched:
+  - `Translators/ChatGPTTranslator.cs`
+  - `Translators/Helpers/StructuredDialogueOpenAiToolHelper.cs`
+  - `Echoglossian.Tests/StructuredDialogueOpenAiToolHelperTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added one reusable OpenAI-family helper that:
+    - builds the narrow function-tool JSON schema
+    - serializes the shared structured request payload
+    - builds the first user prompt for the structured dialogue path
+  - updated `ChatGPTTranslator` so the dialogue-context path now:
+    - tries one forced function-tool call first
+    - validates the returned JSON arguments through the shared structured
+      response validator
+    - falls back automatically to the old plain-text prompt path on any
+      provider, schema, or parsing failure
+  - kept persistence semantics unchanged:
+    - only the translated dialogue text is remembered in the translator cache
+    - no session-aware payload is persisted differently because of this path
+- Behavior-sensitive risks:
+  - some OpenAI-compatible endpoints may ignore forced tool calling or return
+    malformed arguments; this cut intentionally treats that as a soft failure
+    and falls back to the existing plain-text path
+  - the first structured path only covers `ChatGPT` and only when dialogue
+    context is already present
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - extend the same structured path shape to the next OpenAI-family-compatible
+    translator after in-game validation confirms the fallback behavior is
+    stable

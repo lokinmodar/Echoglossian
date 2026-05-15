@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.ClientModel;
+using System.Text;
 using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
 using Echoglossian.Translators.OpenAI;
@@ -223,6 +224,20 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         string cacheKey,
         DialogueTranslationContext? dialogueContext = null)
     {
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation = await this.TryTranslateStructuredDialogueAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
+
         var prompt = this.BuildPrompt(
             text,
             sourceLanguage,
@@ -266,6 +281,147 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         }
 
         return string.Empty;
+    }
+
+    /// <summary>
+    ///     Attempts the first live structured dialogue path for OpenAI-family
+    ///     providers by forcing one tool call that returns JSON arguments.
+    ///     Any failure falls back to the existing plain-text path.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The cache key for this request.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the caller can use the plain-text path.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.ChatGPT) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
+
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest = StructuredDialogueTranslationRequestBuilder.Build(
+                normalizedText,
+                sourceLanguage,
+                targetLanguage,
+                TranslationSurfaceGroup.Dialogue,
+                dialogueContext);
+            var structuredPrompt =
+                StructuredDialogueOpenAiToolHelper.BuildUserPrompt(
+                    PromptTemplateManager.RenderPrompt(
+                        this.promptTemplate,
+                        normalizedText,
+                        sourceLanguage,
+                        targetLanguage),
+                    structuredRequest);
+
+            var structuredTool = ChatTool.CreateFunctionTool(
+                StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                StructuredDialogueOpenAiToolHelper.ToolFunctionDescription,
+                BinaryData.FromString(
+                    StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                true);
+
+            var chatCompletionOptions = new ChatCompletionOptions
+            {
+                Temperature = this.temperature,
+                ToolChoice = ChatToolChoice.CreateFunctionChoice(
+                    StructuredDialogueOpenAiToolHelper.ToolFunctionName),
+            };
+            chatCompletionOptions.Tools.Add(structuredTool);
+
+            var messages = new List<ChatMessage>
+            {
+                ChatMessage.CreateUserMessage(structuredPrompt),
+            };
+
+            ChatCompletion completion =
+                await this.chatClient!.CompleteChatAsync(
+                    messages,
+                    chatCompletionOptions).ConfigureAwait(false);
+
+            var rawStructuredPayload = this.ExtractStructuredPayload(
+                completion);
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"ChatGPT structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                this.translationCache.Remember(
+                    cacheKey,
+                    translatedText);
+                return translatedText;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"ChatGPT structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Extracts one raw structured payload from the OpenAI-family response,
+    ///     preferring forced tool-call arguments and then falling back to any
+    ///     direct text content when a compatible endpoint ignores tool calling.
+    /// </summary>
+    /// <param name="completion">The provider completion.</param>
+    /// <returns>The raw structured payload string, if any.</returns>
+    private string ExtractStructuredPayload(ChatCompletion completion)
+    {
+        foreach (var toolCall in completion.ToolCalls)
+        {
+            if (toolCall.Kind == ChatToolCallKind.Function &&
+                string.Equals(
+                    toolCall.FunctionName,
+                    StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                    StringComparison.Ordinal))
+            {
+                return toolCall.FunctionArguments?.ToString() ?? string.Empty;
+            }
+        }
+
+        if (completion.Content.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        StringBuilder builder = new();
+        foreach (var contentPart in completion.Content)
+        {
+            builder.Append(contentPart.Text);
+        }
+
+        return builder.ToString().Trim();
     }
 
     private string BuildPrompt(
