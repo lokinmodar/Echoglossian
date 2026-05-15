@@ -286,13 +286,17 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
         try
         {
             var normalizedText = FixText(text);
+            var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+                sourceLanguage,
+                targetLanguage);
             var structuredRequest =
                 StructuredDialogueTranslationRequestBuilder.Build(
                     normalizedText,
                     sourceLanguage,
                     targetLanguage,
                     TranslationSurfaceGroup.Dialogue,
-                    dialogueContext);
+                    dialogueContext,
+                    glossaryEntries);
             var structuredPrompt =
                 StructuredDialogueOpenAiToolHelper.BuildUserPrompt(
                     PromptTemplateManager.RenderPrompt(

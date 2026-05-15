@@ -1993,3 +1993,40 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - inject active glossary rows into the structured dialogue request path for
     the LLM providers already using issue-148 structured dialogue
+
+## Iteration 52 - Issue 148 Structured Dialogue Glossary Injection
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - inject the active shared dialogue glossary rows into the structured
+    request contract for the LLM providers already running issue-148
+    structured dialogue
+- Files touched:
+  - `Translators/ChatGPTTranslator.cs`
+  - `Translators/LmStudioTranslator.cs`
+  - `Translators/OpenRouterTranslator.cs`
+  - `Translators/DeepSeekTranslator.cs`
+  - `Translators/GeminiTranslator.cs`
+  - `Translators/OllamaTranslator.cs`
+  - `Translators/ClaudeTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - each structured dialogue path now reads the active glossary rows from the
+    shared store using the current source and target languages
+  - those rows are passed into the existing structured request builder so the
+    provider-specific serializers can include glossary data without inventing a
+    second glossary pipeline
+  - when glossary injection is disabled or unloaded, the store returns no rows
+    and the structured request stays otherwise unchanged
+- Behavior-sensitive risks:
+  - glossary quality now directly affects structured dialogue requests when the
+    feature is enabled, so malformed but loadable term choices can degrade
+    output quality even though they no longer crash the runtime
+  - this cut still keeps the plain-text fallback path intact for every engine
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether glossary activity should surface explicitly in the debugger
+    metrics or per-request structured diagnostics

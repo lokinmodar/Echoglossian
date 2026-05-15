@@ -280,13 +280,18 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
         try
         {
             string normalizedText = FixText(text);
+            IReadOnlyList<StructuredDialogueGlossaryEntry> glossaryEntries =
+                StructuredDialogueGlossaryStore.GetEntries(
+                    sourceLanguage,
+                    targetLanguage);
             StructuredDialogueTranslationRequest structuredRequest =
                 StructuredDialogueTranslationRequestBuilder.Build(
                     normalizedText,
                     sourceLanguage,
                     targetLanguage,
                     TranslationSurfaceGroup.Dialogue,
-                    dialogueContext);
+                    dialogueContext,
+                    glossaryEntries);
             string basePrompt = this.promptTemplate
                 .Replace("{text}", normalizedText, StringComparison.Ordinal)
                 .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
