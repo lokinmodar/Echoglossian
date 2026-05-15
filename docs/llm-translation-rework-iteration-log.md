@@ -1916,3 +1916,37 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - re-evaluate the issue-148 plan/doc wording now that every major dialogue
     LLM family in the branch has at least one first structured path
+
+## Iteration 50 - Issue 148 Dialogue Glossary Loader Foundation
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - add the first shared dialogue glossary file loader and runtime cache before
+    wiring operator-facing config and actual glossary injection into requests
+- Files touched:
+  - `Translators/StructuredDialogueGlossaryLoadResult.cs`
+  - `Translators/Helpers/StructuredDialogueGlossaryLoader.cs`
+  - `Translators/StructuredDialogueGlossaryStore.cs`
+  - `Echoglossian.Tests/StructuredDialogueGlossaryLoaderTests.cs`
+  - `Echoglossian.Tests/StructuredDialogueGlossaryStoreTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added a first-pass JSON glossary loader that accepts:
+    - a root array of glossary rows
+    - or an object document with an `entries` array
+  - malformed rows are skipped instead of crashing the whole glossary load
+  - added a shared in-memory glossary store with:
+    - last-load snapshot state
+    - filtered retrieval by source/target language
+    - explicit clear/reset behavior
+- Behavior-sensitive risks:
+  - this cut does not inject glossary rows into any live translator request yet
+  - language matching currently uses simple case-insensitive exact string
+    comparison on optional language scopes
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - add config, debugger visibility, and a narrow operator-facing control for
+    loading the dialogue glossary file
