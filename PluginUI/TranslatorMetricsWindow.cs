@@ -142,11 +142,17 @@ public sealed class TranslatorMetricsWindow
     ImGui.Spacing();
     var totalLiveRequests = snapshots.Sum(snapshot => snapshot.LiveRequestCount);
     var totalContextAwareRequests = snapshots.Sum(snapshot => snapshot.ContextAwareRequestCount);
+    var totalStructuredRequests = snapshots.Sum(snapshot => snapshot.StructuredRequestCount);
+    var totalStructuredSuccesses = snapshots.Sum(snapshot => snapshot.StructuredSuccessCount);
+    var totalGlossaryStructuredRequests =
+        snapshots.Sum(snapshot => snapshot.GlossaryAugmentedStructuredRequestCount);
     var totalFailures = snapshots.Sum(snapshot => snapshot.FailureCount);
     var totalShortCircuits = snapshots.Sum(snapshot => snapshot.ShortCircuitCount);
     var dialogueSessionSnapshots = DialogueTranslationSessionStore.GetSnapshots();
     ImGui.Text(
         $"Engines: {snapshots.Count}  |  Live requests: {totalLiveRequests}  |  Context-aware: {totalContextAwareRequests}  |  Failures: {totalFailures}  |  Short circuits: {totalShortCircuits}");
+    ImGui.Text(
+        $"Structured attempts: {totalStructuredRequests}  |  Structured successes: {totalStructuredSuccesses}  |  Glossary-assisted: {totalGlossaryStructuredRequests}");
     ImGui.Text(
         $"Dialogue sessions: {dialogueSessionSnapshots.Count}");
 
@@ -160,7 +166,7 @@ public sealed class TranslatorMetricsWindow
 
     if (ImGui.BeginTable(
             "##TranslatorMetricsTable",
-            13,
+            17,
             ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg |
             ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY |
             ImGuiTableFlags.SizingStretchProp,
@@ -171,6 +177,9 @@ public sealed class TranslatorMetricsWindow
       ImGui.TableSetupColumn("Model");
       ImGui.TableSetupColumn("Live Requests");
       ImGui.TableSetupColumn("Context-Aware");
+      ImGui.TableSetupColumn("Structured");
+      ImGui.TableSetupColumn("Structured OK");
+      ImGui.TableSetupColumn("Glossary");
       ImGui.TableSetupColumn("Successes");
       ImGui.TableSetupColumn("Failures");
       ImGui.TableSetupColumn("Short Circuits");
@@ -194,6 +203,12 @@ public sealed class TranslatorMetricsWindow
         ImGui.TextUnformatted(snapshot.LiveRequestCount.ToString(CultureInfo.InvariantCulture));
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(snapshot.ContextAwareRequestCount.ToString(CultureInfo.InvariantCulture));
+        ImGui.TableNextColumn();
+        ImGui.TextUnformatted(snapshot.StructuredRequestCount.ToString(CultureInfo.InvariantCulture));
+        ImGui.TableNextColumn();
+        ImGui.TextUnformatted(snapshot.StructuredSuccessCount.ToString(CultureInfo.InvariantCulture));
+        ImGui.TableNextColumn();
+        ImGui.TextUnformatted(snapshot.GlossaryAugmentedStructuredRequestCount.ToString(CultureInfo.InvariantCulture));
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(snapshot.SuccessCount.ToString(CultureInfo.InvariantCulture));
         ImGui.TableNextColumn();

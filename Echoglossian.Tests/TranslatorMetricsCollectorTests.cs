@@ -33,6 +33,17 @@ public class TranslatorMetricsCollectorTests
         TimeSpan.FromMilliseconds(120),
         usedDialogueContext: true,
         observedAtUtc: observedAtUtc);
+    TranslatorMetricsCollector.RecordStructuredAttempt(
+        (int)Echoglossian.TransEngines.Ollama,
+        succeeded: true,
+        usedGlossary: true,
+        observedAtUtc: observedAtUtc);
+    TranslatorMetricsCollector.RecordStructuredAttempt(
+        (int)Echoglossian.TransEngines.Ollama,
+        succeeded: false,
+        usedGlossary: false,
+        failureReason: "structured-json-invalid",
+        observedAtUtc: observedAtUtc.AddMilliseconds(500));
     TranslatorMetricsCollector.Record(
         (int)Echoglossian.TransEngines.Ollama,
         TranslationRequestMetricOutcome.Failure,
@@ -53,12 +64,16 @@ public class TranslatorMetricsCollectorTests
     Assert.Equal("llama3", snapshot.ModelName);
     Assert.Equal(2, snapshot.LiveRequestCount);
     Assert.Equal(1, snapshot.ContextAwareRequestCount);
+    Assert.Equal(2, snapshot.StructuredRequestCount);
+    Assert.Equal(1, snapshot.StructuredSuccessCount);
+    Assert.Equal(1, snapshot.GlossaryAugmentedStructuredRequestCount);
     Assert.Equal(1, snapshot.SuccessCount);
     Assert.Equal(1, snapshot.FailureCount);
     Assert.Equal(1, snapshot.ShortCircuitCount);
     Assert.Equal(180d, snapshot.AverageLatencyMs);
     Assert.Equal(240d, snapshot.MaxLatencyMs);
     Assert.Equal("known-failure-cache", snapshot.LastFailureReason);
+    Assert.Equal("structured-json-invalid", snapshot.LastStructuredFailureReason);
     Assert.Equal(observedAtUtc.AddSeconds(2), snapshot.LastRequestAtUtc);
   }
 

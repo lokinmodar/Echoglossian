@@ -42,6 +42,15 @@ public enum TranslationRequestMetricOutcome
 /// <param name="ContextAwareRequestCount">
 /// The number of live translator requests that consumed runtime-only short-lived dialogue context.
 /// </param>
+/// <param name="StructuredRequestCount">
+/// The number of requests that attempted the structured dialogue path.
+/// </param>
+/// <param name="StructuredSuccessCount">
+/// The number of structured dialogue attempts that produced an accepted structured payload.
+/// </param>
+/// <param name="GlossaryAugmentedStructuredRequestCount">
+/// The number of structured dialogue attempts that carried one or more glossary rows.
+/// </param>
 /// <param name="SuccessCount">The number of successful translated results.</param>
 /// <param name="FailureCount">The number of live requests that fell back.</param>
 /// <param name="ShortCircuitCount">
@@ -61,6 +70,9 @@ public readonly record struct TranslatorMetricsSnapshot(
     string? ModelName,
     long LiveRequestCount,
     long ContextAwareRequestCount,
+    long StructuredRequestCount,
+    long StructuredSuccessCount,
+    long GlossaryAugmentedStructuredRequestCount,
     long SuccessCount,
     long FailureCount,
     long ShortCircuitCount,
@@ -70,7 +82,8 @@ public readonly record struct TranslatorMetricsSnapshot(
     DateTime? LastRequestAtUtc,
     DateTime? LastSuccessAtUtc,
     DateTime? LastFailureAtUtc,
-    string? LastFailureReason);
+    string? LastFailureReason,
+    string? LastStructuredFailureReason);
 
 /// <summary>
 ///     Aggregates lightweight runtime translator metrics in memory without
@@ -105,6 +118,36 @@ public static class TranslatorMetricsCollector
         latency,
         failureReason,
         usedDialogueContext,
+        observedAtUtc ?? DateTime.UtcNow);
+  }
+
+  /// <summary>
+  ///     Records one structured dialogue attempt so the debugger can expose
+  ///     how often the structured path and glossary augmentation are active.
+  /// </summary>
+  /// <param name="engineId">The translation engine id.</param>
+  /// <param name="succeeded">
+  /// Whether the structured path produced an accepted structured payload.
+  /// </param>
+  /// <param name="usedGlossary">
+  /// Whether the structured request carried one or more glossary rows.
+  /// </param>
+  /// <param name="failureReason">
+  /// Optional structured-path failure detail when the attempt fell back.
+  /// </param>
+  /// <param name="observedAtUtc">Optional explicit observation time for tests.</param>
+  public static void RecordStructuredAttempt(
+      int engineId,
+      bool succeeded,
+      bool usedGlossary,
+      string? failureReason = null,
+      DateTime? observedAtUtc = null)
+  {
+    var bucket = Buckets.GetOrAdd(engineId, _ => new TranslatorMetricsBucket());
+    bucket.RecordStructuredAttempt(
+        succeeded,
+        usedGlossary,
+        failureReason,
         observedAtUtc ?? DateTime.UtcNow);
   }
 
@@ -153,8 +196,12 @@ public static class TranslatorMetricsCollector
     private DateTime? lastSuccessAtUtc;
     private long liveRequestCount;
     private double maxLatencyMs;
+    private long glossaryAugmentedStructuredRequestCount;
     private long shortCircuitCount;
     private long successCount;
+    private string? lastStructuredFailureReason;
+    private long structuredRequestCount;
+    private long structuredSuccessCount;
     private double totalLatencyMs;
     private string? modelName;
     private string? providerName;
@@ -214,6 +261,31 @@ public static class TranslatorMetricsCollector
       }
     }
 
+    public void RecordStructuredAttempt(
+        bool succeeded,
+        bool usedGlossary,
+        string? failureReason,
+        DateTime observedAtUtc)
+    {
+      lock (this.syncRoot)
+      {
+        this.lastRequestAtUtc = observedAtUtc;
+        this.structuredRequestCount++;
+        if (usedGlossary)
+        {
+          this.glossaryAugmentedStructuredRequestCount++;
+        }
+
+        if (succeeded)
+        {
+          this.structuredSuccessCount++;
+          return;
+        }
+
+        this.lastStructuredFailureReason = failureReason;
+      }
+    }
+
     public TranslatorMetricsSnapshot CreateSnapshot(int engineId)
     {
       lock (this.syncRoot)
@@ -231,6 +303,9 @@ public static class TranslatorMetricsCollector
             this.modelName,
             this.liveRequestCount,
             this.contextAwareRequestCount,
+            this.structuredRequestCount,
+            this.structuredSuccessCount,
+            this.glossaryAugmentedStructuredRequestCount,
             this.successCount,
             this.failureCount,
             this.shortCircuitCount,
@@ -240,7 +315,8 @@ public static class TranslatorMetricsCollector
             this.lastRequestAtUtc,
             this.lastSuccessAtUtc,
             this.lastFailureAtUtc,
-            this.lastFailureReason);
+            this.lastFailureReason,
+            this.lastStructuredFailureReason);
       }
     }
   }

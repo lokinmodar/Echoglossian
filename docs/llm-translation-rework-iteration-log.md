@@ -2030,3 +2030,33 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - decide whether glossary activity should surface explicitly in the debugger
     metrics or per-request structured diagnostics
+
+## Iteration 53 - Issue 148 Structured And Glossary Metrics
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - make issue-148 structured-path activity visible in the existing
+    `Translator Debugger and Metrics` window without adding a parallel
+    diagnostics subsystem
+- Files touched:
+  - `Translators/TranslatorMetricsCollector.cs`
+  - `Echoglossian.Tests/TranslatorMetricsCollectorTests.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - extended the shared translator metrics collector with:
+    - `StructuredRequestCount`
+    - `StructuredSuccessCount`
+    - `GlossaryAugmentedStructuredRequestCount`
+    - `LastStructuredFailureReason`
+  - updated the debugger summary and per-engine table to expose those counts
+- Behavior-sensitive risks:
+  - this cut only adds lightweight in-memory counters; it does not change DB
+    semantics or request routing
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - emit the structured/glossary metrics from the individual structured
+    translator paths

@@ -248,12 +248,13 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
             return null;
         }
 
+        var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+            sourceLanguage,
+            targetLanguage);
+        var usedGlossary = glossaryEntries.Count > 0;
         try
         {
             var normalizedText = FixText(text);
-            var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
-                sourceLanguage,
-                targetLanguage);
             var structuredRequest =
                 StructuredDialogueTranslationRequestBuilder.Build(
                     normalizedText,
@@ -320,6 +321,12 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
             if (!structuredValidation.IsValid ||
                 !structuredValidation.Response.HasValue)
             {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.OpenRouter,
+                    false,
+                    usedGlossary,
+                    structuredValidation.FailureReason ??
+                    "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
                     $"OpenRouter structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
@@ -330,16 +337,30 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                 structuredValidation.Response.Value.TextTranslated.Trim();
             if (TranslationResultGuard.IsPersistableTranslation(translatedText))
             {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.OpenRouter,
+                    true,
+                    usedGlossary);
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
                 return translatedText;
             }
 
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.OpenRouter,
+                false,
+                usedGlossary,
+                "non-persistable-structured-result");
             return null;
         }
         catch (Exception ex)
         {
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.OpenRouter,
+                false,
+                usedGlossary,
+                ex.Message);
             PluginRuntimeLog.Debug(
                 this.pluginLog,
                 $"OpenRouter structured dialogue path failed and will fall back to plain-text: {ex.Message}");
