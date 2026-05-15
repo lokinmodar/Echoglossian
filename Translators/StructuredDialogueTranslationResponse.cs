@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Text.Json.Serialization;
+
 namespace Echoglossian.Translators;
 
 /// <summary>
@@ -12,5 +14,7 @@ namespace Echoglossian.Translators;
 /// <param name="SpeakerTranslated">The translated speaker name.</param>
 /// <param name="TextTranslated">The translated dialogue text.</param>
 public readonly record struct StructuredDialogueTranslationResponse(
+    [property: JsonPropertyName("speaker_translated")]
     string SpeakerTranslated,
+    [property: JsonPropertyName("text_translated")]
     string TextTranslated);

@@ -1628,3 +1628,46 @@ turning into an opaque pile of partial changes.
   - add the first structured dialogue response-validation helper so the future
     provider wiring has one shared acceptance gate instead of bespoke JSON-mode
     checks per engine
+
+## Iteration 42 - Issue 148 Structured Response Validation
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - add the first shared structured dialogue response validation helper so the
+    future provider wiring can reuse one acceptance gate for strict JSON
+    payloads instead of open-coding response checks per engine
+- Files touched:
+  - `Translators/StructuredDialogueContextTurn.cs`
+  - `Translators/StructuredDialogueGlossaryEntry.cs`
+  - `Translators/StructuredDialogueTranslationMetadata.cs`
+  - `Translators/StructuredDialogueTranslationRequest.cs`
+  - `Translators/StructuredDialogueTranslationResponse.cs`
+  - `Translators/StructuredDialogueResponseValidationResult.cs`
+  - `Translators/Helpers/StructuredDialogueTranslationResponseValidator.cs`
+  - `Echoglossian.Tests/StructuredDialogueTranslationResponseValidatorTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added JSON-property annotations to the shared structured dialogue contract
+    types so the first provider wiring can serialize and parse stable snake_case
+    payloads
+  - introduced a shared structured response validation result type
+  - introduced a strict JSON parse-and-validate helper that:
+    - rejects wrapper prose instead of extracting JSON from it
+    - rejects empty or synthetic translated text
+    - can optionally require a translated speaker field
+  - added tests covering:
+    - successful strict JSON validation
+    - wrapper/annotation leakage rejection
+    - synthetic translation error rejection
+    - required speaker rejection
+- Behavior-sensitive risks:
+  - no live provider path uses this helper yet
+  - this is foundation only, but it intentionally sets the future structured
+    path to be strict about wrapper prose instead of trying to guess the JSON
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - wire the first OpenAI-family structured dialogue path behind an explicit
+    capability check and keep plain-text fallback in place

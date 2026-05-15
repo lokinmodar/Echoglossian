@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Text.Json.Serialization;
+
 namespace Echoglossian.Translators;
 
 /// <summary>
@@ -18,11 +20,19 @@ namespace Echoglossian.Translators;
 /// <param name="Glossary">The glossary rows to inject.</param>
 /// <param name="Metadata">Optional structured metadata hints.</param>
 public readonly record struct StructuredDialogueTranslationRequest(
+    [property: JsonPropertyName("source_language")]
     string SourceLanguage,
+    [property: JsonPropertyName("target_language")]
     string TargetLanguage,
+    [property: JsonPropertyName("surface_family")]
     string SurfaceFamily,
+    [property: JsonPropertyName("speaker_original")]
     string SpeakerOriginal,
+    [property: JsonPropertyName("text_original")]
     string TextOriginal,
+    [property: JsonPropertyName("dialogue_context")]
     IReadOnlyList<StructuredDialogueContextTurn> DialogueContext,
+    [property: JsonPropertyName("glossary")]
     IReadOnlyList<StructuredDialogueGlossaryEntry> Glossary,
+    [property: JsonPropertyName("metadata")]
     StructuredDialogueTranslationMetadata Metadata);
