@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-15
+Snapshot date: 2026-05-16
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -45,7 +45,7 @@ Notes:
 - This makes `#178` the clearest issue now resolved by a currently published
   build, rather than only by local code.
 
-## Resolved In Submitted `4.2600.1105.x`
+## Previously Closed In Published `4.2600.1105.x`
 
 - `#186` Randomly stops translating to PT-BR and displays English text instead
 - `#190` Seleção de mecanismo de tradução não está funcionando corretamente
@@ -54,10 +54,11 @@ Notes:
 
 Notes:
 
-- `4.2600.1105.x` is the current submitted release package and is tracked in
-  the official repo submission
-  [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626).
-- This package includes:
+- `4.2600.1105.x` was the release package that addressed this engine-selection
+  and dialogue-cache cluster before the current stable line.
+- Those fixes remain part of the published release line and should no longer be
+  treated as "submitted only" backlog items.
+- That package included:
   - engine-selection stabilization that keeps `ChosenTransEngine` and
     `ChosenTransEngineKey` synchronized
   - translator-local concurrency hardening for the LLM cache path
@@ -66,16 +67,18 @@ Notes:
   - transient dialogue-failure persistence guards so exact-failure placeholders
     and cross-language original-text echoes stop becoming sticky fallbacks
 
-## Fixed In Code, Awaiting Published Validation
+## Recently Closed In Published `4.2601.0516.x`
 
-These issues already have fixes merged into `v4-series`, but should stay open
-until a published Dalamud release confirms the behavior in the field.
+This package is now live in the official Dalamud feed after
+[PR #8674](https://github.com/goatcorp/DalamudPluginsD17/pull/8674) merged on
+2026-05-16.
 
 ### #198 Texts are translated multiple times when OpenAI model is changed
 
 - Priority: tracked
 - Ease: done in code
-- Status: fix landed in `v4-series`, not yet validated in a published release
+- Status: published fix, should now be treated as release-validated unless
+  fresh field reports contradict it
 - Notes:
   - The newer reproduction steps narrow this down to runtime-refresh listener
     accumulation, not translator-local dictionary concurrency.
@@ -83,27 +86,42 @@ until a published Dalamud release confirms the behavior in the field.
   - A second review follow-up fixed the shared-handler case where the same
     handler instance is registered for multiple addon names and only the first
     unregister used to succeed.
-  - Keep this open until the next published build confirms that repeated model
-    changes no longer multiply live talk translations or token usage.
+  - Because `4.2601.0516.x` is now officially published, this item should no
+    longer sit in an "awaiting published validation" bucket.
 
 ## P0: Urgent and Likely Next Targets
 
 These are the best immediate targets because they are blocking, widespread, or
 highly visible and appear to have a narrow root cause.
 
+### #206 {targetLanguage} variable do not take Language to translate to
+
+- Priority: P0
+- Ease: narrow/medium
+- Status: active post-release regression confirmed on the current official
+  build
+- Why it is first:
+  - This is the freshest tracker report and the follow-up comment explicitly
+    confirms it still reproduces on official `4.2601.0516.1152`.
+  - The issue narrows a vague "LLM not translating" symptom into a concrete
+    prompt-variable failure around `{targetLanguage}`.
+  - This is directly adjacent to the shared prompt-template path and may
+    explain a chunk of the broader provider-specific failures still being
+    reported.
+
 ### #204 OpenRouter not translating
 
 - Priority: P0
 - Ease: medium
 - Status: active engine regression
-- Why it is first:
-  - This is the freshest post-release translator-engine regression in the
-    tracker and it points at a single provider path rather than generic UI
-    instability.
-  - It is directly adjacent to the current LLM rework branch, so investigation
-    cost should be lower than a cold-start quest/UI regression.
-  - If this is a provider-specific runtime/configuration break, users will read
-    it as "LLM support regressed" even when other engines still translate.
+- Notes:
+  - The body still describes the default prompt path turning dialogue into an
+    obviously wrong result on OpenRouter.
+  - With `#206` now confirming a live `{targetLanguage}` variable problem on
+    the official build, this issue should be treated as potentially overlapping
+    evidence rather than a fully separate provider-only outage.
+  - It is still a P0 because users read this as "LLM support regressed" even
+    when other engines still translate.
 
 ### #203 Echoglossian not translating
 
@@ -404,16 +422,17 @@ work rather than release fallout.
 
 ## Recommended Execution Order
 
-1. `#189`
-2. `#204`
+1. `#206`
+2. `#189`
 3. `#203`
-4. `#188` + `#187` as one native-dialogue sizing cluster
-5. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
-6. `#175`
-7. reassess `#171` only after `#189`, `#203/#204`, and the small-native-box cluster are clearer
-8. `#167`
-9. release-validate / decompose the remaining live parts of `#172`
-10. `#181`
-11. `#173` / `#179`
-12. `#192`
-13. long-term backlog `#139`, `#104`, `#103`, `#68`, `#15`
+4. `#204`
+5. `#188` + `#187` as one native-dialogue sizing cluster
+6. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
+7. `#175`
+8. reassess `#171` only after `#189`, `#203/#204/#206`, and the small-native-box cluster are clearer
+9. `#167`
+10. release-validate / decompose the remaining live parts of `#172`
+11. `#181`
+12. `#173` / `#179`
+13. `#192`
+14. long-term backlog `#139`, `#104`, `#103`, `#68`, `#15`
