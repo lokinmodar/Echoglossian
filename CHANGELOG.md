@@ -7,18 +7,19 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0512.x`
+## Submitted Release `v4.2601.0516.x`
 
-This is the current post-`4.2600.1105.x` hotfix package prepared for the
+This is the current post-`v4.2601.0512.x` hotfix package prepared for the
 official plugin repo.
 
 Highlights:
 
-- fixed duplicate addon-handler registrations surviving runtime refreshes,
-  which could cause repeated translation requests after changing engine or
-  model settings
-- completed the follow-up unregister fix for handlers that serve more than one
-  addon name, preventing stale listeners from surviving partial teardown
+- fixed the `OpenRouter` prompt-expansion bug that could leave placeholder
+  tokens in the request instead of sending the fully materialized translation
+  prompt to the provider
+- hardened the `OpenRouter` prompt builder so literal `{sourceLanguage}` and
+  `{targetLanguage}` text inside dialogue content is no longer corrupted during
+  prompt substitution
 
 ## Official DalamudPluginsD17 Release Timeline
 
