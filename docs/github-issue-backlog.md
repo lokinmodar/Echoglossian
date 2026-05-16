@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-12
+Snapshot date: 2026-05-15
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -91,6 +91,35 @@ until a published Dalamud release confirms the behavior in the field.
 These are the best immediate targets because they are blocking, widespread, or
 highly visible and appear to have a narrow root cause.
 
+### #204 OpenRouter not translating
+
+- Priority: P0
+- Ease: medium
+- Status: active engine regression
+- Why it is first:
+  - This is the freshest post-release translator-engine regression in the
+    tracker and it points at a single provider path rather than generic UI
+    instability.
+  - It is directly adjacent to the current LLM rework branch, so investigation
+    cost should be lower than a cold-start quest/UI regression.
+  - If this is a provider-specific runtime/configuration break, users will read
+    it as "LLM support regressed" even when other engines still translate.
+
+### #203 Echoglossian not translating
+
+- Priority: P0
+- Ease: medium
+- Status: active mixed engine/runtime report
+- Notes:
+  - The follow-up comment is useful because it narrows the symptom:
+    `Google` and `Yandex` can recover, but only on some quest surfaces, while
+    `Gemini API` and `DeepL-non API` still do not work at all.
+  - This now looks less like a total plugin outage and more like a combination
+    of provider gating, engine configuration UX, and uneven surface coverage.
+  - Keep this near the top until we know whether it decomposes into provider
+    runtime bugs, invalid engine/target-language support combinations, or a
+    quest-surface-only partial translation state.
+
 ### #189 Barra de Próxima MSQ e Janela de Missão sem tradução
 
 - Priority: P0
@@ -107,6 +136,70 @@ highly visible and appear to have a narrow root cause.
     mission-window coverage.
   - This is now better scoped as a concrete quest-surface coverage regression,
     not a generic "plugin stopped translating" report.
+
+## P1: Active LLM / IA Rework Cluster
+
+These are tightly related enough that they should be treated as one product and
+runtime direction rather than isolated one-off fixes.
+
+### #174 Translate already saved translated texts does not work
+
+- Priority: P1
+- Ease: medium
+- Status: active, partially addressed by the in-progress LLM rework
+- Notes:
+  - Recent user comments still point at DB reuse semantics and lack of a clear
+    operator workflow for forcing retranslation after translator experiments.
+  - A fresh comment also confirms that clearing the DB resolves the bad state,
+    which makes this a real cache/persistence UX problem rather than only a
+    misunderstanding of settings.
+  - This now belongs squarely in the same operator-facing cluster as dialogue
+    retranslation controls and translator diagnostics.
+
+### #201 Add more visible feedback about LLM API usage limits exceeded
+
+- Priority: P1
+- Ease: medium
+- Status: active UX/runtime feedback gap
+- Notes:
+  - This remains the clearest issue asking for explicit operator feedback when
+    LLM providers fail due to quota, endpoint, or upstream usage-limit reasons.
+  - It is now clearly part of the same translator-debugger / actionable-failure
+    direction as `#174`, `#176`, and `#196`.
+
+### #176 Overhead de ~1s entre captura do texto e exibição da tradução com LLM local
+
+- Priority: P1
+- Ease: medium/hard
+- Status: active performance and prompt-shaping issue
+- Notes:
+  - The comment trail still supports two root-cause angles:
+    raw local-LLM latency and unnecessary prompt/context overhead.
+  - The user-facing screenshots and discussion make it clear that "single
+    ongoing conversation" and filtering unnecessary text are part of the same
+    desired direction, not a separate enhancement.
+
+### #196 Add Custom OpenAI-Compatible API Support
+
+- Priority: P1
+- Ease: medium
+- Status: active platform/configuration enhancement
+- Notes:
+  - This belongs in the same LLM operator/runtime cluster now that users are
+    actively testing multiple providers and custom endpoints.
+  - It also intersects `#203` and `#204`, because provider differentiation and
+    diagnostics matter more once a custom OpenAI-compatible path exists.
+
+### #148 Structured input and output for glossary and metadata
+
+- Priority: P1
+- Ease: hard
+- Status: active architecture enhancement
+- Notes:
+  - This is no longer just "future nice-to-have" architecture; it is part of
+    the same quality and control direction as the current LLM rework.
+  - The issue remains broader than the first structured-dialogue cuts, so it
+    should stay open even as partial foundation work lands elsewhere.
 
 ## P1: Urgent but Medium Investigation
 
@@ -155,21 +248,6 @@ These are still release-quality problems, but they likely need a more careful
   - The only follow-up comment is a user workaround that involves saving config
     and toggling the plugin, which suggests this may overlap with activation /
     refresh timing rather than a pure overlay renderer failure.
-
-### #174 Translate already saved translated texts does not work
-
-- Priority: P1
-- Ease: medium
-- Status: partially improved in published builds, still open
-- Notes:
-  - Users expect settings or engine changes to affect already stored rows.
-  - Part of this overlapped with dialogue rows persisting unchanged source text
-    and being reused as if they were valid translations.
-  - `4.2600.0605` addressed the hot-refresh / activation / engine-selection
-    parts of this complaint, but the cached-row semantics still need reassessment
-    before closure.
-  - Recent comments keep pointing at DB reuse semantics and lack of a clear
-    operator workflow for forcing retranslation after translator experiments.
 
 ### #171 Deepseek translation is not available... mission titles and descriptions are not being translated
 
@@ -262,48 +340,6 @@ require careful UI/runtime investigation rather than a narrow config fix.
 
 ## P3: Important, Not Immediate Release Blockers
 
-## LLM / AI Translation Engine Cluster
-
-If engineering focus shifts from UI/layout regressions toward translation-engine
-quality and LLM usability, this is the best internal order:
-
-1. `#201` visible user feedback for LLM quota / endpoint / usage-limit failures
-2. `#176` local-LLM latency, prompt overhead, and session or context reuse
-3. `#196` custom OpenAI-compatible provider support
-4. `#148` structured input/output, glossary, and metadata shaping
-5. `#174` adjacent DB/cache semantics for retranslation after translator experiments
-
-Notes:
-
-- `#201` is the narrowest, safest LLM-facing improvement with immediate user
-  value. It does not need a broad architecture rewrite and directly addresses
-  the current "silent fallback to original text" confusion when quota or
-  endpoint failures happen.
-- `#176` is the best next technical target if the goal is to materially improve
-  local LLM usage. It naturally connects with the existing design discussion
-  around compact prompts, persistent HTTP/session reuse, and short-lived
-  conversation context for dialogue surfaces.
-- `#196` and `#148` are larger engine-platform steps rather than hotfixes.
-  They are best treated as deliberate architecture work after the narrower UX
-  and latency problems are under control.
-- `#174` is not a pure LLM issue, but current comments show it is part of the
-  same user workflow: experimenting with multiple translators, retranslation,
-  and wanting better control over stored rows and DB reuse semantics.
-
-### #176 [Performance] Overhead de ~1s entre captura do texto e exibição da tradução com LLM local
-
-- Priority: P3
-- Ease: medium/hard
-- Status: valid performance backlog
-- Notes:
-  - This needs investigation across capture latency, request overhead,
-    prompt size, and presentation timing.
-  - The follow-up comment and reply also suggest a second angle beyond raw
-    latency: reducing unnecessary context and potentially reusing a single
-    ongoing local-LLM conversation/session instead of sending the same large
-    fixed prompt every time.
-  - Important, but not more urgent than bootstrap/load/overlay failures.
-
 ### #192 Add example images for the Game UI elements possible to be translated to each configuration window panel option
 
 - Priority: P3
@@ -319,23 +355,6 @@ Notes:
 
 These remain open on purpose and still represent real feature or architecture
 work rather than release fallout.
-
-### #196 Add Custom OpenAI-Compatible API Support
-
-- Status: keep open
-- Scope:
-  - custom OpenAI-compatible endpoint support
-  - engine/provider configuration expansion
-  - likely intersects the broader custom-provider direction already mentioned
-    in `#148`
-
-### #148 Structured input and output for glossary and metadata
-
-- Status: keep open
-- Scope:
-  - LLM prompt and output shaping
-  - richer glossary and metadata flow
-  - future translation-engine enhancement work
 
 ### #139 Arabic Translation Support
 
@@ -386,14 +405,15 @@ work rather than release fallout.
 ## Recommended Execution Order
 
 1. `#189`
-2. `#188` + `#187` as one native-dialogue sizing cluster
-3. `#175`
-4. reassess / release-validate `#174`
-5. reassess `#171` only after `#189` and the small-native-box cluster are clearer
-6. `#167`
-7. release-validate / decompose the remaining live parts of `#172`
-8. `#181`
-9. `#173` / `#179`
-10. `#176`
-11. `#192`
-12. long-term backlog `#196`, `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
+2. `#204`
+3. `#203`
+4. `#188` + `#187` as one native-dialogue sizing cluster
+5. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
+6. `#175`
+7. reassess `#171` only after `#189`, `#203/#204`, and the small-native-box cluster are clearer
+8. `#167`
+9. release-validate / decompose the remaining live parts of `#172`
+10. `#181`
+11. `#173` / `#179`
+12. `#192`
+13. long-term backlog `#139`, `#104`, `#103`, `#68`, `#15`
