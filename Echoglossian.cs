@@ -236,6 +236,12 @@ public partial class Echoglossian : IDalamudPlugin
             "NotoSansCJKkr-Regular.otf",
             "NotoSansCJKsc-Regular.otf",
             "NotoSansCJKtc-Regular.otf",
+            "NotoSansCanadianAboriginal-Regular.ttf",
+            "NotoSansEthiopic-Medium.ttf",
+            "NotoSansNKo-Regular.ttf",
+            "NotoSansOlChiki-Regular.ttf",
+            "NotoSansThaana-Medium.ttf",
+            "NotoSerifTibetan-Regular.ttf",
         ];
 
     ComplementaryFont3FilePath =

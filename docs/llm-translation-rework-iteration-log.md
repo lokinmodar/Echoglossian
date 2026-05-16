@@ -2278,3 +2278,51 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - reconcile the missing font assets already referenced in the repo before
     exposing the remaining deferred script-heavy languages
+
+## Iteration 59 - Reconcile Downloadable Font Assets And Deferred Script Targets
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - close the safe part of the font-asset gap by teaching the plugin that the
+    already-referenced non-CJK Noto fonts are downloadable assets too, then
+    expose the deferred target languages that become safe once those assets are
+    explicit
+- Files touched:
+  - `GeneralHelpers/AssetsManager.cs`
+  - `Echoglossian.cs`
+  - `LanguagesHandling/LanguagesDictionary.cs`
+  - `Echoglossian.Tests/AssetsManagerTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - expanded the downloadable asset registry beyond CJK fonts to include:
+    `NotoSansThaana-Medium.ttf`, `NotoSansEthiopic-Medium.ttf`,
+    `NotoSansNKo-Regular.ttf`, `NotoSansOlChiki-Regular.ttf`,
+    `NotoSansCanadianAboriginal-Regular.ttf`, and
+    `NotoSerifTibetan-Regular.ttf`
+  - aligned plugin startup so those font file names are treated as managed
+    downloadable assets from the first runtime asset check, instead of looking
+    like bundled files that just happen to be missing from disk
+  - switched `dz` from the non-existent `NotoSansTibetan-Medium.ttf` reference
+    to the official downloadable `NotoSerifTibetan-Regular.ttf`
+  - appended the deferred-but-now-safe script-heavy target languages:
+    `bo`, `iu`, and `ikt`
+  - added asset-manager regression coverage for a non-CJK downloadable script
+    font so this path no longer depends on CJK-only tests
+- Deferred on purpose:
+  - `mni` is still not exposed because the right script/font decision is not
+    yet obvious enough to make safely in the same cut
+- Behavior-sensitive risks:
+  - users selecting `dz`, `bo`, `iu`, or `ikt` now correctly enter the
+    downloadable-asset flow; if the new Noto assets are missing, the plugin
+    will flag them as such instead of silently pointing at a bundled path that
+    does not exist
+  - the target-language list gets three more appended entries, but no existing
+    ids were reordered
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - decide whether `mni` should be exposed through a safe script-specific font
+    path, or remain intentionally unsupported until there is a better script
+    strategy

@@ -807,7 +807,7 @@ public partial class Echoglossian
         [132] = new LanguageInfo(
             "dz",
             "རྫོང་ཁ་; Dzongkha",
-            "NotoSansTibetan-Medium.ttf",
+            "NotoSerifTibetan-Regular.ttf",
             "ཀཁགགྷངཅཆཇཉཊཋཌཌྷཎཏཐདདྷནཔཕབབྷམཙཚཛཛྷཝཞཟའཡརལཤཥསཧཨ",
             new List<int> { 8 }),
         [133] = new LanguageInfo(
@@ -1144,6 +1144,24 @@ public partial class Echoglossian
             "uzbcyr",
             "Uzbek (Cyrillic)",
             "NotoSans-Medium.ttf",
+            string.Empty,
+            new List<int>()),
+        [189] = new LanguageInfo(
+            "bo",
+            "Tibetan",
+            "NotoSerifTibetan-Regular.ttf",
+            string.Empty,
+            new List<int>()),
+        [190] = new LanguageInfo(
+            "iu",
+            "Inuktitut (Canadian Aboriginal Syllabics)",
+            "NotoSansCanadianAboriginal-Regular.ttf",
+            string.Empty,
+            new List<int>()),
+        [191] = new LanguageInfo(
+            "ikt",
+            "Inuinnaqtun",
+            "NotoSansCanadianAboriginal-Regular.ttf",
             string.Empty,
             new List<int>()),
     };
