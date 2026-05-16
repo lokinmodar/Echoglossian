@@ -173,7 +173,6 @@ public class OpenRouterTranslator : ITranslator
             : promptTemplate;
 
         return normalizedTemplate
-            .Replace("{text}", FixText(text), StringComparison.Ordinal)
             .Replace(
                 "{sourceLanguage}",
                 sourceLanguage,
@@ -181,7 +180,8 @@ public class OpenRouterTranslator : ITranslator
             .Replace(
                 "{targetLanguage}",
                 targetLanguage,
-                StringComparison.Ordinal);
+                StringComparison.Ordinal)
+            .Replace("{text}", FixText(text), StringComparison.Ordinal);
     }
 
     private class OpenRouterResponse
