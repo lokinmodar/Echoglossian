@@ -33,7 +33,9 @@ public class OpenRouterTranslator : ITranslator
         this.openRouterUrl = string.IsNullOrWhiteSpace(config.OpenRouterBaseUrl)
             ? DefaultOpenRouterUrl
             : config.OpenRouterBaseUrl!;
-        this.prompt = config.OpenRouterPrompt ?? string.Empty;
+        this.prompt = string.IsNullOrWhiteSpace(config.OpenRouterPrompt)
+            ? PromptTemplateManager.DefaultPrompt
+            : config.OpenRouterPrompt!;
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {
@@ -109,12 +111,18 @@ public class OpenRouterTranslator : ITranslator
         string targetLanguage,
         string cacheKey)
     {
+        var fullPrompt = BuildPrompt(
+            this.prompt,
+            text,
+            sourceLanguage,
+            targetLanguage);
+
         var request = new
         {
             this.model,
             messages = new[]
             {
-                new { role = "user", content = this.prompt },
+                new { role = "user", content = fullPrompt },
             },
             this.temperature,
         };
@@ -152,6 +160,28 @@ public class OpenRouterTranslator : ITranslator
         }
 
         return string.Empty;
+    }
+
+    internal static string BuildPrompt(
+        string? promptTemplate,
+        string text,
+        string sourceLanguage,
+        string targetLanguage)
+    {
+        var normalizedTemplate = string.IsNullOrWhiteSpace(promptTemplate)
+            ? PromptTemplateManager.DefaultPrompt
+            : promptTemplate;
+
+        return normalizedTemplate
+            .Replace("{text}", FixText(text), StringComparison.Ordinal)
+            .Replace(
+                "{sourceLanguage}",
+                sourceLanguage,
+                StringComparison.Ordinal)
+            .Replace(
+                "{targetLanguage}",
+                targetLanguage,
+                StringComparison.Ordinal);
     }
 
     private class OpenRouterResponse
