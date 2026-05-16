@@ -2383,3 +2383,33 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - verify whether any other branch-local prompt helpers still bypass
     `PromptTemplateManager` and would therefore need the same ordering guard
+
+## Iteration 62 - Prepare A Deterministic Testing-Channel Build For The LLM Rework
+
+- Date: 2026-05-16
+- Branch: `llm-translation-rework`
+- Goal:
+  - bump the branch-local plugin version to a deterministic testing-build value
+    so the `DalamudPluginsD17` testing submission can point at a clearly newer
+    rework build without inventing a parallel version-series scheme
+- Files touched:
+  - `Echoglossian.csproj`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - advanced the hardcoded version segments from `4.2601.0512.1000` to
+    `4.2601.0516.1300`
+  - kept the existing stable `01` series intact, so the distinction between
+    stable and testing comes from the `DalamudPluginsD17` channel path
+    (`stable/...` vs `testing/live/...`) rather than a fake testing-only
+    version series
+- Behavior-sensitive risks:
+  - this is a real plugin version bump on the rework branch, so local builds
+    and testing-channel installs will report `4.2601.0516.1300`
+  - no GitHub release/tag is created for this testing-only submission; the
+    official testing manifest will point directly at the branch commit
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - create `testing/live/Echoglossian` in the local `DalamudPluginsD17` fork
+    and open the official testing-channel PR against `goatcorp`
