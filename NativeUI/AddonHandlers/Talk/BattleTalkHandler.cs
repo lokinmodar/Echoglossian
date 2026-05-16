@@ -1143,33 +1143,25 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
       nameNode->SetText(replacementName);
     }
 
-    textNode->TextFlags = TextFlags.WordWrap
-                          | TextFlags.MultiLine
-                          | TextFlags.AutoAdjustNodeSize;
-    textNode->FontSize = 14;
-    textNode->SetWidth(640);
-    textNode->SetText(replacementText);
-    textNode->ResizeNodeForCurrentText();
-
-    var textWidth = textNode->GetWidth();
-    var textHeight = textNode->GetHeight();
-
-    if (timerNode != null)
-    {
-      timerNode->SetXShort((short)(textWidth + 40));
-    }
-
-    if (parentNode != null)
-    {
-      parentNode->SetWidth((ushort)(textWidth + 128));
-      parentNode->SetHeight((ushort)(textHeight + 48));
-    }
-
-    if (nineGridNode != null)
-    {
-      nineGridNode->SetWidth((ushort)(textWidth + 128));
-      nineGridNode->SetHeight((ushort)(textHeight + 48));
-    }
+    var backgroundNode = nineGridNode != null ? (AtkResNode*)nineGridNode : null;
+    var layoutSnapshot = NativeTextNodeLayoutHelper.CaptureLayoutSnapshot(
+        textNode,
+        parentNode,
+        backgroundNode,
+        timerNode);
+    var preferredWrapWidth = NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(
+        textNode,
+        parentNode);
+    var resizeResult = NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(
+        textNode,
+        replacementText,
+        preferredWrapWidth);
+    NativeTextNodeLayoutHelper.ResizeFromSnapshot(
+        layoutSnapshot,
+        resizeResult,
+        parentNode,
+        backgroundNode,
+        timerNode);
   }
 }
 

@@ -264,7 +264,11 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     // PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger={type} applying native replacement");
-    textNode->SetText(replacementText);
+    NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
+        addon,
+        textNode,
+        replacementText);
+    this.updateOverlayBounds(addon, textNode);
   }
 
   /// <summary>

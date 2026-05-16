@@ -379,7 +379,11 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         continue;
       }
 
-      textNode->SetText(replacementText);
+      NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
+          addon,
+          textNode,
+          replacementText);
+      this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
     }
 
     this.PruneHiddenMiniTalkBubbles(activeBubbleKeys);

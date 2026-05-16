@@ -6,6 +6,9 @@ Date: 2026-05-03
 
 Future backlog candidate.
 
+For the current live runtime shape before any future experiment work, see
+[dialogue-and-toast-runtime-flows.md](dialogue-and-toast-runtime-flows.md).
+
 ## Goal
 
 Capture a future investigation track for `Talk` and `BattleTalk` that reduces
@@ -35,13 +38,14 @@ native translation is enabled.
 `BattleTalk` is still more UI-first:
 
 - source capture currently comes from the visible addon nodes
-- native apply rewrites the visible text node directly
-- native apply also changes presentation and geometry such as:
+- native apply still rewrites the visible text node directly
+- native apply now uses the shared
+  [NativeTextNodeLayoutHelper.cs](../NativeUI/Helpers/NativeTextNodeLayoutHelper.cs)
+  so wrapper heights and the nearest background can follow the resized text
+- native apply still changes presentation and geometry such as:
   - `TextFlags`
-  - `FontSize`
-  - text-node width
   - timer-node X offset
-  - parent and background node size
+  - wrapper and background height
 
 That makes `BattleTalk` more coupled to live node shape, repaint timing, and
 layout stability than `Talk`.
@@ -88,6 +92,14 @@ Potential experimental track:
 - investigate whether native write can be narrowed so it changes only text, or
   at least uses a symmetrical snapshot-and-restore model for every changed
   property
+
+Near-term non-experimental work that still fits the current runtime:
+
+- keep using the shared late reflow helper for native text replacement
+- audit whether the timer node can anchor from existing wrapper geometry instead
+  of any handler-specific offset logic
+- verify whether any remaining wrapper clipping comes from parent nodes outside
+  the currently captured ancestor chain
 
 ## Why Parallel Implementations Matter
 

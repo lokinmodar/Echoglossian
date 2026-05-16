@@ -252,7 +252,11 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger={type} applying native replacement");
-    textNode->SetText(replacementText);
+    NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
+        addon,
+        textNode,
+        replacementText);
+    this.updateOverlayBounds(addon, textNode);
   }
 
   /// <summary>

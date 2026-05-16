@@ -36,6 +36,12 @@ session context, see:
 - [docs/translation-engines-architecture-and-flows.md](docs/translation-engines-architecture-and-flows.md)
 - [docs/llm-translation-improvements-plan.md](docs/llm-translation-improvements-plan.md)
 
+For the current runtime flows of the dialogue-family and toast-family addon
+handlers, including `Talk`, `BattleTalk`, `TalkSubtitle`, `MiniTalk`,
+`TextGimmickHint`, and the addon-driven versus callback-driven toast paths, see:
+
+- [docs/dialogue-and-toast-runtime-flows.md](docs/dialogue-and-toast-runtime-flows.md)
+
 Localized versions of that document:
 
 - [English](docs/translation-surface-support-matrix.md)

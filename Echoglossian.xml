@@ -17948,6 +17948,289 @@
             <param name="body">The body text.</param>
             <returns>The combined tooltip text.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper">
+            <summary>
+                Shared helpers for native text-node replacement paths that need the game
+                UI to wrap multi-line text and keep nearby background nodes in sync.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.CaptureLayoutSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Captures the current text-node and container sizing so a later native
+                replacement can grow the layout using inferred padding instead of fixed
+                magic numbers.
+            </summary>
+            <param name="textNode">The text node whose layout should be captured.</param>
+            <param name="primaryContainerNode">
+                The main container node that visually owns the text node.
+            </param>
+            <param name="secondaryContainerNode">
+                An optional secondary background node, such as a nine-grid.
+            </param>
+            <param name="anchoredXNode">
+                An optional sibling node whose X position is anchored to the text width.
+            </param>
+            <returns>The captured layout snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the current wrap width that should be reused for a native text
+                replacement.
+            </summary>
+            <param name="textNode">The text node being replaced.</param>
+            <param name="primaryContainerNode">
+                The main container node that owns the text node.
+            </param>
+            <returns>The preferred wrap width to preserve.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16)">
+            <summary>
+                Applies translated text to a node using the existing wrap width and the
+                minimum multiline flags required for the game to recompute size.
+            </summary>
+            <param name="textNode">The text node that should receive the translation.</param>
+            <param name="replacementText">The translated text to write back.</param>
+            <param name="preferredWrapWidth">
+                The width that should be preserved for wrapping.
+            </param>
+            <returns>The measured size after the text replacement.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean)">
+            <summary>
+                Resizes the supplied container nodes using the text delta captured in a
+                pre-replacement layout snapshot.
+            </summary>
+            <param name="snapshot">The layout captured before native replacement.</param>
+            <param name="resizeResult">The measured text size after replacement.</param>
+            <param name="primaryContainerNode">
+                The main visual container that should grow with the text.
+            </param>
+            <param name="secondaryContainerNode">
+                An optional secondary background node, such as a nine-grid.
+            </param>
+            <param name="anchoredXNode">
+                An optional sibling node whose X position should continue to track the
+                text width.
+            </param>
+            <param name="allowWidthGrowth">
+                Whether the helper may grow container widths when the wrapped text width
+                exceeds the original layout.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryResolveContainerNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkNineGridNode*@)">
+            <summary>
+                Resolves the nearest component-backed container for a text node and the
+                first nine-grid background nested inside that container.
+            </summary>
+            <param name="addon">The live addon that owns the text node.</param>
+            <param name="textNode">The text node being translated.</param>
+            <param name="containerNode">
+                Receives the primary container node that should grow with the text.
+            </param>
+            <param name="backgroundNode">
+                Receives the first nested nine-grid background node, when present.
+            </param>
+            <returns>
+                <see langword="true" /> when at least one layout node was resolved;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean)">
+            <summary>
+                Applies translated text to a node and grows its wrapper chain plus the
+                nearest nine-grid background using inferred padding from the current
+                addon layout.
+            </summary>
+            <param name="addon">The visible addon that owns the text node.</param>
+            <param name="textNode">The text node receiving the translation.</param>
+            <param name="replacementText">The translated text to write back.</param>
+            <param name="allowWidthGrowth">
+                Whether wrapper widths may grow when the current wrap width is
+                insufficient.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryMeasureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16@,System.UInt16@)">
+            <summary>
+                Measures the current node size using the live node dimensions first and
+                falling back to text draw size when the node has not been sized yet.
+            </summary>
+            <param name="textNode">The text node to measure.</param>
+            <param name="width">Receives the measured width.</param>
+            <param name="height">Receives the measured height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindNearestAncestorComponentNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Walks up the parent chain until a component-backed ancestor is found.
+            </summary>
+            <param name="node">The node whose ancestors should be inspected.</param>
+            <returns>
+                The nearest component ancestor, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentNode*)">
+            <summary>
+                Resolves the first nine-grid node nested inside a component node.
+            </summary>
+            <param name="componentNode">The component node to inspect.</param>
+            <returns>
+                The first nested nine-grid node, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+            <summary>
+                Resolves the first nine-grid node reachable from a node list.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <returns>
+                The first nested nine-grid node, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the first nine-grid node reachable from a node.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <returns>
+                The first nested nine-grid node, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.CaptureAncestorChain(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Captures the wrapper chain between a text node and the container that
+                visually owns it so each wrapper can be grown by the same delta later.
+            </summary>
+            <param name="snapshot">The snapshot receiving wrapper metadata.</param>
+            <param name="textNode">The text node whose wrappers should be captured.</param>
+            <param name="stopNode">
+                The top-most wrapper to include in the captured chain.
+            </param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot">
+            <summary>
+                Captures the text and container sizing observed before native replacement.
+            </summary>
+            <param name="textWidth">The original text-node width.</param>
+            <param name="textHeight">The original text-node height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.#ctor(System.UInt16,System.UInt16)">
+            <summary>
+                Captures the text and container sizing observed before native replacement.
+            </summary>
+            <param name="textWidth">The original text-node width.</param>
+            <param name="textHeight">The original text-node height.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextWidth">
+            <summary>
+                Gets the original text-node width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextHeight">
+            <summary>
+                Gets the original text-node height.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AncestorChain">
+            <summary>
+                Gets the wrapper chain that should be resized after a native text
+                replacement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerWidth">
+            <summary>
+                Gets or sets the secondary container width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerHeight">
+            <summary>
+                Gets or sets the secondary container height.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOffset">
+            <summary>
+                Gets or sets the X offset between an anchored sibling node and the text
+                width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryHorizontalPadding">
+            <summary>
+                Gets the horizontal padding between the text node and the secondary
+                container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryVerticalPadding">
+            <summary>
+                Gets the vertical padding between the text node and the secondary
+                container.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult">
+            <summary>
+                Represents the measured text-node size after a native replacement.
+            </summary>
+            <param name="Width">The measured text-node width.</param>
+            <param name="Height">The measured text-node height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult.#ctor(System.UInt16,System.UInt16)">
+            <summary>
+                Represents the measured text-node size after a native replacement.
+            </summary>
+            <param name="Width">The measured text-node width.</param>
+            <param name="Height">The measured text-node height.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult.Width">
+            <summary>The measured text-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult.Height">
+            <summary>The measured text-node height.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot">
+            <summary>
+                Captures one ancestor wrapper in a text-node layout chain.
+            </summary>
+            <param name="NodeAddress">The native address of the wrapper node.</param>
+            <param name="Width">The original wrapper width.</param>
+            <param name="Height">The original wrapper height.</param>
+            <param name="HorizontalPadding">
+                The original horizontal padding between this wrapper and its child.
+            </param>
+            <param name="VerticalPadding">
+                The original vertical padding between this wrapper and its child.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.Int32,System.Int32)">
+            <summary>
+                Captures one ancestor wrapper in a text-node layout chain.
+            </summary>
+            <param name="NodeAddress">The native address of the wrapper node.</param>
+            <param name="Width">The original wrapper width.</param>
+            <param name="Height">The original wrapper height.</param>
+            <param name="HorizontalPadding">
+                The original horizontal padding between this wrapper and its child.
+            </param>
+            <param name="VerticalPadding">
+                The original vertical padding between this wrapper and its child.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.NodeAddress">
+            <summary>The native address of the wrapper node.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.Width">
+            <summary>The original wrapper width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.Height">
+            <summary>The original wrapper height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.HorizontalPadding">
+            <summary>
+                The original horizontal padding between this wrapper and its child.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.VerticalPadding">
+            <summary>
+                The original vertical padding between this wrapper and its child.
+            </summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.PayloadStabilityTracker">
             <summary>
                 Tracks whether one payload signature has remained unchanged for long
