@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators;
 using Echoglossian.Translators.LibreTranslate;
 
@@ -81,6 +82,44 @@ public class TranslatorContractTests
         Assert.Contains("language=pt-BR", url, StringComparison.Ordinal);
         Assert.Contains("term=Blue%20Magic%20Spellbook", url, StringComparison.Ordinal);
         Assert.Contains("strategy=2", url, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures prompt variable expansion does not reprocess placeholders that
+    ///     happen to appear inside the source text itself.
+    /// </summary>
+    [Fact]
+    public void PromptTemplateManager_RenderPrompt_DoesNotReprocessInsertedText()
+    {
+        var template = "From {sourceLanguage} to {targetLanguage}: {text}";
+        var text = "Keep literal {sourceLanguage} and {targetLanguage} tokens.";
+
+        var prompt = PromptTemplateManager.RenderPrompt(
+            template,
+            text,
+            "English",
+            "Portuguese");
+
+        Assert.Equal(
+            "From English to Portuguese: Keep literal {sourceLanguage} and {targetLanguage} tokens.",
+            prompt);
+    }
+
+    /// <summary>
+    ///     Ensures prompt variable expansion still resolves all standard placeholders.
+    /// </summary>
+    [Fact]
+    public void PromptTemplateManager_RenderPrompt_ReplacesStandardPlaceholders()
+    {
+        var prompt = PromptTemplateManager.RenderPrompt(
+            "Translate {text} from {sourceLanguage} to {targetLanguage}.",
+            "hello",
+            "English",
+            "Portuguese");
+
+        Assert.Equal(
+            "Translate hello from English to Portuguese.",
+            prompt);
     }
 
     /// <summary>

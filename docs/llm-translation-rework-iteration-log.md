@@ -2326,3 +2326,60 @@ turning into an opaque pile of partial changes.
   - decide whether `mni` should be exposed through a safe script-specific font
     path, or remain intentionally unsupported until there is a better script
     strategy
+
+## Iteration 60 - Reclassify Backlog Around Current LLM Fallout
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - refresh the versioned backlog after rereading the current open issues and
+    their latest comments, so the branch keeps an explicit record of how the
+    LLM rework now relates to live user reports
+- Files touched:
+  - `docs/github-issue-backlog.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - updated the backlog snapshot date to `2026-05-15`
+  - promoted the new provider/runtime reports `#204` and `#203` into the top
+    backlog bucket
+  - regrouped `#174`, `#201`, `#176`, `#196`, and `#148` into one explicit
+    active LLM / IA rework cluster
+  - kept the quest/native-layout issues (`#189`, `#188`, `#187`, `#172`,
+    `#181`) separate from the engine/runtime cluster instead of mixing them
+    under one generic release-fallout bucket
+- Validation:
+  - docs-only update; no build or test run in this iteration
+- Next cut:
+  - keep the issue tracker and the active PR scope aligned as `#203` and `#204`
+    become clearer
+
+## Iteration 61 - Backport The OpenRouter Prompt-Expansion Guard Into The Shared Helper
+
+- Date: 2026-05-16
+- Branch: `llm-translation-rework`
+- Goal:
+  - close the `#204` prompt-expansion regression in the branch-local shared
+    prompt helper, so the fix already merged into `v4-series` is not lost while
+    the LLM rework continues on top
+- Files touched:
+  - `PluginUI/Helpers/PromptTemplateManager.cs`
+  - `Echoglossian.Tests/TranslatorContractTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - changed `PromptTemplateManager.RenderPrompt(...)` to substitute
+    `{sourceLanguage}` and `{targetLanguage}` before injecting `{text}`
+  - added deterministic contract coverage proving that literal placeholder text
+    inside the source dialogue is preserved instead of being reprocessed after
+    insertion
+  - added a second regression test confirming the normal placeholder-expansion
+    path still resolves the standard prompt variables as expected
+- Behavior-sensitive risks:
+  - this helper now affects every translator path that shares
+    `PromptTemplateManager`, not just `OpenRouter`, so the change intentionally
+    broadens the fix to the entire shared prompt-expansion path
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - verify whether any other branch-local prompt helpers still bypass
+    `PromptTemplateManager` and would therefore need the same ordering guard

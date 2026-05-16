@@ -82,9 +82,9 @@ Please provide only the translated text in your response, without any explanatio
   public static string RenderPrompt(string template, string text, string sourceLang, string targetLang)
   {
     return template
-      .Replace("{text}", text, StringComparison.Ordinal)
       .Replace("{sourceLanguage}", sourceLang, StringComparison.Ordinal)
-      .Replace("{targetLanguage}", targetLang, StringComparison.Ordinal);
+      .Replace("{targetLanguage}", targetLang, StringComparison.Ordinal)
+      .Replace("{text}", text, StringComparison.Ordinal);
   }
 
   public string? GetPrompt(Echoglossian.PromptType type)
