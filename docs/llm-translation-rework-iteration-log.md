@@ -2229,3 +2229,52 @@ turning into an opaque pile of partial changes.
   - consider whether Google's explicitly tracked common-code list should also
     be refreshed even though Google/GTranslate are still treated as broad
     support for rare variants
+
+## Iteration 58 - Expand Target Language Dictionary Safely
+
+- Date: 2026-05-15
+- Branch: `llm-translation-rework`
+- Goal:
+  - turn the refreshed vendor language tables into actual selectable plugin
+    target languages where the repo already has safe script coverage, while
+    avoiding a blind add of entries that would immediately need missing font
+    assets or duplicate an existing alias
+- Files touched:
+  - `LanguagesHandling/LanguagesDictionary.cs`
+  - `GeneralHelpers/RuntimeLanguageHelper.cs`
+  - `Echoglossian.Tests/RuntimeLanguageHelperTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - appended new selectable target languages at the end of
+    `LanguagesDictionary`, including regional variants and newly covered
+    vendor-backed codes that can reuse fonts already present in the repo
+  - added the first safe batch for:
+    `es-MX`, `fr-CA`, `fa-AF`, `bho`, `dsb`, `fo`, `hne`, `hsb`,
+    `iu-Latn`, `kmr`, `ks`, `lug`, `lzh`, `mn-Cyrl`, `mn-Mong`, `mww`,
+    `nso`, `otq`, `prs`, `run`, `sr-Cyrl`, `tlh-Latn`, `tlh-Piqd`,
+    `yua`, `yue`, `bua`, `kazlat`, `kbd`, `krc`, `kv`, `mdf`, `mhr`,
+    `mrj`, `myv`, `pap`, `tyv`, `udm`, and `uzbcyr`
+  - kept `zh-Hans` / `zh-Hant` out of the selection list because the plugin
+    already exposes `zh-CN` / `zh-TW`; instead, runtime aliases now normalize
+    those script tags back onto the existing plugin-facing target codes
+  - added runtime normalization coverage for the new Chinese script aliases
+- Deferred on purpose:
+  - `bo`, `ikt`, `iu`, and `mni` were not added in this cut because they need
+    either missing font assets or a more careful script decision before they
+    can be exposed safely
+  - the repo also already references a few older Noto font files that are not
+    present in this checkout (`NotoSansEthiopic-Medium.ttf`,
+    `NotoSansNKo-Regular.ttf`, `NotoSansOlChiki-Regular.ttf`,
+    `NotoSansThaana-Medium.ttf`, `NotoSansTibetan-Medium.ttf`); this cut did
+    not try to silently paper over that broader asset gap
+- Behavior-sensitive risks:
+  - the target-language dropdown gets longer immediately, so user selection
+    ordering changes even though the new entries were appended, not inserted
+  - some new entries are only supported by a subset of engines, so their
+    engine dropdown will look intentionally narrower than mainstream languages
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- Next cut:
+  - reconcile the missing font assets already referenced in the repo before
+    exposing the remaining deferred script-heavy languages

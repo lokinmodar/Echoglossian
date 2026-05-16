@@ -16,6 +16,8 @@ public static class RuntimeLanguageHelper
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["zh"] = "zh-CN",
+            ["zh-Hans"] = "zh-CN",
+            ["zh-Hant"] = "zh-TW",
             ["pt"] = "pt-BR",
             ["he"] = "iw",
             ["nb"] = "no",
