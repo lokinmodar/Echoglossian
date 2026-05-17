@@ -33,6 +33,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       scenarioTreeWaitingNotificationGate = new();
 
   private bool currentScenarioTreeDataReady;
+  private bool hasPendingScenarioTreeEntries;
 
   private JournalTranslationDisplayMode? lastAppliedDisplayMode;
 
@@ -110,6 +111,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       this.RestoreScenarioTreeOriginals(atkValues);
       this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
       this.currentScenarioTreeDataReady = false;
+      this.hasPendingScenarioTreeEntries = false;
       this.lastAppliedDisplayMode = null;
       return;
     }
@@ -120,6 +122,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       this.scenarioTreeRuntimeEntries.Clear();
       this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
       this.currentScenarioTreeDataReady = false;
+      this.hasPendingScenarioTreeEntries = false;
       this.lastAppliedDisplayMode = null;
       this.nextScenarioTreeRetryUtc = DateTime.MinValue;
       this.ClearScenarioTreeWaitingState();
@@ -150,16 +153,17 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
     if (blockingQuestLabels.Count != 0)
     {
-      this.currentScenarioTreeDataReady = false;
+      this.currentScenarioTreeDataReady =
+          this.scenarioTreeRuntimeEntries.Count != 0;
+      this.hasPendingScenarioTreeEntries = true;
       this.nextScenarioTreeRetryUtc = DateTime.UtcNow + ScenarioTreeRetryInterval;
-      this.RestoreScenarioTreeOriginals(atkValues);
-      this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
-      this.lastAppliedDisplayMode = null;
+      this.ApplyScenarioTreePresentation(addon, atkValues);
       this.NotifyScenarioTreeWaitingForQuestData(blockingQuestLabels);
       return;
     }
 
     this.currentScenarioTreeDataReady = true;
+    this.hasPendingScenarioTreeEntries = false;
     this.nextScenarioTreeRetryUtc = DateTime.MinValue;
     this.ClearScenarioTreeWaitingState();
 
@@ -255,7 +259,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
           visibleEntry.ValueIndex,
           progressKey: string.Empty,
           visibleEntry.OriginalText,
-          visibleEntry.OriginalText);
+          string.Empty,
+          translatedPayloadReady: false);
       return false;
     }
 
@@ -279,7 +284,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
           visibleEntry.ValueIndex,
           todoProgressSnapshot.CacheKey,
           visibleEntry.OriginalText,
-          visibleEntry.OriginalText);
+          string.Empty,
+          translatedPayloadReady: false);
       return false;
     }
 
@@ -287,7 +293,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         visibleEntry.ValueIndex,
         todoProgressSnapshot.CacheKey,
         visibleEntry.OriginalText,
-        translatedText);
+        translatedText,
+        translatedPayloadReady: true);
     return true;
   }
 
@@ -514,19 +521,25 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// <param name="progressKey">The stable quest progress key.</param>
   /// <param name="originalText">The original source text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  ///     Indicates whether the translated payload is fully resolved for this
+  ///     slot.
+  /// </param>
   /// <returns>The runtime entry.</returns>
   private ScenarioTreeRuntimeEntry CreateScenarioTreeRuntimeEntry(
       int valueIndex,
       string progressKey,
       string originalText,
-      string translatedText)
+      string translatedText,
+      bool translatedPayloadReady)
   {
     return new ScenarioTreeRuntimeEntry(
         this.BuildScenarioTreeRuntimeEntryKey(progressKey, valueIndex),
         progressKey,
         valueIndex,
         originalText,
-        translatedText);
+        translatedText,
+        translatedPayloadReady);
   }
 
   /// <summary>
@@ -560,6 +573,11 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     if (this.scenarioTreeRuntimeEntries.TryGetValue(valueIndex, out var previousEntry) &&
         !string.IsNullOrWhiteSpace(previousEntry.OriginalText))
     {
+      if (!previousEntry.TranslatedPayloadReady)
+      {
+        return previousEntry.OriginalText;
+      }
+
       return QuestAddonOriginalTextHelper.ResolveOriginalVisibleText(
           visibleText,
           previousEntry.OriginalText,
@@ -591,6 +609,17 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     {
       if (this.ScenarioTreeWritesNativeTranslation)
       {
+        if (!runtimeEntry.TranslatedPayloadReady)
+        {
+          if (this.scenarioTreeNativeMutationIndices.Remove(runtimeEntry.ValueIndex))
+          {
+            atkValues[runtimeEntry.ValueIndex].SetManagedString(
+                runtimeEntry.OriginalText ?? string.Empty);
+          }
+
+          continue;
+        }
+
         var displayText = this.GetScenarioTreeTranslatedDisplayText(runtimeEntry.TranslatedText);
         atkValues[runtimeEntry.ValueIndex].SetManagedString(displayText ?? string.Empty);
         this.scenarioTreeNativeMutationIndices.Add(runtimeEntry.ValueIndex);
@@ -665,6 +694,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     }
 
     var orderedEntries = this.scenarioTreeRuntimeEntries.Values
+        .Where(entry => entry.TranslatedPayloadReady)
         .OrderBy(entry => entry.ValueIndex)
         .ToList();
     var originalText = string.Join(
@@ -768,6 +798,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       this.RestoreScenarioTreeOriginals(atkValues);
       this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
       this.currentScenarioTreeDataReady = false;
+      this.hasPendingScenarioTreeEntries = false;
       this.lastAppliedDisplayMode = null;
       return;
     }
@@ -780,6 +811,16 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       }
 
       return;
+    }
+
+    if (this.hasPendingScenarioTreeEntries &&
+        DateTime.UtcNow >= this.nextScenarioTreeRetryUtc)
+    {
+      this.RefreshScenarioTree();
+      if (!this.currentScenarioTreeDataReady)
+      {
+        return;
+      }
     }
 
     if (this.lastAppliedDisplayMode !=
@@ -814,6 +855,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     this.scenarioTreeNativeMutationIndices.Clear();
     this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
     this.currentScenarioTreeDataReady = false;
+    this.hasPendingScenarioTreeEntries = false;
     this.lastAppliedDisplayMode = null;
     this.nextScenarioTreeRetryUtc = DateTime.MinValue;
     this.ClearScenarioTreeWaitingState();
@@ -876,10 +918,15 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// <param name="ValueIndex">The addon value index.</param>
   /// <param name="OriginalText">The original source text.</param>
   /// <param name="TranslatedText">The translated text from the DB.</param>
+  /// <param name="TranslatedPayloadReady">
+  ///     Indicates whether the translated payload is fully resolved for this
+  ///     slot.
+  /// </param>
   private sealed record ScenarioTreeRuntimeEntry(
       string Key,
       string ProgressKey,
       int ValueIndex,
       string OriginalText,
-      string TranslatedText);
+      string TranslatedText,
+      bool TranslatedPayloadReady);
 }

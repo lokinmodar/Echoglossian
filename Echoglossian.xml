@@ -13959,7 +13959,7 @@
             <param name="translatedText">The resolved translated text.</param>
             <returns>True when the translated text was found in the DB.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CreateScenarioTreeRuntimeEntry(System.Int32,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CreateScenarioTreeRuntimeEntry(System.Int32,System.String,System.String,System.String,System.Boolean)">
             <summary>
                 Creates the runtime payload for one visible ScenarioTree slot.
             </summary>
@@ -13967,6 +13967,10 @@
             <param name="progressKey">The stable quest progress key.</param>
             <param name="originalText">The original source text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+                Indicates whether the translated payload is fully resolved for this
+                slot.
+            </param>
             <returns>The runtime entry.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeRuntimeEntryKey(System.String,System.Int32)">
@@ -14114,8 +14118,12 @@
             <param name="ValueIndex">The addon value index.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TranslatedPayloadReady">
+                Indicates whether the translated payload is fully resolved for this
+                slot.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.String,System.String,System.Boolean)">
             <summary>
                 Represents one resolved ScenarioTree runtime slot.
             </summary>
@@ -14124,6 +14132,10 @@
             <param name="ValueIndex">The addon value index.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TranslatedPayloadReady">
+                Indicates whether the translated payload is fully resolved for this
+                slot.
+            </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.Key">
             <summary>The stable runtime key.</summary>
@@ -14139,6 +14151,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.TranslatedText">
             <summary>The translated text from the DB.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.TranslatedPayloadReady">
+            <summary>
+                Indicates whether the translated payload is fully resolved for this
+                slot.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler">
             <summary>
@@ -14220,7 +14238,7 @@
                 in the DB.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateQuestRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateQuestRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String,System.Boolean)">
             <summary>
                 Creates the runtime payload for one visible quest-name row.
             </summary>
@@ -14228,9 +14246,13 @@
             <param name="progressKey">The stable quest progress key.</param>
             <param name="originalText">The resolved original quest text.</param>
             <param name="translatedText">The translated quest text.</param>
+            <param name="translatedPayloadReady">
+                Indicates whether the translated payload is fully resolved for this
+                row.
+            </param>
             <returns>The runtime entry.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateObjectiveRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateObjectiveRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String,System.Boolean)">
             <summary>
                 Creates the runtime payload for one visible objective row.
             </summary>
@@ -14238,6 +14260,10 @@
             <param name="progressKey">The stable quest progress key.</param>
             <param name="originalText">The resolved original objective text.</param>
             <param name="translatedText">The translated objective text.</param>
+            <param name="translatedPayloadReady">
+                Indicates whether the translated payload is fully resolved for this
+                row.
+            </param>
             <returns>The runtime entry.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.BuildToDoRuntimeEntryKey(System.String,System.Int32,System.Int32,System.UInt32)">
@@ -14391,8 +14417,12 @@
             <param name="NodeId">The backing node id.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TranslatedPayloadReady">
+                Indicates whether the translated payload is fully resolved for this
+                row.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.Int32,System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.Int32,System.UInt32,System.String,System.String,System.Boolean)">
             <summary>
                 Represents one resolved ToDoList runtime row.
             </summary>
@@ -14403,6 +14433,10 @@
             <param name="NodeId">The backing node id.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TranslatedPayloadReady">
+                Indicates whether the translated payload is fully resolved for this
+                row.
+            </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.Key">
             <summary>The stable runtime key.</summary>
@@ -14424,6 +14458,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.TranslatedText">
             <summary>The translated text from the DB.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.TranslatedPayloadReady">
+            <summary>
+                Indicates whether the translated payload is fully resolved for this
+                row.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
             <summary>
