@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-16
+Snapshot date: 2026-05-17
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -94,6 +94,25 @@ This package is now live in the official Dalamud feed after
 These are the best immediate targets because they are blocking, widespread, or
 highly visible and appear to have a narrow root cause.
 
+### #207 Quest tracker todolist not translating to Portuguese on v4.2601.0516.1152
+
+- Priority: P0
+- Ease: narrow/medium
+- Status: active post-release regression confirmed on the current official
+  build
+- Why it is first:
+  - This is the freshest tracker report and it explicitly uses the new release
+    channel field, so the report is clearly tied to the official
+    `DalamudPluginsD17` package rather than a local build.
+  - The body scopes the failure to `Quest tracker / ToDoList / ScenarioTree`
+    while also stating that the dialogue windows still translate, which makes
+    this much narrower than a generic "plugin not translating" symptom.
+  - The report explicitly calls out that it still reproduces on
+    `v4.2601.0516.1152` even though the older `#182` fix was expected to cover
+    this family.
+  - This is now the strongest current-official signal that the quest-tracker
+    cluster is not actually closed.
+
 ### #206 {targetLanguage} variable do not take Language to translate to
 
 - Priority: P0
@@ -101,8 +120,8 @@ highly visible and appear to have a narrow root cause.
 - Status: active post-release regression confirmed on the current official
   build
 - Why it is first:
-  - This is the freshest tracker report and the follow-up comment explicitly
-    confirms it still reproduces on official `4.2601.0516.1152`.
+  - The follow-up comment explicitly confirms it still reproduces on official
+    `4.2601.0516.1152`.
   - The issue narrows a vague "LLM not translating" symptom into a concrete
     prompt-variable failure around `{targetLanguage}`.
   - This is directly adjacent to the shared prompt-template path and may
@@ -113,10 +132,12 @@ highly visible and appear to have a narrow root cause.
 
 - Priority: P0
 - Ease: medium
-- Status: active engine regression
+- Status: active provider-specific manifestation of the same LLM prompt/runtime
+  cluster
 - Notes:
-  - The body still describes the default prompt path turning dialogue into an
-    obviously wrong result on OpenRouter.
+  - The body still describes the default prompt path turning dialogue into the
+    same obviously wrong fixed string on OpenRouter after leaving the prompt
+    untouched.
   - With `#206` now confirming a live `{targetLanguage}` variable problem on
     the official build, this issue should be treated as potentially overlapping
     evidence rather than a fully separate provider-only outage.
@@ -142,7 +163,7 @@ highly visible and appear to have a narrow root cause.
 
 - Priority: P0
 - Ease: medium
-- Status: active regression
+- Status: active quest-family coverage regression
 - Why it is first:
   - This is a visible quest-facing regression in one of the most commonly seen
     gameplay surfaces.
@@ -154,6 +175,9 @@ highly visible and appear to have a narrow root cause.
     mission-window coverage.
   - This is now better scoped as a concrete quest-surface coverage regression,
     not a generic "plugin stopped translating" report.
+  - `#207` makes it more likely that this cluster still includes the quest
+    tracker / `ToDoList` path in the current official build, not only the
+    earlier mission-window surfaces.
 
 ## P1: Active LLM / IA Rework Cluster
 
@@ -313,6 +337,10 @@ require careful UI/runtime investigation rather than a narrow config fix.
   - Treat this as a decomposed umbrella issue rather than a single root cause:
     remaining live parts appear to split across selection-dialog sizing and the
     broader `#181` native-layout/runtime-state work.
+  - With `#207` now reporting current-official `ToDoList` / `ScenarioTree`
+    translation failure and `#189` already scoped to the mission-window family,
+    this issue is better kept as the broader quest-runtime umbrella than as the
+    next narrow target by itself.
 
 ### #173 Plugin function incompatibility: Character panel refined
 
@@ -419,20 +447,24 @@ work rather than release fallout.
   - top-level known-issues tracker
   - preserves the RTL limitation
   - points users to the issue tracker plus changelog
+- Notes:
+  - This should stay a documentation/meta tracker, not compete with the real
+    engineering backlog ordering above.
 
 ## Recommended Execution Order
 
-1. `#206`
-2. `#189`
-3. `#203`
-4. `#204`
-5. `#188` + `#187` as one native-dialogue sizing cluster
-6. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
-7. `#175`
-8. reassess `#171` only after `#189`, `#203/#204/#206`, and the small-native-box cluster are clearer
-9. `#167`
-10. release-validate / decompose the remaining live parts of `#172`
-11. `#181`
-12. `#173` / `#179`
-13. `#192`
-14. long-term backlog `#139`, `#104`, `#103`, `#68`, `#15`
+1. `#207`
+2. `#206`
+3. `#189`
+4. `#203`
+5. `#204`
+6. `#188` + `#187` as one native-dialogue sizing cluster
+7. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
+8. `#175`
+9. reassess `#171` only after `#207/#189/#172`, `#203/#204/#206`, and the small-native-box cluster are clearer
+10. `#167`
+11. release-validate / decompose the remaining live parts of `#172`
+12. `#181`
+13. `#173` / `#179`
+14. `#192`
+15. long-term backlog `#139`, `#104`, `#103`, `#68`, `#15`
