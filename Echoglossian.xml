@@ -2047,11 +2047,6 @@
                 payloads.
             </summary>
             <summary>
-                Handles the quest probe command used to inspect the complete quest data
-                shape from Lumina, the live quest progress resolver, and the current
-                QuestPlate database rows.
-            </summary>
-            <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
                 <see cref="E:Dalamud.Plugin.Services.IToastGui.QuestToast" /> instead of the addon-handler
                 registrar.
@@ -2562,11 +2557,6 @@
             Holds the database editor window instance.
             </summary>
         </member>
-        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
-            <summary>
-            Holds the currently active addon structure probe watch, if any.
-            </summary>
-        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2679,11 +2669,6 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
-            <summary>
-                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -4033,21 +4018,6 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name and optional index.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name and index to probe.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -4316,102 +4286,6 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
-            <summary>
-                Handles the quest probe command.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
-            <summary>
-                Tries to resolve the quest probe target from either a quest id or a
-                quest name.
-            </summary>
-            <param name="input">The command argument.</param>
-            <param name="questIdText">The resolved quest id as text.</param>
-            <param name="questName">The resolved quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>True when the quest could be resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the quest data structure for inspection.
-            </summary>
-            <param name="questIdText">The quest id as text.</param>
-            <param name="questName">The quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the raw Lumina quest row properties.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs all rows from the quest text sheet, not just the live todo
-                entries, so we can inspect the full structure of the quest sheet.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
-            <summary>
-                Logs the QuestPlate rows currently stored for the quest.
-            </summary>
-            <param name="questIdText">The quest id text.</param>
-            <param name="questName">The quest name.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Logs the resolved live quest progression snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves a human-readable quest name from a quest row.
-            </summary>
-            <param name="questRow">The quest row.</param>
-            <returns>The resolved quest name, if available.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
-            <summary>
-                Converts quest text to a readable string for probe output.
-            </summary>
-            <param name="text">The quest text.</param>
-            <returns>The evaluated text string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
-            <summary>
-                Formats a probe value for log output.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>A human-readable value string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Builds the raw quest sheet name used by the game files.
-            </summary>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>The quest text sheet name, if it can be derived.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest row id as text through reflection so the probe
-                stays compatible with generated sheet shapes.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest row id as text, or an empty string if unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest sheet identifier used to mount the quest text
-                sheet path.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -14532,6 +14406,25 @@
             </summary>
             <param name="activeBubbleKeys">The bubble keys seen in this frame.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.RestoreTrackedBubbleLayoutIfNeeded(System.IntPtr,System.String)">
+            <summary>
+                Restores any native MiniTalk mutation currently tracked for the bubble
+                when the source text changes or native mode is left.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="nextOriginalText">
+                The next original source text expected for the bubble, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native MiniTalk layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="snapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.OnPreUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Captures MiniTalk source text early in the lifecycle so a translation
@@ -14736,6 +14629,45 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a MiniTalk
+                text node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryMapVisibleReplacementToKnownOriginal(System.String,System.String@)">
+            <summary>
+                Tries to resolve a visible translated MiniTalk line back to an original
+                source line already known to another tracked bubble state.
+            </summary>
+            <param name="visibleText">The visible text currently rendered by the node.</param>
+            <param name="originalText">Receives the matched original source line.</param>
+            <returns>
+                <see langword="true" /> when a tracked replacement matches the visible
+                line; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryHandleVisibleSourceChange(System.IntPtr,System.String,System.String)">
+            <summary>
+                Reconciles a visible MiniTalk source line against the tracked bubble
+                state so recycled bubble slots do not keep using a stale translation or
+                a stale native layout snapshot from the prior occupant.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="visibleOriginalText">The current visible source line.</param>
+            <param name="trigger">The trigger label used for capture/queue routing.</param>
+            <returns>
+                <see langword="true" /> when the visible source changed and the new
+                source was captured, restored, or queued; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryCaptureOrQueueMiniTalkSource(System.IntPtr,System.String,System.String)">
             <summary>
                 Resolves the source MiniTalk line against cache, database, or background
@@ -14859,6 +14791,29 @@
             <summary>
                 Resets the active in-memory BattleTalk state.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.RestoreTrackedNativeLayoutIfNeeded(System.String,System.String)">
+            <summary>
+                Restores any tracked native BattleTalk mutation when the source changes
+                or native mode is left.
+            </summary>
+            <param name="nextOriginalName">
+                The next original sender name expected for the addon, or an empty value
+                when the current mutation should always be restored.
+            </param>
+            <param name="nextOriginalText">
+                The next original source text expected for the addon, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.String)">
+            <summary>
+                Restores one tracked native BattleTalk layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalName">The original sender name to write back.</param>
+            <param name="originalText">The original text to write back.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.BuildLookupMessage(System.String,System.String)">
             <summary>
@@ -15100,7 +15055,7 @@
                 translated output for the active source; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ApplyTranslatedNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ApplyTranslatedNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.String,System.String,System.String)">
             <summary>
                 Applies translated values directly to the visible BattleTalk addon when
                 replacement mode is enabled.
@@ -15847,6 +15802,37 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.RestoreTrackedNativeLayoutIfNeeded(System.String)">
+            <summary>
+                Restores any tracked native toast mutation when the source changes or
+                native mode is left.
+            </summary>
+            <param name="nextOriginalText">
+                The next original source text expected for the toast, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native toast layout snapshot back to the original
+                game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+            <summary>
+                Reconciles the visible toast source against the tracked state so a
+                recycled toast slot does not keep a stale translated line or a stale
+                native layout snapshot from the prior source.
+            </summary>
+            <param name="visibleOriginalText">The currently visible toast source.</param>
+            <param name="trigger">The trigger label used for capture or queueing.</param>
+            <returns>
+                <see langword="true" /> when the source changed and the new source was
+                handled immediately; otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ResolveTranslationAsync(System.String,System.Int32)">
             <summary>
                 Resolves a toast translation without blocking the game UI and persists the
@@ -15887,6 +15873,18 @@
             <returns>
                 <see langword="true" /> when readable text is available; otherwise,
                 <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a toast text
+                node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
@@ -16368,6 +16366,49 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RestoreTrackedNativeLayoutIfNeeded(System.String)">
+            <summary>
+                Restores any tracked native gimmick-hint mutation when the source
+                changes or native mode is left.
+            </summary>
+            <param name="nextOriginalText">
+                The next original source text expected for the hint, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native gimmick-hint layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+            <summary>
+                Reconciles the visible gimmick-hint source against the tracked state so
+                a recycled slot does not keep a stale translated line or a stale native
+                layout snapshot from the prior source.
+            </summary>
+            <param name="visibleOriginalText">The currently visible source line.</param>
+            <param name="trigger">The trigger label used for capture or queueing.</param>
+            <returns>
+                <see langword="true" /> when the source changed and the new source was
+                handled immediately; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryCaptureOrQueueSource(System.String,System.String)">
+            <summary>
+                Resolves the visible TextGimmickHint source line against cache,
+                database, or background translation work without blocking the game UI.
+            </summary>
+            <param name="originalText">The current visible source line.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+            <returns>
+                <see langword="true" /> when the source was handled immediately;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ResolveTranslationAsync(System.String,System.Int32)">
             <summary>
                 Resolves a gimmick-hint translation without blocking the game UI and
@@ -16531,6 +16572,18 @@
             <returns>
                 <see langword="true" /> when readable text is available; otherwise,
                 <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a gimmick-hint
+                text node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TextMatches(System.String,System.String)">
@@ -17972,7 +18025,7 @@
             </param>
             <returns>The captured layout snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
             <summary>
                 Resolves the current wrap width that should be reused for a native text
                 replacement.
@@ -17980,6 +18033,10 @@
             <param name="textNode">The text node being replaced.</param>
             <param name="primaryContainerNode">
                 The main container node that owns the text node.
+            </param>
+            <param name="secondaryContainerNode">
+                An optional secondary background node whose width may better represent
+                the stable visual bounds than the current text-node width.
             </param>
             <returns>The preferred wrap width to preserve.</returns>
         </member>
@@ -18015,6 +18072,16 @@
             <param name="allowWidthGrowth">
                 Whether the helper may grow container widths when the wrapped text width
                 exceeds the original layout.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores a previously captured native text-node layout snapshot after a
+                temporary translated replacement is no longer needed.
+            </summary>
+            <param name="snapshot">The layout snapshot captured before replacement.</param>
+            <param name="originalText">
+                The original text that should be written back into the text node.
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryResolveContainerNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkNineGridNode*@)">
@@ -18086,6 +18153,17 @@
                 The first nested nine-grid node, or <see langword="null" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveBoundedContainerWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the widest stable visual width exposed by the surrounding
+                container nodes so repeated native replacements do not fall back to a
+                narrow internal wrapper when a larger background already represents the
+                intended visual balloon or panel width.
+            </summary>
+            <param name="primaryContainerNode">The primary owning container.</param>
+            <param name="secondaryContainerNode">An optional secondary background node.</param>
+            <returns>The widest non-zero container width available.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
             <summary>
                 Resolves the first nine-grid node reachable from a node.
@@ -18106,6 +18184,13 @@
                 The top-most wrapper to include in the captured chain.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryRestoreHorizontalCentering(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot)">
+            <summary>
+                Re-centers the text node within its immediate wrapper when the original
+                layout was centered and width growth changed the wrapper size.
+            </summary>
+            <param name="snapshot">The captured layout snapshot.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot">
             <summary>
                 Captures the text and container sizing observed before native replacement.
@@ -18113,12 +18198,24 @@
             <param name="textWidth">The original text-node width.</param>
             <param name="textHeight">The original text-node height.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.#ctor(System.UInt16,System.UInt16)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.Int16,System.Int16)">
             <summary>
-                Captures the text and container sizing observed before native replacement.
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot" /> class.
             </summary>
-            <param name="textWidth">The original text-node width.</param>
-            <param name="textHeight">The original text-node height.</param>
+            <param name="textNodeAddress">The address of the mutated text node.</param>
+            <param name="textWidth">The original measured text width.</param>
+            <param name="textHeight">The original measured text height.</param>
+            <param name="textNodeWidth">The original text-node width.</param>
+            <param name="textNodeHeight">The original text-node height.</param>
+            <param name="textNodeTextFlags">The original text-node flags.</param>
+            <param name="textNodeFontSize">The original text-node font size.</param>
+            <param name="textNodeOriginalX">The original text-node X position.</param>
+            <param name="textNodeOriginalY">The original text-node Y position.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeAddress">
+            <summary>
+                Gets the native address of the mutated text node.
+            </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextWidth">
             <summary>
@@ -18130,10 +18227,51 @@
                 Gets the original text-node height.
             </summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeWidth">
+            <summary>
+                Gets the original width assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeHeight">
+            <summary>
+                Gets the original height assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeTextFlags">
+            <summary>
+                Gets the original text-node flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeFontSize">
+            <summary>
+                Gets the original text-node font size.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeOriginalX">
+            <summary>
+                Gets the original X position assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeOriginalY">
+            <summary>
+                Gets the original Y position assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeWasHorizontallyCentered">
+            <summary>
+                Gets or sets a value indicating whether the text node was originally
+                centered inside its immediate parent.
+            </summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AncestorChain">
             <summary>
                 Gets the wrapper chain that should be resized after a native text
                 replacement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerAddress">
+            <summary>
+                Gets or sets the native address of the secondary container node.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerWidth">
@@ -18146,10 +18284,30 @@
                 Gets or sets the secondary container height.
             </summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerOriginalX">
+            <summary>
+                Gets or sets the original X position of the secondary container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerOriginalY">
+            <summary>
+                Gets or sets the original Y position of the secondary container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXNodeAddress">
+            <summary>
+                Gets or sets the native address of the anchored X node.
+            </summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOffset">
             <summary>
                 Gets or sets the X offset between an anchored sibling node and the text
                 width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOriginal">
+            <summary>
+                Gets or sets the original X position of the anchored sibling node.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryHorizontalPadding">
@@ -18191,6 +18349,8 @@
             <param name="NodeAddress">The native address of the wrapper node.</param>
             <param name="Width">The original wrapper width.</param>
             <param name="Height">The original wrapper height.</param>
+            <param name="OriginalX">The original X position of the wrapper node.</param>
+            <param name="OriginalY">The original Y position of the wrapper node.</param>
             <param name="HorizontalPadding">
                 The original horizontal padding between this wrapper and its child.
             </param>
@@ -18198,13 +18358,15 @@
                 The original vertical padding between this wrapper and its child.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.Int32,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.Int16,System.Int16,System.Int32,System.Int32)">
             <summary>
                 Captures one ancestor wrapper in a text-node layout chain.
             </summary>
             <param name="NodeAddress">The native address of the wrapper node.</param>
             <param name="Width">The original wrapper width.</param>
             <param name="Height">The original wrapper height.</param>
+            <param name="OriginalX">The original X position of the wrapper node.</param>
+            <param name="OriginalY">The original Y position of the wrapper node.</param>
             <param name="HorizontalPadding">
                 The original horizontal padding between this wrapper and its child.
             </param>
@@ -18220,6 +18382,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.Height">
             <summary>The original wrapper height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.OriginalX">
+            <summary>The original X position of the wrapper node.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.OriginalY">
+            <summary>The original Y position of the wrapper node.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.HorizontalPadding">
             <summary>
@@ -21567,6 +21735,51 @@
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.CouldNotFetchOllamaModels">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeNoActiveWatch">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeStopped">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeUsage">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeInvalidDurationFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeStartedFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationMinuteFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationMinutesFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondsFormat">
             <summary>
               Looks up a localized string.
             </summary>

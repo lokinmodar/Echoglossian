@@ -1183,4 +1183,31 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Highest-tier Claude model when you want maximum quality.</value>
   </data>
+  <data name="AddonProbeNoActiveWatch" xml:space="preserve">
+    <value>No active addon probe watch to stop.</value>
+  </data>
+  <data name="AddonProbeStopped" xml:space="preserve">
+    <value>Addon probe watch stopped.</value>
+  </data>
+  <data name="AddonProbeUsage" xml:space="preserve">
+    <value>Usage: /egloaddonprobe &lt;addon name&gt; [index] [duration] or /egloaddonprobe stop</value>
+  </data>
+  <data name="AddonProbeInvalidDurationFormat" xml:space="preserve">
+    <value>Invalid addon probe duration. Use values like 90s or 15m, up to {0} minutes.</value>
+  </data>
+  <data name="AddonProbeStartedFormat" xml:space="preserve">
+    <value>Addon probe watch started for '{0}'[{1}] for {2}. Check the Dalamud log for event and tree dumps.</value>
+  </data>
+  <data name="AddonProbeDurationMinuteFormat" xml:space="preserve">
+    <value>{0} minute</value>
+  </data>
+  <data name="AddonProbeDurationMinutesFormat" xml:space="preserve">
+    <value>{0} minutes</value>
+  </data>
+  <data name="AddonProbeDurationSecondFormat" xml:space="preserve">
+    <value>{0} second</value>
+  </data>
+  <data name="AddonProbeDurationSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
+  </data>
 </root>

@@ -51,6 +51,8 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   private string currentReplacementText = string.Empty;
   private string currentTranslatedText = string.Empty;
   private string lastFailedOriginalText = string.Empty;
+  private NativeTextNodeLayoutSnapshot? nativeLayoutSnapshot;
+  private string nativeLayoutOriginalText = string.Empty;
   private int overlayPublicationVersion;
   private bool translationInFlight;
 
@@ -206,30 +208,34 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
 
     var textNode = this.resolveToastTextNode(addon);
+    if (!this.TryReadCurrentSource(textNode, out var visibleOriginalText))
+    {
+      return;
+    }
+
     this.updateOverlayBounds(addon, textNode);
     // PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger={type} visible-update " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
 
+    if (this.TryHandleVisibleSourceChange(
+            visibleOriginalText,
+            $"{type}-visible-reconcile"))
+    {
+      return;
+    }
+
     if (!this.TryGetCurrentResolvedTranslation(
             out var resolvedOriginalText,
             out var translatedText,
             out var replacementText))
     {
-      if (this.TryReadCurrentSource(textNode, out var visibleOriginalText))
+      if (this.TryCaptureOrQueueToastSource(
+              visibleOriginalText,
+              $"{type}-visible-fallback"))
       {
-        this.updateOverlayBounds(addon, textNode);
-        // PluginRuntimeLog.Debug(
-        //     $"[{this.addonName}] trigger={type} visible-capture source='{visibleOriginalText}' " +
-        //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
-        //     $"swap={this.ShouldSwapTexts()}");
-        if (this.TryCaptureOrQueueToastSource(
-                visibleOriginalText,
-                $"{type}-visible-fallback"))
-        {
-          return;
-        }
+        return;
       }
 
       return;
@@ -248,8 +254,11 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     if (!this.ShouldApplyNativeToastText())
     {
+      this.RestoreTrackedNativeLayoutIfNeeded();
       return;
     }
+
+    this.RestoreTrackedNativeLayoutIfNeeded(resolvedOriginalText);
 
     if (textNode == null || textNode->NodeText.IsEmpty)
     {
@@ -264,10 +273,20 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     // PluginRuntimeLog.Debug(
     //     $"[{this.addonName}] trigger={type} applying native replacement");
-    NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
+    var layoutSnapshot = NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
         addon,
         textNode,
-        replacementText);
+        replacementText,
+        allowWidthGrowth: true);
+    if (layoutSnapshot != null)
+    {
+      lock (this.stateGate)
+      {
+        this.nativeLayoutSnapshot = layoutSnapshot;
+        this.nativeLayoutOriginalText = resolvedOriginalText;
+      }
+    }
+
     this.updateOverlayBounds(addon, textNode);
   }
 
@@ -338,6 +357,8 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     var shouldDelayOverlayClear = this.ShouldUseOverlay();
     var resetRequestId = 0;
     var publicationVersion = 0;
+    NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
+    string layoutOriginalText = string.Empty;
 
     lock (this.stateGate)
     {
@@ -347,9 +368,15 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       this.currentReplacementText = string.Empty;
       this.translationInFlight = false;
       this.lastFailedOriginalText = string.Empty;
+      layoutSnapshot = this.nativeLayoutSnapshot;
+      layoutOriginalText = this.nativeLayoutOriginalText;
+      this.nativeLayoutSnapshot = null;
+      this.nativeLayoutOriginalText = string.Empty;
       resetRequestId = this.activeRequestId;
       publicationVersion = this.overlayPublicationVersion;
     }
+
+    this.TryRestoreNativeLayout(layoutSnapshot, layoutOriginalText);
 
     if (shouldDelayOverlayClear)
     {
@@ -358,6 +385,104 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
 
     this.clearOverlay();
+  }
+
+  /// <summary>
+  ///     Restores any tracked native toast mutation when the source changes or
+  ///     native mode is left.
+  /// </summary>
+  /// <param name="nextOriginalText">
+  ///     The next original source text expected for the toast, or an empty value
+  ///     when the current mutation should always be restored.
+  /// </param>
+  protected void RestoreTrackedNativeLayoutIfNeeded(string? nextOriginalText = null)
+  {
+    NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
+    string layoutOriginalText = string.Empty;
+    var restoreText = string.IsNullOrWhiteSpace(nextOriginalText);
+
+    lock (this.stateGate)
+    {
+      if (this.nativeLayoutSnapshot == null)
+      {
+        return;
+      }
+
+      if (!string.IsNullOrWhiteSpace(nextOriginalText) &&
+          this.TextMatches(this.nativeLayoutOriginalText, nextOriginalText))
+      {
+        return;
+      }
+
+      layoutSnapshot = this.nativeLayoutSnapshot;
+      layoutOriginalText = this.nativeLayoutOriginalText;
+      this.nativeLayoutSnapshot = null;
+      this.nativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(
+        layoutSnapshot,
+        layoutOriginalText,
+        restoreText);
+  }
+
+  /// <summary>
+  ///     Restores one tracked native toast layout snapshot back to the original
+  ///     game state.
+  /// </summary>
+  /// <param name="layoutSnapshot">The captured layout snapshot.</param>
+  /// <param name="originalText">The original text to write back.</param>
+  protected void TryRestoreNativeLayout(
+      NativeTextNodeLayoutSnapshot? layoutSnapshot,
+      string originalText,
+      bool restoreText = true)
+  {
+    if (layoutSnapshot == null)
+    {
+      return;
+    }
+
+    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+        layoutSnapshot,
+        originalText,
+        restoreText);
+  }
+
+  /// <summary>
+  ///     Reconciles the visible toast source against the tracked state so a
+  ///     recycled toast slot does not keep a stale translated line or a stale
+  ///     native layout snapshot from the prior source.
+  /// </summary>
+  /// <param name="visibleOriginalText">The currently visible toast source.</param>
+  /// <param name="trigger">The trigger label used for capture or queueing.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the source changed and the new source was
+  ///     handled immediately; otherwise, <see langword="false" />.
+  /// </returns>
+  protected bool TryHandleVisibleSourceChange(
+      string visibleOriginalText,
+      string trigger)
+  {
+    var shouldReconcile = false;
+
+    lock (this.stateGate)
+    {
+      if (!string.IsNullOrWhiteSpace(this.currentOriginalText) &&
+          !this.TextMatches(this.currentOriginalText, visibleOriginalText))
+      {
+        shouldReconcile = true;
+      }
+    }
+
+    if (!shouldReconcile)
+    {
+      return false;
+    }
+
+    this.RestoreTrackedNativeLayoutIfNeeded(visibleOriginalText);
+    return this.TryCaptureOrQueueToastSource(
+        visibleOriginalText,
+        trigger);
   }
 
   /// <summary>
@@ -518,8 +643,47 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       }
     }
 
+    if (this.ShouldApplyNativeToastText() &&
+        this.TryReadOriginalPointerText(textNode, out var originalPointerText) &&
+        !this.TextMatches(originalPointerText, visibleText))
+    {
+      originalText = originalPointerText;
+      return true;
+    }
+
     originalText = visibleText;
     return true;
+  }
+
+  /// <summary>
+  ///     Tries to read the original game-provided text payload from a toast text
+  ///     node even when the visible node text has already been replaced.
+  /// </summary>
+  /// <param name="textNode">The text node to inspect.</param>
+  /// <param name="originalText">Receives the original payload text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the original payload can be read;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  protected unsafe bool TryReadOriginalPointerText(
+      AtkTextNode* textNode,
+      out string originalText)
+  {
+    originalText = string.Empty;
+    if (textNode == null)
+    {
+      return false;
+    }
+
+    try
+    {
+      originalText = textNode->OriginalTextPointer.AsReadOnlySeStringSpan().ExtractText();
+      return !string.IsNullOrWhiteSpace(originalText);
+    }
+    catch
+    {
+      return false;
+    }
   }
 
   /// <summary>

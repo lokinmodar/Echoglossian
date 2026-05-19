@@ -10,6 +10,7 @@ It is the main diagnostic command for understanding addon tree structure, node l
 
 ```text
 /egloaddonprobe <addon name> [index]
+/egloaddonprobe <addon name> [index] [duration]
 /egloaddonprobe stop
 ```
 
@@ -18,6 +19,8 @@ Examples:
 ```text
 /egloaddonprobe JournalDetail
 /egloaddonprobe _ToDoList 0
+/egloaddonprobe _BattleTalk 15m
+/egloaddonprobe _BattleTalk 0 900s
 /egloaddonprobe stop
 ```
 
@@ -34,6 +37,19 @@ When started, the probe watches the requested addon for a short period and logs:
 - raw subscriber ids plus best-effort addon-name resolution for those arrays
 
 When `stop` or `cancel` is passed, the active watch is stopped if one exists.
+
+The optional `duration` token accepts:
+
+- `<n>s` for seconds
+- `<n>m` for minutes
+
+Examples:
+
+- `90s`
+- `10m`
+- `15m`
+
+The current maximum watch duration is `30m`.
 
 ## Typical Use
 

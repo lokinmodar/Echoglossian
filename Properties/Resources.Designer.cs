@@ -2916,6 +2916,87 @@ namespace Echoglossian.Properties {
                 return ResourceManager.GetString("CouldNotFetchOllamaModels", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeNoActiveWatch {
+            get {
+                return ResourceManager.GetString("AddonProbeNoActiveWatch", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeStopped {
+            get {
+                return ResourceManager.GetString("AddonProbeStopped", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeUsage {
+            get {
+                return ResourceManager.GetString("AddonProbeUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeInvalidDurationFormat {
+            get {
+                return ResourceManager.GetString("AddonProbeInvalidDurationFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeStartedFormat {
+            get {
+                return ResourceManager.GetString("AddonProbeStartedFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeDurationMinuteFormat {
+            get {
+                return ResourceManager.GetString("AddonProbeDurationMinuteFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeDurationMinutesFormat {
+            get {
+                return ResourceManager.GetString("AddonProbeDurationMinutesFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeDurationSecondFormat {
+            get {
+                return ResourceManager.GetString("AddonProbeDurationSecondFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string AddonProbeDurationSecondsFormat {
+            get {
+                return ResourceManager.GetString("AddonProbeDurationSecondsFormat", resourceCulture);
+            }
+        }
     }
 }
 

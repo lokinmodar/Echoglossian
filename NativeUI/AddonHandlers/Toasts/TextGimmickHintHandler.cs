@@ -35,6 +35,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private string currentReplacementText = string.Empty;
   private string currentTranslatedText = string.Empty;
   private string lastFailedOriginalText = string.Empty;
+  private NativeTextNodeLayoutSnapshot? nativeLayoutSnapshot;
+  private string nativeLayoutOriginalText = string.Empty;
   private bool translationInFlight;
 
   /// <summary>
@@ -150,46 +152,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     //     $"[{TextGimmickHintAddonName}] trigger={type} captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
-
-    if (this.TryGetCachedTranslation(
-            originalText,
-            out var translatedText,
-            out _))
-    {
-      // PluginRuntimeLog.Debug(
-      //     $"[{TextGimmickHintAddonName}] trigger={type} cache-hit -> overlay publish");
-      this.SetResolvedState(
-          originalText,
-          translatedText,
-          this.NormalizeForReplacement(translatedText));
-      this.PublishOverlay(originalText, translatedText, type.ToString());
-      return;
-    }
-
-    var lookupToast = this.BuildLookupMessage(originalText);
-    var storedToast = this.findTextGimmickHintMessage(lookupToast);
-    if (this.IsStoredTranslationUsable(storedToast, originalText))
-    {
-      // PluginRuntimeLog.Debug(
-      //     $"[{TextGimmickHintAddonName}] trigger={type} db-hit -> overlay publish");
-      this.SetResolvedState(
-          originalText,
-          storedToast!.TranslatedText!,
-          this.NormalizeForReplacement(storedToast.TranslatedText!));
-      this.PublishOverlay(
-          originalText,
-          storedToast.TranslatedText!,
-          type.ToString());
-      return;
-    }
-
-    if (this.TryQueueTranslation(originalText, out var requestId))
-    {
-      // PluginRuntimeLog.Debug(
-      //     $"[{TextGimmickHintAddonName}] trigger={type} cache-miss -> queued translation request #{requestId}");
-      this.PublishOverlay(originalText, string.Empty, type.ToString());
-      Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
-    }
+    this.TryCaptureOrQueueSource(originalText, type.ToString());
   }
 
   /// <summary>
@@ -206,17 +169,36 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
 
     var textNode = this.resolveToastTextNode(addon);
+    if (!this.TryReadCurrentSource(textNode, out var visibleOriginalText))
+    {
+      return;
+    }
+
     this.updateOverlayBounds(addon, textNode);
     // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger={type} visible-update " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
 
+    if (this.TryHandleVisibleSourceChange(
+            visibleOriginalText,
+            $"{type}-visible-reconcile"))
+    {
+      return;
+    }
+
     if (!this.TryGetCurrentResolvedTranslation(
             out var resolvedOriginalText,
             out var translatedText,
             out var replacementText))
     {
+      if (this.TryCaptureOrQueueSource(
+              visibleOriginalText,
+              $"{type}-visible-fallback"))
+      {
+        return;
+      }
+
       return;
     }
 
@@ -236,8 +218,11 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     if (!this.ShouldApplyNativeText())
     {
+      this.RestoreTrackedNativeLayoutIfNeeded();
       return;
     }
+
+    this.RestoreTrackedNativeLayoutIfNeeded(resolvedOriginalText);
 
     if (textNode == null || textNode->NodeText.IsEmpty)
     {
@@ -252,10 +237,20 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger={type} applying native replacement");
-    NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
+    var layoutSnapshot = NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
         addon,
         textNode,
-        replacementText);
+        replacementText,
+        allowWidthGrowth: true);
+    if (layoutSnapshot != null)
+    {
+      lock (this.stateGate)
+      {
+        this.nativeLayoutSnapshot = layoutSnapshot;
+        this.nativeLayoutOriginalText = resolvedOriginalText;
+      }
+    }
+
     this.updateOverlayBounds(addon, textNode);
   }
 
@@ -267,6 +262,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private void OnResetState(AddonEvent type, AddonArgs args)
   {
     // PluginRuntimeLog.Debug($"[{TextGimmickHintAddonName}] trigger={type} resetting toast state");
+    NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
+    string layoutOriginalText = string.Empty;
     lock (this.stateGate)
     {
       this.activeRequestId++;
@@ -275,9 +272,164 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       this.currentReplacementText = string.Empty;
       this.translationInFlight = false;
       this.lastFailedOriginalText = string.Empty;
+      layoutSnapshot = this.nativeLayoutSnapshot;
+      layoutOriginalText = this.nativeLayoutOriginalText;
+      this.nativeLayoutSnapshot = null;
+      this.nativeLayoutOriginalText = string.Empty;
     }
 
+    this.TryRestoreNativeLayout(layoutSnapshot, layoutOriginalText);
     this.clearOverlay();
+  }
+
+  /// <summary>
+  ///     Restores any tracked native gimmick-hint mutation when the source
+  ///     changes or native mode is left.
+  /// </summary>
+  /// <param name="nextOriginalText">
+  ///     The next original source text expected for the hint, or an empty value
+  ///     when the current mutation should always be restored.
+  /// </param>
+  private void RestoreTrackedNativeLayoutIfNeeded(string? nextOriginalText = null)
+  {
+    NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
+    string layoutOriginalText = string.Empty;
+    var restoreText = string.IsNullOrWhiteSpace(nextOriginalText);
+
+    lock (this.stateGate)
+    {
+      if (this.nativeLayoutSnapshot == null)
+      {
+        return;
+      }
+
+      if (!string.IsNullOrWhiteSpace(nextOriginalText) &&
+          this.TextMatches(this.nativeLayoutOriginalText, nextOriginalText))
+      {
+        return;
+      }
+
+      layoutSnapshot = this.nativeLayoutSnapshot;
+      layoutOriginalText = this.nativeLayoutOriginalText;
+      this.nativeLayoutSnapshot = null;
+      this.nativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(
+        layoutSnapshot,
+        layoutOriginalText,
+        restoreText);
+  }
+
+  /// <summary>
+  ///     Restores one tracked native gimmick-hint layout snapshot back to the
+  ///     original game state.
+  /// </summary>
+  /// <param name="layoutSnapshot">The captured layout snapshot.</param>
+  /// <param name="originalText">The original text to write back.</param>
+  private void TryRestoreNativeLayout(
+      NativeTextNodeLayoutSnapshot? layoutSnapshot,
+      string originalText,
+      bool restoreText = true)
+  {
+    if (layoutSnapshot == null)
+    {
+      return;
+    }
+
+    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+        layoutSnapshot,
+        originalText,
+        restoreText);
+  }
+
+  /// <summary>
+  ///     Reconciles the visible gimmick-hint source against the tracked state so
+  ///     a recycled slot does not keep a stale translated line or a stale native
+  ///     layout snapshot from the prior source.
+  /// </summary>
+  /// <param name="visibleOriginalText">The currently visible source line.</param>
+  /// <param name="trigger">The trigger label used for capture or queueing.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the source changed and the new source was
+  ///     handled immediately; otherwise, <see langword="false" />.
+  /// </returns>
+  private bool TryHandleVisibleSourceChange(
+      string visibleOriginalText,
+      string trigger)
+  {
+    var shouldReconcile = false;
+
+    lock (this.stateGate)
+    {
+      if (!string.IsNullOrWhiteSpace(this.currentOriginalText) &&
+          !this.TextMatches(this.currentOriginalText, visibleOriginalText))
+      {
+        shouldReconcile = true;
+      }
+    }
+
+    if (!shouldReconcile)
+    {
+      return false;
+    }
+
+    this.RestoreTrackedNativeLayoutIfNeeded(visibleOriginalText);
+    return this.TryCaptureOrQueueSource(
+        visibleOriginalText,
+        trigger);
+  }
+
+  /// <summary>
+  ///     Resolves the visible TextGimmickHint source line against cache,
+  ///     database, or background translation work without blocking the game UI.
+  /// </summary>
+  /// <param name="originalText">The current visible source line.</param>
+  /// <param name="trigger">The trigger label associated with the call.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the source was handled immediately;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  private bool TryCaptureOrQueueSource(
+      string originalText,
+      string trigger)
+  {
+    if (this.TryGetCachedTranslation(
+            originalText,
+            out var translatedText,
+            out _))
+    {
+      this.SetResolvedState(
+          originalText,
+          translatedText,
+          this.NormalizeForReplacement(translatedText));
+      this.PublishOverlay(originalText, translatedText, trigger);
+      return true;
+    }
+
+    var lookupToast = this.BuildLookupMessage(originalText);
+    var storedToast = this.findTextGimmickHintMessage(lookupToast);
+    if (this.IsStoredTranslationUsable(storedToast, originalText))
+    {
+      this.SetResolvedState(
+          originalText,
+          storedToast!.TranslatedText!,
+          this.NormalizeForReplacement(storedToast.TranslatedText!));
+      this.PublishOverlay(
+          originalText,
+          storedToast.TranslatedText!,
+          trigger);
+      return true;
+    }
+
+    if (this.TryQueueTranslation(originalText, out var requestId))
+    {
+      this.PublishOverlay(originalText, string.Empty, trigger);
+      Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
+      return true;
+    }
+
+    return false;
   }
 
   /// <summary>
@@ -733,8 +885,47 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       }
     }
 
+    if (this.ShouldApplyNativeText() &&
+        this.TryReadOriginalPointerText(textNode, out var originalPointerText) &&
+        !this.TextMatches(originalPointerText, visibleText))
+    {
+      originalText = originalPointerText;
+      return true;
+    }
+
     originalText = visibleText;
     return true;
+  }
+
+  /// <summary>
+  ///     Tries to read the original game-provided text payload from a gimmick-hint
+  ///     text node even when the visible node text has already been replaced.
+  /// </summary>
+  /// <param name="textNode">The text node to inspect.</param>
+  /// <param name="originalText">Receives the original payload text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the original payload can be read;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  private unsafe bool TryReadOriginalPointerText(
+      AtkTextNode* textNode,
+      out string originalText)
+  {
+    originalText = string.Empty;
+    if (textNode == null)
+    {
+      return false;
+    }
+
+    try
+    {
+      originalText = textNode->OriginalTextPointer.AsReadOnlySeStringSpan().ExtractText();
+      return !string.IsNullOrWhiteSpace(originalText);
+    }
+    catch
+    {
+      return false;
+    }
   }
 
   /// <summary>

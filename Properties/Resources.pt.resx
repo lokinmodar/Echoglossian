@@ -951,4 +951,31 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Modelo Claude de nível mais alto quando você deseja qualidade máxima.</value>
   </data>
+  <data name="AddonProbeNoActiveWatch" xml:space="preserve">
+    <value>Não há um watch ativo do addon probe para parar.</value>
+  </data>
+  <data name="AddonProbeStopped" xml:space="preserve">
+    <value>Watch do addon probe parado.</value>
+  </data>
+  <data name="AddonProbeUsage" xml:space="preserve">
+    <value>Uso: /egloaddonprobe &lt;nome do addon&gt; [índice] [duração] ou /egloaddonprobe stop</value>
+  </data>
+  <data name="AddonProbeInvalidDurationFormat" xml:space="preserve">
+    <value>Duração inválida para addon probe. Use valores como 90s ou 15m, até {0} minutos.</value>
+  </data>
+  <data name="AddonProbeStartedFormat" xml:space="preserve">
+    <value>Watch do addon probe iniciado para '{0}'[{1}] por {2}. Verifique o Dalamud log para os dumps de eventos e árvore.</value>
+  </data>
+  <data name="AddonProbeDurationMinuteFormat" xml:space="preserve">
+    <value>{0} minuto</value>
+  </data>
+  <data name="AddonProbeDurationMinutesFormat" xml:space="preserve">
+    <value>{0} minutos</value>
+  </data>
+  <data name="AddonProbeDurationSecondFormat" xml:space="preserve">
+    <value>{0} segundo</value>
+  </data>
+  <data name="AddonProbeDurationSecondsFormat" xml:space="preserve">
+    <value>{0} segundos</value>
+  </data>
 </root>
