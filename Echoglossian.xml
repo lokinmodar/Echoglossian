@@ -1855,6 +1855,13 @@
         <member name="F:Echoglossian.Config.TranslateToast">
             <summary>Translate toast popup messages.</summary>
         </member>
+        <member name="F:Echoglossian.Config.UseToastGuiCaptureForSupportedToasts">
+            <summary>
+                Uses Dalamud's ToastGui callbacks to prefetch source text and
+                translations for supported normal and error toasts before the addon
+                handlers see the live nodes.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateToDoList">
             <summary>Translate To-Do List entries.</summary>
         </member>
@@ -2054,6 +2061,10 @@
             <summary>
                 Provides reusable DB-first background prefetch for action-adjacent
                 reference-text sheets used by <c>ActionMenu</c>.
+            </summary>
+            <summary>
+                Handles bootstrap and teardown of the experimental ToastGui-assisted
+                toast capture runtime for supported normal and error toasts.
             </summary>
             <summary>
                 Provides DB-first background prefetch for canonical trait payloads.
@@ -4991,6 +5002,25 @@
             <param name="referenceId">The sheet-row identifier.</param>
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateToastGuiCaptureRuntime">
+            <summary>
+                Creates the ToastGui-assisted capture runtime using the same shared
+                toast persistence helpers already used by the addon-handler path.
+            </summary>
+            <returns>The initialized runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterToastGuiCaptureRuntime">
+            <summary>
+                Registers the ToastGui-assisted capture runtime with Dalamud's
+                callback surface for supported normal and error toasts.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterToastGuiCaptureRuntime">
+            <summary>
+                Unregisters the ToastGui-assisted capture runtime from Dalamud's
+                callback surface.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetch">
             <summary>
@@ -16612,6 +16642,140 @@
             <param name="text">The translated text to normalize.</param>
             <returns>The text that should be written back into the native addon.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime">
+            <summary>
+                Uses Dalamud's <see cref="T:Dalamud.Plugin.Services.IToastGui" /> callbacks to capture supported
+                normal and error toast source payloads before the addon-node handlers
+                read the live UI.
+            </summary>
+            <remarks>
+                This runtime is intentionally conservative. It does not replace the
+                addon-handler presentation path, and it does not publish overlays or
+                mutate native nodes. It only prefetches translations into the existing
+                toast persistence path so the addon handlers can later reuse the same
+                cache/DB semantics with lower latency and less dependence on reading a
+                live node that may already be mutated.
+            </remarks>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated toast rows.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated toast rows.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.HandleNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.ToastOptions@,System.Boolean@)">
+            <summary>
+                Handles generic normal-toast callbacks from Dalamud and opportunistically
+                prefetches translations for supported addon-backed toast surfaces.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="options">The generic toast options.</param>
+            <param name="isHandled">
+                Whether another callback already consumed the toast.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.HandleErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.Boolean@)">
+            <summary>
+                Handles error-toast callbacks from Dalamud and opportunistically
+                prefetches translations for the native error-toast addon.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="isHandled">
+                Whether another callback already consumed the toast.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ShouldCaptureNormalToasts">
+            <summary>
+                Determines whether the experimental ToastGui-assisted capture path
+                should run for normal toasts.
+            </summary>
+            <returns>
+                <see langword="true" /> when supported normal toasts should be
+                prefetched from ToastGui; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ShouldCaptureErrorToasts">
+            <summary>
+                Determines whether the experimental ToastGui-assisted capture path
+                should run for error toasts.
+            </summary>
+            <returns>
+                <see langword="true" /> when error toasts should be prefetched from
+                ToastGui; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryPrefetchToast(System.String,System.String)">
+            <summary>
+                Prefetches one toast source line into the existing translation
+                persistence path when no usable translated row already exists.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryBeginPrefetch(System.String,System.String,System.String@)">
+            <summary>
+                Starts one background prefetch request when the same toast line is not
+                already being resolved.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="inFlightKey">
+                Receives the unique in-flight key for the request.
+            </param>
+            <returns>
+                <see langword="true" /> when a new request should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ResolveTranslationAsync(System.String,System.String,System.String)">
+            <summary>
+                Resolves one toast translation asynchronously and persists it into the
+                existing toast history tables when successful.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="inFlightKey">The key representing the queued request.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds a lookup entity matching the historical toast schema already
+                used by the plugin database.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">
+            <summary>
+                Determines whether a stored toast row already contains a usable
+                translation for the observed callback payload.
+            </summary>
+            <param name="toastMessage">The stored row to validate.</param>
+            <param name="originalText">The expected original toast text.</param>
+            <param name="toastType">The persisted toast type.</param>
+            <returns>
+                <see langword="true" /> when the stored row can be reused; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildInFlightKey(System.String,System.String)">
+            <summary>
+                Builds the in-flight key used to deduplicate concurrent callback
+                prefetch requests.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>The stable in-flight dedupe key.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
             <summary>
                 Handles the "_WideText" toast runtime inside the new addon-handler model.
@@ -21562,6 +21726,16 @@
         <member name="P:Echoglossian.Properties.Resources.WhichToastsToTranslate">
             <summary>
               Looks up a localized string similar to Select which kind of in-game message toasts to translate.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiCaptureForSupportedToastsLabel">
+            <summary>
+              Looks up a localized string similar to Use ToastGui-assisted capture for supported normal/error toasts (experimental).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiCaptureForSupportedToastsDescription">
+            <summary>
+              Looks up a localized string similar to Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.YandexCloudApiKey">

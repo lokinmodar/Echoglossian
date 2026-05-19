@@ -369,6 +369,12 @@ public static class OverlayTab
 
         ImGui.TextWrapped(Resources.WhichToastsToTranslate);
         ImGui.Spacing();
+        changed |= ImGui.Checkbox(
+            Resources.ToastGuiCaptureForSupportedToastsLabel,
+            ref config.UseToastGuiCaptureForSupportedToasts);
+        ImGui.TextWrapped(
+            Resources.ToastGuiCaptureForSupportedToastsDescription);
+        ImGui.Spacing();
 
         changed |= ImGui.Checkbox(
             Resources.TranslateScreenInfoToastToggleText,

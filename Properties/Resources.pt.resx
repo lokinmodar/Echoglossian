@@ -273,6 +273,12 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Selecione o tipo de notificação de mensagens do jogo a ser traduzida</value>
   </data>
+  <data name="ToastGuiCaptureForSupportedToastsLabel" xml:space="preserve">
+    <value>Usar captura assistida por ToastGui para toasts normais/de erro suportados (experimental)</value>
+  </data>
+  <data name="ToastGuiCaptureForSupportedToastsDescription" xml:space="preserve">
+    <value>Mantém os limites da overlay e a substituição nativa nos handlers do addon, mas escuta os callbacks do ToastGui para pré-carregar as traduções mais cedo. Os quest toasts já usam ToastGui; o Text Gimmick Hint continua a usar o caminho do addon.</value>
+  </data>
   <data name="ConfigTab8Name" xml:space="preserve">
     <value>Solucionando problemas</value>
   </data>

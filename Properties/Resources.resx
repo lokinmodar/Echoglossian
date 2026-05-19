@@ -394,6 +394,12 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Select which kind of in-game message toasts to translate</value>
   </data>
+  <data name="ToastGuiCaptureForSupportedToastsLabel" xml:space="preserve">
+    <value>Use ToastGui-assisted capture for supported normal/error toasts (experimental)</value>
+  </data>
+  <data name="ToastGuiCaptureForSupportedToastsDescription" xml:space="preserve">
+    <value>Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path.</value>
+  </data>
   <data name="ConfigTab8Name" xml:space="preserve">
     <value>Troubleshooting</value>
   </data>

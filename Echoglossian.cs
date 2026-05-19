@@ -116,6 +116,7 @@ public partial class Echoglossian : IDalamudPlugin
 
   private readonly bool pluginAssetsState;
   private QuestToastRuntime questToastRuntime;
+  private ToastGuiCaptureRuntime toastGuiCaptureRuntime;
   private readonly IDalamudTextureWrap talkImage;
   private static Echoglossian? activeInstance;
   private string? addonHandlerRegistrationSignature;
@@ -320,6 +321,8 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.questToastRuntime = this.CreateQuestToastRuntime();
     this.RegisterQuestToastRuntime();
+    this.toastGuiCaptureRuntime = this.CreateToastGuiCaptureRuntime();
+    this.RegisterToastGuiCaptureRuntime();
 
     this.EgloAddonHandler();
 
@@ -479,6 +482,7 @@ public partial class Echoglossian : IDalamudPlugin
 #endif
 
       this.UnregisterQuestToastRuntime();
+      this.UnregisterToastGuiCaptureRuntime();
       this.queuedTranslationBroker.Dispose();
 
       PluginInterface.UiBuilder.OpenMainUi -= this.ConfigWindow;

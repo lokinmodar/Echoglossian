@@ -146,16 +146,54 @@ What improved:
 - `_MiniTalk` and toast-family state handling is now much closer to a correct
   pooled-slot model
 
+## Iteration 7
+
+Goal:
+- explore `ToastGui` as an earlier source-capture path for supported toasts
+  without regressing the existing overlay/native presentation behavior
+
+Findings:
+- `IToastGui.QuestToast` is already a full callback-native runtime in the repo
+- `IToastGui.Toast` and `IToastGui.ErrorToast` expose earlier source payloads
+  for normal/error toasts
+- generic `IToastGui.Toast` does not expose enough subtype metadata to replace
+  `_WideText`, `_AreaText`, and `_TextClassChange` as presentation owners
+- because overlay bounds and swap mode still depend on the live addon shape,
+  the safest first step is callback-assisted prefetch, not a full replacement
+  of the addon handlers
+
+Changes:
+- added `Config.UseToastGuiCaptureForSupportedToasts`
+- added `ToastGuiCaptureRuntime`
+- registered `IToastGui.Toast` and `IToastGui.ErrorToast` callbacks
+- the callback runtime now prefetches translations into the existing
+  `ToastMessage` persistence path for:
+  - supported normal toasts
+  - error toasts
+- overlay publication and native replacement remain owned by the addon
+  handlers, preserving existing overlay bounds behavior
+- documented the split explicitly in
+  `docs/dialogue-and-toast-runtime-flows.md`
+
+Validation:
+- `dotnet build Echoglossian.sln -c Debug --no-restore`
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+
 What still needs in-game confirmation:
 - `_MiniTalk` bubble reuse stability after the slot-level reconcile changes
 - toast-family source reconciliation and centering consistency
-- whether additional toast surfaces can be moved to an earlier `IToastGui`
-  callback path instead of addon-node mutation
+- whether the `ToastGui`-assisted toast path improves cache-hit timing without
+  changing overlay/swap presentation
+- whether additional toast surfaces can be moved further toward source-level
+  handling after this first prefetch-only cut
 
 ## Next Investigation
 
 1. test the latest `_MiniTalk` and toast-family reconcile changes in game
-2. investigate `IToastGui.Toast` and `IToastGui.ErrorToast` as alternate
-   source-level handling paths behind a config toggle
+2. test the new `ToastGui`-assisted capture toggle with:
+   - `_WideText`
+   - `_TextError`
+   - `_AreaText`
+   - `_TextClassChange`
 3. preserve the current addon-node flow as the default stable path until the
-   alternate toast runtime proves safe
+   callback-assisted runtime proves safe enough to own more of the pipeline

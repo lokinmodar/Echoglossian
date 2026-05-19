@@ -2603,6 +2603,24 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Use ToastGui-assisted capture for supported normal/error toasts (experimental).
+        /// </summary>
+        public static string ToastGuiCaptureForSupportedToastsLabel {
+            get {
+                return ResourceManager.GetString("ToastGuiCaptureForSupportedToastsLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path..
+        /// </summary>
+        public static string ToastGuiCaptureForSupportedToastsDescription {
+            get {
+                return ResourceManager.GetString("ToastGuiCaptureForSupportedToastsDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to YandexCloud Api Key.
         /// </summary>
         public static string YandexCloudApiKey {
