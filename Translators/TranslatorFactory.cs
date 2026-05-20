@@ -40,7 +40,8 @@ public static class TranslatorFactory
                     config.ChatGPTBaseUrl,
                     config.ChatGptApiKey,
                     config.OpenAILlmModel,
-                    config.ChatGptTemperature),
+                    config.ChatGptTemperature,
+                    config.ChatGptPrompt),
             Echoglossian.TransEngines.YandexCloud =>
                 new YandexTranslator(pluginLog, config),
             Echoglossian.TransEngines.GTranslate =>
