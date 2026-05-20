@@ -174,4 +174,41 @@ public class TranslatorContractTests
                 .Replace("{text}", "hello", StringComparison.Ordinal),
             prompt);
     }
+
+    /// <summary>
+    ///     Ensures ChatGPT prompt expansion preserves placeholder-like text inside the translated input.
+    /// </summary>
+    [Fact]
+    public void ChatGpt_BuildPrompt_DoesNotReprocessInsertedText()
+    {
+        var prompt = ChatGPTTranslator.BuildPrompt(
+            "Translate from {sourceLanguage} to {targetLanguage}: {text}",
+            "Keep literal {sourceLanguage} and {targetLanguage} tokens.",
+            "en",
+            "pt-BR");
+
+        Assert.Equal(
+            "Translate from en to pt-BR: Keep literal {sourceLanguage} and {targetLanguage} tokens.",
+            prompt);
+    }
+
+    /// <summary>
+    ///     Ensures ChatGPT prompt expansion falls back to the shared default template when the config prompt is blank.
+    /// </summary>
+    [Fact]
+    public void ChatGpt_BuildPrompt_UsesDefaultTemplateWhenBlank()
+    {
+        var prompt = ChatGPTTranslator.BuildPrompt(
+            "   ",
+            "hello",
+            "en",
+            "pt-BR");
+
+        Assert.Equal(
+            PromptTemplateManager.DefaultPrompt
+                .Replace("{sourceLanguage}", "en", StringComparison.Ordinal)
+                .Replace("{targetLanguage}", "pt-BR", StringComparison.Ordinal)
+                .Replace("{text}", "hello", StringComparison.Ordinal),
+            prompt);
+    }
 }
