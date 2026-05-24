@@ -241,7 +241,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
         addon,
         textNode,
         replacementText,
-        allowWidthGrowth: true);
+        allowWidthGrowth: true,
+        restoreHorizontalCentering: false);
     if (layoutSnapshot != null)
     {
       lock (this.stateGate)

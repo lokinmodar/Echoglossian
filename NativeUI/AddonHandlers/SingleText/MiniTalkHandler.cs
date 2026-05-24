@@ -336,7 +336,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
         snapshot,
         originalText,
-        restoreText);
+        restoreText,
+        restorePositions: false);
   }
 
   /// <summary>
@@ -504,7 +505,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           addon,
           textNode,
           replacementText,
-          allowWidthGrowth: false);
+          allowWidthGrowth: true,
+          additionalWrapWidth: this.ResolveMiniTalkAdditionalWrapWidth(textNode));
       if (layoutSnapshot != null)
       {
         lock (this.stateGate)
@@ -691,6 +693,36 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     translatedText = lookup.TranslatedMiniTalkMessage!;
     replacementText = this.NormalizeForReplacement(translatedText);
     return true;
+  }
+
+  /// <summary>
+  ///     Resolves a small amount of extra wrap width from the live MiniTalk node
+  ///     padding so translated lines can gain a bit of horizontal room without
+  ///     relying on fixed pixel constants.
+  /// </summary>
+  /// <param name="textNode">The live MiniTalk text node.</param>
+  /// <returns>The additional wrap width suggested by the current bubble layout.</returns>
+  private unsafe ushort ResolveMiniTalkAdditionalWrapWidth(AtkTextNode* textNode)
+  {
+    if (textNode == null)
+    {
+      return 0;
+    }
+
+    var parentNode = textNode->AtkResNode.ParentNode;
+    var leftPadding = Math.Max(0, (int)textNode->AtkResNode.GetXShort());
+    if (parentNode == null)
+    {
+      return (ushort)Math.Min(ushort.MaxValue, leftPadding);
+    }
+
+    var currentWidth = textNode->GetWidth();
+    var rightPadding = Math.Max(
+        0,
+        parentNode->GetWidth() - leftPadding - currentWidth);
+    return (ushort)Math.Min(
+        ushort.MaxValue,
+        Math.Max(leftPadding, rightPadding));
   }
 
   /// <summary>

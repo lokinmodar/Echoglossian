@@ -193,7 +193,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       AtkResNode* primaryContainerNode = null,
       AtkResNode* secondaryContainerNode = null,
       AtkResNode* anchoredXNode = null,
-      bool allowWidthGrowth = false)
+      bool allowWidthGrowth = false,
+      bool restoreHorizontalCentering = true)
   {
     var childWidth = resizeResult.Width;
     var childHeight = resizeResult.Height;
@@ -256,7 +257,10 @@ internal static unsafe class NativeTextNodeLayoutHelper
               childWidth + snapshot.AnchoredXOffset)));
     }
 
-    TryRestoreHorizontalCentering(snapshot);
+    if (restoreHorizontalCentering)
+    {
+      TryRestoreHorizontalCentering(snapshot);
+    }
   }
 
   /// <summary>
@@ -270,7 +274,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
   public static void RestoreLayoutSnapshot(
       NativeTextNodeLayoutSnapshot snapshot,
       string originalText,
-      bool restoreText = true)
+      bool restoreText = true,
+      bool restorePositions = true)
   {
     if (snapshot == null)
     {
@@ -302,8 +307,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
         ((AtkResNode*)textNode)->SetHeight(snapshot.TextNodeHeight);
       }
 
-      ((AtkResNode*)textNode)->SetXShort(snapshot.TextNodeOriginalX);
-      ((AtkResNode*)textNode)->SetYShort(snapshot.TextNodeOriginalY);
+      if (restorePositions)
+      {
+        ((AtkResNode*)textNode)->SetXShort(snapshot.TextNodeOriginalX);
+        ((AtkResNode*)textNode)->SetYShort(snapshot.TextNodeOriginalY);
+      }
     }
 
     foreach (var ancestorSnapshot in snapshot.AncestorChain)
@@ -324,8 +332,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
         ancestorNode->SetHeight(ancestorSnapshot.Height);
       }
 
-      ancestorNode->SetXShort(ancestorSnapshot.OriginalX);
-      ancestorNode->SetYShort(ancestorSnapshot.OriginalY);
+      if (restorePositions)
+      {
+        ancestorNode->SetXShort(ancestorSnapshot.OriginalX);
+        ancestorNode->SetYShort(ancestorSnapshot.OriginalY);
+      }
     }
 
     if (snapshot.SecondaryContainerAddress != 0)
@@ -343,12 +354,16 @@ internal static unsafe class NativeTextNodeLayoutHelper
           secondaryContainerNode->SetHeight(snapshot.SecondaryContainerHeight);
         }
 
-        secondaryContainerNode->SetXShort(snapshot.SecondaryContainerOriginalX);
-        secondaryContainerNode->SetYShort(snapshot.SecondaryContainerOriginalY);
+        if (restorePositions)
+        {
+          secondaryContainerNode->SetXShort(snapshot.SecondaryContainerOriginalX);
+          secondaryContainerNode->SetYShort(snapshot.SecondaryContainerOriginalY);
+        }
       }
     }
 
-    if (snapshot.AnchoredXNodeAddress != 0)
+    if (restorePositions &&
+        snapshot.AnchoredXNodeAddress != 0)
     {
       var anchoredXNode = (AtkResNode*)snapshot.AnchoredXNodeAddress;
       if (anchoredXNode != null)
@@ -424,7 +439,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
       AtkUnitBase* addon,
       AtkTextNode* textNode,
       string replacementText,
-      bool allowWidthGrowth = false)
+      bool allowWidthGrowth = false,
+      bool restoreHorizontalCentering = true,
+      ushort additionalWrapWidth = 0)
   {
     if (textNode == null)
     {
@@ -448,6 +465,13 @@ internal static unsafe class NativeTextNodeLayoutHelper
         textNode,
         containerNode,
         backgroundResNode);
+    if (additionalWrapWidth > 0 && preferredWrapWidth > 0)
+    {
+      preferredWrapWidth = (ushort)Math.Min(
+          ushort.MaxValue,
+          preferredWrapWidth + additionalWrapWidth);
+    }
+
     var resizeResult = ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
@@ -457,7 +481,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
         resizeResult,
         containerNode,
         backgroundResNode,
-        allowWidthGrowth: allowWidthGrowth);
+        allowWidthGrowth: allowWidthGrowth,
+        restoreHorizontalCentering: restoreHorizontalCentering);
     return snapshot;
   }
 

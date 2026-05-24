@@ -321,3 +321,42 @@ Changes:
 Validation:
 - `dotnet build Echoglossian.sln -c Debug --no-restore`
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+
+## Iteration 11
+
+Goal:
+- reduce the remaining `_MiniTalk` flicker by letting the game keep the live
+  bubble position while still restoring the original geometry between native
+  apply passes
+- give `_MiniTalk` a little more horizontal room derived from the live bubble
+  padding instead of fixed widths
+- stop re-centering toast text inside widened backgrounds when that centering
+  pushes the text to the right of the visual addon center
+
+Findings:
+- `_MiniTalk` bubbles track NPC movement, so restoring the snapshot X/Y
+  positions on every reset can fight the game and create frame-to-frame
+  position jitter
+- the prior width fix had not actually landed in a validated build because the
+  new `_MiniTalk` helper had a compile-time type ambiguity
+- the shared horizontal-centering helper was still running for addon toasts and
+  could visibly shift text rightward relative to the toast background
+
+Changes:
+- `RestoreLayoutSnapshot(...)` now supports restoring size/flags without
+  restoring node positions
+- `_MiniTalk` now restores tracked native layouts with `restorePositions: false`
+  so the bubble keeps the game-controlled live position while geometry resets to
+  the original client state
+- `_MiniTalk` native apply now adds a small extra wrap-width allowance derived
+  from the current left/right padding inside the live bubble
+- the shared native text reflow helper now accepts:
+  - `restoreHorizontalCentering`
+  - `additionalWrapWidth`
+- addon toasts and `_TextGimmickHint` now disable the horizontal-centering
+  adjustment so their text can stay anchored to the original addon layout
+
+Validation:
+- `dotnet build Echoglossian.sln -c Debug --no-restore`
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- `dotnet build Echoglossian.csproj -c Release --no-restore`
