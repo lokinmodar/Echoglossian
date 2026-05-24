@@ -413,7 +413,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     this.TryRestoreNativeLayout(
         layoutSnapshot,
         layoutOriginalName,
-        layoutOriginalText);
+        layoutOriginalText,
+        restoreText: false);
   }
 
   /// <summary>
@@ -426,7 +427,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   private unsafe void TryRestoreNativeLayout(
       NativeTextNodeLayoutSnapshot? layoutSnapshot,
       string originalName,
-      string originalText)
+      string originalText,
+      bool restoreText = true)
   {
     if (layoutSnapshot == null)
     {
@@ -440,14 +442,19 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
       if (battleTalkAddon != null)
       {
         var nameNode = battleTalkAddon->GetTextNodeById(NameNodeId);
-        if (nameNode != null && !string.IsNullOrWhiteSpace(originalName))
+        if (restoreText &&
+            nameNode != null &&
+            !string.IsNullOrWhiteSpace(originalName))
         {
           nameNode->SetText(originalName);
         }
       }
     }
 
-    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(layoutSnapshot, originalText);
+    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+        layoutSnapshot,
+        originalText,
+        restoreText);
   }
 
   /// <summary>

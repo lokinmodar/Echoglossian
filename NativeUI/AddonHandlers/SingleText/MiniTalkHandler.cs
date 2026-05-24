@@ -311,7 +311,10 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       state.NativeLayoutOriginalText = string.Empty;
     }
 
-    this.TryRestoreNativeLayout(snapshot, originalText);
+    this.TryRestoreNativeLayout(
+        snapshot,
+        originalText,
+        restoreText: false);
   }
 
   /// <summary>
@@ -1081,9 +1084,14 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     if (this.ShouldApplyNativeText())
     {
       if (this.TryReadOriginalPointerText(textNode, out var originalPointerText) &&
-          !this.TextMatches(originalPointerText, visibleText))
+          !this.TextMatches(originalPointerText, visibleText) &&
+          this.TryConfirmOriginalPointerMatchesVisible(
+              bubbleKey,
+              originalPointerText,
+              visibleText,
+              out var confirmedOriginalText))
       {
-        originalText = originalPointerText;
+        originalText = confirmedOriginalText;
         return true;
       }
 
@@ -1096,6 +1104,69 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
     originalText = visibleText;
     return true;
+  }
+
+  /// <summary>
+  ///     Confirms that a MiniTalk node's original-text pointer really belongs to
+  ///     the currently visible bubble text before the handler trusts it as the
+  ///     logical source line.
+  /// </summary>
+  /// <param name="bubbleKey">The stable bubble key.</param>
+  /// <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+  /// <param name="visibleText">The text currently visible in the node.</param>
+  /// <param name="originalText">Receives the confirmed original text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the pointer text can be proven to explain
+  ///     the visible replacement inside MiniTalk; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool TryConfirmOriginalPointerMatchesVisible(
+      nint bubbleKey,
+      string originalPointerText,
+      string visibleText,
+      out string originalText)
+  {
+    lock (this.stateGate)
+    {
+      if (this.TryGetBubbleState(bubbleKey, out var state) &&
+          this.TextMatches(state.CurrentOriginalText, originalPointerText) &&
+          this.TextMatches(visibleText, state.CurrentReplacementText))
+      {
+        originalText = originalPointerText;
+        return true;
+      }
+
+      foreach (var bubbleState in this.bubbleStates.Values)
+      {
+        if (!this.TextMatches(
+                bubbleState.CurrentOriginalText,
+                originalPointerText))
+        {
+          continue;
+        }
+
+        if (this.TextMatches(
+                visibleText,
+                bubbleState.CurrentReplacementText))
+        {
+          originalText = originalPointerText;
+          return true;
+        }
+      }
+    }
+
+    if (this.TryLoadStoredTranslation(
+            originalPointerText,
+            out _,
+            out var replacementText) &&
+        this.TextMatches(visibleText, replacementText))
+    {
+      originalText = originalPointerText;
+      return true;
+    }
+
+    originalText = string.Empty;
+    return false;
   }
 
   /// <summary>

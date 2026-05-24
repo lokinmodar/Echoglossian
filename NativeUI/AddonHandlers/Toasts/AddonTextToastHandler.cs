@@ -645,14 +645,63 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     if (this.ShouldApplyNativeToastText() &&
         this.TryReadOriginalPointerText(textNode, out var originalPointerText) &&
-        !this.TextMatches(originalPointerText, visibleText))
+        !this.TextMatches(originalPointerText, visibleText) &&
+        this.TryConfirmOriginalPointerMatchesVisible(
+            originalPointerText,
+            visibleText,
+            out var confirmedOriginalText))
     {
-      originalText = originalPointerText;
+      originalText = confirmedOriginalText;
       return true;
     }
 
     originalText = visibleText;
     return true;
+  }
+
+  /// <summary>
+  ///     Confirms that a toast node's original-text pointer really belongs to
+  ///     the currently visible toast text before the handler trusts it as the
+  ///     logical source line.
+  /// </summary>
+  /// <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+  /// <param name="visibleText">The text currently visible in the node.</param>
+  /// <param name="originalText">Receives the confirmed original toast text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the pointer text can be proven to explain
+  ///     the visible replacement inside the same toast surface; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  protected bool TryConfirmOriginalPointerMatchesVisible(
+      string originalPointerText,
+      string visibleText,
+      out string originalText)
+  {
+    lock (this.stateGate)
+    {
+      if (this.TextMatches(this.currentOriginalText, originalPointerText) &&
+          this.TextMatches(visibleText, this.currentReplacementText))
+      {
+        originalText = originalPointerText;
+        return true;
+      }
+    }
+
+    var lookupToast = this.findToastMessage(
+        this.BuildLookupMessage(originalPointerText));
+    if (this.IsStoredTranslationUsable(lookupToast, originalPointerText))
+    {
+      var replacementText = this.NormalizeForReplacement(
+          lookupToast!.TranslatedToastMessage!);
+      if (this.TextMatches(visibleText, replacementText))
+      {
+        originalText = originalPointerText;
+        return true;
+      }
+    }
+
+    originalText = string.Empty;
+    return false;
   }
 
   /// <summary>

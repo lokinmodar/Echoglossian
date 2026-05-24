@@ -887,14 +887,60 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     if (this.ShouldApplyNativeText() &&
         this.TryReadOriginalPointerText(textNode, out var originalPointerText) &&
-        !this.TextMatches(originalPointerText, visibleText))
+        !this.TextMatches(originalPointerText, visibleText) &&
+        this.TryConfirmOriginalPointerMatchesVisible(
+            originalPointerText,
+            visibleText,
+            out var confirmedOriginalText))
     {
-      originalText = originalPointerText;
+      originalText = confirmedOriginalText;
       return true;
     }
 
     originalText = visibleText;
     return true;
+  }
+
+  /// <summary>
+  ///     Confirms that a gimmick-hint node's original-text pointer really
+  ///     belongs to the currently visible text before the handler trusts it as
+  ///     the logical source line.
+  /// </summary>
+  /// <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+  /// <param name="visibleText">The text currently visible in the node.</param>
+  /// <param name="originalText">Receives the confirmed original text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the pointer text can be proven to explain
+  ///     the visible replacement inside the same gimmick-hint surface;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  private bool TryConfirmOriginalPointerMatchesVisible(
+      string originalPointerText,
+      string visibleText,
+      out string originalText)
+  {
+    lock (this.stateGate)
+    {
+      if (this.TextMatches(this.currentOriginalText, originalPointerText) &&
+          this.TextMatches(visibleText, this.currentReplacementText))
+      {
+        originalText = originalPointerText;
+        return true;
+      }
+    }
+
+    if (this.TryLoadStoredTranslation(
+            originalPointerText,
+            out _,
+            out var replacementText) &&
+        this.TextMatches(visibleText, replacementText))
+    {
+      originalText = originalPointerText;
+      return true;
+    }
+
+    originalText = string.Empty;
+    return false;
   }
 
   /// <summary>

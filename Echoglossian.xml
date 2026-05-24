@@ -14894,6 +14894,22 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryConfirmOriginalPointerMatchesVisible(System.IntPtr,System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a MiniTalk node's original-text pointer really belongs to
+                the currently visible bubble text before the handler trusts it as the
+                logical source line.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside MiniTalk; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
             <summary>
                 Tries to read the original game-provided text payload from a MiniTalk
@@ -15081,7 +15097,7 @@
             <param name="originalName">The original sender name for the active line.</param>
             <param name="originalText">The original source text for the active line.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.String,System.Boolean)">
             <summary>
                 Restores one tracked native BattleTalk layout snapshot back to the
                 original game state.
@@ -16150,6 +16166,21 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a toast node's original-text pointer really belongs to
+                the currently visible toast text before the handler trusts it as the
+                logical source line.
+            </summary>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original toast text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside the same toast surface; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
             <summary>
                 Tries to read the original game-provided text payload from a toast text
@@ -16847,6 +16878,21 @@
             <returns>
                 <see langword="true" /> when readable text is available; otherwise,
                 <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a gimmick-hint node's original-text pointer really
+                belongs to the currently visible text before the handler trusts it as
+                the logical source line.
+            </summary>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside the same gimmick-hint surface;
+                otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">

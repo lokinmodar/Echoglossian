@@ -277,3 +277,47 @@ Validation:
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter AddonProbeAutoWatchPolicyTests`
 - `dotnet build Echoglossian.sln -c Debug --no-restore`
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+
+## Iteration 10
+
+Goal:
+- stop cross-surface leakage where stale `OriginalTextPointer` content could be
+  mistaken for the logical source line in `_MiniTalk`, addon toasts, or
+  `_TextGimmickHint`
+- reduce `_MiniTalk` and `BattleTalk` flicker by restoring only geometry before
+  same-source native reapply passes instead of briefly writing the original text
+  back into the node mid-frame
+
+Findings:
+- `_MiniTalk`, addon toasts, and `_TextGimmickHint` all trusted
+  `AtkTextNode.OriginalTextPointer` whenever it differed from the visible node
+  text
+- pooled/recycled native text nodes can carry stale original-pointer content
+  from an unrelated prior use, which is enough to make one surface believe the
+  source text belongs to another surface
+- `_MiniTalk` and `BattleTalk` same-source reapply paths restored the original
+  text as part of the geometry reset, which can create visible flicker when the
+  next apply happens in a later lifecycle callback of the same frame
+
+Changes:
+- `_MiniTalk` now accepts `OriginalTextPointer` only when MiniTalk itself can
+  corroborate that original through:
+  - the current bubble state
+  - another tracked MiniTalk bubble state
+  - or a stored `MiniTalkMessage` row whose replacement matches the visible text
+- addon toasts now accept `OriginalTextPointer` only when the toast surface can
+  corroborate it through:
+  - the current toast handler state
+  - or a stored `ToastMessage` row whose replacement matches the visible text
+- `_TextGimmickHint` now applies the same corroboration rule through:
+  - the current gimmick-hint handler state
+  - or a stored `TextGimmickHintMessage` row whose replacement matches the
+    visible text
+- `_MiniTalk` same-source reapply now restores only geometry and flags before
+  writing the replacement back, avoiding an intermediate original-text flash
+- `BattleTalk` same-source reapply now restores only geometry and flags before
+  reapplying the translated text and translated speaker name
+
+Validation:
+- `dotnet build Echoglossian.sln -c Debug --no-restore`
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
