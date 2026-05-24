@@ -378,6 +378,45 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Restores the tracked native BattleTalk layout even when the visible
+  ///     source line has not changed, so a repeat native apply pass starts from
+  ///     the original addon geometry instead of stacking height and width
+  ///     mutations from the previous frame.
+  /// </summary>
+  /// <param name="originalName">The original sender name for the active line.</param>
+  /// <param name="originalText">The original source text for the active line.</param>
+  private void PrepareTrackedNativeLayoutForReapply(
+      string originalName,
+      string originalText)
+  {
+    NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
+    string layoutOriginalName = string.Empty;
+    string layoutOriginalText = string.Empty;
+
+    lock (this.stateGate)
+    {
+      if (this.nativeLayoutSnapshot == null ||
+          this.nativeLayoutOriginalName != originalName ||
+          this.nativeLayoutOriginalText != originalText)
+      {
+        return;
+      }
+
+      layoutSnapshot = this.nativeLayoutSnapshot;
+      layoutOriginalName = this.nativeLayoutOriginalName;
+      layoutOriginalText = this.nativeLayoutOriginalText;
+      this.nativeLayoutSnapshot = null;
+      this.nativeLayoutOriginalName = string.Empty;
+      this.nativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(
+        layoutSnapshot,
+        layoutOriginalName,
+        layoutOriginalText);
+  }
+
+  /// <summary>
   ///     Restores one tracked native BattleTalk layout snapshot back to the
   ///     original game state.
   /// </summary>
@@ -1231,10 +1270,10 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         (nint)textNode->NodeText.StringPtr.Value);
 
     if (!string.IsNullOrWhiteSpace(replacementText) &&
-        visibleText == replacementText &&
+        this.TextMatchesForSourceMapping(visibleText, replacementText) &&
         (!this.ShouldTranslateBattleTalkNpcNames() ||
          string.IsNullOrWhiteSpace(replacementName) ||
-         visibleName == replacementName))
+         this.TextMatchesForSourceMapping(visibleName, replacementName)))
     {
       return;
     }
@@ -1242,10 +1281,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     if (this.ShouldTranslateBattleTalkNpcNames() &&
         nameNode != null &&
         !string.IsNullOrWhiteSpace(translatedName) &&
-        visibleName != replacementName)
+        !this.TextMatchesForSourceMapping(visibleName, replacementName))
     {
       nameNode->SetText(replacementName);
     }
+
+    this.PrepareTrackedNativeLayoutForReapply(
+        originalName,
+        originalText);
 
     var backgroundNode = nineGridNode != null ? (AtkResNode*)nineGridNode : null;
     var layoutSnapshot = NativeTextNodeLayoutHelper.CaptureLayoutSnapshot(
@@ -1267,7 +1310,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         parentNode,
         backgroundNode,
         timerNode,
-        allowWidthGrowth: true);
+        allowWidthGrowth: false);
 
     lock (this.stateGate)
     {

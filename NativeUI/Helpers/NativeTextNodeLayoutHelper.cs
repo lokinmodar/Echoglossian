@@ -101,7 +101,7 @@ internal static unsafe class NativeTextNodeLayoutHelper
     var boundedContainerWidth = ResolveBoundedContainerWidth(
         primaryContainerNode,
         secondaryContainerNode);
-    if (boundedContainerWidth > 0 && boundedContainerWidth > currentWidth)
+    if (boundedContainerWidth > 0)
     {
       return boundedContainerWidth;
     }
@@ -152,7 +152,18 @@ internal static unsafe class NativeTextNodeLayoutHelper
     textNode->SetText(replacementText);
     textNode->ResizeNodeForCurrentText();
 
+    if (preferredWrapWidth > 0 &&
+        textNode->GetWidth() != preferredWrapWidth)
+    {
+      textNode->SetWidth(preferredWrapWidth);
+    }
+
     TryMeasureTextNode(textNode, out var width, out var height);
+    if (preferredWrapWidth > 0)
+    {
+      width = preferredWrapWidth;
+    }
+
     return new NativeTextNodeResizeResult(width, height);
   }
 

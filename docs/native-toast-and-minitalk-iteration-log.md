@@ -197,3 +197,42 @@ What still needs in-game confirmation:
    - `_TextClassChange`
 3. preserve the current addon-node flow as the default stable path until the
    callback-assisted runtime proves safe enough to own more of the pipeline
+
+## Iteration 8
+
+Goal:
+- stop `_MiniTalk` and `_BattleTalk` from re-applying native layout on top of
+  already-mutated geometry
+- keep wrap width tied to the stable original bubble/addon width instead of the
+  potentially bloated width left behind by a prior native replacement pass
+
+Findings:
+- `_MiniTalk` could still capture a layout snapshot from an already-mutated
+  bubble when the same visible line was re-applied
+- `_BattleTalk` native replacement still used exact string equality for the
+  visible translated text, so layout-driven whitespace changes could trigger
+  another apply pass against the same source line
+- the shared helper still trusted the current text-node width over the stable
+  container width, and it allowed `ResizeNodeForCurrentText()` to report a
+  larger width than the intended wrap width
+
+Changes:
+- `NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(...)` now prefers the
+  bounded container width whenever it exists
+- `NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(...)` now clamps the
+  effective width back to the chosen wrap width after the resize pass and uses
+  that width for downstream container sizing
+- `_MiniTalk` now restores the tracked native layout for the same bubble/source
+  before reapplying translation, so each apply pass starts from the original
+  bubble geometry
+- `_MiniTalk` native reflow now keeps width growth disabled again, relying on a
+  better stable wrap width instead of growing the whole bubble horizontally
+- `_BattleTalk` now restores the tracked native layout before a same-source
+  reapply
+- `_BattleTalk` now uses normalized text comparison when checking whether the
+  visible translated text is already applied
+- `_BattleTalk` native reflow now keeps width growth disabled so the original
+  addon width remains the wrap target
+
+Validation:
+- pending after implementation

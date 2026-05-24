@@ -284,6 +284,37 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Restores the tracked native MiniTalk layout for the current bubble even
+  ///     when the source line has not changed, so repeated native apply passes
+  ///     always restart from the original bubble geometry instead of stacking
+  ///     width and height growth from the prior frame.
+  /// </summary>
+  /// <param name="bubbleKey">The stable bubble key.</param>
+  /// <param name="originalText">The original source line currently assigned to the bubble.</param>
+  private void PrepareTrackedBubbleLayoutForReapply(
+      nint bubbleKey,
+      string originalText)
+  {
+    NativeTextNodeLayoutSnapshot? snapshot = null;
+
+    lock (this.stateGate)
+    {
+      if (!this.bubbleStates.TryGetValue(bubbleKey, out var state) ||
+          state.NativeLayoutSnapshot == null ||
+          !this.TextMatches(state.NativeLayoutOriginalText, originalText))
+      {
+        return;
+      }
+
+      snapshot = state.NativeLayoutSnapshot;
+      state.NativeLayoutSnapshot = null;
+      state.NativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(snapshot, originalText);
+  }
+
+  /// <summary>
   ///     Restores one tracked native MiniTalk layout snapshot back to the
   ///     original game state.
   /// </summary>
@@ -462,11 +493,15 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         continue;
       }
 
+      this.PrepareTrackedBubbleLayoutForReapply(
+          bubbleNodeAddress,
+          resolvedOriginalText);
+
       var layoutSnapshot = NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
           addon,
           textNode,
           replacementText,
-          allowWidthGrowth: true);
+          allowWidthGrowth: false);
       if (layoutSnapshot != null)
       {
         lock (this.stateGate)
