@@ -98,6 +98,14 @@ public partial class Echoglossian
   /// </summary>
   private void TickAutoAddonProbeWatches()
   {
+    if (!this.configuration.EnableDebugLoginAddonProbe)
+    {
+      this.StopManagedAddonProbeWatches();
+      this.autoAddonProbeStartedForCurrentLogin = false;
+      this.autoAddonProbeWasLoggedIn = ClientStateInterface.IsLoggedIn;
+      return;
+    }
+
     var isLoggedIn = ClientStateInterface.IsLoggedIn;
     if (AddonProbeAutoWatchPolicy.ShouldResetForLogout(
             this.autoAddonProbeWasLoggedIn,

@@ -270,6 +270,8 @@ Changes:
   - any auto-started managed watches
 - documented the new `DEBUG` login auto-probe behavior in
   `docs/commands/egloaddonprobe.md`
+- added hidden config flag `EnableDebugLoginAddonProbe`, default `false`, so
+  the login auto-probe path is opt-in instead of always-on
 
 Validation:
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter AddonProbeAutoWatchPolicyTests`

@@ -1862,6 +1862,13 @@
                 handlers see the live nodes.
             </summary>
         </member>
+        <member name="F:Echoglossian.Config.EnableDebugLoginAddonProbe">
+            <summary>
+                Enables debug-only automatic login probes for `_BattleTalk` and
+                `_MiniTalk` so their earliest addon state can be captured without
+                manually issuing the probe command after login.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateToDoList">
             <summary>Translate To-Do List entries.</summary>
         </member>

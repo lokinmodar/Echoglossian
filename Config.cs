@@ -858,6 +858,13 @@ public class Config : IPluginConfiguration
   /// </summary>
   [DefaultValue(false)] public bool UseToastGuiCaptureForSupportedToasts = false;
 
+  /// <summary>
+  ///     Enables debug-only automatic login probes for `_BattleTalk` and
+  ///     `_MiniTalk` so their earliest addon state can be captured without
+  ///     manually issuing the probe command after login.
+  /// </summary>
+  [DefaultValue(false)] public bool EnableDebugLoginAddonProbe = false;
+
   /// <summary>Translate To-Do List entries.</summary>
   [DefaultValue(false)] public bool TranslateToDoList = false;
 
