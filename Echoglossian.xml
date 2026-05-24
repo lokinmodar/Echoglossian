@@ -2050,6 +2050,10 @@
                 ItemDetail addons, including trait-aware ActionDetail handling.
             </summary>
             <summary>
+                Hosts debug-only automatic addon-probe watches that start on login for
+                selected addons with early hidden-state value.
+            </summary>
+            <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
             </summary>
@@ -4042,6 +4046,70 @@
         <member name="M:Echoglossian.Echoglossian.EgloAddonHandler">
             <summary>
             Handles the registration of addon handlers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickAddonProbeInfrastructure">
+            <summary>
+                Ticks manual and automatic addon-probe watches, including the
+                debug-only login bootstrap for the default watch set.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetActiveAddonProbeWatchCount">
+            <summary>
+                Gets how many addon-probe watches are currently active across manual
+                and managed watch sets.
+            </summary>
+            <returns>The active probe-watch count.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopAllAddonProbeWatches(System.Boolean)">
+            <summary>
+                Stops every active addon-probe watch known to the plugin.
+            </summary>
+            <param name="suppressAutoUntilLogout">
+                Whether the current login session should suppress the default
+                automatic watch set after the stop completes.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManualAddonProbeWatch">
+            <summary>
+                Ticks the currently active manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManagedAddonProbeWatches">
+            <summary>
+                Ticks every managed addon-probe watch and prunes the disposed ones.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic addon-probe watch set when the player
+                logs in, then resets the gate on logout.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartDefaultAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic watch set used to capture early
+                structural state for pooled dialogue addons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartManagedAddonProbeWatch(System.String,System.Int32,System.TimeSpan,System.String)">
+            <summary>
+                Starts one managed addon-probe watch and tracks it for later stop or
+                pruning.
+            </summary>
+            <param name="addonName">The addon name to watch.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay alive.</param>
+            <param name="reason">The debug log reason attached to the startup.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManualAddonProbeWatch">
+            <summary>
+                Stops the current manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManagedAddonProbeWatches">
+            <summary>
+                Stops every managed automatic addon-probe watch.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
@@ -6851,171 +6919,165 @@
                 Gets or sets the row update time in UTC.
             </summary>
         </member>
-        <member name="P:EDungeonItem payload.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText.DeepDungeonItemId">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ActionTooltip.RowVersion">
             <summary>
-                Gets or sets the DeepDungeonItem row identifier.
+                Gets or sets the optimistic-concurrency token.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText.ToString">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.ActionTooltip.ToString">
             <inheritdoc />
         </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.EurekaMagiaActionText">
+        <member name="T:Echoglossian.EFCoreSqlite.Models.AozActionText">
             <summary>
-                Represents one canonical DB-first EurekaMagiaAction payload.
+                Represents one canonical DB-first AozAction payload.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.EurekaMagiaActionText.EurekaMagiaActionId">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.AozActionText.AozActionId">
             <summary>
-                Gets or sets the EurekaMagiaAction row identifier.
+                Gets or sets the AozAction row identifier.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.EurekaMagiaActionText.ToString">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.AozActionText.ToString">
             <inheritdoc />
         </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.EventActionText">
+        <member name="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage">
             <summary>
-                Represents one canonical DB-first EventAction payload.
+                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> to be handled via
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity" />.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.EventActionText.EventActionId">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Byte[],System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
-                Gets or sets the EventAction row identifier.
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> class.
             </summary>
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.EventActionText.ToString">
-            <inheritdoc />
-        </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.EventItemText">
-            <summary>
-                Represents one canonical DB-first EventItem payload.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.EventItemText.EventItemId">
-            <summary>
-                Gets or sets the EventItem row identifier.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.EventItemText.ToString">
-            <inheritdoc />
-        </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.GameWindow">
-            <summary>
-                Represents a game window translation entity in the database.
-            </summary>
-            <summary>
-                Provides <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" /> implementation for the
-                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> entity.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.UInt32})">
-            <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> class.
-            </summary>
-            <param name="windowAddonName">The name of the window addon.</param>
-            <param name="originalWindowStrings">The original window strings.</param>
-            <param name="originalWindowStringsLang">
-                The language of the original window
-                strings.
-            </param>
-            <param name="translatedWindowStrings">The translated window strings.</param>
+            <param name="senderName">The name of the sender.</param>
+            <param name="originalBattleTalkMessage">The original battle talk message.</param>
+            <param name="originalBattleTalkMessageLang">The language of the original battle talk message.</param>
+            <param name="originalSenderNameLang">The language of the original sender name.</param>
+            <param name="translatedSenderName">The translated sender name.</param>
+            <param name="translatedBattleTalkMessage">The translated battle talk message.</param>
             <param name="translationLang">The language of the translation.</param>
             <param name="translationEngine">The translation engine used.</param>
-            <param name="gameVersion">The version of the game.</param>
-            <param name="createdDate">The date the record was created.</param>
-            <param name="updatedDate">The date the record was last updated.</param>
-            <param name="classJobId">
-                The class/job identifier associated with this window payload when the
-                addon content varies by the active job.
-            </param>
+            <param name="rtlLangTranslationImageData">The RTL language translation image data.</param>
+            <param name="createdDate">The date the message was created.</param>
+            <param name="updatedDate">The date the message was last updated.</param>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.GameWindow.WindowAddonName">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.#ctor">
             <summary>
-                Gets or sets the name of the window addon or unique key that identifies
-                this entity context.
+             Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage"/> class.
+             </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetOriginalSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetOriginalSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslatedSecondaryText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslatedSecondaryText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.BgcArmyActionText">
+            <summary>
+                Represents one canonical DB-first BgcArmyAction payload.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.GameWindow.ClassJobId">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.BgcArmyActionText.BgcArmyActionId">
             <summary>
-                Gets or sets the class/job identifier associated with this window
-                payload when the addon content varies by the active job.
+                Gets or sets the BgcArmyAction row identifier.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.#ctor">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BgcArmyActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.BuddyActionText">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> class for use
-                with the <see cref="!:GenericAddonHandler" />.
+                Represents one canonical DB-first BuddyAction payload.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetOriginalText">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetOriginalText(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetOriginalLang">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetOriginalLang(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslatedText">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetTranslatedText(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslationLang">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetTranslationLang(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetTranslationEngine">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetTranslationEngine(System.Int32)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetEntityKey">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetEntityKey(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.GetGameVersion">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GameWindow.SetGameVersion(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.GeneralActionText">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.BuddyActionText.BuddyActionId">
             <summary>
-                Represents one canonical DB-first GeneralAction payload.
+                Gets or sets the BuddyAction row identifier.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.GeneralActionText.GeneralActionId">
-            <summary>
-                Gets or sets the GeneralAction row identifier.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.GeneralActionText.ToString">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.BuddyActionText.ToString">
             <inheritdoc />
         </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.IComplexEntity">
+        <member name="T:Echoglossian.EFCoreSqlite.Models.CompanyActionText">
             <summary>
-            Enhances the IMultiTextEntity interface to include additional properties and methods
+                Represents one canonical DB-first CompanyAction payload.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.GetType">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.CompanyActionText.CompanyActionId">
             <summary>
-            Gets the type of the StringArrayData.
+                Gets or sets the CompanyAction row identifier.
             </summary>
-            <returns>Returns the type of the StringArrayData.</returns>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.IComplexEntity.SetType(System.Stri   </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.CompanyActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.CraftActionText">
+            <summary>
+                Represents one canonical DB-first CraftAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.CraftActionText.CraftActionId">
+            <summary>
+                Gets or sets the CraftAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.CraftActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText">
+            <summary>
+                Represents one canonical DB-first DeepDungeonItem payload.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.DeepDungeonItemText.DeepDungeonItemId">
             <summary>
                 Gets or sets the DeepDungeonItem row identifier.
@@ -7725,82 +7787,76 @@
             </summary>
             <param name="prettyPrint">Should it be pretty printed?.</param>
         </member>
-        <member</member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.MainCommandText.CategoryId">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.UpdateFieldsFromText">
             <summary>
-                Gets or sets the sheet category value.
+                Forces loading the Objectives and Summaries from the stored text fields.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.MainCommandText.MainCommandCategoryId">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.LoadDictionaryFromTextOrKeepCurrent(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
             <summary>
-                Gets or sets the linked MainCommandCategory row identifier.
+                Loads a serialized dictionary when available and otherwise preserves
+                any current in-memory state that has not yet been materialized.
+            </summary>
+            <param name="serializedText">The serialized dictionary text.</param>
+            <param name="currentValue">The current in-memory dictionary.</param>
+            <returns>The resolved dictionary.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.LoadFromTextOrKeepCurrent``1(System.String,System.Collections.Generic.List{``0},System.Func{System.Collections.Generic.List{``0}})">
+            <summary>
+                Loads a serialized payload when available and otherwise preserves
+                any current in-memory state that has not yet been materialized.
+            </summary>
+            <typeparam name="T">The payload item type.</typeparam>
+            <param name="serializedText">The serialized payload text.</param>
+            <param name="currentValue">The current in-memory payload.</param>
+            <param name="loadFromText">The loader to invoke when serialized text exists.</param>
+            <returns>The resolved payload collection.</returns>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection">
+            <summary>
+                Identifies one canonical quest-text row section inside the persisted
+                quest payload.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.MainCommandText.Unknown0">
+        <member name="F:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection.Summary">
             <summary>
-                Gets or sets the MainCommand sheet's <c>Unknown0</c> value.
+                A SEQ / journal summary row.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.MainCommandText.SortId">
+        <member name="F:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection.Objective">
             <summary>
-                Gets or sets the sheet sort identifier.
+                A TODO / objective row.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MainCommandText.ToString">
-            <inheritdoc />
-        </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage">
+        <member name="F:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection.System">
             <summary>
-                Adapter to enable <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> to be handled via
-                <see cref="T:Echoglossian.EFCoreSqlite.Models.IGenericEntity" />.
+                A SYSTEM / system-message row.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> class.
+                Represents one canonical persisted quest row with section, row key,
+                ordering, original text, and translated text kept together.
             </summary>
-            <param name="originalMiniTalkMessage">The original MiniTalk message.</param>
-            <param name="originalMiniTalkMessageLang">The language of the original MiniTalk message.</param>
-            <param name="translatedMiniTalkMessage">The translated MiniTalk message.</param>
-            <param name="translationLang">The language of the translated MiniTalk message.</param>
-            <param name="translationEngine">The translation engine used.</param>
-            <param name="createdDate">The date the message was created.</param>
-            <param name="updatedDate">The date the message was last updated.</param>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetOriginalText">
-            <inheritdoc />
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.#ctor">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow" />
+                class.
+            </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetOriginalText(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetOriginalLang">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetOriginalLang(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetTranslatedText">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetTranslatedText(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetTranslationLang">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetTranslationLang(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetTranslationEngine">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetTranslationEngine(System.Int32)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetEntityKey">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.">The stable section-relative order.</param>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow.#ctor(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRowSection,System.String,System.String,System.Int32,System.Boolean,System.String)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlateCanonicalRow" />
+                class.
+            </summary>
+            <param name="section">The row section.</param>
+            <param name="rowKey">The canonical row key.</param>
+            <param name="originalText">The original row text.</param>
+            <param name="order">The stable section-relative order.</param>
             <param name="isCurrentSequence">Whether this row is the live current SEQ row.</param>
             <param name="translatedText">The translated row text when available.</param>
         </member>
@@ -7948,81 +8004,89 @@
         <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetEntityKey">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetEntityKey(SyelectString">The translated question/title.</param>
-            <param name="translatedOptionsAsText">The translated option list serialized as JSON.</param>
-            <param name="translationLang">The language of the translated dialog.</param>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.MountActionText">
+            <summary>
+                Represents one canonical DB-first MountAction payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.MountActionText.MountActionId">
+            <summary>
+                Gets or sets the MountAction row identifier.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.MountActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.NpcNames.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.NpcNames" /> class.
+            </summary>
+            <param name="id">The unique identifier for the NPC.</param>
+            <param name="originalNpcName">The original name of the NPC.</param>
+            <param name="originalNpcNameLang">The language of the original NPC name.</param>
+            <param name="translatedNpcName">The translated name of the NPC.</param>
+            <param name="translationLang">The language of the translated NPC name.</param>
             <param name="translationEngine">The translation engine used.</param>
-            <param name="createdDate">The date the record was created.</param>
-            <param name="updatedDate">The date the record was last updated.</param>
+            <param name="createdDate">The date the NPC name was created.</param>
+            <param name="updatedDate">The date the NPC name was last updated.</param>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectString.OriginalOptions">
+        <member name="T:Echoglossian.EFCoreSqlite.Models.PetActionText">
             <summary>
-                Gets or sets the original options as a list of strings.
+                Represents one canonical DB-first PetAction payload.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectString.TranslatedOptions">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.PetActionText.PetActionId">
             <summary>
-                Gets or sets the translated options as a list of strings.
+                Gets or sets the PetAction row identifier.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.UpdateFieldsAsText(System.Boolean)">
-            <summary>
-                Updates the serialized text fields from the current option lists.
-            </summary>
-            <param name="prettyPrint">Should the JSON be pretty printed?.</param>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.PetActionText.ToString">
+            <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.UpdateFieldsFromText">
+        <member name="T:Echoglossian.EFCoreSqlite.Models.PvPActionText">
             <summary>
-                Forces loading the option lists from the stored text fields.
+                Represents one canonical DB-first PvPAction payload.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetOriginalText">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetOriginalText(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetOriginalLang">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetOriginalLang(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetTranslatedText">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetTranslatedText(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetTranslationLang">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetTranslationEngine">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetTranslationEngine(System.Int32)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetEntityKey(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetGameVersion">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.SetGameVersion(System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectString.GetEntityKey">
-            <inheritdoc />
-        </member>
-        <member name="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.PvPActionText.PvPActionId">
             <summary>
-            Represents a record of a translated string array, including raw data and translation metadata.
+                Gets or sets the PvPAction row identifier.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.#ctor(System.String,System.Int32,System.Byte[],System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.DateTime,System.DateTime)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.PvPActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase">
             <summary>
-             Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas"/> classs.ReferenceTextRowBase.OriginalDescription">
+                Provides the shared canonical persisted fields for action-adjacent
+                Excel-sheet reference-text rows.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase.ReferenceId">
+            <summary>
+                Gets or sets the stable sheet-row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase.OriginalName">
+            <summary>
+                Gets or sets the canonical original name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase.OriginalDescription">
             <summary>
                 Gets or sets the canonical original description, when available.
             </summary>
@@ -8253,82 +8317,92 @@
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.ContextKey">
             <summary>
-            Gets or sets the semantic context key for this string-array 
-                <see cref="T:Echoglossian.EFCoreSqlite.Models.IMultiTextEntity" />.
+            Gets or sets the semantic context key for this string-array surface.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Byte[],System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SchemaVersion">
             <summary>
-                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> class.
+            Gets or sets the schema version used to serialize the structured payload.
             </summary>
-            <param name="senderName">The name of the sender.</param>
-            <param name="originalTalkMessage">The original talk message.</param>
-            <param name="originalTalkMessageLang">
-                The language of the original talk
-                message.
-            </param>
-            <param name="originalSenderNameLang">
-                The language of the original sender's
-                name.
-            </param>
-            <param name="translatedSenderName">The translated sender's name.</param>
-            <param name="translatedTalkMessage">The translated talk message.</param>
-            <param name="translationLang">The language of the translation.</param>
-            <param name="translationEngine">The translation engine used.</param>
-            <param name="rtlLangTranslationImageData">The RTL language translation image data.</param>
-            <param name="createdDate">The date the message was created.</param>
-            <param name="updatedDate">The date the message was last updated.</param>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.#ctor">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SourceContentHash">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage"/> class.
+            Gets or sets the stable source-content hash for the canonical payload.
             </summary>
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetOriginalText">
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.OriginalStructuredPayload">
+            <summary>
+            Gets or sets the structured original payload for this surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.TranslatedStructuredPayload">
+            <summary>
+            Gets or sets the structured translated payload for this surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.CreatedAt">
+            <summary>
+            Gets or sets the creation timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.UpdatedAt">
+            <summary>
+            Gets or sets the last updated timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.RowVersion">
+            <summary>
+            Gets or sets the row version for concurrency handling.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas"/> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetType">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetOriginalText(System.String)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetType(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetOriginalLang">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetSize">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetOriginalLang(System.String)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetSize(System.Int32)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetOriginalSecondaryText">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetRawData">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetOriginalSecondaryText(System.String)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetRawData(System.Byte[])">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslatedText">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetFormattedRawData">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslatedText(System.String)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetFormattedRawData(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslatedSecondaryText">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslatedStringsWithPayloads">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslatedSecondaryText(System.String)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslatedStringsWithPayloads(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslationLang">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetOriginalLang">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslationLang(System.String)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetOriginalLang(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetTranslationEngine">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetOriginalStrings">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.SetTranslationEngine(System.Int32)">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetOriginalStrings(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.EFCoreSqlite.Models.TalkMessage.GetEntityKey">
-            <inheritdoc />
-    ang">
+        <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.GetTranslationLang">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.StringArrayDatas.SetTranslationLang(System.String)">
@@ -8708,7 +8782,185 @@
                 Gets or sets the trait icon identifier.
             </summary>
         </member>
-        <member name="P:Echoglossian.EFCoreSqlite.Models.Tra          <param name="languageInfo">The language to inspect.</param>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.ClassJobId">
+            <summary>
+                Gets or sets the active class-job identifier used to scope the trait.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.ClassJobCategoryId">
+            <summary>
+                Gets or sets the class-job-category row identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.TraitName">
+            <summary>
+                Gets or sets the canonical original trait name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.TraitDescription">
+            <summary>
+                Gets or sets the canonical original trait description.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.OriginalTooltipText">
+            <summary>
+                Gets or sets the fully assembled original tooltip text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.OriginalLang">
+            <summary>
+                Gets or sets the language of the original source payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.TranslatedTraitName">
+            <summary>
+                Gets or sets the translated trait name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.TranslatedTraitDescription">
+            <summary>
+                Gets or sets the translated trait description.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.TranslatedTooltipText">
+            <summary>
+                Gets or sets the fully assembled translated tooltip text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.TranslationLang">
+            <summary>
+                Gets or sets the target translation language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.TranslationEngine">
+            <summary>
+                Gets or sets the translation-engine identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.GameVersion">
+            <summary>
+                Gets or sets the game version associated with the source payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.SourceContentHash">
+            <summary>
+                Gets or sets the stable source-content hash.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.CanonicalPayloadAsText">
+            <summary>
+                Gets or sets the serialized canonical payload, including translated fields when available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.CreatedDate">
+            <summary>
+                Gets or sets the row creation time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.UpdatedDate">
+            <summary>
+                Gets or sets the row update time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Trait.RowVersion">
+            <summary>
+                Gets or sets the optimistic-concurrency token.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Trait.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.TranslationFailure">
+            <summary>
+                Represents one exact translation request that previously returned no
+                usable translated text for a specific source/target language pair and
+                translation engine.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.SourceText">
+            <summary>
+                Gets or sets the exact sanitized text that was sent to the
+                translation engine.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.SourceTextHash">
+            <summary>
+                Gets or sets the stable hash of <see cref="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.SourceText" /> used for
+                lookup and indexing.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.SourceLanguage">
+            <summary>
+                Gets or sets the normalized source language code.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.TargetLanguage">
+            <summary>
+                Gets or sets the normalized target language code.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.TranslationEngine">
+            <summary>
+                Gets or sets the translation-engine identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.FailureReason">
+            <summary>
+                Gets or sets the last recorded failure reason.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.FirstSeenOrigin">
+            <summary>
+                Gets or sets the origin context that first produced this exact
+                failed translation request.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.LastSeenOrigin">
+            <summary>
+                Gets or sets the most recent origin context that produced this exact
+                failed translation request.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.FailureCount">
+            <summary>
+                Gets or sets how many times this exact request failed.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.CreatedDate">
+            <summary>
+                Gets or sets the row creation time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.UpdatedDate">
+            <summary>
+                Gets or sets the last update time in UTC.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TranslationFailure.RowVersion">
+            <summary>
+                Gets or sets the optimistic-concurrency token.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.TranslationFailure.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.AssetsManager.RequiresDownloadedAsset(System.String)">
+            <summary>
+            Determines whether a font file name depends on a downloaded external asset.
+            </summary>
+            <param name="fontFileName">The font file name to inspect.</param>
+            <returns><c>true</c> if the font requires a downloaded asset; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Echoglossian.AssetsManager.RequiresDownloadedAssets(Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Determines whether the specified language requires a downloaded font asset.
+            </summary>
+            <param name="languageInfo">The language to inspect.</param>
             <returns><c>true</c> if the language depends on a downloaded asset; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:Echoglossian.AssetsManager.GetRequiredAssetFiles(Echoglossian.LanguagesHandling.LanguageInfo)">
@@ -9154,86 +9406,80 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.ResolveSupportedEngineSelection(System.Int32,System.Collections.Generic.IReadOnlyCollection{e to an explicit logger sink.
-            </summary>
-            <param name="pluginLog">The explicit logger sink to use.</param>
-            <param name="message">The message to write.</param>
-        </member>
-        <member name="M:Echoglossian.PluginRuntimeLog.Warning(System.String,System.String)">
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.ResolveSupportedEngineSelection(System.Int32,System.Collections.Generic.IReadOnlyCollection{System.Int32})">
             <summary>
-                Writes a scoped warning log line.
+                Normalizes a selected engine id against the currently supported engine
+                ids for the target language.
             </summary>
-            <param name="scope">The logical scope to render inside square brackets.</param>
-            <param name="message">The message to write.</param>
-        </member>
-        <member name="M:Echoglossian.PluginRuntimeLog.Error(System.String)">
-            <summary>
-                Writes an error log line.
-            </summary>
-            <param name="message">The message to write.</param>
-        </member>
-        <member name="M:Echoglossian.PluginRuntimeLog.Error(Dalamud.Plugin.Services.IPluginLog,System.String)">
-            <summary>
-                Writes an error log line to an explicit logger sink.
-            </summary>
-            <param name="pluginLog">The explicit logger sink to use.</param>
-            <param name="message">The message to write.</param>
-        </member>
-        <member name="M:Echoglossian.PluginRuntimeLog.Error(System.String,System.String)">
-            <summary>
-                Writes a scoped error log line.
-            </summary>
-            <param name="scope">The logical scope to render inside square brackets.</param>
-            <param name="message">The message to write.</param>
-        </member>
-        <member name="M:Echoglossian.PluginRuntimeLog.Format(System.String,System.String)">
-            <summary>
-                Prepends an optional logical scope to a message.
-            </summary>
-            <param name="scope">The logical scope to render inside square brackets.</param>
-            <param name="message">The message to format.</param>
-            <returns>The formatted message.</returns>
-        </member>
-        <member name="T:Echoglossian.RuntimeLanguageHelper">
-            <summary>
-                Normalizes the runtime game and target language values so DB-first
-                recovery code can compare persisted rows safely without hardcoding a
-                single target language.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.RuntimeLanguageHelper.GetCurrentGameLanguageCode">
-            <summary>
-                Gets the current native client language as a normalized language
-                code.
-            </summary>
-            <returns>The normalized current game language code.</returns>
-        </member>
-        <member name="M:Echoglossian.RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(System.Int32)">
-            <summary>
-                Gets the configured translation target language as a normalized
-                language code.
-            </summary>
-            <param name="languageIndex">The configured target-language index.</param>
-            <returns>The normalized configured target language code.</returns>
-        </member>
-        <member name="M:Echoglossian.RuntimeLanguageHelper.LanguagesMatch(System.String,System.String)">
-            <summary>
-                Determines whether two language values represent the same effective
-                language.
-            </summary>
-            <param name="left">The first language value.</param>
-            <param name="right">The second language value.</param>
+            <param name="selectedEngineId">The currently selected engine id.</param>
+            <param name="supportedEngineIds">
+                The supported engine ids for the active
+                target language.
+            </param>
             <returns>
-                <see langword="true" /> when both values normalize to the same
-                code; otherwise <see langword="false" />.
+                The selected engine id when it is supported; otherwise, the first
+                supported concrete engine id, or Google when the language exposes no
+                concrete engine list.
             </returns>
         </member>
-        <member name="M:Echoglossian.RuntimeLanguageHelper.NormalizeLanguage(System.String)">
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(Echoglossian.Config,System.Int32,System.Collections.Generic.IReadOnlyCollection{System.Int32})">
             <summary>
-                Normalizes one runtime language value to a stable comparison code.
+                Normalizes and synchronizes the persisted translation engine
+                selection, preferring the persisted engine key when available and
+                keeping the numeric and string forms aligned.
             </summary>
-            <param name="language">The raw language value.</param>
-            <returns>The normalized .</param>
+            <param name="config">The active plugin configuration.</param>
+            <param name="loadedConfigVersion">
+                The config version loaded from disk before
+                migrations.
+            </param>
+            <param name="supportedEngineIds">
+                The supported engine ids for the active target
+                language, when that constraint should be applied.
+            </param>
+            <returns><see langword="true" /> when the config changed.</returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.ApplyExplicitSelection(Echoglossian.Config,System.Int32)">
+            <summary>
+                Applies an explicit user-selected engine to both persisted selection
+                forms so later normalization cannot silently revert the choice.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="selectedEngineId">The explicitly selected concrete engine id.</param>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.NormalizeLegacyChatGptBaseUrl(System.String)">
+            <summary>
+                Normalizes the legacy ChatGPT base URL that pointed directly at the
+                completions endpoint instead of the API root.
+            </summary>
+            <param name="chatGptBaseUrl">The configured ChatGPT base URL.</param>
+            <returns>The normalized base URL.</returns>
+        </member>
+        <member name="M:Echoglossian.TranslationEngineSelectionMigrationHelper.ResolvePersistedEngineSelection(System.Int32,System.Int32,System.String)">
+            <summary>
+                Resolves the effective persisted engine selection from the available
+                persisted forms.
+            </summary>
+            <param name="loadedConfigVersion">
+                The config version loaded from disk before
+                migrations.
+            </param>
+            <param name="chosenEngineId">The persisted numeric engine id.</param>
+            <param name="chosenEngineKey">The persisted engine key.</param>
+            <returns>The resolved concrete engine id.</returns>
+        </member>
+        <member name="T:Echoglossian.TranslationPersistenceGuard">
+            <summary>
+            Provides shared guards for deciding whether translated results and
+            translation failures are safe to persist or reuse.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationPersistenceGuard.IsPersistentFailureReason(System.String)">
+            <summary>
+            Determines whether a translation failure reason is stable enough to
+            persist across sessions.
+            </summary>
+            <param name="failureReason">The recorded failure reason.</param>
             <returns>
             <c>true</c> when the failure reason should be persisted; otherwise,
             <c>false</c>.
@@ -10545,122 +10791,6 @@
             <param name="keyPrefix">The stable key prefix to match.</param>
             <returns>
                 The number of distinct non-empty values whose keys start with the
-                requested prefix.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.CanonicalizeIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
-            <summary>
-                Canonicalizes one integer-keyed payload map through an exact text
-                lookup.
-            </summary>
-            <param name="sourceValues">The source values.</param>
-            <param name="lookup">The exact text lookup.</param>
-            <param name="changed">
-                Receives whether any resulting value differs from the source.
-            </param>
-            <returns>The canonicalized map.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.CanonicalizeStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
-            <summary>
-                Canonicalizes one text-node payload map through an exact text
-                lookup.
-            </summary>
-            <param name="sourceValues">The source values.</param>
-            <param name="lookup">The exact text lookup.</param>
-            <param name="changed">
-                Receives whether any resulting value differs from the source.
-            </param>
-            <returns>The canonicalized map.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.AppendLookupEntry(System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.Boolean)">
-            <summary>
-                Appends one exact original/translated text pair to the supplied
-                lookups.
-            </summary>
-            <param name="originalText">The canonical original text.</param>
-            <param name="translatedText">The canonical translated text.</param>
-            <param name="originalLookup">
-                The lookup mapping any known visible text back to the canonical
-                original text.
-            </param>
-            <param name="translatedLookup">
-                The lookup mapping any known visible text to the canonical
-                translated text.
-            </param>
-            <param name="knownTexts">
-                The known-text set used to keep capture shape stable in both
-                original and translated states.
-            </param>
-            <param name="requireDifference">
-                When set, only pairs whose original and translated text differ are
-                appended.
-            </param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.AppendValueMapEntries``1(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{``0,System.String},System.Collections.Generic.IReadOnlyDictionary{``0,System.String})">
-            <summary>
-                Appends one exact source-text to target-text mapping from matching
-                payload keys.
-            </summary>
-            <typeparam name="TKey">The payload key type.</typeparam>
-            <param name="valueMap">The target value map to augment.</param>
-            <param name="sourceValues">The source-facing payload values.</param>
-            <param name="targetValues">The target-facing payload values.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper.TryDetermineDirectValueMapDirection(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
-            <summary>
-                Determines whether the direct payload-pair map represents one
-                source-original to target-translated transition or the reverse.
-            </summary>
-            <param name="directValueMap">The direct payload-pair map.</param>
-            <param name="originalLookup">The canonical original lookup.</param>
-            <param name="translatedLookup">The canonical translated lookup.</param>
-            <param name="sourceIsOriginal">
-                Receives <see langword="true" /> when the direct map flows from
-                original to translated text; otherwise <see langword="false" />
-                when it flows from translated to original text.
-            </param>
-            <returns>
-                <see langword="true" /> when one direction could be inferred;
-                otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler">
-            <summary>
-                Handles translation for the "CharacterClass" addon using visible text
-                nodes only.
-                Lifecycle-safe: extracts and applies values within valid memory scope per
-                frame.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
-            <summary>
-                Initializes a new instance of the
-                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler" /> class.
-            </summary>
-            <param name="config">The configuration settings for the plugin.</param>
-            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
-            <param name="translationService">The service used for translating text.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldReuseCompatiblePayloads">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldRefreshAppliedStateOnPreDraw">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.OnCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
-            <se keys start with the
                 requested prefix.
             </returns>
         </member>
@@ -17162,6 +17292,46 @@
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy">
+            <summary>
+                Encapsulates the login-session gating rules for debug-only automatic
+                addon-probe watches.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldStartForCurrentLogin(System.Boolean,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+                Determines whether the current login session should start the default
+                automatic addon-probe watch set.
+            </summary>
+            <param name="isLoggedIn">Whether the client is currently logged in.</param>
+            <param name="hasStartedForCurrentLogin">
+                Whether the current login session already started its automatic probe
+                set.
+            </param>
+            <param name="isSuppressedUntilLogout">
+                Whether the user explicitly suppressed the automatic probe set until
+                the next logout.
+            </param>
+            <param name="activeManagedWatchCount">
+                How many managed automatic probe watches are currently alive.
+            </param>
+            <returns>
+                <see langword="true" /> when the automatic probe set should start.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldResetForLogout(System.Boolean,System.Boolean)">
+            <summary>
+                Determines whether the automatic login-session gate should reset
+                because the player logged out.
+            </summary>
+            <param name="wasLoggedIn">
+                Whether the client was logged in on the previous tick.
+            </param>
+            <param name="isLoggedIn">Whether the client is logged in now.</param>
+            <returns>
+                <see langword="true" /> when the automatic probe gate should reset.
+            </returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
             <summary>
             Provides a generic recursive addon probe for live UI inspection.
@@ -22122,7 +22292,151 @@
                 language using AWS Translate.
             </summary>
             <param name="text"></param>
-            <param name="sourceLanguage"></paraaram name="targetLanguage"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.AmazonTranslateTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+                Asynchronously translates the given text from source language to target
+                language using AWS Translate.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single,System.String)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.ChatGPTTranslator" /> class.
+            </summary>
+            <param name="pluginLog"></param>
+            <param name="baseUrl"></param>
+            <param name="apiKey"></param>
+            <param name="model"></param>
+            <param name="temperature"></param>
+            <param name="promptTemplate"></param>
+        </member>
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.Translate(System.String,System.String,System.String)">
+            <summary>
+                Translates the specified text from the source language to the target
+                language.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <returns>The translated text.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+                Translates the specified text from the source language to the target
+                language asynchronously.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <returns>
+                A task that represents the asynchronous translation operation. The
+                task result contains the translated text.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual OpenAI chat completion call for a single cache
+                key. Concurrent callers for the same key share the same in-flight
+                task.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text, or a synthetic error placeholder.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.ClaudeTranslator">
+            <summary>
+                Translator implementation for Anthropic Claude using the Messages API.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,Echoglossian.Config)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.Translators.ClaudeTranslator" /> class.
+            </summary>
+            <param name="pluginLog">The plugin log instance for diagnostics.</param>
+            <param name="config">The active plugin configuration.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.Translate(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.TranslateAsync(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.Translators.ClaudeTranslator.TranslateCoreAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+                Performs the actual Claude Messages API request for one cache key.
+            </summary>
+            <param name="text">The text to translate.</param>
+            <param name="sourceLanguage">The source language of the text.</param>
+            <param name="targetLanguage">The target language for the translation.</param>
+            <param name="cacheKey">The normalized cache key for this request.</param>
+            <returns>The translated text or an error placeholder.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.Claude.ClaudeModelManager">
+            <summary>
+                Manages the optional live Claude model catalog used by the engine configuration UI.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Translators.Claude.ClaudeModelManager.CurrentModelList">
+            <summary>
+                Gets the current Claude model list used by the UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Claude.ClaudeModelManager.ResetToDefault">
+            <summary>
+                Restores the committed fallback model list.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Claude.ClaudeModelManager.RefreshAsync(System.String,System.String)">
+            <summary>
+                Refreshes the Claude model list from Anthropic's official models endpoint.
+            </summary>
+            <param name="apiKey">The Anthropic API key.</param>
+            <param name="baseUrl">The Anthropic API base URL.</param>
+            <returns>A task that completes when refresh finishes.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.Claude.ClaudeTextModelDefaults">
+            <summary>
+                Provides the committed fallback Claude model list used when live fetch is disabled or unavailable.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Translators.Claude.ClaudeTextModelDefaults.PredefinedModels">
+            <summary>
+                Gets the predefined Claude models.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Translators.DeepLTranslator">
+            <summary>
+                Provides translation services using the DeepL API or Free API based on the
+                configuration.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.Echoglossian#Translators#ITranslator#TranslateAsync(System.String,System.String,System.String)">
+            <summary>
+                Asynchronously translates the given text from source language to target
+                language using the DeepL API or Free API based on the configuration.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepLTranslator.Echoglossian#Translators#ITranslator#Translate(System.String,System.String,System.String)">
+            <summary>
+                Synchronously translates the given text from source language to target
+                language using the DeepL API or Free API based on the configuration.
+            </summary>
+            <param name="text"></param>
+            <param name="sourceLanguage"></param>
+            <param name="targetLanguage"></param>
             <returns></returns>
         </member>
         <member name="M:Echoglossian.Translators.DeepLTranslator.Translate(System.String,System.String,System.String)">
@@ -22756,139 +23070,6 @@
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTalk(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for talk translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForBattleTalk(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for battle talk translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigTalkSubtitle(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for talk subtitle translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForMiniTalk(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for MiniTalk translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForCutSceneSelectString(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for CutSceneSelectString overlays.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTextGimmickHint(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for text gimmick hint translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForWideTextToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for Screen Info (_WideText) toast
-            translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForErrorToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for error toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForAreaToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for area toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForClassChangeToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for class/job change toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForQuestToast(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
-            provided <see cref="T:Echoglossian.Config"/> for quest toast translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForChatBubble(Echoglossian.Config)">
-            <summary>
-            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for chat bubble translations.
-            </summary>
-            <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="T:TextTextureGenerator">
-            <summary>
-            Generates textures from text using a specified font and size.
-            </summary>
-        </member>
-        <member name="M:TextTextureGenerator.#ctor(Dalamud.Plugin.Services.ITextureProvider)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TextTextureGenerator"/> class.
-            </summary>
-            <param name="textureProvider"></param>
-        </member>
-        <member name="M:TextTextureGenerator.CreateTextTextureAsync(System.String,System.String,System.Single,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Drawing.FontStyle,System.Nullable{System.Int32})">
-            <summary>
-            Creates a texture from the specified text using the given font and size.
-            </summary>
-            <param name="text"></param>
-            <param name="fontPath"></param>
-            <param name="fontSize"></param>
-            <param name="textColor"></param>
-            <param name="backgroundColor"></param>
-            <param name="fontStyle"></param>
-            <param name="maxWidth"></param>
-            <returns></returns>
-        </member>
-        <member name="T:Microsoft.Extensions.DependencyInjection.DiscoveredServicesExtensions">
-            <summary>
-            Extension methods for discovered service registrations
-            </summary>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.DiscoveredServicesExtensions.AddEchoglossian(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String[])">
-            <summary>
-            Adds discovered services from Echoglossian to the specified service collection
-            </summary>
-            <param name="serviceCollection">The service collection.</param>
-            <param name="tags">The service registration tags to include.</param>
-            <returns>The service collection</returns>
-        </member>
-    </members>
-</doc>
-ossian.Config"/> for talk translations.
             </summary>
             <param name="config"></param>
             <returns></returns>

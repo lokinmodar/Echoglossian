@@ -77,6 +77,13 @@ public partial class Echoglossian : IDalamudPlugin
   /// </summary>
 #if DEBUG
   private AddonStructureProbe.AddonStructureProbeWatch? addonProbeWatch;
+
+  private readonly List<AddonStructureProbe.AddonStructureProbeWatch>
+      addonManagedProbeWatches = [];
+
+  private bool autoAddonProbeStartedForCurrentLogin;
+  private bool autoAddonProbeSuppressedUntilLogout;
+  private bool autoAddonProbeWasLoggedIn;
 #endif
 
   /// <summary>
@@ -477,8 +484,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.ClearReferenceTextPrefetchState();
 
 #if DEBUG
-    this.addonProbeWatch?.Dispose();
-    this.addonProbeWatch = null;
+    this.StopAllAddonProbeWatches();
 #endif
 
       this.UnregisterQuestToastRuntime();

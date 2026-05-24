@@ -37,6 +37,11 @@ When started, the probe watches the requested addon for a short period and logs:
 - raw subscriber ids plus best-effort addon-name resolution for those arrays
 
 When `stop` or `cancel` is passed, the active watch is stopped if one exists.
+In `DEBUG` builds, the plugin also auto-starts managed probe watches for
+`_BattleTalk` and `_MiniTalk` once per login session so their earliest hidden
+state can be captured before the in-game chat is available. `/egloaddonprobe stop`
+stops both the manual watch and any auto-started managed watches for the current
+login session.
 
 The optional `duration` token accepts:
 

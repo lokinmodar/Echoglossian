@@ -236,3 +236,42 @@ Changes:
 
 Validation:
 - pending after implementation
+
+## Iteration 9
+
+Goal:
+- start probing `_BattleTalk` and `_MiniTalk` automatically at login in
+  `DEBUG` builds so the earliest hidden addon state can be captured before the
+  game chat becomes available
+- allow `/egloaddonprobe stop` to stop both manual and auto-started probe
+  watches for the current login session
+
+Findings:
+- the existing addon-probe command only tracked one manual watch
+- the shared `AddonStructureProbeWatch` already dumps an addon even when it is
+  resolved while invisible, so it can capture `_BattleTalk`'s startup state as
+  soon as the login session becomes ready
+- `_MiniTalk` is not guaranteed to exist at login, but starting a managed watch
+  there is still useful because the watch will dump as soon as the addon
+  appears later in the same session
+
+Changes:
+- added `AddonProbeAutoWatchPolicy` as the small testable gate for:
+  - one automatic watch set per login session
+  - stop-command suppression until the next logout
+- added `AddonProbeAutoWatchHelpers` to:
+  - tick the manual watch
+  - tick managed auto-started watches
+  - start `_BattleTalk` and `_MiniTalk` managed watches for `15m` once per
+    login session
+  - reset that gate on logout
+- `/egloaddonprobe stop` now stops:
+  - the manual watch
+  - any auto-started managed watches
+- documented the new `DEBUG` login auto-probe behavior in
+  `docs/commands/egloaddonprobe.md`
+
+Validation:
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter AddonProbeAutoWatchPolicyTests`
+- `dotnet build Echoglossian.sln -c Debug --no-restore`
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`

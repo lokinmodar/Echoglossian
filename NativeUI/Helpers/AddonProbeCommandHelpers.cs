@@ -22,14 +22,13 @@ public partial class Echoglossian
     if (trimmedArgs.Equals("stop", StringComparison.OrdinalIgnoreCase) ||
         trimmedArgs.Equals("cancel", StringComparison.OrdinalIgnoreCase))
     {
-      if (this.addonProbeWatch == null)
+      if (this.GetActiveAddonProbeWatchCount() == 0)
       {
         ChatGuiInterface.Print(Resources.AddonProbeNoActiveWatch);
         return;
       }
 
-      this.addonProbeWatch.Stop();
-      this.addonProbeWatch = null;
+      this.StopAllAddonProbeWatches(suppressAutoUntilLogout: true);
 
       ChatGuiInterface.Print(Resources.AddonProbeStopped);
       return;
