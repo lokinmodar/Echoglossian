@@ -489,3 +489,34 @@ Changes:
 
 Focused validation:
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter "ConfigDefaultsTests|ToastGuiCaptureRuntimeTests|ToastGuiSupportedToastPolicyTests"`
+
+## Iteration 16
+
+Goal:
+- keep the BattleTalk timer spinner inside the visible background after native
+  text reflow
+- preserve client-derived sizing instead of introducing fixed widths or
+  resolution-specific heuristics
+
+Root cause:
+- BattleTalk already re-anchored the timer/spinner node after text reflow, but
+  the nine-grid background width was not guaranteed to grow with it
+- that let the spinner end up past the right edge of the background even when
+  the parent addon and text node had resized correctly
+
+Changes:
+- extended `NativeTextNodeLayoutSnapshot` to capture:
+  - anchored sibling width
+  - original right padding between the anchored sibling and the secondary
+    background
+- added
+  `NativeTextNodeLayoutHelper.ResolveMinimumSecondaryWidthForAnchoredNode(...)`
+  as a reusable geometry helper
+- `ResizeFromSnapshot(...)` now grows the secondary container just enough to
+  keep an anchored sibling node covered by the same background, while clamping
+  negative historical padding to zero
+- added focused tests in:
+  - `Echoglossian.Tests/NativeTextNodeLayoutHelperTests.cs`
+
+Validation:
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter NativeTextNodeLayoutHelperTests`

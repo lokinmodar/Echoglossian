@@ -18755,6 +18755,31 @@
                 insufficient.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMinimumSecondaryWidthForAnchoredNode(System.Int16,System.UInt16,System.Int16,System.UInt16,System.Int32)">
+            <summary>
+                Resolves the minimum secondary-container width required to keep an
+                anchored sibling node covered by the same background after reflow.
+            </summary>
+            <param name="secondaryContainerX">
+                The live X position of the secondary container.
+            </param>
+            <param name="currentSecondaryWidth">
+                The current width of the secondary container before adjustment.
+            </param>
+            <param name="anchoredNodeX">
+                The live X position of the anchored sibling node.
+            </param>
+            <param name="anchoredNodeWidth">The current width of the anchored node.</param>
+            <param name="preferredRightPadding">
+                The original right padding between the secondary container and the
+                anchored node. Negative values are treated as zero so coverage still
+                extends to the anchored node edge.
+            </param>
+            <returns>
+                The minimum width that keeps the anchored node inside the secondary
+                background.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryMeasureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16@,System.UInt16@)">
             <summary>
                 Measures the current node size using the live node dimensions first and
@@ -18947,6 +18972,17 @@
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOriginal">
             <summary>
                 Gets or sets the original X position of the anchored sibling node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXWidth">
+            <summary>
+                Gets or sets the original width of the anchored sibling node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXRightPaddingFromSecondary">
+            <summary>
+                Gets or sets the original right padding between the anchored sibling
+                node and the secondary container.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryHorizontalPadding">

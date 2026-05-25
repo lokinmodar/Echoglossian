@@ -56,6 +56,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
           : 0,
       AnchoredXNodeAddress = anchoredXNode != null ? (nint)anchoredXNode : 0,
       AnchoredXOriginal = anchoredXNode != null ? anchoredXNode->GetXShort() : (short)0,
+      AnchoredXWidth = anchoredXNode != null ? anchoredXNode->GetWidth() : (ushort)0,
+      AnchoredXRightPaddingFromSecondary = secondaryContainerNode != null && anchoredXNode != null
+          ? ((secondaryContainerNode->GetXShort() + secondaryContainerNode->GetWidth())
+             - (anchoredXNode->GetXShort() + anchoredXNode->GetWidth()))
+          : 0,
     };
 
     if (secondaryContainerNode != null)
@@ -255,6 +260,22 @@ internal static unsafe class NativeTextNodeLayoutHelper
           (short)Math.Max(short.MinValue, Math.Min(
               short.MaxValue,
               childWidth + snapshot.AnchoredXOffset)));
+    }
+
+    if (secondaryContainerNode != null &&
+        anchoredXNode != null &&
+        snapshot.AnchoredXWidth > 0)
+    {
+      var minimumSecondaryWidth = ResolveMinimumSecondaryWidthForAnchoredNode(
+          secondaryContainerNode->GetXShort(),
+          secondaryContainerNode->GetWidth(),
+          anchoredXNode->GetXShort(),
+          anchoredXNode->GetWidth(),
+          snapshot.AnchoredXRightPaddingFromSecondary);
+      if (minimumSecondaryWidth > secondaryContainerNode->GetWidth())
+      {
+        secondaryContainerNode->SetWidth(minimumSecondaryWidth);
+      }
     }
 
     if (restoreHorizontalCentering)
@@ -484,6 +505,50 @@ internal static unsafe class NativeTextNodeLayoutHelper
         allowWidthGrowth: allowWidthGrowth,
         restoreHorizontalCentering: restoreHorizontalCentering);
     return snapshot;
+  }
+
+  /// <summary>
+  ///     Resolves the minimum secondary-container width required to keep an
+  ///     anchored sibling node covered by the same background after reflow.
+  /// </summary>
+  /// <param name="secondaryContainerX">
+  ///     The live X position of the secondary container.
+  /// </param>
+  /// <param name="currentSecondaryWidth">
+  ///     The current width of the secondary container before adjustment.
+  /// </param>
+  /// <param name="anchoredNodeX">
+  ///     The live X position of the anchored sibling node.
+  /// </param>
+  /// <param name="anchoredNodeWidth">The current width of the anchored node.</param>
+  /// <param name="preferredRightPadding">
+  ///     The original right padding between the secondary container and the
+  ///     anchored node. Negative values are treated as zero so coverage still
+  ///     extends to the anchored node edge.
+  /// </param>
+  /// <returns>
+  ///     The minimum width that keeps the anchored node inside the secondary
+  ///     background.
+  /// </returns>
+  public static ushort ResolveMinimumSecondaryWidthForAnchoredNode(
+      short secondaryContainerX,
+      ushort currentSecondaryWidth,
+      short anchoredNodeX,
+      ushort anchoredNodeWidth,
+      int preferredRightPadding)
+  {
+    var secondaryLeft = (int)secondaryContainerX;
+    var currentRight = secondaryLeft + currentSecondaryWidth;
+    var anchoredRight = anchoredNodeX + anchoredNodeWidth + Math.Max(0, preferredRightPadding);
+    if (anchoredRight <= currentRight)
+    {
+      return currentSecondaryWidth;
+    }
+
+    var requiredWidth = Math.Max(
+        currentSecondaryWidth,
+        anchoredRight - secondaryLeft);
+    return (ushort)Math.Min(ushort.MaxValue, requiredWidth);
   }
 
   /// <summary>
@@ -902,6 +967,17 @@ internal sealed class NativeTextNodeLayoutSnapshot
   ///     Gets or sets the original X position of the anchored sibling node.
   /// </summary>
   public short AnchoredXOriginal { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original width of the anchored sibling node.
+  /// </summary>
+  public ushort AnchoredXWidth { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original right padding between the anchored sibling
+  ///     node and the secondary container.
+  /// </summary>
+  public int AnchoredXRightPaddingFromSecondary { get; set; }
 
   /// <summary>
   ///     Gets the horizontal padding between the text node and the secondary
