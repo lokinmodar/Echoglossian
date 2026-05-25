@@ -1862,6 +1862,13 @@
                 handlers see the live nodes.
             </summary>
         </member>
+        <member name="F:Echoglossian.Config.UseToastGuiRuntimeForSupportedToasts">
+            <summary>
+                Enables the alternate callback-owned ToastGui runtime for supported
+                normal and error toasts instead of the legacy addon-handler path.
+                This stays hidden and opt-in while the route is still being validated.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.EnableDebugLoginAddonProbe">
             <summary>
                 Enables debug-only automatic login probes for `_BattleTalk` and
@@ -2072,6 +2079,10 @@
             <summary>
                 Handles bootstrap and teardown of the experimental ToastGui-assisted
                 toast capture runtime for supported normal and error toasts.
+            </summary>
+            <summary>
+                Handles bootstrap and teardown for the alternate callback-owned
+                ToastGui route that owns supported normal and error toasts.
             </summary>
             <summary>
                 Provides DB-first background prefetch for canonical trait payloads.
@@ -2663,7 +2674,7 @@
                 Recreates the shared queued-translation broker for the current engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RebuildQuestToastRuntime">
+        <member name="M:Echoglossian.Echoglossian.RebuildToastGuiRuntimes">
             <summary>
                 Recreates and re-registers the quest-toast runtime so it uses the
                 current translation service.
@@ -5027,6 +5038,26 @@
             <summary>
                 Unregisters the ToastGui-assisted capture runtime from Dalamud's
                 callback surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateToastGuiSupportedToastRuntime">
+            <summary>
+                Creates the alternate supported-toast runtime using the same shared
+                toast persistence and overlay helpers already used elsewhere in the
+                plugin.
+            </summary>
+            <returns>The initialized supported-toast runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterToastGuiSupportedToastRuntime">
+            <summary>
+                Registers the alternate supported-toast runtime with Dalamud's normal
+                and error-toast callbacks.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterToastGuiSupportedToastRuntime">
+            <summary>
+                Unregisters the alternate supported-toast runtime from Dalamud's
+                normal and error-toast callbacks.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetch">
@@ -16857,6 +16888,368 @@
             <param name="toastType">The persisted toast type.</param>
             <param name="originalText">The original toast text.</param>
             <returns>The stable in-flight dedupe key.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy">
+            <summary>
+                Centralizes the family-level routing rules for the alternate
+                ToastGui-owned runtime path. Under that route, supported normal toasts
+                are intentionally treated as one unified logical family rather than as
+                addon-specific subtypes.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedToastGuiRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the alternate callback-owned ToastGui route is enabled at
+                all.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the alternate ToastGui route is enabled;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the alternate callback-owned ToastGui route should own
+                the unified normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the alternate route should own the
+                supported non-error toast family; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedErrorToastRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the alternate callback-owned ToastGui route should own
+                error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the alternate route should own error
+                toasts; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(Echoglossian.Config)">
+            <summary>
+                Gets the canonical family-level display mode used by the alternate
+                callback-owned runtime for the unified normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                The effective family-level display mode for supported non-error
+                toasts, currently sourced from the wide-text toast config.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyNormalToastCapturePrefetch(Echoglossian.Config)">
+            <summary>
+                Gets whether the legacy ToastGui prefetch-only path should stay active
+                for supported normal toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the capture-only path should remain
+                active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyErrorToastCapturePrefetch(Echoglossian.Config)">
+            <summary>
+                Gets whether the legacy ToastGui prefetch-only path should stay active
+                for error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the capture-only error-toast path should
+                remain active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime">
+            <summary>
+                Owns the alternate callback-driven ToastGui route for supported normal
+                and error toasts. Under this path, supported normal toasts are treated
+                as one logical family and no longer rely on addon-specific native
+                mutation or overlay anchoring.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findToastMessage">The shared toast DB lookup delegate.</param>
+            <param name="insertToastMessageAsync">
+                The shared toast persistence delegate.
+            </param>
+            <param name="updateNormalOverlay">
+                Delegate used to publish content into the unified normal-toast
+                overlay.
+            </param>
+            <param name="clearNormalOverlay">
+                Delegate used to clear the unified normal-toast overlay.
+            </param>
+            <param name="updateErrorOverlay">
+                Delegate used to publish content into the error-toast overlay.
+            </param>
+            <param name="clearErrorOverlay">
+                Delegate used to clear the error-toast overlay.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize text before native replacement when the
+                game font requires it.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.HandleNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.ToastOptions@,System.Boolean@)">
+            <summary>
+                Handles generic normal-toast callbacks through the alternate family
+                route.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="options">The toast options supplied by Dalamud.</param>
+            <param name="isHandled">Whether another callback consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.HandleErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.Boolean@)">
+            <summary>
+                Handles error-toast callbacks through the alternate callback-owned
+                route.
+            </summary>
+            <param name="message">The error-toast payload.</param>
+            <param name="isHandled">Whether another callback consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.TrySyncNormalToastOverlayToViewport(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Synchronizes the unified normal-toast overlay to a stable viewport
+                anchor based on the last callback-reported toast position.
+            </summary>
+            <param name="overlay">The overlay to synchronize.</param>
+            <returns>
+                <see langword="true" /> when the overlay currently has visible
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.TrySyncErrorToastOverlayToViewport(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Synchronizes the error-toast overlay to a stable top-center viewport
+                anchor.
+            </summary>
+            <param name="overlay">The overlay to synchronize.</param>
+            <returns>
+                <see langword="true" /> when the overlay currently has visible
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ApplyResolvedNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
+            <summary>
+                Applies one cache-hit normal toast immediately to the current callback.
+            </summary>
+            <param name="message">The live callback payload.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ApplyResolvedErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
+            <summary>
+                Applies one cache-hit error toast immediately to the current callback.
+            </summary>
+            <param name="message">The live callback payload.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveNormalTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves one supported normal-toast line asynchronously.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+            <returns>A task that completes after the translation attempt.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveErrorTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves one supported error-toast line asynchronously.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+            <returns>A task that completes after the translation attempt.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BeginNormalRequest(System.String,Dalamud.Game.Gui.Toast.ToastOptions)">
+            <summary>
+                Starts one supported normal-toast request.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="options">The current toast options.</param>
+            <returns>The active request identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BeginErrorRequest(System.String)">
+            <summary>
+                Starts one error-toast request.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <returns>The active request identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ScheduleNormalOverlayClearAsync(System.Int32)">
+            <summary>
+                Delays clearing the unified normal-toast overlay so the overlay
+                lifetime roughly matches the transient toast lifetime.
+            </summary>
+            <param name="requestId">The owning request identifier.</param>
+            <returns>A task that completes after the clear delay.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ScheduleErrorOverlayClearAsync(System.Int32)">
+            <summary>
+                Delays clearing the error-toast overlay so the overlay lifetime roughly
+                matches the transient toast lifetime.
+            </summary>
+            <param name="requestId">The owning request identifier.</param>
+            <returns>A task that completes after the clear delay.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetNormalOverlayLifetimeMs">
+            <summary>
+                Gets the overlay lifetime for the current supported normal-toast
+                request.
+            </summary>
+            <returns>The overlay clear delay in milliseconds.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsCurrentNormalRequest(System.Int32,System.String)">
+            <summary>
+                Determines whether the specified request still belongs to the current
+                supported normal-toast line.
+            </summary>
+            <param name="requestId">The request identifier to validate.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>
+                <see langword="true" /> when the request is still current; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsCurrentErrorRequest(System.Int32,System.String)">
+            <summary>
+                Determines whether the specified request still belongs to the current
+                error-toast line.
+            </summary>
+            <param name="requestId">The request identifier to validate.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>
+                <see langword="true" /> when the request is still current; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldUseNormalOverlay">
+            <summary>
+                Gets whether the unified normal-toast family should publish overlay
+                text.
+            </summary>
+            <returns>
+                <see langword="true" /> when the unified normal-toast overlay is
+                active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldApplyNativeNormalText">
+            <summary>
+                Gets whether the unified normal-toast family should write translated
+                text into the native toast callback payload.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldSwapNormalTexts">
+            <summary>
+                Gets whether the unified normal-toast overlay should show original text
+                while the native toast displays the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldUseErrorOverlay">
+            <summary>
+                Gets whether error toasts should publish overlay text.
+            </summary>
+            <returns>
+                <see langword="true" /> when the error-toast overlay is active;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldApplyNativeErrorText">
+            <summary>
+                Gets whether error toasts should write translated text into the native
+                callback payload.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldSwapErrorTexts">
+            <summary>
+                Gets whether the error-toast overlay should show the original text
+                while the native error toast displays the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.PublishNormalOverlay(System.String,System.String,System.String)">
+            <summary>
+                Publishes content into the unified normal-toast overlay.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.PublishErrorOverlay(System.String,System.String,System.String)">
+            <summary>
+                Publishes content into the error-toast overlay.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.SelectOverlayText(System.String,System.String,System.Boolean)">
+            <summary>
+                Selects the overlay text for one callback-owned toast route.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="showOriginalOverlayText">
+                Whether the overlay should show the original text.
+            </param>
+            <returns>The overlay text to display.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds one toast DB lookup entity using the plugin's existing toast
+                persistence schema.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>A lookup <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">
+            <summary>
+                Determines whether one stored toast row contains a usable translation
+                for the requested source line and toast type.
+            </summary>
+            <param name="toastMessage">The stored row to validate.</param>
+            <param name="originalText">The expected original text.</param>
+            <param name="toastType">The expected toast type.</param>
+            <returns>
+                <see langword="true" /> when the stored row is usable; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated text before native replacement when the game font
+                requires it.
+            </summary>
+            <param name="translatedText">The translated text to normalize.</param>
+            <returns>The text that should be written back into the callback payload.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
             <summary>

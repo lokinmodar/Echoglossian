@@ -862,7 +862,11 @@ namespace Echoglossian
         TranslationOverlaySurfaceId.MiniTalk => this.configuration.MiniTalkTranslationDisplayMode,
         TranslationOverlaySurfaceId.CutSceneSelectString => this.configuration.CutSceneSelectStringTranslationDisplayMode,
         TranslationOverlaySurfaceId.TextGimmickHint => this.configuration.TextGimmickHintTranslationDisplayMode,
-        TranslationOverlaySurfaceId.WideTextToast => this.configuration.WideTextToastTranslationDisplayMode,
+        TranslationOverlaySurfaceId.WideTextToast => NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+                this.configuration)
+            ? NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(
+                this.configuration)
+            : this.configuration.WideTextToastTranslationDisplayMode,
         TranslationOverlaySurfaceId.ErrorToast => this.configuration.ErrorToastTranslationDisplayMode,
         TranslationOverlaySurfaceId.AreaToast => this.configuration.AreaToastTranslationDisplayMode,
         TranslationOverlaySurfaceId.ClassChangeToast => this.configuration.ClassChangeToastTranslationDisplayMode,

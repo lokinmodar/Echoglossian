@@ -360,3 +360,132 @@ Validation:
 - `dotnet build Echoglossian.sln -c Debug --no-restore`
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
 - `dotnet build Echoglossian.csproj -c Release --no-restore`
+
+## Iteration 12
+
+Goal:
+- document the current toast runtime ownership model in English
+- document the proposed full alternate `ToastGui` path for supported toasts in
+  English
+- make the distinction explicit between:
+  - today's addon-handler presentation path
+  - today's optional `ToastGui` prefetch
+  - the proposed callback-owned full runtime
+
+Changes:
+- added `docs/toast-runtime-current-state.md`
+- added `docs/toastgui-runtime-alternative-path.md`
+- recorded the current and proposed ownership of:
+  - capture
+  - translation lookup
+  - overlay publication
+  - native mutation
+  - persistence
+- documented that `_TextGimmickHint` remains outside the proposed migration
+
+Validation:
+- not run, docs-only change
+
+## Iteration 13
+
+Goal:
+- verify exactly what `ToastGui` supports in Dalamud before implementing a full
+  alternate callback-owned toast route
+- update the toast design docs with the real callback boundaries and
+  architectural constraints
+
+Findings from Dalamud source and docs:
+- `IToastGui` exposes exactly three callback surfaces:
+  - `Toast`
+  - `QuestToast`
+  - `ErrorToast`
+- the implementation hooks:
+  - `UIModule.ShowWideText`
+  - `UIModule.ShowText`
+  - `UIModule.ShowErrorText`
+- `isHandled = true` suppresses the original native call
+- the generic normal-toast callback only exposes:
+  - `SeString message`
+  - `ToastOptions.Position`
+  - `ToastOptions.Speed`
+- it does not expose:
+  - addon name
+  - normal-toast subtype
+  - a stable identity that distinguishes `_WideText`, `_AreaText`, and
+    `_TextClassChange`
+
+Implication:
+- a full `ToastGui` route is straightforward for quest and error toasts
+- a full subtype-preserving normal-toast migration needs either:
+  - a correlation layer
+  - or a deliberate collapse into one generic normal-toast family under the
+    alternate route
+
+Changes:
+- updated `docs/toast-runtime-current-state.md`
+- updated `docs/toastgui-runtime-alternative-path.md`
+
+Validation:
+- not run, docs-only change
+
+## Iteration 14
+
+Goal:
+- record the architectural decision for the future `ToastGui` alternate route
+  after confirming that Echoglossian already persists supported normal toasts
+  as one logical DB family
+
+Decision:
+- under the alternate `ToastGui` route, `_WideText`, `_AreaText`, and
+  `_TextClassChange` should be treated as one unified `Toast / NonError`
+  runtime family
+- the alternate route should not try to preserve addon-specific ownership for
+  activation or behavior inside that normal-toast family
+
+Changes:
+- updated `docs/toast-runtime-current-state.md`
+- updated `docs/toastgui-runtime-alternative-path.md`
+
+Validation:
+- not run, docs-only change
+
+## Iteration 15
+
+Goal:
+- implement the hidden full `ToastGui` route for supported normal and error
+  toasts
+- keep the legacy addon-handler route as the default fallback
+- stop treating `_WideText`, `_AreaText`, and `_TextClassChange` as separate
+  activation owners while the hidden route is enabled
+
+Changes:
+- added hidden config toggle:
+  - `UseToastGuiRuntimeForSupportedToasts`
+- added `ToastGuiSupportedToastPolicy`
+- added `ToastGuiSupportedToastRuntime`
+- added `ToastGuiSupportedToastRuntimeRegistration`
+- the supported normal-toast family is now callback-owned through
+  `IToastGui.Toast` when the hidden route is enabled
+- the error-toast family is now callback-owned through
+  `IToastGui.ErrorToast` when the hidden route is enabled
+- legacy addon handlers for:
+  - `_WideText`
+  - `_AreaText`
+  - `_TextClassChange`
+  - `_TextError`
+  are not registered while the hidden route is active
+- the old capture-only `ToastGui` runtime now self-suppresses when the hidden
+  full route owns the same family
+- the hidden route treats supported normal toasts as one logical
+  `Toast / NonError` family and currently reuses
+  `WideTextToastTranslationDisplayMode` as its family display-mode source
+- added focused tests for:
+  - hidden config default
+  - legacy prefetch suppression
+  - family-level normal-toast routing policy
+- updated:
+  - `docs/toast-runtime-current-state.md`
+  - `docs/toastgui-runtime-alternative-path.md`
+
+Focused validation:
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter "ConfigDefaultsTests|ToastGuiCaptureRuntimeTests|ToastGuiSupportedToastPolicyTests"`

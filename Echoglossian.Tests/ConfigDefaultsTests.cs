@@ -22,4 +22,16 @@ public class ConfigDefaultsTests
 
         Assert.False(config.EnableDebugLoginAddonProbe);
     }
+
+    /// <summary>
+    ///     Ensures the full ToastGui runtime path for supported toasts stays
+    ///     opt-in by default.
+    /// </summary>
+    [Fact]
+    public void UseToastGuiRuntimeForSupportedToasts_DefaultsToFalse()
+    {
+        var config = new Config();
+
+        Assert.False(config.UseToastGuiRuntimeForSupportedToasts);
+    }
 }

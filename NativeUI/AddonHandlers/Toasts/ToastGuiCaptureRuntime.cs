@@ -110,11 +110,8 @@ internal sealed class ToastGuiCaptureRuntime
   /// </returns>
   private bool ShouldCaptureNormalToasts()
   {
-    return this.config.TranslateToast &&
-           this.config.UseToastGuiCaptureForSupportedToasts &&
-           (this.config.TranslateWideTextToast ||
-            this.config.TranslateAreaToast ||
-            this.config.TranslateClassChangeToast);
+    return ToastGuiSupportedToastPolicy.UseLegacyNormalToastCapturePrefetch(
+        this.config);
   }
 
   /// <summary>
@@ -127,9 +124,8 @@ internal sealed class ToastGuiCaptureRuntime
   /// </returns>
   private bool ShouldCaptureErrorToasts()
   {
-    return this.config.TranslateToast &&
-           this.config.UseToastGuiCaptureForSupportedToasts &&
-           this.config.TranslateErrorToast;
+    return ToastGuiSupportedToastPolicy.UseLegacyErrorToastCapturePrefetch(
+        this.config);
   }
 
   /// <summary>
