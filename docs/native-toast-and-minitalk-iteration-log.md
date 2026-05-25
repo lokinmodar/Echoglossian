@@ -520,3 +520,33 @@ Changes:
 
 Validation:
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter NativeTextNodeLayoutHelperTests`
+
+## Iteration 17
+
+Goal:
+- apply the global non-quest native replacement diacritics-removal toggle
+  consistently across shared DB-first native UI surfaces
+- keep overlay-only payloads and persistence semantics unchanged
+
+Root cause:
+- Talk, BattleTalk, MiniTalk, subtitles, and toast-family handlers already
+  normalized replacement text in their addon-local native apply paths
+- shared DB-first handlers and the `_MainCommand` refresh writer still wrote
+  translated native text directly without passing through that same
+  normalization step
+
+Changes:
+- added `NativeReplacementTextNormalizationHelper` as a pure shared payload
+  normalizer for native replacement-only writes
+- added `Echoglossian.TryCreateNativeReplacementTextNormalizer(...)` so shared
+  handlers can reuse the same game-font diacritics-removal callback without
+  changing DB semantics
+- `DbFirstGameWindowAddonHandler.ApplyPayload(...)` now normalizes translated
+  payloads only for display modes that actually write native translation
+- `_MainCommand` refresh apply now normalizes translated payloads before
+  writing translated labels into refresh `AtkValue`s
+- added focused tests in:
+  - `Echoglossian.Tests/NativeReplacementTextNormalizationHelperTests.cs`
+
+Validation:
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter NativeReplacementTextNormalizationHelperTests`

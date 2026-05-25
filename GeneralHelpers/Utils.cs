@@ -922,6 +922,34 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Creates the shared normalizer used by non-quest native replacement
+  ///     flows when the global diacritics-removal toggle is active.
+  /// </summary>
+  /// <param name="config">The current plugin configuration.</param>
+  /// <returns>
+  ///     A normalization callback when the feature is active and the plugin
+  ///     instance is available; otherwise <see langword="null" />.
+  /// </returns>
+  internal static Func<string, string>? TryCreateNativeReplacementTextNormalizer(
+      Config config)
+  {
+    if (!config.RemoveDiacriticsWhenUsingReplacementTalkBTalk)
+    {
+      return null;
+    }
+
+    var instance = activeInstance;
+    if (instance == null)
+    {
+      return null;
+    }
+
+    return text => instance.RemoveDiacritics(
+        text,
+        instance.SpecialCharsSupportedByGameFont);
+  }
+
+  /// <summary>
   ///     Gets the game version from the framework.
   /// </summary>
   /// <returns>Game version as a string.</returns>
