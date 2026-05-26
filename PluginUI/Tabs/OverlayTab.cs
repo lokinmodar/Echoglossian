@@ -366,6 +366,12 @@ public static class OverlayTab
     private static bool DrawToastGeneralPage(Config config)
     {
         var changed = false;
+        var normalRouteState =
+            NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
+                .GetSupportedNormalToastRouteState(config);
+        var errorRouteState =
+            NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
+                .GetSupportedErrorToastRouteState(config);
 
         ImGui.TextWrapped(Resources.WhichToastsToTranslate);
         ImGui.Spacing();
@@ -374,6 +380,19 @@ public static class OverlayTab
             ref config.UseToastGuiCaptureForSupportedToasts);
         ImGui.TextWrapped(
             Resources.ToastGuiCaptureForSupportedToastsDescription);
+        ImGui.Spacing();
+        ImGui.TextWrapped(
+            Resources.ToastGuiNormalToastRouteStatusLabel + ": " +
+            GetToastGuiRouteStateText(normalRouteState));
+        ImGui.TextWrapped(
+            Resources.ToastGuiErrorToastRouteStatusLabel + ": " +
+            GetToastGuiRouteStateText(errorRouteState));
+        ImGui.TextWrapped(
+            Resources.ToastGuiQuestToastRouteStatusLabel + ": " +
+            Resources.ToastGuiRouteStateFullRuntime);
+        ImGui.TextWrapped(
+            Resources.ToastGuiTextGimmickHintRouteStatusLabel + ": " +
+            Resources.ToastGuiRouteStateAddonHandlerOnly);
         ImGui.Spacing();
 
         changed |= ImGui.Checkbox(
@@ -409,6 +428,25 @@ public static class OverlayTab
         }
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Maps one effective toast route state to the localized UI label used
+    ///     in the toast general page.
+    /// </summary>
+    /// <param name="routeState">The effective route state.</param>
+    /// <returns>The localized UI label for the route state.</returns>
+    private static string GetToastGuiRouteStateText(
+        NativeUI.AddonHandlers.Toasts.ToastGuiRouteState routeState)
+    {
+        return routeState switch
+        {
+            NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiFullRuntime =>
+                Resources.ToastGuiRouteStateFullRuntime,
+            NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiCapturePrefetch =>
+                Resources.ToastGuiRouteStateCapturePrefetch,
+            _ => Resources.ToastGuiRouteStateLegacyAddonHandlers,
+        };
     }
 
     private static bool DrawToastTypePage(

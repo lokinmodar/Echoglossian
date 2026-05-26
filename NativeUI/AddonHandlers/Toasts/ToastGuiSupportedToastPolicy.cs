@@ -14,6 +14,48 @@ namespace Echoglossian.NativeUI.AddonHandlers.Toasts;
 internal static class ToastGuiSupportedToastPolicy
 {
   /// <summary>
+  ///     Gets the effective route state for the supported normal-toast family.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The effective route state for supported normal toasts.</returns>
+  public static ToastGuiRouteState GetSupportedNormalToastRouteState(
+      Config config)
+  {
+    if (UseSupportedNormalToastRuntime(config))
+    {
+      return ToastGuiRouteState.ToastGuiFullRuntime;
+    }
+
+    if (UseLegacyNormalToastCapturePrefetch(config))
+    {
+      return ToastGuiRouteState.ToastGuiCapturePrefetch;
+    }
+
+    return ToastGuiRouteState.LegacyAddonHandlers;
+  }
+
+  /// <summary>
+  ///     Gets the effective route state for supported error toasts.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The effective route state for supported error toasts.</returns>
+  public static ToastGuiRouteState GetSupportedErrorToastRouteState(
+      Config config)
+  {
+    if (UseSupportedErrorToastRuntime(config))
+    {
+      return ToastGuiRouteState.ToastGuiFullRuntime;
+    }
+
+    if (UseLegacyErrorToastCapturePrefetch(config))
+    {
+      return ToastGuiRouteState.ToastGuiCapturePrefetch;
+    }
+
+    return ToastGuiRouteState.LegacyAddonHandlers;
+  }
+
+  /// <summary>
   ///     Gets whether the alternate callback-owned ToastGui route is enabled at
   ///     all.
   /// </summary>

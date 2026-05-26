@@ -2621,6 +2621,78 @@ namespace Echoglossian.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Supported normal toast route.
+        /// </summary>
+        public static string ToastGuiNormalToastRouteStatusLabel {
+            get {
+                return ResourceManager.GetString("ToastGuiNormalToastRouteStatusLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Supported error toast route.
+        /// </summary>
+        public static string ToastGuiErrorToastRouteStatusLabel {
+            get {
+                return ResourceManager.GetString("ToastGuiErrorToastRouteStatusLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Quest toast route.
+        /// </summary>
+        public static string ToastGuiQuestToastRouteStatusLabel {
+            get {
+                return ResourceManager.GetString("ToastGuiQuestToastRouteStatusLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Text Gimmick Hint route.
+        /// </summary>
+        public static string ToastGuiTextGimmickHintRouteStatusLabel {
+            get {
+                return ResourceManager.GetString("ToastGuiTextGimmickHintRouteStatusLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy addon handlers.
+        /// </summary>
+        public static string ToastGuiRouteStateLegacyAddonHandlers {
+            get {
+                return ResourceManager.GetString("ToastGuiRouteStateLegacyAddonHandlers", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ToastGui capture/prefetch.
+        /// </summary>
+        public static string ToastGuiRouteStateCapturePrefetch {
+            get {
+                return ResourceManager.GetString("ToastGuiRouteStateCapturePrefetch", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ToastGui full runtime.
+        /// </summary>
+        public static string ToastGuiRouteStateFullRuntime {
+            get {
+                return ResourceManager.GetString("ToastGuiRouteStateFullRuntime", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Addon handler only.
+        /// </summary>
+        public static string ToastGuiRouteStateAddonHandlerOnly {
+            get {
+                return ResourceManager.GetString("ToastGuiRouteStateAddonHandlerOnly", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to YandexCloud Api Key.
         /// </summary>
         public static string YandexCloudApiKey {

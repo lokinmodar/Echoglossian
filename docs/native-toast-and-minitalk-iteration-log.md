@@ -550,3 +550,48 @@ Changes:
 
 Validation:
 - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter NativeReplacementTextNormalizationHelperTests`
+
+## Iteration 18
+
+Goal:
+- make it explicit, in runtime UI and policy tests, whether supported toasts
+  are currently using the legacy addon path, the old ToastGui capture/prefetch
+  path, or the full ToastGui runtime path
+- enable the full supported-toast ToastGui route in the user's real local
+  `Echoglossian.json` without guessing
+
+Root cause:
+- the hidden toast routing toggles lived only in config and policy code
+- there was no explicit runtime-facing status showing which route was actually
+  active for normal/error toasts
+- the real local config file did not contain either hidden ToastGui toast key,
+  so runtime behavior silently fell back to the default legacy addon handlers
+
+Changes:
+- added `ToastGuiRouteState` as the canonical route-state enum for supported
+  toast-family routing
+- added:
+  - `ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(...)`
+  - `ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(...)`
+- expanded `ToastGuiSupportedToastPolicyTests` to cover:
+  - default legacy state
+  - capture/prefetch state
+  - full runtime state
+  for both normal and error toast families
+- updated `OverlayTab.DrawToastGeneralPage(...)` to show live route status for:
+  - supported normal toasts
+  - supported error toasts
+  - quest toast
+  - text gimmick hint
+- added localized resource keys for those route-status labels and values
+- manually aligned `Resources.Designer.cs` because this repo branch did not
+  regenerate the designer automatically during the test-first pass
+- updated the real local config at:
+  - `%APPDATA%\\XIVLauncher\\pluginConfigs\\Echoglossian.json`
+  to set:
+  - `UseToastGuiRuntimeForSupportedToasts = true`
+  - `UseToastGuiCaptureForSupportedToasts = false`
+  with a timestamped backup created alongside the file
+
+Focused validation:
+- `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --filter ToastGuiSupportedToastPolicyTests`

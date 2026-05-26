@@ -17138,6 +17138,27 @@
             <param name="originalText">The original toast text.</param>
             <returns>The stable in-flight dedupe key.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState">
+            <summary>
+                Describes which family-level route currently owns one supported toast
+                path at runtime.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.LegacyAddonHandlers">
+            <summary>
+                The legacy addon-handler route remains active.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiCapturePrefetch">
+            <summary>
+                The legacy ToastGui capture-only prefetch path is active.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiFullRuntime">
+            <summary>
+                The alternate full ToastGui runtime owns the route.
+            </summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy">
             <summary>
                 Centralizes the family-level routing rules for the alternate
@@ -17145,6 +17166,20 @@
                 are intentionally treated as one unified logical family rather than as
                 addon-specific subtypes.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(Echoglossian.Config)">
+            <summary>
+                Gets the effective route state for the supported normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The effective route state for supported normal toasts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(Echoglossian.Config)">
+            <summary>
+                Gets the effective route state for supported error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The effective route state for supported error toasts.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedToastGuiRuntime(Echoglossian.Config)">
             <summary>
@@ -20907,6 +20942,14 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.GetToastGuiRouteStateText(Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState)">
+            <summary>
+                Maps one effective toast route state to the localized UI label used
+                in the toast general page.
+            </summary>
+            <param name="routeState">The effective route state.</param>
+            <returns>The localized UI label for the route state.</returns>
+        </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawMiniTalkOverlay(Echoglossian.Config)">
             <summary>
                 Draws the MiniTalk overlay settings without exposing a title bar
@@ -22577,6 +22620,46 @@
         <member name="P:Echoglossian.Properties.Resources.ToastGuiCaptureForSupportedToastsDescription">
             <summary>
               Looks up a localized string similar to Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiNormalToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Supported normal toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiErrorToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Supported error toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiQuestToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Quest toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiTextGimmickHintRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Text Gimmick Hint route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateLegacyAddonHandlers">
+            <summary>
+              Looks up a localized string similar to Legacy addon handlers.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateCapturePrefetch">
+            <summary>
+              Looks up a localized string similar to ToastGui capture/prefetch.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateFullRuntime">
+            <summary>
+              Looks up a localized string similar to ToastGui full runtime.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateAddonHandlerOnly">
+            <summary>
+              Looks up a localized string similar to Addon handler only.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.YandexCloudApiKey">
