@@ -6,10 +6,9 @@
 namespace Echoglossian.NativeUI.AddonHandlers.Toasts;
 
 /// <summary>
-///     Centralizes the family-level routing rules for the alternate
-///     ToastGui-owned runtime path. Under that route, supported normal toasts
-///     are intentionally treated as one unified logical family rather than as
-///     addon-specific subtypes.
+///     Centralizes the family-level routing rules for the ToastGui-owned
+///     runtime path. Supported normal toasts are intentionally treated as one
+///     unified logical family rather than as addon-specific subtypes.
 /// </summary>
 internal static class ToastGuiSupportedToastPolicy
 {
@@ -56,22 +55,20 @@ internal static class ToastGuiSupportedToastPolicy
   }
 
   /// <summary>
-  ///     Gets whether the alternate callback-owned ToastGui route is enabled at
-  ///     all.
+  ///     Gets whether the callback-owned ToastGui route is enabled at all.
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
   /// <returns>
-  ///     <see langword="true" /> when the alternate ToastGui route is enabled;
+  ///     <see langword="true" /> when the ToastGui route is enabled;
   ///     otherwise, <see langword="false" />.
   /// </returns>
   public static bool UseSupportedToastGuiRuntime(Config config)
   {
-    return config.TranslateToast &&
-           config.UseToastGuiRuntimeForSupportedToasts;
+    return config.TranslateToast;
   }
 
   /// <summary>
-  ///     Gets whether the alternate callback-owned ToastGui route should own
+  ///     Gets whether the callback-owned ToastGui route should own
   ///     the unified normal-toast family.
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
@@ -85,7 +82,7 @@ internal static class ToastGuiSupportedToastPolicy
   }
 
   /// <summary>
-  ///     Gets whether the alternate callback-owned ToastGui route should own
+  ///     Gets whether the callback-owned ToastGui route should own
   ///     error toasts.
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
@@ -100,7 +97,7 @@ internal static class ToastGuiSupportedToastPolicy
   }
 
   /// <summary>
-  ///     Gets the canonical family-level display mode used by the alternate
+  ///     Gets the canonical family-level display mode used by the
   ///     callback-owned runtime for the unified normal-toast family.
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
@@ -115,8 +112,7 @@ internal static class ToastGuiSupportedToastPolicy
   }
 
   /// <summary>
-  ///     Gets whether the legacy ToastGui prefetch-only path should stay active
-  ///     for supported normal toasts.
+  ///     Gets whether the legacy ToastGui prefetch-only path should stay active.
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
   /// <returns>
@@ -125,12 +121,8 @@ internal static class ToastGuiSupportedToastPolicy
   /// </returns>
   public static bool UseLegacyNormalToastCapturePrefetch(Config config)
   {
-    return config.TranslateToast &&
-           config.UseToastGuiCaptureForSupportedToasts &&
-           !UseSupportedNormalToastRuntime(config) &&
-           (config.TranslateWideTextToast ||
-            config.TranslateAreaToast ||
-            config.TranslateClassChangeToast);
+    _ = config;
+    return false;
   }
 
   /// <summary>
@@ -144,10 +136,8 @@ internal static class ToastGuiSupportedToastPolicy
   /// </returns>
   public static bool UseLegacyErrorToastCapturePrefetch(Config config)
   {
-    return config.TranslateToast &&
-           config.UseToastGuiCaptureForSupportedToasts &&
-           !UseSupportedErrorToastRuntime(config) &&
-           config.TranslateErrorToast;
+    _ = config;
+    return false;
   }
 
 }

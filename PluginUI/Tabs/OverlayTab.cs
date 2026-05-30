@@ -366,21 +366,16 @@ public static class OverlayTab
     private static bool DrawToastGeneralPage(Config config)
     {
         var changed = false;
+
+        ImGui.TextWrapped(Resources.WhichToastsToTranslate);
+        ImGui.Spacing();
+#if DEBUG
         var normalRouteState =
             NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
                 .GetSupportedNormalToastRouteState(config);
         var errorRouteState =
             NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
                 .GetSupportedErrorToastRouteState(config);
-
-        ImGui.TextWrapped(Resources.WhichToastsToTranslate);
-        ImGui.Spacing();
-        changed |= ImGui.Checkbox(
-            Resources.ToastGuiCaptureForSupportedToastsLabel,
-            ref config.UseToastGuiCaptureForSupportedToasts);
-        ImGui.TextWrapped(
-            Resources.ToastGuiCaptureForSupportedToastsDescription);
-        ImGui.Spacing();
         ImGui.TextWrapped(
             Resources.ToastGuiNormalToastRouteStatusLabel + ": " +
             GetToastGuiRouteStateText(normalRouteState));
@@ -394,6 +389,7 @@ public static class OverlayTab
             Resources.ToastGuiTextGimmickHintRouteStatusLabel + ": " +
             Resources.ToastGuiRouteStateAddonHandlerOnly);
         ImGui.Spacing();
+#endif
 
         changed |= ImGui.Checkbox(
             Resources.TranslateScreenInfoToastToggleText,
@@ -436,6 +432,7 @@ public static class OverlayTab
     /// </summary>
     /// <param name="routeState">The effective route state.</param>
     /// <returns>The localized UI label for the route state.</returns>
+#if DEBUG
     private static string GetToastGuiRouteStateText(
         NativeUI.AddonHandlers.Toasts.ToastGuiRouteState routeState)
     {
@@ -448,6 +445,7 @@ public static class OverlayTab
             _ => Resources.ToastGuiRouteStateLegacyAddonHandlers,
         };
     }
+#endif
 
     private static bool DrawToastTypePage(
         Config config,

@@ -181,7 +181,6 @@ public partial class Echoglossian
           this.configuration.TranslateAreaToast,
           this.configuration.TranslateClassChangeToast,
           this.configuration.TranslateTextGimmickHint,
-          this.configuration.UseToastGuiRuntimeForSupportedToasts,
         });
   }
 

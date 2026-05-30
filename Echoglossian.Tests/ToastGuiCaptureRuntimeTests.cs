@@ -16,18 +16,18 @@ namespace Echoglossian.Tests;
 public class ToastGuiCaptureRuntimeTests
 {
     /// <summary>
-    ///     Ensures the legacy capture-only path shuts itself off when the new
-    ///     full callback-owned ToastGui route is enabled for supported toasts.
+    ///     Ensures the legacy capture-only path stays inactive while supported
+    ///     toasts are callback-owned.
     /// </summary>
     [Fact]
-    public void HandleNormalToast_DoesNotPrefetch_WhenFullToastGuiRuntimeIsEnabled()
+    public void HandleNormalToast_DoesNotPrefetch_WhenToastTranslationIsEnabled()
     {
         var config = new Config
         {
             TranslateToast = true,
             TranslateWideTextToast = true,
             UseToastGuiCaptureForSupportedToasts = true,
-            UseToastGuiRuntimeForSupportedToasts = true,
+            UseToastGuiRuntimeForSupportedToasts = false,
         };
         var lookupCalls = 0;
         var runtime = new ToastGuiCaptureRuntime(

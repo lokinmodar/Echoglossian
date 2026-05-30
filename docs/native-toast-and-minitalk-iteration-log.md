@@ -618,3 +618,34 @@ Changes:
 Validation:
 - `dotnet build Echoglossian.sln -c Debug --no-restore`
 - `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --no-build`
+
+## Iteration 20
+
+Goal:
+- make the supported toast ToastGui runtime path always active when
+  `TranslateToast` is enabled
+- remove redundant user-facing controls for legacy capture/runtime toggles
+- keep route-state diagnostics visible only in debug builds
+
+Root cause:
+- the first toast general-page checkbox (`UseToastGuiCaptureForSupportedToasts`)
+  had become operationally redundant for user flows after we stabilized the
+  callback-owned path
+- exposing hidden route toggles in normal UI increased confusion and made it
+  harder to reason about effective runtime ownership
+
+Changes:
+- updated `ToastGuiSupportedToastPolicy` so supported runtime activation is now
+  driven only by `TranslateToast`
+- disabled legacy capture-prefetch policy gates in that policy (`false`)
+- removed `UseToastGuiRuntimeForSupportedToasts` from addon-handler
+  registration signature refresh inputs (it no longer affects routing)
+- removed the toast general-page hidden capture checkbox from public UI
+- kept route-status text blocks behind `#if DEBUG` in
+  `PluginUI/Tabs/OverlayTab.cs`
+- updated toast policy tests and capture-runtime gating test semantics to
+  reflect the always-on callback-owned supported-toast route
+
+Validation:
+- `dotnet build Echoglossian.sln -c Debug --no-restore`
+- `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --no-build`

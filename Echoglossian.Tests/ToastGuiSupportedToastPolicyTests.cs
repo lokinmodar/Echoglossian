@@ -9,22 +9,21 @@ using Xunit;
 namespace Echoglossian.Tests;
 
 /// <summary>
-///     Covers the merged family-level semantics used by the alternate ToastGui
-///     runtime path for supported toasts.
+///     Covers the merged family-level semantics used by the ToastGui runtime
+///     path for supported toasts.
 /// </summary>
 public class ToastGuiSupportedToastPolicyTests
 {
     /// <summary>
-    ///     Ensures the default supported normal-toast route remains on the
-    ///     legacy addon-handler path when neither hidden ToastGui toggle is
-    ///     enabled.
+    ///     Ensures the supported normal-toast route remains on the legacy
+    ///     addon-handler path while global toast translation is disabled.
     /// </summary>
     [Fact]
-    public void GetSupportedNormalToastRouteState_ReturnsLegacyAddonHandlers_ByDefault()
+    public void GetSupportedNormalToastRouteState_ReturnsLegacyAddonHandlers_WhenToastTranslationIsDisabled()
     {
         var config = new Config
         {
-            TranslateToast = true,
+            TranslateToast = false,
         };
 
         Assert.Equal(
@@ -33,99 +32,116 @@ public class ToastGuiSupportedToastPolicyTests
     }
 
     /// <summary>
-    ///     Ensures the supported normal-toast route reports the capture-only
-    ///     prefetch path when the legacy ToastGui capture toggle is enabled.
+    ///     Ensures the supported normal-toast route is callback-owned whenever
+    ///     global toast translation is enabled.
     /// </summary>
     [Fact]
-    public void GetSupportedNormalToastRouteState_ReturnsToastGuiCapturePrefetch_WhenLegacyCaptureIsEnabled()
+    public void GetSupportedNormalToastRouteState_ReturnsToastGuiFullRuntime_WhenToastTranslationIsEnabled()
+    {
+        var config = new Config
+        {
+            TranslateToast = true,
+        };
+
+        Assert.Equal(
+            ToastGuiRouteState.ToastGuiFullRuntime,
+            ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(config));
+    }
+
+    /// <summary>
+    ///     Ensures legacy hidden toggles no longer change the supported
+    ///     normal-toast route while toast translation is enabled.
+    /// </summary>
+    [Fact]
+    public void GetSupportedNormalToastRouteState_ReturnsToastGuiFullRuntime_WhenLegacyCaptureToggleIsEnabled()
+    {
+        var config = new Config
+        {
+            TranslateToast = true,
+            UseToastGuiCaptureForSupportedToasts = true,
+            UseToastGuiRuntimeForSupportedToasts = false,
+        };
+
+        Assert.Equal(
+            ToastGuiRouteState.ToastGuiFullRuntime,
+            ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(config));
+    }
+
+    /// <summary>
+    ///     Ensures the supported error-toast route remains on the legacy
+    ///     addon-handler path while global toast translation is disabled.
+    /// </summary>
+    [Fact]
+    public void GetSupportedErrorToastRouteState_ReturnsLegacyAddonHandlers_WhenToastTranslationIsDisabled()
+    {
+        var config = new Config
+        {
+            TranslateToast = false,
+            TranslateErrorToast = true,
+        };
+
+        Assert.Equal(
+            ToastGuiRouteState.LegacyAddonHandlers,
+            ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(config));
+    }
+
+    /// <summary>
+    ///     Ensures the supported error-toast route remains callback-owned while
+    ///     global toast translation and error-toast translation are both
+    ///     enabled.
+    /// </summary>
+    [Fact]
+    public void GetSupportedErrorToastRouteState_ReturnsToastGuiFullRuntime_WhenToastAndErrorTranslationAreEnabled()
+    {
+        var config = new Config
+        {
+            TranslateToast = true,
+            TranslateErrorToast = true,
+        };
+
+        Assert.Equal(
+            ToastGuiRouteState.ToastGuiFullRuntime,
+            ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(config));
+    }
+
+    /// <summary>
+    ///     Ensures legacy hidden toggles no longer change the supported
+    ///     error-toast route while toast translation is enabled.
+    /// </summary>
+    [Fact]
+    public void GetSupportedErrorToastRouteState_ReturnsToastGuiFullRuntime_WhenLegacyCaptureToggleIsEnabled()
+    {
+        var config = new Config
+        {
+            TranslateToast = true,
+            TranslateErrorToast = true,
+            UseToastGuiCaptureForSupportedToasts = true,
+            UseToastGuiRuntimeForSupportedToasts = false,
+        };
+
+        Assert.Equal(
+            ToastGuiRouteState.ToastGuiFullRuntime,
+            ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(config));
+    }
+
+    /// <summary>
+    ///     Ensures the legacy prefetch-only policy gates remain disabled now
+    ///     that supported toasts are permanently callback-owned.
+    /// </summary>
+    [Fact]
+    public void UseLegacyCapturePolicies_ReturnFalse()
     {
         var config = new Config
         {
             TranslateToast = true,
             TranslateWideTextToast = true,
-            UseToastGuiCaptureForSupportedToasts = true,
-        };
-
-        Assert.Equal(
-            ToastGuiRouteState.ToastGuiCapturePrefetch,
-            ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(config));
-    }
-
-    /// <summary>
-    ///     Ensures the supported normal-toast family becomes active whenever
-    ///     the hidden runtime toggle is on, without depending on the legacy
-    ///     addon-specific toast toggles.
-    /// </summary>
-    [Fact]
-    public void UseSupportedNormalToastRuntime_ReturnsTrue_WhenHiddenRuntimeToggleIsEnabled()
-    {
-        var config = new Config
-        {
-            TranslateToast = true,
-            UseToastGuiRuntimeForSupportedToasts = true,
-        };
-
-        Assert.True(ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(config));
-        Assert.Equal(
-            ToastGuiRouteState.ToastGuiFullRuntime,
-            ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(config));
-    }
-
-    /// <summary>
-    ///     Ensures the default supported error-toast route remains on the
-    ///     legacy addon-handler path when the hidden full-runtime toggle is
-    ///     disabled.
-    /// </summary>
-    [Fact]
-    public void GetSupportedErrorToastRouteState_ReturnsLegacyAddonHandlers_ByDefault()
-    {
-        var config = new Config
-        {
-            TranslateToast = true,
-            TranslateErrorToast = true,
-        };
-
-        Assert.Equal(
-            ToastGuiRouteState.LegacyAddonHandlers,
-            ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(config));
-    }
-
-    /// <summary>
-    ///     Ensures the supported error-toast route reports the capture-only
-    ///     prefetch path when the legacy ToastGui capture toggle is enabled.
-    /// </summary>
-    [Fact]
-    public void GetSupportedErrorToastRouteState_ReturnsToastGuiCapturePrefetch_WhenLegacyCaptureIsEnabled()
-    {
-        var config = new Config
-        {
-            TranslateToast = true,
             TranslateErrorToast = true,
             UseToastGuiCaptureForSupportedToasts = true,
+            UseToastGuiRuntimeForSupportedToasts = false,
         };
 
-        Assert.Equal(
-            ToastGuiRouteState.ToastGuiCapturePrefetch,
-            ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(config));
-    }
-
-    /// <summary>
-    ///     Ensures the supported error-toast route reports the full callback
-    ///     runtime when the hidden full ToastGui path is enabled.
-    /// </summary>
-    [Fact]
-    public void GetSupportedErrorToastRouteState_ReturnsToastGuiFullRuntime_WhenFullRuntimeIsEnabled()
-    {
-        var config = new Config
-        {
-            TranslateToast = true,
-            TranslateErrorToast = true,
-            UseToastGuiRuntimeForSupportedToasts = true,
-        };
-
-        Assert.Equal(
-            ToastGuiRouteState.ToastGuiFullRuntime,
-            ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(config));
+        Assert.False(ToastGuiSupportedToastPolicy.UseLegacyNormalToastCapturePrefetch(config));
+        Assert.False(ToastGuiSupportedToastPolicy.UseLegacyErrorToastCapturePrefetch(config));
     }
 
     /// <summary>

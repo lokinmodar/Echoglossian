@@ -17161,10 +17161,9 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy">
             <summary>
-                Centralizes the family-level routing rules for the alternate
-                ToastGui-owned runtime path. Under that route, supported normal toasts
-                are intentionally treated as one unified logical family rather than as
-                addon-specific subtypes.
+                Centralizes the family-level routing rules for the ToastGui-owned
+                runtime path. Supported normal toasts are intentionally treated as one
+                unified logical family rather than as addon-specific subtypes.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(Echoglossian.Config)">
@@ -17183,18 +17182,17 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedToastGuiRuntime(Echoglossian.Config)">
             <summary>
-                Gets whether the alternate callback-owned ToastGui route is enabled at
-                all.
+                Gets whether the callback-owned ToastGui route is enabled at all.
             </summary>
             <param name="config">The active plugin configuration.</param>
             <returns>
-                <see langword="true" /> when the alternate ToastGui route is enabled;
+                <see langword="true" /> when the ToastGui route is enabled;
                 otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(Echoglossian.Config)">
             <summary>
-                Gets whether the alternate callback-owned ToastGui route should own
+                Gets whether the callback-owned ToastGui route should own
                 the unified normal-toast family.
             </summary>
             <param name="config">The active plugin configuration.</param>
@@ -17205,7 +17203,7 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedErrorToastRuntime(Echoglossian.Config)">
             <summary>
-                Gets whether the alternate callback-owned ToastGui route should own
+                Gets whether the callback-owned ToastGui route should own
                 error toasts.
             </summary>
             <param name="config">The active plugin configuration.</param>
@@ -17216,7 +17214,7 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(Echoglossian.Config)">
             <summary>
-                Gets the canonical family-level display mode used by the alternate
+                Gets the canonical family-level display mode used by the
                 callback-owned runtime for the unified normal-toast family.
             </summary>
             <param name="config">The active plugin configuration.</param>
@@ -17227,8 +17225,7 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyNormalToastCapturePrefetch(Echoglossian.Config)">
             <summary>
-                Gets whether the legacy ToastGui prefetch-only path should stay active
-                for supported normal toasts.
+                Gets whether the legacy ToastGui prefetch-only path should stay active.
             </summary>
             <param name="config">The active plugin configuration.</param>
             <returns>
