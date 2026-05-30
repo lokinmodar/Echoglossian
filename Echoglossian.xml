@@ -2891,6 +2891,13 @@
             </param>
             <returns>Cleand text.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.EnsureConfigDefaultsPersistedForMissingKeys">
+            <summary>
+                Ensures newly introduced config fields are materialized in the
+                persisted JSON after an update by saving once when any known field is
+                missing from disk.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryCreateNativeReplacementTextNormalizer(Echoglossian.Config)">
             <summary>
                 Creates the shared normalizer used by non-quest native replacement

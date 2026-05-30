@@ -249,6 +249,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.MigrateOverlayDisplayModes();
     this.MigrateGameMainMenuTranslationSettings();
     this.MigrateTranslationEngineSelection(loadedConfigVersion);
+    this.EnsureConfigDefaultsPersistedForMissingKeys();
 
     SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
     AssetsManager.RefreshPluginAssetsState(SelectedLanguage);

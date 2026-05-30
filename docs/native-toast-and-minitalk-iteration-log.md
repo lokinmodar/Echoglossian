@@ -619,6 +619,35 @@ Validation:
 - `dotnet build Echoglossian.sln -c Debug --no-restore`
 - `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --no-build`
 
+## Iteration 21
+
+Goal:
+- guarantee that users upgrading from older persisted configs receive newly
+  introduced config fields with defaults materialized in their local
+  `Echoglossian.json`
+
+Root cause:
+- runtime already handles missing fields safely through `Config` defaults, but
+  older persisted JSON files can still omit new keys until some later manual
+  save
+- that makes support/debug harder because runtime and persisted config may not
+  match immediately after update
+
+Changes:
+- added `EnsureConfigDefaultsPersistedForMissingKeys()` in
+  `GeneralHelpers/Utils.cs`
+- startup now calls this check right after config migrations in
+  `Echoglossian` constructor
+- the check compares persisted JSON keys against the current runtime config
+  shape and triggers one `SaveConfig(...)` when any known field is missing,
+  materializing defaults into the user file
+- failure to inspect the JSON is handled as a warning without blocking plugin
+  startup
+
+Validation:
+- `dotnet build Echoglossian.sln -c Debug --no-restore`
+- `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --no-build`
+
 ## Iteration 20
 
 Goal:

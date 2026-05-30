@@ -922,6 +922,46 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Ensures newly introduced config fields are materialized in the
+  ///     persisted JSON after an update by saving once when any known field is
+  ///     missing from disk.
+  /// </summary>
+  private void EnsureConfigDefaultsPersistedForMissingKeys()
+  {
+    if (!File.Exists(PluginInterface.ConfigFile.FullName))
+    {
+      return;
+    }
+
+    try
+    {
+      var persistedConfig = Newtonsoft.Json.Linq.JObject.Parse(
+          File.ReadAllText(PluginInterface.ConfigFile.FullName));
+      var runtimeConfig = Newtonsoft.Json.Linq.JObject.FromObject(
+          this.configuration);
+
+      foreach (var property in runtimeConfig.Properties())
+      {
+        if (persistedConfig.Property(
+                property.Name,
+                StringComparison.Ordinal) != null)
+        {
+          continue;
+        }
+
+        SaveConfig(this.configuration);
+        return;
+      }
+    }
+    catch (Exception ex)
+    {
+      PluginRuntimeLog.Warning(
+          "Config",
+          $"Failed to verify persisted config defaults: {ex.Message}");
+    }
+  }
+
+  /// <summary>
   ///     Creates the shared normalizer used by non-quest native replacement
   ///     flows when the global diacritics-removal toggle is active.
   /// </summary>
