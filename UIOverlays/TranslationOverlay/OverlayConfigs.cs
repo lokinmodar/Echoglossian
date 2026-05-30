@@ -107,18 +107,28 @@ public partial class Echoglossian
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.toastOverlay,
-                () => TranslationWindowConfig.FromConfigForWideTextToast(this.configuration),
+                () => TranslationWindowConfig.FromConfigForToast(this.configuration),
                 isEnabled: () =>
-                    this.configuration.TranslateToast &&
-                    this.configuration.TranslateWideTextToast &&
-                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                        this.configuration.WideTextToastTranslationDisplayMode,
-                        this.configuration.OverlayOnlyLanguage),
+                    NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+                        this.configuration)
+                        ? NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                            NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(
+                                this.configuration),
+                            this.configuration.OverlayOnlyLanguage)
+                        : this.configuration.TranslateToast &&
+                          this.configuration.TranslateWideTextToast &&
+                          NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                              this.configuration.WideTextToastTranslationDisplayMode,
+                              this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
-                    this.TrySyncToastOverlayToAddon(
-                        "_WideText",
-                        this.toastOverlay,
-                        AddonTextNodeResolvers.ResolveWideTextNode)));
+                    NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+                        this.configuration)
+                        ? this.toastGuiSupportedToastRuntime.TrySyncNormalToastOverlayToViewport(
+                            this.toastOverlay)
+                        : this.TrySyncToastOverlayToAddon(
+                            "_WideText",
+                            this.toastOverlay,
+                            AddonTextNodeResolvers.ResolveWideTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -126,16 +136,25 @@ public partial class Echoglossian
                 () => TranslationWindowConfig.FromConfigForErrorToast(
                     this.configuration),
                 isEnabled: () =>
-                    this.configuration.TranslateToast &&
-                    this.configuration.TranslateErrorToast &&
-                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                        this.configuration.ErrorToastTranslationDisplayMode,
-                        this.configuration.OverlayOnlyLanguage),
+                    NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedErrorToastRuntime(
+                        this.configuration)
+                        ? NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                            this.configuration.ErrorToastTranslationDisplayMode,
+                            this.configuration.OverlayOnlyLanguage)
+                        : this.configuration.TranslateToast &&
+                          this.configuration.TranslateErrorToast &&
+                          NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                              this.configuration.ErrorToastTranslationDisplayMode,
+                              this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
-                    this.TrySyncToastOverlayToAddon(
-                        "_TextError",
-                        this.errorToastOverlay,
-                        AddonTextNodeResolvers.ResolveFirstTextNode)));
+                    NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedErrorToastRuntime(
+                        this.configuration)
+                        ? this.toastGuiSupportedToastRuntime.TrySyncErrorToastOverlayToViewport(
+                            this.errorToastOverlay)
+                        : this.TrySyncToastOverlayToAddon(
+                            "_TextError",
+                            this.errorToastOverlay,
+                            AddonTextNodeResolvers.ResolveFirstTextNode)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -143,6 +162,8 @@ public partial class Echoglossian
                 () => TranslationWindowConfig.FromConfigForAreaToast(
                     this.configuration),
                 isEnabled: () =>
+                    !NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+                        this.configuration) &&
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateAreaToast &&
                     NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
@@ -160,6 +181,8 @@ public partial class Echoglossian
                 () => TranslationWindowConfig.FromConfigForClassChangeToast(
                     this.configuration),
                 isEnabled: () =>
+                    !NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+                        this.configuration) &&
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateClassChangeToast &&
                     NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(

@@ -1855,6 +1855,27 @@
         <member name="F:Echoglossian.Config.TranslateToast">
             <summary>Translate toast popup messages.</summary>
         </member>
+        <member name="F:Echoglossian.Config.UseToastGuiCaptureForSupportedToasts">
+            <summary>
+                Uses Dalamud's ToastGui callbacks to prefetch source text and
+                translations for supported normal and error toasts before the addon
+                handlers see the live nodes.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseToastGuiRuntimeForSupportedToasts">
+            <summary>
+                Enables the alternate callback-owned ToastGui runtime for supported
+                normal and error toasts instead of the legacy addon-handler path.
+                This stays hidden and opt-in while the route is still being validated.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.EnableDebugLoginAddonProbe">
+            <summary>
+                Enables debug-only automatic login probes for `_BattleTalk` and
+                `_MiniTalk` so their earliest addon state can be captured without
+                manually issuing the probe command after login.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateToDoList">
             <summary>Translate To-Do List entries.</summary>
         </member>
@@ -2043,6 +2064,10 @@
                 ItemDetail addons, including trait-aware ActionDetail handling.
             </summary>
             <summary>
+                Hosts debug-only automatic addon-probe watches that start on login for
+                selected addons with early hidden-state value.
+            </summary>
+            <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
             </summary>
@@ -2059,6 +2084,14 @@
             <summary>
                 Provides reusable DB-first background prefetch for action-adjacent
                 reference-text sheets used by <c>ActionMenu</c>.
+            </summary>
+            <summary>
+                Handles bootstrap and teardown of the experimental ToastGui-assisted
+                toast capture runtime for supported normal and error toasts.
+            </summary>
+            <summary>
+                Handles bootstrap and teardown for the alternate callback-owned
+                ToastGui route that owns supported normal and error toasts.
             </summary>
             <summary>
                 Provides DB-first background prefetch for canonical trait payloads.
@@ -2655,7 +2688,7 @@
                 Recreates the shared queued-translation broker for the current engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RebuildQuestToastRuntime">
+        <member name="M:Echoglossian.Echoglossian.RebuildToastGuiRuntimes">
             <summary>
                 Recreates and re-registers the quest-toast runtime so it uses the
                 current translation service.
@@ -2857,6 +2890,24 @@
                 chars.
             </param>
             <returns>Cleand text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EnsureConfigDefaultsPersistedForMissingKeys">
+            <summary>
+                Ensures newly introduced config fields are materialized in the
+                persisted JSON after an update by saving once when any known field is
+                missing from disk.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCreateNativeReplacementTextNormalizer(Echoglossian.Config)">
+            <summary>
+                Creates the shared normalizer used by non-quest native replacement
+                flows when the global diacritics-removal toggle is active.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <returns>
+                A normalization callback when the feature is active and the plugin
+                instance is available; otherwise <see langword="null" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.GetGameVersion">
             <summary>
@@ -4033,6 +4084,70 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickAddonProbeInfrastructure">
+            <summary>
+                Ticks manual and automatic addon-probe watches, including the
+                debug-only login bootstrap for the default watch set.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetActiveAddonProbeWatchCount">
+            <summary>
+                Gets how many addon-probe watches are currently active across manual
+                and managed watch sets.
+            </summary>
+            <returns>The active probe-watch count.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopAllAddonProbeWatches(System.Boolean)">
+            <summary>
+                Stops every active addon-probe watch known to the plugin.
+            </summary>
+            <param name="suppressAutoUntilLogout">
+                Whether the current login session should suppress the default
+                automatic watch set after the stop completes.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManualAddonProbeWatch">
+            <summary>
+                Ticks the currently active manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManagedAddonProbeWatches">
+            <summary>
+                Ticks every managed addon-probe watch and prunes the disposed ones.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic addon-probe watch set when the player
+                logs in, then resets the gate on logout.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartDefaultAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic watch set used to capture early
+                structural state for pooled dialogue addons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartManagedAddonProbeWatch(System.String,System.Int32,System.TimeSpan,System.String)">
+            <summary>
+                Starts one managed addon-probe watch and tracks it for later stop or
+                pruning.
+            </summary>
+            <param name="addonName">The addon name to watch.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay alive.</param>
+            <param name="reason">The debug log reason attached to the startup.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManualAddonProbeWatch">
+            <summary>
+                Stops the current manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManagedAddonProbeWatches">
+            <summary>
+                Stops every managed automatic addon-probe watch.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
             <summary>
             Dumps a recursive probe of the requested addon to the log so we can
@@ -4043,10 +4158,34 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
             <summary>
-            Parses the addon probe command arguments into an addon name and optional index.
+            Parses the addon probe command arguments into an addon name, optional index,
+            and optional watch duration.
             </summary>
             <param name="args">The raw command arguments.</param>
-            <returns>The addon name and index to probe.</returns>
+            <returns>The addon name, index, and duration to probe.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryParseAddonProbeDuration(System.String,System.TimeSpan@)">
+            <summary>
+            Parses one addon-probe duration token such as "90s" or "15m".
+            </summary>
+            <param name="token">The raw duration token.</param>
+            <param name="duration">Receives the parsed duration.</param>
+            <returns><see langword="true"/> when the token parsed successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LooksLikeAddonProbeDuration(System.String)">
+            <summary>
+            Determines whether a token looks like an addon-probe duration even when the
+            value is outside the accepted range.
+            </summary>
+            <param name="token">The token to inspect.</param>
+            <returns><see langword="true"/> when the token resembles a duration.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatAddonProbeDuration(System.TimeSpan)">
+            <summary>
+            Formats one addon-probe watch duration for chat feedback.
+            </summary>
+            <param name="duration">The duration to format.</param>
+            <returns>The human-readable duration string.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
@@ -5117,6 +5256,45 @@
             <param name="referenceId">The sheet-row identifier.</param>
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateToastGuiCaptureRuntime">
+            <summary>
+                Creates the ToastGui-assisted capture runtime using the same shared
+                toast persistence helpers already used by the addon-handler path.
+            </summary>
+            <returns>The initialized runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterToastGuiCaptureRuntime">
+            <summary>
+                Registers the ToastGui-assisted capture runtime with Dalamud's
+                callback surface for supported normal and error toasts.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterToastGuiCaptureRuntime">
+            <summary>
+                Unregisters the ToastGui-assisted capture runtime from Dalamud's
+                callback surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateToastGuiSupportedToastRuntime">
+            <summary>
+                Creates the alternate supported-toast runtime using the same shared
+                toast persistence and overlay helpers already used elsewhere in the
+                plugin.
+            </summary>
+            <returns>The initialized supported-toast runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterToastGuiSupportedToastRuntime">
+            <summary>
+                Registers the alternate supported-toast runtime with Dalamud's normal
+                and error-toast callbacks.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterToastGuiSupportedToastRuntime">
+            <summary>
+                Unregisters the alternate supported-toast runtime from Dalamud's
+                normal and error-toast callbacks.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetch">
             <summary>
@@ -11872,6 +12050,17 @@
             <param name="translatedPayload">The translated payload.</param>
             <param name="payloadKey">The stable payload key.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeTranslatedPayloadForDisplayMode(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Normalizes one translated payload only when the current display mode
+                will actually write the translated text into the native UI.
+            </summary>
+            <param name="translatedPayload">The translated payload to normalize.</param>
+            <param name="displayMode">The active display mode.</param>
+            <returns>
+                The translated payload that should be applied for this display mode.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RestoreOriginalPayloadIfNeeded">
             <summary>
                 Restores the original payload if this runtime mutated the addon.
@@ -12470,6 +12659,15 @@
                 the main command menu reprocesses its <c>AtkValue</c>s.
             </summary>
             <param name="args">The lifecycle arguments for the refresh event.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.NormalizeTranslatedPayloadForDisplayMode(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Normalizes one translated main-command payload only when the active
+                display mode will write the text into the native UI.
+            </summary>
+            <param name="translatedPayload">The translated payload to normalize.</param>
+            <param name="displayMode">The active display mode.</param>
+            <returns>The payload to use for refresh apply and hover state.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.CaptureRefreshPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.UInt32)">
             <summary>
@@ -14532,6 +14730,35 @@
             </summary>
             <param name="activeBubbleKeys">The bubble keys seen in this frame.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.RestoreTrackedBubbleLayoutIfNeeded(System.IntPtr,System.String)">
+            <summary>
+                Restores any native MiniTalk mutation currently tracked for the bubble
+                when the source text changes or native mode is left.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="nextOriginalText">
+                The next original source text expected for the bubble, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.PrepareTrackedBubbleLayoutForReapply(System.IntPtr,System.String)">
+            <summary>
+                Restores the tracked native MiniTalk layout for the current bubble even
+                when the source line has not changed, so repeated native apply passes
+                always restart from the original bubble geometry instead of stacking
+                width and height growth from the prior frame.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="originalText">The original source line currently assigned to the bubble.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native MiniTalk layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="snapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.OnPreUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Captures MiniTalk source text early in the lifecycle so a translation
@@ -14588,6 +14815,15 @@
                 <see langword="true" /> when a stored translation exists;
                 otherwise, <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ResolveMiniTalkAdditionalWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Resolves a small amount of extra wrap width from the live MiniTalk node
+                padding so translated lines can gain a bit of horizontal room without
+                relying on fixed pixel constants.
+            </summary>
+            <param name="textNode">The live MiniTalk text node.</param>
+            <returns>The additional wrap width suggested by the current bubble layout.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryGetCurrentResolvedTranslation(System.IntPtr,System.String@,System.String@,System.String@)">
             <summary>
@@ -14736,6 +14972,61 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryConfirmOriginalPointerMatchesVisible(System.IntPtr,System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a MiniTalk node's original-text pointer really belongs to
+                the currently visible bubble text before the handler trusts it as the
+                logical source line.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside MiniTalk; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a MiniTalk
+                text node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryMapVisibleReplacementToKnownOriginal(System.String,System.String@)">
+            <summary>
+                Tries to resolve a visible translated MiniTalk line back to an original
+                source line already known to another tracked bubble state.
+            </summary>
+            <param name="visibleText">The visible text currently rendered by the node.</param>
+            <param name="originalText">Receives the matched original source line.</param>
+            <returns>
+                <see langword="true" /> when a tracked replacement matches the visible
+                line; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryHandleVisibleSourceChange(System.IntPtr,System.String,System.String)">
+            <summary>
+                Reconciles a visible MiniTalk source line against the tracked bubble
+                state so recycled bubble slots do not keep using a stale translation or
+                a stale native layout snapshot from the prior occupant.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="visibleOriginalText">The current visible source line.</param>
+            <param name="trigger">The trigger label used for capture/queue routing.</param>
+            <returns>
+                <see langword="true" /> when the visible source changed and the new
+                source was captured, restored, or queued; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryCaptureOrQueueMiniTalkSource(System.IntPtr,System.String,System.String)">
             <summary>
                 Resolves the source MiniTalk line against cache, database, or background
@@ -14859,6 +15150,39 @@
             <summary>
                 Resets the active in-memory BattleTalk state.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.RestoreTrackedNativeLayoutIfNeeded(System.String,System.String)">
+            <summary>
+                Restores any tracked native BattleTalk mutation when the source changes
+                or native mode is left.
+            </summary>
+            <param name="nextOriginalName">
+                The next original sender name expected for the addon, or an empty value
+                when the current mutation should always be restored.
+            </param>
+            <param name="nextOriginalText">
+                The next original source text expected for the addon, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.PrepareTrackedNativeLayoutForReapply(System.String,System.String)">
+            <summary>
+                Restores the tracked native BattleTalk layout even when the visible
+                source line has not changed, so a repeat native apply pass starts from
+                the original addon geometry instead of stacking height and width
+                mutations from the previous frame.
+            </summary>
+            <param name="originalName">The original sender name for the active line.</param>
+            <param name="originalText">The original source text for the active line.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native BattleTalk layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalName">The original sender name to write back.</param>
+            <param name="originalText">The original text to write back.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.BuildLookupMessage(System.String,System.String)">
             <summary>
@@ -15100,7 +15424,7 @@
                 translated output for the active source; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ApplyTranslatedNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ApplyTranslatedNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.String,System.String,System.String)">
             <summary>
                 Applies translated values directly to the visible BattleTalk addon when
                 replacement mode is enabled.
@@ -15847,6 +16171,37 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.RestoreTrackedNativeLayoutIfNeeded(System.String)">
+            <summary>
+                Restores any tracked native toast mutation when the source changes or
+                native mode is left.
+            </summary>
+            <param name="nextOriginalText">
+                The next original source text expected for the toast, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native toast layout snapshot back to the original
+                game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+            <summary>
+                Reconciles the visible toast source against the tracked state so a
+                recycled toast slot does not keep a stale translated line or a stale
+                native layout snapshot from the prior source.
+            </summary>
+            <param name="visibleOriginalText">The currently visible toast source.</param>
+            <param name="trigger">The trigger label used for capture or queueing.</param>
+            <returns>
+                <see langword="true" /> when the source changed and the new source was
+                handled immediately; otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ResolveTranslationAsync(System.String,System.Int32)">
             <summary>
                 Resolves a toast translation without blocking the game UI and persists the
@@ -15887,6 +16242,33 @@
             <returns>
                 <see langword="true" /> when readable text is available; otherwise,
                 <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a toast node's original-text pointer really belongs to
+                the currently visible toast text before the handler trusts it as the
+                logical source line.
+            </summary>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original toast text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside the same toast surface; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a toast text
+                node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
@@ -16368,6 +16750,49 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RestoreTrackedNativeLayoutIfNeeded(System.String)">
+            <summary>
+                Restores any tracked native gimmick-hint mutation when the source
+                changes or native mode is left.
+            </summary>
+            <param name="nextOriginalText">
+                The next original source text expected for the hint, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native gimmick-hint layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+            <summary>
+                Reconciles the visible gimmick-hint source against the tracked state so
+                a recycled slot does not keep a stale translated line or a stale native
+                layout snapshot from the prior source.
+            </summary>
+            <param name="visibleOriginalText">The currently visible source line.</param>
+            <param name="trigger">The trigger label used for capture or queueing.</param>
+            <returns>
+                <see langword="true" /> when the source changed and the new source was
+                handled immediately; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryCaptureOrQueueSource(System.String,System.String)">
+            <summary>
+                Resolves the visible TextGimmickHint source line against cache,
+                database, or background translation work without blocking the game UI.
+            </summary>
+            <param name="originalText">The current visible source line.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+            <returns>
+                <see langword="true" /> when the source was handled immediately;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ResolveTranslationAsync(System.String,System.Int32)">
             <summary>
                 Resolves a gimmick-hint translation without blocking the game UI and
@@ -16533,6 +16958,33 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a gimmick-hint node's original-text pointer really
+                belongs to the currently visible text before the handler trusts it as
+                the logical source line.
+            </summary>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside the same gimmick-hint surface;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a gimmick-hint
+                text node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TextMatches(System.String,System.String)">
             <summary>
                 Compares text values after normalizing spacing and the optional
@@ -16558,6 +17010,534 @@
             </summary>
             <param name="text">The translated text to normalize.</param>
             <returns>The text that should be written back into the native addon.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime">
+            <summary>
+                Uses Dalamud's <see cref="T:Dalamud.Plugin.Services.IToastGui" /> callbacks to capture supported
+                normal and error toast source payloads before the addon-node handlers
+                read the live UI.
+            </summary>
+            <remarks>
+                This runtime is intentionally conservative. It does not replace the
+                addon-handler presentation path, and it does not publish overlays or
+                mutate native nodes. It only prefetches translations into the existing
+                toast persistence path so the addon handlers can later reuse the same
+                cache/DB semantics with lower latency and less dependence on reading a
+                live node that may already be mutated.
+            </remarks>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated toast rows.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated toast rows.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.HandleNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.ToastOptions@,System.Boolean@)">
+            <summary>
+                Handles generic normal-toast callbacks from Dalamud and opportunistically
+                prefetches translations for supported addon-backed toast surfaces.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="options">The generic toast options.</param>
+            <param name="isHandled">
+                Whether another callback already consumed the toast.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.HandleErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.Boolean@)">
+            <summary>
+                Handles error-toast callbacks from Dalamud and opportunistically
+                prefetches translations for the native error-toast addon.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="isHandled">
+                Whether another callback already consumed the toast.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ShouldCaptureNormalToasts">
+            <summary>
+                Determines whether the experimental ToastGui-assisted capture path
+                should run for normal toasts.
+            </summary>
+            <returns>
+                <see langword="true" /> when supported normal toasts should be
+                prefetched from ToastGui; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ShouldCaptureErrorToasts">
+            <summary>
+                Determines whether the experimental ToastGui-assisted capture path
+                should run for error toasts.
+            </summary>
+            <returns>
+                <see langword="true" /> when error toasts should be prefetched from
+                ToastGui; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryPrefetchToast(System.String,System.String)">
+            <summary>
+                Prefetches one toast source line into the existing translation
+                persistence path when no usable translated row already exists.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryBeginPrefetch(System.String,System.String,System.String@)">
+            <summary>
+                Starts one background prefetch request when the same toast line is not
+                already being resolved.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="inFlightKey">
+                Receives the unique in-flight key for the request.
+            </param>
+            <returns>
+                <see langword="true" /> when a new request should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ResolveTranslationAsync(System.String,System.String,System.String)">
+            <summary>
+                Resolves one toast translation asynchronously and persists it into the
+                existing toast history tables when successful.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="inFlightKey">The key representing the queued request.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds a lookup entity matching the historical toast schema already
+                used by the plugin database.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">
+            <summary>
+                Determines whether a stored toast row already contains a usable
+                translation for the observed callback payload.
+            </summary>
+            <param name="toastMessage">The stored row to validate.</param>
+            <param name="originalText">The expected original toast text.</param>
+            <param name="toastType">The persisted toast type.</param>
+            <returns>
+                <see langword="true" /> when the stored row can be reused; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildInFlightKey(System.String,System.String)">
+            <summary>
+                Builds the in-flight key used to deduplicate concurrent callback
+                prefetch requests.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>The stable in-flight dedupe key.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState">
+            <summary>
+                Describes which family-level route currently owns one supported toast
+                path at runtime.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.LegacyAddonHandlers">
+            <summary>
+                The legacy addon-handler route remains active.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiCapturePrefetch">
+            <summary>
+                The legacy ToastGui capture-only prefetch path is active.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiFullRuntime">
+            <summary>
+                The alternate full ToastGui runtime owns the route.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy">
+            <summary>
+                Centralizes the family-level routing rules for the ToastGui-owned
+                runtime path. Supported normal toasts are intentionally treated as one
+                unified logical family rather than as addon-specific subtypes.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(Echoglossian.Config)">
+            <summary>
+                Gets the effective route state for the supported normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The effective route state for supported normal toasts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(Echoglossian.Config)">
+            <summary>
+                Gets the effective route state for supported error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The effective route state for supported error toasts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedToastGuiRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the callback-owned ToastGui route is enabled at all.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the ToastGui route is enabled;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the callback-owned ToastGui route should own
+                the unified normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the alternate route should own the
+                supported non-error toast family; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedErrorToastRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the callback-owned ToastGui route should own
+                error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the alternate route should own error
+                toasts; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(Echoglossian.Config)">
+            <summary>
+                Gets the canonical family-level display mode used by the
+                callback-owned runtime for the unified normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                The effective family-level display mode for supported non-error
+                toasts, currently sourced from the wide-text toast config.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyNormalToastCapturePrefetch(Echoglossian.Config)">
+            <summary>
+                Gets whether the legacy ToastGui prefetch-only path should stay active.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the capture-only path should remain
+                active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyErrorToastCapturePrefetch(Echoglossian.Config)">
+            <summary>
+                Gets whether the legacy ToastGui prefetch-only path should stay active
+                for error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the capture-only error-toast path should
+                remain active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime">
+            <summary>
+                Owns the alternate callback-driven ToastGui route for supported normal
+                and error toasts. Under this path, supported normal toasts are treated
+                as one logical family and no longer rely on addon-specific native
+                mutation or overlay anchoring.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findToastMessage">The shared toast DB lookup delegate.</param>
+            <param name="insertToastMessageAsync">
+                The shared toast persistence delegate.
+            </param>
+            <param name="updateNormalOverlay">
+                Delegate used to publish content into the unified normal-toast
+                overlay.
+            </param>
+            <param name="clearNormalOverlay">
+                Delegate used to clear the unified normal-toast overlay.
+            </param>
+            <param name="updateErrorOverlay">
+                Delegate used to publish content into the error-toast overlay.
+            </param>
+            <param name="clearErrorOverlay">
+                Delegate used to clear the error-toast overlay.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize text before native replacement when the
+                game font requires it.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.HandleNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.ToastOptions@,System.Boolean@)">
+            <summary>
+                Handles generic normal-toast callbacks through the alternate family
+                route.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="options">The toast options supplied by Dalamud.</param>
+            <param name="isHandled">Whether another callback consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.HandleErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.Boolean@)">
+            <summary>
+                Handles error-toast callbacks through the alternate callback-owned
+                route.
+            </summary>
+            <param name="message">The error-toast payload.</param>
+            <param name="isHandled">Whether another callback consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.TrySyncNormalToastOverlayToViewport(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Synchronizes the unified normal-toast overlay to a stable viewport
+                anchor based on the last callback-reported toast position.
+            </summary>
+            <param name="overlay">The overlay to synchronize.</param>
+            <returns>
+                <see langword="true" /> when the overlay currently has visible
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.TrySyncErrorToastOverlayToViewport(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Synchronizes the error-toast overlay to a stable top-center viewport
+                anchor.
+            </summary>
+            <param name="overlay">The overlay to synchronize.</param>
+            <returns>
+                <see langword="true" /> when the overlay currently has visible
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ApplyResolvedNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
+            <summary>
+                Applies one cache-hit normal toast immediately to the current callback.
+            </summary>
+            <param name="message">The live callback payload.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ApplyResolvedErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
+            <summary>
+                Applies one cache-hit error toast immediately to the current callback.
+            </summary>
+            <param name="message">The live callback payload.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveNormalTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves one supported normal-toast line asynchronously.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+            <returns>A task that completes after the translation attempt.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveErrorTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves one supported error-toast line asynchronously.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+            <returns>A task that completes after the translation attempt.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BeginNormalRequest(System.String,Dalamud.Game.Gui.Toast.ToastOptions)">
+            <summary>
+                Starts one supported normal-toast request.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="options">The current toast options.</param>
+            <returns>The active request identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BeginErrorRequest(System.String)">
+            <summary>
+                Starts one error-toast request.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <returns>The active request identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ScheduleNormalOverlayClearAsync(System.Int32)">
+            <summary>
+                Delays clearing the unified normal-toast overlay so the overlay
+                lifetime roughly matches the transient toast lifetime.
+            </summary>
+            <param name="requestId">The owning request identifier.</param>
+            <returns>A task that completes after the clear delay.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ScheduleErrorOverlayClearAsync(System.Int32)">
+            <summary>
+                Delays clearing the error-toast overlay so the overlay lifetime roughly
+                matches the transient toast lifetime.
+            </summary>
+            <param name="requestId">The owning request identifier.</param>
+            <returns>A task that completes after the clear delay.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetNormalOverlayLifetimeMs">
+            <summary>
+                Gets the overlay lifetime for the current supported normal-toast
+                request.
+            </summary>
+            <returns>The overlay clear delay in milliseconds.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsCurrentNormalRequest(System.Int32,System.String)">
+            <summary>
+                Determines whether the specified request still belongs to the current
+                supported normal-toast line.
+            </summary>
+            <param name="requestId">The request identifier to validate.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>
+                <see langword="true" /> when the request is still current; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsCurrentErrorRequest(System.Int32,System.String)">
+            <summary>
+                Determines whether the specified request still belongs to the current
+                error-toast line.
+            </summary>
+            <param name="requestId">The request identifier to validate.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>
+                <see langword="true" /> when the request is still current; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldUseNormalOverlay">
+            <summary>
+                Gets whether the unified normal-toast family should publish overlay
+                text.
+            </summary>
+            <returns>
+                <see langword="true" /> when the unified normal-toast overlay is
+                active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldApplyNativeNormalText">
+            <summary>
+                Gets whether the unified normal-toast family should write translated
+                text into the native toast callback payload.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldSwapNormalTexts">
+            <summary>
+                Gets whether the unified normal-toast overlay should show original text
+                while the native toast displays the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldUseErrorOverlay">
+            <summary>
+                Gets whether error toasts should publish overlay text.
+            </summary>
+            <returns>
+                <see langword="true" /> when the error-toast overlay is active;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldApplyNativeErrorText">
+            <summary>
+                Gets whether error toasts should write translated text into the native
+                callback payload.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldSwapErrorTexts">
+            <summary>
+                Gets whether the error-toast overlay should show the original text
+                while the native error toast displays the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.PublishNormalOverlay(System.String,System.String,System.String)">
+            <summary>
+                Publishes content into the unified normal-toast overlay.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.PublishErrorOverlay(System.String,System.String,System.String)">
+            <summary>
+                Publishes content into the error-toast overlay.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.SelectOverlayText(System.String,System.String,System.Boolean)">
+            <summary>
+                Selects the overlay text for one callback-owned toast route.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="showOriginalOverlayText">
+                Whether the overlay should show the original text.
+            </param>
+            <returns>The overlay text to display.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds one toast DB lookup entity using the plugin's existing toast
+                persistence schema.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>A lookup <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">
+            <summary>
+                Determines whether one stored toast row contains a usable translation
+                for the requested source line and toast type.
+            </summary>
+            <param name="toastMessage">The stored row to validate.</param>
+            <param name="originalText">The expected original text.</param>
+            <param name="toastType">The expected toast type.</param>
+            <returns>
+                <see langword="true" /> when the stored row is usable; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated text before native replacement when the game font
+                requires it.
+            </summary>
+            <param name="translatedText">The translated text to normalize.</param>
+            <returns>The text that should be written back into the callback payload.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
             <summary>
@@ -16836,6 +17816,46 @@
             <param name="addonLifecycle">The add-on lifecycle instance from which logging event listeners will be removed. Cannot be null.</param>
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy">
+            <summary>
+                Encapsulates the login-session gating rules for debug-only automatic
+                addon-probe watches.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldStartForCurrentLogin(System.Boolean,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+                Determines whether the current login session should start the default
+                automatic addon-probe watch set.
+            </summary>
+            <param name="isLoggedIn">Whether the client is currently logged in.</param>
+            <param name="hasStartedForCurrentLogin">
+                Whether the current login session already started its automatic probe
+                set.
+            </param>
+            <param name="isSuppressedUntilLogout">
+                Whether the user explicitly suppressed the automatic probe set until
+                the next logout.
+            </param>
+            <param name="activeManagedWatchCount">
+                How many managed automatic probe watches are currently alive.
+            </param>
+            <returns>
+                <see langword="true" /> when the automatic probe set should start.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldResetForLogout(System.Boolean,System.Boolean)">
+            <summary>
+                Determines whether the automatic login-session gate should reset
+                because the player logged out.
+            </summary>
+            <param name="wasLoggedIn">
+                Whether the client was logged in on the previous tick.
+            </param>
+            <param name="isLoggedIn">Whether the client is logged in now.</param>
+            <returns>
+                <see langword="true" /> when the automatic probe gate should reset.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
             <summary>
@@ -17948,6 +18968,47 @@
             <param name="body">The body text.</param>
             <returns>The combined tooltip text.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper">
+            <summary>
+                Normalizes translated payload text for native replacement-only flows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper.NormalizePayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Func{System.String,System.String})">
+            <summary>
+                Applies one text normalizer to every translated value that can be
+                written back into one native addon payload.
+            </summary>
+            <param name="payload">The translated payload to normalize.</param>
+            <param name="normalizeText">
+                The per-string normalization callback.
+            </param>
+            <returns>
+                The normalized payload. When no value changes, the original payload
+                instance is returned unchanged.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper.NormalizeMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Func{System.String,System.String},System.Boolean@)">
+            <summary>
+                Applies one text normalizer to one numeric-keyed payload map.
+            </summary>
+            <param name="sourceValues">The source values.</param>
+            <param name="normalizeText">The per-string normalization callback.</param>
+            <param name="changed">
+                Tracks whether any normalized value differed from the source value.
+            </param>
+            <returns>The normalized payload map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper.NormalizeMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.Func{System.String,System.String},System.Boolean@)">
+            <summary>
+                Applies one text normalizer to one text-node payload map.
+            </summary>
+            <param name="sourceValues">The source values.</param>
+            <param name="normalizeText">The per-string normalization callback.</param>
+            <param name="changed">
+                Tracks whether any normalized value differed from the source value.
+            </param>
+            <returns>The normalized payload map.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper">
             <summary>
                 Shared helpers for native text-node replacement paths that need the game
@@ -17972,7 +19033,7 @@
             </param>
             <returns>The captured layout snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
             <summary>
                 Resolves the current wrap width that should be reused for a native text
                 replacement.
@@ -17980,6 +19041,10 @@
             <param name="textNode">The text node being replaced.</param>
             <param name="primaryContainerNode">
                 The main container node that owns the text node.
+            </param>
+            <param name="secondaryContainerNode">
+                An optional secondary background node whose width may better represent
+                the stable visual bounds than the current text-node width.
             </param>
             <returns>The preferred wrap width to preserve.</returns>
         </member>
@@ -17995,7 +19060,7 @@
             </param>
             <returns>The measured size after the text replacement.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean)">
             <summary>
                 Resizes the supplied container nodes using the text delta captured in a
                 pre-replacement layout snapshot.
@@ -18017,6 +19082,16 @@
                 exceeds the original layout.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean,System.Boolean)">
+            <summary>
+                Restores a previously captured native text-node layout snapshot after a
+                temporary translated replacement is no longer needed.
+            </summary>
+            <param name="snapshot">The layout snapshot captured before replacement.</param>
+            <param name="originalText">
+                The original text that should be written back into the text node.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryResolveContainerNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkNineGridNode*@)">
             <summary>
                 Resolves the nearest component-backed container for a text node and the
@@ -18035,7 +19110,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16)">
             <summary>
                 Applies translated text to a node and grows its wrapper chain plus the
                 nearest nine-grid background using inferred padding from the current
@@ -18048,6 +19123,31 @@
                 Whether wrapper widths may grow when the current wrap width is
                 insufficient.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMinimumSecondaryWidthForAnchoredNode(System.Int16,System.UInt16,System.Int16,System.UInt16,System.Int32)">
+            <summary>
+                Resolves the minimum secondary-container width required to keep an
+                anchored sibling node covered by the same background after reflow.
+            </summary>
+            <param name="secondaryContainerX">
+                The live X position of the secondary container.
+            </param>
+            <param name="currentSecondaryWidth">
+                The current width of the secondary container before adjustment.
+            </param>
+            <param name="anchoredNodeX">
+                The live X position of the anchored sibling node.
+            </param>
+            <param name="anchoredNodeWidth">The current width of the anchored node.</param>
+            <param name="preferredRightPadding">
+                The original right padding between the secondary container and the
+                anchored node. Negative values are treated as zero so coverage still
+                extends to the anchored node edge.
+            </param>
+            <returns>
+                The minimum width that keeps the anchored node inside the secondary
+                background.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryMeasureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16@,System.UInt16@)">
             <summary>
@@ -18086,6 +19186,17 @@
                 The first nested nine-grid node, or <see langword="null" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveBoundedContainerWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the widest stable visual width exposed by the surrounding
+                container nodes so repeated native replacements do not fall back to a
+                narrow internal wrapper when a larger background already represents the
+                intended visual balloon or panel width.
+            </summary>
+            <param name="primaryContainerNode">The primary owning container.</param>
+            <param name="secondaryContainerNode">An optional secondary background node.</param>
+            <returns>The widest non-zero container width available.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
             <summary>
                 Resolves the first nine-grid node reachable from a node.
@@ -18106,6 +19217,13 @@
                 The top-most wrapper to include in the captured chain.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryRestoreHorizontalCentering(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot)">
+            <summary>
+                Re-centers the text node within its immediate wrapper when the original
+                layout was centered and width growth changed the wrapper size.
+            </summary>
+            <param name="snapshot">The captured layout snapshot.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot">
             <summary>
                 Captures the text and container sizing observed before native replacement.
@@ -18113,12 +19231,24 @@
             <param name="textWidth">The original text-node width.</param>
             <param name="textHeight">The original text-node height.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.#ctor(System.UInt16,System.UInt16)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.Int16,System.Int16)">
             <summary>
-                Captures the text and container sizing observed before native replacement.
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot" /> class.
             </summary>
-            <param name="textWidth">The original text-node width.</param>
-            <param name="textHeight">The original text-node height.</param>
+            <param name="textNodeAddress">The address of the mutated text node.</param>
+            <param name="textWidth">The original measured text width.</param>
+            <param name="textHeight">The original measured text height.</param>
+            <param name="textNodeWidth">The original text-node width.</param>
+            <param name="textNodeHeight">The original text-node height.</param>
+            <param name="textNodeTextFlags">The original text-node flags.</param>
+            <param name="textNodeFontSize">The original text-node font size.</param>
+            <param name="textNodeOriginalX">The original text-node X position.</param>
+            <param name="textNodeOriginalY">The original text-node Y position.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeAddress">
+            <summary>
+                Gets the native address of the mutated text node.
+            </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextWidth">
             <summary>
@@ -18130,10 +19260,51 @@
                 Gets the original text-node height.
             </summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeWidth">
+            <summary>
+                Gets the original width assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeHeight">
+            <summary>
+                Gets the original height assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeTextFlags">
+            <summary>
+                Gets the original text-node flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeFontSize">
+            <summary>
+                Gets the original text-node font size.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeOriginalX">
+            <summary>
+                Gets the original X position assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeOriginalY">
+            <summary>
+                Gets the original Y position assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeWasHorizontallyCentered">
+            <summary>
+                Gets or sets a value indicating whether the text node was originally
+                centered inside its immediate parent.
+            </summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AncestorChain">
             <summary>
                 Gets the wrapper chain that should be resized after a native text
                 replacement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerAddress">
+            <summary>
+                Gets or sets the native address of the secondary container node.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerWidth">
@@ -18146,10 +19317,41 @@
                 Gets or sets the secondary container height.
             </summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerOriginalX">
+            <summary>
+                Gets or sets the original X position of the secondary container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerOriginalY">
+            <summary>
+                Gets or sets the original Y position of the secondary container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXNodeAddress">
+            <summary>
+                Gets or sets the native address of the anchored X node.
+            </summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOffset">
             <summary>
                 Gets or sets the X offset between an anchored sibling node and the text
                 width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOriginal">
+            <summary>
+                Gets or sets the original X position of the anchored sibling node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXWidth">
+            <summary>
+                Gets or sets the original width of the anchored sibling node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXRightPaddingFromSecondary">
+            <summary>
+                Gets or sets the original right padding between the anchored sibling
+                node and the secondary container.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryHorizontalPadding">
@@ -18191,6 +19393,8 @@
             <param name="NodeAddress">The native address of the wrapper node.</param>
             <param name="Width">The original wrapper width.</param>
             <param name="Height">The original wrapper height.</param>
+            <param name="OriginalX">The original X position of the wrapper node.</param>
+            <param name="OriginalY">The original Y position of the wrapper node.</param>
             <param name="HorizontalPadding">
                 The original horizontal padding between this wrapper and its child.
             </param>
@@ -18198,13 +19402,15 @@
                 The original vertical padding between this wrapper and its child.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.Int32,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.Int16,System.Int16,System.Int32,System.Int32)">
             <summary>
                 Captures one ancestor wrapper in a text-node layout chain.
             </summary>
             <param name="NodeAddress">The native address of the wrapper node.</param>
             <param name="Width">The original wrapper width.</param>
             <param name="Height">The original wrapper height.</param>
+            <param name="OriginalX">The original X position of the wrapper node.</param>
+            <param name="OriginalY">The original Y position of the wrapper node.</param>
             <param name="HorizontalPadding">
                 The original horizontal padding between this wrapper and its child.
             </param>
@@ -18220,6 +19426,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.Height">
             <summary>The original wrapper height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.OriginalX">
+            <summary>The original X position of the wrapper node.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.OriginalY">
+            <summary>The original Y position of the wrapper node.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.HorizontalPadding">
             <summary>
@@ -19733,6 +20945,14 @@
             <summary>
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.GetToastGuiRouteStateText(Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState)">
+            <summary>
+                Maps one effective toast route state to the localized UI label used
+                in the toast general page.
+            </summary>
+            <param name="routeState">The effective route state.</param>
+            <returns>The localized UI label for the route state.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawMiniTalkOverlay(Echoglossian.Config)">
             <summary>
@@ -21396,6 +22616,56 @@
               Looks up a localized string similar to Select which kind of in-game message toasts to translate.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiCaptureForSupportedToastsLabel">
+            <summary>
+              Looks up a localized string similar to Use ToastGui-assisted capture for supported normal/error toasts (experimental).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiCaptureForSupportedToastsDescription">
+            <summary>
+              Looks up a localized string similar to Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiNormalToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Supported normal toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiErrorToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Supported error toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiQuestToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Quest toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiTextGimmickHintRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Text Gimmick Hint route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateLegacyAddonHandlers">
+            <summary>
+              Looks up a localized string similar to Legacy addon handlers.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateCapturePrefetch">
+            <summary>
+              Looks up a localized string similar to ToastGui capture/prefetch.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateFullRuntime">
+            <summary>
+              Looks up a localized string similar to ToastGui full runtime.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateAddonHandlerOnly">
+            <summary>
+              Looks up a localized string similar to Addon handler only.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.YandexCloudApiKey">
             <summary>
               Looks up a localized string similar to YandexCloud Api Key.
@@ -21571,6 +22841,51 @@
               Looks up a localized string.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeNoActiveWatch">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeStopped">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeUsage">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeInvalidDurationFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeStartedFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationMinuteFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationMinutesFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondsFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
         <member name="T:Echoglossian.Services.AddonObserver.CallbackDelegate">
             <summary>
              Delegate for addon open/close events.
@@ -21641,7 +22956,7 @@
             <param name="targetLanguage"></param>
             <returns></returns>
         </member>
-        <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single)">
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single,System.String)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.Translators.ChatGPTTranslator" /> class.
             </summary>
@@ -21650,6 +22965,7 @@
             <param name="apiKey"></param>
             <param name="model"></param>
             <param name="temperature"></param>
+            <param name="promptTemplate"></param>
         </member>
         <member name="M:Echoglossian.Translators.ChatGPTTranslator.Translate(System.String,System.String,System.String)">
             <summary>

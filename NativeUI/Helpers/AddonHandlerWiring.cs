@@ -266,7 +266,9 @@ public partial class Echoglossian
               Handler: new ScenarioTreeHandler(questAddonDependencies)));
     }
 
-    if (this.configuration.TranslateToast &&
+    if (!NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+            this.configuration) &&
+        this.configuration.TranslateToast &&
         this.configuration.TranslateWideTextToast)
     {
       this.registeredAddonHandlers.Add(
@@ -290,7 +292,9 @@ public partial class Echoglossian
                       this.SpecialCharsSupportedByGameFont))));
     }
 
-    if (this.configuration.TranslateToast &&
+    if (!NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedErrorToastRuntime(
+            this.configuration) &&
+        this.configuration.TranslateToast &&
         this.configuration.TranslateErrorToast)
     {
       this.registeredAddonHandlers.Add(
@@ -316,7 +320,9 @@ public partial class Echoglossian
                       this.SpecialCharsSupportedByGameFont))));
     }
 
-    if (this.configuration.TranslateToast &&
+    if (!NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+            this.configuration) &&
+        this.configuration.TranslateToast &&
         this.configuration.TranslateAreaToast)
     {
       this.registeredAddonHandlers.Add(
@@ -342,7 +348,9 @@ public partial class Echoglossian
                       this.SpecialCharsSupportedByGameFont))));
     }
 
-    if (this.configuration.TranslateToast &&
+    if (!NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+            this.configuration) &&
+        this.configuration.TranslateToast &&
         this.configuration.TranslateClassChangeToast)
     {
       this.registeredAddonHandlers.Add(

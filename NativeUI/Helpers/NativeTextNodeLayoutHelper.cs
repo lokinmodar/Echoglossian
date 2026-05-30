@@ -34,17 +34,42 @@ internal static unsafe class NativeTextNodeLayoutHelper
       AtkResNode* anchoredXNode = null)
   {
     TryMeasureTextNode(textNode, out var textWidth, out var textHeight);
-    var snapshot = new NativeTextNodeLayoutSnapshot(textWidth, textHeight)
+    var textNodeWidth = textNode != null ? textNode->GetWidth() : (ushort)0;
+    var textNodeHeight = textNode != null ? textNode->GetHeight() : (ushort)0;
+    var textNodeTextFlags = textNode != null ? textNode->TextFlags : default;
+    var textNodeFontSize = textNode != null ? textNode->FontSize : (byte)0;
+    var textNodeOriginalX = textNode != null ? textNode->AtkResNode.GetXShort() : (short)0;
+    var textNodeOriginalY = textNode != null ? textNode->AtkResNode.GetYShort() : (short)0;
+    var snapshot = new NativeTextNodeLayoutSnapshot(
+        textNode != null ? (nint)textNode : 0,
+        textWidth,
+        textHeight,
+        textNodeWidth,
+        textNodeHeight,
+        textNodeTextFlags,
+        textNodeFontSize,
+        textNodeOriginalX,
+        textNodeOriginalY)
     {
       AnchoredXOffset = anchoredXNode != null
           ? anchoredXNode->GetXShort() - textWidth
+          : 0,
+      AnchoredXNodeAddress = anchoredXNode != null ? (nint)anchoredXNode : 0,
+      AnchoredXOriginal = anchoredXNode != null ? anchoredXNode->GetXShort() : (short)0,
+      AnchoredXWidth = anchoredXNode != null ? anchoredXNode->GetWidth() : (ushort)0,
+      AnchoredXRightPaddingFromSecondary = secondaryContainerNode != null && anchoredXNode != null
+          ? ((secondaryContainerNode->GetXShort() + secondaryContainerNode->GetWidth())
+             - (anchoredXNode->GetXShort() + anchoredXNode->GetWidth()))
           : 0,
     };
 
     if (secondaryContainerNode != null)
     {
+      snapshot.SecondaryContainerAddress = (nint)secondaryContainerNode;
       snapshot.SecondaryContainerWidth = secondaryContainerNode->GetWidth();
       snapshot.SecondaryContainerHeight = secondaryContainerNode->GetHeight();
+      snapshot.SecondaryContainerOriginalX = secondaryContainerNode->GetXShort();
+      snapshot.SecondaryContainerOriginalY = secondaryContainerNode->GetYShort();
     }
 
     CaptureAncestorChain(
@@ -62,10 +87,15 @@ internal static unsafe class NativeTextNodeLayoutHelper
   /// <param name="primaryContainerNode">
   ///     The main container node that owns the text node.
   /// </param>
+  /// <param name="secondaryContainerNode">
+  ///     An optional secondary background node whose width may better represent
+  ///     the stable visual bounds than the current text-node width.
+  /// </param>
   /// <returns>The preferred wrap width to preserve.</returns>
   public static ushort ResolvePreferredWrapWidth(
       AtkTextNode* textNode,
-      AtkResNode* primaryContainerNode = null)
+      AtkResNode* primaryContainerNode = null,
+      AtkResNode* secondaryContainerNode = null)
   {
     if (textNode == null)
     {
@@ -73,14 +103,22 @@ internal static unsafe class NativeTextNodeLayoutHelper
     }
 
     var currentWidth = textNode->GetWidth();
+    var boundedContainerWidth = ResolveBoundedContainerWidth(
+        primaryContainerNode,
+        secondaryContainerNode);
+    if (boundedContainerWidth > 0)
+    {
+      return boundedContainerWidth;
+    }
+
     if (currentWidth > 0)
     {
       return currentWidth;
     }
 
-    if (primaryContainerNode != null)
+    if (boundedContainerWidth > 0)
     {
-      return primaryContainerNode->GetWidth();
+      return boundedContainerWidth;
     }
 
     var parentNode = textNode->AtkResNode.ParentNode;
@@ -119,7 +157,18 @@ internal static unsafe class NativeTextNodeLayoutHelper
     textNode->SetText(replacementText);
     textNode->ResizeNodeForCurrentText();
 
+    if (preferredWrapWidth > 0 &&
+        textNode->GetWidth() != preferredWrapWidth)
+    {
+      textNode->SetWidth(preferredWrapWidth);
+    }
+
     TryMeasureTextNode(textNode, out var width, out var height);
+    if (preferredWrapWidth > 0)
+    {
+      width = preferredWrapWidth;
+    }
+
     return new NativeTextNodeResizeResult(width, height);
   }
 
@@ -149,7 +198,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       AtkResNode* primaryContainerNode = null,
       AtkResNode* secondaryContainerNode = null,
       AtkResNode* anchoredXNode = null,
-      bool allowWidthGrowth = false)
+      bool allowWidthGrowth = false,
+      bool restoreHorizontalCentering = true)
   {
     var childWidth = resizeResult.Width;
     var childHeight = resizeResult.Height;
@@ -210,6 +260,137 @@ internal static unsafe class NativeTextNodeLayoutHelper
           (short)Math.Max(short.MinValue, Math.Min(
               short.MaxValue,
               childWidth + snapshot.AnchoredXOffset)));
+    }
+
+    if (secondaryContainerNode != null &&
+        anchoredXNode != null &&
+        snapshot.AnchoredXWidth > 0)
+    {
+      var minimumSecondaryWidth = ResolveMinimumSecondaryWidthForAnchoredNode(
+          secondaryContainerNode->GetXShort(),
+          secondaryContainerNode->GetWidth(),
+          anchoredXNode->GetXShort(),
+          anchoredXNode->GetWidth(),
+          snapshot.AnchoredXRightPaddingFromSecondary);
+      if (minimumSecondaryWidth > secondaryContainerNode->GetWidth())
+      {
+        secondaryContainerNode->SetWidth(minimumSecondaryWidth);
+      }
+    }
+
+    if (restoreHorizontalCentering)
+    {
+      TryRestoreHorizontalCentering(snapshot);
+    }
+  }
+
+  /// <summary>
+  ///     Restores a previously captured native text-node layout snapshot after a
+  ///     temporary translated replacement is no longer needed.
+  /// </summary>
+  /// <param name="snapshot">The layout snapshot captured before replacement.</param>
+  /// <param name="originalText">
+  ///     The original text that should be written back into the text node.
+  /// </param>
+  public static void RestoreLayoutSnapshot(
+      NativeTextNodeLayoutSnapshot snapshot,
+      string originalText,
+      bool restoreText = true,
+      bool restorePositions = true)
+  {
+    if (snapshot == null)
+    {
+      return;
+    }
+
+    var textNode = (AtkTextNode*)snapshot.TextNodeAddress;
+    if (textNode != null)
+    {
+      textNode->TextFlags = snapshot.TextNodeTextFlags;
+      if (snapshot.TextNodeFontSize > 0)
+      {
+        textNode->FontSize = snapshot.TextNodeFontSize;
+      }
+
+      if (restoreText &&
+          !string.IsNullOrWhiteSpace(originalText))
+      {
+        textNode->SetText(originalText);
+      }
+
+      if (snapshot.TextNodeWidth > 0)
+      {
+        textNode->SetWidth(snapshot.TextNodeWidth);
+      }
+
+      if (snapshot.TextNodeHeight > 0)
+      {
+        ((AtkResNode*)textNode)->SetHeight(snapshot.TextNodeHeight);
+      }
+
+      if (restorePositions)
+      {
+        ((AtkResNode*)textNode)->SetXShort(snapshot.TextNodeOriginalX);
+        ((AtkResNode*)textNode)->SetYShort(snapshot.TextNodeOriginalY);
+      }
+    }
+
+    foreach (var ancestorSnapshot in snapshot.AncestorChain)
+    {
+      var ancestorNode = (AtkResNode*)ancestorSnapshot.NodeAddress;
+      if (ancestorNode == null)
+      {
+        continue;
+      }
+
+      if (ancestorSnapshot.Width > 0)
+      {
+        ancestorNode->SetWidth(ancestorSnapshot.Width);
+      }
+
+      if (ancestorSnapshot.Height > 0)
+      {
+        ancestorNode->SetHeight(ancestorSnapshot.Height);
+      }
+
+      if (restorePositions)
+      {
+        ancestorNode->SetXShort(ancestorSnapshot.OriginalX);
+        ancestorNode->SetYShort(ancestorSnapshot.OriginalY);
+      }
+    }
+
+    if (snapshot.SecondaryContainerAddress != 0)
+    {
+      var secondaryContainerNode = (AtkResNode*)snapshot.SecondaryContainerAddress;
+      if (secondaryContainerNode != null)
+      {
+        if (snapshot.SecondaryContainerWidth > 0)
+        {
+          secondaryContainerNode->SetWidth(snapshot.SecondaryContainerWidth);
+        }
+
+        if (snapshot.SecondaryContainerHeight > 0)
+        {
+          secondaryContainerNode->SetHeight(snapshot.SecondaryContainerHeight);
+        }
+
+        if (restorePositions)
+        {
+          secondaryContainerNode->SetXShort(snapshot.SecondaryContainerOriginalX);
+          secondaryContainerNode->SetYShort(snapshot.SecondaryContainerOriginalY);
+        }
+      }
+    }
+
+    if (restorePositions &&
+        snapshot.AnchoredXNodeAddress != 0)
+    {
+      var anchoredXNode = (AtkResNode*)snapshot.AnchoredXNodeAddress;
+      if (anchoredXNode != null)
+      {
+        anchoredXNode->SetXShort(snapshot.AnchoredXOriginal);
+      }
     }
   }
 
@@ -275,15 +456,17 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     Whether wrapper widths may grow when the current wrap width is
   ///     insufficient.
   /// </param>
-  public static void ApplyTextReplacementWithInferredReflow(
+  public static NativeTextNodeLayoutSnapshot? ApplyTextReplacementWithInferredReflow(
       AtkUnitBase* addon,
       AtkTextNode* textNode,
       string replacementText,
-      bool allowWidthGrowth = false)
+      bool allowWidthGrowth = false,
+      bool restoreHorizontalCentering = true,
+      ushort additionalWrapWidth = 0)
   {
     if (textNode == null)
     {
-      return;
+      return null;
     }
 
     TryResolveContainerNodes(
@@ -299,7 +482,17 @@ internal static unsafe class NativeTextNodeLayoutHelper
         textNode,
         containerNode,
         backgroundResNode);
-    var preferredWrapWidth = ResolvePreferredWrapWidth(textNode, containerNode);
+    var preferredWrapWidth = ResolvePreferredWrapWidth(
+        textNode,
+        containerNode,
+        backgroundResNode);
+    if (additionalWrapWidth > 0 && preferredWrapWidth > 0)
+    {
+      preferredWrapWidth = (ushort)Math.Min(
+          ushort.MaxValue,
+          preferredWrapWidth + additionalWrapWidth);
+    }
+
     var resizeResult = ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
@@ -309,7 +502,53 @@ internal static unsafe class NativeTextNodeLayoutHelper
         resizeResult,
         containerNode,
         backgroundResNode,
-        allowWidthGrowth: allowWidthGrowth);
+        allowWidthGrowth: allowWidthGrowth,
+        restoreHorizontalCentering: restoreHorizontalCentering);
+    return snapshot;
+  }
+
+  /// <summary>
+  ///     Resolves the minimum secondary-container width required to keep an
+  ///     anchored sibling node covered by the same background after reflow.
+  /// </summary>
+  /// <param name="secondaryContainerX">
+  ///     The live X position of the secondary container.
+  /// </param>
+  /// <param name="currentSecondaryWidth">
+  ///     The current width of the secondary container before adjustment.
+  /// </param>
+  /// <param name="anchoredNodeX">
+  ///     The live X position of the anchored sibling node.
+  /// </param>
+  /// <param name="anchoredNodeWidth">The current width of the anchored node.</param>
+  /// <param name="preferredRightPadding">
+  ///     The original right padding between the secondary container and the
+  ///     anchored node. Negative values are treated as zero so coverage still
+  ///     extends to the anchored node edge.
+  /// </param>
+  /// <returns>
+  ///     The minimum width that keeps the anchored node inside the secondary
+  ///     background.
+  /// </returns>
+  public static ushort ResolveMinimumSecondaryWidthForAnchoredNode(
+      short secondaryContainerX,
+      ushort currentSecondaryWidth,
+      short anchoredNodeX,
+      ushort anchoredNodeWidth,
+      int preferredRightPadding)
+  {
+    var secondaryLeft = (int)secondaryContainerX;
+    var currentRight = secondaryLeft + currentSecondaryWidth;
+    var anchoredRight = anchoredNodeX + anchoredNodeWidth + Math.Max(0, preferredRightPadding);
+    if (anchoredRight <= currentRight)
+    {
+      return currentSecondaryWidth;
+    }
+
+    var requiredWidth = Math.Max(
+        currentSecondaryWidth,
+        anchoredRight - secondaryLeft);
+    return (ushort)Math.Min(ushort.MaxValue, requiredWidth);
   }
 
   /// <summary>
@@ -423,6 +662,38 @@ internal static unsafe class NativeTextNodeLayoutHelper
   }
 
   /// <summary>
+  ///     Resolves the widest stable visual width exposed by the surrounding
+  ///     container nodes so repeated native replacements do not fall back to a
+  ///     narrow internal wrapper when a larger background already represents the
+  ///     intended visual balloon or panel width.
+  /// </summary>
+  /// <param name="primaryContainerNode">The primary owning container.</param>
+  /// <param name="secondaryContainerNode">An optional secondary background node.</param>
+  /// <returns>The widest non-zero container width available.</returns>
+  private static ushort ResolveBoundedContainerWidth(
+      AtkResNode* primaryContainerNode,
+      AtkResNode* secondaryContainerNode)
+  {
+    ushort width = 0;
+
+    if (primaryContainerNode != null)
+    {
+      width = primaryContainerNode->GetWidth();
+    }
+
+    if (secondaryContainerNode != null)
+    {
+      var secondaryWidth = secondaryContainerNode->GetWidth();
+      if (secondaryWidth > 0 && secondaryWidth > width)
+      {
+        width = secondaryWidth;
+      }
+    }
+
+    return width;
+  }
+
+  /// <summary>
   ///     Resolves the first nine-grid node reachable from a node.
   /// </summary>
   /// <param name="node">The node to inspect.</param>
@@ -487,11 +758,23 @@ internal static unsafe class NativeTextNodeLayoutHelper
     {
       var width = currentNode->GetWidth();
       var height = currentNode->GetHeight();
+      if (snapshot.AncestorChain.Count == 0 && width > 0)
+      {
+        var leftPadding = Math.Max(0, (int)snapshot.TextNodeOriginalX);
+        var rightPadding = Math.Max(
+            0,
+            width - leftPadding - snapshot.TextNodeWidth);
+        snapshot.TextNodeWasHorizontallyCentered =
+            Math.Abs(leftPadding - rightPadding) <= 4;
+      }
+
       snapshot.AncestorChain.Add(
           new NativeTextNodeAncestorSnapshot(
               (nint)currentNode,
               width,
               height,
+              currentNode->GetXShort(),
+              currentNode->GetYShort(),
               Math.Max(0, width - childWidth),
               Math.Max(0, height - childHeight)));
 
@@ -506,6 +789,44 @@ internal static unsafe class NativeTextNodeLayoutHelper
       currentNode = currentNode->ParentNode;
     }
   }
+
+  /// <summary>
+  ///     Re-centers the text node within its immediate wrapper when the original
+  ///     layout was centered and width growth changed the wrapper size.
+  /// </summary>
+  /// <param name="snapshot">The captured layout snapshot.</param>
+  private static void TryRestoreHorizontalCentering(
+      NativeTextNodeLayoutSnapshot snapshot)
+  {
+    if (snapshot == null ||
+        !snapshot.TextNodeWasHorizontallyCentered ||
+        snapshot.TextNodeAddress == 0 ||
+        snapshot.AncestorChain.Count == 0)
+    {
+      return;
+    }
+
+    var textNode = (AtkTextNode*)snapshot.TextNodeAddress;
+    var immediateParent = (AtkResNode*)snapshot.AncestorChain[0].NodeAddress;
+    if (textNode == null || immediateParent == null)
+    {
+      return;
+    }
+
+    var parentWidth = immediateParent->GetWidth();
+    var textWidth = textNode->GetWidth();
+    if (parentWidth == 0 || textWidth == 0 || parentWidth <= textWidth)
+    {
+      return;
+    }
+
+    var centeredX = (short)Math.Max(
+        short.MinValue,
+        Math.Min(
+            short.MaxValue,
+            (parentWidth - textWidth) / 2));
+    ((AtkResNode*)textNode)->SetXShort(centeredX);
+  }
 }
 
 /// <summary>
@@ -513,25 +834,103 @@ internal static unsafe class NativeTextNodeLayoutHelper
 /// </summary>
 /// <param name="textWidth">The original text-node width.</param>
 /// <param name="textHeight">The original text-node height.</param>
-internal sealed class NativeTextNodeLayoutSnapshot(
-    ushort textWidth,
-    ushort textHeight)
+internal sealed class NativeTextNodeLayoutSnapshot
 {
+  /// <summary>
+  ///     Initializes a new instance of the <see cref="NativeTextNodeLayoutSnapshot" /> class.
+  /// </summary>
+  /// <param name="textNodeAddress">The address of the mutated text node.</param>
+  /// <param name="textWidth">The original measured text width.</param>
+  /// <param name="textHeight">The original measured text height.</param>
+  /// <param name="textNodeWidth">The original text-node width.</param>
+  /// <param name="textNodeHeight">The original text-node height.</param>
+  /// <param name="textNodeTextFlags">The original text-node flags.</param>
+  /// <param name="textNodeFontSize">The original text-node font size.</param>
+  /// <param name="textNodeOriginalX">The original text-node X position.</param>
+  /// <param name="textNodeOriginalY">The original text-node Y position.</param>
+  public NativeTextNodeLayoutSnapshot(
+      nint textNodeAddress,
+      ushort textWidth,
+      ushort textHeight,
+      ushort textNodeWidth,
+      ushort textNodeHeight,
+      TextFlags textNodeTextFlags,
+      byte textNodeFontSize,
+      short textNodeOriginalX,
+      short textNodeOriginalY)
+  {
+    this.TextNodeAddress = textNodeAddress;
+    this.TextWidth = textWidth;
+    this.TextHeight = textHeight;
+    this.TextNodeWidth = textNodeWidth;
+    this.TextNodeHeight = textNodeHeight;
+    this.TextNodeTextFlags = textNodeTextFlags;
+    this.TextNodeFontSize = textNodeFontSize;
+    this.TextNodeOriginalX = textNodeOriginalX;
+    this.TextNodeOriginalY = textNodeOriginalY;
+  }
+
+  /// <summary>
+  ///     Gets the native address of the mutated text node.
+  /// </summary>
+  public nint TextNodeAddress { get; }
+
   /// <summary>
   ///     Gets the original text-node width.
   /// </summary>
-  public ushort TextWidth { get; } = textWidth;
+  public ushort TextWidth { get; }
 
   /// <summary>
   ///     Gets the original text-node height.
   /// </summary>
-  public ushort TextHeight { get; } = textHeight;
+  public ushort TextHeight { get; }
+
+  /// <summary>
+  ///     Gets the original width assigned to the text node itself.
+  /// </summary>
+  public ushort TextNodeWidth { get; }
+
+  /// <summary>
+  ///     Gets the original height assigned to the text node itself.
+  /// </summary>
+  public ushort TextNodeHeight { get; }
+
+  /// <summary>
+  ///     Gets the original text-node flags.
+  /// </summary>
+  public TextFlags TextNodeTextFlags { get; }
+
+  /// <summary>
+  ///     Gets the original text-node font size.
+  /// </summary>
+  public byte TextNodeFontSize { get; }
+
+  /// <summary>
+  ///     Gets the original X position assigned to the text node itself.
+  /// </summary>
+  public short TextNodeOriginalX { get; }
+
+  /// <summary>
+  ///     Gets the original Y position assigned to the text node itself.
+  /// </summary>
+  public short TextNodeOriginalY { get; }
+
+  /// <summary>
+  ///     Gets or sets a value indicating whether the text node was originally
+  ///     centered inside its immediate parent.
+  /// </summary>
+  public bool TextNodeWasHorizontallyCentered { get; set; }
 
   /// <summary>
   ///     Gets the wrapper chain that should be resized after a native text
   ///     replacement.
   /// </summary>
   public List<NativeTextNodeAncestorSnapshot> AncestorChain { get; } = [];
+
+  /// <summary>
+  ///     Gets or sets the native address of the secondary container node.
+  /// </summary>
+  public nint SecondaryContainerAddress { get; set; }
 
   /// <summary>
   ///     Gets or sets the secondary container width.
@@ -544,10 +943,41 @@ internal sealed class NativeTextNodeLayoutSnapshot(
   public ushort SecondaryContainerHeight { get; set; }
 
   /// <summary>
+  ///     Gets or sets the original X position of the secondary container.
+  /// </summary>
+  public short SecondaryContainerOriginalX { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original Y position of the secondary container.
+  /// </summary>
+  public short SecondaryContainerOriginalY { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the native address of the anchored X node.
+  /// </summary>
+  public nint AnchoredXNodeAddress { get; set; }
+
+  /// <summary>
   ///     Gets or sets the X offset between an anchored sibling node and the text
   ///     width.
   /// </summary>
   public int AnchoredXOffset { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original X position of the anchored sibling node.
+  /// </summary>
+  public short AnchoredXOriginal { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original width of the anchored sibling node.
+  /// </summary>
+  public ushort AnchoredXWidth { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original right padding between the anchored sibling
+  ///     node and the secondary container.
+  /// </summary>
+  public int AnchoredXRightPaddingFromSecondary { get; set; }
 
   /// <summary>
   ///     Gets the horizontal padding between the text node and the secondary
@@ -577,6 +1007,8 @@ internal readonly record struct NativeTextNodeResizeResult(
 /// <param name="NodeAddress">The native address of the wrapper node.</param>
 /// <param name="Width">The original wrapper width.</param>
 /// <param name="Height">The original wrapper height.</param>
+/// <param name="OriginalX">The original X position of the wrapper node.</param>
+/// <param name="OriginalY">The original Y position of the wrapper node.</param>
 /// <param name="HorizontalPadding">
 ///     The original horizontal padding between this wrapper and its child.
 /// </param>
@@ -587,5 +1019,7 @@ internal readonly record struct NativeTextNodeAncestorSnapshot(
     nint NodeAddress,
     ushort Width,
     ushort Height,
+    short OriginalX,
+    short OriginalY,
     int HorizontalPadding,
     int VerticalPadding);

@@ -851,6 +851,27 @@ public class Config : IPluginConfiguration
   /// <summary>Translate toast popup messages.</summary>
   [DefaultValue(false)] public bool TranslateToast = false;
 
+  /// <summary>
+  ///     Uses Dalamud's ToastGui callbacks to prefetch source text and
+  ///     translations for supported normal and error toasts before the addon
+  ///     handlers see the live nodes.
+  /// </summary>
+  [DefaultValue(false)] public bool UseToastGuiCaptureForSupportedToasts = false;
+
+  /// <summary>
+  ///     Enables the alternate callback-owned ToastGui runtime for supported
+  ///     normal and error toasts instead of the legacy addon-handler path.
+  ///     This stays hidden and opt-in while the route is still being validated.
+  /// </summary>
+  [DefaultValue(false)] public bool UseToastGuiRuntimeForSupportedToasts = false;
+
+  /// <summary>
+  ///     Enables debug-only automatic login probes for `_BattleTalk` and
+  ///     `_MiniTalk` so their earliest addon state can be captured without
+  ///     manually issuing the probe command after login.
+  /// </summary>
+  [DefaultValue(false)] public bool EnableDebugLoginAddonProbe = false;
+
   /// <summary>Translate To-Do List entries.</summary>
   [DefaultValue(false)] public bool TranslateToDoList = false;
 

@@ -228,6 +228,36 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Selecione qual tipo de mensagens de toast traduzir</value>
   </data>
+  <data name="ToastGuiCaptureForSupportedToastsLabel" xml:space="preserve">
+    <value>Usar captura assistida por ToastGui para toasts normais/de erro suportados (experimental)</value>
+  </data>
+  <data name="ToastGuiCaptureForSupportedToastsDescription" xml:space="preserve">
+    <value>Mantém os limites da overlay e a substituição nativa nos handlers do addon, mas escuta os callbacks do ToastGui para pré-carregar as traduções mais cedo. Quest toasts já usam ToastGui; Text Gimmick Hint continua usando o caminho do addon.</value>
+  </data>
+  <data name="ToastGuiNormalToastRouteStatusLabel" xml:space="preserve">
+    <value>Rota dos toasts normais suportados</value>
+  </data>
+  <data name="ToastGuiErrorToastRouteStatusLabel" xml:space="preserve">
+    <value>Rota dos toasts de erro suportados</value>
+  </data>
+  <data name="ToastGuiQuestToastRouteStatusLabel" xml:space="preserve">
+    <value>Rota dos quest toasts</value>
+  </data>
+  <data name="ToastGuiTextGimmickHintRouteStatusLabel" xml:space="preserve">
+    <value>Rota do Text Gimmick Hint</value>
+  </data>
+  <data name="ToastGuiRouteStateLegacyAddonHandlers" xml:space="preserve">
+    <value>Handlers legados do addon</value>
+  </data>
+  <data name="ToastGuiRouteStateCapturePrefetch" xml:space="preserve">
+    <value>Captura/pré-busca via ToastGui</value>
+  </data>
+  <data name="ToastGuiRouteStateFullRuntime" xml:space="preserve">
+    <value>Runtime completo via ToastGui</value>
+  </data>
+  <data name="ToastGuiRouteStateAddonHandlerOnly" xml:space="preserve">
+    <value>Apenas handler do addon</value>
+  </data>
   <data name="AssetsCheckingPopupMsg" xml:space="preserve">
     <value>Verificando os arquivos do Plugin!</value>
   </data>
@@ -920,5 +950,32 @@
   </data>
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Modelo Claude de nível mais alto quando você deseja qualidade máxima.</value>
+  </data>
+  <data name="AddonProbeNoActiveWatch" xml:space="preserve">
+    <value>Não há um watch ativo do addon probe para parar.</value>
+  </data>
+  <data name="AddonProbeStopped" xml:space="preserve">
+    <value>Watch do addon probe parado.</value>
+  </data>
+  <data name="AddonProbeUsage" xml:space="preserve">
+    <value>Uso: /egloaddonprobe &lt;nome do addon&gt; [índice] [duração] ou /egloaddonprobe stop</value>
+  </data>
+  <data name="AddonProbeInvalidDurationFormat" xml:space="preserve">
+    <value>Duração inválida para addon probe. Use valores como 90s ou 15m, até {0} minutos.</value>
+  </data>
+  <data name="AddonProbeStartedFormat" xml:space="preserve">
+    <value>Watch do addon probe iniciado para '{0}'[{1}] por {2}. Verifique o Dalamud log para os dumps de eventos e árvore.</value>
+  </data>
+  <data name="AddonProbeDurationMinuteFormat" xml:space="preserve">
+    <value>{0} minuto</value>
+  </data>
+  <data name="AddonProbeDurationMinutesFormat" xml:space="preserve">
+    <value>{0} minutos</value>
+  </data>
+  <data name="AddonProbeDurationSecondFormat" xml:space="preserve">
+    <value>{0} segundo</value>
+  </data>
+  <data name="AddonProbeDurationSecondsFormat" xml:space="preserve">
+    <value>{0} segundos</value>
   </data>
 </root>

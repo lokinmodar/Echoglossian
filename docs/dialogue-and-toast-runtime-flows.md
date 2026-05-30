@@ -56,6 +56,11 @@ Toast-family surfaces covered here:
 - `_TextGimmickHint`
 - quest toast callback runtime
 
+Optional alternate capture runtime:
+
+- `IToastGui.Toast` prefetch for supported normal toasts
+- `IToastGui.ErrorToast` prefetch for error toasts
+
 ## Registration map
 
 All of these surfaces are wired from
@@ -307,16 +312,18 @@ Current risk:
 
 ## Toast-family overview
 
-There are two different runtime shapes in the toast family:
+There are three different runtime shapes in the toast family:
 
 1. AddonLifecycle-driven text-node toasts
 2. callback-driven quest toast
+3. optional callback-assisted prefetch for supported normal/error toasts
 
 ```mermaid
 flowchart TD
     A[Toast event] --> B{Surface}
     B --> C[AddonLifecycle toast addon]
     B --> D[Quest toast callback]
+    B --> E[ToastGui callback prefetch]
 
     C --> C1[PreUpdate read visible text node]
     C1 --> C2[Cache or DB lookup]
@@ -329,6 +336,11 @@ flowchart TD
     D2 --> D3[Publish overlay]
     D2 --> D4[Mutate callback SeString directly if native mode]
     D2 --> D5[Queue async translation on miss]
+
+    E --> E1[Read callback SeString source]
+    E1 --> E2[Prefetch DB or cache row]
+    E2 --> E3[Later addon handler reuses cached row]
+    E3 --> E4[Overlay bounds and swap logic still come from live addon]
 ```
 
 ## AddonLifecycle toast family
@@ -431,6 +443,55 @@ flowchart TD
 
 This is the most source-native toast flow in the family today.
 
+## Optional `ToastGui`-assisted capture for supported normal/error toasts
+
+Current owner:
+
+- [ToastGuiCaptureRuntime.cs](../NativeUI/AddonHandlers/Toasts/ToastGuiCaptureRuntime.cs)
+
+Key facts:
+
+- this path is gated by `Config.UseToastGuiCaptureForSupportedToasts`
+- it listens to:
+  - `IToastGui.Toast`
+  - `IToastGui.ErrorToast`
+- it does not replace the addon handlers
+- it does not publish overlays directly
+- it does not mutate the callback payload
+- it only prefetches translated rows into the same `ToastMessage` history that
+  addon-based toast handlers already use
+
+Current flow:
+
+```mermaid
+flowchart TD
+    A[IToastGui.Toast or IToastGui.ErrorToast] --> B[Read original SeString text]
+    B --> C{Translated row already exists}
+    C -->|yes| D[Do nothing else]
+    C -->|no| E[Queue async prefetch translation]
+    E --> F[Store ToastMessage row]
+    F --> G[Later addon handler sees DB or cache hit]
+    G --> H[Overlay publication still uses live addon bounds]
+    G --> I[Native replacement still uses live addon path]
+```
+
+Why it exists:
+
+- it captures toast source earlier than addon-node polling
+- it reduces dependence on reading a live text node that might already be
+  mutated by native replacement
+- it preserves the current overlay path, so swap mode and overlay positioning
+  still depend on the visible addon and should not regress just because the
+  source was prefetched earlier
+
+Important limitation:
+
+- generic `IToastGui.Toast` does not expose enough subtype metadata to replace
+  the per-addon presentation model outright
+- because of that, `_WideText`, `_AreaText`, and `_TextClassChange` still keep
+  the addon handlers as presentation owners
+- `_TextGimmickHint` remains addon-only for now
+
 ## Overlay ownership
 
 Overlay publication for these surfaces is still separate from capture and native
@@ -448,6 +509,9 @@ That means:
 - overlay bounds and overlay text are not owned by the dialogue or toast
   handlers directly
 - the handlers only publish content and ask for bounds synchronization
+- the experimental `ToastGui`-assisted toast path still relies on the addon
+  handlers for overlay publication, specifically to preserve bounds, swap mode,
+  and native/overlay presentation parity
 
 ## Current pain points
 

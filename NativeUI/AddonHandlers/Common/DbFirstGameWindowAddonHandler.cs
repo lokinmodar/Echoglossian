@@ -1998,11 +1998,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         string payloadKey,
         JournalTranslationDisplayMode displayMode)
     {
+        var translatedPayloadToApply =
+            this.NormalizeTranslatedPayloadForDisplayMode(
+                translatedPayload,
+                displayMode);
+
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode) &&
             this.useAtkValues &&
             addon->AtkValues != null)
         {
-            foreach (var (index, translatedText) in translatedPayload.AtkValues)
+            foreach (var (index, translatedText) in translatedPayloadToApply.AtkValues)
             {
                 if ((uint)index >= addon->AtkValuesCount)
                 {
@@ -2033,14 +2038,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode) &&
             this.useTextNodes &&
-            translatedPayload.TextNodes.Count > 0)
+            translatedPayloadToApply.TextNodes.Count > 0)
         {
             if (!this.TryApplyCustomTextNodePayload(
                     addon,
                     originalPayload,
-                    translatedPayload))
+                    translatedPayloadToApply))
             {
-                this.ApplyTranslatedTextNodes(addon, translatedPayload.TextNodes);
+                this.ApplyTranslatedTextNodes(
+                    addon,
+                    translatedPayloadToApply.TextNodes);
             }
         }
 
@@ -2054,7 +2061,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 this.ShouldWriteStringArrayValues(
                     stringArrayData->SubscribedAddonsCount))
             {
-                foreach (var (index, translatedText) in translatedPayload
+                foreach (var (index, translatedText) in translatedPayloadToApply
                              .StringArrayValues)
                 {
                     if ((uint)index >= stringArrayData->Size)
@@ -2097,7 +2104,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.RegisterHoverTooltips(
                 addon,
                 originalPayload,
-                translatedPayload,
+                translatedPayloadToApply,
                 displayMode);
         }
         else
@@ -2108,14 +2115,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         this.lastResolvedState = new DbFirstGameWindowRuntimeState(
             payloadKey,
             originalPayload,
-            translatedPayload);
+            translatedPayloadToApply);
 
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
         {
             this.runtimeState = new DbFirstGameWindowRuntimeState(
                 payloadKey,
                 originalPayload,
-                translatedPayload);
+                translatedPayloadToApply);
         }
         else
         {
@@ -2123,6 +2130,36 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         this.lastAppliedDisplayMode = displayMode;
+    }
+
+    /// <summary>
+    ///     Normalizes one translated payload only when the current display mode
+    ///     will actually write the translated text into the native UI.
+    /// </summary>
+    /// <param name="translatedPayload">The translated payload to normalize.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    /// <returns>
+    ///     The translated payload that should be applied for this display mode.
+    /// </returns>
+    private DbFirstGameWindowPayload NormalizeTranslatedPayloadForDisplayMode(
+        DbFirstGameWindowPayload translatedPayload,
+        JournalTranslationDisplayMode displayMode)
+    {
+        if (!TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
+        {
+            return translatedPayload;
+        }
+
+        var normalizeText =
+            Echoglossian.TryCreateNativeReplacementTextNormalizer(this.config);
+        if (normalizeText == null)
+        {
+            return translatedPayload;
+        }
+
+        return NativeReplacementTextNormalizationHelper.NormalizePayload(
+            translatedPayload,
+            normalizeText);
     }
 
     /// <summary>

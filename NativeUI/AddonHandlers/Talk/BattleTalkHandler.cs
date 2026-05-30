@@ -44,6 +44,9 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   private string lastResolvedOriginalText = string.Empty;
   private string lastResolvedReplacementName = string.Empty;
   private string lastResolvedReplacementText = string.Empty;
+  private NativeTextNodeLayoutSnapshot? nativeLayoutSnapshot;
+  private string nativeLayoutOriginalName = string.Empty;
+  private string nativeLayoutOriginalText = string.Empty;
   private bool translationInFlight;
 
   /// <summary>
@@ -198,15 +201,25 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
 
       if (this.ShouldApplyNativeBattleTalkText())
       {
+        this.RestoreTrackedNativeLayoutIfNeeded(
+            originalName,
+            originalText);
         this.ApplyTranslatedNodes(
             battleTalkAddon,
+            originalName,
+            originalText,
             translatedName,
             replacementName,
             replacementText);
       }
+      else
+      {
+        this.RestoreTrackedNativeLayoutIfNeeded();
+      }
     }
     else
     {
+      this.RestoreTrackedNativeLayoutIfNeeded();
       this.ShowPendingSwapOverlayIfNeeded(originalName, originalText);
     }
 
@@ -234,6 +247,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     {
       return;
     }
+
+    this.RestoreTrackedNativeLayoutIfNeeded();
 
     int scheduledGeneration;
     lock (this.stateGate)
@@ -271,6 +286,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
       return;
     }
 
+    this.RestoreTrackedNativeLayoutIfNeeded();
+
     lock (this.stateGate)
     {
       this.hideResetGeneration++;
@@ -306,7 +323,138 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     this.currentTranslatedText = string.Empty;
     this.failedOriginalName = string.Empty;
     this.failedOriginalText = string.Empty;
+    this.nativeLayoutSnapshot = null;
+    this.nativeLayoutOriginalName = string.Empty;
+    this.nativeLayoutOriginalText = string.Empty;
     this.translationInFlight = false;
+  }
+
+  /// <summary>
+  ///     Restores any tracked native BattleTalk mutation when the source changes
+  ///     or native mode is left.
+  /// </summary>
+  /// <param name="nextOriginalName">
+  ///     The next original sender name expected for the addon, or an empty value
+  ///     when the current mutation should always be restored.
+  /// </param>
+  /// <param name="nextOriginalText">
+  ///     The next original source text expected for the addon, or an empty value
+  ///     when the current mutation should always be restored.
+  /// </param>
+  private void RestoreTrackedNativeLayoutIfNeeded(
+      string? nextOriginalName = null,
+      string? nextOriginalText = null)
+  {
+    NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
+    string layoutOriginalName = string.Empty;
+    string layoutOriginalText = string.Empty;
+
+    lock (this.stateGate)
+    {
+      if (this.nativeLayoutSnapshot == null)
+      {
+        return;
+      }
+
+      if (!string.IsNullOrWhiteSpace(nextOriginalText) &&
+          this.nativeLayoutOriginalName == nextOriginalName &&
+          this.nativeLayoutOriginalText == nextOriginalText)
+      {
+        return;
+      }
+
+      layoutSnapshot = this.nativeLayoutSnapshot;
+      layoutOriginalName = this.nativeLayoutOriginalName;
+      layoutOriginalText = this.nativeLayoutOriginalText;
+      this.nativeLayoutSnapshot = null;
+      this.nativeLayoutOriginalName = string.Empty;
+      this.nativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(
+        layoutSnapshot,
+        layoutOriginalName,
+        layoutOriginalText);
+  }
+
+  /// <summary>
+  ///     Restores the tracked native BattleTalk layout even when the visible
+  ///     source line has not changed, so a repeat native apply pass starts from
+  ///     the original addon geometry instead of stacking height and width
+  ///     mutations from the previous frame.
+  /// </summary>
+  /// <param name="originalName">The original sender name for the active line.</param>
+  /// <param name="originalText">The original source text for the active line.</param>
+  private void PrepareTrackedNativeLayoutForReapply(
+      string originalName,
+      string originalText)
+  {
+    NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
+    string layoutOriginalName = string.Empty;
+    string layoutOriginalText = string.Empty;
+
+    lock (this.stateGate)
+    {
+      if (this.nativeLayoutSnapshot == null ||
+          this.nativeLayoutOriginalName != originalName ||
+          this.nativeLayoutOriginalText != originalText)
+      {
+        return;
+      }
+
+      layoutSnapshot = this.nativeLayoutSnapshot;
+      layoutOriginalName = this.nativeLayoutOriginalName;
+      layoutOriginalText = this.nativeLayoutOriginalText;
+      this.nativeLayoutSnapshot = null;
+      this.nativeLayoutOriginalName = string.Empty;
+      this.nativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(
+        layoutSnapshot,
+        layoutOriginalName,
+        layoutOriginalText,
+        restoreText: false);
+  }
+
+  /// <summary>
+  ///     Restores one tracked native BattleTalk layout snapshot back to the
+  ///     original game state.
+  /// </summary>
+  /// <param name="layoutSnapshot">The captured layout snapshot.</param>
+  /// <param name="originalName">The original sender name to write back.</param>
+  /// <param name="originalText">The original text to write back.</param>
+  private unsafe void TryRestoreNativeLayout(
+      NativeTextNodeLayoutSnapshot? layoutSnapshot,
+      string originalName,
+      string originalText,
+      bool restoreText = true)
+  {
+    if (layoutSnapshot == null)
+    {
+      return;
+    }
+
+    var addonPtr = GameGuiInterface.GetAddonByName(BattleTalkAddonName);
+    if (addonPtr.Address != IntPtr.Zero)
+    {
+      var battleTalkAddon = (AtkUnitBase*)addonPtr.Address;
+      if (battleTalkAddon != null)
+      {
+        var nameNode = battleTalkAddon->GetTextNodeById(NameNodeId);
+        if (restoreText &&
+            nameNode != null &&
+            !string.IsNullOrWhiteSpace(originalName))
+        {
+          nameNode->SetText(originalName);
+        }
+      }
+    }
+
+    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+        layoutSnapshot,
+        originalText,
+        restoreText);
   }
 
   /// <summary>
@@ -1102,6 +1250,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   /// </param>
   private unsafe void ApplyTranslatedNodes(
       AtkUnitBase* battleTalkAddon,
+      string originalName,
+      string originalText,
       string translatedName,
       string replacementName,
       string replacementText)
@@ -1127,10 +1277,10 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         (nint)textNode->NodeText.StringPtr.Value);
 
     if (!string.IsNullOrWhiteSpace(replacementText) &&
-        visibleText == replacementText &&
+        this.TextMatchesForSourceMapping(visibleText, replacementText) &&
         (!this.ShouldTranslateBattleTalkNpcNames() ||
          string.IsNullOrWhiteSpace(replacementName) ||
-         visibleName == replacementName))
+         this.TextMatchesForSourceMapping(visibleName, replacementName)))
     {
       return;
     }
@@ -1138,10 +1288,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     if (this.ShouldTranslateBattleTalkNpcNames() &&
         nameNode != null &&
         !string.IsNullOrWhiteSpace(translatedName) &&
-        visibleName != replacementName)
+        !this.TextMatchesForSourceMapping(visibleName, replacementName))
     {
       nameNode->SetText(replacementName);
     }
+
+    this.PrepareTrackedNativeLayoutForReapply(
+        originalName,
+        originalText);
 
     var backgroundNode = nineGridNode != null ? (AtkResNode*)nineGridNode : null;
     var layoutSnapshot = NativeTextNodeLayoutHelper.CaptureLayoutSnapshot(
@@ -1151,7 +1305,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         timerNode);
     var preferredWrapWidth = NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(
         textNode,
-        parentNode);
+        parentNode,
+        backgroundNode);
     var resizeResult = NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
@@ -1161,7 +1316,15 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         resizeResult,
         parentNode,
         backgroundNode,
-        timerNode);
+        timerNode,
+        allowWidthGrowth: false);
+
+    lock (this.stateGate)
+    {
+      this.nativeLayoutSnapshot = layoutSnapshot;
+      this.nativeLayoutOriginalName = originalName;
+      this.nativeLayoutOriginalText = originalText;
+    }
   }
 }
 
