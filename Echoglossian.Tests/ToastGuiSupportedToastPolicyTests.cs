@@ -32,15 +32,17 @@ public class ToastGuiSupportedToastPolicyTests
     }
 
     /// <summary>
-    ///     Ensures the supported normal-toast route is callback-owned whenever
-    ///     global toast translation is enabled.
+    ///     Ensures the supported normal-toast route is callback-owned when
+    ///     global toast translation is enabled and at least one supported
+    ///     normal toast type is enabled.
     /// </summary>
     [Fact]
-    public void GetSupportedNormalToastRouteState_ReturnsToastGuiFullRuntime_WhenToastTranslationIsEnabled()
+    public void GetSupportedNormalToastRouteState_ReturnsToastGuiFullRuntime_WhenToastTranslationAndNormalTypeAreEnabled()
     {
         var config = new Config
         {
             TranslateToast = true,
+            TranslateWideTextToast = true,
         };
 
         Assert.Equal(
@@ -49,21 +51,23 @@ public class ToastGuiSupportedToastPolicyTests
     }
 
     /// <summary>
-    ///     Ensures legacy hidden toggles no longer change the supported
-    ///     normal-toast route while toast translation is enabled.
+    ///     Ensures the supported normal-toast route remains on the legacy path
+    ///     when global toast translation is enabled but all normal toast type
+    ///     toggles are disabled.
     /// </summary>
     [Fact]
-    public void GetSupportedNormalToastRouteState_ReturnsToastGuiFullRuntime_WhenLegacyCaptureToggleIsEnabled()
+    public void GetSupportedNormalToastRouteState_ReturnsLegacyAddonHandlers_WhenNoNormalToastTypeIsEnabled()
     {
         var config = new Config
         {
             TranslateToast = true,
-            UseToastGuiCaptureForSupportedToasts = true,
-            UseToastGuiRuntimeForSupportedToasts = false,
+            TranslateWideTextToast = false,
+            TranslateAreaToast = false,
+            TranslateClassChangeToast = false,
         };
 
         Assert.Equal(
-            ToastGuiRouteState.ToastGuiFullRuntime,
+            ToastGuiRouteState.LegacyAddonHandlers,
             ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(config));
     }
 

@@ -78,7 +78,8 @@ internal static class ToastGuiSupportedToastPolicy
   /// </returns>
   public static bool UseSupportedNormalToastRuntime(Config config)
   {
-    return UseSupportedToastGuiRuntime(config);
+    return UseSupportedToastGuiRuntime(config) &&
+           HasAnyEnabledNormalToastType(config);
   }
 
   /// <summary>
@@ -138,6 +139,22 @@ internal static class ToastGuiSupportedToastPolicy
   {
     _ = config;
     return false;
+  }
+
+  /// <summary>
+  ///     Gets whether at least one supported normal-toast type is enabled in
+  ///     the user configuration.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>
+  ///     <see langword="true" /> when at least one supported normal-toast
+  ///     toggle is enabled; otherwise, <see langword="false" />.
+  /// </returns>
+  private static bool HasAnyEnabledNormalToastType(Config config)
+  {
+    return config.TranslateWideTextToast ||
+           config.TranslateAreaToast ||
+           config.TranslateClassChangeToast;
   }
 
 }
