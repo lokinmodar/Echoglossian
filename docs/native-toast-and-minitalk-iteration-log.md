@@ -595,3 +595,26 @@ Changes:
 
 Focused validation:
 - `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --filter ToastGuiSupportedToastPolicyTests`
+
+## Iteration 19
+
+Goal:
+- stop ImGui table assertions that were spamming `dalamud.log` and potentially
+  impacting frame-time stability while the DB Editor window is open
+
+Root cause:
+- `DbTableView` called `ImGui.TableSetupColumn` with a non-zero initial width
+  (`150f`) while using `ImGuiTableColumnFlags.None`
+- ImGui requires explicit table or column sizing policy whenever
+  `initWidthOrWeight` is specified; otherwise it triggers:
+  - `init_width_or_weight <= 0.0f && "Can only specify width/weight if sizing policy is set explicitly in either Table or Column."`
+
+Changes:
+- updated `DBManagerUI/Components/DbTableView.cs` so data columns use explicit
+  `ImGuiTableColumnFlags.WidthFixed` when passing an initial width
+- kept behavior narrow: no table routing, cache, or native-surface behavior
+  changes
+
+Validation:
+- `dotnet build Echoglossian.sln -c Debug --no-restore`
+- `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --no-build`
