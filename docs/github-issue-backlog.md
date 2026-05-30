@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-17
+Snapshot date: 2026-05-30
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -9,6 +9,52 @@ feature work.
 When the user asks to "read the issues" or "update the issue list", the
 default source of truth for that request is the open issue tracker in
 `lokinmodar/Echoglossian`.
+
+## Tracker Review Update (2026-05-30)
+
+This pass re-read all currently open issues and all available issue comments
+in the tracker (28 open issues at review time).
+
+### Items likely addressed on `v4-series` but still awaiting release validation
+
+- `#187` MiniTalk text extrapolates balloon size in native replacement mode
+- `#188` Text overflow in small dialogue boxes
+- part of `#171` and `#172` overflow/layout symptoms on dialogue surfaces
+
+Notes:
+
+- `PR #211` merged into `v4-series` on 2026-05-30 (`0c09d02`) with
+  MiniTalk/BattleTalk/Toast reflow and ToastGui path changes.
+- Follow-up fix `e4cff33` on `v4-series` now ensures supported normal toast
+  toggles are honored by the ToastGui route.
+- Keep these issues open until the same behavior is validated in an official
+  published build.
+
+### Active regression cluster still reported in comments
+
+- `#206` `{targetLanguage}` variable regression (comment confirms repro on
+  official `4.2601.0516.1152`; owner comment says fix release was pending)
+- `#207` quest tracker / ToDoList Portuguese regression on official build
+- `#203` mixed engine behavior (Google/Yandex partial recovery, Gemini/DeepL
+  failures reported)
+- `#204` OpenRouter translation failure (no new comment yet, still open)
+- `#208` Turkish rendering issue (newer report, no follow-up comments yet)
+- `#171` currently mixes DeepSeek auth/runtime errors with additional UI
+  clipping reports
+- `#172` dynamic objective text staleness and cross-quest text mix in tracker
+
+### Product-direction backlog (not pure break/fix)
+
+- `#209` local LLM context limiting/disable controls
+- `#201` explicit feedback for quota/usage-limit/provider failures
+- `#196` custom OpenAI-compatible provider path
+- `#148` structured input/output for glossary and metadata
+
+### Compatibility and long-tail backlog
+
+- `#173` and `#179`: CharacterPanelRefined compatibility/crash analysis
+- older enhancement backlog remains open (`#192`, `#139`, `#104`, `#103`,
+  `#68`, `#15`)
 
 ## Triage Model
 
