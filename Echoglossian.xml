@@ -5773,6 +5773,26 @@
                 family; otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldCenterOverlayText(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
+            <summary>
+                Gets whether overlay text should be centered for the specified
+                surface.
+            </summary>
+            <param name="surfaceId">The overlay surface identifier.</param>
+            <returns>
+                <see langword="true" /> when text should be centered; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawOverlayLine(System.String,System.Boolean)">
+            <summary>
+                Draws one overlay text line, centering it horizontally when enabled.
+            </summary>
+            <param name="line">The line to draw.</param>
+            <param name="centerAligned">
+                Whether to center-align the line in the available content region.
+            </param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
             Updates the shared toast overlay bounds using a live "_WideText" addon
