@@ -7,19 +7,23 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0516.x`
+## Submitted Release `v4.2601.0531.x`
 
-This is the current post-`v4.2601.0512.x` hotfix package prepared for the
-official plugin repo.
+This package advances the native-dialogue and toast runtime stability line and
+prepares the LLM rework fixes for official feed submission.
 
 Highlights:
 
-- fixed the `OpenRouter` prompt-expansion bug that could leave placeholder
-  tokens in the request instead of sending the fully materialized translation
-  prompt to the provider
-- hardened the `OpenRouter` prompt builder so literal `{sourceLanguage}` and
-  `{targetLanguage}` text inside dialogue content is no longer corrupted during
-  prompt substitution
+- moved supported toast families to the `ToastGui` runtime path with corrected
+  per-type enable/disable gating
+- stabilized native reflow behavior for `MiniTalk`, `BattleTalk`, and toast
+  family windows, including sizing and background alignment follow-ups
+- fixed cross-surface text leakage between dialogue and toast surfaces by
+  tightening source ownership and runtime routing
+- unified diacritics-removal behavior for native replacement flows and exposed
+  a single toggle in General settings
+- centered overlay text rendering for toast-family overlays, `TextGimmickHint`,
+  and `TalkSubtitle`
 
 ## Official DalamudPluginsD17 Release Timeline
 
