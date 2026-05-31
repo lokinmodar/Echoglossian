@@ -671,6 +671,52 @@ public class Config : IPluginConfiguration
   }
 
   /// <summary>
+  ///     Synchronizes legacy diacritics-removal toggles into one unified
+  ///     native-replacement behavior across all native UI surfaces.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when one or more values changed; otherwise
+  ///     <see langword="false" />.
+  /// </returns>
+  public bool NormalizeNativeReplacementDiacriticsSettings()
+  {
+    var unifiedEnabled =
+        this.RemoveDiacriticsWhenUsingReplacementTalkBTalk ||
+        this.RemoveDiacriticsWhenUsingReplacementQuest;
+    return this.SetNativeReplacementDiacriticsEnabled(unifiedEnabled);
+  }
+
+  /// <summary>
+  ///     Sets the unified diacritics-removal toggle for native UI replacement
+  ///     flows across quest and non-quest surfaces.
+  /// </summary>
+  /// <param name="enabled">
+  ///     Whether diacritics removal should be enabled for native replacement.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when one or more values changed; otherwise
+  ///     <see langword="false" />.
+  /// </returns>
+  public bool SetNativeReplacementDiacriticsEnabled(bool enabled)
+  {
+    var changed = false;
+
+    if (this.RemoveDiacriticsWhenUsingReplacementTalkBTalk != enabled)
+    {
+      this.RemoveDiacriticsWhenUsingReplacementTalkBTalk = enabled;
+      changed = true;
+    }
+
+    if (this.RemoveDiacriticsWhenUsingReplacementQuest != enabled)
+    {
+      this.RemoveDiacriticsWhenUsingReplacementQuest = enabled;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  /// <summary>
   /// Sets the unified game-main-menu scope toggle and display mode.
   /// </summary>
   /// <param name="enabled">Whether translation is enabled for the scope.</param>

@@ -1757,6 +1757,29 @@
             <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Config.NormalizeNativeReplacementDiacriticsSettings">
+            <summary>
+                Synchronizes legacy diacritics-removal toggles into one unified
+                native-replacement behavior across all native UI surfaces.
+            </summary>
+            <returns>
+                <see langword="true" /> when one or more values changed; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Config.SetNativeReplacementDiacriticsEnabled(System.Boolean)">
+            <summary>
+                Sets the unified diacritics-removal toggle for native UI replacement
+                flows across quest and non-quest surfaces.
+            </summary>
+            <param name="enabled">
+                Whether diacritics removal should be enabled for native replacement.
+            </param>
+            <returns>
+                <see langword="true" /> when one or more values changed; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Config.SetGameMainMenuTranslationSettings(System.Boolean,Echoglossian.JournalTranslationDisplayMode)">
             <summary>
             Sets the unified game-main-menu scope toggle and display mode.
@@ -20894,12 +20917,11 @@
                 Renders the settings tab for journal and quest-family translation.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.Draw(Echoglossian.Config,System.Boolean)">
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.Draw(Echoglossian.Config)">
             <summary>
                 Draws the Journal settings tab.
             </summary>
             <param name="config">The current plugin configuration.</param>
-            <param name="langToRemoveDiacritics">Whether the selected language supports diacritic removal.</param>
             <returns><c>true</c> when a setting changed.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestNotificationSection(Echoglossian.Config)">
@@ -21033,18 +21055,6 @@
             </param>
             <returns>
                 <see langword="true" /> when the overlay path is active.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawGlobalReplacementDiacriticsSetting(Echoglossian.Config)">
-            <summary>
-                Draws the global diacritics-removal toggle used by native replacement
-                flows across Talk, BattleTalk, Toasts, subtitles, and other handlers
-                that must fit within the game font limitations.
-            </summary>
-            <param name="config">The active plugin configuration.</param>
-            <returns>
-                <see langword="true" /> when the toggle value changed; otherwise,
-                <see langword="false" />.
             </returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.QuestWindowsTab">

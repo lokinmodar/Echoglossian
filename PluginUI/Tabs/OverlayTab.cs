@@ -100,7 +100,7 @@ public static class OverlayTab
                 changed |= DrawCutSceneSelectStringOverlay(config);
                 break;
             case 6:
-                changed |= JournalTab.Draw(config, LangToRemoveDiacritics);
+                changed |= JournalTab.Draw(config);
                 break;
             case 7:
                 changed |= QuestWindowsTab.Draw(config);
@@ -111,12 +111,6 @@ public static class OverlayTab
             case 9:
                 changed |= GameWindowsTab.Draw(config);
                 break;
-        }
-
-        if (ShouldRemoveDiacritics(config))
-        {
-            ImGui.Separator();
-            changed |= DrawGlobalReplacementDiacriticsSetting(config);
         }
 
         ImGui.EndChild();
@@ -907,29 +901,6 @@ public static class OverlayTab
             overlayOnlyLanguage);
     }
 
-    /// <summary>
-    ///     Draws the global diacritics-removal toggle used by native replacement
-    ///     flows across Talk, BattleTalk, Toasts, subtitles, and other handlers
-    ///     that must fit within the game font limitations.
-    /// </summary>
-    /// <param name="config">The active plugin configuration.</param>
-    /// <returns>
-    ///     <see langword="true" /> when the toggle value changed; otherwise,
-    ///     <see langword="false" />.
-    /// </returns>
-    private static bool DrawGlobalReplacementDiacriticsSetting(Config config)
-    {
-        return ImGui.Checkbox(
-            Resources.RemoveDiacriticsToggle,
-            ref config.RemoveDiacriticsWhenUsingReplacementTalkBTalk);
-    }
-
-    private static bool ShouldRemoveDiacritics(Config config)
-    {
-        var lang = config.Lang;
-        return lang is 24 or 25 or 44 or 60 or 61 or 80 or 83 or 87 or 91 or 104
-            or 105 or 109 or 110;
-    }
 }
 
 
