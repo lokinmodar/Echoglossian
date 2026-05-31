@@ -4,6 +4,11 @@
 // </copyright>
 
 using Xunit;
+using Echoglossian.Cache;
+using Echoglossian.EFCoreSqlite;
+using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.Translators;
+using Microsoft.EntityFrameworkCore;
 
 using PluginEntry = Echoglossian.Echoglossian;
 

@@ -710,6 +710,7 @@ namespace Echoglossian
       ImGui.Begin(windowLabel, flags);
       ImGui.SetWindowFontScale(effectiveFontScale);
       var renderedWindowPos = ImGui.GetWindowPos();
+      var shouldCenterOverlayText = this.ShouldCenterOverlayText(config.SurfaceId);
 
       overlay.Semaphore.Wait();
       foreach (var line in overlayTextLines)
@@ -720,7 +721,7 @@ namespace Echoglossian
           continue;
         }
 
-        ImGui.TextWrapped(line);
+        DrawOverlayLine(line, shouldCenterOverlayText);
       }
       overlay.Semaphore.Release();
 
@@ -862,7 +863,11 @@ namespace Echoglossian
         TranslationOverlaySurfaceId.MiniTalk => this.configuration.MiniTalkTranslationDisplayMode,
         TranslationOverlaySurfaceId.CutSceneSelectString => this.configuration.CutSceneSelectStringTranslationDisplayMode,
         TranslationOverlaySurfaceId.TextGimmickHint => this.configuration.TextGimmickHintTranslationDisplayMode,
-        TranslationOverlaySurfaceId.WideTextToast => this.configuration.WideTextToastTranslationDisplayMode,
+        TranslationOverlaySurfaceId.WideTextToast => NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
+                this.configuration)
+            ? NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(
+                this.configuration)
+            : this.configuration.WideTextToastTranslationDisplayMode,
         TranslationOverlaySurfaceId.ErrorToast => this.configuration.ErrorToastTranslationDisplayMode,
         TranslationOverlaySurfaceId.AreaToast => this.configuration.AreaToastTranslationDisplayMode,
         TranslationOverlaySurfaceId.ClassChangeToast => this.configuration.ClassChangeToastTranslationDisplayMode,
@@ -902,6 +907,55 @@ namespace Echoglossian
           or TranslationOverlaySurfaceId.AreaToast
           or TranslationOverlaySurfaceId.ClassChangeToast
           or TranslationOverlaySurfaceId.QuestToast;
+    }
+
+    /// <summary>
+    ///     Gets whether overlay text should be centered for the specified
+    ///     surface.
+    /// </summary>
+    /// <param name="surfaceId">The overlay surface identifier.</param>
+    /// <returns>
+    ///     <see langword="true" /> when text should be centered; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    private bool ShouldCenterOverlayText(TranslationOverlaySurfaceId surfaceId)
+    {
+      return surfaceId == TranslationOverlaySurfaceId.TalkSubtitle ||
+             this.IsToastLikeOverlaySurface(surfaceId);
+    }
+
+    /// <summary>
+    ///     Draws one overlay text line, centering it horizontally when enabled.
+    /// </summary>
+    /// <param name="line">The line to draw.</param>
+    /// <param name="centerAligned">
+    ///     Whether to center-align the line in the available content region.
+    /// </param>
+    private static void DrawOverlayLine(string line, bool centerAligned)
+    {
+      if (!centerAligned)
+      {
+        ImGui.TextWrapped(line);
+        return;
+      }
+
+      var availableWidth = ImGui.GetContentRegionAvail().X;
+      if (availableWidth <= 0f)
+      {
+        ImGui.TextWrapped(line);
+        return;
+      }
+
+      var lineWidth = ImGui.CalcTextSize(line).X;
+      if (lineWidth >= availableWidth)
+      {
+        ImGui.TextWrapped(line);
+        return;
+      }
+
+      var centeredOffset = Math.Max(0f, (availableWidth - lineWidth) * 0.5f);
+      ImGui.SetCursorPosX(ImGui.GetCursorPosX() + centeredOffset);
+      ImGui.TextUnformatted(line);
     }
   }
 }

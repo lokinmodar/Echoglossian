@@ -671,6 +671,52 @@ public class Config : IPluginConfiguration
   }
 
   /// <summary>
+  ///     Synchronizes legacy diacritics-removal toggles into one unified
+  ///     native-replacement behavior across all native UI surfaces.
+  /// </summary>
+  /// <returns>
+  ///     <see langword="true" /> when one or more values changed; otherwise
+  ///     <see langword="false" />.
+  /// </returns>
+  public bool NormalizeNativeReplacementDiacriticsSettings()
+  {
+    var unifiedEnabled =
+        this.RemoveDiacriticsWhenUsingReplacementTalkBTalk ||
+        this.RemoveDiacriticsWhenUsingReplacementQuest;
+    return this.SetNativeReplacementDiacriticsEnabled(unifiedEnabled);
+  }
+
+  /// <summary>
+  ///     Sets the unified diacritics-removal toggle for native UI replacement
+  ///     flows across quest and non-quest surfaces.
+  /// </summary>
+  /// <param name="enabled">
+  ///     Whether diacritics removal should be enabled for native replacement.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when one or more values changed; otherwise
+  ///     <see langword="false" />.
+  /// </returns>
+  public bool SetNativeReplacementDiacriticsEnabled(bool enabled)
+  {
+    var changed = false;
+
+    if (this.RemoveDiacriticsWhenUsingReplacementTalkBTalk != enabled)
+    {
+      this.RemoveDiacriticsWhenUsingReplacementTalkBTalk = enabled;
+      changed = true;
+    }
+
+    if (this.RemoveDiacriticsWhenUsingReplacementQuest != enabled)
+    {
+      this.RemoveDiacriticsWhenUsingReplacementQuest = enabled;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  /// <summary>
   /// Sets the unified game-main-menu scope toggle and display mode.
   /// </summary>
   /// <param name="enabled">Whether translation is enabled for the scope.</param>
@@ -850,6 +896,27 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate toast popup messages.</summary>
   [DefaultValue(false)] public bool TranslateToast = false;
+
+  /// <summary>
+  ///     Uses Dalamud's ToastGui callbacks to prefetch source text and
+  ///     translations for supported normal and error toasts before the addon
+  ///     handlers see the live nodes.
+  /// </summary>
+  [DefaultValue(false)] public bool UseToastGuiCaptureForSupportedToasts = false;
+
+  /// <summary>
+  ///     Enables the alternate callback-owned ToastGui runtime for supported
+  ///     normal and error toasts instead of the legacy addon-handler path.
+  ///     This stays hidden and opt-in while the route is still being validated.
+  /// </summary>
+  [DefaultValue(false)] public bool UseToastGuiRuntimeForSupportedToasts = false;
+
+  /// <summary>
+  ///     Enables debug-only automatic login probes for `_BattleTalk` and
+  ///     `_MiniTalk` so their earliest addon state can be captured without
+  ///     manually issuing the probe command after login.
+  /// </summary>
+  [DefaultValue(false)] public bool EnableDebugLoginAddonProbe = false;
 
   /// <summary>Translate To-Do List entries.</summary>
   [DefaultValue(false)] public bool TranslateToDoList = false;

@@ -71,7 +71,7 @@ namespace Echoglossian.DBManagerUI.Components
 
         foreach (var prop in props)
         {
-          ImGui.TableSetupColumn(prop.Name, ImGuiTableColumnFlags.None, 150f);
+          ImGui.TableSetupColumn(prop.Name, ImGuiTableColumnFlags.WidthFixed, 150f);
         }
 
         ImGui.TableHeadersRow();

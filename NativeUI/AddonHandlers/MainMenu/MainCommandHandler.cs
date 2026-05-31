@@ -189,6 +189,9 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
         var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
             this.config.GameMainMenuWindowTranslationDisplayMode,
             this.config.OverlayOnlyLanguage);
+        translatedPayload = this.NormalizeTranslatedPayloadForDisplayMode(
+            translatedPayload,
+            displayMode);
 
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
         {
@@ -214,6 +217,34 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
             originalPayload,
             translatedPayload,
             displayMode);
+    }
+
+    /// <summary>
+    ///     Normalizes one translated main-command payload only when the active
+    ///     display mode will write the text into the native UI.
+    /// </summary>
+    /// <param name="translatedPayload">The translated payload to normalize.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    /// <returns>The payload to use for refresh apply and hover state.</returns>
+    private DbFirstGameWindowPayload NormalizeTranslatedPayloadForDisplayMode(
+        DbFirstGameWindowPayload translatedPayload,
+        JournalTranslationDisplayMode displayMode)
+    {
+        if (!TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
+        {
+            return translatedPayload;
+        }
+
+        var normalizeText =
+            Echoglossian.TryCreateNativeReplacementTextNormalizer(this.config);
+        if (normalizeText == null)
+        {
+            return translatedPayload;
+        }
+
+        return NativeReplacementTextNormalizationHelper.NormalizePayload(
+            translatedPayload,
+            normalizeText);
     }
 
     /// <summary>

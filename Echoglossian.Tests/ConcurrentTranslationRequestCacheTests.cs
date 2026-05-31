@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.Helpers;
+using Xunit;
 
 namespace Echoglossian.Tests;
 
@@ -29,7 +30,7 @@ public class ConcurrentTranslationRequestCacheTests
         async Task<string?> Factory()
         {
             Interlocked.Increment(ref invocationCount);
-            await releaseGate.Task.ConfigureAwait(false);
+            await releaseGate.Task;
             return "translated";
         }
 
@@ -37,7 +38,7 @@ public class ConcurrentTranslationRequestCacheTests
         var second = cache.GetOrAddAsync("line", Factory);
         releaseGate.SetResult(true);
 
-        var results = await Task.WhenAll(first, second).ConfigureAwait(false);
+        var results = await Task.WhenAll(first, second);
 
         Assert.Equal(1, invocationCount);
         Assert.All(results, static result => Assert.Equal("translated", result));

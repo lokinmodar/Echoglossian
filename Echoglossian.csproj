@@ -16,11 +16,12 @@
     <NeutralLanguage>en</NeutralLanguage>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <VersionMajor>4</VersionMajor>
-    <VersionSeries Condition="'$(VersionSeries)' == ''">00</VersionSeries>
-    <VersionMinor>$([System.DateTime]::UtcNow.ToString("yy"))$(VersionSeries)</VersionMinor>
-    <!-- Keep patch and revision manual so release numbering only changes when explicitly updated. -->
-    <VersionPatch Condition="'$(VersionPatch)' == ''">1105</VersionPatch>
-    <VersionRevision Condition="'$(VersionRevision)' == ''">1000</VersionRevision>
+    <VersionYear Condition="'$(VersionYear)' == ''">26</VersionYear>
+    <VersionSeries Condition="'$(VersionSeries)' == ''">01</VersionSeries>
+    <VersionMinor>$(VersionYear)$(VersionSeries)</VersionMinor>
+    <!-- Release pattern: 4.yy01.mmdd.HHmm. Keep year, patch, and revision manual so release numbering only changes when explicitly updated. -->
+    <VersionPatch Condition="'$(VersionPatch)' == ''">0531</VersionPatch>
+    <VersionRevision Condition="'$(VersionRevision)' == ''">0115</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>

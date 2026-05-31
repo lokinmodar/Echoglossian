@@ -14,9 +14,8 @@ public static class JournalTab
     ///     Draws the Journal settings tab.
     /// </summary>
     /// <param name="config">The current plugin configuration.</param>
-    /// <param name="langToRemoveDiacritics">Whether the selected language supports diacritic removal.</param>
     /// <returns><c>true</c> when a setting changed.</returns>
-    public static bool Draw(Config config, bool langToRemoveDiacritics)
+    public static bool Draw(Config config)
     {
         var changed = false;
 
@@ -39,13 +38,6 @@ public static class JournalTab
                 ref config.TranslateScenarioTree,
                 ref config.ScenarioTreeTranslationDisplayMode);
             changed |= DrawQuestNotificationSection(config);
-        }
-
-        if (langToRemoveDiacritics)
-        {
-            changed |= ImGui.Checkbox(
-                Resources.RemoveDiacriticsToggle,
-                ref config.RemoveDiacriticsWhenUsingReplacementQuest);
         }
 
         if (changed)

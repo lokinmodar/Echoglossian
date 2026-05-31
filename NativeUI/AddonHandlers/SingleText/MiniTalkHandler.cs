@@ -78,6 +78,10 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   {
     public int ActiveRequestId;
 
+    public NativeTextNodeLayoutSnapshot? NativeLayoutSnapshot { get; set; }
+
+    public string NativeLayoutOriginalText { get; set; } = string.Empty;
+
     public string CurrentOriginalText { get; set; } = string.Empty;
 
     public string CurrentReplacementText { get; set; } = string.Empty;
@@ -217,18 +221,123 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// <param name="activeBubbleKeys">The bubble keys seen in this frame.</param>
   private void PruneHiddenMiniTalkBubbles(HashSet<nint> activeBubbleKeys)
   {
-    List<nint> hiddenBubbleKeys;
+    List<KeyValuePair<nint, BubbleState>> hiddenBubbleStates;
     lock (this.stateGate)
     {
-      hiddenBubbleKeys = this.bubbleStates.Keys
-          .Where(bubbleKey => !activeBubbleKeys.Contains(bubbleKey))
+      hiddenBubbleStates = this.bubbleStates
+          .Where(kvp => !activeBubbleKeys.Contains(kvp.Key))
           .ToList();
+
+      foreach (var hiddenBubbleState in hiddenBubbleStates)
+      {
+        this.bubbleStates.Remove(hiddenBubbleState.Key);
+      }
     }
 
-    foreach (var bubbleKey in hiddenBubbleKeys)
+    foreach (var hiddenBubbleState in hiddenBubbleStates)
     {
-      this.clearOverlay(bubbleKey, false);
+      this.TryRestoreNativeLayout(
+          hiddenBubbleState.Value.NativeLayoutSnapshot,
+          hiddenBubbleState.Value.NativeLayoutOriginalText);
+      this.clearOverlay(hiddenBubbleState.Key, false);
     }
+  }
+
+  /// <summary>
+  ///     Restores any native MiniTalk mutation currently tracked for the bubble
+  ///     when the source text changes or native mode is left.
+  /// </summary>
+  /// <param name="bubbleKey">The stable bubble key.</param>
+  /// <param name="nextOriginalText">
+  ///     The next original source text expected for the bubble, or an empty value
+  ///     when the current mutation should always be restored.
+  /// </param>
+  private void RestoreTrackedBubbleLayoutIfNeeded(
+      nint bubbleKey,
+      string? nextOriginalText = null)
+  {
+    NativeTextNodeLayoutSnapshot? snapshot = null;
+    string originalText = string.Empty;
+    var restoreText = string.IsNullOrWhiteSpace(nextOriginalText);
+
+    lock (this.stateGate)
+    {
+      if (!this.bubbleStates.TryGetValue(bubbleKey, out var state) ||
+          state.NativeLayoutSnapshot == null)
+      {
+        return;
+      }
+
+      if (!string.IsNullOrWhiteSpace(nextOriginalText) &&
+          this.TextMatches(state.NativeLayoutOriginalText, nextOriginalText))
+      {
+        return;
+      }
+
+      snapshot = state.NativeLayoutSnapshot;
+      originalText = state.NativeLayoutOriginalText;
+      state.NativeLayoutSnapshot = null;
+      state.NativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(snapshot, originalText, restoreText);
+  }
+
+  /// <summary>
+  ///     Restores the tracked native MiniTalk layout for the current bubble even
+  ///     when the source line has not changed, so repeated native apply passes
+  ///     always restart from the original bubble geometry instead of stacking
+  ///     width and height growth from the prior frame.
+  /// </summary>
+  /// <param name="bubbleKey">The stable bubble key.</param>
+  /// <param name="originalText">The original source line currently assigned to the bubble.</param>
+  private void PrepareTrackedBubbleLayoutForReapply(
+      nint bubbleKey,
+      string originalText)
+  {
+    NativeTextNodeLayoutSnapshot? snapshot = null;
+
+    lock (this.stateGate)
+    {
+      if (!this.bubbleStates.TryGetValue(bubbleKey, out var state) ||
+          state.NativeLayoutSnapshot == null ||
+          !this.TextMatches(state.NativeLayoutOriginalText, originalText))
+      {
+        return;
+      }
+
+      snapshot = state.NativeLayoutSnapshot;
+      state.NativeLayoutSnapshot = null;
+      state.NativeLayoutOriginalText = string.Empty;
+    }
+
+    this.TryRestoreNativeLayout(
+        snapshot,
+        originalText,
+        restoreText: false);
+  }
+
+  /// <summary>
+  ///     Restores one tracked native MiniTalk layout snapshot back to the
+  ///     original game state.
+  /// </summary>
+  /// <param name="snapshot">The captured layout snapshot.</param>
+  /// <param name="originalText">The original text to write back.</param>
+  private void TryRestoreNativeLayout(
+      NativeTextNodeLayoutSnapshot? snapshot,
+      string originalText,
+      bool restoreText = true)
+  {
+    if (snapshot == null)
+    {
+      return;
+    }
+
+    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+        snapshot,
+        originalText,
+        restoreText,
+        restorePositions: false);
   }
 
   /// <summary>
@@ -317,7 +426,20 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       }
 
       activeBubbleKeys.Add(bubbleNodeAddress);
+      if (!this.TryReadCurrentSource(bubbleNodeAddress, textNode, out var visibleOriginalText))
+      {
+        continue;
+      }
+
       this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
+
+      if (this.TryHandleVisibleSourceChange(
+              bubbleNodeAddress,
+              visibleOriginalText,
+              $"{type}-visible-reconcile"))
+      {
+        continue;
+      }
 
       // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} bubble=0x{bubbleNodeAddress:X} visible-update overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} swap={this.ShouldSwapTexts()}");
@@ -328,21 +450,12 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
               out var translatedText,
               out var replacementText))
       {
-        if (this.TryReadCurrentSource(bubbleNodeAddress, textNode, out var visibleOriginalText))
+        if (this.TryCaptureOrQueueMiniTalkSource(
+                bubbleNodeAddress,
+                visibleOriginalText,
+                $"{type}-visible-fallback"))
         {
-          this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
-          if (this.TryCaptureOrQueueMiniTalkSource(
-                  bubbleNodeAddress,
-                  visibleOriginalText,
-                  $"{type}-visible-fallback"))
-          {
-            continue;
-          }
-        }
-        else
-        {
-          // PluginRuntimeLog.Debug(
-          //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} readable text unavailable {this.DescribeMiniTalkTextNode(textNode)}");
+          continue;
         }
 
         continue;
@@ -363,8 +476,13 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
       if (!this.ShouldApplyNativeText())
       {
+        this.RestoreTrackedBubbleLayoutIfNeeded(bubbleNodeAddress);
         continue;
       }
+
+      this.RestoreTrackedBubbleLayoutIfNeeded(
+          bubbleNodeAddress,
+          resolvedOriginalText);
 
       if (textNode == null)
       {
@@ -379,7 +497,29 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         continue;
       }
 
-      textNode->SetText(replacementText);
+      this.PrepareTrackedBubbleLayoutForReapply(
+          bubbleNodeAddress,
+          resolvedOriginalText);
+
+      var layoutSnapshot = NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
+          addon,
+          textNode,
+          replacementText,
+          allowWidthGrowth: true,
+          additionalWrapWidth: this.ResolveMiniTalkAdditionalWrapWidth(textNode));
+      if (layoutSnapshot != null)
+      {
+        lock (this.stateGate)
+        {
+          if (this.bubbleStates.TryGetValue(bubbleNodeAddress, out var state))
+          {
+            state.NativeLayoutSnapshot = layoutSnapshot;
+            state.NativeLayoutOriginalText = resolvedOriginalText;
+          }
+        }
+      }
+
+      this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
     }
 
     this.PruneHiddenMiniTalkBubbles(activeBubbleKeys);
@@ -394,16 +534,19 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   {
     // PluginRuntimeLog.Debug($"[MiniTalk] trigger={type} resetting mini talk state");
 
-    List<nint> bubbleKeys;
+    List<KeyValuePair<nint, BubbleState>> bubbleStates;
     lock (this.stateGate)
     {
-      bubbleKeys = this.bubbleStates.Keys.ToList();
+      bubbleStates = this.bubbleStates.ToList();
       this.bubbleStates.Clear();
     }
 
-    foreach (var bubbleKey in bubbleKeys)
+    foreach (var bubbleState in bubbleStates)
     {
-      this.clearOverlay(bubbleKey, true);
+      this.TryRestoreNativeLayout(
+          bubbleState.Value.NativeLayoutSnapshot,
+          bubbleState.Value.NativeLayoutOriginalText);
+      this.clearOverlay(bubbleState.Key, true);
     }
   }
 
@@ -550,6 +693,36 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     translatedText = lookup.TranslatedMiniTalkMessage!;
     replacementText = this.NormalizeForReplacement(translatedText);
     return true;
+  }
+
+  /// <summary>
+  ///     Resolves a small amount of extra wrap width from the live MiniTalk node
+  ///     padding so translated lines can gain a bit of horizontal room without
+  ///     relying on fixed pixel constants.
+  /// </summary>
+  /// <param name="textNode">The live MiniTalk text node.</param>
+  /// <returns>The additional wrap width suggested by the current bubble layout.</returns>
+  private unsafe ushort ResolveMiniTalkAdditionalWrapWidth(AtkTextNode* textNode)
+  {
+    if (textNode == null)
+    {
+      return 0;
+    }
+
+    var parentNode = textNode->AtkResNode.ParentNode;
+    var leftPadding = Math.Max(0, (int)textNode->AtkResNode.GetXShort());
+    if (parentNode == null)
+    {
+      return (ushort)Math.Min(ushort.MaxValue, leftPadding);
+    }
+
+    var currentWidth = textNode->GetWidth();
+    var rightPadding = Math.Max(
+        0,
+        parentNode->GetWidth() - leftPadding - currentWidth);
+    return (ushort)Math.Min(
+        ushort.MaxValue,
+        Math.Max(leftPadding, rightPadding));
   }
 
   /// <summary>
@@ -875,6 +1048,17 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return false;
     }
 
+    if (NativeTextNodeLayoutHelper.TryResolveContainerNodes(
+            addon: null,
+            textNode,
+            out var containerNode,
+            out _) &&
+        containerNode != null &&
+        !containerNode->IsVisible())
+    {
+      return false;
+    }
+
     var viewport = ImGui.GetMainViewport();
     var left = textNode->ScreenX;
     var top = textNode->ScreenY;
@@ -929,8 +1113,203 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       }
     }
 
+    if (this.ShouldApplyNativeText())
+    {
+      if (this.TryReadOriginalPointerText(textNode, out var originalPointerText) &&
+          !this.TextMatches(originalPointerText, visibleText) &&
+          this.TryConfirmOriginalPointerMatchesVisible(
+              bubbleKey,
+              originalPointerText,
+              visibleText,
+              out var confirmedOriginalText))
+      {
+        originalText = confirmedOriginalText;
+        return true;
+      }
+
+      if (this.TryMapVisibleReplacementToKnownOriginal(visibleText, out var mappedOriginalText))
+      {
+        originalText = mappedOriginalText;
+        return true;
+      }
+    }
+
     originalText = visibleText;
     return true;
+  }
+
+  /// <summary>
+  ///     Confirms that a MiniTalk node's original-text pointer really belongs to
+  ///     the currently visible bubble text before the handler trusts it as the
+  ///     logical source line.
+  /// </summary>
+  /// <param name="bubbleKey">The stable bubble key.</param>
+  /// <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+  /// <param name="visibleText">The text currently visible in the node.</param>
+  /// <param name="originalText">Receives the confirmed original text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the pointer text can be proven to explain
+  ///     the visible replacement inside MiniTalk; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool TryConfirmOriginalPointerMatchesVisible(
+      nint bubbleKey,
+      string originalPointerText,
+      string visibleText,
+      out string originalText)
+  {
+    lock (this.stateGate)
+    {
+      if (this.TryGetBubbleState(bubbleKey, out var state) &&
+          this.TextMatches(state.CurrentOriginalText, originalPointerText) &&
+          this.TextMatches(visibleText, state.CurrentReplacementText))
+      {
+        originalText = originalPointerText;
+        return true;
+      }
+
+      foreach (var bubbleState in this.bubbleStates.Values)
+      {
+        if (!this.TextMatches(
+                bubbleState.CurrentOriginalText,
+                originalPointerText))
+        {
+          continue;
+        }
+
+        if (this.TextMatches(
+                visibleText,
+                bubbleState.CurrentReplacementText))
+        {
+          originalText = originalPointerText;
+          return true;
+        }
+      }
+    }
+
+    if (this.TryLoadStoredTranslation(
+            originalPointerText,
+            out _,
+            out var replacementText) &&
+        this.TextMatches(visibleText, replacementText))
+    {
+      originalText = originalPointerText;
+      return true;
+    }
+
+    originalText = string.Empty;
+    return false;
+  }
+
+  /// <summary>
+  ///     Tries to read the original game-provided text payload from a MiniTalk
+  ///     text node even when the visible node text has already been replaced.
+  /// </summary>
+  /// <param name="textNode">The text node to inspect.</param>
+  /// <param name="originalText">Receives the original payload text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the original payload can be read;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  private unsafe bool TryReadOriginalPointerText(
+      AtkTextNode* textNode,
+      out string originalText)
+  {
+    originalText = string.Empty;
+    if (textNode == null)
+    {
+      return false;
+    }
+
+    try
+    {
+      originalText = textNode->OriginalTextPointer.AsReadOnlySeStringSpan().ExtractText();
+      return !string.IsNullOrWhiteSpace(originalText);
+    }
+    catch
+    {
+      return false;
+    }
+  }
+
+  /// <summary>
+  ///     Tries to resolve a visible translated MiniTalk line back to an original
+  ///     source line already known to another tracked bubble state.
+  /// </summary>
+  /// <param name="visibleText">The visible text currently rendered by the node.</param>
+  /// <param name="originalText">Receives the matched original source line.</param>
+  /// <returns>
+  ///     <see langword="true" /> when a tracked replacement matches the visible
+  ///     line; otherwise, <see langword="false" />.
+  /// </returns>
+  private bool TryMapVisibleReplacementToKnownOriginal(
+      string visibleText,
+      out string originalText)
+  {
+    lock (this.stateGate)
+    {
+      foreach (var state in this.bubbleStates.Values)
+      {
+        if (string.IsNullOrWhiteSpace(state.CurrentOriginalText) ||
+            string.IsNullOrWhiteSpace(state.CurrentReplacementText))
+        {
+          continue;
+        }
+
+        if (this.TextMatches(visibleText, state.CurrentReplacementText))
+        {
+          originalText = state.CurrentOriginalText;
+          return true;
+        }
+      }
+    }
+
+    originalText = string.Empty;
+    return false;
+  }
+
+  /// <summary>
+  ///     Reconciles a visible MiniTalk source line against the tracked bubble
+  ///     state so recycled bubble slots do not keep using a stale translation or
+  ///     a stale native layout snapshot from the prior occupant.
+  /// </summary>
+  /// <param name="bubbleKey">The stable bubble key.</param>
+  /// <param name="visibleOriginalText">The current visible source line.</param>
+  /// <param name="trigger">The trigger label used for capture/queue routing.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the visible source changed and the new
+  ///     source was captured, restored, or queued; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool TryHandleVisibleSourceChange(
+      nint bubbleKey,
+      string visibleOriginalText,
+      string trigger)
+  {
+    var shouldReconcile = false;
+
+    lock (this.stateGate)
+    {
+      if (this.TryGetBubbleState(bubbleKey, out var state) &&
+          !string.IsNullOrWhiteSpace(state.CurrentOriginalText) &&
+          !this.TextMatches(state.CurrentOriginalText, visibleOriginalText))
+      {
+        shouldReconcile = true;
+      }
+    }
+
+    if (!shouldReconcile)
+    {
+      return false;
+    }
+
+    this.RestoreTrackedBubbleLayoutIfNeeded(
+        bubbleKey,
+        visibleOriginalText);
+    return this.TryCaptureOrQueueMiniTalkSource(
+        bubbleKey,
+        visibleOriginalText,
+        trigger);
   }
 
   /// <summary>

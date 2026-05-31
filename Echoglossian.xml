@@ -1757,6 +1757,29 @@
             <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Config.NormalizeNativeReplacementDiacriticsSettings">
+            <summary>
+                Synchronizes legacy diacritics-removal toggles into one unified
+                native-replacement behavior across all native UI surfaces.
+            </summary>
+            <returns>
+                <see langword="true" /> when one or more values changed; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Config.SetNativeReplacementDiacriticsEnabled(System.Boolean)">
+            <summary>
+                Sets the unified diacritics-removal toggle for native UI replacement
+                flows across quest and non-quest surfaces.
+            </summary>
+            <param name="enabled">
+                Whether diacritics removal should be enabled for native replacement.
+            </param>
+            <returns>
+                <see langword="true" /> when one or more values changed; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Config.SetGameMainMenuTranslationSettings(System.Boolean,Echoglossian.JournalTranslationDisplayMode)">
             <summary>
             Sets the unified game-main-menu scope toggle and display mode.
@@ -1854,6 +1877,27 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateToast">
             <summary>Translate toast popup messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseToastGuiCaptureForSupportedToasts">
+            <summary>
+                Uses Dalamud's ToastGui callbacks to prefetch source text and
+                translations for supported normal and error toasts before the addon
+                handlers see the live nodes.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.UseToastGuiRuntimeForSupportedToasts">
+            <summary>
+                Enables the alternate callback-owned ToastGui runtime for supported
+                normal and error toasts instead of the legacy addon-handler path.
+                This stays hidden and opt-in while the route is still being validated.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.EnableDebugLoginAddonProbe">
+            <summary>
+                Enables debug-only automatic login probes for `_BattleTalk` and
+                `_MiniTalk` so their earliest addon state can be captured without
+                manually issuing the probe command after login.
+            </summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateToDoList">
             <summary>Translate To-Do List entries.</summary>
@@ -2054,6 +2098,14 @@
             <summary>
                 Provides reusable DB-first background prefetch for action-adjacent
                 reference-text sheets used by <c>ActionMenu</c>.
+            </summary>
+            <summary>
+                Handles bootstrap and teardown of the experimental ToastGui-assisted
+                toast capture runtime for supported normal and error toasts.
+            </summary>
+            <summary>
+                Handles bootstrap and teardown for the alternate callback-owned
+                ToastGui route that owns supported normal and error toasts.
             </summary>
             <summary>
                 Provides DB-first background prefetch for canonical trait payloads.
@@ -2645,7 +2697,7 @@
                 Recreates the shared queued-translation broker for the current engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RebuildQuestToastRuntime">
+        <member name="M:Echoglossian.Echoglossian.RebuildToastGuiRuntimes">
             <summary>
                 Recreates and re-registers the quest-toast runtime so it uses the
                 current translation service.
@@ -2842,6 +2894,24 @@
                 chars.
             </param>
             <returns>Cleand text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EnsureConfigDefaultsPersistedForMissingKeys">
+            <summary>
+                Ensures newly introduced config fields are materialized in the
+                persisted JSON after an update by saving once when any known field is
+                missing from disk.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCreateNativeReplacementTextNormalizer(Echoglossian.Config)">
+            <summary>
+                Creates the shared normalizer used by non-quest native replacement
+                flows when the global diacritics-removal toggle is active.
+            </summary>
+            <param name="config">The current plugin configuration.</param>
+            <returns>
+                A normalization callback when the feature is active and the plugin
+                instance is available; otherwise <see langword="null" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.GetGameVersion">
             <summary>
@@ -4992,6 +5062,45 @@
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.CreateToastGuiCaptureRuntime">
+            <summary>
+                Creates the ToastGui-assisted capture runtime using the same shared
+                toast persistence helpers already used by the addon-handler path.
+            </summary>
+            <returns>The initialized runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterToastGuiCaptureRuntime">
+            <summary>
+                Registers the ToastGui-assisted capture runtime with Dalamud's
+                callback surface for supported normal and error toasts.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterToastGuiCaptureRuntime">
+            <summary>
+                Unregisters the ToastGui-assisted capture runtime from Dalamud's
+                callback surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateToastGuiSupportedToastRuntime">
+            <summary>
+                Creates the alternate supported-toast runtime using the same shared
+                toast persistence and overlay helpers already used elsewhere in the
+                plugin.
+            </summary>
+            <returns>The initialized supported-toast runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterToastGuiSupportedToastRuntime">
+            <summary>
+                Registers the alternate supported-toast runtime with Dalamud's normal
+                and error-toast callbacks.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterToastGuiSupportedToastRuntime">
+            <summary>
+                Unregisters the alternate supported-toast runtime from Dalamud's
+                normal and error-toast callbacks.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetch">
             <summary>
                 Ticks the trait prefetch runtime so current class/job traits are translated
@@ -5445,6 +5554,26 @@
                 <see langword="true" /> when the overlay belongs to the toast/gimmick
                 family; otherwise, <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldCenterOverlayText(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
+            <summary>
+                Gets whether overlay text should be centered for the specified
+                surface.
+            </summary>
+            <param name="surfaceId">The overlay surface identifier.</param>
+            <returns>
+                <see langword="true" /> when text should be centered; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawOverlayLine(System.String,System.Boolean)">
+            <summary>
+                Draws one overlay text line, centering it horizontally when enabled.
+            </summary>
+            <param name="line">The line to draw.</param>
+            <param name="centerAligned">
+                Whether to center-align the line in the available content region.
+            </param>
         </member>
         <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
@@ -11746,6 +11875,17 @@
             <param name="translatedPayload">The translated payload.</param>
             <param name="payloadKey">The stable payload key.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeTranslatedPayloadForDisplayMode(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Normalizes one translated payload only when the current display mode
+                will actually write the translated text into the native UI.
+            </summary>
+            <param name="translatedPayload">The translated payload to normalize.</param>
+            <param name="displayMode">The active display mode.</param>
+            <returns>
+                The translated payload that should be applied for this display mode.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RestoreOriginalPayloadIfNeeded">
             <summary>
                 Restores the original payload if this runtime mutated the addon.
@@ -12345,6 +12485,15 @@
             </summary>
             <param name="args">The lifecycle arguments for the refresh event.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.NormalizeTranslatedPayloadForDisplayMode(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Normalizes one translated main-command payload only when the active
+                display mode will write the text into the native UI.
+            </summary>
+            <param name="translatedPayload">The translated payload to normalize.</param>
+            <param name="displayMode">The active display mode.</param>
+            <returns>The payload to use for refresh apply and hover state.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.CaptureRefreshPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.UInt32)">
             <summary>
                 Captures the hover-label portion of the main command refresh payload.
@@ -12635,7 +12784,7 @@
             <param name="snapshot">The cached original snapshot.</param>
             <returns>True when the scope already has an original snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailOriginalSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.String,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailOriginalSnapshot(System.String,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
                 Remembers the original JournalDetail texts for the current quest
                 scope so mode switches can restore native UI state correctly.
@@ -12645,13 +12794,6 @@
             <param name="questMessage">The original quest description.</param>
             <param name="objectiveText">The original visible objective text.</param>
             <param name="summaryText">The original visible summary text.</param>
-            <param name="descriptionNode">The live description text node.</param>
-            <param name="objectiveNodeAddresses">
-                The live visible objective text nodes in order.
-            </param>
-            <param name="objectiveTexts">
-                The original visible objective texts in order.
-            </param>
             <param name="summaryNode">The live primary summary text node, if any.</param>
             <param name="summaryContainerNode">
                 The live summary container node, if any.
@@ -12662,136 +12804,6 @@
             <param name="additionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.MergeJournalDetailOriginalSnapshotAdditionalNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr})">
-            <summary>
-                Merges newly discovered supplemental summary nodes into the existing
-                JournalDetail original snapshot so later native restores and hover
-                bounds stay stable even if the addon exposes more summary nodes on a
-                later repaint.
-            </summary>
-            <param name="scopeKey">The current quest-detail scope key.</param>
-            <param name="originalSnapshot">The original snapshot for that scope.</param>
-            <param name="objectiveNodeAddresses">
-                The currently visible objective text nodes.
-            </param>
-            <param name="objectiveTexts">
-                The currently visible objective texts.
-            </param>
-            <param name="visibleAdditionalSummaryNodes">
-                The supplemental summary nodes visible on the current repaint.
-            </param>
-            <returns>The merged snapshot.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CreateJournalDetailOriginalSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
-            <summary>
-                Creates one JournalDetail original snapshot, including the ordered
-                native reflow blocks and container chain used by native translation.
-            </summary>
-            <param name="journalBox">The live JournalDetail body component.</param>
-            <param name="questName">The original quest name.</param>
-            <param name="questMessage">The original quest message.</param>
-            <param name="objectiveText">The original visible objective text.</param>
-            <param name="summaryText">The original visible summary text.</param>
-            <param name="descriptionNode">The live description text node.</param>
-            <param name="objectiveNodeAddresses">
-                The live visible objective text nodes in order.
-            </param>
-            <param name="objectiveTexts">
-                The original visible objective texts in order.
-            </param>
-            <param name="summaryNode">The live primary summary text node, if any.</param>
-            <param name="summaryContainerNode">The live summary container node, if any.</param>
-            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
-            <param name="additionalSummaryTexts">The original supplemental summary texts.</param>
-            <returns>The captured original snapshot.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ApplyJournalDetailNativeTextNodePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.String)">
-            <summary>
-                Applies the native multiline presentation used by JournalDetail body
-                nodes when translated text is written into the game UI.
-            </summary>
-            <param name="textNode">The target text node.</param>
-            <param name="originalWidth">The original node width.</param>
-            <param name="originalTextFlags">The original text flags.</param>
-            <param name="originalFontSize">The original font size.</param>
-            <param name="text">The translated text to render.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RestoreJournalDetailTextNodePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.String)">
-            <summary>
-                Restores the original JournalDetail presentation for a body text
-                node after leaving native translation mode.
-            </summary>
-            <param name="textNode">The target text node.</param>
-            <param name="originalWidth">The original node width.</param>
-            <param name="originalTextFlags">The original text flags.</param>
-            <param name="originalFontSize">The original font size.</param>
-            <param name="text">The original text to restore.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureTextNodeLayout(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-                Captures the current layout metadata of a visible JournalDetail text
-                node so native mode can restore both presentation and position.
-            </summary>
-            <param name="textNode">The text node to snapshot.</param>
-            <returns>The captured layout, or <c>null</c> when the node is unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureVisibleTextNodeLayouts(System.Collections.Generic.IEnumerable{System.IntPtr})">
-            <summary>
-                Captures the current layout metadata of the supplied text-node
-                addresses in their current display order.
-            </summary>
-            <param name="nodes">The visible text-node addresses.</param>
-            <returns>The captured node layouts.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ApplyJournalDetailNativeSummaryFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.String})">
-            <summary>
-                Applies the translated JournalDetail summary block to the primary
-                summary node while clearing the supplemental summary nodes that would
-                otherwise leak original text underneath the native translation.
-            </summary>
-            <param name="originalSnapshot">The original quest-detail snapshot.</param>
-            <param name="summaryContainerNode">The live summary container node, if any.</param>
-            <param name="translatedSections">The translated summary sections in order.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RestoreJournalDetailOriginalSummaryFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
-            <summary>
-                Restores the original JournalDetail summary-node positions,
-                presentation, and texts after leaving native translation mode.
-            </summary>
-            <param name="originalSnapshot">The original quest-detail snapshot.</param>
-            <param name="summaryContainerNode">The live summary container node, if any.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryApplyJournalDetailNativeBodyFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.String})">
-            <summary>
-                Applies the translated JournalDetail native body flow using the
-                shared block-reflow helper when a flow snapshot is available.
-            </summary>
-            <param name="originalSnapshot">The original quest-detail snapshot.</param>
-            <param name="descriptionNode">The live description text node.</param>
-            <param name="translatedDescriptionText">The translated description text.</param>
-            <param name="objectiveNodeAddresses">
-                The live visible objective text nodes in order.
-            </param>
-            <param name="translatedObjectiveTexts">
-                The translated objective texts in visible order.
-            </param>
-            <param name="summaryNode">The live primary summary text node.</param>
-            <param name="translatedSummarySections">The translated summary sections.</param>
-            <returns><c>true</c> when the shared reflow helper handled the body flow.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryRestoreJournalDetailOriginalBodyFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-                Restores the original JournalDetail body flow using the shared
-                reflow helper when a flow snapshot is available.
-            </summary>
-            <param name="originalSnapshot">The original quest-detail snapshot.</param>
-            <param name="descriptionNode">The live description text node.</param>
-            <param name="objectiveNodeAddresses">
-                The live visible objective text nodes in order.
-            </param>
-            <param name="summaryNode">The live primary summary text node.</param>
-            <returns><c>true</c> when the shared reflow helper handled the restore.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
             <summary>
@@ -12845,43 +12857,15 @@
             <param name="sections">The summary sections to join.</param>
             <returns>A deduplicated summary block for the JournalDetail body.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.NormalizeJournalDetailSummaryCandidateText(System.String)">
-            <summary>
-                Normalizes JournalDetail summary text for stable node-content
-                matching across live addon refreshes and native writes.
-            </summary>
-            <param name="text">The summary text to normalize.</param>
-            <returns>The normalized summary text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailSummaryTextCandidates(System.Collections.Generic.IEnumerable{System.String})">
-            <summary>
-                Builds the set of summary texts that should be considered part of the
-                active JournalDetail summary block on the current repaint.
-            </summary>
-            <param name="summarySections">The known summary sections.</param>
-            <returns>The normalized summary text candidates.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.MatchesJournalDetailSummaryCandidate(System.String,System.Collections.Generic.IReadOnlyCollection{System.String})">
-            <summary>
-                Gets whether a visible JournalDetail text node looks like one of the
-                known summary paragraphs for the active quest.
-            </summary>
-            <param name="visibleText">The current visible text of the node.</param>
-            <param name="summaryTextCandidates">The known summary texts.</param>
-            <returns><c>true</c> when the node text matches the summary set.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyCollection{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Collects the visible JournalDetail supplemental summary nodes in their
                 current display order.
             </summary>
-            <param name="journalBox">The live JournalDetail body component.</param>
+            <param name="journalBox">The live JournalDetail box component.</param>
             <param name="descriptionNode">The live description text node.</param>
             <param name="objectiveNode">The live objective text node.</param>
             <param name="summaryNode">The live primary summary text node, if any.</param>
-            <param name="summaryTextCandidates">
-                The normalized summary texts expected for the active quest.
-            </param>
             <returns>The visible supplemental summary text nodes.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureVisibleTextNodeTexts(System.Collections.Generic.IEnumerable{System.IntPtr})">
@@ -12890,147 +12874,6 @@
             </summary>
             <param name="nodes">The visible text nodes.</param>
             <returns>The current visible text for each node.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailObjectiveDisplayText(System.Collections.Generic.IEnumerable{System.String})">
-            <summary>
-                Builds the visible JournalDetail objective block text for hover and
-                native-payload readiness checks.
-            </summary>
-            <param name="objectiveSections">The visible objective sections in order.</param>
-            <returns>The combined objective text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveJournalDetailActiveBodyNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.Collections.Generic.List{System.IntPtr}@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.Collections.Generic.List{System.IntPtr}@)">
-            <summary>
-                Resolves the currently visible JournalDetail body sections from the
-                active body flow instead of relying on ambiguous repeated node ids.
-            </summary>
-            <param name="journalBox">The live JournalDetail body component.</param>
-            <param name="descriptionNode">The resolved description text node.</param>
-            <param name="objectiveNodeAddresses">
-                The resolved visible objective text nodes in order.
-            </param>
-            <param name="summaryContainerNode">
-                The resolved summary section container node.
-            </param>
-            <param name="summaryNode">The resolved primary summary text node.</param>
-            <param name="additionalSummaryNodeAddresses">
-                The resolved supplemental summary text nodes in order.
-            </param>
-            <returns><c>true</c> when the visible body sections were resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveVisibleJournalDetailSection(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.Collections.Generic.IReadOnlyCollection{System.UInt32},System.Single,System.Single,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.Collections.Generic.List{System.IntPtr}@)">
-            <summary>
-                Resolves one visible JournalDetail section by its label text id and
-                returns the visible body text nodes that belong to that section.
-            </summary>
-            <param name="journalBox">The live JournalDetail body component.</param>
-            <param name="labelTextIds">The section label text ids.</param>
-            <param name="viewportTop">The visible viewport top.</param>
-            <param name="viewportBottom">The visible viewport bottom.</param>
-            <param name="sectionContainerNode">The resolved section container.</param>
-            <param name="labelNode">The resolved visible label node.</param>
-            <param name="bodyNodeAddresses">The resolved visible body text nodes.</param>
-            <returns><c>true</c> when the section was resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleJournalDetailLabelTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyCollection{System.UInt32},System.Single,System.Single)">
-            <summary>
-                Collects the visible JournalDetail section label text nodes inside
-                the active body flow and sorts them by on-screen order.
-            </summary>
-            <param name="rootNode">The candidate section subtree root.</param>
-            <param name="labelTextIds">The accepted label text ids.</param>
-            <param name="viewportTop">The visible viewport top.</param>
-            <param name="viewportBottom">The visible viewport bottom.</param>
-            <returns>The resolved visible label text nodes in screen order.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ResolveJournalDetailSectionContainerNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-                Resolves the narrowest useful JournalDetail section container for one
-                visible section label inside the live body flow.
-            </summary>
-            <param name="flowRoot">The live JournalDetail body flow root.</param>
-            <param name="labelNode">The resolved visible section label node.</param>
-            <returns>The section container that owns the label and body flow.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleJournalDetailSectionBodyTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Single,System.Single)">
-            <summary>
-                Collects the visible body text nodes that belong to one resolved
-                JournalDetail section.
-            </summary>
-            <param name="sectionContainerNode">The section container subtree root.</param>
-            <param name="labelNode">The resolved label node for that section.</param>
-            <param name="viewportTop">The visible viewport top.</param>
-            <param name="viewportBottom">The visible viewport bottom.</param>
-            <returns>The visible body text nodes in display order.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.IsJournalDetailNodeWithinViewport(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Single,System.Single)">
-            <summary>
-                Gets whether one node intersects the visible JournalDetail viewport.
-            </summary>
-            <param name="node">The node to evaluate.</param>
-            <param name="viewportTop">The visible viewport top.</param>
-            <param name="viewportBottom">The visible viewport bottom.</param>
-            <returns><c>true</c> when the node intersects the viewport.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleJournalDetailFlowTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr})">
-            <summary>
-                Collects the visible JournalDetail body-flow text nodes that should
-                participate in native vertical reflow.
-            </summary>
-            <param name="journalBox">The live JournalDetail body component.</param>
-            <param name="descriptionNode">The live description text node.</param>
-            <param name="objectiveNodeAddresses">
-                The live visible objective text nodes in order.
-            </param>
-            <param name="summaryNode">The live primary summary text node, if any.</param>
-            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
-            <returns>The ordered text-node addresses that belong to the body flow.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureJournalDetailNativeFlowContainers(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot})">
-            <summary>
-                Captures the JournalDetail container state that should grow together
-                with the native body flow.
-            </summary>
-            <param name="flowRoot">The JournalDetail body-flow root node.</param>
-            <param name="flowBlocks">The captured ordered body-flow blocks.</param>
-            <returns>The captured container snapshots.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailNativeFlowTextMap(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
-            <summary>
-                Builds the translated or original text payloads that the JournalDetail
-                native body-flow reflow should apply.
-            </summary>
-            <param name="descriptionNode">The description text node.</param>
-            <param name="descriptionText">The description text to render.</param>
-            <param name="objectiveNodeAddresses">
-                The visible objective text nodes in order.
-            </param>
-            <param name="objectiveTexts">The objective texts to render in order.</param>
-            <param name="summaryNode">The primary summary text node.</param>
-            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
-            <param name="summarySections">The summary sections in display order.</param>
-            <returns>The node-address keyed text payloads.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailObjectiveNodeTextAssignments(System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
-            <summary>
-                Distributes JournalDetail objective sections across the currently
-                visible native objective nodes.
-            </summary>
-            <param name="objectiveNodeAddresses">
-                The visible objective text nodes in order.
-            </param>
-            <param name="objectiveSections">The objective sections in display order.</param>
-            <returns>The objective text payload keyed by node address.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailSummaryNodeTextAssignments(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
-            <summary>
-                Distributes JournalDetail summary sections across the currently
-                visible native summary nodes.
-            </summary>
-            <param name="summaryNode">The primary summary text node.</param>
-            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
-            <param name="summarySections">The summary sections in display order.</param>
-            <returns>The summary text payload keyed by node address.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveTranslatedSummaryText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.String,System.String,System.String,System.String@)">
             <summary>
@@ -13043,18 +12886,6 @@
             <param name="sourceText">The canonical summary row text.</param>
             <param name="translatedText">The translated summary row text.</param>
             <returns>True when the translated summary row is ready.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveTranslatedObjectiveText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String,System.String@)">
-            <summary>
-                Resolves one translated objective row from the JournalDetail cache or
-                the persisted quest plate.
-            </summary>
-            <param name="foundQuestPlate">The persisted quest plate, if any.</param>
-            <param name="questCanonicalData">The canonical quest payload, if any.</param>
-            <param name="journalDetailScopeKey">The current JournalDetail scope key.</param>
-            <param name="sourceText">The visible source objective text.</param>
-            <param name="translatedText">The translated objective text.</param>
-            <returns>True when the translated objective row is ready.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildCanonicalSummaryRows(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String)">
             <summary>
@@ -13085,7 +12916,7 @@
             <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
             <returns>True when the node is visible and the bounds are usable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Applies translations to the active Journal detail box.
             </summary>
@@ -13098,12 +12929,7 @@
             <param name="summaryText">The summary text.</param>
             <param name="questNameNode">The quest-name text node.</param>
             <param name="descriptionNode">The description text node.</param>
-            <param name="objectiveNodeAddresses">
-                The visible objective text nodes in order.
-            </param>
-            <param name="objectiveTexts">
-                The visible objective texts in order.
-            </param>
+            <param name="objectiveNode">The objective text node.</param>
             <param name="summaryContainerNode">The summary container node, if any.</param>
             <param name="summaryNode">The optional summary text node.</param>
         </member>
@@ -13156,20 +12982,6 @@
             <param name="AdditionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
-            <param name="DescriptionNodeWidth">The original description-node width.</param>
-            <param name="DescriptionNodeTextFlags">
-                The original description-node text flags.
-            </param>
-            <param name="DescriptionNodeFontSize">
-                The original description-node font size.
-            </param>
-            <param name="ObjectiveNodeWidth">The original objective-node width.</param>
-            <param name="ObjectiveNodeTextFlags">
-                The original objective-node text flags.
-            </param>
-            <param name="ObjectiveNodeFontSize">
-                The original objective-node font size.
-            </param>
             <param name="SummaryNodeWidth">The original primary summary node width.</param>
             <param name="SummaryContainerHeight">
                 The original summary container height.
@@ -13180,21 +12992,8 @@
             <param name="SummaryNodeFontSize">
                 The original primary summary node font size.
             </param>
-            <param name="SummaryNodeLayout">
-                The original primary summary node layout.
-            </param>
-            <param name="AdditionalSummaryNodeLayouts">
-                The original supplemental summary node layouts.
-            </param>
-            <param name="NativeFlowBlocks">
-                The ordered native body-flow block snapshots captured for reflow.
-            </param>
-            <param name="NativeFlowContainerSnapshots">
-                The container chain that should grow and restore with the native body
-                flow.
-            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte)">
             <summary>
                 Stores the original JournalDetail texts for a single visible quest
                 scope so mode changes can restore native UI state and drive swap
@@ -13210,20 +13009,6 @@
             <param name="AdditionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
-            <param name="DescriptionNodeWidth">The original description-node width.</param>
-            <param name="DescriptionNodeTextFlags">
-                The original description-node text flags.
-            </param>
-            <param name="DescriptionNodeFontSize">
-                The original description-node font size.
-            </param>
-            <param name="ObjectiveNodeWidth">The original objective-node width.</param>
-            <param name="ObjectiveNodeTextFlags">
-                The original objective-node text flags.
-            </param>
-            <param name="ObjectiveNodeFontSize">
-                The original objective-node font size.
-            </param>
             <param name="SummaryNodeWidth">The original primary summary node width.</param>
             <param name="SummaryContainerHeight">
                 The original summary container height.
@@ -13233,19 +13018,6 @@
             </param>
             <param name="SummaryNodeFontSize">
                 The original primary summary node font size.
-            </param>
-            <param name="SummaryNodeLayout">
-                The original primary summary node layout.
-            </param>
-            <param name="AdditionalSummaryNodeLayouts">
-                The original supplemental summary node layouts.
-            </param>
-            <param name="NativeFlowBlocks">
-                The ordered native body-flow block snapshots captured for reflow.
-            </param>
-            <param name="NativeFlowContainerSnapshots">
-                The container chain that should grow and restore with the native body
-                flow.
             </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.QuestName">
@@ -13270,32 +13042,6 @@
                 The original visible supplemental summary texts.
             </summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeWidth">
-            <summary>The original description-node width.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeTextFlags">
-            <summary>
-                The original description-node text flags.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeFontSize">
-            <summary>
-                The original description-node font size.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeWidth">
-            <summary>The original objective-node width.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeTextFlags">
-            <summary>
-                The original objective-node text flags.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeFontSize">
-            <summary>
-                The original objective-node font size.
-            </summary>
-        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeWidth">
             <summary>The original primary summary node width.</summary>
         </member>
@@ -13313,74 +13059,6 @@
             <summary>
                 The original primary summary node font size.
             </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeLayout">
-            <summary>
-                The original primary summary node layout.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.AdditionalSummaryNodeLayouts">
-            <summary>
-                The original supplemental summary node layouts.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.NativeFlowBlocks">
-            <summary>
-                The ordered native body-flow block snapshots captured for reflow.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.NativeFlowContainerSnapshots">
-            <summary>
-                The container chain that should grow and restore with the native body
-                flow.
-            </summary>
-        </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout">
-            <summary>
-                Captures the original layout state for a JournalDetail body text
-                node.
-            </summary>
-            <param name="NodeAddress">The live text-node address.</param>
-            <param name="X">The original local X position.</param>
-            <param name="Y">The original local Y position.</param>
-            <param name="Width">The original node width.</param>
-            <param name="Height">The original node height.</param>
-            <param name="TextFlags">The original text flags.</param>
-            <param name="FontSize">The original font size.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte)">
-            <summary>
-                Captures the original layout state for a JournalDetail body text
-                node.
-            </summary>
-            <param name="NodeAddress">The live text-node address.</param>
-            <param name="X">The original local X position.</param>
-            <param name="Y">The original local Y position.</param>
-            <param name="Width">The original node width.</param>
-            <param name="Height">The original node height.</param>
-            <param name="TextFlags">The original text flags.</param>
-            <param name="FontSize">The original font size.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.NodeAddress">
-            <summary>The live text-node address.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.X">
-            <summary>The original local X position.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Y">
-            <summary>The original local Y position.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Width">
-            <summary>The original node width.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Height">
-            <summary>The original node height.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.TextFlags">
-            <summary>The original text flags.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.FontSize">
-            <summary>The original font size.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler">
             <summary>
@@ -14877,6 +14555,35 @@
             </summary>
             <param name="activeBubbleKeys">The bubble keys seen in this frame.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.RestoreTrackedBubbleLayoutIfNeeded(System.IntPtr,System.String)">
+            <summary>
+                Restores any native MiniTalk mutation currently tracked for the bubble
+                when the source text changes or native mode is left.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="nextOriginalText">
+                The next original source text expected for the bubble, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.PrepareTrackedBubbleLayoutForReapply(System.IntPtr,System.String)">
+            <summary>
+                Restores the tracked native MiniTalk layout for the current bubble even
+                when the source line has not changed, so repeated native apply passes
+                always restart from the original bubble geometry instead of stacking
+                width and height growth from the prior frame.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="originalText">The original source line currently assigned to the bubble.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native MiniTalk layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="snapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.OnPreUpdate(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Captures MiniTalk source text early in the lifecycle so a translation
@@ -14933,6 +14640,15 @@
                 <see langword="true" /> when a stored translation exists;
                 otherwise, <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ResolveMiniTalkAdditionalWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Resolves a small amount of extra wrap width from the live MiniTalk node
+                padding so translated lines can gain a bit of horizontal room without
+                relying on fixed pixel constants.
+            </summary>
+            <param name="textNode">The live MiniTalk text node.</param>
+            <returns>The additional wrap width suggested by the current bubble layout.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryGetCurrentResolvedTranslation(System.IntPtr,System.String@,System.String@,System.String@)">
             <summary>
@@ -15081,6 +14797,61 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryConfirmOriginalPointerMatchesVisible(System.IntPtr,System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a MiniTalk node's original-text pointer really belongs to
+                the currently visible bubble text before the handler trusts it as the
+                logical source line.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside MiniTalk; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a MiniTalk
+                text node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryMapVisibleReplacementToKnownOriginal(System.String,System.String@)">
+            <summary>
+                Tries to resolve a visible translated MiniTalk line back to an original
+                source line already known to another tracked bubble state.
+            </summary>
+            <param name="visibleText">The visible text currently rendered by the node.</param>
+            <param name="originalText">Receives the matched original source line.</param>
+            <returns>
+                <see langword="true" /> when a tracked replacement matches the visible
+                line; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryHandleVisibleSourceChange(System.IntPtr,System.String,System.String)">
+            <summary>
+                Reconciles a visible MiniTalk source line against the tracked bubble
+                state so recycled bubble slots do not keep using a stale translation or
+                a stale native layout snapshot from the prior occupant.
+            </summary>
+            <param name="bubbleKey">The stable bubble key.</param>
+            <param name="visibleOriginalText">The current visible source line.</param>
+            <param name="trigger">The trigger label used for capture/queue routing.</param>
+            <returns>
+                <see langword="true" /> when the visible source changed and the new
+                source was captured, restored, or queued; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryCaptureOrQueueMiniTalkSource(System.IntPtr,System.String,System.String)">
             <summary>
                 Resolves the source MiniTalk line against cache, database, or background
@@ -15204,6 +14975,39 @@
             <summary>
                 Resets the active in-memory BattleTalk state.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.RestoreTrackedNativeLayoutIfNeeded(System.String,System.String)">
+            <summary>
+                Restores any tracked native BattleTalk mutation when the source changes
+                or native mode is left.
+            </summary>
+            <param name="nextOriginalName">
+                The next original sender name expected for the addon, or an empty value
+                when the current mutation should always be restored.
+            </param>
+            <param name="nextOriginalText">
+                The next original source text expected for the addon, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.PrepareTrackedNativeLayoutForReapply(System.String,System.String)">
+            <summary>
+                Restores the tracked native BattleTalk layout even when the visible
+                source line has not changed, so a repeat native apply pass starts from
+                the original addon geometry instead of stacking height and width
+                mutations from the previous frame.
+            </summary>
+            <param name="originalName">The original sender name for the active line.</param>
+            <param name="originalText">The original source text for the active line.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native BattleTalk layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalName">The original sender name to write back.</param>
+            <param name="originalText">The original text to write back.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.BuildLookupMessage(System.String,System.String)">
             <summary>
@@ -15445,7 +15249,7 @@
                 translated output for the active source; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ApplyTranslatedNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ApplyTranslatedNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String,System.String,System.String,System.String,System.String)">
             <summary>
                 Applies translated values directly to the visible BattleTalk addon when
                 replacement mode is enabled.
@@ -16192,6 +15996,37 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.RestoreTrackedNativeLayoutIfNeeded(System.String)">
+            <summary>
+                Restores any tracked native toast mutation when the source changes or
+                native mode is left.
+            </summary>
+            <param name="nextOriginalText">
+                The next original source text expected for the toast, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native toast layout snapshot back to the original
+                game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+            <summary>
+                Reconciles the visible toast source against the tracked state so a
+                recycled toast slot does not keep a stale translated line or a stale
+                native layout snapshot from the prior source.
+            </summary>
+            <param name="visibleOriginalText">The currently visible toast source.</param>
+            <param name="trigger">The trigger label used for capture or queueing.</param>
+            <returns>
+                <see langword="true" /> when the source changed and the new source was
+                handled immediately; otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ResolveTranslationAsync(System.String,System.Int32)">
             <summary>
                 Resolves a toast translation without blocking the game UI and persists the
@@ -16232,6 +16067,33 @@
             <returns>
                 <see langword="true" /> when readable text is available; otherwise,
                 <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a toast node's original-text pointer really belongs to
+                the currently visible toast text before the handler trusts it as the
+                logical source line.
+            </summary>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original toast text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside the same toast surface; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a toast text
+                node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
@@ -16713,6 +16575,49 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RestoreTrackedNativeLayoutIfNeeded(System.String)">
+            <summary>
+                Restores any tracked native gimmick-hint mutation when the source
+                changes or native mode is left.
+            </summary>
+            <param name="nextOriginalText">
+                The next original source text expected for the hint, or an empty value
+                when the current mutation should always be restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryRestoreNativeLayout(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean)">
+            <summary>
+                Restores one tracked native gimmick-hint layout snapshot back to the
+                original game state.
+            </summary>
+            <param name="layoutSnapshot">The captured layout snapshot.</param>
+            <param name="originalText">The original text to write back.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+            <summary>
+                Reconciles the visible gimmick-hint source against the tracked state so
+                a recycled slot does not keep a stale translated line or a stale native
+                layout snapshot from the prior source.
+            </summary>
+            <param name="visibleOriginalText">The currently visible source line.</param>
+            <param name="trigger">The trigger label used for capture or queueing.</param>
+            <returns>
+                <see langword="true" /> when the source changed and the new source was
+                handled immediately; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryCaptureOrQueueSource(System.String,System.String)">
+            <summary>
+                Resolves the visible TextGimmickHint source line against cache,
+                database, or background translation work without blocking the game UI.
+            </summary>
+            <param name="originalText">The current visible source line.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+            <returns>
+                <see langword="true" /> when the source was handled immediately;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ResolveTranslationAsync(System.String,System.Int32)">
             <summary>
                 Resolves a gimmick-hint translation without blocking the game UI and
@@ -16878,6 +16783,33 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+            <summary>
+                Confirms that a gimmick-hint node's original-text pointer really
+                belongs to the currently visible text before the handler trusts it as
+                the logical source line.
+            </summary>
+            <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
+            <param name="visibleText">The text currently visible in the node.</param>
+            <param name="originalText">Receives the confirmed original text.</param>
+            <returns>
+                <see langword="true" /> when the pointer text can be proven to explain
+                the visible replacement inside the same gimmick-hint surface;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryReadOriginalPointerText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Tries to read the original game-provided text payload from a gimmick-hint
+                text node even when the visible node text has already been replaced.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <param name="originalText">Receives the original payload text.</param>
+            <returns>
+                <see langword="true" /> when the original payload can be read;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TextMatches(System.String,System.String)">
             <summary>
                 Compares text values after normalizing spacing and the optional
@@ -16903,6 +16835,545 @@
             </summary>
             <param name="text">The translated text to normalize.</param>
             <returns>The text that should be written back into the native addon.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime">
+            <summary>
+                Uses Dalamud's <see cref="T:Dalamud.Plugin.Services.IToastGui" /> callbacks to capture supported
+                normal and error toast source payloads before the addon-node handlers
+                read the live UI.
+            </summary>
+            <remarks>
+                This runtime is intentionally conservative. It does not replace the
+                addon-handler presentation path, and it does not publish overlays or
+                mutate native nodes. It only prefetches translations into the existing
+                toast persistence path so the addon handlers can later reuse the same
+                cache/DB semantics with lower latency and less dependence on reading a
+                live node that may already be mutated.
+            </remarks>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findToastMessage">
+                Delegate used to look up previously translated toast rows.
+            </param>
+            <param name="insertToastMessageAsync">
+                Delegate used to persist translated toast rows.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.HandleNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.ToastOptions@,System.Boolean@)">
+            <summary>
+                Handles generic normal-toast callbacks from Dalamud and opportunistically
+                prefetches translations for supported addon-backed toast surfaces.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="options">The generic toast options.</param>
+            <param name="isHandled">
+                Whether another callback already consumed the toast.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.HandleErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.Boolean@)">
+            <summary>
+                Handles error-toast callbacks from Dalamud and opportunistically
+                prefetches translations for the native error-toast addon.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="isHandled">
+                Whether another callback already consumed the toast.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ShouldCaptureNormalToasts">
+            <summary>
+                Determines whether the experimental ToastGui-assisted capture path
+                should run for normal toasts.
+            </summary>
+            <returns>
+                <see langword="true" /> when supported normal toasts should be
+                prefetched from ToastGui; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ShouldCaptureErrorToasts">
+            <summary>
+                Determines whether the experimental ToastGui-assisted capture path
+                should run for error toasts.
+            </summary>
+            <returns>
+                <see langword="true" /> when error toasts should be prefetched from
+                ToastGui; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryPrefetchToast(System.String,System.String)">
+            <summary>
+                Prefetches one toast source line into the existing translation
+                persistence path when no usable translated row already exists.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryBeginPrefetch(System.String,System.String,System.String@)">
+            <summary>
+                Starts one background prefetch request when the same toast line is not
+                already being resolved.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="inFlightKey">
+                Receives the unique in-flight key for the request.
+            </param>
+            <returns>
+                <see langword="true" /> when a new request should be queued;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ResolveTranslationAsync(System.String,System.String,System.String)">
+            <summary>
+                Resolves one toast translation asynchronously and persists it into the
+                existing toast history tables when successful.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="inFlightKey">The key representing the queued request.</param>
+            <returns>A task that completes when the translation attempt finishes.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds a lookup entity matching the historical toast schema already
+                used by the plugin database.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for DB lookup.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">
+            <summary>
+                Determines whether a stored toast row already contains a usable
+                translation for the observed callback payload.
+            </summary>
+            <param name="toastMessage">The stored row to validate.</param>
+            <param name="originalText">The expected original toast text.</param>
+            <param name="toastType">The persisted toast type.</param>
+            <returns>
+                <see langword="true" /> when the stored row can be reused; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildInFlightKey(System.String,System.String)">
+            <summary>
+                Builds the in-flight key used to deduplicate concurrent callback
+                prefetch requests.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>The stable in-flight dedupe key.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState">
+            <summary>
+                Describes which family-level route currently owns one supported toast
+                path at runtime.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.LegacyAddonHandlers">
+            <summary>
+                The legacy addon-handler route remains active.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiCapturePrefetch">
+            <summary>
+                The legacy ToastGui capture-only prefetch path is active.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState.ToastGuiFullRuntime">
+            <summary>
+                The alternate full ToastGui runtime owns the route.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy">
+            <summary>
+                Centralizes the family-level routing rules for the ToastGui-owned
+                runtime path. Supported normal toasts are intentionally treated as one
+                unified logical family rather than as addon-specific subtypes.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetSupportedNormalToastRouteState(Echoglossian.Config)">
+            <summary>
+                Gets the effective route state for the supported normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The effective route state for supported normal toasts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetSupportedErrorToastRouteState(Echoglossian.Config)">
+            <summary>
+                Gets the effective route state for supported error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The effective route state for supported error toasts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedToastGuiRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the callback-owned ToastGui route is enabled at all.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the ToastGui route is enabled;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the callback-owned ToastGui route should own
+                the unified normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the alternate route should own the
+                supported non-error toast family; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedErrorToastRuntime(Echoglossian.Config)">
+            <summary>
+                Gets whether the callback-owned ToastGui route should own
+                error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the alternate route should own error
+                toasts; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(Echoglossian.Config)">
+            <summary>
+                Gets the canonical family-level display mode used by the
+                callback-owned runtime for the unified normal-toast family.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                The effective family-level display mode for supported non-error
+                toasts, currently sourced from the wide-text toast config.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyNormalToastCapturePrefetch(Echoglossian.Config)">
+            <summary>
+                Gets whether the legacy ToastGui prefetch-only path should stay active.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the capture-only path should remain
+                active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyErrorToastCapturePrefetch(Echoglossian.Config)">
+            <summary>
+                Gets whether the legacy ToastGui prefetch-only path should stay active
+                for error toasts.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when the capture-only error-toast path should
+                remain active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.HasAnyEnabledNormalToastType(Echoglossian.Config)">
+            <summary>
+                Gets whether at least one supported normal-toast type is enabled in
+                the user configuration.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>
+                <see langword="true" /> when at least one supported normal-toast
+                toggle is enabled; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime">
+            <summary>
+                Owns the alternate callback-driven ToastGui route for supported normal
+                and error toasts. Under this path, supported normal toasts are treated
+                as one logical family and no longer rely on addon-specific native
+                mutation or overlay anchoring.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,Echoglossian.EFCoreSqlite.Models.ToastMessage},System.Func{Echoglossian.EFCoreSqlite.Models.ToastMessage,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findToastMessage">The shared toast DB lookup delegate.</param>
+            <param name="insertToastMessageAsync">
+                The shared toast persistence delegate.
+            </param>
+            <param name="updateNormalOverlay">
+                Delegate used to publish content into the unified normal-toast
+                overlay.
+            </param>
+            <param name="clearNormalOverlay">
+                Delegate used to clear the unified normal-toast overlay.
+            </param>
+            <param name="updateErrorOverlay">
+                Delegate used to publish content into the error-toast overlay.
+            </param>
+            <param name="clearErrorOverlay">
+                Delegate used to clear the error-toast overlay.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize text before native replacement when the
+                game font requires it.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.HandleNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,Dalamud.Game.Gui.Toast.ToastOptions@,System.Boolean@)">
+            <summary>
+                Handles generic normal-toast callbacks through the alternate family
+                route.
+            </summary>
+            <param name="message">The toast payload.</param>
+            <param name="options">The toast options supplied by Dalamud.</param>
+            <param name="isHandled">Whether another callback consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.HandleErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.Boolean@)">
+            <summary>
+                Handles error-toast callbacks through the alternate callback-owned
+                route.
+            </summary>
+            <param name="message">The error-toast payload.</param>
+            <param name="isHandled">Whether another callback consumed the toast.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.TrySyncNormalToastOverlayToViewport(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Synchronizes the unified normal-toast overlay to a stable viewport
+                anchor based on the last callback-reported toast position.
+            </summary>
+            <param name="overlay">The overlay to synchronize.</param>
+            <returns>
+                <see langword="true" /> when the overlay currently has visible
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.TrySyncErrorToastOverlayToViewport(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Synchronizes the error-toast overlay to a stable top-center viewport
+                anchor.
+            </summary>
+            <param name="overlay">The overlay to synchronize.</param>
+            <returns>
+                <see langword="true" /> when the overlay currently has visible
+                content; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ApplyResolvedNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
+            <summary>
+                Applies one cache-hit normal toast immediately to the current callback.
+            </summary>
+            <param name="message">The live callback payload.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ApplyResolvedErrorToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
+            <summary>
+                Applies one cache-hit error toast immediately to the current callback.
+            </summary>
+            <param name="message">The live callback payload.</param>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveNormalTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves one supported normal-toast line asynchronously.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+            <returns>A task that completes after the translation attempt.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveErrorTranslationAsync(System.String,System.Int32)">
+            <summary>
+                Resolves one supported error-toast line asynchronously.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="requestId">The active request identifier.</param>
+            <returns>A task that completes after the translation attempt.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BeginNormalRequest(System.String,Dalamud.Game.Gui.Toast.ToastOptions)">
+            <summary>
+                Starts one supported normal-toast request.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="options">The current toast options.</param>
+            <returns>The active request identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BeginErrorRequest(System.String)">
+            <summary>
+                Starts one error-toast request.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <returns>The active request identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ScheduleNormalOverlayClearAsync(System.Int32)">
+            <summary>
+                Delays clearing the unified normal-toast overlay so the overlay
+                lifetime roughly matches the transient toast lifetime.
+            </summary>
+            <param name="requestId">The owning request identifier.</param>
+            <returns>A task that completes after the clear delay.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ScheduleErrorOverlayClearAsync(System.Int32)">
+            <summary>
+                Delays clearing the error-toast overlay so the overlay lifetime roughly
+                matches the transient toast lifetime.
+            </summary>
+            <param name="requestId">The owning request identifier.</param>
+            <returns>A task that completes after the clear delay.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetNormalOverlayLifetimeMs">
+            <summary>
+                Gets the overlay lifetime for the current supported normal-toast
+                request.
+            </summary>
+            <returns>The overlay clear delay in milliseconds.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsCurrentNormalRequest(System.Int32,System.String)">
+            <summary>
+                Determines whether the specified request still belongs to the current
+                supported normal-toast line.
+            </summary>
+            <param name="requestId">The request identifier to validate.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>
+                <see langword="true" /> when the request is still current; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsCurrentErrorRequest(System.Int32,System.String)">
+            <summary>
+                Determines whether the specified request still belongs to the current
+                error-toast line.
+            </summary>
+            <param name="requestId">The request identifier to validate.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>
+                <see langword="true" /> when the request is still current; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldUseNormalOverlay">
+            <summary>
+                Gets whether the unified normal-toast family should publish overlay
+                text.
+            </summary>
+            <returns>
+                <see langword="true" /> when the unified normal-toast overlay is
+                active; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldApplyNativeNormalText">
+            <summary>
+                Gets whether the unified normal-toast family should write translated
+                text into the native toast callback payload.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldSwapNormalTexts">
+            <summary>
+                Gets whether the unified normal-toast overlay should show original text
+                while the native toast displays the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldUseErrorOverlay">
+            <summary>
+                Gets whether error toasts should publish overlay text.
+            </summary>
+            <returns>
+                <see langword="true" /> when the error-toast overlay is active;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldApplyNativeErrorText">
+            <summary>
+                Gets whether error toasts should write translated text into the native
+                callback payload.
+            </summary>
+            <returns>
+                <see langword="true" /> when native replacement is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldSwapErrorTexts">
+            <summary>
+                Gets whether the error-toast overlay should show the original text
+                while the native error toast displays the translation.
+            </summary>
+            <returns>
+                <see langword="true" /> when swap mode is active; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.PublishNormalOverlay(System.String,System.String,System.String)">
+            <summary>
+                Publishes content into the unified normal-toast overlay.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.PublishErrorOverlay(System.String,System.String,System.String)">
+            <summary>
+                Publishes content into the error-toast overlay.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="trigger">The trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.SelectOverlayText(System.String,System.String,System.Boolean)">
+            <summary>
+                Selects the overlay text for one callback-owned toast route.
+            </summary>
+            <param name="originalText">The original toast text.</param>
+            <param name="translatedText">The translated toast text.</param>
+            <param name="showOriginalOverlayText">
+                Whether the overlay should show the original text.
+            </param>
+            <returns>The overlay text to display.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BuildLookupMessage(System.String,System.String)">
+            <summary>
+                Builds one toast DB lookup entity using the plugin's existing toast
+                persistence schema.
+            </summary>
+            <param name="toastType">The persisted toast type.</param>
+            <param name="originalText">The original toast text.</param>
+            <returns>A lookup <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">
+            <summary>
+                Determines whether one stored toast row contains a usable translation
+                for the requested source line and toast type.
+            </summary>
+            <param name="toastMessage">The stored row to validate.</param>
+            <param name="originalText">The expected original text.</param>
+            <param name="toastType">The expected toast type.</param>
+            <returns>
+                <see langword="true" /> when the stored row is usable; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.NormalizeForReplacement(System.String)">
+            <summary>
+                Normalizes translated text before native replacement when the game font
+                requires it.
+            </summary>
+            <param name="translatedText">The translated text to normalize.</param>
+            <returns>The text that should be written back into the callback payload.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
             <summary>
@@ -18293,236 +18764,480 @@
             <param name="body">The body text.</param>
             <returns>The combined tooltip text.</returns>
         </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper">
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper">
             <summary>
-                Provides shared snapshot, reflow, and restore helpers for native UI
-                text flows where translated text can grow beyond the original English
-                layout budget.
+                Normalizes translated payload text for native replacement-only flows.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ResolveFlowWrapperNodeAddress(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper.NormalizePayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Func{System.String,System.String})">
             <summary>
-                Resolves the visual wrapper node address for one text node inside a
-                given flow root.
+                Applies one text normalizer to every translated value that can be
+                written back into one native addon payload.
             </summary>
-            <param name="flowRoot">The visual flow root that owns the blocks.</param>
-            <param name="textNode">The text node whose wrapper should be resolved.</param>
-            <returns>The resolved wrapper-node address.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.CaptureOrderedFlowBlocks(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IEnumerable{System.IntPtr})">
-            <summary>
-                Captures the ordered flow-block snapshots for the supplied text nodes.
-            </summary>
-            <param name="flowRoot">The visual flow root that owns the blocks.</param>
-            <param name="textNodeAddresses">The text nodes that participate in the flow.</param>
-            <returns>The captured ordered flow blocks.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.CaptureContainerSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Int16,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot})">
-            <summary>
-                Captures one container snapshot for a text flow.
-            </summary>
-            <param name="containerNode">The container node to snapshot.</param>
-            <param name="flowOriginY">
-                The vertical origin of the flow inside the container.
+            <param name="payload">The translated payload to normalize.</param>
+            <param name="normalizeText">
+                The per-string normalization callback.
             </param>
-            <param name="flowBlocks">The captured flow blocks.</param>
-            <returns>The captured container snapshot, or <see langword="null" />.</returns>
+            <returns>
+                The normalized payload. When no value changes, the original payload
+                instance is returned unchanged.
+            </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ApplyVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.Helpers.NativeTextFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot})">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper.NormalizeMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Func{System.String,System.String},System.Boolean@)">
             <summary>
-                Applies translated text to an ordered native text flow and reflows
-                later blocks by cumulative height delta.
+                Applies one text normalizer to one numeric-keyed payload map.
             </summary>
-            <param name="flowBlocks">The ordered flow blocks.</param>
-            <param name="translatedTextsByTextNode">
-                The translated text keyed by text-node address.
+            <param name="sourceValues">The source values.</param>
+            <param name="normalizeText">The per-string normalization callback.</param>
+            <param name="changed">
+                Tracks whether any normalized value differed from the source value.
             </param>
-            <param name="applyText">
-                Delegate used to apply translated text with the desired presentation.
+            <returns>The normalized payload map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper.NormalizeMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.Func{System.String,System.String},System.Boolean@)">
+            <summary>
+                Applies one text normalizer to one text-node payload map.
+            </summary>
+            <param name="sourceValues">The source values.</param>
+            <param name="normalizeText">The per-string normalization callback.</param>
+            <param name="changed">
+                Tracks whether any normalized value differed from the source value.
             </param>
-            <param name="containerSnapshots">
-                The containers whose heights should grow with the flow.
+            <returns>The normalized payload map.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper">
+            <summary>
+                Shared helpers for native text-node replacement paths that need the game
+                UI to wrap multi-line text and keep nearby background nodes in sync.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.CaptureLayoutSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Captures the current text-node and container sizing so a later native
+                replacement can grow the layout using inferred padding instead of fixed
+                magic numbers.
+            </summary>
+            <param name="textNode">The text node whose layout should be captured.</param>
+            <param name="primaryContainerNode">
+                The main container node that visually owns the text node.
             </param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.RestoreVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.Helpers.NativeTextFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot})">
-            <summary>
-                Restores an ordered native text flow to its original layout and text.
-            </summary>
-            <param name="flowBlocks">The ordered flow blocks.</param>
-            <param name="originalTextsByTextNode">
-                The original text keyed by text-node address.
+            <param name="secondaryContainerNode">
+                An optional secondary background node, such as a nine-grid.
             </param>
-            <param name="restoreText">
-                Delegate used to restore the original text presentation.
+            <param name="anchoredXNode">
+                An optional sibling node whose X position is anchored to the text width.
             </param>
-            <param name="containerSnapshots">
-                The container snapshots captured before native mutation.
+            <returns>The captured layout snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the current wrap width that should be reused for a native text
+                replacement.
+            </summary>
+            <param name="textNode">The text node being replaced.</param>
+            <param name="primaryContainerNode">
+                The main container node that owns the text node.
             </param>
+            <param name="secondaryContainerNode">
+                An optional secondary background node whose width may better represent
+                the stable visual bounds than the current text-node width.
+            </param>
+            <returns>The preferred wrap width to preserve.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ResolveWrapperNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16)">
             <summary>
-                Resolves the nearest visual wrapper node for a text node inside a
-                given flow root.
+                Applies translated text to a node using the existing wrap width and the
+                minimum multiline flags required for the game to recompute size.
             </summary>
-            <param name="flowRoot">The flow root owning the text flow.</param>
-            <param name="textNode">The text node being wrapped.</param>
-            <returns>The resolved wrapper node.</returns>
+            <param name="textNode">The text node that should receive the translation.</param>
+            <param name="replacementText">The translated text to write back.</param>
+            <param name="preferredWrapWidth">
+                The width that should be preserved for wrapping.
+            </param>
+            <returns>The measured size after the text replacement.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.CalculateNodeOffsetToAncestor(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean)">
             <summary>
-                Calculates the local offset between one node and one ancestor node.
+                Resizes the supplied container nodes using the text delta captured in a
+                pre-replacement layout snapshot.
             </summary>
-            <param name="node">The descendant node.</param>
-            <param name="ancestorNode">The ancestor node.</param>
-            <returns>The accumulated local offset from the ancestor to the node.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.IsDescendantOf(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
-            <summary>
-                Gets whether one node belongs to the subtree rooted at the supplied
-                ancestor node.
-            </summary>
-            <param name="node">The node to test.</param>
-            <param name="ancestorNode">The ancestor node.</param>
-            <returns><c>true</c> when the node belongs to the ancestor subtree.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ApplyContainerHeights(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot},System.Single)">
-            <summary>
-                Applies container height growth after the text flow has been reflowed.
-            </summary>
-            <param name="containerSnapshots">The captured container snapshots.</param>
-            <param name="finalBottom">The last occupied vertical pixel of the flow.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ClampToShort(System.Single)">
-            <summary>
-                Clamps one local coordinate to the short range expected by native
-                node positioning helpers.
-            </summary>
-            <param name="value">The coordinate to clamp.</param>
-            <returns>The clamped coordinate.</returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowApplyDelegate">
-            <summary>
-                Applies one translated or restored text payload to a native text node
-                using its original presentation metadata.
-            </summary>
-            <param name="textNode">The target text node.</param>
-            <param name="originalWidth">The original text-node width.</param>
-            <param name="originalTextFlags">The original text flags.</param>
-            <param name="originalFontSize">The original font size.</param>
-            <param name="text">The text to render.</param>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot">
-            <summary>
-                Captures one reflowable native text block.
-            </summary>
-            <param name="WrapperNodeAddress">The wrapper node address.</param>
-            <param name="WrapperX">The original wrapper X.</param>
-            <param name="WrapperY">The original wrapper Y.</param>
-            <param name="WrapperWidth">The original wrapper width.</param>
-            <param name="WrapperHeight">The original wrapper height.</param>
-            <param name="TextNodeAddress">The inner text-node address.</param>
-            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
-            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
-            <param name="TextWidth">The original text-node width.</param>
-            <param name="TextHeight">The original text-node height.</param>
-            <param name="TextFlags">The original text flags.</param>
-            <param name="FontSize">The original font size.</param>
-            <param name="BottomPadding">
-                The original bottom padding between the text bottom and wrapper bottom.
+            <param name="snapshot">The layout captured before native replacement.</param>
+            <param name="resizeResult">The measured text size after replacement.</param>
+            <param name="primaryContainerNode">
+                The main visual container that should grow with the text.
+            </param>
+            <param name="secondaryContainerNode">
+                An optional secondary background node, such as a nine-grid.
+            </param>
+            <param name="anchoredXNode">
+                An optional sibling node whose X position should continue to track the
+                text width.
+            </param>
+            <param name="allowWidthGrowth">
+                Whether the helper may grow container widths when the wrapped text width
+                exceeds the original layout.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.Int16)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean,System.Boolean)">
             <summary>
-                Captures one reflowable native text block.
+                Restores a previously captured native text-node layout snapshot after a
+                temporary translated replacement is no longer needed.
             </summary>
-            <param name="WrapperNodeAddress">The wrapper node address.</param>
-            <param name="WrapperX">The original wrapper X.</param>
-            <param name="WrapperY">The original wrapper Y.</param>
-            <param name="WrapperWidth">The original wrapper width.</param>
-            <param name="WrapperHeight">The original wrapper height.</param>
-            <param name="TextNodeAddress">The inner text-node address.</param>
-            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
-            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
-            <param name="TextWidth">The original text-node width.</param>
-            <param name="TextHeight">The original text-node height.</param>
-            <param name="TextFlags">The original text flags.</param>
-            <param name="FontSize">The original font size.</param>
-            <param name="BottomPadding">
-                The original bottom padding between the text bottom and wrapper bottom.
+            <param name="snapshot">The layout snapshot captured before replacement.</param>
+            <param name="originalText">
+                The original text that should be written back into the text node.
             </param>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperNodeAddress">
-            <summary>The wrapper node address.</summary>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryResolveContainerNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkNineGridNode*@)">
+            <summary>
+                Resolves the nearest component-backed container for a text node and the
+                first nine-grid background nested inside that container.
+            </summary>
+            <param name="addon">The live addon that owns the text node.</param>
+            <param name="textNode">The text node being translated.</param>
+            <param name="containerNode">
+                Receives the primary container node that should grow with the text.
+            </param>
+            <param name="backgroundNode">
+                Receives the first nested nine-grid background node, when present.
+            </param>
+            <returns>
+                <see langword="true" /> when at least one layout node was resolved;
+                otherwise, <see langword="false" />.
+            </returns>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperX">
-            <summary>The original wrapper X.</summary>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16)">
+            <summary>
+                Applies translated text to a node and grows its wrapper chain plus the
+                nearest nine-grid background using inferred padding from the current
+                addon layout.
+            </summary>
+            <param name="addon">The visible addon that owns the text node.</param>
+            <param name="textNode">The text node receiving the translation.</param>
+            <param name="replacementText">The translated text to write back.</param>
+            <param name="allowWidthGrowth">
+                Whether wrapper widths may grow when the current wrap width is
+                insufficient.
+            </param>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperY">
-            <summary>The original wrapper Y.</summary>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMinimumSecondaryWidthForAnchoredNode(System.Int16,System.UInt16,System.Int16,System.UInt16,System.Int32)">
+            <summary>
+                Resolves the minimum secondary-container width required to keep an
+                anchored sibling node covered by the same background after reflow.
+            </summary>
+            <param name="secondaryContainerX">
+                The live X position of the secondary container.
+            </param>
+            <param name="currentSecondaryWidth">
+                The current width of the secondary container before adjustment.
+            </param>
+            <param name="anchoredNodeX">
+                The live X position of the anchored sibling node.
+            </param>
+            <param name="anchoredNodeWidth">The current width of the anchored node.</param>
+            <param name="preferredRightPadding">
+                The original right padding between the secondary container and the
+                anchored node. Negative values are treated as zero so coverage still
+                extends to the anchored node edge.
+            </param>
+            <returns>
+                The minimum width that keeps the anchored node inside the secondary
+                background.
+            </returns>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperWidth">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryMeasureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16@,System.UInt16@)">
+            <summary>
+                Measures the current node size using the live node dimensions first and
+                falling back to text draw size when the node has not been sized yet.
+            </summary>
+            <param name="textNode">The text node to measure.</param>
+            <param name="width">Receives the measured width.</param>
+            <param name="height">Receives the measured height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindNearestAncestorComponentNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Walks up the parent chain until a component-backed ancestor is found.
+            </summary>
+            <param name="node">The node whose ancestors should be inspected.</param>
+            <returns>
+                The nearest component ancestor, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentNode*)">
+            <summary>
+                Resolves the first nine-grid node nested inside a component node.
+            </summary>
+            <param name="componentNode">The component node to inspect.</param>
+            <returns>
+                The first nested nine-grid node, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+            <summary>
+                Resolves the first nine-grid node reachable from a node list.
+            </summary>
+            <param name="nodeList">The node list to inspect.</param>
+            <param name="nodeCount">The number of nodes in the list.</param>
+            <returns>
+                The first nested nine-grid node, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveBoundedContainerWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the widest stable visual width exposed by the surrounding
+                container nodes so repeated native replacements do not fall back to a
+                narrow internal wrapper when a larger background already represents the
+                intended visual balloon or panel width.
+            </summary>
+            <param name="primaryContainerNode">The primary owning container.</param>
+            <param name="secondaryContainerNode">An optional secondary background node.</param>
+            <returns>The widest non-zero container width available.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindFirstNineGridNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Resolves the first nine-grid node reachable from a node.
+            </summary>
+            <param name="node">The node to inspect.</param>
+            <returns>
+                The first nested nine-grid node, or <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.CaptureAncestorChain(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Captures the wrapper chain between a text node and the container that
+                visually owns it so each wrapper can be grown by the same delta later.
+            </summary>
+            <param name="snapshot">The snapshot receiving wrapper metadata.</param>
+            <param name="textNode">The text node whose wrappers should be captured.</param>
+            <param name="stopNode">
+                The top-most wrapper to include in the captured chain.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryRestoreHorizontalCentering(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot)">
+            <summary>
+                Re-centers the text node within its immediate wrapper when the original
+                layout was centered and width growth changed the wrapper size.
+            </summary>
+            <param name="snapshot">The captured layout snapshot.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot">
+            <summary>
+                Captures the text and container sizing observed before native replacement.
+            </summary>
+            <param name="textWidth">The original text-node width.</param>
+            <param name="textHeight">The original text-node height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.Int16,System.Int16)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot" /> class.
+            </summary>
+            <param name="textNodeAddress">The address of the mutated text node.</param>
+            <param name="textWidth">The original measured text width.</param>
+            <param name="textHeight">The original measured text height.</param>
+            <param name="textNodeWidth">The original text-node width.</param>
+            <param name="textNodeHeight">The original text-node height.</param>
+            <param name="textNodeTextFlags">The original text-node flags.</param>
+            <param name="textNodeFontSize">The original text-node font size.</param>
+            <param name="textNodeOriginalX">The original text-node X position.</param>
+            <param name="textNodeOriginalY">The original text-node Y position.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeAddress">
+            <summary>
+                Gets the native address of the mutated text node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextWidth">
+            <summary>
+                Gets the original text-node width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextHeight">
+            <summary>
+                Gets the original text-node height.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeWidth">
+            <summary>
+                Gets the original width assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeHeight">
+            <summary>
+                Gets the original height assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeTextFlags">
+            <summary>
+                Gets the original text-node flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeFontSize">
+            <summary>
+                Gets the original text-node font size.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeOriginalX">
+            <summary>
+                Gets the original X position assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeOriginalY">
+            <summary>
+                Gets the original Y position assigned to the text node itself.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.TextNodeWasHorizontallyCentered">
+            <summary>
+                Gets or sets a value indicating whether the text node was originally
+                centered inside its immediate parent.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AncestorChain">
+            <summary>
+                Gets the wrapper chain that should be resized after a native text
+                replacement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerAddress">
+            <summary>
+                Gets or sets the native address of the secondary container node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerWidth">
+            <summary>
+                Gets or sets the secondary container width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerHeight">
+            <summary>
+                Gets or sets the secondary container height.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerOriginalX">
+            <summary>
+                Gets or sets the original X position of the secondary container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerOriginalY">
+            <summary>
+                Gets or sets the original Y position of the secondary container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXNodeAddress">
+            <summary>
+                Gets or sets the native address of the anchored X node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOffset">
+            <summary>
+                Gets or sets the X offset between an anchored sibling node and the text
+                width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXOriginal">
+            <summary>
+                Gets or sets the original X position of the anchored sibling node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXWidth">
+            <summary>
+                Gets or sets the original width of the anchored sibling node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.AnchoredXRightPaddingFromSecondary">
+            <summary>
+                Gets or sets the original right padding between the anchored sibling
+                node and the secondary container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryHorizontalPadding">
+            <summary>
+                Gets the horizontal padding between the text node and the secondary
+                container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryVerticalPadding">
+            <summary>
+                Gets the vertical padding between the text node and the secondary
+                container.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult">
+            <summary>
+                Represents the measured text-node size after a native replacement.
+            </summary>
+            <param name="Width">The measured text-node width.</param>
+            <param name="Height">The measured text-node height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult.#ctor(System.UInt16,System.UInt16)">
+            <summary>
+                Represents the measured text-node size after a native replacement.
+            </summary>
+            <param name="Width">The measured text-node width.</param>
+            <param name="Height">The measured text-node height.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult.Width">
+            <summary>The measured text-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult.Height">
+            <summary>The measured text-node height.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot">
+            <summary>
+                Captures one ancestor wrapper in a text-node layout chain.
+            </summary>
+            <param name="NodeAddress">The native address of the wrapper node.</param>
+            <param name="Width">The original wrapper width.</param>
+            <param name="Height">The original wrapper height.</param>
+            <param name="OriginalX">The original X position of the wrapper node.</param>
+            <param name="OriginalY">The original Y position of the wrapper node.</param>
+            <param name="HorizontalPadding">
+                The original horizontal padding between this wrapper and its child.
+            </param>
+            <param name="VerticalPadding">
+                The original vertical padding between this wrapper and its child.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.#ctor(System.IntPtr,System.UInt16,System.UInt16,System.Int16,System.Int16,System.Int32,System.Int32)">
+            <summary>
+                Captures one ancestor wrapper in a text-node layout chain.
+            </summary>
+            <param name="NodeAddress">The native address of the wrapper node.</param>
+            <param name="Width">The original wrapper width.</param>
+            <param name="Height">The original wrapper height.</param>
+            <param name="OriginalX">The original X position of the wrapper node.</param>
+            <param name="OriginalY">The original Y position of the wrapper node.</param>
+            <param name="HorizontalPadding">
+                The original horizontal padding between this wrapper and its child.
+            </param>
+            <param name="VerticalPadding">
+                The original vertical padding between this wrapper and its child.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.NodeAddress">
+            <summary>The native address of the wrapper node.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.Width">
             <summary>The original wrapper width.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperHeight">
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.Height">
             <summary>The original wrapper height.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextNodeAddress">
-            <summary>The inner text-node address.</summary>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.OriginalX">
+            <summary>The original X position of the wrapper node.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextOffsetX">
-            <summary>The original text offset X inside the wrapper.</summary>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.OriginalY">
+            <summary>The original Y position of the wrapper node.</summary>
         </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextOffsetY">
-            <summary>The original text offset Y inside the wrapper.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextWidth">
-            <summary>The original text-node width.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextHeight">
-            <summary>The original text-node height.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextFlags">
-            <summary>The original text flags.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.FontSize">
-            <summary>The original font size.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.BottomPadding">
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.HorizontalPadding">
             <summary>
-                The original bottom padding between the text bottom and wrapper bottom.
+                The original horizontal padding between this wrapper and its child.
             </summary>
         </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot">
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeAncestorSnapshot.VerticalPadding">
             <summary>
-                Captures one container that should grow together with a native text
-                flow.
+                The original vertical padding between this wrapper and its child.
             </summary>
-            <param name="ContainerNodeAddress">The container node address.</param>
-            <param name="FlowOriginY">The flow origin Y inside the container.</param>
-            <param name="Height">The original container height.</param>
-            <param name="BottomPadding">The original bottom padding below the flow.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.#ctor(System.IntPtr,System.Int16,System.UInt16,System.Int16)">
-            <summary>
-                Captures one container that should grow together with a native text
-                flow.
-            </summary>
-            <param name="ContainerNodeAddress">The container node address.</param>
-            <param name="FlowOriginY">The flow origin Y inside the container.</param>
-            <param name="Height">The original container height.</param>
-            <param name="BottomPadding">The original bottom padding below the flow.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.ContainerNodeAddress">
-            <summary>The container node address.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.FlowOriginY">
-            <summary>The flow origin Y inside the container.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.Height">
-            <summary>The original container height.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.BottomPadding">
-            <summary>The original bottom padding below the flow.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.PayloadStabilityTracker">
             <summary>
@@ -19964,12 +20679,11 @@
                 Renders the settings tab for journal and quest-family translation.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.Draw(Echoglossian.Config,System.Boolean)">
+        <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.Draw(Echoglossian.Config)">
             <summary>
                 Draws the Journal settings tab.
             </summary>
             <param name="config">The current plugin configuration.</param>
-            <param name="langToRemoveDiacritics">Whether the selected language supports diacritic removal.</param>
             <returns><c>true</c> when a setting changed.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.JournalTab.DrawQuestNotificationSection(Echoglossian.Config)">
@@ -20026,6 +20740,14 @@
             <summary>
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawToastTypePage(Echoglossian.Config,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.Single@,System.Int64@)">
+            <summary>
+                Maps one effective toast route state to the localized UI label used
+                in the toast general page.
+            </summary>
+            <param name="routeState">The effective route state.</param>
+            <returns>The localized UI label for the route state.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawMiniTalkOverlay(Echoglossian.Config)">
             <summary>
@@ -20095,18 +20817,6 @@
             </param>
             <returns>
                 <see langword="true" /> when the overlay path is active.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawGlobalReplacementDiacriticsSetting(Echoglossian.Config)">
-            <summary>
-                Draws the global diacritics-removal toggle used by native replacement
-                flows across Talk, BattleTalk, Toasts, subtitles, and other handlers
-                that must fit within the game font limitations.
-            </summary>
-            <param name="config">The active plugin configuration.</param>
-            <returns>
-                <see langword="true" /> when the toggle value changed; otherwise,
-                <see langword="false" />.
             </returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.QuestWindowsTab">
@@ -21689,6 +22399,56 @@
               Looks up a localized string similar to Select which kind of in-game message toasts to translate.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiCaptureForSupportedToastsLabel">
+            <summary>
+              Looks up a localized string similar to Use ToastGui-assisted capture for supported normal/error toasts (experimental).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiCaptureForSupportedToastsDescription">
+            <summary>
+              Looks up a localized string similar to Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiNormalToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Supported normal toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiErrorToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Supported error toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiQuestToastRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Quest toast route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiTextGimmickHintRouteStatusLabel">
+            <summary>
+              Looks up a localized string similar to Text Gimmick Hint route.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateLegacyAddonHandlers">
+            <summary>
+              Looks up a localized string similar to Legacy addon handlers.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateCapturePrefetch">
+            <summary>
+              Looks up a localized string similar to ToastGui capture/prefetch.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateFullRuntime">
+            <summary>
+              Looks up a localized string similar to ToastGui full runtime.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastGuiRouteStateAddonHandlerOnly">
+            <summary>
+              Looks up a localized string similar to Addon handler only.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.YandexCloudApiKey">
             <summary>
               Looks up a localized string similar to YandexCloud Api Key.
@@ -21864,6 +22624,51 @@
               Looks up a localized string.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeNoActiveWatch">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeStopped">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeUsage">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeInvalidDurationFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeStartedFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationMinuteFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationMinutesFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondsFormat">
+            <summary>
+              Looks up a localized string.
+            </summary>
+        </member>
         <member name="T:Echoglossian.Services.AddonObserver.CallbackDelegate">
             <summary>
              Delegate for addon open/close events.
@@ -21934,7 +22739,7 @@
             <param name="targetLanguage"></param>
             <returns></returns>
         </member>
-        <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single)">
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.#ctor(Dalamud.Plugin.Services.IPluginLog,System.String,System.String,System.String,System.Single,System.String)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.Translators.ChatGPTTranslator" /> class.
             </summary>
@@ -21943,6 +22748,7 @@
             <param name="apiKey"></param>
             <param name="model"></param>
             <param name="temperature"></param>
+            <param name="promptTemplate"></param>
         </member>
         <member name="M:Echoglossian.Translators.ChatGPTTranslator.Translate(System.String,System.String,System.String)">
             <summary>
