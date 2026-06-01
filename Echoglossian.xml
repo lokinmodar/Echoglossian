@@ -13212,6 +13212,14 @@
             <param name="sections">The summary sections to join.</param>
             <returns>A deduplicated summary block for the JournalDetail body.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.HasEquivalentTextSections(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Checks whether two ordered section collections are text-equivalent.
+            </summary>
+            <param name="leftSections">The first section collection.</param>
+            <param name="rightSections">The second section collection.</param>
+            <returns><c>true</c> when both collections are equivalent.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.NormalizeJournalDetailSummaryCandidateText(System.String)">
             <summary>
                 Normalizes JournalDetail summary text for stable node-content

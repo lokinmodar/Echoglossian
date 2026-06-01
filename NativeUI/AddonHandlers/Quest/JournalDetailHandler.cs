@@ -999,6 +999,35 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Checks whether two ordered section collections are text-equivalent.
+  /// </summary>
+  /// <param name="leftSections">The first section collection.</param>
+  /// <param name="rightSections">The second section collection.</param>
+  /// <returns><c>true</c> when both collections are equivalent.</returns>
+  private static bool HasEquivalentTextSections(
+      IReadOnlyList<string> leftSections,
+      IReadOnlyList<string> rightSections)
+  {
+    if (leftSections.Count != rightSections.Count)
+    {
+      return false;
+    }
+
+    for (var index = 0; index < leftSections.Count; index++)
+    {
+      if (!string.Equals(
+              leftSections[index],
+              rightSections[index],
+              StringComparison.Ordinal))
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// <summary>
   ///     Normalizes JournalDetail summary text for stable node-content
   ///     matching across live addon refreshes and native writes.
   /// </summary>
@@ -2615,12 +2644,30 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         translatedQuestDescriptionReady &&
         translatedQuestObjectiveReady &&
         translatedQuestSummaryReady;
-    var translatedQuestNativeReady =
-        translatedQuestNameReady &&
-        translatedQuestBodyReady;
+    var hasTranslatedQuestName = !string.Equals(
+        translatedQuestName,
+        originalQuestName,
+        StringComparison.Ordinal);
+    var hasTranslatedQuestDescription = !string.Equals(
+        translatedQuestDescription,
+        originalQuestDescription,
+        StringComparison.Ordinal);
+    var hasTranslatedObjectiveSections = !HasEquivalentTextSections(
+        originalObjectiveTexts,
+        translatedObjectiveSections);
+    var hasTranslatedSummarySections = !HasEquivalentTextSections(
+        originalSummarySections,
+        translatedSummarySections);
+    var hasAnyNativeQuestBodyTranslation =
+        hasTranslatedQuestDescription ||
+        hasTranslatedObjectiveSections ||
+        hasTranslatedSummarySections;
+    var hasAnyNativeQuestTranslation =
+        hasTranslatedQuestName ||
+        hasAnyNativeQuestBodyTranslation;
 
     if (this.JournalDetailWritesNativeTranslation &&
-        translatedQuestNativeReady)
+        hasAnyNativeQuestTranslation)
     {
       questNameNode->SetText(translatedQuestName ?? string.Empty);
       this.journalDetailNativeMutationScopes.Add(journalDetailScopeKey);
@@ -3024,12 +3071,20 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             translatedQuestMessage ?? string.Empty);
       }
 
-      var translatedCompletedQuestReady =
-          translatedQuestNameReady &&
-          translatedQuestMessageReady;
+      var hasTranslatedCompletedQuestName = !string.Equals(
+          translatedQuestName,
+          originalQuestName,
+          StringComparison.Ordinal);
+      var hasTranslatedCompletedQuestMessage = !string.Equals(
+          translatedQuestMessage,
+          originalQuestMessage,
+          StringComparison.Ordinal);
+      var hasAnyNativeCompletedQuestTranslation =
+          hasTranslatedCompletedQuestName ||
+          hasTranslatedCompletedQuestMessage;
 
       if (this.JournalDetailWritesNativeTranslation &&
-          translatedCompletedQuestReady)
+          hasAnyNativeCompletedQuestTranslation)
       {
         questNameNode->SetText(translatedQuestName ?? string.Empty);
         this.ApplyJournalDetailNativeTextNodePresentation(
