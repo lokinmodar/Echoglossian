@@ -13856,6 +13856,15 @@
             <param name="originalText">The cached original quest title.</param>
             <returns>True when an original quest title is cached for that node.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ResolveJournalListOriginalText(System.IntPtr,System.String)">
+            <summary>
+                Resolves the source quest title for a Journal list node while
+                handling node reuse across different visible rows.
+            </summary>
+            <param name="nodeKey">The live quest-name node key.</param>
+            <param name="liveQuestNameText">The currently visible node text.</param>
+            <returns>The source quest title to use for lookup and hover mapping.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListOriginalText(System.IntPtr,System.String)">
             <summary>
                 Remembers the original quest title associated with a visible Journal
