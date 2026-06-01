@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-30
+Snapshot date: 2026-06-01
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -10,25 +10,26 @@ When the user asks to "read the issues" or "update the issue list", the
 default source of truth for that request is the open issue tracker in
 `lokinmodar/Echoglossian`.
 
-## Tracker Review Update (2026-05-30)
+## Tracker Review Update (2026-06-01)
 
 This pass re-read all currently open issues and all available issue comments
-in the tracker (28 open issues at review time).
+in the tracker (27 open issues at review time).
 
-### Items likely addressed on `v4-series` but still awaiting release validation
+### Release-validated in official `v4.2601.0531.0115` and closed
 
 - `#187` MiniTalk text extrapolates balloon size in native replacement mode
 - `#188` Text overflow in small dialogue boxes
-- part of `#171` and `#172` overflow/layout symptoms on dialogue surfaces
 
 Notes:
 
-- `PR #211` merged into `v4-series` on 2026-05-30 (`0c09d02`) with
-  MiniTalk/BattleTalk/Toast reflow and ToastGui path changes.
-- Follow-up fix `e4cff33` on `v4-series` now ensures supported normal toast
-  toggles are honored by the ToastGui route.
-- Keep these issues open until the same behavior is validated in an official
-  published build.
+- `v4.2601.0531.0115` is now live in official `DalamudPluginsD17` after
+  [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) merged
+  on 2026-06-01.
+- Both issues were closed with release-validation comments and explicit reopen
+  guidance for reports on `v4.2601.0531.0115` or newer.
+- Overflow/layout reports embedded in umbrella issues (`#171`, `#172`) are
+  still treated as mixed symptoms until fresh post-release repro confirms what
+  remains.
 
 ### Active regression cluster still reported in comments
 
@@ -39,6 +40,7 @@ Notes:
   failures reported)
 - `#204` OpenRouter translation failure (no new comment yet, still open)
 - `#208` Turkish rendering issue (newer report, no follow-up comments yet)
+- `#212` DeepL free-tier `TooManyRequests` report on official `4.2601.0516.1152`
 - `#171` currently mixes DeepSeek auth/runtime errors with additional UI
   clipping reports
 - `#172` dynamic objective text staleness and cross-quest text mix in tracker
@@ -134,6 +136,23 @@ This package is now live in the official Dalamud feed after
     unregister used to succeed.
   - Because `4.2601.0516.x` is now officially published, this item should no
     longer sit in an "awaiting published validation" bucket.
+
+## Recently Closed In Published `4.2601.0531.0115`
+
+This package is now live in the official Dalamud feed after
+[PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) merged on
+2026-06-01.
+
+- `#187` MiniTalk text extrapolates balloon size in native replacement mode
+- `#188` Text overflow in small dialogue boxes
+
+Notes:
+
+- Both items were closed with release-validation comments and clear reopen
+  instructions for users still reproducing on `v4.2601.0531.0115` or newer.
+- Overflow reports that remain inside umbrella issues (`#171`, `#172`) should
+  now be treated as new post-release repro candidates, not as pending closure
+  blockers for `#187`/`#188`.
 
 ## P0: Urgent and Likely Next Targets
 
@@ -294,35 +313,6 @@ runtime direction rather than isolated one-off fixes.
 These are still release-quality problems, but they likely need a more careful
  runtime pass than the P0 items above.
 
-### #188 Translated texts that go beyond the small dialogue boxes
-
-- Priority: P1
-- Ease: medium/hard
-- Status: active layout bug
-- Notes:
-  - This is now clearly part of the native reflow/layout family rather than a
-    generic overlay failure.
-  - The current `JournalDetail` probe work shows that these surfaces need
-    explicit wrapper/container/scroll reflow, not only text-node resizing.
-  - Keep paired with `#187` until a shared reflow helper lands on both.
-  - This is the clearest user-facing umbrella for the small native boxes that
-    cannot accommodate more verbose translated text.
-
-### #187 MiniTalk text extrapolates balloon size when using Native UI replacement
-
-- Priority: P1
-- Ease: medium/hard
-- Status: active native-layout bug
-- Notes:
-  - This is the explicit `MiniTalk` variant of the same "translated text no
-    longer fits the native box" problem.
-  - The new native text-flow reflow helper was introduced with `JournalDetail`
-    specifically so `MiniTalk` can reuse that strategy next.
-  - A fresh follow-up confirms this also reproduces in Spanish, which makes it
-    clearly language-agnostic rather than a PT-BR-specific edge case.
-  - Treat this as the first downstream consumer of whatever stable reflow model
-    we settle on for `JournalDetail`.
-
 ### #175 Overlay problem
 
 - Priority: P1
@@ -347,8 +337,9 @@ These are still release-quality problems, but they likely need a more careful
     - engine / API-error behavior on DeepSeek
     - mission-title / description coverage and layout failures on other engines
   - A follow-up comment adds Google/Spanish screenshots of text overflowing
-    dialogue boxes, which is better categorized with the `#188` / `#187`
-    native-layout cluster than with translator-engine availability.
+    dialogue boxes, which was previously tracked by `#188` / `#187` (now closed
+    in `4.2601.0531.0115`) and should now be validated as a fresh repro only if
+    it still occurs on current official builds.
   - Keep this open for now, but treat it as an umbrella report that likely
     decomposes into `#189`, `#174`, and the small-native-box reflow work.
 
@@ -504,10 +495,10 @@ work rather than release fallout.
 3. `#189`
 4. `#203`
 5. `#204`
-6. `#188` + `#187` as one native-dialogue sizing cluster
-7. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
+6. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
+7. `#212` + `#201` as one "provider limits vs operator feedback" UX cluster
 8. `#175`
-9. reassess `#171` only after `#207/#189/#172`, `#203/#204/#206`, and the small-native-box cluster are clearer
+9. reassess `#171` only after `#207/#189/#172` and `#203/#204/#206` are clearer
 10. `#167`
 11. release-validate / decompose the remaining live parts of `#172`
 12. `#181`

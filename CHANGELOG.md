@@ -7,10 +7,14 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0531.x`
+## Published Release `v4.2601.0531.0115`
 
 This package advances the native-dialogue and toast runtime stability line and
-prepares the LLM rework fixes for official feed submission.
+is now live in the official Dalamud feed.
+
+Published in `DalamudPluginsD17` via
+[PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) on
+2026-06-01.
 
 Highlights:
 
@@ -67,6 +71,7 @@ repository workflow.
 | 2026-05-04 | [PR #8510](https://github.com/goatcorp/DalamudPluginsD17/pull/8510) `v4.2600.x` | first official `4.x` / `API15` release |
 | 2026-05-04 | [PR #8522](https://github.com/goatcorp/DalamudPluginsD17/pull/8522) `v4.2600.x` hotfix | first-launch config creation fix |
 | 2026-05-12 | [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626) `v4.2600.1105.x` | setup, engine selection, cache-concurrency, and version-reuse stabilization |
+| 2026-06-01 | [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) `v4.2601.0531.0115` | native dialogue/toast reflow stabilization, ToastGui route, and cross-surface isolation fixes |
 
 ## Pre-Official History
 
