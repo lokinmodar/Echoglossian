@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-06-01
+Snapshot date: 2026-06-20
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -10,10 +10,20 @@ When the user asks to "read the issues" or "update the issue list", the
 default source of truth for that request is the open issue tracker in
 `lokinmodar/Echoglossian`.
 
-## Tracker Review Update (2026-06-01)
+## Tracker Review Update (2026-06-20)
 
 This pass re-read all currently open issues and all available issue comments
 in the tracker (27 open issues at review time).
+
+Delta since the 2026-06-01 pass:
+
+- no new issues were opened
+- `#206` received fresh post-release comments confirming the bug still
+  reproduces on the latest installed official build
+- `#171` received a new comment that again points at dynamic `ToDoList` /
+  tracker progression not updating after quest-state changes
+- the rest of the tracker is materially unchanged and remains open for the same
+  reasons documented in the previous pass
 
 ### Release-validated in official `v4.2601.0531.0115` and closed
 
@@ -33,16 +43,16 @@ Notes:
 
 ### Active regression cluster still reported in comments
 
-- `#206` `{targetLanguage}` variable regression (comment confirms repro on
-  official `4.2601.0516.1152`; owner comment says fix release was pending)
+- `#206` `{targetLanguage}` variable regression (fresh 2026-06-01 comments say
+  it still resolves to `Japanese` even after updating and refreshing resources)
 - `#207` quest tracker / ToDoList Portuguese regression on official build
 - `#203` mixed engine behavior (Google/Yandex partial recovery, Gemini/DeepL
   failures reported)
 - `#204` OpenRouter translation failure (no new comment yet, still open)
 - `#208` Turkish rendering issue (newer report, no follow-up comments yet)
 - `#212` DeepL free-tier `TooManyRequests` report on official `4.2601.0516.1152`
-- `#171` currently mixes DeepSeek auth/runtime errors with additional UI
-  clipping reports
+- `#171` currently mixes DeepSeek auth/runtime errors with additional quest
+  tracker progression reports
 - `#172` dynamic objective text staleness and cross-quest text mix in tracker
 
 ### Product-direction backlog (not pure break/fix)
@@ -177,6 +187,9 @@ highly visible and appear to have a narrow root cause.
     this family.
   - This is now the strongest current-official signal that the quest-tracker
     cluster is not actually closed.
+  - A later 2026-06-09 comment on `#171` reports the same family again in
+    Spanish/Google, but specifically as tracker progression failing to advance
+    after quest-state changes.
 
 ### #206 {targetLanguage} variable do not take Language to translate to
 
@@ -185,13 +198,17 @@ highly visible and appear to have a narrow root cause.
 - Status: active post-release regression confirmed on the current official
   build
 - Why it is first:
-  - The follow-up comment explicitly confirms it still reproduces on official
-    `4.2601.0516.1152`.
+  - Two 2026-06-01 follow-up comments explicitly confirm that it still
+    reproduces after updating to the newest installed official build and after
+    forcing plugin-resource refresh.
   - The issue narrows a vague "LLM not translating" symptom into a concrete
     prompt-variable failure around `{targetLanguage}`.
   - This is directly adjacent to the shared prompt-template path and may
     explain a chunk of the broader provider-specific failures still being
     reported.
+  - The screenshot evidence still shows `targetLanguage = Japanese`, so this
+    is no longer just "awaiting release validation"; it is a live confirmed
+    regression after the last production release.
 
 ### #204 OpenRouter not translating
 
@@ -340,8 +357,12 @@ These are still release-quality problems, but they likely need a more careful
     dialogue boxes, which was previously tracked by `#188` / `#187` (now closed
     in `4.2601.0531.0115`) and should now be validated as a fresh repro only if
     it still occurs on current official builds.
+  - A new 2026-06-09 comment shifts the freshest live symptom toward dynamic
+    quest-tracker progression not updating after quest-state changes, which is
+    much closer to `#207` / `#172` than to DeepSeek auth alone.
   - Keep this open for now, but treat it as an umbrella report that likely
-    decomposes into `#189`, `#174`, and the small-native-box reflow work.
+    decomposes into `#207`, `#189`, `#174`, and residual provider/runtime
+    failures.
 
 ## P2: Release Stabilization, More Involved
 
@@ -490,11 +511,11 @@ work rather than release fallout.
 
 ## Recommended Execution Order
 
-1. `#207`
-2. `#206`
+1. `#206`
+2. `#207`
 3. `#189`
-4. `#203`
-5. `#204`
+4. `#204`
+5. `#203`
 6. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
 7. `#212` + `#201` as one "provider limits vs operator feedback" UX cluster
 8. `#175`
