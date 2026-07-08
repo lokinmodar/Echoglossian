@@ -16,6 +16,22 @@ namespace Echoglossian.Tests;
 public class StructuredDialogueOpenAiCompatiblePayloadHelperTests
 {
     /// <summary>
+    ///     Ensures the shared schema element remains usable after the helper
+    ///     disposes its temporary backing document.
+    /// </summary>
+    [Fact]
+    public void BuildFunctionParametersJsonElement_ShouldReturnUsableClonedElement()
+    {
+        var element =
+            StructuredDialogueOpenAiCompatiblePayloadHelper
+                .BuildFunctionParametersJsonElement();
+
+        element.ValueKind.Should().Be(System.Text.Json.JsonValueKind.Object);
+        element.TryGetProperty("type", out var typeElement).Should().BeTrue();
+        typeElement.GetString().Should().Be("object");
+    }
+
+    /// <summary>
     ///     Ensures the helper can extract matching tool-call arguments from a
     ///     typical OpenAI-compatible response.
     /// </summary>

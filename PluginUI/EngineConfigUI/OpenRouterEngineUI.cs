@@ -118,7 +118,13 @@ public static class OpenRouterEngineUI
 
     private static string BuildLiveModelRefreshSignature(Config config)
     {
-        return
-            $"apiKey={config.OpenRouterApiKey?.Trim()}|baseUrl={config.OpenRouterBaseUrl?.Trim()}";
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.OpenRouterApiKey,
+                Sensitive: true),
+            new LiveModelRefreshSignatureComponent(
+                "baseUrl",
+                config.OpenRouterBaseUrl));
     }
 }

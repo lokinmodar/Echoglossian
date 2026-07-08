@@ -103,6 +103,10 @@ public static class GeminiEngineUI
 
     private static string BuildLiveModelRefreshSignature(Config config)
     {
-        return $"apiKey={config.GeminiTranslatorApiKey?.Trim()}";
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.GeminiTranslatorApiKey,
+                Sensitive: true));
     }
 }

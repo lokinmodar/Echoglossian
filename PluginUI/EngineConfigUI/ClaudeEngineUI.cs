@@ -137,6 +137,13 @@ public static class ClaudeEngineUI
 
     private static string BuildLiveModelRefreshSignature(Config config)
     {
-        return $"apiKey={config.ClaudeApiKey?.Trim()}|baseUrl={config.ClaudeBaseUrl?.Trim()}";
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.ClaudeApiKey,
+                Sensitive: true),
+            new LiveModelRefreshSignatureComponent(
+                "baseUrl",
+                config.ClaudeBaseUrl));
     }
 }

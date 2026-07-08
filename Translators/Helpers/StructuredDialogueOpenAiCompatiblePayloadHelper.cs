@@ -19,9 +19,9 @@ public static class StructuredDialogueOpenAiCompatiblePayloadHelper
     /// <returns>The cloned JSON element.</returns>
     public static System.Text.Json.JsonElement BuildFunctionParametersJsonElement()
     {
-        return System.Text.Json.JsonDocument.Parse(
-                StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson())
-            .RootElement.Clone();
+        using var document = System.Text.Json.JsonDocument.Parse(
+            StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson());
+        return document.RootElement.Clone();
     }
 
     /// <summary>

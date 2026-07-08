@@ -21294,6 +21294,53 @@
             <param name="scope">The stable scope key.</param>
             <param name="refreshAsync">The refresh work to execute.</param>
         </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent">
+            <summary>
+                Represents one input component for a live model-refresh signature.
+            </summary>
+            <param name="Name">The stable component name.</param>
+            <param name="Value">The current component value.</param>
+            <param name="Sensitive">
+                Whether the component should be reduced to a short stable hash instead
+                of storing the raw value in memory.
+            </param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent.#ctor(System.String,System.String,System.Boolean)">
+            <summary>
+                Represents one input component for a live model-refresh signature.
+            </summary>
+            <param name="Name">The stable component name.</param>
+            <param name="Value">The current component value.</param>
+            <param name="Sensitive">
+                Whether the component should be reduced to a short stable hash instead
+                of storing the raw value in memory.
+            </param>
+        </member>
+        <member name="P:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent.Name">
+            <summary>The stable component name.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent.Value">
+            <summary>The current component value.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent.Sensitive">
+            <summary>
+                Whether the component should be reduced to a short stable hash instead
+                of storing the raw value in memory.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureHelper">
+            <summary>
+                Builds stable live model-refresh signatures without embedding raw
+                secret material such as API keys.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureHelper.Build(Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent[])">
+            <summary>
+                Builds one stable refresh signature from the provided components.
+            </summary>
+            <param name="components">The ordered signature components.</param>
+            <returns>The stable signature string.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI">
             <summary>
                 UI for configuring LM Studio translator engine.

@@ -436,11 +436,24 @@ public static class ChatGPTEngineUI
     {
         if (variant == OpenAiProviderVariant.CustomOpenAICompatible)
         {
-            return
-                $"apiKey={config.CustomOpenAiCompatibleApiKey?.Trim()}|baseUrl={config.CustomOpenAiCompatibleBaseUrl?.Trim()}";
+            return LiveModelRefreshSignatureHelper.Build(
+                new LiveModelRefreshSignatureComponent(
+                    "apiKeyHash",
+                    config.CustomOpenAiCompatibleApiKey,
+                    Sensitive: true),
+                new LiveModelRefreshSignatureComponent(
+                    "baseUrl",
+                    config.CustomOpenAiCompatibleBaseUrl));
         }
 
-        return $"apiKey={config.ChatGptApiKey?.Trim()}|baseUrl={config.ChatGPTBaseUrl?.Trim()}";
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.ChatGptApiKey,
+                Sensitive: true),
+            new LiveModelRefreshSignatureComponent(
+                "baseUrl",
+                config.ChatGPTBaseUrl));
     }
 
     /// <summary>

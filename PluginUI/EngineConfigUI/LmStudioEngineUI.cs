@@ -130,7 +130,16 @@ public static class LmStudioEngineUI
 
     private static string BuildLiveModelRefreshSignature(Config config)
     {
-        return
-            $"baseUrl={config.LmStudioBaseUrl?.Trim()}|useAuth={config.UseLmStudioAuth}|apiKey={config.LmStudioApiKey?.Trim()}";
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "baseUrl",
+                config.LmStudioBaseUrl),
+            new LiveModelRefreshSignatureComponent(
+                "useAuth",
+                config.UseLmStudioAuth.ToString()),
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.UseLmStudioAuth ? config.LmStudioApiKey : string.Empty,
+                Sensitive: true));
     }
 }

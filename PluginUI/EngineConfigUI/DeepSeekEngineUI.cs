@@ -116,7 +116,13 @@ public static class DeepSeekEngineUI
 
     private static string BuildLiveModelRefreshSignature(Config config)
     {
-        return
-            $"apiKey={config.DeepSeekTranslatorApiKey?.Trim()}|baseUrl={config.DeepSeekBaseUrl?.Trim()}";
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.DeepSeekTranslatorApiKey,
+                Sensitive: true),
+            new LiveModelRefreshSignatureComponent(
+                "baseUrl",
+                config.DeepSeekBaseUrl));
     }
 }

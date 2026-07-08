@@ -2549,3 +2549,53 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - scrub raw API-key material out of live model-refresh signatures and clean
     up the OpenAI-compatible structured payload helper's JSON-document lifetime
+
+## Iteration 66 - Scrub Live Model Refresh Signatures And Clone Structured Schema Elements
+
+- Date: 2026-07-08
+- Branch: `llm-translation-rework`
+- Goal:
+  - close the remaining PR `#202` LLM review debt by removing raw API-key
+    material from live model-refresh cache signatures and fixing the
+    OpenAI-compatible structured payload helper so it never returns a
+    `JsonElement` backed by a disposed `JsonDocument`
+- Files touched:
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `PluginUI/EngineConfigUI/ClaudeEngineUI.cs`
+  - `PluginUI/EngineConfigUI/DeepSeekEngineUI.cs`
+  - `PluginUI/EngineConfigUI/GeminiEngineUI.cs`
+  - `PluginUI/EngineConfigUI/LmStudioEngineUI.cs`
+  - `PluginUI/EngineConfigUI/OpenRouterEngineUI.cs`
+  - `PluginUI/EngineConfigUI/LiveModelRefreshSignatureHelper.cs`
+  - `Translators/Helpers/StructuredDialogueOpenAiCompatiblePayloadHelper.cs`
+  - `Echoglossian.Tests/LiveModelRefreshSignatureHelperTests.cs`
+  - `Echoglossian.Tests/StructuredDialogueOpenAiCompatiblePayloadHelperTests.cs`
+  - `Echoglossian.xml`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - introduced a shared live-refresh signature helper that normalizes ordinary
+    inputs and reduces sensitive components to short stable hashes instead of
+    embedding raw API keys in signature strings
+  - updated the ChatGPT, Claude, DeepSeek, Gemini, LM Studio, and OpenRouter
+    engine UIs to build their refresh signatures through that helper, with LM
+    Studio only including the API-key hash when auth is enabled
+  - changed
+    `StructuredDialogueOpenAiCompatiblePayloadHelper.BuildFunctionParametersJsonElement()`
+    to clone the root element before disposing the temporary parsed document
+  - added regression coverage for both the secret-scrubbing signature behavior
+    and the cloned `JsonElement` lifetime guarantee
+- Behavior-sensitive risks:
+  - live model-refresh caches will observe a one-time signature change because
+    the format now stores hashed secret markers instead of raw values, but the
+    refresh invalidation inputs remain behaviorally equivalent
+  - the structured dialogue schema payload is unchanged on the wire; this only
+    removes a disposed-document lifetime hazard for callers that hold the
+    returned `JsonElement`
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet build Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+    : passed (`323/323`)
+- Next cut:
+  - re-scan PR `#202` unresolved review state and decide whether any remaining
+    debt is code, tests, or only GitHub thread follow-up
