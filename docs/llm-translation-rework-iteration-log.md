@@ -2599,3 +2599,40 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - re-scan PR `#202` unresolved review state and decide whether any remaining
     debt is code, tests, or only GitHub thread follow-up
+
+## Iteration 67 - Prepare The Local In-Game LLM Test Path And Operator Playbook
+
+- Date: 2026-07-08
+- Branch: `llm-translation-rework`
+- Goal:
+  - prepare the workstation for branch-local in-game LLM validation with a
+    reversible config backup, a single-engine first-test setup, and an
+    operator-focused playbook for acquiring provider credentials and running
+    smoke and deep coverage passes
+- Files touched:
+  - `docs/llm-ingame-test-playbook.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- Local operator actions performed:
+  - backed up the active plugin config from
+    `%AppData%\XIVLauncher\pluginConfigs\Echoglossian.json`
+  - switched only the selected engine in the local config from `Google` to
+    `ChatGPT`, leaving the rest of the operator's translation and UI settings
+    intact
+- What changed:
+  - added a dedicated in-game LLM test playbook that records the current local
+    config state, clarifies which engines require API keys, links the official
+    provider key-generation pages, and defines a recommended in-game smoke and
+    deep test order
+  - documented the local backup and restore flow so operator-side testing can
+    move quickly without losing the pre-test config snapshot
+- Behavior-sensitive risks:
+  - the repo change is documentation-only, but the local operator config now
+    points to `ChatGPT` and will remain activation-blocked until a valid
+    OpenAI key is supplied and the plugin is reloaded
+  - external edits to the config file require a plugin reload or game restart
+    before the in-memory runtime matches disk
+- Validation:
+  - not run; repo changes are documentation-only
+- Next cut:
+  - perform the actual in-game smoke pass on `ChatGPT`, then expand into the
+    deeper multi-engine matrix from the playbook
