@@ -48,14 +48,14 @@ public class TranslatorMetricsCollectorTests
         (int)Echoglossian.TransEngines.Ollama,
         TranslationRequestMetricOutcome.Failure,
         TimeSpan.FromMilliseconds(240),
-        "llm-timeout",
-        observedAtUtc.AddSeconds(1));
+        failureReason: "llm-timeout",
+        observedAtUtc: observedAtUtc.AddSeconds(1));
     TranslatorMetricsCollector.Record(
         (int)Echoglossian.TransEngines.Ollama,
         TranslationRequestMetricOutcome.ShortCircuited,
         TimeSpan.Zero,
-        "known-failure-cache",
-        observedAtUtc.AddSeconds(2));
+        failureReason: "known-failure-cache",
+        observedAtUtc: observedAtUtc.AddSeconds(2));
 
     var snapshot = Assert.Single(TranslatorMetricsCollector.GetSnapshots());
 

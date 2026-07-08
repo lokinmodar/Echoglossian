@@ -2471,3 +2471,49 @@ turning into an opaque pile of partial changes.
   - commit this merge checkpoint, then fix the remaining PR `#202` review items
     and the now-exposed test drift in small validated slices, starting with the
     structured-dialogue capability mismatch and dialogue-session context bugs
+
+## Iteration 64 - Realign The Branch Test Suite With The Current LLM Runtime
+
+- Date: 2026-07-08
+- Branch: `llm-translation-rework`
+- Goal:
+  - restore a reliable validation baseline after the merge checkpoint by
+    fixing the branch-local test drift that no longer matched the current LLM
+    runtime and structured-dialogue plumbing
+- Files touched:
+  - `Echoglossian.Tests/OpenAiProviderConfigurationTests.cs`
+  - `Echoglossian.Tests/StructuredDialogueCapabilityHelperTests.cs`
+  - `Echoglossian.Tests/TranslationFailureTextClassifierTests.cs`
+  - `Echoglossian.Tests/TranslationServiceTests.cs`
+  - `Echoglossian.Tests/TranslatorContractTests.cs`
+  - `Echoglossian.Tests/TranslatorMetricsCollectorTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - added the missing `Resources` imports needed by the newer localized
+    unavailable-message assertions
+  - aligned `StructuredDialogueCapabilityHelperTests` with the branch runtime,
+    which already routes Claude through the structured path instead of keeping
+    it in the disabled bucket
+  - removed stale `BuildPrompt(...)` expectations from
+    `TranslatorContractTests` now that `ChatGPT` and `OpenRouter` share prompt
+    rendering through `PromptTemplateManager` instead of exposing separate
+    translator helpers
+  - updated `TranslatorMetricsCollectorTests` for the current
+    `Record(...)` signature
+  - rewrote the failing `TranslationServiceTests` cases around empty and
+    synthetic outputs so they assert the current transient-failure behavior
+    rather than the older persistent-failure path
+- Behavior-sensitive risks:
+  - this cut is test-only; it does not change runtime translation behavior
+  - the Claude capability expectation now explicitly documents the branch's
+    current structured-dialogue intent, so if Claude is later re-deferred the
+    code and tests will need to move together
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet build Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+    : passed (`319/319`)
+- Next cut:
+  - implement the remaining runtime review fixes for PR `#202`: dialogue
+    session history-limit enforcement, live model-refresh signature scrubbing,
+    and OpenAI-compatible structured payload lifetime cleanup

@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Properties;
 using Echoglossian.Tests.TestDoubles;
 using Echoglossian.Translators;
 using Echoglossian.Translators.OpenAI;

@@ -27,6 +27,7 @@ public class StructuredDialogueCapabilityHelperTests
   [InlineData(Echoglossian.TransEngines.LmStudio)]
   [InlineData(Echoglossian.TransEngines.Ollama)]
   [InlineData(Echoglossian.TransEngines.Gemini)]
+  [InlineData(Echoglossian.TransEngines.Claude)]
   public void GetPreferredCapability_StructuredFamilies_ReturnJsonSchema(
       Echoglossian.TransEngines engine)
   {
@@ -39,7 +40,6 @@ public class StructuredDialogueCapabilityHelperTests
   ///     disabled by default.
   /// </summary>
   [Theory]
-  [InlineData(Echoglossian.TransEngines.Claude)]
   [InlineData(Echoglossian.TransEngines.Google)]
   [InlineData(Echoglossian.TransEngines.Microsoft)]
   public void GetPreferredCapability_UnsupportedFamilies_ReturnDisabled(

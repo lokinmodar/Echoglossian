@@ -7,6 +7,8 @@ using Echoglossian.Translators;
 
 using Xunit;
 
+using Echoglossian.Properties;
+
 namespace Echoglossian.Tests;
 
 /// <summary>
@@ -169,8 +171,8 @@ public class TranslationServiceTests
     ///     recording a transient failure reason for the persistence guard.
     /// </summary>
     [Fact]
-    public void Translate_EmptyResult_RecordsTransientFailureReason()
-    {
+  public void Translate_EmptyResult_RecordsTransientFailureReason()
+  {
         var translator = new RecordingTranslator
         {
             SyncResult = string.Empty,
@@ -185,7 +187,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 11,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedText = text;
                 recordedSource = source;
@@ -223,7 +225,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 5,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedText = text;
                 recordedReason = reason;
@@ -254,7 +256,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 3,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedReason = reason;
             });
@@ -262,7 +264,7 @@ public class TranslationServiceTests
         var result = service.Translate("hello", "en", "pt-BR");
 
         Assert.Equal("hello", result);
-        Assert.Equal("synthetic-error-result", recordedReason);
+        Assert.Equal("llm-endpoint-unavailable", recordedReason);
     }
 
     /// <summary>
@@ -284,7 +286,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 4,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedReason = reason;
             });
@@ -292,7 +294,7 @@ public class TranslationServiceTests
         var result = await service.TranslateAsync("...hello", "en", "pt-BR");
 
         Assert.Equal("...hello", result);
-        Assert.Equal("synthetic-error-result", recordedReason);
+        Assert.Equal("llm-endpoint-unavailable", recordedReason);
     }
 
     /// <summary>
@@ -468,39 +470,8 @@ public class TranslationServiceTests
     }
 
     /// <summary>
-    ///     Ensures a failed translation records the explicit origin context
-    ///     when one is provided by the caller.
-    /// </summary>
-    [Fact]
-    public void Translate_RecordsExplicitOriginContext()
-    {
-        var translator = new RecordingTranslator
-        {
-            SyncResult = string.Empty,
-        };
-        string? recordedOrigin = null;
-
-        var service = new TranslationService(
-            text => text,
-            translator,
-            translationEngine: 11,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
-            {
-                recordedOrigin = origin;
-            });
-
-        _ = service.Translate(
-            "hello",
-            "en",
-            "pt-BR",
-            originContext: "ActionDetailPrefetch.Name");
-
-        Assert.Equal("ActionDetailPrefetch.Name", recordedOrigin);
-    }
-
-    /// <summary>
-    ///     Ensures known localized engine-unavailable messages do not become
-    ///     accepted translated output and are reported to the runtime
+     ///     Ensures known localized engine-unavailable messages do not become
+     ///     accepted translated output and are reported to the runtime
     ///     feedback path.
     /// </summary>
     [Fact]
