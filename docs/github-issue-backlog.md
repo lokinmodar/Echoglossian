@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-05-11
+Snapshot date: 2026-06-20
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -9,6 +9,64 @@ feature work.
 When the user asks to "read the issues" or "update the issue list", the
 default source of truth for that request is the open issue tracker in
 `lokinmodar/Echoglossian`.
+
+## Tracker Review Update (2026-06-20)
+
+This pass re-read all currently open issues and all available issue comments
+in the tracker (27 open issues at review time).
+
+Delta since the 2026-06-01 pass:
+
+- no new issues were opened
+- `#206` received fresh post-release comments confirming the bug still
+  reproduces on the latest installed official build
+- `#171` received a new comment that again points at dynamic `ToDoList` /
+  tracker progression not updating after quest-state changes
+- the rest of the tracker is materially unchanged and remains open for the same
+  reasons documented in the previous pass
+
+### Release-validated in official `v4.2601.0531.0115` and closed
+
+- `#187` MiniTalk text extrapolates balloon size in native replacement mode
+- `#188` Text overflow in small dialogue boxes
+
+Notes:
+
+- `v4.2601.0531.0115` is now live in official `DalamudPluginsD17` after
+  [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) merged
+  on 2026-06-01.
+- Both issues were closed with release-validation comments and explicit reopen
+  guidance for reports on `v4.2601.0531.0115` or newer.
+- Overflow/layout reports embedded in umbrella issues (`#171`, `#172`) are
+  still treated as mixed symptoms until fresh post-release repro confirms what
+  remains.
+
+### Active regression cluster still reported in comments
+
+- `#206` `{targetLanguage}` variable regression (fresh 2026-06-01 comments say
+  it still resolves to `Japanese` even after updating and refreshing resources)
+- `#207` quest tracker / ToDoList Portuguese regression on official build
+- `#203` mixed engine behavior (Google/Yandex partial recovery, Gemini/DeepL
+  failures reported)
+- `#204` OpenRouter translation failure (no new comment yet, still open)
+- `#208` Turkish rendering issue (newer report, no follow-up comments yet)
+- `#212` DeepL free-tier `TooManyRequests` report on official `4.2601.0516.1152`
+- `#171` currently mixes DeepSeek auth/runtime errors with additional quest
+  tracker progression reports
+- `#172` dynamic objective text staleness and cross-quest text mix in tracker
+
+### Product-direction backlog (not pure break/fix)
+
+- `#209` local LLM context limiting/disable controls
+- `#201` explicit feedback for quota/usage-limit/provider failures
+- `#196` custom OpenAI-compatible provider path
+- `#148` structured input/output for glossary and metadata
+
+### Compatibility and long-tail backlog
+
+- `#173` and `#179`: CharacterPanelRefined compatibility/crash analysis
+- older enhancement backlog remains open (`#192`, `#139`, `#104`, `#103`,
+  `#68`, `#15`)
 
 ## Triage Model
 
@@ -45,7 +103,7 @@ Notes:
 - This makes `#178` the clearest issue now resolved by a currently published
   build, rather than only by local code.
 
-## Resolved In Submitted `4.2600.1105.x`
+## Previously Closed In Published `4.2600.1105.x`
 
 - `#186` Randomly stops translating to PT-BR and displays English text instead
 - `#190` Seleção de mecanismo de tradução não está funcionando corretamente
@@ -54,10 +112,11 @@ Notes:
 
 Notes:
 
-- `4.2600.1105.x` is the current submitted release package and is tracked in
-  the official repo submission
-  [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626).
-- This package includes:
+- `4.2600.1105.x` was the release package that addressed this engine-selection
+  and dialogue-cache cluster before the current stable line.
+- Those fixes remain part of the published release line and should no longer be
+  treated as "submitted only" backlog items.
+- That package included:
   - engine-selection stabilization that keeps `ChosenTransEngine` and
     `ChosenTransEngineKey` synchronized
   - translator-local concurrency hardening for the LLM cache path
@@ -66,16 +125,18 @@ Notes:
   - transient dialogue-failure persistence guards so exact-failure placeholders
     and cross-language original-text echoes stop becoming sticky fallbacks
 
-## Fixed In Code, Awaiting Published Validation
+## Recently Closed In Published `4.2601.0516.x`
 
-These issues already have fixes merged into `v4-series`, but should stay open
-until a published Dalamud release confirms the behavior in the field.
+This package is now live in the official Dalamud feed after
+[PR #8674](https://github.com/goatcorp/DalamudPluginsD17/pull/8674) merged on
+2026-05-16.
 
 ### #198 Texts are translated multiple times when OpenAI model is changed
 
 - Priority: tracked
 - Ease: done in code
-- Status: fix landed in `v4-series`, not yet validated in a published release
+- Status: published fix, should now be treated as release-validated unless
+  fresh field reports contradict it
 - Notes:
   - The newer reproduction steps narrow this down to runtime-refresh listener
     accumulation, not translator-local dictionary concurrency.
@@ -83,19 +144,108 @@ until a published Dalamud release confirms the behavior in the field.
   - A second review follow-up fixed the shared-handler case where the same
     handler instance is registered for multiple addon names and only the first
     unregister used to succeed.
-  - Keep this open until the next published build confirms that repeated model
-    changes no longer multiply live talk translations or token usage.
+  - Because `4.2601.0516.x` is now officially published, this item should no
+    longer sit in an "awaiting published validation" bucket.
+
+## Recently Closed In Published `4.2601.0531.0115`
+
+This package is now live in the official Dalamud feed after
+[PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) merged on
+2026-06-01.
+
+- `#187` MiniTalk text extrapolates balloon size in native replacement mode
+- `#188` Text overflow in small dialogue boxes
+
+Notes:
+
+- Both items were closed with release-validation comments and clear reopen
+  instructions for users still reproducing on `v4.2601.0531.0115` or newer.
+- Overflow reports that remain inside umbrella issues (`#171`, `#172`) should
+  now be treated as new post-release repro candidates, not as pending closure
+  blockers for `#187`/`#188`.
 
 ## P0: Urgent and Likely Next Targets
 
 These are the best immediate targets because they are blocking, widespread, or
 highly visible and appear to have a narrow root cause.
 
+### #207 Quest tracker todolist not translating to Portuguese on v4.2601.0516.1152
+
+- Priority: P0
+- Ease: narrow/medium
+- Status: active post-release regression confirmed on the current official
+  build
+- Why it is first:
+  - This is the freshest tracker report and it explicitly uses the new release
+    channel field, so the report is clearly tied to the official
+    `DalamudPluginsD17` package rather than a local build.
+  - The body scopes the failure to `Quest tracker / ToDoList / ScenarioTree`
+    while also stating that the dialogue windows still translate, which makes
+    this much narrower than a generic "plugin not translating" symptom.
+  - The report explicitly calls out that it still reproduces on
+    `v4.2601.0516.1152` even though the older `#182` fix was expected to cover
+    this family.
+  - This is now the strongest current-official signal that the quest-tracker
+    cluster is not actually closed.
+  - A later 2026-06-09 comment on `#171` reports the same family again in
+    Spanish/Google, but specifically as tracker progression failing to advance
+    after quest-state changes.
+
+### #206 {targetLanguage} variable do not take Language to translate to
+
+- Priority: P0
+- Ease: narrow/medium
+- Status: active post-release regression confirmed on the current official
+  build
+- Why it is first:
+  - Two 2026-06-01 follow-up comments explicitly confirm that it still
+    reproduces after updating to the newest installed official build and after
+    forcing plugin-resource refresh.
+  - The issue narrows a vague "LLM not translating" symptom into a concrete
+    prompt-variable failure around `{targetLanguage}`.
+  - This is directly adjacent to the shared prompt-template path and may
+    explain a chunk of the broader provider-specific failures still being
+    reported.
+  - The screenshot evidence still shows `targetLanguage = Japanese`, so this
+    is no longer just "awaiting release validation"; it is a live confirmed
+    regression after the last production release.
+
+### #204 OpenRouter not translating
+
+- Priority: P0
+- Ease: medium
+- Status: active provider-specific manifestation of the same LLM prompt/runtime
+  cluster
+- Notes:
+  - The body still describes the default prompt path turning dialogue into the
+    same obviously wrong fixed string on OpenRouter after leaving the prompt
+    untouched.
+  - With `#206` now confirming a live `{targetLanguage}` variable problem on
+    the official build, this issue should be treated as potentially overlapping
+    evidence rather than a fully separate provider-only outage.
+  - It is still a P0 because users read this as "LLM support regressed" even
+    when other engines still translate.
+
+### #203 Echoglossian not translating
+
+- Priority: P0
+- Ease: medium
+- Status: active mixed engine/runtime report
+- Notes:
+  - The follow-up comment is useful because it narrows the symptom:
+    `Google` and `Yandex` can recover, but only on some quest surfaces, while
+    `Gemini API` and `DeepL-non API` still do not work at all.
+  - This now looks less like a total plugin outage and more like a combination
+    of provider gating, engine configuration UX, and uneven surface coverage.
+  - Keep this near the top until we know whether it decomposes into provider
+    runtime bugs, invalid engine/target-language support combinations, or a
+    quest-surface-only partial translation state.
+
 ### #189 Barra de Próxima MSQ e Janela de Missão sem tradução
 
 - Priority: P0
 - Ease: medium
-- Status: active regression
+- Status: active quest-family coverage regression
 - Why it is first:
   - This is a visible quest-facing regression in one of the most commonly seen
     gameplay surfaces.
@@ -107,40 +257,78 @@ highly visible and appear to have a narrow root cause.
     mission-window coverage.
   - This is now better scoped as a concrete quest-surface coverage regression,
     not a generic "plugin stopped translating" report.
+  - `#207` makes it more likely that this cluster still includes the quest
+    tracker / `ToDoList` path in the current official build, not only the
+    earlier mission-window surfaces.
+
+## P1: Active LLM / IA Rework Cluster
+
+These are tightly related enough that they should be treated as one product and
+runtime direction rather than isolated one-off fixes.
+
+### #174 Translate already saved translated texts does not work
+
+- Priority: P1
+- Ease: medium
+- Status: active, partially addressed by the in-progress LLM rework
+- Notes:
+  - Recent user comments still point at DB reuse semantics and lack of a clear
+    operator workflow for forcing retranslation after translator experiments.
+  - A fresh comment also confirms that clearing the DB resolves the bad state,
+    which makes this a real cache/persistence UX problem rather than only a
+    misunderstanding of settings.
+  - This now belongs squarely in the same operator-facing cluster as dialogue
+    retranslation controls and translator diagnostics.
+
+### #201 Add more visible feedback about LLM API usage limits exceeded
+
+- Priority: P1
+- Ease: medium
+- Status: active UX/runtime feedback gap
+- Notes:
+  - This remains the clearest issue asking for explicit operator feedback when
+    LLM providers fail due to quota, endpoint, or upstream usage-limit reasons.
+  - It is now clearly part of the same translator-debugger / actionable-failure
+    direction as `#174`, `#176`, and `#196`.
+
+### #176 Overhead de ~1s entre captura do texto e exibição da tradução com LLM local
+
+- Priority: P1
+- Ease: medium/hard
+- Status: active performance and prompt-shaping issue
+- Notes:
+  - The comment trail still supports two root-cause angles:
+    raw local-LLM latency and unnecessary prompt/context overhead.
+  - The user-facing screenshots and discussion make it clear that "single
+    ongoing conversation" and filtering unnecessary text are part of the same
+    desired direction, not a separate enhancement.
+
+### #196 Add Custom OpenAI-Compatible API Support
+
+- Priority: P1
+- Ease: medium
+- Status: active platform/configuration enhancement
+- Notes:
+  - This belongs in the same LLM operator/runtime cluster now that users are
+    actively testing multiple providers and custom endpoints.
+  - It also intersects `#203` and `#204`, because provider differentiation and
+    diagnostics matter more once a custom OpenAI-compatible path exists.
+
+### #148 Structured input and output for glossary and metadata
+
+- Priority: P1
+- Ease: hard
+- Status: active architecture enhancement
+- Notes:
+  - This is no longer just "future nice-to-have" architecture; it is part of
+    the same quality and control direction as the current LLM rework.
+  - The issue remains broader than the first structured-dialogue cuts, so it
+    should stay open even as partial foundation work lands elsewhere.
 
 ## P1: Urgent but Medium Investigation
 
 These are still release-quality problems, but they likely need a more careful
  runtime pass than the P0 items above.
-
-### #188 Translated texts that go beyond the small dialogue boxes
-
-- Priority: P1
-- Ease: medium/hard
-- Status: active layout bug
-- Notes:
-  - This is now clearly part of the native reflow/layout family rather than a
-    generic overlay failure.
-  - The current `JournalDetail` probe work shows that these surfaces need
-    explicit wrapper/container/scroll reflow, not only text-node resizing.
-  - Keep paired with `#187` until a shared reflow helper lands on both.
-  - This is the clearest user-facing umbrella for the small native boxes that
-    cannot accommodate more verbose translated text.
-
-### #187 MiniTalk text extrapolates balloon size when using Native UI replacement
-
-- Priority: P1
-- Ease: medium/hard
-- Status: active native-layout bug
-- Notes:
-  - This is the explicit `MiniTalk` variant of the same "translated text no
-    longer fits the native box" problem.
-  - The new native text-flow reflow helper was introduced with `JournalDetail`
-    specifically so `MiniTalk` can reuse that strategy next.
-  - A fresh follow-up confirms this also reproduces in Spanish, which makes it
-    clearly language-agnostic rather than a PT-BR-specific edge case.
-  - Treat this as the first downstream consumer of whatever stable reflow model
-    we settle on for `JournalDetail`.
 
 ### #175 Overlay problem
 
@@ -156,21 +344,6 @@ These are still release-quality problems, but they likely need a more careful
     and toggling the plugin, which suggests this may overlap with activation /
     refresh timing rather than a pure overlay renderer failure.
 
-### #174 Translate already saved translated texts does not work
-
-- Priority: P1
-- Ease: medium
-- Status: partially improved in published builds, still open
-- Notes:
-  - Users expect settings or engine changes to affect already stored rows.
-  - Part of this overlapped with dialogue rows persisting unchanged source text
-    and being reused as if they were valid translations.
-  - `4.2600.0605` addressed the hot-refresh / activation / engine-selection
-    parts of this complaint, but the cached-row semantics still need reassessment
-    before closure.
-  - Recent comments keep pointing at DB reuse semantics and lack of a clear
-    operator workflow for forcing retranslation after translator experiments.
-
 ### #171 Deepseek translation is not available... mission titles and descriptions are not being translated
 
 - Priority: P1
@@ -181,10 +354,15 @@ These are still release-quality problems, but they likely need a more careful
     - engine / API-error behavior on DeepSeek
     - mission-title / description coverage and layout failures on other engines
   - A follow-up comment adds Google/Spanish screenshots of text overflowing
-    dialogue boxes, which is better categorized with the `#188` / `#187`
-    native-layout cluster than with translator-engine availability.
+    dialogue boxes, which was previously tracked by `#188` / `#187` (now closed
+    in `4.2601.0531.0115`) and should now be validated as a fresh repro only if
+    it still occurs on current official builds.
+  - A new 2026-06-09 comment shifts the freshest live symptom toward dynamic
+    quest-tracker progression not updating after quest-state changes, which is
+    much closer to `#207` / `#172` than to DeepSeek auth alone.
   - Keep this open for now, but treat it as an umbrella report that likely
-    decomposes into `#189`, `#174`, and the small-native-box reflow work.
+    decomposes into `#207`, `#189`, `#174`, and residual provider/runtime
+    failures.
 
 ## P2: Release Stabilization, More Involved
 
@@ -217,6 +395,10 @@ require careful UI/runtime investigation rather than a narrow config fix.
   - Treat this as a decomposed umbrella issue rather than a single root cause:
     remaining live parts appear to split across selection-dialog sizing and the
     broader `#181` native-layout/runtime-state work.
+  - With `#207` now reporting current-official `ToDoList` / `ScenarioTree`
+    translation failure and `#189` already scoped to the mission-window family,
+    this issue is better kept as the broader quest-runtime umbrella than as the
+    next narrow target by itself.
 
 ### #173 Plugin function incompatibility: Character panel refined
 
@@ -262,20 +444,6 @@ require careful UI/runtime investigation rather than a narrow config fix.
 
 ## P3: Important, Not Immediate Release Blockers
 
-### #176 [Performance] Overhead de ~1s entre captura do texto e exibição da tradução com LLM local
-
-- Priority: P3
-- Ease: medium/hard
-- Status: valid performance backlog
-- Notes:
-  - This needs investigation across capture latency, request overhead,
-    prompt size, and presentation timing.
-  - The follow-up comment and reply also suggest a second angle beyond raw
-    latency: reducing unnecessary context and potentially reusing a single
-    ongoing local-LLM conversation/session instead of sending the same large
-    fixed prompt every time.
-  - Important, but not more urgent than bootstrap/load/overlay failures.
-
 ### #192 Add example images for the Game UI elements possible to be translated to each configuration window panel option
 
 - Priority: P3
@@ -291,23 +459,6 @@ require careful UI/runtime investigation rather than a narrow config fix.
 
 These remain open on purpose and still represent real feature or architecture
 work rather than release fallout.
-
-### #196 Add Custom OpenAI-Compatible API Support
-
-- Status: keep open
-- Scope:
-  - custom OpenAI-compatible endpoint support
-  - engine/provider configuration expansion
-  - likely intersects the broader custom-provider direction already mentioned
-    in `#148`
-
-### #148 Structured input and output for glossary and metadata
-
-- Status: keep open
-- Scope:
-  - LLM prompt and output shaping
-  - richer glossary and metadata flow
-  - future translation-engine enhancement work
 
 ### #139 Arabic Translation Support
 
@@ -354,18 +505,24 @@ work rather than release fallout.
   - top-level known-issues tracker
   - preserves the RTL limitation
   - points users to the issue tracker plus changelog
+- Notes:
+  - This should stay a documentation/meta tracker, not compete with the real
+    engineering backlog ordering above.
 
 ## Recommended Execution Order
 
-1. `#189`
-2. `#188` + `#187` as one native-dialogue sizing cluster
-3. `#175`
-4. reassess / release-validate `#174`
-5. reassess `#171` only after `#189` and the small-native-box cluster are clearer
-6. `#167`
-7. release-validate / decompose the remaining live parts of `#172`
-8. `#181`
-9. `#173` / `#179`
-10. `#176`
-11. `#192`
-12. long-term backlog `#196`, `#148`, `#139`, `#104`, `#103`, `#68`, `#15`
+1. `#206`
+2. `#207`
+3. `#189`
+4. `#204`
+5. `#203`
+6. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
+7. `#212` + `#201` as one "provider limits vs operator feedback" UX cluster
+8. `#175`
+9. reassess `#171` only after `#207/#189/#172` and `#203/#204/#206` are clearer
+10. `#167`
+11. release-validate / decompose the remaining live parts of `#172`
+12. `#181`
+13. `#173` / `#179`
+14. `#192`
+15. long-term backlog `#139`, `#104`, `#103`, `#68`, `#15`

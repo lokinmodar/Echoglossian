@@ -2413,3 +2413,61 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - create `testing/live/Echoglossian` in the local `DalamudPluginsD17` fork
     and open the official testing-channel PR against `goatcorp`
+
+## Iteration 63 - Refresh The Rework Branch On Top Of The Latest `v4-series`
+
+- Date: 2026-07-08
+- Branch: `llm-translation-rework`
+- Goal:
+  - merge the latest `origin/v4-series` into the rework branch, re-read the
+    still-open PR review debt, and preserve the LLM rework codepaths while
+    closing the immediate merge fallout before the remaining review fixes
+- Files touched:
+  - `Echoglossian.csproj`
+  - `Echoglossian.Tests/Echoglossian.Tests.csproj`
+  - `Properties/Resources.Designer.cs`
+  - `Properties/Resources.resx`
+  - `Properties/Resources.pt.resx`
+  - `Properties/Resources.pt-BR.resx`
+  - `Translators/ChatGPTTranslator.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+  - plus the upstream `origin/v4-series` merge payload
+- What changed:
+  - merged the current `origin/v4-series` state into `llm-translation-rework`
+    and resolved the translator conflicts in favor of the newer rework
+    implementations so the structured-dialogue and OpenAI-compatible paths were
+    not overwritten by older upstream translator constructors
+  - kept the upstream safety improvement for empty ChatGPT responses by guarding
+    the first `completion.Content` read instead of assuming index `0` always
+    exists
+  - carried the latest release-date patch segment into the branch-local testing
+    build version, landing on `4.2601.0531.1300`
+  - unioned the new toast-routing and addon-probe resource keys from
+    `v4-series` into the rework branch resource files, then manually restored
+    the strongly typed `Resources` accessors required for that merged UI
+  - added the missing `FluentAssertions` package reference to the test project
+    so the structured-dialogue test suite could compile far enough to expose
+    the remaining branch-local test drift instead of failing immediately on a
+    missing assertion library
+- Behavior-sensitive risks:
+  - the merge intentionally keeps the rework translator codepaths as the source
+    of truth, so any future comparison against `v4-series` needs to remember
+    that the branch is not meant to fall back to the older prompt-only LLM
+    translators
+  - `Echoglossian.xml` was regenerated as part of the validated merge state and
+    should travel with the merge checkpoint
+- Validation:
+  - `dotnet restore Echoglossian.sln`
+  - `dotnet build Echoglossian.sln -c Debug --no-restore` : passed
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+    : initially failed because the fresh worktree had no built test assembly
+  - `dotnet restore Echoglossian.Tests\Echoglossian.Tests.csproj`
+  - `dotnet build Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`
+    : currently fails on pre-existing branch-local test drift, now surfaced as:
+    missing `Resources` imports in several tests, stale
+    `TranslatorMetricsCollectorTests` constructor arguments, and stale
+    `BuildPrompt` expectations in `TranslatorContractTests`
+- Next cut:
+  - commit this merge checkpoint, then fix the remaining PR `#202` review items
+    and the now-exposed test drift in small validated slices, starting with the
+    structured-dialogue capability mismatch and dialogue-session context bugs

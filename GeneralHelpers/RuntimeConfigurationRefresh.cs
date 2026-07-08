@@ -65,7 +65,7 @@ public partial class Echoglossian
     {
       this.RebuildTranslationServiceSafely();
       this.RebuildQueuedTranslationBroker();
-      this.RebuildQuestToastRuntime();
+      this.RebuildToastGuiRuntimes();
       this.translationRuntimeSignature = translationSignature;
       this.addonHandlerRegistrationSignature = null;
     }
@@ -255,11 +255,17 @@ public partial class Echoglossian
   ///     Recreates and re-registers the quest-toast runtime so it uses the
   ///     current translation service.
   /// </summary>
-  private void RebuildQuestToastRuntime()
+  private void RebuildToastGuiRuntimes()
   {
     this.UnregisterQuestToastRuntime();
+    this.UnregisterToastGuiSupportedToastRuntime();
+    this.UnregisterToastGuiCaptureRuntime();
     this.questToastRuntime = this.CreateQuestToastRuntime();
+    this.toastGuiSupportedToastRuntime = this.CreateToastGuiSupportedToastRuntime();
+    this.toastGuiCaptureRuntime = this.CreateToastGuiCaptureRuntime();
     this.RegisterQuestToastRuntime();
+    this.RegisterToastGuiSupportedToastRuntime();
+    this.RegisterToastGuiCaptureRuntime();
   }
 
   /// <summary>

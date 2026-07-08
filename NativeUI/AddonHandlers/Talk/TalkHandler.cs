@@ -423,13 +423,6 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     var shouldApplyNativeTalkText = this.ShouldApplyNativeTalkText();
     if (!shouldApplyNativeTalkText)
     {
-      if (this.nativeTalkTextNodeStateDirty)
-      {
-        this.TryRestoreOriginalTalkText(
-            nameNode,
-            textNode);
-      }
-
       return;
     }
 
@@ -505,7 +498,9 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     if (addonPtr.Address != IntPtr.Zero)
     {
       var talkAddon = (AtkUnitBase*)addonPtr.Address;
-      if (talkAddon != null && talkAddon->IsVisible)
+      if (talkAddon != null &&
+          talkAddon->IsVisible &&
+          this.ShouldApplyNativeTalkText())
       {
         var nameNode = talkAddon->GetTextNodeById(NameNodeId);
         var textNode = talkAddon->GetTextNodeById(TextNodeId);

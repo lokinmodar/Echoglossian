@@ -439,6 +439,7 @@ public partial class Echoglossian
   public static void SaveConfig(Config config)
   {
     config.NormalizeGameMainMenuTranslationSettings();
+    config.NormalizeNativeReplacementDiacriticsSettings();
     TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
         config,
         config.Version);
@@ -464,6 +465,7 @@ public partial class Echoglossian
   public void RebuildTranslationServiceSafely()
   {
     this.configuration.NormalizeGameMainMenuTranslationSettings();
+    this.configuration.NormalizeNativeReplacementDiacriticsSettings();
     TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
         this.configuration,
         this.configuration.Version,
@@ -919,6 +921,74 @@ public partial class Echoglossian
     }
 
     return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+  }
+
+  /// <summary>
+  ///     Ensures newly introduced config fields are materialized in the
+  ///     persisted JSON after an update by saving once when any known field is
+  ///     missing from disk.
+  /// </summary>
+  private void EnsureConfigDefaultsPersistedForMissingKeys()
+  {
+    if (!File.Exists(PluginInterface.ConfigFile.FullName))
+    {
+      return;
+    }
+
+    try
+    {
+      var persistedConfig = Newtonsoft.Json.Linq.JObject.Parse(
+          File.ReadAllText(PluginInterface.ConfigFile.FullName));
+      var runtimeConfig = Newtonsoft.Json.Linq.JObject.FromObject(
+          this.configuration);
+
+      foreach (var property in runtimeConfig.Properties())
+      {
+        if (persistedConfig.Property(
+                property.Name,
+                StringComparison.Ordinal) != null)
+        {
+          continue;
+        }
+
+        SaveConfig(this.configuration);
+        return;
+      }
+    }
+    catch (Exception ex)
+    {
+      PluginRuntimeLog.Warning(
+          "Config",
+          $"Failed to verify persisted config defaults: {ex.Message}");
+    }
+  }
+
+  /// <summary>
+  ///     Creates the shared normalizer used by non-quest native replacement
+  ///     flows when the global diacritics-removal toggle is active.
+  /// </summary>
+  /// <param name="config">The current plugin configuration.</param>
+  /// <returns>
+  ///     A normalization callback when the feature is active and the plugin
+  ///     instance is available; otherwise <see langword="null" />.
+  /// </returns>
+  internal static Func<string, string>? TryCreateNativeReplacementTextNormalizer(
+      Config config)
+  {
+    if (!config.RemoveDiacriticsWhenUsingReplacementTalkBTalk)
+    {
+      return null;
+    }
+
+    var instance = activeInstance;
+    if (instance == null)
+    {
+      return null;
+    }
+
+    return text => instance.RemoveDiacritics(
+        text,
+        instance.SpecialCharsSupportedByGameFont);
   }
 
   /// <summary>

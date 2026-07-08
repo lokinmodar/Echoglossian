@@ -44,6 +44,21 @@ public static class GeneralTab
             ImGui.SetTooltip(Resources.ConfigTab9CheckboxClipboardTooltipText);
         }
 
+        if (Echoglossian.LangToRemoveDiacritics)
+        {
+            ImGui.Spacing();
+            var removeDiacriticsEnabled =
+                config.RemoveDiacriticsWhenUsingReplacementTalkBTalk ||
+                config.RemoveDiacriticsWhenUsingReplacementQuest;
+            if (ImGui.Checkbox(
+                    Resources.RemoveDiacriticsToggle,
+                    ref removeDiacriticsEnabled))
+            {
+                changed |= config.SetNativeReplacementDiacriticsEnabled(
+                    removeDiacriticsEnabled);
+            }
+        }
+
         return changed;
     }
 }

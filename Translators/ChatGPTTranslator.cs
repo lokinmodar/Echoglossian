@@ -260,7 +260,9 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 await this.chatClient.CompleteChatAsync(
                     messages,
                     chatCompletionOptions).ConfigureAwait(false);
-            var translatedText = completion.Content[0].Text.Trim();
+            var translatedText = completion.Content.Count > 0
+                ? completion.Content[0].Text?.Trim() ?? string.Empty
+                : string.Empty;
 
             translatedText = translatedText.Trim('"');
 

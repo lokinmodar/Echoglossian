@@ -87,11 +87,42 @@ internal static unsafe class AddonTextNodeResolvers
     }
 
     var seen = new HashSet<nint>();
-    CollectReadableTextNodes(
-        addon->UldManager.NodeList,
-        (int)addon->UldManager.NodeListCount,
-        bubbleNodes,
-        seen);
+    var nodeList = addon->UldManager.NodeList;
+    var nodeCount = (int)addon->UldManager.NodeListCount;
+    for (var i = 0; i < nodeCount; i++)
+    {
+      var node = nodeList[i];
+      if (node == null || !node->IsVisible())
+      {
+        continue;
+      }
+
+      if ((ushort)node->Type < 1000)
+      {
+        continue;
+      }
+
+      var componentNode = (AtkComponentNode*)node;
+      if (componentNode->Component == null)
+      {
+        continue;
+      }
+
+      var readableTextNode = ResolveFirstReadableTextNode(
+          componentNode->Component->UldManager.NodeList,
+          (int)componentNode->Component->UldManager.NodeListCount);
+      if (readableTextNode == null)
+      {
+        continue;
+      }
+
+      var textNodeAddress = (nint)readableTextNode;
+      if (seen.Add(textNodeAddress))
+      {
+        bubbleNodes.Add(textNodeAddress);
+      }
+    }
+
     return bubbleNodes;
   }
 

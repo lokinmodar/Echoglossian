@@ -4,6 +4,7 @@
 // </copyright>
 
 using Xunit;
+using Echoglossian.LanguagesHandling;
 
 namespace Echoglossian.Tests;
 

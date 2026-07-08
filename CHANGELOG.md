@@ -7,18 +7,27 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0512.x`
+## Published Release `v4.2601.0531.0115`
 
-This is the current post-`4.2600.1105.x` hotfix package prepared for the
-official plugin repo.
+This package advances the native-dialogue and toast runtime stability line and
+is now live in the official Dalamud feed.
+
+Published in `DalamudPluginsD17` via
+[PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) on
+2026-06-01.
 
 Highlights:
 
-- fixed duplicate addon-handler registrations surviving runtime refreshes,
-  which could cause repeated translation requests after changing engine or
-  model settings
-- completed the follow-up unregister fix for handlers that serve more than one
-  addon name, preventing stale listeners from surviving partial teardown
+- moved supported toast families to the `ToastGui` runtime path with corrected
+  per-type enable/disable gating
+- stabilized native reflow behavior for `MiniTalk`, `BattleTalk`, and toast
+  family windows, including sizing and background alignment follow-ups
+- fixed cross-surface text leakage between dialogue and toast surfaces by
+  tightening source ownership and runtime routing
+- unified diacritics-removal behavior for native replacement flows and exposed
+  a single toggle in General settings
+- centered overlay text rendering for toast-family overlays, `TextGimmickHint`,
+  and `TalkSubtitle`
 
 ## Official DalamudPluginsD17 Release Timeline
 
@@ -62,6 +71,7 @@ repository workflow.
 | 2026-05-04 | [PR #8510](https://github.com/goatcorp/DalamudPluginsD17/pull/8510) `v4.2600.x` | first official `4.x` / `API15` release |
 | 2026-05-04 | [PR #8522](https://github.com/goatcorp/DalamudPluginsD17/pull/8522) `v4.2600.x` hotfix | first-launch config creation fix |
 | 2026-05-12 | [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626) `v4.2600.1105.x` | setup, engine selection, cache-concurrency, and version-reuse stabilization |
+| 2026-06-01 | [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) `v4.2601.0531.0115` | native dialogue/toast reflow stabilization, ToastGui route, and cross-surface isolation fixes |
 
 ## Pre-Official History
 

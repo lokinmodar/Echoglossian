@@ -14,8 +14,18 @@ body:
     id: plugin-version
     attributes:
       label: Echoglossian version
-      description: The plugin version shown by Dalamud for the installed release.
+      description: The plugin version shown by Dalamud for the installed release or local manual build.
       placeholder: e.g. 4.0.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: release-channel
+    attributes:
+      label: Release channel
+      description: Only official DalamudPluginsD17 installs and local manual builds are supported for issue triage.
+      options:
+        - Official DalamudPluginsD17 build
+        - Local manual build
     validations:
       required: true
   - type: input

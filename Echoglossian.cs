@@ -84,6 +84,13 @@ public partial class Echoglossian : IDalamudPlugin
   /// </summary>
 #if DEBUG
   private AddonStructureProbe.AddonStructureProbeWatch? addonProbeWatch;
+
+  private readonly List<AddonStructureProbe.AddonStructureProbeWatch>
+      addonManagedProbeWatches = [];
+
+  private bool autoAddonProbeStartedForCurrentLogin;
+  private bool autoAddonProbeSuppressedUntilLogout;
+  private bool autoAddonProbeWasLoggedIn;
 #endif
 
   /// <summary>
@@ -123,6 +130,8 @@ public partial class Echoglossian : IDalamudPlugin
 
   private readonly bool pluginAssetsState;
   private QuestToastRuntime questToastRuntime;
+  private ToastGuiCaptureRuntime toastGuiCaptureRuntime;
+  private ToastGuiSupportedToastRuntime toastGuiSupportedToastRuntime;
   private readonly IDalamudTextureWrap talkImage;
   private static Echoglossian? activeInstance;
   private string? addonHandlerRegistrationSignature;
@@ -266,6 +275,12 @@ public partial class Echoglossian : IDalamudPlugin
     this.MigrateOverlayDisplayModes();
     this.MigrateGameMainMenuTranslationSettings();
     this.MigrateTranslationEngineSelection(loadedConfigVersion);
+    if (this.configuration.NormalizeNativeReplacementDiacriticsSettings())
+    {
+      SaveConfig(this.configuration);
+    }
+
+    this.EnsureConfigDefaultsPersistedForMissingKeys();
 
     SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
     AssetsManager.RefreshPluginAssetsState(SelectedLanguage);
@@ -347,6 +362,10 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.questToastRuntime = this.CreateQuestToastRuntime();
     this.RegisterQuestToastRuntime();
+    this.toastGuiSupportedToastRuntime = this.CreateToastGuiSupportedToastRuntime();
+    this.RegisterToastGuiSupportedToastRuntime();
+    this.toastGuiCaptureRuntime = this.CreateToastGuiCaptureRuntime();
+    this.RegisterToastGuiCaptureRuntime();
 
     this.EgloAddonHandler();
 
@@ -507,11 +526,12 @@ public partial class Echoglossian : IDalamudPlugin
     this.ClearReferenceTextPrefetchState();
 
 #if DEBUG
-    this.addonProbeWatch?.Dispose();
-    this.addonProbeWatch = null;
+    this.StopAllAddonProbeWatches();
 #endif
 
       this.UnregisterQuestToastRuntime();
+      this.UnregisterToastGuiSupportedToastRuntime();
+      this.UnregisterToastGuiCaptureRuntime();
       this.queuedTranslationBroker.Dispose();
 
       PluginInterface.UiBuilder.OpenMainUi -= this.ConfigWindow;
