@@ -108,6 +108,54 @@ public class DialogueTranslationSessionStoreTests
   }
 
   /// <summary>
+  ///     Ensures lowering the history limit trims stale retained turns before
+  ///     the current request builds its prior-turn context.
+  /// </summary>
+  [Fact]
+  public void BuildContext_LoweredHistoryLimit_TrimsPriorTurnsBeforeReturning()
+  {
+    DialogueTranslationSessionStore.Clear();
+    var observedAtUtc = new DateTime(2026, 05, 12, 15, 12, 0, DateTimeKind.Utc);
+
+    DialogueTranslationSessionStore.BuildContext(
+        "Talk",
+        "G'raha|engine:8|target:pt-BR",
+        "G'raha",
+        "First line.",
+        3,
+        TimeSpan.FromSeconds(30),
+        observedAtUtc);
+    DialogueTranslationSessionStore.BuildContext(
+        "Talk",
+        "G'raha|engine:8|target:pt-BR",
+        "G'raha",
+        "Second line.",
+        3,
+        TimeSpan.FromSeconds(30),
+        observedAtUtc.AddSeconds(5));
+    DialogueTranslationSessionStore.BuildContext(
+        "Talk",
+        "G'raha|engine:8|target:pt-BR",
+        "G'raha",
+        "Third line.",
+        3,
+        TimeSpan.FromSeconds(30),
+        observedAtUtc.AddSeconds(10));
+
+    var context = DialogueTranslationSessionStore.BuildContext(
+        "Talk",
+        "G'raha|engine:8|target:pt-BR",
+        "G'raha",
+        "Fourth line.",
+        1,
+        TimeSpan.FromSeconds(30),
+        observedAtUtc.AddSeconds(15));
+
+    var retainedPriorTurn = Assert.Single(context.PriorTurns);
+    Assert.Equal("Third line.", retainedPriorTurn.SourceText);
+  }
+
+  /// <summary>
   ///     Ensures snapshots expose retained runtime-only session metadata.
   /// </summary>
   [Fact]

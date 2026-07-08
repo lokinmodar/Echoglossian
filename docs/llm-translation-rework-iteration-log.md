@@ -2517,3 +2517,35 @@ turning into an opaque pile of partial changes.
   - implement the remaining runtime review fixes for PR `#202`: dialogue
     session history-limit enforcement, live model-refresh signature scrubbing,
     and OpenAI-compatible structured payload lifetime cleanup
+
+## Iteration 65 - Enforce The Active Dialogue History Limit Before Context Capture
+
+- Date: 2026-07-08
+- Branch: `llm-translation-rework`
+- Goal:
+  - fix the remaining `DialogueTranslationSessionStore.BuildContext(...)`
+    review bug where lowering the configured history limit could still return
+    stale prior turns above the new limit on the very next request
+- Files touched:
+  - `Translators/DialogueTranslationSessionStore.cs`
+  - `Echoglossian.Tests/DialogueTranslationSessionStoreTests.cs`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - trimmed the retained in-memory turn list against the active `historyLimit`
+    before copying `priorTurns` for the current request, instead of only after
+    appending the new turn
+  - added regression coverage proving that a session created under a larger
+    history limit immediately respects a later smaller limit and only returns
+    the newest retained turn
+- Behavior-sensitive risks:
+  - this only changes the in-memory runtime-only dialogue context returned to
+    LLM requests when the configured limit shrinks; stable-limit behavior and
+    session TTL pruning remain unchanged
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet build Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+    : passed (`320/320`)
+- Next cut:
+  - scrub raw API-key material out of live model-refresh signatures and clean
+    up the OpenAI-compatible structured payload helper's JSON-document lifetime

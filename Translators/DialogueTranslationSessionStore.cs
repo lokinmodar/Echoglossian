@@ -68,6 +68,7 @@ public static class DialogueTranslationSessionStore
       }
 
       entry.LastObservedAtUtc = now;
+      TrimToHistoryLimit(entry.Turns, historyLimit);
       var priorTurns = entry.Turns.ToList();
 
       entry.Turns.Add(new DialogueTranslationTurn(
