@@ -4,10 +4,11 @@
 // </copyright>
 
 using Echoglossian.Translators.Helpers;
+using Echoglossian.PluginUI.Helpers;
 
 namespace Echoglossian.Translators;
 
-public class GeminiTranslator : ITranslator
+public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private readonly string apiKey;
     private readonly HttpClient? httpClient;
@@ -15,6 +16,7 @@ public class GeminiTranslator : ITranslator
     private readonly int maxRetries = 3;
     private readonly string model;
     private readonly IPluginLog pluginLog;
+    private readonly string promptTemplate;
     private readonly float temperature = 0.1f;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
 
@@ -23,6 +25,9 @@ public class GeminiTranslator : ITranslator
         this.apiKey = config.GeminiTranslatorApiKey ?? string.Empty;
         this.model = config.GeminiModel ?? "gemini-pro"; // Default model
         this.temperature = config.GeminiTemperature;
+        this.promptTemplate = string.IsNullOrWhiteSpace(config.GeminiPrompt)
+            ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Gemini)
+            : config.GeminiPrompt;
         this.pluginLog = pluginLog;
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
@@ -91,6 +96,48 @@ public class GeminiTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (this.httpClient == null)
+        {
+            return Resources.GeminiTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        if (!DialogueContextPromptHelper.HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        var cacheKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(
+                cacheKey,
+                out var cachedTranslation))
+        {
+            return cachedTranslation;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual Gemini translation request for one cache key.
     /// </summary>
@@ -103,27 +150,29 @@ public class GeminiTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        var fixedInputText = FixText(text);
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation =
+                await this.TryTranslateStructuredDialogueAsync(
+                    text,
+                    sourceLanguage,
+                    targetLanguage,
+                    cacheKey,
+                    dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
 
-        var prompt =
-            @$"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
-
-1. Preserve the original tone, humor, personality, and emotional nuances of the dialogue, considering the unique style and atmosphere of Final Fantasy XIV.
-2. Adapt idioms, cultural references, and wordplay to resonate naturally with native {targetLanguage} speakers while maintaining the fantasy RPG context.
-3. Maintain consistency in character voices, terminology, and naming conventions specific to Final Fantasy XIV throughout the translation.
-4. Avoid literal translations that may lose the original intent or impact, especially for game-specific terms or lore elements.
-5. Ensure the translation flows naturally and reads as if it were originally written in {targetLanguage}, while staying true to the game's narrative style.
-6. Consider the context and subtext of the dialogue, including any references to the game's lore, world, or ongoing storylines.
-7. If a word, phrase, or name has been translated in a specific way, maintain that translation consistently unless the context demands otherwise, respecting established localization choices for Final Fantasy XIV.
-8. Pay attention to formal/informal speech patterns and adjust accordingly for the target language and cultural norms, considering the speaker's role and status within the game world.
-9. Be mindful of character limits or text box constraints that may be present in the game, adapting the translation to fit if necessary.
-10. Preserve any game-specific jargon, spell names, or technical terms according to the official localization guidelines for Final Fantasy XIV in the target language.
-
-Text to translate: ""{fixedInputText}""
-
-Please provide only the translated text in your response, without any explanations, additional comments, or quotation marks. Your goal is to create a localized version that captures the essence of the original Final Fantasy XIV dialogue while feeling authentic to {targetLanguage} speakers and seamlessly fitting into the game world.";
+        var prompt = this.BuildPrompt(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
 
         for (var retry = 0; retry <= this.maxRetries; retry++)
         {
@@ -242,5 +291,185 @@ Please provide only the translated text in your response, without any explanatio
         }
 
         return string.Empty;
+    }
+
+    /// <summary>
+    ///     Attempts the Gemini structured dialogue path and falls back to the
+    ///     legacy plain-text request on incompatibility or malformed provider
+    ///     output.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The normalized request cache key.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the legacy path can run.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.Gemini) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
+
+        var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+            sourceLanguage,
+            targetLanguage);
+        var usedGlossary = glossaryEntries.Count > 0;
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest =
+                StructuredDialogueTranslationRequestBuilder.Build(
+                    normalizedText,
+                    sourceLanguage,
+                    targetLanguage,
+                    TranslationSurfaceGroup.Dialogue,
+                    dialogueContext,
+                    glossaryEntries);
+            var basePrompt = PromptTemplateManager.RenderPrompt(
+                this.promptTemplate,
+                normalizedText,
+                sourceLanguage,
+                targetLanguage);
+            var structuredPrompt =
+                $"{basePrompt}\n\n" +
+                "Return only a JSON object that matches the provided response schema. " +
+                "Do not answer with prose, markdown, or code fences.\n\n" +
+                "Structured dialogue request JSON:\n" +
+                StructuredDialogueOpenAiToolHelper.SerializeRequestPayload(
+                    structuredRequest);
+            var requestData = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new[]
+                        {
+                            new
+                            {
+                                text = structuredPrompt,
+                            },
+                        },
+                    },
+                },
+                generationConfig = new
+                {
+                    this.temperature,
+                    responseFormat = new
+                    {
+                        text = new
+                        {
+                            mimeType = "application/json",
+                            schema = JObject.Parse(
+                                StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                        },
+                    },
+                },
+            };
+
+            var jsonContent = JsonConvert.SerializeObject(requestData);
+            var httpContent = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
+            var baseUrl =
+                $"https://generativelanguage.googleapis.com/v1beta/models/{this.model}:generateContent?key={this.apiKey}";
+
+            var response =
+                await this.httpClient!.PostAsync(baseUrl, httpContent)
+                    .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var responseString =
+                await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var responseObject = JObject.Parse(responseString);
+            var rawStructuredPayload =
+                responseObject["candidates"]?[0]?["content"]?["parts"]?[0]?
+                    ["text"]?.ToString();
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.Gemini,
+                    false,
+                    usedGlossary,
+                    structuredValidation.FailureReason ??
+                    "unknown-structured-dialogue-failure");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"Gemini structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.Gemini,
+                    true,
+                    usedGlossary);
+                this.translationCache.Remember(
+                    cacheKey,
+                    translatedText);
+                return translatedText;
+            }
+
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.Gemini,
+                false,
+                usedGlossary,
+                "non-persistable-structured-result");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.Gemini,
+                false,
+                usedGlossary,
+                ex.Message);
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"Gemini structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        var prompt = PromptTemplateManager.RenderPrompt(
+            this.promptTemplate,
+            FixText(text),
+            sourceLanguage,
+            targetLanguage);
+
+        if (!dialogueContext.HasValue)
+        {
+            return prompt;
+        }
+
+        return DialogueContextPromptHelper.AppendDialogueContext(
+            prompt,
+            dialogueContext.Value,
+            FixText);
     }
 }

@@ -14,11 +14,7 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class LmStudioEngineUI
 {
-    private static List<LlmTextModel> staticModels =
-        LmStudioTextModelDefaults.PredefinedModels;
-
-    private static List<LlmTextModel> liveModels = new();
-    private static bool modelsFetched;
+    private const string LiveModelRefreshScope = "LmStudio";
 
     /// <summary>
     ///     Draws the LM Studio engine configuration panel.
@@ -51,24 +47,53 @@ public static class LmStudioEngineUI
                 out isApiKeyInvalid);
         }
 
-        ImGui.Checkbox(
-            Resources.FetchLiveModels,
-            ref config.UseLiveLmStudioModelList);
+        var previousUseLiveModelList = config.UseLiveLmStudioModelList;
+        if (ImGui.Checkbox(
+                Resources.FetchLiveModels,
+                ref config.UseLiveLmStudioModelList))
+        {
+            changed = true;
+            if (config.UseLiveLmStudioModelList && !previousUseLiveModelList)
+            {
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => LmStudioModelManager.RefreshAsync(
+                        config.LmStudioBaseUrl ?? string.Empty,
+                        config.UseLmStudioAuth ? config.LmStudioApiKey : null));
+            }
+            else if (!config.UseLiveLmStudioModelList)
+            {
+                LmStudioModelManager.ResetToDefault();
+                LiveModelRefreshCoordinator.Clear(LiveModelRefreshScope);
+            }
+        }
 
         var models = config.UseLiveLmStudioModelList
             ? LmStudioModelManager.CurrentModelList
             : LmStudioTextModelDefaults.PredefinedModels;
 
-        if (config.UseLiveLmStudioModelList && !modelsFetched)
+        if (config.UseLiveLmStudioModelList)
         {
-            _ = Task.Run(async () =>
+            ImGui.SameLine();
+            if (ImGui.Button(Resources.Reload))
             {
-                await LmStudioModelManager.RefreshAsync(
-                    config.LmStudioBaseUrl ?? string.Empty,
-                    config.UseLmStudioAuth ? config.LmStudioApiKey : null);
-                modelsFetched = true;
-            });
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => LmStudioModelManager.RefreshAsync(
+                        config.LmStudioBaseUrl ?? string.Empty,
+                        config.UseLmStudioAuth ? config.LmStudioApiKey : null));
+            }
         }
+
+        LiveModelRefreshCoordinator.RequestIfNeeded(
+            LiveModelRefreshScope,
+            config.UseLiveLmStudioModelList,
+            BuildLiveModelRefreshSignature(config),
+            () => LmStudioModelManager.RefreshAsync(
+                config.LmStudioBaseUrl ?? string.Empty,
+                config.UseLmStudioAuth ? config.LmStudioApiKey : null));
 
         changed |= ModelDropdownUI.Draw(
             Resources.Model,
@@ -91,7 +116,7 @@ public static class LmStudioEngineUI
         PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.LmStudio,
-            PromptTemplateManager.DefaultPrompt,
+            PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.LmStudio),
             Echoglossian.TransEngines.LmStudio.ToString());
 
         if (changed)
@@ -101,5 +126,20 @@ public static class LmStudioEngineUI
         }
 
         return changed;
+    }
+
+    private static string BuildLiveModelRefreshSignature(Config config)
+    {
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "baseUrl",
+                config.LmStudioBaseUrl),
+            new LiveModelRefreshSignatureComponent(
+                "useAuth",
+                config.UseLmStudioAuth.ToString()),
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.UseLmStudioAuth ? config.LmStudioApiKey : string.Empty,
+                Sensitive: true));
     }
 }

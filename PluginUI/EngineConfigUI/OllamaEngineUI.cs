@@ -10,6 +10,8 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 
 public static class OllamaEngineUI
 {
+    private const string LiveModelRefreshScope = "Ollama";
+
     public static bool Draw(Config config, PromptTemplateManager promptManager)
     {
         var changed = false;
@@ -32,14 +34,35 @@ public static class OllamaEngineUI
             changed = true;
             if (config.UseLiveOllamaModelList && !previous)
             {
-                _ = Task.Run(() =>
-                    OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
             }
             else if (!config.UseLiveOllamaModelList)
             {
                 OllamaModelManager.ResetToDefault();
+                LiveModelRefreshCoordinator.Clear(LiveModelRefreshScope);
             }
         }
+
+        if (config.UseLiveOllamaModelList)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(Resources.Reload))
+            {
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
+            }
+        }
+
+        LiveModelRefreshCoordinator.RequestIfNeeded(
+            LiveModelRefreshScope,
+            config.UseLiveOllamaModelList,
+            BuildLiveModelRefreshSignature(config),
+            () => OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
 
         if (config.UseLiveOllamaModelList &&
             OllamaModelManager.CurrentModelList.Count == 0)
@@ -70,7 +93,7 @@ public static class OllamaEngineUI
         PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Ollama,
-            PromptTemplateManager.DefaultPrompt,
+            PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Ollama),
             Echoglossian.TransEngines.Ollama.ToString());
 
         if (changed)
@@ -80,5 +103,10 @@ public static class OllamaEngineUI
         }
 
         return changed;
+    }
+
+    private static string BuildLiveModelRefreshSignature(Config config)
+    {
+        return $"baseUrl={config.OllamaUrl?.Trim()}";
     }
 }

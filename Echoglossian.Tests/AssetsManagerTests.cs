@@ -20,6 +20,12 @@ public class AssetsManagerTests
         "NotoSansCJKkr-Regular.otf",
         "NotoSansCJKsc-Regular.otf",
         "NotoSansCJKtc-Regular.otf",
+        "NotoSansCanadianAboriginal-Regular.ttf",
+        "NotoSansEthiopic-Medium.ttf",
+        "NotoSansNKo-Regular.ttf",
+        "NotoSansOlChiki-Regular.ttf",
+        "NotoSansThaana-Medium.ttf",
+        "NotoSerifTibetan-Regular.ttf",
     ];
 
     var languageInfo = new LanguageInfo(
@@ -43,6 +49,12 @@ public class AssetsManagerTests
         "NotoSansCJKkr-Regular.otf",
         "NotoSansCJKsc-Regular.otf",
         "NotoSansCJKtc-Regular.otf",
+        "NotoSansCanadianAboriginal-Regular.ttf",
+        "NotoSansEthiopic-Medium.ttf",
+        "NotoSansNKo-Regular.ttf",
+        "NotoSansOlChiki-Regular.ttf",
+        "NotoSansThaana-Medium.ttf",
+        "NotoSerifTibetan-Regular.ttf",
     ];
 
     var languageInfo = new LanguageInfo(
@@ -72,6 +84,12 @@ public class AssetsManagerTests
           "NotoSansCJKkr-Regular.otf",
           "NotoSansCJKsc-Regular.otf",
           "NotoSansCJKtc-Regular.otf",
+          "NotoSansCanadianAboriginal-Regular.ttf",
+          "NotoSansEthiopic-Medium.ttf",
+          "NotoSansNKo-Regular.ttf",
+          "NotoSansOlChiki-Regular.ttf",
+          "NotoSansThaana-Medium.ttf",
+          "NotoSerifTibetan-Regular.ttf",
       ];
       AssetsManager.AssetsPath = tempDirectory.FullName;
 
@@ -94,5 +112,37 @@ public class AssetsManagerTests
     {
       tempDirectory.Delete(recursive: true);
     }
+  }
+
+  [Fact]
+  public void RequiresDownloadedAssets_ReturnsTrue_ForExternalScriptFont()
+  {
+    AssetsManager.AssetFiles =
+    [
+        "NotoSansCJKhk-Regular.otf",
+        "NotoSansCJKjp-Regular.otf",
+        "NotoSansCJKkr-Regular.otf",
+        "NotoSansCJKsc-Regular.otf",
+        "NotoSansCJKtc-Regular.otf",
+        "NotoSansCanadianAboriginal-Regular.ttf",
+        "NotoSansEthiopic-Medium.ttf",
+        "NotoSansNKo-Regular.ttf",
+        "NotoSansOlChiki-Regular.ttf",
+        "NotoSansThaana-Medium.ttf",
+        "NotoSerifTibetan-Regular.ttf",
+    ];
+
+    var languageInfo = new LanguageInfo(
+        "bo",
+        "Tibetan",
+        "NotoSerifTibetan-Regular.ttf",
+        string.Empty,
+        []);
+
+    Assert.True(AssetsManager.RequiresDownloadedAssets(languageInfo));
+    Assert.Equal(
+        ["NotoSerifTibetan-Regular.ttf"],
+        AssetsManager.GetRequiredAssetFiles(languageInfo));
+    Assert.NotNull(AssetsManager.GetAssetDownloadUri("NotoSerifTibetan-Regular.ttf"));
   }
 }

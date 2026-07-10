@@ -4,11 +4,12 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
-public class OpenRouterTranslator : ITranslator
+public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private const string DefaultModel = "mistral";
     private const string DefaultOpenRouterUrl = "https://openrouter.ai/api/v1/";
@@ -18,7 +19,7 @@ public class OpenRouterTranslator : ITranslator
     private readonly string openRouterUrl;
     private readonly IPluginLog pluginLog;
 
-    private readonly string prompt;
+    private readonly string promptTemplate;
     private readonly float temperature;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
 
@@ -33,9 +34,9 @@ public class OpenRouterTranslator : ITranslator
         this.openRouterUrl = string.IsNullOrWhiteSpace(config.OpenRouterBaseUrl)
             ? DefaultOpenRouterUrl
             : config.OpenRouterBaseUrl!;
-        this.prompt = string.IsNullOrWhiteSpace(config.OpenRouterPrompt)
-            ? PromptTemplateManager.DefaultPrompt
-            : config.OpenRouterPrompt!;
+        this.promptTemplate = string.IsNullOrWhiteSpace(config.OpenRouterPrompt)
+            ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.OpenRouter)
+            : config.OpenRouterPrompt;
 
         if (string.IsNullOrWhiteSpace(this.apiKey))
         {
@@ -97,6 +98,48 @@ public class OpenRouterTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (string.IsNullOrWhiteSpace(this.apiKey))
+        {
+            return Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        if (!DialogueContextPromptHelper.HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        var cacheKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(
+                cacheKey,
+                out var cachedTranslation))
+        {
+            return cachedTranslation;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual OpenRouter translation request for one cache key.
     /// </summary>
@@ -109,20 +152,36 @@ public class OpenRouterTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        var fullPrompt = BuildPrompt(
-            this.prompt,
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation =
+                await this.TryTranslateStructuredDialogueAsync(
+                    text,
+                    sourceLanguage,
+                    targetLanguage,
+                    cacheKey,
+                    dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
+
+        var prompt = this.BuildPrompt(
             text,
             sourceLanguage,
-            targetLanguage);
+            targetLanguage,
+            dialogueContext);
 
         var request = new
         {
             this.model,
             messages = new[]
             {
-                new { role = "user", content = fullPrompt },
+                new { role = "user", content = prompt },
             },
             this.temperature,
         };
@@ -162,26 +221,174 @@ public class OpenRouterTranslator : ITranslator
         return string.Empty;
     }
 
-    internal static string BuildPrompt(
-        string? promptTemplate,
+    /// <summary>
+    ///     Attempts the first OpenAI-compatible structured dialogue path for
+    ///     OpenRouter and falls back to the legacy plain-text request on any
+    ///     incompatibility or malformed provider output.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The normalized request cache key.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the legacy path can run.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
         string text,
         string sourceLanguage,
-        string targetLanguage)
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
     {
-        var normalizedTemplate = string.IsNullOrWhiteSpace(promptTemplate)
-            ? PromptTemplateManager.DefaultPrompt
-            : promptTemplate;
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.OpenRouter) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
 
-        return normalizedTemplate
-            .Replace(
-                "{sourceLanguage}",
-                sourceLanguage,
-                StringComparison.Ordinal)
-            .Replace(
-                "{targetLanguage}",
-                targetLanguage,
-                StringComparison.Ordinal)
-            .Replace("{text}", FixText(text), StringComparison.Ordinal);
+        var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+            sourceLanguage,
+            targetLanguage);
+        var usedGlossary = glossaryEntries.Count > 0;
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest =
+                StructuredDialogueTranslationRequestBuilder.Build(
+                    normalizedText,
+                    sourceLanguage,
+                    targetLanguage,
+                    TranslationSurfaceGroup.Dialogue,
+                    dialogueContext,
+                    glossaryEntries);
+            var structuredPrompt =
+                StructuredDialogueOpenAiToolHelper.BuildUserPrompt(
+                    PromptTemplateManager.RenderPrompt(
+                        this.promptTemplate,
+                        normalizedText,
+                        sourceLanguage,
+                        targetLanguage),
+                    structuredRequest);
+            var request = new
+            {
+                this.model,
+                messages = new[]
+                {
+                    new { role = "user", content = structuredPrompt },
+                },
+                this.temperature,
+                tools = new[]
+                {
+                    new
+                    {
+                        type = "function",
+                        function = new
+                        {
+                            name = StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                            description = StructuredDialogueOpenAiToolHelper.ToolFunctionDescription,
+                            parameters = StructuredDialogueOpenAiCompatiblePayloadHelper.BuildFunctionParametersJsonElement(),
+                            strict = true,
+                        },
+                    },
+                },
+                tool_choice = new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                    },
+                },
+            };
+
+            var response = await this.httpClient.PostAsJsonAsync(
+                "chat/completions",
+                request).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var responseJson =
+                await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var rawStructuredPayload =
+                StructuredDialogueOpenAiCompatiblePayloadHelper.ExtractRawStructuredPayload(
+                    responseJson,
+                    StructuredDialogueOpenAiToolHelper.ToolFunctionName);
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.OpenRouter,
+                    false,
+                    usedGlossary,
+                    structuredValidation.FailureReason ??
+                    "unknown-structured-dialogue-failure");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"OpenRouter structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.OpenRouter,
+                    true,
+                    usedGlossary);
+                this.translationCache.Remember(
+                    cacheKey,
+                    translatedText);
+                return translatedText;
+            }
+
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.OpenRouter,
+                false,
+                usedGlossary,
+                "non-persistable-structured-result");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.OpenRouter,
+                false,
+                usedGlossary,
+                ex.Message);
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"OpenRouter structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        var prompt = PromptTemplateManager.RenderPrompt(
+            this.promptTemplate,
+            FixText(text),
+            sourceLanguage,
+            targetLanguage);
+
+        if (!dialogueContext.HasValue)
+        {
+            return prompt;
+        }
+
+        return DialogueContextPromptHelper.AppendDialogueContext(
+            prompt,
+            dialogueContext.Value,
+            FixText);
     }
 
     private class OpenRouterResponse

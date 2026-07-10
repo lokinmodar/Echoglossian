@@ -36,9 +36,7 @@ public static class TooltipTab
         ImGui.Separator();
 
         changed |= ImGui.Checkbox(
-            GetText(
-                "ActionAndItemTooltipsToggleLabel",
-                "Enable action/item detail translation and shared hover tooltips"),
+            Resources.ActionAndItemTooltipsToggleLabel,
             ref config.TranslateTooltips);
 
         if (!config.TranslateTooltips)
@@ -95,11 +93,5 @@ public static class TooltipTab
         }
 
         return changed;
-    }
-
-    private static string GetText(string key, string fallback)
-    {
-        return Resources.ResourceManager.GetString(key, Resources.Culture) ??
-               fallback;
     }
 }

@@ -48,7 +48,9 @@ internal static class TranslationResultGuard
     public static bool IsPersistableTranslation(string? text)
     {
         return !string.IsNullOrWhiteSpace(text) &&
-               !ContainsSyntheticTranslationError(text);
+               !ContainsSyntheticTranslationError(text) &&
+               !TranslationFailureTextClassifier.IsKnownUnavailableTranslation(
+                   text);
     }
 
     /// <summary>

@@ -10,9 +10,11 @@ namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 ///     This includes live text capture from the visible addon, translation lookup,
 ///     async translation, overlay updates, and optional native text replacement.
 /// </summary>
-public sealed class BattleTalkHandler : IAddonTranslationHandler
+public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialogueRetranslationHandler
 {
+  private static readonly TimeSpan DialogueSessionTtl = TimeSpan.FromSeconds(30);
   private const string BattleTalkAddonName = "_BattleTalk";
+  private const int DialogueSessionHistoryLimit = 3;
   private const int HideResetDelayMilliseconds = 5000;
   private const int NameNodeId = 4;
   private const int TextNodeId = 6;
@@ -112,6 +114,176 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
             handler(evt, args);
           }
         }));
+  }
+
+  /// <inheritdoc />
+  public async Task<VisibleDialogueRetranslationResult> RetranslateVisibleTextAndPersistAsync()
+  {
+    if (!this.TryCaptureCurrentBattleTalkSource(
+            out var originalName,
+            out var originalText))
+    {
+      return new VisibleDialogueRetranslationResult(
+          false,
+          false,
+          BattleTalkAddonName,
+          "No visible BattleTalk line is available to retranslate.");
+    }
+
+    int requestId;
+    lock (this.stateGate)
+    {
+      this.currentOriginalName = originalName;
+      this.currentOriginalText = originalText;
+      this.currentReplacementName = string.Empty;
+      this.currentReplacementText = string.Empty;
+      this.currentTranslatedName = string.Empty;
+      this.currentTranslatedText = string.Empty;
+      this.failedOriginalName = string.Empty;
+      this.failedOriginalText = string.Empty;
+      this.translationInFlight = true;
+      this.activeRequestId++;
+      requestId = this.activeRequestId;
+    }
+
+    try
+    {
+      var translatedText = await this.translationService.TranslateAsync(
+          originalText,
+          ClientStateInterface.ClientLanguage.Humanize(),
+          LangDict[LanguageInt].Code,
+          TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
+      var translatedName = this.ShouldTranslateBattleTalkNpcNames() &&
+                           !originalName.IsNullOrEmpty()
+          ? await this.translationService.TranslateAsync(
+              originalName,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              LangDict[LanguageInt].Code,
+              TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
+          : string.Empty;
+      var dialogueTranslationEngine =
+          this.translationService.GetEffectiveTranslationEngineId(
+              TranslationSurfaceGroup.Dialogue);
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              originalText,
+              translatedText,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              LangDict[LanguageInt].Code))
+      {
+        lock (this.stateGate)
+        {
+          if (requestId == this.activeRequestId)
+          {
+            this.translationInFlight = false;
+            this.failedOriginalName = originalName;
+            this.failedOriginalText = originalText;
+          }
+        }
+
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            BattleTalkAddonName,
+            "BattleTalk retranslation did not produce a usable translated result.");
+      }
+
+      var translatedBattleTalkData = new BattleTalkMessage(
+          originalName,
+          originalText,
+          ClientStateInterface.ClientLanguage.Humanize(),
+          ClientStateInterface.ClientLanguage.Humanize(),
+          translatedName,
+          translatedText,
+          LangDict[LanguageInt].Code,
+          dialogueTranslationEngine,
+          rtlLangTranslationImageData: null,
+          DateTime.Now,
+          DateTime.Now);
+      var persistenceResult = await Echoglossian.UpsertBattleTalkDataAsync(
+          translatedBattleTalkData).ConfigureAwait(false);
+      var persistenceSucceeded = !persistenceResult.StartsWith(
+          "ErrorSavingData:",
+          StringComparison.Ordinal) &&
+                                 !string.Equals(
+                                     persistenceResult,
+                                     "No data to save.",
+                                     StringComparison.Ordinal);
+      var replacementName = this.NormalizeForReplacement(translatedName);
+      var replacementText = this.NormalizeForReplacement(translatedText);
+      var sourceChangedBeforeApply = false;
+      lock (this.stateGate)
+      {
+        sourceChangedBeforeApply = requestId != this.activeRequestId;
+        if (!sourceChangedBeforeApply)
+        {
+          this.translationInFlight = false;
+          this.currentReplacementName = replacementName;
+          this.currentReplacementText = replacementText;
+          this.currentTranslatedName = translatedName;
+          this.currentTranslatedText = translatedText;
+          this.failedOriginalName = string.Empty;
+          this.failedOriginalText = string.Empty;
+          this.lastResolvedOriginalName = originalName;
+          this.lastResolvedOriginalText = originalText;
+          this.lastResolvedReplacementName = replacementName;
+          this.lastResolvedReplacementText = replacementText;
+        }
+      }
+
+      if (!sourceChangedBeforeApply)
+      {
+        this.PublishOverlay(
+            originalName,
+            originalText,
+            translatedName,
+            translatedText);
+      }
+
+      if (!persistenceSucceeded)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            BattleTalkAddonName,
+            $"BattleTalk retranslation updated the live line, but persistence failed: {persistenceResult}");
+      }
+
+      if (sourceChangedBeforeApply)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            true,
+            BattleTalkAddonName,
+            "BattleTalk retranslation was persisted, but the visible line changed before the refreshed text could be applied.");
+      }
+
+      return new VisibleDialogueRetranslationResult(
+          true,
+          true,
+          BattleTalkAddonName,
+          "BattleTalk visible dialogue was retranslated and persisted.");
+    }
+    catch (Exception ex)
+    {
+      lock (this.stateGate)
+      {
+        if (requestId == this.activeRequestId)
+        {
+          this.translationInFlight = false;
+          this.failedOriginalName = originalName;
+          this.failedOriginalText = originalText;
+        }
+      }
+
+      PluginRuntimeLog.Error(
+          $"[{BattleTalkAddonName}] Error retranslating visible BattleTalk dialogue: {ex}");
+      return new VisibleDialogueRetranslationResult(
+          true,
+          false,
+          BattleTalkAddonName,
+          "BattleTalk retranslation failed before a usable result could be applied.");
+    }
   }
 
   /// <summary>
@@ -470,6 +642,9 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
       string originalName,
       string originalText)
   {
+    var dialogueTranslationEngine =
+        this.translationService.GetEffectiveTranslationEngineId(
+            TranslationSurfaceGroup.Dialogue);
     return new BattleTalkMessage(
         originalName,
         originalText,
@@ -478,7 +653,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
         string.Empty,
         string.Empty,
         LangDict[LanguageInt].Code,
-        this.config.ChosenTransEngine,
+        dialogueTranslationEngine,
         rtlLangTranslationImageData: null,
         DateTime.Now,
         DateTime.Now);
@@ -542,6 +717,24 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Builds the normalized runtime session key used by BattleTalk
+  ///     dialogue session history.
+  /// </summary>
+  /// <param name="originalName">The visible speaker name.</param>
+  /// <returns>The normalized session key.</returns>
+  private string BuildDialogueSessionKey(string originalName)
+  {
+    var normalizedSpeaker = string.IsNullOrWhiteSpace(originalName)
+        ? "(anonymous)"
+        : originalName.Trim();
+    var dialogueTranslationEngine =
+        this.translationService.GetEffectiveTranslationEngineId(
+            TranslationSurfaceGroup.Dialogue);
+    return
+        $"{normalizedSpeaker}|engine:{dialogueTranslationEngine}|target:{LangDict[LanguageInt].Code}";
+  }
+
+  /// <summary>
   ///     Resolves a BattleTalk translation from cache or external translation and
   ///     stores the result as the current translation state.
   /// </summary>
@@ -577,10 +770,24 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
       }
       else
       {
+        var dialogueContext = DialogueTranslationSessionStore.BuildContext(
+            BattleTalkAddonName,
+            this.BuildDialogueSessionKey(originalName),
+            originalName,
+            originalText,
+            DialogueSessionHistoryLimit,
+            DialogueSessionTtl);
+        var usesRuntimeOnlyDialogueContext =
+            this.translationService.WillUseDialogueContext(
+                dialogueContext,
+                TranslationSurfaceGroup.Dialogue);
+
         translatedText = await this.translationService.TranslateAsync(
             originalText,
             ClientStateInterface.ClientLanguage.Humanize(),
-            LangDict[LanguageInt].Code);
+            LangDict[LanguageInt].Code,
+            dialogueContext,
+            TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
 
         translatedName = string.Empty;
         if (this.ShouldTranslateBattleTalkNpcNames() && !originalName.IsNullOrEmpty())
@@ -590,7 +797,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
             translatedName = await this.translationService.TranslateAsync(
                 originalName,
                 ClientStateInterface.ClientLanguage.Humanize(),
-                LangDict[LanguageInt].Code);
+                LangDict[LanguageInt].Code,
+                TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
           }
           catch (Exception ex)
           {
@@ -599,20 +807,26 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
           }
         }
 
-        var translatedBattleTalkData = new BattleTalkMessage(
-            originalName,
-            originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
-            ClientStateInterface.ClientLanguage.Humanize(),
-            translatedName,
-            translatedText,
-            LangDict[LanguageInt].Code,
-            this.config.ChosenTransEngine,
-            rtlLangTranslationImageData: null,
-            DateTime.Now,
-            DateTime.Now);
+        if (!usesRuntimeOnlyDialogueContext)
+        {
+          var dialogueTranslationEngine =
+              this.translationService.GetEffectiveTranslationEngineId(
+                  TranslationSurfaceGroup.Dialogue);
+          var translatedBattleTalkData = new BattleTalkMessage(
+              originalName,
+              originalText,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              ClientStateInterface.ClientLanguage.Humanize(),
+              translatedName,
+              translatedText,
+              LangDict[LanguageInt].Code,
+              dialogueTranslationEngine,
+              rtlLangTranslationImageData: null,
+              DateTime.Now,
+              DateTime.Now);
 
-        await this.insertBattleTalkMessageAsync(translatedBattleTalkData);
+          await this.insertBattleTalkMessageAsync(translatedBattleTalkData);
+        }
       }
 
       lock (this.stateGate)
@@ -1156,6 +1370,50 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler
     originalName = candidateOriginalName;
     originalText = candidateOriginalText;
     return true;
+  }
+
+  /// <summary>
+  ///     Tries to capture the currently visible BattleTalk source line, mapping
+  ///     translated native state back to the original source when possible.
+  /// </summary>
+  /// <param name="originalName">Receives the original visible sender name.</param>
+  /// <param name="originalText">Receives the original visible BattleTalk text.</param>
+  /// <returns>
+  ///     <see langword="true" /> when a visible BattleTalk line could be
+  ///     resolved; otherwise, <see langword="false" />.
+  /// </returns>
+  private unsafe bool TryCaptureCurrentBattleTalkSource(
+      out string originalName,
+      out string originalText)
+  {
+    var addonPtr = GameGuiInterface.GetAddonByName(BattleTalkAddonName);
+    if (addonPtr.Address != IntPtr.Zero)
+    {
+      var battleTalkAddon = (AtkUnitBase*)addonPtr.Address;
+      if (battleTalkAddon != null &&
+          battleTalkAddon->IsVisible &&
+          this.TryReadCurrentSource(
+              battleTalkAddon,
+              out originalName,
+              out originalText))
+      {
+        return true;
+      }
+    }
+
+    lock (this.stateGate)
+    {
+      if (string.IsNullOrWhiteSpace(this.currentOriginalText))
+      {
+        originalName = string.Empty;
+        originalText = string.Empty;
+        return false;
+      }
+
+      originalName = this.currentOriginalName;
+      originalText = this.currentOriginalText;
+      return true;
+    }
   }
 
   /// <summary>

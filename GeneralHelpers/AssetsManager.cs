@@ -21,6 +21,18 @@ public static class AssetsManager
             "https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf",
         ["NotoSansCJKtc-Regular.otf"] =
             "https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/TraditionalChinese/NotoSansCJKtc-Regular.otf",
+        ["NotoSansCanadianAboriginal-Regular.ttf"] =
+            "https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSansCanadianAboriginal/NotoSansCanadianAboriginal-Regular.ttf",
+        ["NotoSansEthiopic-Medium.ttf"] =
+            "https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSansEthiopic/NotoSansEthiopic-Medium.ttf",
+        ["NotoSansNKo-Regular.ttf"] =
+            "https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSansNKo/NotoSansNKo-Regular.ttf",
+        ["NotoSansOlChiki-Regular.ttf"] =
+            "https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSansOlChiki/NotoSansOlChiki-Regular.ttf",
+        ["NotoSansThaana-Medium.ttf"] =
+            "https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSansThaana/NotoSansThaana-Medium.ttf",
+        ["NotoSerifTibetan-Regular.ttf"] =
+            "https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSerifTibetan/NotoSerifTibetan-Regular.ttf",
       };
   public static List<string> AssetFiles = new();
 

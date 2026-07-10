@@ -152,6 +152,59 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Draws the translator debugger and metrics window.
+  /// </summary>
+  private void DrawTranslatorMetricsWindow()
+  {
+    this.translatorMetricsWindow?.Draw();
+  }
+
+  /// <summary>
+  ///     Retranslates the currently visible Talk or BattleTalk line using the
+  ///     active engine and persists the refreshed result when a dialogue handler
+  ///     can resolve a live source line.
+  /// </summary>
+  /// <returns>
+  ///     A result describing whether a visible dialogue line was available and
+  ///     whether the explicit retranslation succeeded.
+  /// </returns>
+  private async Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>
+      RetranslateVisibleDialogueAndPersistAsync()
+  {
+    if (this.registeredAddonHandlers == null || this.registeredAddonHandlers.Count == 0)
+    {
+      return new NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult(
+          false,
+          false,
+          "Dialogue",
+          "No registered dialogue handler is currently available to retranslate visible text.");
+    }
+
+    foreach (var (_, handler) in this.registeredAddonHandlers)
+    {
+      if (handler is not NativeUI.AddonHandlers.Talk.IVisibleDialogueRetranslationHandler
+          visibleDialogueRetranslationHandler)
+      {
+        continue;
+      }
+
+      var result = await visibleDialogueRetranslationHandler
+          .RetranslateVisibleTextAndPersistAsync()
+          .ConfigureAwait(false);
+      if (result.IsApplicable)
+      {
+        return result;
+      }
+    }
+
+    return new NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult(
+        false,
+        false,
+        "Dialogue",
+        "No visible Talk or BattleTalk line is currently available to retranslate.");
+  }
+
+  /// <summary>
   /// Open the Echoglossian DB Editor window when the command is executed.
   /// </summary>
   /// <param name="command">Command name.</param>
@@ -159,6 +212,19 @@ public partial class Echoglossian
   private void OnEgloDbEditorCommand(string command, string args)
   {
     this.dbEditorWindow?.IsOpen = true;
+  }
+
+  /// <summary>
+  /// Opens the translator debugger and metrics window when the command is executed.
+  /// </summary>
+  /// <param name="command">Command name.</param>
+  /// <param name="args">Command arguments.</param>
+  private void OnEgloTranslatorDebuggerCommand(string command, string args)
+  {
+    if (this.translatorMetricsWindow is not null)
+    {
+      this.translatorMetricsWindow.IsOpen = true;
+    }
   }
 
   /// <summary>

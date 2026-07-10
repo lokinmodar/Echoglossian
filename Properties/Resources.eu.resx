@@ -951,4 +951,28 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Maila goreneko Claude eredua kalitate handiena nahi duzunean.</value>
   </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[OpenAI-compatible itzulpena ez dago erabilgarri. Egiaztatu endpoint-a, API gakoa eta modeloaren ezarpenak.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>OpenAI-compatible hornitzailearen konfigurazioa osatu gabe dago. Itzulpena ez da erabilgarri egongo endpoint-a, API gakoa eta modeloa bete arte.</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Hornitzailea</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Konfiguratu OpenAI-compatible endpoint bat, API gako bat eta modelo bat. Zuzeneko modeloak eskuratzea aukerakoa da; hornitzaileak /models behar bezala eskaintzen ez badu, erabili eskuzko modelo-ID bat.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Ezin izan dira modeloak lortu konfiguratutako OpenAI-compatible hornitzailetik. Mantendu eskuzko modelo-ID bat edo egiaztatu endpoint-a eta kredentzialak.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Erabili zure OpenAI-compatible hornitzaileak ematen duen modelo-ID zehatza zuzeneko modelo-zerrenda erabilgarri ez dagoenean edo desgaituta dagoenean.</value>
+  </data>
 </root>

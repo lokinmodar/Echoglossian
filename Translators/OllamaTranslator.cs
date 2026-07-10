@@ -4,16 +4,18 @@
 // </copyright>
 
 using System.Net.Http.Json;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
-public class OllamaTranslator : ITranslator
+public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private readonly string endpoint;
     private readonly HttpClient httpClient;
     private readonly string model;
     private readonly IPluginLog pluginLog;
+    private readonly string promptTemplate;
     private readonly float temperature;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
 
@@ -23,6 +25,9 @@ public class OllamaTranslator : ITranslator
         this.endpoint =
             config.OllamaUrl?.TrimEnd('/') ?? "http://localhost:11434";
         this.model = config.OllamaModel ?? "llama3";
+        this.promptTemplate = string.IsNullOrWhiteSpace(config.OllamaPrompt)
+            ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Ollama)
+            : config.OllamaPrompt;
         this.temperature = config.OllamaTemperature;
 
         this.httpClient = new HttpClient
@@ -62,6 +67,41 @@ public class OllamaTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (!DialogueContextPromptHelper.HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        var cacheKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(cacheKey, out var cached))
+        {
+            return cached;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual Ollama translation request for one cache key.
     /// </summary>
@@ -74,11 +114,29 @@ public class OllamaTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        var fixedText = FixText(text);
-        var prompt =
-            $"Translate the following Final Fantasy XIV dialogue from {sourceLanguage} to {targetLanguage}. Keep it localized and immersive:\n\n\"{fixedText}\"";
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation =
+                await this.TryTranslateStructuredDialogueAsync(
+                    text,
+                    sourceLanguage,
+                    targetLanguage,
+                    cacheKey,
+                    dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
+
+        var prompt = this.BuildPrompt(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
 
         var request = new
         {
@@ -118,5 +176,154 @@ public class OllamaTranslator : ITranslator
             PluginRuntimeLog.Error(this.pluginLog, $"OllamaTranslator failed: {ex.Message}");
             return $"[{Resources.TranslationError} Ollama error: {ex.Message}]";
         }
+    }
+
+    /// <summary>
+    ///     Attempts the Ollama structured dialogue path and falls back to the
+    ///     legacy plain-text request on incompatibility or malformed provider
+    ///     output.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The normalized request cache key.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the legacy path can run.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.Ollama) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
+
+        var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+            sourceLanguage,
+            targetLanguage);
+        var usedGlossary = glossaryEntries.Count > 0;
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest =
+                StructuredDialogueTranslationRequestBuilder.Build(
+                    normalizedText,
+                    sourceLanguage,
+                    targetLanguage,
+                    TranslationSurfaceGroup.Dialogue,
+                    dialogueContext,
+                    glossaryEntries);
+            var basePrompt = this.promptTemplate
+                .Replace("{text}", normalizedText)
+                .Replace("{sourceLanguage}", sourceLanguage)
+                .Replace("{targetLanguage}", targetLanguage);
+            var structuredPrompt =
+                $"{basePrompt}\n\n" +
+                "Return only a JSON object that matches the provided response schema. " +
+                "Do not answer with prose, markdown, or code fences.\n\n" +
+                "Structured dialogue request JSON:\n" +
+                StructuredDialogueOpenAiToolHelper.SerializeRequestPayload(
+                    structuredRequest);
+            var request = new
+            {
+                this.model,
+                prompt = structuredPrompt,
+                stream = false,
+                format = JObject.Parse(
+                    StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                options = new
+                {
+                    temperature = this.temperature,
+                },
+            };
+
+            var response =
+                await this.httpClient.PostAsJsonAsync("/api/generate", request)
+                    .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var parsed = JObject.Parse(json);
+            var rawStructuredPayload = parsed["response"]?.ToString();
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.Ollama,
+                    false,
+                    usedGlossary,
+                    structuredValidation.FailureReason ??
+                    "unknown-structured-dialogue-failure");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"Ollama structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.Ollama,
+                    true,
+                    usedGlossary);
+                this.translationCache.Remember(cacheKey, translatedText);
+                return translatedText;
+            }
+
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.Ollama,
+                false,
+                usedGlossary,
+                "non-persistable-structured-result");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.Ollama,
+                false,
+                usedGlossary,
+                ex.Message);
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"Ollama structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        var fixedText = FixText(text);
+        var prompt = this.promptTemplate
+            .Replace("{text}", fixedText)
+            .Replace("{sourceLanguage}", sourceLanguage)
+            .Replace("{targetLanguage}", targetLanguage);
+
+        if (!dialogueContext.HasValue)
+        {
+            return prompt;
+        }
+
+        return DialogueContextPromptHelper.AppendDialogueContext(
+            prompt,
+            dialogueContext.Value,
+            FixText);
     }
 }

@@ -6,6 +6,7 @@ This folder contains the user-facing command reference for Echoglossian.
 
 - [`/eglo`](./eglo.md) opens the plugin configuration window.
 - [`/eglodbmanager`](./eglodbmanager.md) opens the database editor window.
+- [`/eglotranslatordebugger`](./eglotranslatordebugger.md) opens the translator debugger and metrics window.
 - [`/egloaddonprobe`](./egloaddonprobe.md) starts or stops a recursive addon structure probe.
 - [`/egloquestprobe`](../quest-probe-command.md) inspects a quest's Lumina data, live progress, and matching `QuestPlate` rows.
 

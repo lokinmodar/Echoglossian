@@ -7,6 +7,9 @@ using Echoglossian.Translators.OpenAI;
 
 namespace Echoglossian.Translators.DeepSeek;
 
+/// <summary>
+///     Manages the DeepSeek live model list used by the configuration UI.
+/// </summary>
 public static class DeepSeekModelManager
 {
     private static readonly HttpClient HttpClient = new();
@@ -15,6 +18,9 @@ public static class DeepSeekModelManager
     public static List<LlmTextModel> CurrentModelList { get; private set; } =
         DeepSeekTextModelDefaults.PredefinedModels;
 
+    /// <summary>
+    ///     Restores the predefined DeepSeek model catalog.
+    /// </summary>
     public static void ResetToDefault()
     {
         lock (SyncLock)
@@ -23,33 +29,41 @@ public static class DeepSeekModelManager
         }
     }
 
+    /// <summary>
+    ///     Refreshes the DeepSeek model list from the configured endpoint.
+    /// </summary>
+    /// <param name="apiKey">The configured DeepSeek API key.</param>
+    /// <param name="baseUrl">The configured DeepSeek base URL.</param>
     public static async Task RefreshAsync(string apiKey, string baseUrl)
     {
         if (string.IsNullOrWhiteSpace(apiKey) ||
             string.IsNullOrWhiteSpace(baseUrl))
         {
+            ResetToDefault();
             return;
         }
 
         try
         {
-            var request = new HttpRequestMessage(
+            using var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"{baseUrl.TrimEnd('/')}/v1/models");
+                BuildModelsEndpoint(baseUrl));
             request.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", apiKey);
 
-            var response = await HttpClient.SendAsync(request);
+            using var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
+                ResetToDefault();
                 return;
             }
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var root = JObject.Parse(json);
             var data = root["data"] as JArray;
             if (data == null)
             {
+                ResetToDefault();
                 return;
             }
 
@@ -99,12 +113,25 @@ public static class DeepSeekModelManager
                 if (models.Count > 0)
                 {
                     CurrentModelList = models;
+                    return;
                 }
             }
+
+            ResetToDefault();
         }
         catch
         {
             ResetToDefault();
         }
+    }
+
+    /// <summary>
+    ///     Builds the DeepSeek models endpoint from the configured base URL.
+    /// </summary>
+    /// <param name="baseUrl">The configured DeepSeek base URL.</param>
+    /// <returns>The normalized DeepSeek models endpoint.</returns>
+    internal static string BuildModelsEndpoint(string baseUrl)
+    {
+        return $"{baseUrl.Trim().TrimEnd('/')}/models";
     }
 }

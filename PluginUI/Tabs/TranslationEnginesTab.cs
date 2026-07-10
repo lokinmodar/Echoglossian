@@ -3,6 +3,11 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Globalization;
+using Echoglossian.Helpers;
+using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators;
+
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
@@ -71,6 +76,12 @@ public static class TranslationEnginesTab
             changed = true;
         }
 
+        if (LlmSurfaceGroupRoutingPolicy.NormalizeDialogueOverrideSelection(config))
+        {
+            rebuildTranslationService();
+            changed = true;
+        }
+
         var selected = Array.FindIndex(
             engineOptions,
             option => option.EngineId == config.ChosenTransEngine);
@@ -100,7 +111,36 @@ public static class TranslationEnginesTab
         ImGui.BeginGroup();
 
         var engine = (Echoglossian.TransEngines)config.ChosenTransEngine;
+        changed |= DrawEngineConfiguration(config, promptManager, engine);
 
+        ImGui.EndGroup();
+        ImGui.Separator();
+        ImGui.Spacing();
+        changed |= DrawDialogueOverrideSection(
+            config,
+            promptManager,
+            engine,
+            rebuildTranslationService);
+        ImGui.Separator();
+        ImGui.Spacing();
+        changed |= DrawDialogueGlossarySection(config);
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the settings UI for one specific translation engine.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="promptManager">The shared prompt template manager.</param>
+    /// <param name="engine">The engine whose configuration should be shown.</param>
+    /// <returns><see langword="true" /> when the configuration changed.</returns>
+    private static bool DrawEngineConfiguration(
+        Config config,
+        PromptTemplateManager promptManager,
+        Echoglossian.TransEngines engine)
+    {
+        var changed = false;
         switch (engine)
         {
             case Echoglossian.TransEngines.Google:
@@ -132,8 +172,7 @@ public static class TranslationEnginesTab
                         $"OllamaEngineUI failed: {ex.Message}, {ex.StackTrace}");
                     ImGui.TextColored(
                         new Vector4(1f, 0.4f, 0.4f, 1f),
-                        Resources.ResourceManager.GetString("OllamaEngineUiFailedToRender", Resources.Culture) ??
-                        "Ollama engine UI failed to render.");
+                        Resources.OllamaEngineUiFailedToRender);
                 }
 
                 break;
@@ -166,9 +205,217 @@ public static class TranslationEnginesTab
                 break;
         }
 
-        ImGui.EndGroup();
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the first-pass operator-facing LLM-only routing override for
+    ///     dialogue-family surfaces.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="promptManager">The shared prompt template manager.</param>
+    /// <param name="primaryEngine">The currently selected global engine.</param>
+    /// <param name="rebuildTranslationService">
+    ///     The action used to rebuild runtime
+    ///     translator instances immediately after routing changes.
+    /// </param>
+    /// <returns><see langword="true" /> when the configuration changed.</returns>
+    private static bool DrawDialogueOverrideSection(
+        Config config,
+        PromptTemplateManager promptManager,
+        Echoglossian.TransEngines primaryEngine,
+        Action rebuildTranslationService)
+    {
+        var changed = false;
+        DrawSubsectionHeader(
+            Resources.DialogueLlmOverrideSectionLabel);
+        ImGui.TextWrapped(
+            Resources.DialogueLlmOverrideDescription);
+
+        var overrideToggleChanged = ImGui.Checkbox(
+            Resources.UseDialogueLlmOverrideLabel,
+            ref config.UseDialogueLlmOverride);
+        changed |= overrideToggleChanged;
+        if (overrideToggleChanged)
+        {
+            rebuildTranslationService();
+        }
+
+        var llmEngineOptions = Enum.GetValues<Echoglossian.TransEngines>()
+            .Where(LlmSurfaceGroupRoutingPolicy.IsLlmEngine)
+            .Select(engine => new TranslationEngineOption(
+                (int)engine,
+                GetDisplayName(engine)))
+            .ToArray();
+
+        var selected = Array.FindIndex(
+            llmEngineOptions,
+            option => option.EngineId == config.DialogueLlmEngine);
+        if (selected < 0 && llmEngineOptions.Length > 0)
+        {
+            selected = 0;
+        }
+
+        ImGui.BeginDisabled(!config.UseDialogueLlmOverride);
+        if (ImGui.Combo(
+                Resources.DialogueLlmEngineLabel,
+                ref selected,
+                llmEngineOptions.Select(option => option.Label).ToArray(),
+                llmEngineOptions.Length))
+        {
+            config.DialogueLlmEngine = llmEngineOptions[selected].EngineId;
+            config.DialogueLlmEngineKey =
+                ((Echoglossian.TransEngines)config.DialogueLlmEngine).ToString();
+            rebuildTranslationService();
+            changed = true;
+        }
+
+        if (config.UseDialogueLlmOverride)
+        {
+            var overrideEngine =
+                (Echoglossian.TransEngines)config.DialogueLlmEngine;
+            var overrideConfigured =
+                TranslationEngineConfigurationHelper.IsConfigured(
+                    config,
+                    overrideEngine);
+            if (!overrideConfigured)
+            {
+                ImGui.TextColored(
+                    new Vector4(1f, 0.4f, 0.4f, 1f),
+                    Resources.DialogueLlmOverrideNeedsConfigurationText);
+            }
+
+            if (overrideEngine == primaryEngine)
+            {
+                ImGui.TextWrapped(
+                    Resources.DialogueLlmOverrideMatchesPrimaryText);
+            }
+            else
+            {
+                ImGui.Separator();
+                changed |= DrawEngineConfiguration(
+                    config,
+                    promptManager,
+                    overrideEngine);
+            }
+        }
+
+        ImGui.EndDisabled();
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Draws the operator-facing structured dialogue glossary settings used
+    ///     by issue 148.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <returns><see langword="true" /> when the configuration changed.</returns>
+    private static bool DrawDialogueGlossarySection(Config config)
+    {
+        var changed = false;
+        var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
+        DrawSubsectionHeader(
+            Resources.DialogueGlossarySectionLabel);
+        ImGui.TextWrapped(
+            Resources.DialogueGlossaryDescription);
+
+        changed |= ImGui.Checkbox(
+            Resources.EnableDialogueGlossaryInjectionLabel,
+            ref config.EnableDialogueGlossaryInjection);
+
+        ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);
+        var glossaryPathLabel = Resources.DialogueGlossaryFilePathLabel;
+        changed |= FieldValidationHelper.ValidatedInputText(
+            glossaryPathLabel,
+            ref config.DialogueGlossaryFilePath,
+            1024,
+            out _);
+
+        if (ImGui.Button(
+                Resources.ReloadDialogueGlossaryButtonLabel))
+        {
+            StructuredDialogueGlossaryStore.Refresh(
+                config.DialogueGlossaryFilePath);
+        }
+
+        ImGui.EndDisabled();
+
+        ImGui.SameLine();
+        if (ImGui.Button(
+                Resources.ClearDialogueGlossaryButtonLabel))
+        {
+            StructuredDialogueGlossaryStore.Clear();
+        }
+
+        DrawDialogueGlossarySnapshot(snapshot);
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the current shared glossary snapshot inline in the translation
+    ///     engines tab.
+    /// </summary>
+    /// <param name="snapshot">The current glossary snapshot.</param>
+    private static void DrawDialogueGlossarySnapshot(
+        StructuredDialogueGlossaryStore.StructuredDialogueGlossarySnapshot snapshot)
+    {
+        var statusText = snapshot.LastLoadSucceeded switch
+        {
+            true => Resources.DialogueGlossaryStatusLoaded,
+            false => Resources.DialogueGlossaryStatusFailed,
+            _ => Resources.DialogueGlossaryStatusIdle,
+        };
+        ImGui.TextWrapped(
+            string.Format(
+                CultureInfo.CurrentCulture,
+                Resources.DialogueGlossarySnapshotSummary,
+                statusText,
+                snapshot.EntryCount,
+                snapshot.SkippedEntryCount));
+
+        if (!string.IsNullOrWhiteSpace(snapshot.LastLoadPath))
+        {
+            ImGui.TextWrapped(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resources.DialogueGlossarySnapshotPath,
+                    snapshot.LastLoadPath));
+        }
+
+        if (snapshot.LastLoadObservedAtUtc.HasValue)
+        {
+            ImGui.TextWrapped(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resources.DialogueGlossarySnapshotUtc,
+                    snapshot.LastLoadObservedAtUtc.Value.ToString(
+                        "u",
+                        CultureInfo.InvariantCulture)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(snapshot.LastLoadFailureDetail))
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.4f, 0.4f, 1f));
+            ImGui.TextWrapped(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resources.DialogueGlossarySnapshotFailure,
+                    snapshot.LastLoadFailureDetail));
+            ImGui.PopStyleColor();
+        }
+    }
+
+    /// <summary>
+    ///     Draws a muted subsection header used to visually separate nested
+    ///     configuration groups inside the translation engine section.
+    /// </summary>
+    /// <param name="title">The subsection title to render.</param>
+    private static void DrawSubsectionHeader(string title)
+    {
+        ImGui.TextDisabled(title);
+        ImGui.Separator();
+        ImGui.Spacing();
     }
 
     /// <summary>

@@ -951,4 +951,28 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Модель Claude высшего уровня, если вам нужно максимальное качество.</value>
   </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[Перевод через OpenAI-compatible недоступен. Проверьте endpoint, API-ключ и настройки модели.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Конфигурация OpenAI-compatible провайдера неполная. Перевод будет недоступен, пока не будут заполнены endpoint, API-ключ и модель.</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Провайдер</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Настройте OpenAI-compatible endpoint, API-ключ и модель. Получение списка моделей в реальном времени необязательно; если провайдер некорректно отдает /models, используйте идентификатор модели вручную.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Не удалось получить модели от настроенного OpenAI-compatible провайдера. Оставьте ручной идентификатор модели или проверьте endpoint и учетные данные.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Используйте точный идентификатор модели, который предоставляет ваш OpenAI-compatible провайдер, если список моделей в реальном времени недоступен или отключен.</value>
+  </data>
 </root>

@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.LibreTranslate;
+using Echoglossian.Translators.OpenAI;
 
 namespace Echoglossian.PluginUI.Helpers;
 
@@ -44,8 +45,7 @@ public static class TranslationEngineConfigurationHelper
       Echoglossian.TransEngines.Google => true,
       Echoglossian.TransEngines.Deepl => !config.DeeplTranslatorUsingApiKey ||
           HasValue(config.DeeplTranslatorApiKey),
-      Echoglossian.TransEngines.ChatGPT => HasValue(config.ChatGptApiKey) &&
-          HasValue(config.ChatGPTBaseUrl),
+      Echoglossian.TransEngines.ChatGPT => IsOpenAiFamilyConfigured(config),
       Echoglossian.TransEngines.YandexCloud => HasValue(config.YandexFolderId) &&
           HasValue(config.YandexPaidApiKey),
       Echoglossian.TransEngines.GTranslate => true,
@@ -83,5 +83,22 @@ public static class TranslationEngineConfigurationHelper
   private static bool HasValue(string? value)
   {
     return !string.IsNullOrWhiteSpace(value);
+  }
+
+  /// <summary>
+  ///     Determines whether the active OpenAI-family provider profile is
+  ///     configured enough to be used safely.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the active OpenAI-family provider
+  ///     profile is configured; otherwise, <see langword="false" />.
+  /// </returns>
+  private static bool IsOpenAiFamilyConfigured(Config config)
+  {
+    var settings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
+    return HasValue(settings.ApiKey) &&
+           HasValue(settings.BaseUrl) &&
+           HasValue(settings.Model);
   }
 }

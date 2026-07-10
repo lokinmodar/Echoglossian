@@ -58,4 +58,21 @@ public class RuntimeLanguageHelperTests
 
         Assert.True(result);
     }
+
+    /// <summary>
+    ///     Ensures Simplified and Traditional Chinese aliases normalize to the
+    ///     existing plugin-facing target codes.
+    /// </summary>
+    [Theory]
+    [InlineData("zh-Hans", "zh-CN")]
+    [InlineData("zh-Hant", "zh-TW")]
+    public void NormalizeLanguage_NormalizesChineseScriptAliases(
+        string rawLanguage,
+        string expectedCode)
+    {
+        var normalizedLanguage =
+            RuntimeLanguageHelper.NormalizeLanguage(rawLanguage);
+
+        Assert.Equal(expectedCode, normalizedLanguage);
+    }
 }

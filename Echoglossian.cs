@@ -31,6 +31,8 @@ public partial class Echoglossian : IDalamudPlugin
 
   private const string DBManagerWindowCommand = "/eglodbmanager";
 
+  private const string TranslatorDebuggerWindowCommand = "/eglotranslatordebugger";
+
 #if DEBUG
   private const string AddonProbeCommand = "/egloaddonprobe";
 
@@ -71,6 +73,11 @@ public partial class Echoglossian : IDalamudPlugin
   /// Holds the database editor window instance.
   /// </summary>
   private DbEditorWindow? dbEditorWindow;
+
+  /// <summary>
+  /// Holds the translator debugger and metrics window instance.
+  /// </summary>
+  private TranslatorMetricsWindow? translatorMetricsWindow;
 
   /// <summary>
   /// Holds the currently active addon structure probe watch, if any.
@@ -128,6 +135,10 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly IDalamudTextureWrap talkImage;
   private static Echoglossian? activeInstance;
   private string? addonHandlerRegistrationSignature;
+  private readonly object runtimeTranslationFailureNotificationLock = new();
+  private readonly Dictionary<string, DateTime> runtimeTranslationFailureNotificationTimes =
+      new(StringComparer.Ordinal);
+  private string? structuredDialogueGlossaryRuntimeSignature;
   private string? translationActivationBlockedNotificationSignature;
   private string? translationRuntimeSignature;
   private bool runtimeConfigurationDirty;
@@ -181,6 +192,15 @@ public partial class Echoglossian : IDalamudPlugin
     {
       HelpMessage = Resources.OpensTheEchoglossianDBEditor
     });
+    CommandManager.AddHandler(
+        TranslatorDebuggerWindowCommand,
+        new CommandInfo(this.OnEgloTranslatorDebuggerCommand)
+        {
+          HelpMessage = Resources.ResourceManager.GetString(
+                            "OpensTheTranslatorDebuggerAndMetricsWindow",
+                            this.cultureInfo) ??
+                        "Opens the Translator Debugger and Metrics window.",
+        });
 
 #if DEBUG
     CommandManager.AddHandler(
@@ -225,6 +245,12 @@ public partial class Echoglossian : IDalamudPlugin
             "NotoSansCJKkr-Regular.otf",
             "NotoSansCJKsc-Regular.otf",
             "NotoSansCJKtc-Regular.otf",
+            "NotoSansCanadianAboriginal-Regular.ttf",
+            "NotoSansEthiopic-Medium.ttf",
+            "NotoSansNKo-Regular.ttf",
+            "NotoSansOlChiki-Regular.ttf",
+            "NotoSansThaana-Medium.ttf",
+            "NotoSerifTibetan-Regular.ttf",
         ];
 
     ComplementaryFont3FilePath =
@@ -330,6 +356,7 @@ public partial class Echoglossian : IDalamudPlugin
     TraitCacheManager.Preload(ConfigDirectory);
     ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
     ItemTooltipCacheManager.Preload(ConfigDirectory);
+    this.RefreshStructuredDialogueGlossaryRuntime();
 
     FrameworkInterface.Update += this.Tick;
 
@@ -345,11 +372,17 @@ public partial class Echoglossian : IDalamudPlugin
     this.RegisterOverlays();
 
     this.dbEditorWindow = new DbEditorWindow(new EchoglossianDbContext(ConfigDirectory));
+    this.translatorMetricsWindow = new TranslatorMetricsWindow(
+        this.configuration,
+        this.RetranslateVisibleDialogueAndPersistAsync);
     // Subscribe to draw it:
     PluginInterface.UiBuilder.Draw += this.DrawDbEditorWindow;
+    PluginInterface.UiBuilder.Draw += this.DrawTranslatorMetricsWindow;
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
     activeInstance = this;
+    this.structuredDialogueGlossaryRuntimeSignature =
+        this.ComputeStructuredDialogueGlossaryRuntimeSignature();
     this.translationRuntimeSignature =
         this.ComputeTranslationRuntimeSignature();
     this.addonHandlerRegistrationSignature =
@@ -506,6 +539,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     PluginInterface.UiBuilder.Draw -= this.BuildUi;
     PluginInterface.UiBuilder.Draw -= this.DrawDbEditorWindow;
+    PluginInterface.UiBuilder.Draw -= this.DrawTranslatorMetricsWindow;
 
     this.pixImage?.Dispose();
     this.choiceImage?.Dispose();
@@ -544,6 +578,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     CommandManager.RemoveHandler(SlashCommand);
     CommandManager.RemoveHandler(DBManagerWindowCommand);
+    CommandManager.RemoveHandler(TranslatorDebuggerWindowCommand);
 #if DEBUG
     CommandManager.RemoveHandler(AddonProbeCommand);
     CommandManager.RemoveHandler(QuestProbeCommand);

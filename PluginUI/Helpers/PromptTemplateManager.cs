@@ -10,15 +10,9 @@ namespace Echoglossian.PluginUI.Helpers;
 /// </summary>
 public class PromptTemplateManager
 {
-  private readonly Config config;
-
-  public PromptTemplateManager(Config config)
-  {
-    this.config = config;
-  }
-
   /// <summary>
-  /// Default prompt used when no custom prompt is defined.
+  /// Default prompt used when no custom prompt is defined for the general
+  /// cloud LLM translators.
   /// </summary>
   public const string DefaultPrompt = @"As an expert translator and cultural localization specialist with deep knowledge of video game localization, your task is to translate dialogues from the game Final Fantasy XIV from {sourceLanguage} to {targetLanguage}. This is not just a translation, but a full localization effort tailored for the Final Fantasy XIV universe. Please adhere to the following guidelines:
 
@@ -37,6 +31,29 @@ Text to translate: ""{text}""
 
 Please provide only the translated text in your response, without any explanations, additional comments, or quotation marks. Your goal is to create a localized version that captures the essence of the original Final Fantasy XIV dialogue while feeling authentic to {targetLanguage} speakers and seamlessly fitting into the game world.;";
 
+  /// <summary>
+  /// Compact prompt tuned for the LM Studio OpenAI-compatible local flow.
+  /// </summary>
+  public const string LmStudioDefaultPrompt =
+      @"Translate this Final Fantasy XIV text from {sourceLanguage} to {targetLanguage}. Preserve tone, names, lore terms, and character voice. Return only the translated text.
+
+{text}";
+
+  /// <summary>
+  /// Compact prompt tuned for the Ollama local generate flow.
+  /// </summary>
+  public const string OllamaDefaultPrompt =
+      @"Translate this Final Fantasy XIV text from {sourceLanguage} to {targetLanguage}. Keep the meaning, tone, names, and lore terms. Reply with only the translated text.
+
+{text}";
+
+  private readonly Config config;
+
+  public PromptTemplateManager(Config config)
+  {
+    this.config = config;
+  }
+
   private static readonly string[] RequiredPlaceholders =
   {
     "{text}",
@@ -51,10 +68,23 @@ Please provide only the translated text in your response, without any explanatio
 
   public string ApplyPromptVariables(string template, string text, string sourceLang, string targetLang)
   {
+    return RenderPrompt(template, text, sourceLang, targetLang);
+  }
+
+  /// <summary>
+  /// Applies standard translation prompt placeholders to a prompt template.
+  /// </summary>
+  /// <param name="template">The template containing prompt placeholders.</param>
+  /// <param name="text">The source text to translate.</param>
+  /// <param name="sourceLang">The source language display name.</param>
+  /// <param name="targetLang">The target language display name.</param>
+  /// <returns>The rendered prompt.</returns>
+  public static string RenderPrompt(string template, string text, string sourceLang, string targetLang)
+  {
     return template
-      .Replace("{text}", text)
-      .Replace("{sourceLanguage}", sourceLang)
-      .Replace("{targetLanguage}", targetLang);
+      .Replace("{sourceLanguage}", sourceLang, StringComparison.Ordinal)
+      .Replace("{targetLanguage}", targetLang, StringComparison.Ordinal)
+      .Replace("{text}", text, StringComparison.Ordinal);
   }
 
   public string? GetPrompt(Echoglossian.PromptType type)
@@ -78,7 +108,22 @@ Please provide only the translated text in your response, without any explanatio
   public string GetPromptOrDefault(Echoglossian.PromptType type)
   {
     var prompt = this.GetPrompt(type);
-    return string.IsNullOrWhiteSpace(prompt) ? DefaultPrompt : prompt;
+    return string.IsNullOrWhiteSpace(prompt) ? GetDefaultPrompt(type) : prompt;
+  }
+
+  /// <summary>
+  /// Gets the built-in default prompt for the given engine prompt type.
+  /// </summary>
+  /// <param name="type">The prompt type to resolve.</param>
+  /// <returns>The built-in default prompt.</returns>
+  public static string GetDefaultPrompt(Echoglossian.PromptType type)
+  {
+    return type switch
+    {
+      Echoglossian.PromptType.Ollama => OllamaDefaultPrompt,
+      Echoglossian.PromptType.LmStudio => LmStudioDefaultPrompt,
+      _ => DefaultPrompt,
+    };
   }
 
   public void SetPrompt(Echoglossian.PromptType type, string? prompt)

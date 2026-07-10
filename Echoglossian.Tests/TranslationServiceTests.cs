@@ -7,6 +7,8 @@ using Echoglossian.Translators;
 
 using Xunit;
 
+using Echoglossian.Properties;
+
 namespace Echoglossian.Tests;
 
 /// <summary>
@@ -111,6 +113,7 @@ public class TranslationServiceTests
         {
             SyncResult = "should-not-be-used",
         };
+        TranslationRequestMetricOutcome? recordedOutcome = null;
 
         var service = new TranslationService(
             text => text,
@@ -120,12 +123,19 @@ public class TranslationServiceTests
                 text == "hello" &&
                 source == "en" &&
                 target == "pt-BR" &&
-                engine == 8);
+                engine == 8,
+            recordTranslationMetric: (engine, outcome, latency, failureReason, usedDialogueContext) =>
+            {
+                recordedOutcome = outcome;
+            });
 
         var result = service.Translate("hello", "English", "pt");
 
         Assert.Equal("hello", result);
         Assert.Equal(0, translator.SyncCalls);
+        Assert.Equal(
+            TranslationRequestMetricOutcome.ShortCircuited,
+            recordedOutcome);
     }
 
     /// <summary>
@@ -161,8 +171,8 @@ public class TranslationServiceTests
     ///     recording a transient failure reason for the persistence guard.
     /// </summary>
     [Fact]
-    public void Translate_EmptyResult_RecordsTransientFailureReason()
-    {
+  public void Translate_EmptyResult_RecordsTransientFailureReason()
+  {
         var translator = new RecordingTranslator
         {
             SyncResult = string.Empty,
@@ -177,7 +187,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 11,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedText = text;
                 recordedSource = source;
@@ -215,7 +225,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 5,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedText = text;
                 recordedReason = reason;
@@ -246,7 +256,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 3,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedReason = reason;
             });
@@ -254,7 +264,7 @@ public class TranslationServiceTests
         var result = service.Translate("hello", "en", "pt-BR");
 
         Assert.Equal("hello", result);
-        Assert.Equal("synthetic-error-result", recordedReason);
+        Assert.Equal("llm-endpoint-unavailable", recordedReason);
     }
 
     /// <summary>
@@ -276,7 +286,7 @@ public class TranslationServiceTests
             text => text,
             translator,
             translationEngine: 4,
-            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
             {
                 recordedReason = reason;
             });
@@ -284,7 +294,151 @@ public class TranslationServiceTests
         var result = await service.TranslateAsync("...hello", "en", "pt-BR");
 
         Assert.Equal("...hello", result);
-        Assert.Equal("synthetic-error-result", recordedReason);
+        Assert.Equal("llm-endpoint-unavailable", recordedReason);
+    }
+
+    /// <summary>
+    ///     Ensures the async service path dispatches runtime-only short-lived
+    ///     dialogue context to translators that explicitly support it.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Fact]
+    public async Task TranslateAsync_WithDialogueContext_UsesContextAwareTranslator()
+    {
+        var translator = new ContextAwareRecordingTranslator
+        {
+            AsyncResult = "translated-with-context",
+        };
+
+        var service = new TranslationService(
+            text => text,
+            translator);
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "Krile|engine:8|target:pt-BR",
+            "Krile",
+            [
+                new DialogueTranslationTurn(
+                    "Krile",
+                    "Pray return.",
+                    new DateTime(2026, 05, 12, 15, 20, 0, DateTimeKind.Utc)),
+            ]);
+
+        var result = await service.TranslateAsync(
+            "We must press on.",
+            "English",
+            "pt-BR",
+            dialogueContext);
+
+        Assert.Equal("translated-with-context", result);
+        Assert.Equal(1, translator.ContextAwareAsyncCalls);
+        Assert.Equal(0, translator.AsyncCalls);
+        Assert.Equal("Talk", translator.LastDialogueContext?.SessionNamespace);
+        Assert.True(service.WillUseDialogueContext(dialogueContext));
+    }
+
+    /// <summary>
+    ///     Ensures dialogue-family requests can route to a different engine
+    ///     than the global default without creating a second translation
+    ///     service.
+    /// </summary>
+    [Fact]
+    public async Task TranslateAsync_DialogueSurface_UsesRoutedTranslator()
+    {
+        var defaultTranslator = new RecordingTranslator
+        {
+            AsyncResult = "default-path",
+        };
+        var dialogueTranslator = new RecordingTranslator
+        {
+            AsyncResult = "dialogue-path",
+        };
+        var service = new TranslationService(
+            text => text,
+            defaultTranslator,
+            translationEngine: (int)Echoglossian.TransEngines.Google,
+            translatorResolver: surfaceGroup => surfaceGroup == TranslationSurfaceGroup.Dialogue
+                ? new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.ChatGPT,
+                    dialogueTranslator)
+                : new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.Google,
+                    defaultTranslator));
+
+        var result = await service.TranslateAsync(
+            "hello",
+            "English",
+            "pt-BR",
+            TranslationSurfaceGroup.Dialogue);
+
+        Assert.Equal("dialogue-path", result);
+        Assert.Equal(0, defaultTranslator.AsyncCalls);
+        Assert.Equal(1, dialogueTranslator.AsyncCalls);
+        Assert.Equal(
+            (int)Echoglossian.TransEngines.ChatGPT,
+            service.GetEffectiveTranslationEngineId(
+                TranslationSurfaceGroup.Dialogue));
+    }
+
+    /// <summary>
+    ///     Ensures dialogue-context routing checks the translator selected for
+    ///     the specific surface group instead of only the global default path.
+    /// </summary>
+    [Fact]
+    public void WillUseDialogueContext_DialogueSurface_UsesRoutedTranslator()
+    {
+        var defaultTranslator = new RecordingTranslator();
+        var dialogueTranslator = new ContextAwareRecordingTranslator();
+        var service = new TranslationService(
+            text => text,
+            defaultTranslator,
+            translationEngine: (int)Echoglossian.TransEngines.Google,
+            translatorResolver: surfaceGroup => surfaceGroup == TranslationSurfaceGroup.Dialogue
+                ? new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.ChatGPT,
+                    dialogueTranslator)
+                : new TranslationService.TranslatorResolution(
+                    (int)Echoglossian.TransEngines.Google,
+                    defaultTranslator));
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "Krile|engine:2|target:pt-BR",
+            "Krile",
+            [
+                new DialogueTranslationTurn(
+                    "Krile",
+                    "Pray return.",
+                    new DateTime(2026, 05, 12, 15, 20, 0, DateTimeKind.Utc)),
+            ]);
+
+        Assert.True(
+            service.WillUseDialogueContext(
+                dialogueContext,
+                TranslationSurfaceGroup.Dialogue));
+        Assert.False(
+            service.WillUseDialogueContext(
+                dialogueContext,
+                TranslationSurfaceGroup.Default));
+    }
+
+    /// <summary>
+    ///     Ensures empty runtime-only dialogue context does not switch the
+    ///     translation service into the context-aware path.
+    /// </summary>
+    [Fact]
+    public void WillUseDialogueContext_RequiresPriorTurns()
+    {
+        var translator = new ContextAwareRecordingTranslator();
+        var service = new TranslationService(
+            text => text,
+            translator);
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "Krile|engine:8|target:pt-BR",
+            "Krile",
+            []);
+
+        Assert.False(service.WillUseDialogueContext(dialogueContext));
     }
 
     /// <summary>
@@ -316,40 +470,85 @@ public class TranslationServiceTests
     }
 
     /// <summary>
-    ///     Ensures a failed translation records the explicit origin context
-    ///     when one is provided by the caller.
+     ///     Ensures known localized engine-unavailable messages do not become
+     ///     accepted translated output and are reported to the runtime
+    ///     feedback path.
     /// </summary>
     [Fact]
-    public void Translate_RecordsExplicitOriginContext()
+    public void Translate_UnavailableMessage_FallsBackAndReportsFailure()
     {
         var translator = new RecordingTranslator
         {
-            SyncResult = string.Empty,
+            SyncResult = Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey,
         };
-        string? recordedOrigin = null;
+        TranslationFailureClassification? reportedClassification = null;
+        TranslationRequestMetricOutcome? recordedOutcome = null;
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.ChatGPT,
+            recordTranslationMetric: (engine, outcome, latency, failureReason, usedDialogueContext) =>
+            {
+                recordedOutcome = outcome;
+            },
+            reportTranslationFailure: (engine, classification) =>
+            {
+                reportedClassification = classification;
+            });
+
+        var result = service.Translate("hello", "en", "pt-BR");
+
+        Assert.Equal("hello", result);
+        Assert.NotNull(reportedClassification);
+        Assert.Equal(
+            TranslationFailureKind.EngineUnavailable,
+            reportedClassification!.Kind);
+        Assert.Equal(
+            TranslationRequestMetricOutcome.Failure,
+            recordedOutcome);
+    }
+
+    /// <summary>
+    ///     Ensures transient LLM failures are recorded in the runtime-only
+    ///     failure path instead of the persistent failure path.
+    /// </summary>
+    [Fact]
+    public void Translate_QuotaFailure_RecordsTransientFailure()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "[Translation Error: OpenAI: insufficient_quota]",
+        };
+        string? persistentReason = null;
+        string? transientReason = null;
+        TimeSpan? transientTtl = null;
 
         var service = new TranslationService(
             text => text,
             translator,
-            translationEngine: 11,
+            translationEngine: (int)Echoglossian.TransEngines.ChatGPT,
             recordFailedTranslation: (text, source, target, engine, reason, origin) =>
             {
-                recordedOrigin = origin;
+                persistentReason = reason;
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                transientReason = reason;
+                transientTtl = ttl;
             });
 
-        _ = service.Translate(
-            "hello",
-            "en",
-            "pt-BR",
-            originContext: "ActionDetailPrefetch.Name");
+        var result = service.Translate("hello", "en", "pt-BR");
 
-        Assert.Equal("ActionDetailPrefetch.Name", recordedOrigin);
+        Assert.Equal("hello", result);
+        Assert.Null(persistentReason);
+        Assert.Equal("llm-quota-or-rate-limit", transientReason);
+        Assert.Equal(TimeSpan.FromSeconds(30), transientTtl);
     }
 
     /// <summary>
     ///     Minimal fake translator for pipeline tests.
     /// </summary>
-    private sealed class RecordingTranslator : ITranslator
+    private class RecordingTranslator : ITranslator
     {
         /// <summary>
         ///     Gets or sets the synchronous result.
@@ -394,6 +593,35 @@ public class TranslationServiceTests
         {
             this.AsyncCalls++;
             this.LastAsyncText = text;
+            return Task.FromResult(this.AsyncResult);
+        }
+    }
+
+    /// <summary>
+    ///     Minimal fake translator that also records runtime-only short-lived
+    ///     dialogue context dispatch.
+    /// </summary>
+    private sealed class ContextAwareRecordingTranslator : RecordingTranslator, IDialogueContextAwareTranslator
+    {
+        /// <summary>
+        ///     Gets the number of context-aware async calls.
+        /// </summary>
+        public int ContextAwareAsyncCalls { get; private set; }
+
+        /// <summary>
+        ///     Gets the last dialogue context seen by the context-aware path.
+        /// </summary>
+        public DialogueTranslationContext? LastDialogueContext { get; private set; }
+
+        /// <inheritdoc/>
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage,
+            DialogueTranslationContext dialogueContext)
+        {
+            this.ContextAwareAsyncCalls++;
+            this.LastDialogueContext = dialogueContext;
             return Task.FromResult(this.AsyncResult);
         }
     }

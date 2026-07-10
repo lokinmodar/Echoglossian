@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators;
 using Echoglossian.Translators.LibreTranslate;
 using Echoglossian.PluginUI.Helpers;
@@ -85,6 +86,44 @@ public class TranslatorContractTests
     }
 
     /// <summary>
+    ///     Ensures prompt variable expansion does not reprocess placeholders that
+    ///     happen to appear inside the source text itself.
+    /// </summary>
+    [Fact]
+    public void PromptTemplateManager_RenderPrompt_DoesNotReprocessInsertedText()
+    {
+        var template = "From {sourceLanguage} to {targetLanguage}: {text}";
+        var text = "Keep literal {sourceLanguage} and {targetLanguage} tokens.";
+
+        var prompt = PromptTemplateManager.RenderPrompt(
+            template,
+            text,
+            "English",
+            "Portuguese");
+
+        Assert.Equal(
+            "From English to Portuguese: Keep literal {sourceLanguage} and {targetLanguage} tokens.",
+            prompt);
+    }
+
+    /// <summary>
+    ///     Ensures prompt variable expansion still resolves all standard placeholders.
+    /// </summary>
+    [Fact]
+    public void PromptTemplateManager_RenderPrompt_ReplacesStandardPlaceholders()
+    {
+        var prompt = PromptTemplateManager.RenderPrompt(
+            "Translate {text} from {sourceLanguage} to {targetLanguage}.",
+            "hello",
+            "English",
+            "Portuguese");
+
+        Assert.Equal(
+            "Translate hello from English to Portuguese.",
+            prompt);
+    }
+
+    /// <summary>
     ///     Ensures Microsoft request URLs keep the expected query shape.
     /// </summary>
     [Fact]
@@ -138,77 +177,4 @@ public class TranslatorContractTests
             LibreTranslateTranslator.DetermineEndpoint(deConfig));
     }
 
-    /// <summary>
-    ///     Ensures OpenRouter prompt expansion preserves placeholder-like text inside the translated input.
-    /// </summary>
-    [Fact]
-    public void OpenRouter_BuildPrompt_DoesNotReprocessInsertedText()
-    {
-        var prompt = OpenRouterTranslator.BuildPrompt(
-            "Translate from {sourceLanguage} to {targetLanguage}: {text}",
-            "Keep literal {sourceLanguage} and {targetLanguage} tokens.",
-            "en",
-            "pt-BR");
-
-        Assert.Equal(
-            "Translate from en to pt-BR: Keep literal {sourceLanguage} and {targetLanguage} tokens.",
-            prompt);
-    }
-
-    /// <summary>
-    ///     Ensures OpenRouter prompt expansion falls back to the shared default template when the config prompt is blank.
-    /// </summary>
-    [Fact]
-    public void OpenRouter_BuildPrompt_UsesDefaultTemplateWhenBlank()
-    {
-        var prompt = OpenRouterTranslator.BuildPrompt(
-            "   ",
-            "hello",
-            "en",
-            "pt-BR");
-
-        Assert.Equal(
-            PromptTemplateManager.DefaultPrompt
-                .Replace("{sourceLanguage}", "en", StringComparison.Ordinal)
-                .Replace("{targetLanguage}", "pt-BR", StringComparison.Ordinal)
-                .Replace("{text}", "hello", StringComparison.Ordinal),
-            prompt);
-    }
-
-    /// <summary>
-    ///     Ensures ChatGPT prompt expansion preserves placeholder-like text inside the translated input.
-    /// </summary>
-    [Fact]
-    public void ChatGpt_BuildPrompt_DoesNotReprocessInsertedText()
-    {
-        var prompt = ChatGPTTranslator.BuildPrompt(
-            "Translate from {sourceLanguage} to {targetLanguage}: {text}",
-            "Keep literal {sourceLanguage} and {targetLanguage} tokens.",
-            "en",
-            "pt-BR");
-
-        Assert.Equal(
-            "Translate from en to pt-BR: Keep literal {sourceLanguage} and {targetLanguage} tokens.",
-            prompt);
-    }
-
-    /// <summary>
-    ///     Ensures ChatGPT prompt expansion falls back to the shared default template when the config prompt is blank.
-    /// </summary>
-    [Fact]
-    public void ChatGpt_BuildPrompt_UsesDefaultTemplateWhenBlank()
-    {
-        var prompt = ChatGPTTranslator.BuildPrompt(
-            "   ",
-            "hello",
-            "en",
-            "pt-BR");
-
-        Assert.Equal(
-            PromptTemplateManager.DefaultPrompt
-                .Replace("{sourceLanguage}", "en", StringComparison.Ordinal)
-                .Replace("{targetLanguage}", "pt-BR", StringComparison.Ordinal)
-                .Replace("{text}", "hello", StringComparison.Ordinal),
-            prompt);
-    }
 }

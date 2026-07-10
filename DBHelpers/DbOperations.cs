@@ -129,7 +129,8 @@ public partial class Echoglossian
             t.TranslationEngine == talkMessage.TranslationEngine);
       }
 
-      var localFoundTalkMessage = existingTalkMessage.FirstOrDefault();
+      var localFoundTalkMessage = OrderTalkMessageLookupQuery(existingTalkMessage)
+          .FirstOrDefault();
       if (localFoundTalkMessage == null ||
           localFoundTalkMessage.OriginalTalkMessage !=
               talkMessage.OriginalTalkMessage)
@@ -342,7 +343,8 @@ public partial class Echoglossian
       }
 
       var localFoundBattleTalkMessage =
-          existingBattleTalkMessage.FirstOrDefault();
+          OrderBattleTalkMessageLookupQuery(existingBattleTalkMessage)
+              .FirstOrDefault();
       if (localFoundBattleTalkMessage == null ||
           localFoundBattleTalkMessage.OriginalBattleTalkMessage !=
               battleTalkMessage.OriginalBattleTalkMessage)
@@ -853,6 +855,70 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Inserts or refreshes a TalkMessage record for the same source line and
+  ///     engine, preserving other historical rows while making the refreshed row
+  ///     the most recent candidate for future lookups.
+  /// </summary>
+  /// <param name="talkMessage">Formatted TalkMessage to be inserted or updated in the database.</param>
+  /// <returns>A status string describing the persistence outcome.</returns>
+  public static async Task<string> UpsertTalkDataAsync(TalkMessage talkMessage)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(talkMessage.TranslatedTalkMessage))
+      {
+        return "No data to save.";
+      }
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              talkMessage.OriginalTalkMessage,
+              talkMessage.TranslatedTalkMessage,
+              talkMessage.OriginalTalkMessageLang,
+              talkMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
+      if (ShouldCopyTranslationToClipboard())
+      {
+        ImGui.SetClipboardText(talkMessage.ToString());
+      }
+
+      var matchingRows = context.TalkMessage.Where(t =>
+          t.SenderName == talkMessage.SenderName &&
+          t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
+          t.TranslationLang == talkMessage.TranslationLang &&
+          t.TranslationEngine == talkMessage.TranslationEngine);
+      var matchingRow = OrderTalkMessageLookupQuery(matchingRows).FirstOrDefault();
+      var now = DateTime.Now;
+      if (matchingRow != null)
+      {
+        matchingRow.TranslatedSenderName = talkMessage.TranslatedSenderName;
+        matchingRow.TranslatedTalkMessage = talkMessage.TranslatedTalkMessage;
+        matchingRow.RTLLangTranslationImageData =
+            talkMessage.RTLLangTranslationImageData;
+        matchingRow.UpdatedDate = now;
+        context.TalkMessage.Update(matchingRow);
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data updated in TalkMessages table.";
+      }
+
+      talkMessage.CreatedDate ??= now;
+      talkMessage.UpdatedDate ??= now;
+      context.TalkMessage.Add(talkMessage);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to TalkMessages table.";
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Error($"DB Upsert Failed: {e.Message}\n{e.StackTrace}");
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
   /// Inserts a BattleTalkMessage record into the database.
   /// </summary>
   /// <param name="battleTalkMessage">Formatted BattleTalkMessage to be inserted into the database</param>
@@ -893,6 +959,104 @@ public partial class Echoglossian
     {
       return $"ErrorSavingData: {e}";
     }
+  }
+
+  /// <summary>
+  ///     Inserts or refreshes a BattleTalkMessage record for the same source
+  ///     line and engine, preserving other historical rows while making the
+  ///     refreshed row the most recent candidate for future lookups.
+  /// </summary>
+  /// <param name="battleTalkMessage">Formatted BattleTalkMessage to be inserted or updated in the database.</param>
+  /// <returns>A status string describing the persistence outcome.</returns>
+  public static async Task<string> UpsertBattleTalkDataAsync(
+      BattleTalkMessage battleTalkMessage)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(battleTalkMessage.TranslatedBattleTalkMessage))
+      {
+        return "No data to save.";
+      }
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              battleTalkMessage.OriginalBattleTalkMessage,
+              battleTalkMessage.TranslatedBattleTalkMessage,
+              battleTalkMessage.OriginalBattleTalkMessageLang,
+              battleTalkMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
+      if (ShouldCopyTranslationToClipboard())
+      {
+        ImGui.SetClipboardText(battleTalkMessage.ToString());
+      }
+
+      var matchingRows = context.BattleTalkMessage.Where(t =>
+          t.SenderName == battleTalkMessage.SenderName &&
+          t.OriginalBattleTalkMessage ==
+          battleTalkMessage.OriginalBattleTalkMessage &&
+          t.TranslationLang == battleTalkMessage.TranslationLang &&
+          t.TranslationEngine == battleTalkMessage.TranslationEngine);
+      var matchingRow = OrderBattleTalkMessageLookupQuery(matchingRows)
+          .FirstOrDefault();
+      var now = DateTime.Now;
+      if (matchingRow != null)
+      {
+        matchingRow.TranslatedSenderName =
+            battleTalkMessage.TranslatedSenderName;
+        matchingRow.TranslatedBattleTalkMessage =
+            battleTalkMessage.TranslatedBattleTalkMessage;
+        matchingRow.RTLLangTranslationImageData =
+            battleTalkMessage.RTLLangTranslationImageData;
+        matchingRow.UpdatedDate = now;
+        context.BattleTalkMessage.Update(matchingRow);
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data updated in BattleTalkMessages table.";
+      }
+
+      battleTalkMessage.CreatedDate ??= now;
+      battleTalkMessage.UpdatedDate ??= now;
+      context.BattleTalkMessage.Add(battleTalkMessage);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to BattleTalkMessages table.";
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Error($"DB Upsert Failed: {e.Message}\n{e.StackTrace}");
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Orders TalkMessage lookup candidates so the most recently refreshed row
+  ///     wins when multiple historical rows exist for the same source line.
+  /// </summary>
+  /// <param name="query">The TalkMessage query to order.</param>
+  /// <returns>The ordered TalkMessage query.</returns>
+  public static IQueryable<TalkMessage> OrderTalkMessageLookupQuery(
+      IQueryable<TalkMessage> query)
+  {
+    return query.OrderByDescending(t =>
+            t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+        .ThenByDescending(t => t.Id);
+  }
+
+  /// <summary>
+  ///     Orders BattleTalkMessage lookup candidates so the most recently
+  ///     refreshed row wins when multiple historical rows exist for the same
+  ///     source line.
+  /// </summary>
+  /// <param name="query">The BattleTalkMessage query to order.</param>
+  /// <returns>The ordered BattleTalkMessage query.</returns>
+  public static IQueryable<BattleTalkMessage> OrderBattleTalkMessageLookupQuery(
+      IQueryable<BattleTalkMessage> query)
+  {
+    return query.OrderByDescending(t =>
+            t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+        .ThenByDescending(t => t.Id);
   }
 
   /// <summary>

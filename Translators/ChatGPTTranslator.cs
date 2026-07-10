@@ -4,14 +4,16 @@
 // </copyright>
 
 using System.ClientModel;
+using System.Text;
 using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Helpers;
+using Echoglossian.Translators.OpenAI;
 using OpenAI;
 using OpenAI.Chat;
 
 namespace Echoglossian.Translators;
 
-public class ChatGPTTranslator : ITranslator
+public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private readonly ChatClient? chatClient;
     private readonly string model;
@@ -19,37 +21,38 @@ public class ChatGPTTranslator : ITranslator
     private readonly string promptTemplate;
     private readonly float temperature;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
+    private readonly string unavailableMessage;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ChatGPTTranslator" /> class.
     /// </summary>
     /// <param name="pluginLog"></param>
-    /// <param name="baseUrl"></param>
-    /// <param name="apiKey"></param>
-    /// <param name="model"></param>
-    /// <param name="temperature"></param>
-    /// <param name="promptTemplate"></param>
-    public ChatGPTTranslator(
-        IPluginLog pluginLog,
-        string baseUrl = "https://api.openai.com/v1",
-        string apiKey = "",
-        string model = "gpt-4o-mini",
-        float temperature = 0.1f,
-        string? promptTemplate = null)
+    /// <param name="config">The active plugin configuration.</param>
+    public ChatGPTTranslator(IPluginLog pluginLog, Config config)
     {
         this.pluginLog = pluginLog;
-        this.model = model;
-        this.temperature = temperature;
-        this.promptTemplate = string.IsNullOrWhiteSpace(promptTemplate)
-            ? PromptTemplateManager.DefaultPrompt
-            : promptTemplate;
+        this.temperature = config.ChatGptTemperature;
+        this.promptTemplate = string.IsNullOrWhiteSpace(config.ChatGptPrompt)
+            ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.ChatGPT)
+            : config.ChatGptPrompt;
 
-        if (string.IsNullOrWhiteSpace(apiKey))
+        var providerSettings =
+            OpenAiProviderVariantHelper.ResolveActiveSettings(config);
+        var baseUrl = providerSettings.BaseUrl;
+        var apiKey = providerSettings.ApiKey;
+        this.model = providerSettings.Model;
+        this.unavailableMessage =
+            OpenAiProviderVariantHelper.ResolveUnavailableMessage(
+                providerSettings.Variant);
+
+        if (string.IsNullOrWhiteSpace(apiKey) ||
+            string.IsNullOrWhiteSpace(baseUrl) ||
+            string.IsNullOrWhiteSpace(this.model))
         {
             PluginRuntimeLog.Warning(
                 this.pluginLog,
-                Resources
-                    .APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable);
+                OpenAiProviderVariantHelper.ResolveConfigurationWarning(
+                    providerSettings.Variant));
             this.chatClient = null;
         }
         else
@@ -57,8 +60,8 @@ public class ChatGPTTranslator : ITranslator
             try
             {
                 PluginRuntimeLog.Debug(
-                    pluginLog,
-                    $"ChatGPTTranslator: {baseUrl}, {apiKey[..20]}***{apiKey[^5..]}, {temperature}");
+                    this.pluginLog,
+                    $"ChatGPTTranslator: provider={providerSettings.ProviderName}, {baseUrl}, {MaskApiKeyForDebugLog(apiKey)}, {this.temperature}");
 
                 var clientOptions = new OpenAIClientOptions
                 {
@@ -66,11 +69,11 @@ public class ChatGPTTranslator : ITranslator
                 };
 
                 PluginRuntimeLog.Debug(
-                    pluginLog,
+                    this.pluginLog,
                     $"ChatGPTTranslator: Endpoint={clientOptions.Endpoint}");
 
                 this.chatClient = new ChatClient(
-                    model,
+                    this.model,
                     new ApiKeyCredential(apiKey),
                     clientOptions);
             }
@@ -82,6 +85,29 @@ public class ChatGPTTranslator : ITranslator
                 this.chatClient = null;
             }
         }
+    }
+
+    /// <summary>
+    ///     Masks an API key for debug logging without assuming a minimum key
+    ///     length.
+    /// </summary>
+    /// <param name="apiKey">The API key to mask.</param>
+    /// <returns>A masked representation safe for debug logs.</returns>
+    private static string MaskApiKeyForDebugLog(string apiKey)
+    {
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            return "<empty>";
+        }
+
+        if (apiKey.Length <= 8)
+        {
+            return $"{apiKey[0]}***{apiKey[^1]}";
+        }
+
+        var prefixLength = Math.Min(20, Math.Max(1, apiKey.Length - 5));
+        var suffixLength = Math.Min(5, Math.Max(1, apiKey.Length - prefixLength));
+        return $"{apiKey[..prefixLength]}***{apiKey[^suffixLength..]}";
     }
 
     /// <summary>
@@ -119,7 +145,7 @@ public class ChatGPTTranslator : ITranslator
     {
         if (this.chatClient == null)
         {
-            return Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+            return this.unavailableMessage;
         }
 
         var cacheKey = $"{text}_{sourceLanguage}_{targetLanguage}";
@@ -139,6 +165,48 @@ public class ChatGPTTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc/>
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (!DialogueContextPromptHelper.HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        if (this.chatClient == null)
+        {
+            return this.unavailableMessage;
+        }
+
+        var cacheKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(
+                cacheKey,
+                out var cachedTranslation))
+        {
+            return cachedTranslation;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual OpenAI chat completion call for a single cache
     ///     key. Concurrent callers for the same key share the same in-flight
@@ -153,20 +221,28 @@ public class ChatGPTTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        var client = this.chatClient;
-
-        if (client is null)
+        if (dialogueContext.HasValue)
         {
-            return Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+            var structuredTranslation = await this.TryTranslateStructuredDialogueAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
         }
 
-        var prompt = BuildPrompt(
-            this.promptTemplate,
+        var prompt = this.BuildPrompt(
             text,
             sourceLanguage,
-            targetLanguage);
+            targetLanguage,
+            dialogueContext);
 
         try
         {
@@ -181,7 +257,7 @@ public class ChatGPTTranslator : ITranslator
             };
 
             ChatCompletion completion =
-                await client.CompleteChatAsync(
+                await this.chatClient.CompleteChatAsync(
                     messages,
                     chatCompletionOptions).ConfigureAwait(false);
             var translatedText = completion.Content.Count > 0
@@ -209,25 +285,192 @@ public class ChatGPTTranslator : ITranslator
         return string.Empty;
     }
 
-    internal static string BuildPrompt(
-        string? promptTemplate,
+    /// <summary>
+    ///     Attempts the first live structured dialogue path for OpenAI-family
+    ///     providers by forcing one tool call that returns JSON arguments.
+    ///     Any failure falls back to the existing plain-text path.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The cache key for this request.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the caller can use the plain-text path.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
         string text,
         string sourceLanguage,
-        string targetLanguage)
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
     {
-        var normalizedTemplate = string.IsNullOrWhiteSpace(promptTemplate)
-            ? PromptTemplateManager.DefaultPrompt
-            : promptTemplate;
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.ChatGPT) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
 
-        return normalizedTemplate
-            .Replace(
-                "{sourceLanguage}",
+        var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+            sourceLanguage,
+            targetLanguage);
+        var usedGlossary = glossaryEntries.Count > 0;
+        try
+        {
+            var normalizedText = FixText(text);
+            var structuredRequest = StructuredDialogueTranslationRequestBuilder.Build(
+                normalizedText,
                 sourceLanguage,
-                StringComparison.Ordinal)
-            .Replace(
-                "{targetLanguage}",
                 targetLanguage,
-                StringComparison.Ordinal)
-            .Replace("{text}", FixText(text), StringComparison.Ordinal);
+                TranslationSurfaceGroup.Dialogue,
+                dialogueContext,
+                glossaryEntries);
+            var structuredPrompt =
+                StructuredDialogueOpenAiToolHelper.BuildUserPrompt(
+                    PromptTemplateManager.RenderPrompt(
+                        this.promptTemplate,
+                        normalizedText,
+                        sourceLanguage,
+                        targetLanguage),
+                    structuredRequest);
+
+            var structuredTool = ChatTool.CreateFunctionTool(
+                StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                StructuredDialogueOpenAiToolHelper.ToolFunctionDescription,
+                BinaryData.FromString(
+                    StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                true);
+
+            var chatCompletionOptions = new ChatCompletionOptions
+            {
+                Temperature = this.temperature,
+                ToolChoice = ChatToolChoice.CreateFunctionChoice(
+                    StructuredDialogueOpenAiToolHelper.ToolFunctionName),
+            };
+            chatCompletionOptions.Tools.Add(structuredTool);
+
+            var messages = new List<ChatMessage>
+            {
+                ChatMessage.CreateUserMessage(structuredPrompt),
+            };
+
+            ChatCompletion completion =
+                await this.chatClient!.CompleteChatAsync(
+                    messages,
+                    chatCompletionOptions).ConfigureAwait(false);
+
+            var rawStructuredPayload = this.ExtractStructuredPayload(
+                completion);
+            var structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.ChatGPT,
+                    false,
+                    usedGlossary,
+                    structuredValidation.FailureReason ??
+                    "unknown-structured-dialogue-failure");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"ChatGPT structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            var translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.ChatGPT,
+                    true,
+                    usedGlossary);
+                this.translationCache.Remember(
+                    cacheKey,
+                    translatedText);
+                return translatedText;
+            }
+
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.ChatGPT,
+                false,
+                usedGlossary,
+                "non-persistable-structured-result");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.ChatGPT,
+                false,
+                usedGlossary,
+                ex.Message);
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"ChatGPT structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Extracts one raw structured payload from the OpenAI-family response,
+    ///     preferring forced tool-call arguments and then falling back to any
+    ///     direct text content when a compatible endpoint ignores tool calling.
+    /// </summary>
+    /// <param name="completion">The provider completion.</param>
+    /// <returns>The raw structured payload string, if any.</returns>
+    private string ExtractStructuredPayload(ChatCompletion completion)
+    {
+        foreach (var toolCall in completion.ToolCalls)
+        {
+            if (toolCall.Kind == ChatToolCallKind.Function &&
+                string.Equals(
+                    toolCall.FunctionName,
+                    StructuredDialogueOpenAiToolHelper.ToolFunctionName,
+                    StringComparison.Ordinal))
+            {
+                return toolCall.FunctionArguments?.ToString() ?? string.Empty;
+            }
+        }
+
+        if (completion.Content.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        StringBuilder builder = new();
+        foreach (var contentPart in completion.Content)
+        {
+            builder.Append(contentPart.Text);
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        var prompt = PromptTemplateManager.RenderPrompt(
+            this.promptTemplate,
+            FixText(text),
+            sourceLanguage,
+            targetLanguage);
+
+        if (!dialogueContext.HasValue)
+        {
+            return prompt;
+        }
+
+        return DialogueContextPromptHelper.AppendDialogueContext(
+            prompt,
+            dialogueContext.Value,
+            FixText);
     }
 }

@@ -11,7 +11,7 @@ namespace Echoglossian.Translators;
 /// <summary>
 ///     Translator implementation for Anthropic Claude using the Messages API.
 /// </summary>
-public class ClaudeTranslator : ITranslator
+public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
 {
     private const string AnthropicVersion = "2023-06-01";
     private const string DefaultBaseUrl = "https://api.anthropic.com";
@@ -104,6 +104,46 @@ public class ClaudeTranslator : ITranslator
                 cacheKey)).ConfigureAwait(false);
     }
 
+    /// <inheritdoc/>
+    public async Task<string?> TranslateAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (this.httpClient is null)
+        {
+            return Resources.ClaudeTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        if (!DialogueContextPromptHelper.HasUsableDialogueContext(dialogueContext))
+        {
+            return await this.TranslateAsync(
+                text,
+                sourceLanguage,
+                targetLanguage).ConfigureAwait(false);
+        }
+
+        string cacheKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
+        if (this.translationCache.TryGetValue(cacheKey, out string? cachedTranslation))
+        {
+            return cachedTranslation;
+        }
+
+        return await this.translationCache.GetOrAddAsync(
+            cacheKey,
+            () => this.TranslateCoreAsync(
+                text,
+                sourceLanguage,
+                targetLanguage,
+                cacheKey,
+                dialogueContext)).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Performs the actual Claude Messages API request for one cache key.
     /// </summary>
@@ -116,12 +156,29 @@ public class ClaudeTranslator : ITranslator
         string text,
         string sourceLanguage,
         string targetLanguage,
-        string cacheKey)
+        string cacheKey,
+        DialogueTranslationContext? dialogueContext = null)
     {
-        string fullPrompt = this.promptTemplate
-            .Replace("{text}", text, StringComparison.Ordinal)
-            .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
-            .Replace("{targetLanguage}", targetLanguage, StringComparison.Ordinal);
+        if (dialogueContext.HasValue)
+        {
+            var structuredTranslation =
+                await this.TryTranslateStructuredDialogueAsync(
+                    text,
+                    sourceLanguage,
+                    targetLanguage,
+                    cacheKey,
+                    dialogueContext.Value).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(structuredTranslation))
+            {
+                return structuredTranslation;
+            }
+        }
+
+        string fullPrompt = this.BuildPrompt(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            dialogueContext);
 
         var requestData = new
         {
@@ -191,5 +248,177 @@ public class ClaudeTranslator : ITranslator
         }
 
         return string.Empty;
+    }
+
+    /// <summary>
+    ///     Attempts the Anthropic structured dialogue path and falls back to
+    ///     the legacy plain-text request on incompatibility or malformed tool
+    ///     output.
+    /// </summary>
+    /// <param name="text">The visible source text.</param>
+    /// <param name="sourceLanguage">The source language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="cacheKey">The normalized request cache key.</param>
+    /// <param name="dialogueContext">The runtime-only dialogue context.</param>
+    /// <returns>
+    ///     The structured translated text when successful; otherwise
+    ///     <see langword="null" /> so the legacy path can run.
+    /// </returns>
+    private async Task<string?> TryTranslateStructuredDialogueAsync(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        string cacheKey,
+        DialogueTranslationContext dialogueContext)
+    {
+        if (StructuredDialogueCapabilityHelper.GetPreferredCapability(
+                Echoglossian.TransEngines.Claude) != StructuredDialogueProviderCapability.JsonSchema)
+        {
+            return null;
+        }
+
+        IReadOnlyList<StructuredDialogueGlossaryEntry> glossaryEntries =
+            StructuredDialogueGlossaryStore.GetEntries(
+                sourceLanguage,
+                targetLanguage);
+        bool usedGlossary = glossaryEntries.Count > 0;
+        try
+        {
+            string normalizedText = FixText(text);
+            StructuredDialogueTranslationRequest structuredRequest =
+                StructuredDialogueTranslationRequestBuilder.Build(
+                    normalizedText,
+                    sourceLanguage,
+                    targetLanguage,
+                    TranslationSurfaceGroup.Dialogue,
+                    dialogueContext,
+                    glossaryEntries);
+            string basePrompt = this.promptTemplate
+                .Replace("{text}", normalizedText, StringComparison.Ordinal)
+                .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
+                .Replace("{targetLanguage}", targetLanguage, StringComparison.Ordinal);
+            string structuredPrompt =
+                StructuredDialogueOpenAiToolHelper.BuildUserPrompt(
+                    basePrompt,
+                    structuredRequest);
+
+            var requestData = new
+            {
+                model = this.model,
+                max_tokens = MaxOutputTokens,
+                temperature = this.temperature,
+                messages = new[]
+                {
+                    new
+                    {
+                        role = "user",
+                        content = structuredPrompt,
+                    },
+                },
+                tools = new[]
+                {
+                    new
+                    {
+                        name = StructuredDialogueAnthropicToolHelper.ToolName,
+                        description = StructuredDialogueAnthropicToolHelper.ToolDescription,
+                        input_schema = JObject.Parse(
+                            StructuredDialogueAnthropicToolHelper.BuildInputSchemaJson()),
+                    },
+                },
+                tool_choice = new
+                {
+                    type = "tool",
+                    name = StructuredDialogueAnthropicToolHelper.ToolName,
+                },
+            };
+
+            string jsonContent = JsonConvert.SerializeObject(requestData);
+            using StringContent httpContent = new(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
+
+            using HttpResponseMessage response = await this.httpClient!.PostAsync(
+                "v1/messages",
+                httpContent).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            string responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string? rawStructuredPayload =
+                StructuredDialogueAnthropicToolHelper.ExtractRawStructuredPayload(
+                    responseString,
+                    StructuredDialogueAnthropicToolHelper.ToolName);
+            StructuredDialogueResponseValidationResult structuredValidation =
+                StructuredDialogueTranslationResponseValidator.ParseAndValidate(
+                    rawStructuredPayload);
+
+            if (!structuredValidation.IsValid ||
+                !structuredValidation.Response.HasValue)
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.Claude,
+                    false,
+                    usedGlossary,
+                    structuredValidation.FailureReason ??
+                    "unknown-structured-dialogue-failure");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    $"Claude structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                return null;
+            }
+
+            string translatedText =
+                structuredValidation.Response.Value.TextTranslated.Trim();
+            if (TranslationResultGuard.IsPersistableTranslation(translatedText))
+            {
+                TranslatorMetricsCollector.RecordStructuredAttempt(
+                    (int)Echoglossian.TransEngines.Claude,
+                    true,
+                    usedGlossary);
+                this.translationCache.Remember(cacheKey, translatedText);
+                return translatedText;
+            }
+
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.Claude,
+                false,
+                usedGlossary,
+                "non-persistable-structured-result");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            TranslatorMetricsCollector.RecordStructuredAttempt(
+                (int)Echoglossian.TransEngines.Claude,
+                false,
+                usedGlossary,
+                ex.Message);
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"Claude structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            return null;
+        }
+    }
+
+    private string BuildPrompt(
+        string text,
+        string sourceLanguage,
+        string targetLanguage,
+        DialogueTranslationContext? dialogueContext = null)
+    {
+        string prompt = this.promptTemplate
+            .Replace("{text}", text, StringComparison.Ordinal)
+            .Replace("{sourceLanguage}", sourceLanguage, StringComparison.Ordinal)
+            .Replace("{targetLanguage}", targetLanguage, StringComparison.Ordinal);
+
+        if (!dialogueContext.HasValue)
+        {
+            return prompt;
+        }
+
+        return DialogueContextPromptHelper.AppendDialogueContext(
+            prompt,
+            dialogueContext.Value,
+            FixText);
     }
 }
