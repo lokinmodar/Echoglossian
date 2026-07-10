@@ -277,6 +277,37 @@ Option B, direct file edit:
 11. Use `Retranslate Visible Dialogue And Persist` on a visible `Talk` or
     `BattleTalk` line to validate the DB-backed refresh path.
 
+## Current In-Game Findings
+
+Current operator result on this workstation after switching Dalamud to the
+`llm-translation-rework` DLL:
+
+- the correct worktree build is loading in-game
+- `/eglotranslatordebugger` opens successfully
+- the OpenAI-family runtime is issuing live requests and persisting translated
+  output
+- successful runtime coverage has already been observed across multiple
+  surfaces, including `Talk`, dense quest-family text, `AddonContextMenuTitle`,
+  and `CharacterClass`
+
+Current interpretation of `QueuedTranslationBroker` cancellations:
+
+- isolated `TaskCanceledException` events seen in prefetch paths are currently
+  treated as benign unless they correlate with visible translation loss
+- this matches the observed session so far: the runtime continued translating
+  and persisting text normally before and after the cancellations
+- if future sessions show repeated cancellations during steady-state use with
+  missing visible translations, reclassify them from observation to bug and
+  investigate the broker timeout or shutdown path
+
+Practical operator rule:
+
+- isolated cancellation plus continued correct translation: observe only
+- repeated cancellations plus visible missing translation in the same surface:
+  investigate
+- cancellation burst during manual disable, reload, or branch switch: expected
+  until proven otherwise
+
 ## Deep Test Matrix
 
 After the first smoke test passes, test in this order.

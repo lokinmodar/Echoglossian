@@ -2636,3 +2636,39 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - perform the actual in-game smoke pass on `ChatGPT`, then expand into the
     deeper multi-engine matrix from the playbook
+
+## Iteration 68 - Record The First Worktree In-Game Validation Results
+
+- Date: 2026-07-10
+- Branch: `llm-translation-rework`
+- Goal:
+  - capture the first real in-game validation outcome after redirecting
+    Dalamud to the worktree build, and document the current interpretation of
+    the observed queued-translation cancellations
+- Files touched:
+  - `docs/llm-ingame-test-playbook.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- Runtime findings recorded:
+  - the game is now loading the worktree DLL from
+    `C:\Dante\_dalamud\worktrees\Echoglossian\llm-translation-rework\bin\x64\Debug\win-x64\Echoglossian.dll`
+  - `/eglotranslatordebugger` opens successfully on the rework build
+  - the rework runtime has already translated and persisted output across
+    multiple surfaces, including `Talk`, quest-family text,
+    `AddonContextMenuTitle`, and `CharacterClass`
+  - only two `QueuedTranslationBroker` `TaskCanceledException` events were
+    observed in the worktree-backed session, both in prefetch-oriented paths
+- What changed:
+  - updated the in-game test playbook with the current workstation findings and
+    a practical operator rule for treating isolated broker cancellations as
+    benign unless they correlate with visible translation loss
+- Behavior-sensitive risks:
+  - the current benign classification depends on the observed session context:
+    successful translation continued before and after the cancellations
+  - if later sessions show repeated steady-state cancellations with missing
+    visible translations, the broker path should be re-opened as a real bug
+- Validation:
+  - not run; repo changes are documentation-only
+- Next cut:
+  - continue deeper in-game coverage and only promote the broker cancellations
+    to active bug work if they become user-visible or reproducible without
+    reload or manual translation shutdown
