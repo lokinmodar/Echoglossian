@@ -7,6 +7,25 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0710.1250`
+
+This package advances the LLM dialogue runtime and provider workflow line and
+has been submitted for the next official Dalamud stable update.
+
+Pending publication in `DalamudPluginsD17`.
+
+Highlights:
+
+- added structured dialogue translation plus glossary/context routing across
+  ChatGPT, Claude, Gemini, DeepSeek, LM Studio, Ollama, OpenRouter, and custom
+  OpenAI-compatible providers
+- added runtime model refresh, provider diagnostics, dialogue sessions and
+  metrics, and retranslation controls in `/eglotranslatordebugger`
+- hardened prompt expansion, dialogue history limiting, quota/error feedback,
+  and live model refresh state isolation for OpenAI-compatible engines
+- refreshed target-language coverage and downloadable script-font support for
+  newer LLM workflows
+
 ## Published Release `v4.2601.0531.0115`
 
 This package advances the native-dialogue and toast runtime stability line and

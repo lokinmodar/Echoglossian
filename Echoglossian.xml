@@ -2174,17 +2174,8 @@
                 ItemDetail addons, including trait-aware ActionDetail handling.
             </summary>
             <summary>
-                Hosts debug-only automatic addon-probe watches that start on login for
-                selected addons with early hidden-state value.
-            </summary>
-            <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
-            </summary>
-            <summary>
-                Handles the quest probe command used to inspect the complete quest data
-                shape from Lumina, the live quest progress resolver, and the current
-                QuestPlate database rows.
             </summary>
             <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
@@ -2745,11 +2736,6 @@
             Holds the translator debugger and metrics window instance.
             </summary>
         </member>
-        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
-            <summary>
-            Holds the currently active addon structure probe watch, if any.
-            </summary>
-        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2909,11 +2895,6 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
-            <summary>
-                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -4281,109 +4262,6 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TickAddonProbeInfrastructure">
-            <summary>
-                Ticks manual and automatic addon-probe watches, including the
-                debug-only login bootstrap for the default watch set.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetActiveAddonProbeWatchCount">
-            <summary>
-                Gets how many addon-probe watches are currently active across manual
-                and managed watch sets.
-            </summary>
-            <returns>The active probe-watch count.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StopAllAddonProbeWatches(System.Boolean)">
-            <summary>
-                Stops every active addon-probe watch known to the plugin.
-            </summary>
-            <param name="suppressAutoUntilLogout">
-                Whether the current login session should suppress the default
-                automatic watch set after the stop completes.
-            </param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TickManualAddonProbeWatch">
-            <summary>
-                Ticks the currently active manual addon-probe watch, if any.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TickManagedAddonProbeWatches">
-            <summary>
-                Ticks every managed addon-probe watch and prunes the disposed ones.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TickAutoAddonProbeWatches">
-            <summary>
-                Starts the default automatic addon-probe watch set when the player
-                logs in, then resets the gate on logout.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StartDefaultAutoAddonProbeWatches">
-            <summary>
-                Starts the default automatic watch set used to capture early
-                structural state for pooled dialogue addons.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StartManagedAddonProbeWatch(System.String,System.Int32,System.TimeSpan,System.String)">
-            <summary>
-                Starts one managed addon-probe watch and tracks it for later stop or
-                pruning.
-            </summary>
-            <param name="addonName">The addon name to watch.</param>
-            <param name="index">The addon instance index.</param>
-            <param name="duration">How long the watch should stay alive.</param>
-            <param name="reason">The debug log reason attached to the startup.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StopManualAddonProbeWatch">
-            <summary>
-                Stops the current manual addon-probe watch, if any.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StopManagedAddonProbeWatches">
-            <summary>
-                Stops every managed automatic addon-probe watch.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name, optional index,
-            and optional watch duration.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name, index, and duration to probe.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryParseAddonProbeDuration(System.String,System.TimeSpan@)">
-            <summary>
-            Parses one addon-probe duration token such as "90s" or "15m".
-            </summary>
-            <param name="token">The raw duration token.</param>
-            <param name="duration">Receives the parsed duration.</param>
-            <returns><see langword="true"/> when the token parsed successfully.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LooksLikeAddonProbeDuration(System.String)">
-            <summary>
-            Determines whether a token looks like an addon-probe duration even when the
-            value is outside the accepted range.
-            </summary>
-            <param name="token">The token to inspect.</param>
-            <returns><see langword="true"/> when the token resembles a duration.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatAddonProbeDuration(System.TimeSpan)">
-            <summary>
-            Formats one addon-probe watch duration for chat feedback.
-            </summary>
-            <param name="duration">The duration to format.</param>
-            <returns>The human-readable duration string.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -4652,102 +4530,6 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
-            <summary>
-                Handles the quest probe command.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
-            <summary>
-                Tries to resolve the quest probe target from either a quest id or a
-                quest name.
-            </summary>
-            <param name="input">The command argument.</param>
-            <param name="questIdText">The resolved quest id as text.</param>
-            <param name="questName">The resolved quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>True when the quest could be resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the quest data structure for inspection.
-            </summary>
-            <param name="questIdText">The quest id as text.</param>
-            <param name="questName">The quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the raw Lumina quest row properties.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs all rows from the quest text sheet, not just the live todo
-                entries, so we can inspect the full structure of the quest sheet.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
-            <summary>
-                Logs the QuestPlate rows currently stored for the quest.
-            </summary>
-            <param name="questIdText">The quest id text.</param>
-            <param name="questName">The quest name.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Logs the resolved live quest progression snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves a human-readable quest name from a quest row.
-            </summary>
-            <param name="questRow">The quest row.</param>
-            <returns>The resolved quest name, if available.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
-            <summary>
-                Converts quest text to a readable string for probe output.
-            </summary>
-            <param name="text">The quest text.</param>
-            <returns>The evaluated text string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
-            <summary>
-                Formats a probe value for log output.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>A human-readable value string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Builds the raw quest sheet name used by the game files.
-            </summary>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>The quest text sheet name, if it can be derived.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest row id as text through reflection so the probe
-                stays compatible with generated sheet shapes.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest row id as text, or an empty string if unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest sheet identifier used to mount the quest text
-                sheet path.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -18280,46 +18062,6 @@
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy">
-            <summary>
-                Encapsulates the login-session gating rules for debug-only automatic
-                addon-probe watches.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldStartForCurrentLogin(System.Boolean,System.Boolean,System.Boolean,System.Int32)">
-            <summary>
-                Determines whether the current login session should start the default
-                automatic addon-probe watch set.
-            </summary>
-            <param name="isLoggedIn">Whether the client is currently logged in.</param>
-            <param name="hasStartedForCurrentLogin">
-                Whether the current login session already started its automatic probe
-                set.
-            </param>
-            <param name="isSuppressedUntilLogout">
-                Whether the user explicitly suppressed the automatic probe set until
-                the next logout.
-            </param>
-            <param name="activeManagedWatchCount">
-                How many managed automatic probe watches are currently alive.
-            </param>
-            <returns>
-                <see langword="true" /> when the automatic probe set should start.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldResetForLogout(System.Boolean,System.Boolean)">
-            <summary>
-                Determines whether the automatic login-session gate should reset
-                because the player logged out.
-            </summary>
-            <param name="wasLoggedIn">
-                Whether the client was logged in on the previous tick.
-            </param>
-            <param name="isLoggedIn">Whether the client is logged in now.</param>
-            <returns>
-                <see langword="true" /> when the automatic probe gate should reset.
-            </returns>
-        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
             <summary>
             Provides a generic recursive addon probe for live UI inspection.
@@ -21640,7 +21382,7 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.GetToastGuiRouteStateText(Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState)">
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawToastTypePage(Echoglossian.Config,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.Single@,System.Int64@)">
             <summary>
                 Maps one effective toast route state to the localized UI label used
                 in the toast general page.
