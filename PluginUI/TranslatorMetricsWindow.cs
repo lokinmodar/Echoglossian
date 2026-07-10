@@ -384,7 +384,7 @@ public sealed class TranslatorMetricsWindow
     var isConfigured = TranslationEngineConfigurationHelper.IsConfigured(
         this.config,
         Echoglossian.TransEngines.ChatGPT);
-    var refreshSnapshot = OpenAIModelManager.GetRefreshSnapshot();
+    var refreshSnapshot = OpenAIModelManager.GetRefreshSnapshot(settings.ProviderName);
     var providerVariantDisplayName = ResolveProviderVariantDisplayName(settings.Variant);
 
     ImGui.TextWrapped(

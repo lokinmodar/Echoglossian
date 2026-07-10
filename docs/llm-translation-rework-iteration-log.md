@@ -2719,3 +2719,50 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - continue the PR `#202` review-debt pass and decide whether the remaining
     follow-up is limited to comment resolution or needs another code slice
+
+## Iteration 70 - Finish The Remaining Live Model Refresh Review Fixes
+
+- Date: 2026-07-10
+- Branch: `llm-translation-rework`
+- Goal:
+  - close the remaining non-stale PR `#202` review items around live model
+    refresh coordination and OpenAI-family provider isolation before merge
+- Files touched:
+  - `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`
+  - `PluginUI/EngineConfigUI/LiveModelRefreshCoordinator.cs`
+  - `PluginUI/TranslatorMetricsWindow.cs`
+  - `Translators/OpenAI/OpenAIModelManager.cs`
+  - `Echoglossian.Tests/LiveModelRefreshCoordinatorTests.cs`
+  - `Echoglossian.Tests/OpenAIModelManagerTests.cs`
+  - `Echoglossian.xml`
+  - `docs/llm-translation-rework-iteration-log.md`
+- What changed:
+  - changed `LiveModelRefreshCoordinator` so input-signature changes that occur
+    during an in-flight refresh are retained and replayed once the current
+    refresh completes, instead of being silently dropped
+  - changed the shared OpenAI-family model manager to retain live model lists
+    and refresh snapshots per provider profile (`OpenAI` vs
+    `OpenAI-Compatible`) instead of using one shared mutable model list for
+    both variants
+  - updated the ChatGPT/OpenAI-family engine UI and translator debugger to read
+    the active provider's retained model list and refresh snapshot rather than
+    a single shared global list
+  - added regression coverage for:
+    - queued refresh replay after an in-flight signature change
+    - provider-scoped model-list isolation and reset behavior
+- Behavior-sensitive risks:
+  - the OpenAI-family live model cache is now provider-scoped, so switching
+    variants preserves each provider's own refreshed model list instead of
+    reusing the last provider's results
+  - the refresh coordinator may now issue one immediate follow-up refresh after
+    a currently running request finishes if the operator changed credentials or
+    endpoint inputs mid-flight; this is intentional to avoid stale results
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet build Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~LiveModelRefreshCoordinatorTests|FullyQualifiedName~OpenAIModelManagerTests"`
+    : passed (`4/4`)
+- Next cut:
+  - resolve the stale PR `#202` review threads now covered by the current
+    branch head and request the final human merge pass into `v4-series`

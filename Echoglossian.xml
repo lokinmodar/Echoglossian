@@ -25612,6 +25612,26 @@
                 failed.
             </summary>
         </member>
+        <member name="P:Echoglossian.Translators.OpenAI.OpenAIModelManager.CurrentModelList">
+            <summary>
+                Gets the current official OpenAI live model list.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.GetCurrentModelList(System.String)">
+            <summary>
+                Gets the current live model list for one OpenAI-family provider
+                profile.
+            </summary>
+            <param name="providerStateKey">The provider-profile state key.</param>
+            <returns>The retained model list for that provider profile.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.ResetToDefault(System.String)">
+            <summary>
+                Restores the predefined OpenAI-family model catalog for one provider
+                profile.
+            </summary>
+            <param name="providerStateKey">The provider-profile state key.</param>
+        </member>
         <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.RefreshAsync(System.String,System.String,System.String)">
             <summary>
                 Refreshes the model list from the specified OpenAI-compatible
@@ -25628,16 +25648,65 @@
             </summary>
             <returns>The current live model refresh snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.UpdateRefreshState(System.DateTime,System.String,System.String,System.Boolean,System.String)">
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.GetRefreshSnapshot(System.String)">
+            <summary>
+                Gets the current OpenAI-family live model refresh snapshot for one
+                provider profile.
+            </summary>
+            <param name="providerStateKey">The provider-profile state key.</param>
+            <returns>The current live model refresh snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.ApplyRefreshSuccess(System.String,System.DateTime,System.String,System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.OpenAI.LlmTextModel})">
+            <summary>
+                Applies a successful live-model refresh result for one provider
+                profile.
+            </summary>
+            <param name="providerStateKey">The provider-profile state key.</param>
+            <param name="observedAtUtc">The observation timestamp.</param>
+            <param name="providerName">The provider label.</param>
+            <param name="baseUrl">The normalized base URL.</param>
+            <param name="models">The supported model list.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.ResetAllForTesting">
+            <summary>
+                Clears retained provider refresh state for unit tests.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.UpdateRefreshState(System.String,System.DateTime,System.String,System.String,System.Boolean,System.String)">
             <summary>
                 Updates the shared refresh snapshot after one live model-list
                 attempt.
             </summary>
+            <param name="providerStateKey">The provider-profile state key.</param>
             <param name="observedAtUtc">The observation timestamp.</param>
             <param name="providerName">The provider label.</param>
             <param name="baseUrl">The provider base URL.</param>
             <param name="succeeded">Whether the refresh succeeded.</param>
             <param name="failureDetail">The failure detail when the refresh failed.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.ResolveProviderStateKey(System.String)">
+            <summary>
+                Resolves the retained state key for one OpenAI-family provider
+                profile.
+            </summary>
+            <param name="providerName">The displayable provider label.</param>
+            <returns>The stable provider state key.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.GetOrCreateProviderState(System.String)">
+            <summary>
+                Gets or creates the retained refresh state for one provider profile.
+            </summary>
+            <param name="providerStateKey">The provider-profile state key.</param>
+            <returns>The retained provider refresh state.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.TryGetProviderState(System.String,Echoglossian.Translators.OpenAI.OpenAIModelManager.OpenAiProviderRefreshState@)">
+            <summary>
+                Tries to get retained refresh state for one provider profile without
+                creating a new entry.
+            </summary>
+            <param name="providerStateKey">The provider-profile state key.</param>
+            <param name="state">The retained provider state when present.</param>
+            <returns><see langword="true" /> when a retained state exists.</returns>
         </member>
         <member name="T:Echoglossian.Translators.OpenAI.OpenAiProviderVariantHelper">
             <summary>

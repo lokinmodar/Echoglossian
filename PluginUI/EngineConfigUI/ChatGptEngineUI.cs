@@ -131,7 +131,6 @@ public static class ChatGPTEngineUI
         if (lastRenderedVariant != config.OpenAiProviderVariant)
         {
             lastRenderedVariant = config.OpenAiProviderVariant;
-            OpenAIModelManager.ResetToDefault();
             if (config.OpenAiProviderVariant == OpenAiProviderVariant.CustomOpenAICompatible)
             {
                 customLiveModelFetchAttempted = false;
@@ -241,7 +240,7 @@ public static class ChatGPTEngineUI
             }
             else if (!useLiveModels)
             {
-                OpenAIModelManager.ResetToDefault();
+                OpenAIModelManager.ResetToDefault(settings.ProviderName);
                 customLiveModelFetchAttempted = false;
                 customLiveModelFetchSucceeded = false;
                 LiveModelRefreshCoordinator.Clear(GetLiveModelRefreshScope(settings.Variant));
@@ -285,7 +284,7 @@ public static class ChatGPTEngineUI
         if (settings.Variant == OpenAiProviderVariant.OfficialOpenAI)
         {
             var models = config.UseLiveOpenAIModelList
-                ? OpenAIModelManager.CurrentModelList
+                ? OpenAIModelManager.GetCurrentModelList(settings.ProviderName)
                 : OpenAITextModelDefaults.PredefinedModels;
             var selectedModel = config.OpenAILlmModel;
             changed |= ModelDropdownUI.Draw(
@@ -302,7 +301,7 @@ public static class ChatGPTEngineUI
         var useLiveModels = config.UseLiveCustomOpenAiCompatibleModelList;
         if (useLiveModels && customLiveModelFetchSucceeded)
         {
-            var models = OpenAIModelManager.CurrentModelList;
+            var models = OpenAIModelManager.GetCurrentModelList(settings.ProviderName);
             var selectedModel = config.CustomOpenAiCompatibleModel;
             changed |= ModelDropdownUI.Draw(
                 Resources.LLMModel,

@@ -76,6 +76,7 @@ public static class LiveModelRefreshCoordinator
         {
             if (InFlightScopes.Contains(scope))
             {
+                RequestedSignatures[scope] = signature;
                 return;
             }
 
@@ -101,15 +102,40 @@ public static class LiveModelRefreshCoordinator
         string scope,
         Func<Task> refreshAsync)
     {
-        try
+        while (true)
         {
-            await refreshAsync().ConfigureAwait(false);
-        }
-        finally
-        {
+            string requestedSignature;
+            var shouldRerun = false;
             lock (SyncLock)
             {
-                InFlightScopes.Remove(scope);
+                if (!RequestedSignatures.TryGetValue(scope, out requestedSignature!))
+                {
+                    InFlightScopes.Remove(scope);
+                    return;
+                }
+            }
+
+            try
+            {
+                await refreshAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                lock (SyncLock)
+                {
+                    shouldRerun =
+                        RequestedSignatures.TryGetValue(scope, out string? latestSignature) &&
+                        !string.Equals(latestSignature, requestedSignature, StringComparison.Ordinal);
+                    if (!shouldRerun)
+                    {
+                        InFlightScopes.Remove(scope);
+                    }
+                }
+            }
+
+            if (!shouldRerun)
+            {
+                return;
             }
         }
     }
