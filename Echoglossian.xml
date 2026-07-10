@@ -24665,6 +24665,30 @@
                 <see langword="null" /> so the legacy path can run.
             </returns>
         </member>
+        <member name="T:Echoglossian.Translators.DeepSeek.DeepSeekModelManager">
+            <summary>
+                Manages the DeepSeek live model list used by the configuration UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepSeek.DeepSeekModelManager.ResetToDefault">
+            <summary>
+                Restores the predefined DeepSeek model catalog.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepSeek.DeepSeekModelManager.RefreshAsync(System.String,System.String)">
+            <summary>
+                Refreshes the DeepSeek model list from the configured endpoint.
+            </summary>
+            <param name="apiKey">The configured DeepSeek API key.</param>
+            <param name="baseUrl">The configured DeepSeek base URL.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.DeepSeek.DeepSeekModelManager.BuildModelsEndpoint(System.String)">
+            <summary>
+                Builds the DeepSeek models endpoint from the configured base URL.
+            </summary>
+            <param name="baseUrl">The configured DeepSeek base URL.</param>
+            <returns>The normalized DeepSeek models endpoint.</returns>
+        </member>
         <member name="T:Echoglossian.Translators.DialogueTranslationContext">
             <summary>
                 Holds runtime-only short-lived dialogue session context for one live

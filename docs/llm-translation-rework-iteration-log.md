@@ -2672,3 +2672,50 @@ turning into an opaque pile of partial changes.
   - continue deeper in-game coverage and only promote the broker cancellations
     to active bug work if they become user-visible or reproducible without
     reload or manual translation shutdown
+
+## Iteration 69 - Fix DeepSeek Live Model Refresh Endpoint Normalization
+
+- Date: 2026-07-10
+- Branch: `llm-translation-rework`
+- Goal:
+  - fix the DeepSeek live model refresh path uncovered during in-game testing,
+    where refreshing current models appeared ineffective even with valid
+    credentials
+- Files touched:
+  - `Translators/DeepSeek/DeepSeekModelManager.cs`
+  - `Echoglossian.Tests/DeepSeekModelManagerTests.cs`
+  - `Echoglossian.xml`
+  - `docs/llm-translation-rework-iteration-log.md`
+- Runtime diagnosis:
+  - the local plugin config currently stores
+    `DeepSeekBaseUrl = https://api.deepseek.com/v1`
+  - a direct authenticated request to
+    `https://api.deepseek.com/v1/models` succeeded and returned the current
+    live model ids:
+    - `deepseek-v4-flash`
+    - `deepseek-v4-pro`
+  - the branch runtime was instead building
+    `https://api.deepseek.com/v1/v1/models`, which returned HTTP `404`
+- What changed:
+  - changed `DeepSeekModelManager` to build the live refresh endpoint as
+    `<normalized baseUrl>/models` instead of hardcoding an extra `/v1`
+  - normalized whitespace and trailing slashes before composing the endpoint
+  - made missing configuration, unsuccessful responses, and empty/invalid model
+    payloads fall back to the predefined DeepSeek defaults instead of leaving
+    the manager in an ambiguous state
+  - added regression coverage for versioned, root, and whitespace-padded
+    DeepSeek base URLs
+- Behavior-sensitive risks:
+  - when live refresh succeeds, the fetched list now reflects the provider's
+    current catalog rather than the legacy alias defaults; operators using
+    stored ids such as `deepseek-chat` may want to reselect a current live
+    model explicitly
+  - this change only fixes model-list refresh; it does not alter the existing
+    translation request path or migrate saved DeepSeek model ids automatically
+- Validation:
+  - `dotnet build Echoglossian.sln -c Debug --no-restore`
+  - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+    : passed (`323/323`)
+- Next cut:
+  - continue the PR `#202` review-debt pass and decide whether the remaining
+    follow-up is limited to comment resolution or needs another code slice
