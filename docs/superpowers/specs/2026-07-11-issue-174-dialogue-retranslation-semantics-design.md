@@ -8,14 +8,20 @@ This spec defines the next smallest shippable follow-up for GitHub issue
 
 The release already shipped explicit visible dialogue retranslation and
 persistence for `Talk` and `BattleTalk`. The remaining operator gap is that
-users still cannot easily tell whether a visible line came from an old DB row
-or from a fresh live translation request.
+users still cannot easily tell whether story-facing text currently shown to the
+player came from an old DB row or from a fresh live translation request.
 
 The approved next slice is therefore a diagnostics-first follow-up:
 
-- expose visible dialogue provenance in `/eglotranslatordebugger`
+- expose visible provenance for player-facing story text in
+  `/eglotranslatordebugger`
 - add a non-destructive `View In DB Manager` handoff from the debugger
-- keep scope limited to `Talk` and `BattleTalk`
+- cover:
+  - `Talk`
+  - `BattleTalk`
+  - `TalkSubtitle`
+  - `CutSceneSelectString`
+  - `TextGimmickHint`
 - do not change non-dialogue DB semantics
 - do not add DB deletion or purge actions in this slice
 - treat the existing `/eglodbmanager` window as the correct operator surface for
@@ -32,7 +38,8 @@ translator experimentation:
 
 The stable build already improved this meaningfully by shipping
 `Retranslate Visible Dialogue And Persist`, but the issue remains open because
-the operator cannot yet answer a basic question for the currently visible line:
+the operator cannot yet answer a basic question for the currently visible
+story-facing text:
 
 `Where did this translation come from?`
 
@@ -40,7 +47,8 @@ the operator cannot yet answer a basic question for the currently visible line:
 
 Current shipped behavior:
 
-- `Talk` and `BattleTalk` first try DB lookup
+- `Talk`, `BattleTalk`, `TalkSubtitle`, `CutSceneSelectString`, and
+  `TextGimmickHint` all have DB-backed lookup paths
 - when no suitable row exists, they can issue a live translation request
 - when runtime-only dialogue context is used, the result stays non-persistent
 - `/eglotranslatordebugger` already exposes aggregate metrics, dialogue
@@ -53,12 +61,14 @@ Current limitation:
 
 - the debugger shows aggregate translator activity, not per-visible-line
   provenance
-- the retranslate action reports whether persistence succeeded, but not what
-  source the currently shown line originally came from
+- the retranslate action reports whether persistence succeeded, but only for
+  `Talk` and `BattleTalk`
+- none of these story-facing surfaces tell the operator what source the
+  currently shown text originally came from
 
 ## Goals
 
-1. Make DB reuse for visible `Talk` and `BattleTalk` lines explicit.
+1. Make DB reuse for visible player-facing story text explicit.
 2. Reduce operator confusion during engine, model, and prompt experiments.
 3. Reuse the existing debugger and dialogue handler architecture.
 4. Hand the operator off to the existing DB manager without adding destructive
@@ -69,6 +79,8 @@ Current limitation:
 
 - no broad `clear database` button
 - no bulk rewrite or purge workflow
+- no expansion of explicit visible retranslate-and-persist beyond `Talk` and
+  `BattleTalk` in this slice
 - no change to quest, tooltip, toast, or canonical game-window persistence
 - no change to runtime-only dialogue-context persistence rules
 - no latency optimization work for `#176`
@@ -76,16 +88,17 @@ Current limitation:
 
 ## Options Considered
 
-### Option A: Visible dialogue provenance in the debugger
+### Option A: Visible story-surface provenance in the debugger
 
 Add a small current-line diagnostics section that reports:
 
-- addon family: `Talk` or `BattleTalk`
+- addon family or surface kind
 - source: `DB`, `Live translation`, or `Runtime-only context`
 - effective engine id or label
-- whether the most recent explicit retranslate persisted successfully
+- whether the most recent explicit retranslate persisted successfully when the
+  surface supports it
 - a `View In DB Manager` action that opens the existing DB manager on the
-  relevant dialogue table
+  relevant table
 
 Pros:
 
@@ -98,6 +111,7 @@ Cons:
 
 - does not itself remove stale rows
 - first cut may only preselect the table, not deep-link to an exact row
+- non-dialogue story surfaces do not all support runtime-only dialogue context
 
 ### Option B: Targeted purge for the current visible dialogue row
 
@@ -129,8 +143,8 @@ Cons:
 Choose Option A first.
 
 The right next slice is not more mutation. It is visibility. Once the debugger
-can show whether a visible line was reused from DB or freshly translated, the
-operator can reason about experiments without wiping storage blindly.
+can show whether visible story text was reused from DB or freshly translated,
+the operator can reason about experiments without wiping storage blindly.
 
 If the issue remains open after this slice, a later follow-up can add a narrow
 dialogue-row purge action with better scope and clearer operator expectations,
@@ -139,28 +153,30 @@ turning `/eglotranslatordebugger` into a second DB-management window.
 
 ## Proposed Design
 
-### 1. Add a visible dialogue diagnostics snapshot
+### 1. Add a visible story-surface diagnostics snapshot
 
 Introduce a small runtime-only snapshot model for the most recently resolved
-visible dialogue line. It should capture only what the debugger needs:
+visible story-facing surface. It should capture only what the debugger needs:
 
-- addon family
+- addon family or surface kind
 - original speaker text when available
 - original line text
+- original options text when applicable
 - translated speaker text when available
 - translated line text
+- translated options text when applicable
 - provenance kind
 - effective translation engine id
 - whether runtime-only dialogue context was used
 - timestamp of the observation
-- latest explicit retranslate outcome for that addon family
+- latest explicit retranslate outcome when supported by that surface
 
 This state stays in memory only.
 
 The snapshot should also expose enough coarse identity for UI handoff:
 
-- addon family
-- effective dialogue table name
+- addon family or surface kind
+- effective table name
 
 ### 2. Record provenance in `TalkHandler`
 
@@ -184,18 +200,54 @@ Apply the same rules and same snapshot contract used by `TalkHandler`.
 Keep the namespace separate so the debugger can identify which addon family the
 current snapshot belongs to.
 
-### 4. Show the snapshot in `/eglotranslatordebugger`
+### 4. Record provenance in `TalkSubtitleHandler`
+
+When `TalkSubtitleHandler` resolves a line:
+
+- record `DB` when a stored subtitle row is accepted
+- record `Live translation` when a fresh subtitle translation is produced and
+  stored
+- do not expose a retranslate outcome because this slice does not add visible
+  subtitle retranslation
+
+Use `TalkSubtitleMessage` as the DB-manager handoff target.
+
+### 5. Record provenance in `CutSceneSelectStringHandler`
+
+When `CutSceneSelectStringHandler` resolves one question-and-options payload:
+
+- record `DB` when a stored `SelectString` row is accepted
+- record `Live translation` when the handler translates the question or options
+  live and stores the result
+- model provenance at the whole prompt-plus-options payload level, not at one
+  option row at a time
+
+Use `SelectString` as the DB-manager handoff target.
+
+### 6. Record provenance in `TextGimmickHintHandler`
+
+When `TextGimmickHintHandler` resolves a hint line:
+
+- record `DB` when a stored hint row is accepted
+- record `Live translation` when a fresh hint translation is produced and
+  stored
+- do not claim runtime-only dialogue context for this surface unless the actual
+  runtime path proves it
+
+Use `TextGimmickHintMessage` as the DB-manager handoff target.
+
+### 7. Show the snapshot in `/eglotranslatordebugger`
 
 Add a compact section near the existing retranslate controls that shows the
-current visible dialogue state when available.
+current visible story-surface state when available.
 
 Suggested fields:
 
-- current visible dialogue source
-- current visible dialogue addon family
+- current visible source
+- current visible surface
 - effective engine
 - context-aware runtime-only flag
-- last explicit retranslate result
+- last explicit retranslate result when applicable
 - observation timestamp
 - `View In DB Manager`
 
@@ -210,6 +262,10 @@ The `View In DB Manager` action should:
 - open the existing DB manager window
 - preselect `TalkMessage` when the current snapshot is `Talk`
 - preselect `BattleTalkMessage` when the current snapshot is `BattleTalk`
+- preselect `TalkSubtitleMessage` when the current snapshot is `TalkSubtitle`
+- preselect `SelectString` when the current snapshot is `CutSceneSelectString`
+- preselect `TextGimmickHintMessage` when the current snapshot is
+  `TextGimmickHint`
 
 First-pass limit:
 
@@ -217,9 +273,9 @@ First-pass limit:
 - no auto-delete
 - no mutation from the debugger itself
 
-### 5. Keep failure behavior simple
+### 8. Keep failure behavior simple
 
-If no visible dialogue snapshot is available, the debugger should say so
+If no visible story-surface snapshot is available, the debugger should say so
 plainly instead of inferring anything from aggregate metrics.
 
 Do not backfill provenance from DB queries or logs after the fact.
@@ -227,17 +283,18 @@ Only show what the handlers actually observed while resolving the visible line.
 
 ## Data Flow
 
-1. `TalkHandler` or `BattleTalkHandler` resolves one visible line.
+1. One supported story-facing handler resolves the currently visible text.
 2. The handler determines whether the result came from:
    - DB lookup
    - live translation without runtime-only context
    - live translation with runtime-only context
-3. The handler writes one in-memory visible dialogue diagnostics snapshot.
+3. The handler writes one in-memory visible story-surface diagnostics snapshot.
 4. `/eglotranslatordebugger` reads and renders the latest snapshot.
 5. When requested, the debugger opens `/eglodbmanager` against the relevant
-   dialogue table for the current snapshot.
-6. The explicit retranslate action updates the last retranslate result in the
-   same in-memory state.
+   table for the current snapshot.
+6. When the supported surface is `Talk` or `BattleTalk`, the explicit
+   retranslate action updates the last retranslate result in the same in-memory
+   state.
 
 ## Files Expected To Change
 
@@ -245,6 +302,9 @@ Smallest expected touch set:
 
 - `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
 - `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
+- `NativeUI/AddonHandlers/Talk/TalkSubtitleHandler.cs`
+- `NativeUI/AddonHandlers/CutSceneSelectString/CutSceneSelectStringHandler.cs`
+- `NativeUI/AddonHandlers/Toasts/TextGimmickHintHandler.cs`
 - `PluginUI/TranslatorMetricsWindow.cs`
 - `DBManagerUI/DBEditorWindow.cs`
 
@@ -314,15 +374,32 @@ Recommended in-game:
   `/eglodbmanager` opens on `TalkMessage`
 - use `View In DB Manager` from a visible `BattleTalk` snapshot and verify
   `/eglodbmanager` opens on `BattleTalkMessage`
-- repeat the same checks for `BattleTalk`
+- trigger one `TalkSubtitle` line already known to exist in DB and verify it
+  shows `DB reuse`
+- trigger one fresh `TalkSubtitle` line and verify it shows `Fresh live
+  translation`
+- use `View In DB Manager` from a visible `TalkSubtitle` snapshot and verify
+  `/eglodbmanager` opens on `TalkSubtitleMessage`
+- trigger one `CutSceneSelectString` prompt already known to exist in DB and
+  verify it shows `DB reuse`
+- trigger one fresh `CutSceneSelectString` prompt and verify it shows `Fresh
+  live translation`
+- use `View In DB Manager` from a visible `CutSceneSelectString` snapshot and
+  verify `/eglodbmanager` opens on `SelectString`
+- trigger one `TextGimmickHint` line already known to exist in DB and verify
+  it shows `DB reuse`
+- trigger one fresh `TextGimmickHint` line and verify it shows `Fresh live
+  translation`
+- use `View In DB Manager` from a visible `TextGimmickHint` snapshot and
+  verify `/eglodbmanager` opens on `TextGimmickHintMessage`
 
 ## Success Criteria
 
 This slice is successful when:
 
-- operators can tell how the current visible `Talk` or `BattleTalk` line was
+- operators can tell how the current visible supported story-facing surface was
   resolved
 - users no longer need to guess whether a stale DB row or a live request is
   responsible for the currently visible output
-- dialogue retranslation semantics are clearer without changing DB-first rules
-  outside dialogue
+- `Talk` and `BattleTalk` retranslation semantics are clearer without changing
+  DB-first rules for the broader plugin
