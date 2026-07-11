@@ -17,6 +17,8 @@ The approved next slice is therefore a diagnostics-first follow-up:
 - keep scope limited to `Talk` and `BattleTalk`
 - do not change non-dialogue DB semantics
 - do not add DB deletion or purge actions in this slice
+- treat the existing `/eglodbmanager` window as the correct operator surface for
+  any future targeted DB cleanup work
 
 ## Problem
 
@@ -43,6 +45,8 @@ Current shipped behavior:
 - `/eglotranslatordebugger` already exposes aggregate metrics, dialogue
   sessions, glossary status, provider state, and the explicit retranslate
   action
+- `/eglodbmanager` already exposes the existing database editor window for
+  direct table inspection and deletion
 
 Current limitation:
 
@@ -99,6 +103,8 @@ Cons:
 - riskier semantics around engine filtering and row selection
 - easier to misuse
 - broader than needed before provenance is visible
+- should reuse `/eglodbmanager` or shared DB-manager infrastructure rather than
+  add destructive controls to `/eglotranslatordebugger`
 
 ### Option C: Broader DB cleanup workflow
 
@@ -120,7 +126,9 @@ can show whether a visible line was reused from DB or freshly translated, the
 operator can reason about experiments without wiping storage blindly.
 
 If the issue remains open after this slice, a later follow-up can add a narrow
-dialogue-row purge action with better scope and clearer operator expectations.
+dialogue-row purge action with better scope and clearer operator expectations,
+but that should build on the existing `/eglodbmanager` surface instead of
+turning `/eglotranslatordebugger` into a second DB-management window.
 
 ## Proposed Design
 
@@ -233,12 +241,15 @@ Mitigation:
 
 ### Risk 2: Scope creep into DB-management UI
 
-The presence of the DB editor makes it tempting to add deletion controls here.
+The existing `/eglodbmanager` window makes it tempting to add deletion controls
+to the debugger for convenience.
 
 Mitigation:
 
 - keep this slice debugger-only
 - do not add purge buttons or broader DB actions
+- if later work adds targeted purge, route it through `/eglodbmanager` or its
+  shared DB-manager components
 
 ### Risk 3: Unintended behavior changes in dialogue handlers
 
