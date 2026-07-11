@@ -14,6 +14,7 @@ or from a fresh live translation request.
 The approved next slice is therefore a diagnostics-first follow-up:
 
 - expose visible dialogue provenance in `/eglotranslatordebugger`
+- add a non-destructive `View In DB Manager` handoff from the debugger
 - keep scope limited to `Talk` and `BattleTalk`
 - do not change non-dialogue DB semantics
 - do not add DB deletion or purge actions in this slice
@@ -60,7 +61,9 @@ Current limitation:
 1. Make DB reuse for visible `Talk` and `BattleTalk` lines explicit.
 2. Reduce operator confusion during engine, model, and prompt experiments.
 3. Reuse the existing debugger and dialogue handler architecture.
-4. Keep the change narrow and safe for the published branch line.
+4. Hand the operator off to the existing DB manager without adding destructive
+   controls to the debugger.
+5. Keep the change narrow and safe for the published branch line.
 
 ## Non-Goals
 
@@ -81,16 +84,20 @@ Add a small current-line diagnostics section that reports:
 - source: `DB`, `Live translation`, or `Runtime-only context`
 - effective engine id or label
 - whether the most recent explicit retranslate persisted successfully
+- a `View In DB Manager` action that opens the existing DB manager on the
+  relevant dialogue table
 
 Pros:
 
 - smallest code change that directly addresses the remaining user confusion
 - no DB semantics change
+- reuses the existing DB-management surface instead of creating another one
 - easy to validate in-game
 
 Cons:
 
 - does not itself remove stale rows
+- first cut may only preselect the table, not deep-link to an exact row
 
 ### Option B: Targeted purge for the current visible dialogue row
 
@@ -150,6 +157,11 @@ visible dialogue line. It should capture only what the debugger needs:
 
 This state stays in memory only.
 
+The snapshot should also expose enough coarse identity for UI handoff:
+
+- addon family
+- effective dialogue table name
+
 ### 2. Record provenance in `TalkHandler`
 
 When `TalkHandler` resolves a line:
@@ -185,12 +197,25 @@ Suggested fields:
 - context-aware runtime-only flag
 - last explicit retranslate result
 - observation timestamp
+- `View In DB Manager`
 
 The debugger should clearly distinguish:
 
 - `DB reuse`
 - `Fresh live translation`
 - `Fresh live translation (runtime-only dialogue context)`
+
+The `View In DB Manager` action should:
+
+- open the existing DB manager window
+- preselect `TalkMessage` when the current snapshot is `Talk`
+- preselect `BattleTalkMessage` when the current snapshot is `BattleTalk`
+
+First-pass limit:
+
+- no exact-row filter
+- no auto-delete
+- no mutation from the debugger itself
 
 ### 5. Keep failure behavior simple
 
@@ -209,7 +234,9 @@ Only show what the handlers actually observed while resolving the visible line.
    - live translation with runtime-only context
 3. The handler writes one in-memory visible dialogue diagnostics snapshot.
 4. `/eglotranslatordebugger` reads and renders the latest snapshot.
-5. The explicit retranslate action updates the last retranslate result in the
+5. When requested, the debugger opens `/eglodbmanager` against the relevant
+   dialogue table for the current snapshot.
+6. The explicit retranslate action updates the last retranslate result in the
    same in-memory state.
 
 ## Files Expected To Change
@@ -219,11 +246,17 @@ Smallest expected touch set:
 - `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
 - `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
 - `PluginUI/TranslatorMetricsWindow.cs`
+- `DBManagerUI/DBEditorWindow.cs`
 
 Possible new helper file if needed:
 
 - one small runtime-only visible dialogue diagnostics store under an existing
   runtime or translator-adjacent namespace
+
+Possible small plugin-runtime touch:
+
+- a narrow handoff method or delegate that opens the DB manager and selects the
+  requested dialogue table
 
 Avoid touching `DbOperations.cs` unless the implementation proves it is needed
 for clearer engine labels only.
@@ -277,6 +310,10 @@ Recommended in-game:
   it shows the runtime-only provenance
 - use `Retranslate Visible Dialogue And Persist` and verify the retranslate
   outcome updates clearly
+- use `View In DB Manager` from a visible `Talk` snapshot and verify
+  `/eglodbmanager` opens on `TalkMessage`
+- use `View In DB Manager` from a visible `BattleTalk` snapshot and verify
+  `/eglodbmanager` opens on `BattleTalkMessage`
 - repeat the same checks for `BattleTalk`
 
 ## Success Criteria
