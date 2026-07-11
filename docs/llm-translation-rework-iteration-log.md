@@ -2766,3 +2766,47 @@ turning into an opaque pile of partial changes.
 - Next cut:
   - resolve the stale PR `#202` review threads now covered by the current
     branch head and request the final human merge pass into `v4-series`
+
+## Iteration 71 - Record The Official Publication Of The LLM Rework Stable Cut
+
+- Date: 2026-07-11
+- Branch: `v4-series`
+- Goal:
+  - record the transition from "submitted" to "published" after the official
+    `DalamudPluginsD17` stable PR merged
+  - align the repo-local release history and backlog docs with the now-live
+    official package state
+- Files touched:
+  - `CHANGELOG.md`
+  - `docs/github-issue-backlog.md`
+  - `docs/llm-translation-rework-iteration-log.md`
+- External follow-up actions performed:
+  - confirmed the official stable submission merged as
+    `goatcorp/DalamudPluginsD17`
+    [PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) on
+    2026-07-11
+  - confirmed `v4.2601.0710.1250` is now the published official stable build
+  - prepared the issue-tracker follow-up split:
+    - close `#196` and `#201` as published release outcomes
+    - keep `#148`, `#174`, and `#176` open as broader or only partially
+      addressed work
+- What changed:
+  - changed the changelog entry for `v4.2601.0710.1250` from submitted to
+    published, including the official `DalamudPluginsD17` PR reference and
+    publication date
+  - added the new official release to the long-term
+    `DalamudPluginsD17` release timeline
+  - refreshed the backlog document so the published `#196` / `#201` outcomes
+    are recorded separately from the still-open LLM rework follow-up items
+- Behavior-sensitive risks:
+  - this is documentation and tracker-maintenance only; it does not change the
+    plugin runtime
+  - `#148`, `#174`, and `#176` intentionally remain open so publication is not
+    misread as full completion of the broader LLM roadmap
+- Validation:
+  - not run; repo changes are documentation-only and the official release
+    publication was verified externally
+- Next cut:
+  - collect fresh field validation on the now-published `4.2601.0710.1250`
+    build for the remaining open LLM/runtime issues before choosing the next
+    engineering slice

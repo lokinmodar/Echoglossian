@@ -7,12 +7,14 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0710.1250`
+## Published Release `v4.2601.0710.1250`
 
 This package advances the LLM dialogue runtime and provider workflow line and
-has been submitted for the next official Dalamud stable update.
+is now live in the official Dalamud feed.
 
-Pending publication in `DalamudPluginsD17`.
+Published in `DalamudPluginsD17` via
+[PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) on
+2026-07-11.
 
 Highlights:
 
@@ -91,6 +93,7 @@ repository workflow.
 | 2026-05-04 | [PR #8522](https://github.com/goatcorp/DalamudPluginsD17/pull/8522) `v4.2600.x` hotfix | first-launch config creation fix |
 | 2026-05-12 | [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626) `v4.2600.1105.x` | setup, engine selection, cache-concurrency, and version-reuse stabilization |
 | 2026-06-01 | [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) `v4.2601.0531.0115` | native dialogue/toast reflow stabilization, ToastGui route, and cross-surface isolation fixes |
+| 2026-07-11 | [PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) `v4.2601.0710.1250` | LLM structured dialogue/runtime release: custom OpenAI-compatible providers, live model refresh, debugger diagnostics, and prompt/history hardening |
 
 ## Pre-Official History
 

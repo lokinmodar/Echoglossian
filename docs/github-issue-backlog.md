@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-06-20
+Snapshot date: 2026-07-11
 
 This document is a lightweight backlog snapshot derived from the current open
 GitHub issues. It is meant to keep release fallout separate from medium-term
@@ -10,20 +10,32 @@ When the user asks to "read the issues" or "update the issue list", the
 default source of truth for that request is the open issue tracker in
 `lokinmodar/Echoglossian`.
 
-## Tracker Review Update (2026-06-20)
+## Publication Update (2026-07-11)
 
-This pass re-read all currently open issues and all available issue comments
-in the tracker (27 open issues at review time).
+This pass is a targeted post-publication update after
+`v4.2601.0710.1250` went live through the official
+`DalamudPluginsD17` feed.
 
-Delta since the 2026-06-01 pass:
+It rechecked the current open issue list (27 open issues at review time) and
+re-read the issue comments for `#148`, `#174`, `#176`, `#196`, and `#201` to
+separate what is now officially published and closeable from what remains open
+as broader follow-up work.
 
-- no new issues were opened
-- `#206` received fresh post-release comments confirming the bug still
-  reproduces on the latest installed official build
-- `#171` received a new comment that again points at dynamic `ToDoList` /
-  tracker progression not updating after quest-state changes
-- the rest of the tracker is materially unchanged and remains open for the same
-  reasons documented in the previous pass
+Delta since the 2026-06-20 pass:
+
+- official `v4.2601.0710.1250` is now live after
+  [PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) merged
+  on 2026-07-11
+- `#196` and `#201` move from active product-direction backlog to
+  published-and-closed release outcomes
+- `#148` remains open because the shipped structured-dialogue work is only the
+  first foundation slice, not the full glossary and metadata scope described
+  in the issue
+- `#174` and `#176` remain open because the release improved operator tooling
+  and prompt/context behavior, but the open issue comments still point at
+  broader persistence and latency follow-up rather than a clean validated
+  closure
+- no new issues were opened and 27 issues remain open
 
 ### Release-validated in official `v4.2601.0531.0115` and closed
 
@@ -58,9 +70,30 @@ Notes:
 ### Product-direction backlog (not pure break/fix)
 
 - `#209` local LLM context limiting/disable controls
-- `#201` explicit feedback for quota/usage-limit/provider failures
-- `#196` custom OpenAI-compatible provider path
 - `#148` structured input/output for glossary and metadata
+
+## Recently Closed In Published `4.2601.0710.1250`
+
+This package is now live in the official Dalamud feed after
+[PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) merged on
+2026-07-11.
+
+- `#196` Add Custom OpenAI-Compatible API Support
+- `#201` Add more visible feedback about LLM API usage limits exceeded
+
+Notes:
+
+- `#196` is now represented by the shipped custom OpenAI-compatible provider
+  path, provider-aware runtime behavior, and live model-refresh / debugger
+  support in the official build.
+- `#201` is now represented by the shipped actionable LLM failure
+  notifications, provider-aware runtime failure classification, and clearer
+  debugger/runtime feedback for quota and endpoint failures.
+- `#148` stays open because the release shipped the first structured-dialogue
+  foundation, not the full glossary/metadata scope requested in that issue.
+- `#174` and `#176` stay open as improved-but-not-closed follow-up work:
+  operator retranslation / DB semantics and local-LLM latency still need
+  separate field validation and likely further iteration.
 
 ### Compatibility and long-tail backlog
 
@@ -266,6 +299,10 @@ highly visible and appear to have a narrow root cause.
 These are tightly related enough that they should be treated as one product and
 runtime direction rather than isolated one-off fixes.
 
+The first official release of this line is now published in
+`4.2601.0710.1250`, but the remaining items below still need field validation
+or broader follow-up beyond what that release shipped.
+
 ### #174 Translate already saved translated texts does not work
 
 - Priority: P1
@@ -280,17 +317,6 @@ runtime direction rather than isolated one-off fixes.
   - This now belongs squarely in the same operator-facing cluster as dialogue
     retranslation controls and translator diagnostics.
 
-### #201 Add more visible feedback about LLM API usage limits exceeded
-
-- Priority: P1
-- Ease: medium
-- Status: active UX/runtime feedback gap
-- Notes:
-  - This remains the clearest issue asking for explicit operator feedback when
-    LLM providers fail due to quota, endpoint, or upstream usage-limit reasons.
-  - It is now clearly part of the same translator-debugger / actionable-failure
-    direction as `#174`, `#176`, and `#196`.
-
 ### #176 Overhead de ~1s entre captura do texto e exibição da tradução com LLM local
 
 - Priority: P1
@@ -302,17 +328,6 @@ runtime direction rather than isolated one-off fixes.
   - The user-facing screenshots and discussion make it clear that "single
     ongoing conversation" and filtering unnecessary text are part of the same
     desired direction, not a separate enhancement.
-
-### #196 Add Custom OpenAI-Compatible API Support
-
-- Priority: P1
-- Ease: medium
-- Status: active platform/configuration enhancement
-- Notes:
-  - This belongs in the same LLM operator/runtime cluster now that users are
-    actively testing multiple providers and custom endpoints.
-  - It also intersects `#203` and `#204`, because provider differentiation and
-    diagnostics matter more once a custom OpenAI-compatible path exists.
 
 ### #148 Structured input and output for glossary and metadata
 
@@ -516,8 +531,8 @@ work rather than release fallout.
 3. `#189`
 4. `#204`
 5. `#203`
-6. the active LLM rework cluster: `#174`, `#201`, `#176`, `#196`, `#148`
-7. `#212` + `#201` as one "provider limits vs operator feedback" UX cluster
+6. the remaining active LLM rework cluster: `#174`, `#176`, `#148`, `#209`
+7. `#212` as provider-limits field validation against the newer feedback path
 8. `#175`
 9. reassess `#171` only after `#207/#189/#172` and `#203/#204/#206` are clearer
 10. `#167`
