@@ -7,6 +7,27 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0712.1140`
+
+This package has been prepared for submission to the official Dalamud feed and
+extends the story-surface debugger and persistence tooling shipped in the
+current `v4` line.
+
+Highlights:
+
+- added explicit retranslate-and-persist coverage for visible `TalkSubtitle`,
+  `CutSceneSelectString`, and `TextGimmickHint` story-facing surfaces alongside
+  the existing `Talk` and `BattleTalk` flows
+- added latest visible story-surface provenance inspection in
+  `/eglotranslatordebugger`, including runtime provenance, effective table,
+  last update status, and a direct `View In DB Manager` handoff
+- extracted the DB-manager read-only inspection table primitives into reusable
+  shared UI components so the debugger and DB manager render the same inspection
+  structures while keeping their data providers separate
+- hardened the new story-surface diagnostics path with follow-up fixes for enum
+  mapping safety, latest-snapshot consistency, retranslation outcome promotion,
+  and operator-facing fallback semantics
+
 ## Published Release `v4.2601.0710.1250`
 
 This package advances the LLM dialogue runtime and provider workflow line and
