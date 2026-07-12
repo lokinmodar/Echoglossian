@@ -39,7 +39,7 @@ public static class VisibleStorySurfaceDiagnosticsStore
       SnapshotsBySurface.Remove(surface);
       if (latestSurface == surface)
       {
-        latestSurface = null;
+        latestSurface = ResolveLatestSurfaceUnsafe();
       }
     }
   }
@@ -94,6 +94,7 @@ public static class VisibleStorySurfaceDiagnosticsStore
         LastRetranslationMessage = message,
         ObservedAtUtc = observedAtUtc,
       };
+      latestSurface = surface;
     }
   }
 
@@ -108,10 +109,41 @@ public static class VisibleStorySurfaceDiagnosticsStore
       if (latestSurface == null ||
           !SnapshotsBySurface.TryGetValue(latestSurface.Value, out var snapshot))
       {
-        return null;
+        latestSurface = ResolveLatestSurfaceUnsafe();
+        if (latestSurface == null ||
+            !SnapshotsBySurface.TryGetValue(latestSurface.Value, out snapshot))
+        {
+          return null;
+        }
       }
 
       return snapshot;
     }
+  }
+
+  /// <summary>
+  ///     Resolves the retained surface with the most recent observed snapshot
+  ///     timestamp.
+  /// </summary>
+  /// <returns>
+  ///     The latest retained surface, or <see langword="null"/> when none
+  ///     remain.
+  /// </returns>
+  private static VisibleStorySurfaceKind? ResolveLatestSurfaceUnsafe()
+  {
+    VisibleStorySurfaceKind? resolvedSurface = null;
+    var latestObservedAtUtc = DateTime.MinValue;
+
+    foreach (var snapshotEntry in SnapshotsBySurface)
+    {
+      if (resolvedSurface == null ||
+          snapshotEntry.Value.ObservedAtUtc > latestObservedAtUtc)
+      {
+        resolvedSurface = snapshotEntry.Key;
+        latestObservedAtUtc = snapshotEntry.Value.ObservedAtUtc;
+      }
+    }
+
+    return resolvedSurface;
   }
 }

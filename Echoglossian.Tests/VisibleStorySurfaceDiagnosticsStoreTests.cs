@@ -81,4 +81,112 @@ public class VisibleStorySurfaceDiagnosticsStoreTests
         VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot()!
             .Value.LastRetranslationMessage);
   }
+
+  /// <summary>
+  ///     Ensures clearing the current latest surface falls back to the newest
+  ///     retained snapshot instead of leaving the debugger without any latest
+  ///     snapshot.
+  /// </summary>
+  [Fact]
+  public void Clear_RemovingLatestSurfacePromotesNewestRemainingSnapshot()
+  {
+    VisibleStorySurfaceDiagnosticsStore.Clear();
+
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.Talk,
+            VisibleStorySurfaceProvenanceKind.DbReuse,
+            "TalkMessage",
+            string.Empty,
+            "Original talk",
+            string.Empty,
+            string.Empty,
+            "Translated talk",
+            string.Empty,
+            false,
+            2,
+            new DateTime(2026, 07, 11, 15, 0, 0, DateTimeKind.Utc),
+            null,
+            null));
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.TextGimmickHint,
+            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+            "TextGimmickHintMessage",
+            string.Empty,
+            "Original hint",
+            string.Empty,
+            string.Empty,
+            "Translated hint",
+            string.Empty,
+            false,
+            8,
+            new DateTime(2026, 07, 11, 15, 1, 0, DateTimeKind.Utc),
+            null,
+            null));
+
+    VisibleStorySurfaceDiagnosticsStore.Clear(
+        VisibleStorySurfaceKind.TextGimmickHint);
+
+    Assert.Equal(
+        VisibleStorySurfaceKind.Talk,
+        VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot()!.Value.Surface);
+  }
+
+  /// <summary>
+  ///     Ensures explicit retranslation promotes the updated surface to the
+  ///     latest debugger snapshot.
+  /// </summary>
+  [Fact]
+  public void SetRetranslationOutcome_PromotesUpdatedSurfaceToLatest()
+  {
+    VisibleStorySurfaceDiagnosticsStore.Clear();
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.Talk,
+            VisibleStorySurfaceProvenanceKind.DbReuse,
+            "TalkMessage",
+            string.Empty,
+            "Original talk",
+            string.Empty,
+            string.Empty,
+            "Translated talk",
+            string.Empty,
+            false,
+            2,
+            new DateTime(2026, 07, 11, 15, 0, 0, DateTimeKind.Utc),
+            null,
+            null));
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.TalkSubtitle,
+            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+            "TalkSubtitleMessage",
+            string.Empty,
+            "Original subtitle",
+            string.Empty,
+            string.Empty,
+            "Translated subtitle",
+            string.Empty,
+            false,
+            2,
+            new DateTime(2026, 07, 11, 15, 1, 0, DateTimeKind.Utc),
+            null,
+            null));
+
+    VisibleStorySurfaceDiagnosticsStore.SetRetranslationOutcome(
+        VisibleStorySurfaceKind.Talk,
+        true,
+        VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(
+            VisibleStorySurfaceKind.Talk),
+        new DateTime(2026, 07, 11, 15, 2, 0, DateTimeKind.Utc));
+
+    var latestSnapshot = VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot()!
+        .Value;
+    Assert.Equal(VisibleStorySurfaceKind.Talk, latestSnapshot.Surface);
+    Assert.Equal(
+        VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(
+            VisibleStorySurfaceKind.Talk),
+        latestSnapshot.LastRetranslationMessage);
+  }
 }

@@ -3,10 +3,13 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Game.Addon.Lifecycle;
+using static Dalamud.Plugin.Services.IAddonLifecycle;
 using Echoglossian.NativeUI.AddonHandlers.Talk;
 using Echoglossian.NativeUI.Handlers;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Properties;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -50,6 +53,25 @@ public class VisibleStorySurfaceRetranslationDispatcherTests
         result.SurfaceName);
   }
 
+  /// <summary>
+  ///     Ensures the dispatcher uses a neutral fallback surface label when no
+  ///     visible story-facing handler is applicable.
+  /// </summary>
+  [Fact]
+  public async Task DispatchAsync_ReturnsUnknownSurfaceNameWhenNoHandlerApplies()
+  {
+    var dispatcher = new VisibleStorySurfaceRetranslationDispatcher();
+
+    var result = await dispatcher.DispatchAsync([]);
+
+    Assert.False(result.IsApplicable);
+    Assert.Null(result.Surface);
+    Assert.Equal(Resources.TranslatorDebuggerUnknown, result.SurfaceName);
+    Assert.Equal(
+        VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage(),
+        result.Message);
+  }
+
   private sealed class FakeRetranslationHandler :
       IAddonTranslationHandler,
       IVisibleDialogueRetranslationHandler
@@ -70,9 +92,9 @@ public class VisibleStorySurfaceRetranslationDispatcherTests
           surfaceName + " result");
     }
 
-    public Dictionary<AddonEvent, IAddonLifecycle.AddonEventDelegate> GetEventHandlers()
+    public Dictionary<AddonEvent, AddonEventDelegate> GetEventHandlers()
     {
-      return new Dictionary<AddonEvent, IAddonLifecycle.AddonEventDelegate>();
+      return new Dictionary<AddonEvent, AddonEventDelegate>();
     }
 
     public Task<VisibleDialogueRetranslationResult> RetranslateVisibleTextAndPersistAsync()

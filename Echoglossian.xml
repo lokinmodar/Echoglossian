@@ -20969,6 +20969,16 @@
             </summary>
             <returns>The latest snapshot, or <see langword="null"/> when none exist.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.ResolveLatestSurfaceUnsafe">
+            <summary>
+                Resolves the retained surface with the most recent observed snapshot
+                timestamp.
+            </summary>
+            <returns>
+                The latest retained surface, or <see langword="null"/> when none
+                remain.
+            </returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind">
             <summary>
                 Identifies a player-visible story-facing surface that can expose

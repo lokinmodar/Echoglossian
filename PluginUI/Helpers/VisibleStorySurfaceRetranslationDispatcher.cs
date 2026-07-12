@@ -47,7 +47,7 @@ public sealed class VisibleStorySurfaceRetranslationDispatcher
         false,
         false,
         null,
-        Resources.TranslatorDebuggerVisibleStorySurfaceSectionTitle,
+        Resources.TranslatorDebuggerUnknown,
         VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage());
   }
 }

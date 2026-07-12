@@ -5,6 +5,7 @@
 
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Properties;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -24,6 +25,18 @@ public class VisibleStorySurfaceInspectionModelBuilderTests
         "SelectString",
         VisibleStorySurfaceTableMap.Resolve(
             VisibleStorySurfaceKind.CutSceneSelectString));
+  }
+
+  /// <summary>
+  ///     Ensures unknown story surfaces fail loudly instead of silently
+  ///     reusing the TalkMessage table mapping.
+  /// </summary>
+  [Fact]
+  public void Resolve_ThrowsForUnknownSurfaceMapping()
+  {
+    Assert.Throws<ArgumentOutOfRangeException>(
+        () => VisibleStorySurfaceTableMap.Resolve(
+            (VisibleStorySurfaceKind)999));
   }
 
   /// <summary>

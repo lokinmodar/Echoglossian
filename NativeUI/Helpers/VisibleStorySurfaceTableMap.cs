@@ -24,7 +24,7 @@ public static class VisibleStorySurfaceTableMap
       VisibleStorySurfaceKind.TalkSubtitle => nameof(TalkSubtitleMessage),
       VisibleStorySurfaceKind.CutSceneSelectString => nameof(SelectString),
       VisibleStorySurfaceKind.TextGimmickHint => nameof(TextGimmickHintMessage),
-      _ => nameof(TalkMessage),
+      _ => throw new ArgumentOutOfRangeException(nameof(surface), surface, null),
     };
   }
 }

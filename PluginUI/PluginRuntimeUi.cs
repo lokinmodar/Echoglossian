@@ -180,7 +180,7 @@ public partial class Echoglossian
           false,
           false,
           null,
-          Resources.TranslatorDebuggerVisibleStorySurfaceSectionTitle,
+          Resources.TranslatorDebuggerUnknown,
           VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage());
     }
 
@@ -206,7 +206,7 @@ public partial class Echoglossian
         false,
         false,
         null,
-        Resources.TranslatorDebuggerVisibleStorySurfaceSectionTitle,
+        Resources.TranslatorDebuggerUnknown,
         VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage());
   }
 
