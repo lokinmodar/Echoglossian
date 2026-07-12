@@ -65,15 +65,15 @@ namespace Echoglossian.DBManagerUI.Components
         return;
       }
 
-      if (rows.Count == 0)
-      {
-        ImGui.Text(this.noRecordsFoundMessage);
-        return;
-      }
-
       if (columns == null || columns.Count == 0)
       {
         ImGui.Text(this.noColumnsMessage);
+        return;
+      }
+
+      if (rows.Count == 0)
+      {
+        ImGui.Text(this.noRecordsFoundMessage);
         return;
       }
 

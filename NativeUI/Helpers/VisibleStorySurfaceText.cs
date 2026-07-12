@@ -32,7 +32,7 @@ public static class VisibleStorySurfaceText
           Resources.TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString,
       VisibleStorySurfaceKind.TextGimmickHint =>
           Resources.TranslatorDebuggerVisibleStorySurfaceNameTextGimmickHint,
-      _ => Resources.TranslatorDebuggerVisibleStorySurfaceNameTalk,
+      _ => throw new ArgumentOutOfRangeException(nameof(surface), surface, null),
     };
   }
 
@@ -52,7 +52,10 @@ public static class VisibleStorySurfaceText
           Resources.TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation,
       VisibleStorySurfaceProvenanceKind.FreshLiveTranslationRuntimeOnlyDialogueContext =>
           Resources.TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslationRuntimeOnlyContext,
-      _ => Resources.TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation,
+      _ => throw new ArgumentOutOfRangeException(
+          nameof(provenance),
+          provenance,
+          null),
     };
   }
 

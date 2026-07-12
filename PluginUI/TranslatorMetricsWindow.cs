@@ -31,9 +31,12 @@ public sealed class TranslatorMetricsWindow
   ///     class.
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
+  /// <param name="openDbEditorForTable">
+  ///     Delegate used to open the DB manager on the requested table.
+  /// </param>
   /// <param name="retranslateVisibleDialogueAsync">
-  ///     Delegate used to explicitly retranslate the currently visible dialogue
-  ///     line and persist the refreshed result.
+  ///     Delegate used to explicitly retranslate the currently visible
+  ///     story-facing text and persist the refreshed result.
   /// </param>
   public TranslatorMetricsWindow(
       Config config,

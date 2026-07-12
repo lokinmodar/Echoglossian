@@ -16027,15 +16027,15 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult">
             <summary>
-                Describes the outcome of one explicit visible-dialogue retranslation
+                Describes the outcome of one explicit visible story-surface retranslation
                 request.
             </summary>
             <param name="IsApplicable">
-            Whether the handler had an active visible dialogue line to operate on.
+            Whether the handler had an active visible story-facing payload to operate on.
             </param>
             <param name="Success">
             Whether the visible retranslation completed successfully for the current
-            line.
+            payload.
             </param>
             <param name="Surface">
             The visible story surface that handled the request, when applicable.
@@ -16045,15 +16045,15 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.#ctor(System.Boolean,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind},System.String,System.String)">
             <summary>
-                Describes the outcome of one explicit visible-dialogue retranslation
+                Describes the outcome of one explicit visible story-surface retranslation
                 request.
             </summary>
             <param name="IsApplicable">
-            Whether the handler had an active visible dialogue line to operate on.
+            Whether the handler had an active visible story-facing payload to operate on.
             </param>
             <param name="Success">
             Whether the visible retranslation completed successfully for the current
-            line.
+            payload.
             </param>
             <param name="Surface">
             The visible story surface that handled the request, when applicable.
@@ -16063,13 +16063,13 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.IsApplicable">
             <summary>
-            Whether the handler had an active visible dialogue line to operate on.
+            Whether the handler had an active visible story-facing payload to operate on.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.Success">
             <summary>
             Whether the visible retranslation completed successfully for the current
-            line.
+            payload.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.Surface">
@@ -22554,9 +22554,12 @@
                 class.
             </summary>
             <param name="config">The active plugin configuration.</param>
+            <param name="openDbEditorForTable">
+                Delegate used to open the DB manager on the requested table.
+            </param>
             <param name="retranslateVisibleDialogueAsync">
-                Delegate used to explicitly retranslate the currently visible dialogue
-                line and persist the refreshed result.
+                Delegate used to explicitly retranslate the currently visible
+                story-facing text and persist the refreshed result.
             </param>
         </member>
         <member name="P:Echoglossian.TranslatorMetricsWindow.IsOpen">
