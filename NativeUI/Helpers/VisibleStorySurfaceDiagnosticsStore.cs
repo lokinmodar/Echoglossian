@@ -74,7 +74,10 @@ public static class VisibleStorySurfaceDiagnosticsStore
   /// <param name="surface">The surface that handled the request.</param>
   /// <param name="success">Whether the explicit retranslation succeeded.</param>
   /// <param name="message">The user-facing outcome message.</param>
-  /// <param name="observedAtUtc">The UTC timestamp for the outcome.</param>
+  /// <param name="observedAtUtc">
+  /// The UTC timestamp to store as the snapshot's latest update time for the
+  /// explicit retranslation outcome.
+  /// </param>
   public static void SetRetranslationOutcome(
       VisibleStorySurfaceKind surface,
       bool success,

@@ -24,7 +24,10 @@ namespace Echoglossian.NativeUI.Helpers;
 /// <param name="EffectiveTranslationEngineId">
 /// The effective translation engine identifier used for the snapshot.
 /// </param>
-/// <param name="ObservedAtUtc">The UTC timestamp when the snapshot was observed.</param>
+/// <param name="ObservedAtUtc">
+/// The UTC timestamp when this snapshot was last updated, either from a live
+/// observation or from an explicit retranslation outcome.
+/// </param>
 /// <param name="LastRetranslationSuccess">
 /// The latest explicit retranslation success flag for this surface.
 /// </param>

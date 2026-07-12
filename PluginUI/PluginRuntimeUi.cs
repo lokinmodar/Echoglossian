@@ -174,18 +174,10 @@ public partial class Echoglossian
   private async Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>
       RetranslateVisibleDialogueAndPersistAsync()
   {
-    if (this.registeredAddonHandlers == null || this.registeredAddonHandlers.Count == 0)
-    {
-      return new NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult(
-          false,
-          false,
-          null,
-          Resources.TranslatorDebuggerUnknown,
-          VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage());
-    }
-
+    IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)> handlers =
+        this.registeredAddonHandlers ?? [];
     var result = await this.visibleStorySurfaceRetranslationDispatcher
-        .DispatchAsync(this.registeredAddonHandlers)
+        .DispatchAsync(handlers)
         .ConfigureAwait(false);
 
     if (result.IsApplicable && result.Surface != null)
@@ -197,17 +189,7 @@ public partial class Echoglossian
           DateTime.UtcNow);
     }
 
-    if (result.IsApplicable)
-    {
-      return result;
-    }
-
-    return new NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult(
-        false,
-        false,
-        null,
-        Resources.TranslatorDebuggerUnknown,
-        VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage());
+    return result;
   }
 
   /// <summary>

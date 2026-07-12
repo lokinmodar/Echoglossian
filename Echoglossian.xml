@@ -9731,6 +9731,13 @@
             <param name="scope">The logical scope to render inside square brackets.</param>
             <param name="message">The message to write.</param>
         </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Warning(System.Exception,System.String)">
+            <summary>
+                Writes a warning log line with exception details.
+            </summary>
+            <param name="exception">The exception to include in the log entry.</param>
+            <param name="message">The message to write.</param>
+        </member>
         <member name="M:Echoglossian.PluginRuntimeLog.Error(System.String)">
             <summary>
                 Writes an error log line.
@@ -20846,7 +20853,10 @@
             <param name="EffectiveTranslationEngineId">
             The effective translation engine identifier used for the snapshot.
             </param>
-            <param name="ObservedAtUtc">The UTC timestamp when the snapshot was observed.</param>
+            <param name="ObservedAtUtc">
+            The UTC timestamp when this snapshot was last updated, either from a live
+            observation or from an explicit retranslation outcome.
+            </param>
             <param name="LastRetranslationSuccess">
             The latest explicit retranslation success flag for this surface.
             </param>
@@ -20874,7 +20884,10 @@
             <param name="EffectiveTranslationEngineId">
             The effective translation engine identifier used for the snapshot.
             </param>
-            <param name="ObservedAtUtc">The UTC timestamp when the snapshot was observed.</param>
+            <param name="ObservedAtUtc">
+            The UTC timestamp when this snapshot was last updated, either from a live
+            observation or from an explicit retranslation outcome.
+            </param>
             <param name="LastRetranslationSuccess">
             The latest explicit retranslation success flag for this surface.
             </param>
@@ -20920,7 +20933,10 @@
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.ObservedAtUtc">
-            <summary>The UTC timestamp when the snapshot was observed.</summary>
+            <summary>
+            The UTC timestamp when this snapshot was last updated, either from a live
+            observation or from an explicit retranslation outcome.
+            </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.LastRetranslationSuccess">
             <summary>
@@ -20961,7 +20977,10 @@
             <param name="surface">The surface that handled the request.</param>
             <param name="success">Whether the explicit retranslation succeeded.</param>
             <param name="message">The user-facing outcome message.</param>
-            <param name="observedAtUtc">The UTC timestamp for the outcome.</param>
+            <param name="observedAtUtc">
+            The UTC timestamp to store as the snapshot's latest update time for the
+            explicit retranslation outcome.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot">
             <summary>

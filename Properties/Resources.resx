@@ -1454,7 +1454,7 @@
     <value>Runtime-only dialogue context</value>
   </data>
   <data name="TranslatorDebuggerVisibleStorySurfaceFieldObservedUtc" xml:space="preserve">
-    <value>Observed (UTC)</value>
+    <value>Last updated (UTC)</value>
   </data>
   <data name="TranslatorDebuggerVisibleStorySurfaceFieldOriginalSpeaker" xml:space="preserve">
     <value>Original speaker</value>

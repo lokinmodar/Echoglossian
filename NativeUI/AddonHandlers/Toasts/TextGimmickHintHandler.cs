@@ -666,7 +666,8 @@ internal sealed class TextGimmickHintHandler :
     catch (Exception ex)
     {
       PluginRuntimeLog.Warning(
-          $"[{TextGimmickHintAddonName}] Failed to persist translated TextGimmickHint text. {ex.Message}");
+          ex,
+          $"[{TextGimmickHintAddonName}] Failed to persist translated TextGimmickHint text.");
     }
 
     lock (this.stateGate)
