@@ -23,6 +23,7 @@ public sealed class TranslatorMetricsWindow
   private readonly InspectionTableView visibleStorySurfaceInspectionTable;
   private Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>?
       activeRetranslationTask;
+  private VisibleStorySurfaceDiagnosticsSnapshot? activeVisibleStorySurfaceSnapshot;
   private string? lastRetranslationMessage;
   private bool? lastRetranslationSucceeded;
 
@@ -357,7 +358,8 @@ public sealed class TranslatorMetricsWindow
   /// <returns>The reusable inspection rows for the latest snapshot.</returns>
   private IReadOnlyList<InspectionRow> BuildVisibleStorySurfaceInspectionRows()
   {
-    var snapshot = VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot();
+    var snapshot = this.activeVisibleStorySurfaceSnapshot ??
+        VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot();
     if (snapshot == null)
     {
       return [];
@@ -386,11 +388,19 @@ public sealed class TranslatorMetricsWindow
       return;
     }
 
-    this.visibleStorySurfaceInspectionTable.Draw();
-    if (ImGui.Button(
-            Resources.TranslatorDebuggerVisibleStorySurfaceViewInDbManager))
+    this.activeVisibleStorySurfaceSnapshot = snapshot;
+    try
     {
-      this.openDbEditorForTable(snapshot.Value.TableName);
+      this.visibleStorySurfaceInspectionTable.Draw();
+      if (ImGui.Button(
+              Resources.TranslatorDebuggerVisibleStorySurfaceViewInDbManager))
+      {
+        this.openDbEditorForTable(snapshot.Value.TableName);
+      }
+    }
+    finally
+    {
+      this.activeVisibleStorySurfaceSnapshot = null;
     }
   }
 
