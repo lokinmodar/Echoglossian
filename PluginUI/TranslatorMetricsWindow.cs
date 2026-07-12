@@ -17,8 +17,10 @@ namespace Echoglossian;
 public sealed class TranslatorMetricsWindow
 {
   private readonly Config config;
+  private readonly Action<string> openDbEditorForTable;
   private readonly Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
       retranslateVisibleDialogueAsync;
+  private readonly InspectionTableView visibleStorySurfaceInspectionTable;
   private Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>?
       activeRetranslationTask;
   private string? lastRetranslationMessage;
@@ -35,11 +37,20 @@ public sealed class TranslatorMetricsWindow
   /// </param>
   public TranslatorMetricsWindow(
       Config config,
+      Action<string> openDbEditorForTable,
       Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
           retranslateVisibleDialogueAsync)
   {
     this.config = config;
+    this.openDbEditorForTable = openDbEditorForTable;
     this.retranslateVisibleDialogueAsync = retranslateVisibleDialogueAsync;
+    this.visibleStorySurfaceInspectionTable = new InspectionTableView(
+        tableId: "visibleStorySurfaceInspection",
+        getColumns: VisibleStorySurfaceInspectionModelBuilder.BuildColumns,
+        getRows: this.BuildVisibleStorySurfaceInspectionRows,
+        noRecordsLoadedMessage: Resources.TranslatorDebuggerVisibleStorySurfaceNoSnapshot,
+        noRecordsFoundMessage: Resources.TranslatorDebuggerVisibleStorySurfaceNoSnapshot,
+        noColumnsMessage: Resources.TranslatorDebuggerVisibleStorySurfaceNoColumns);
   }
 
   /// <summary>
@@ -129,6 +140,10 @@ public sealed class TranslatorMetricsWindow
       ImGui.TextWrapped(this.lastRetranslationMessage);
       ImGui.PopStyleColor();
     }
+
+    ImGui.Spacing();
+    this.DrawVisibleStorySurfaceDiagnostics();
+    ImGui.Separator();
 
     var snapshots = TranslatorMetricsCollector.GetSnapshots();
     if (snapshots.Count == 0)
@@ -315,7 +330,7 @@ public sealed class TranslatorMetricsWindow
     {
       this.lastRetranslationSucceeded = false;
       this.lastRetranslationMessage =
-          "Visible dialogue retranslation failed unexpectedly before a result could be reported.";
+          VisibleStorySurfaceText.GetUnexpectedFailureMessage();
       return;
     }
 
@@ -323,13 +338,57 @@ public sealed class TranslatorMetricsWindow
     {
       this.lastRetranslationSucceeded = false;
       this.lastRetranslationMessage =
-          "Visible dialogue retranslation was canceled before completion.";
+          VisibleStorySurfaceText.GetCanceledMessage();
       return;
     }
 
     var result = completedTask.GetAwaiter().GetResult();
     this.lastRetranslationSucceeded = result.Success;
     this.lastRetranslationMessage = result.Message;
+  }
+
+  /// <summary>
+  ///     Builds the reusable inspection rows for the latest retained visible
+  ///     story-surface diagnostics snapshot.
+  /// </summary>
+  /// <returns>The reusable inspection rows for the latest snapshot.</returns>
+  private IReadOnlyList<InspectionRow> BuildVisibleStorySurfaceInspectionRows()
+  {
+    var snapshot = VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot();
+    if (snapshot == null)
+    {
+      return [];
+    }
+
+    return VisibleStorySurfaceInspectionModelBuilder.BuildRows(
+        snapshot.Value);
+  }
+
+  /// <summary>
+  ///     Draws the latest visible story-surface provenance snapshot and DB
+  ///     manager handoff controls.
+  /// </summary>
+  private void DrawVisibleStorySurfaceDiagnostics()
+  {
+    ImGui.TextWrapped(
+        Resources.TranslatorDebuggerVisibleStorySurfaceSectionTitle);
+    ImGui.TextWrapped(
+        Resources.TranslatorDebuggerVisibleStorySurfaceDescription);
+
+    var snapshot = VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot();
+    if (snapshot == null)
+    {
+      ImGui.TextWrapped(
+          Resources.TranslatorDebuggerVisibleStorySurfaceNoSnapshot);
+      return;
+    }
+
+    this.visibleStorySurfaceInspectionTable.Draw();
+    if (ImGui.Button(
+            Resources.TranslatorDebuggerVisibleStorySurfaceViewInDbManager))
+    {
+      this.openDbEditorForTable(snapshot.Value.TableName);
+    }
   }
 
   /// <summary>

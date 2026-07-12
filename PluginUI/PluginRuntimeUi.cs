@@ -7,6 +7,9 @@ namespace Echoglossian;
 
 public partial class Echoglossian
 {
+  private readonly VisibleStorySurfaceRetranslationDispatcher
+      visibleStorySurfaceRetranslationDispatcher = new();
+
   /// <summary>
   /// Updates the plugin's state on each tick.
   /// </summary>
@@ -160,13 +163,13 @@ public partial class Echoglossian
   }
 
   /// <summary>
-  ///     Retranslates the currently visible Talk or BattleTalk line using the
-  ///     active engine and persists the refreshed result when a dialogue handler
-  ///     can resolve a live source line.
+  ///     Retranslates the currently visible story-facing text using the active
+  ///     engine and persists the refreshed result when a registered handler can
+  ///     resolve a live source payload.
   /// </summary>
   /// <returns>
-  ///     A result describing whether a visible dialogue line was available and
-  ///     whether the explicit retranslation succeeded.
+  ///     A result describing whether a visible story-facing surface was
+  ///     available and whether the explicit retranslation succeeded.
   /// </returns>
   private async Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>
       RetranslateVisibleDialogueAndPersistAsync()
@@ -176,32 +179,49 @@ public partial class Echoglossian
       return new NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult(
           false,
           false,
-          "Dialogue",
-          "No registered dialogue handler is currently available to retranslate visible text.");
+          null,
+          Resources.TranslatorDebuggerVisibleStorySurfaceSectionTitle,
+          VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage());
     }
 
-    foreach (var (_, handler) in this.registeredAddonHandlers)
-    {
-      if (handler is not NativeUI.AddonHandlers.Talk.IVisibleDialogueRetranslationHandler
-          visibleDialogueRetranslationHandler)
-      {
-        continue;
-      }
+    var result = await this.visibleStorySurfaceRetranslationDispatcher
+        .DispatchAsync(this.registeredAddonHandlers)
+        .ConfigureAwait(false);
 
-      var result = await visibleDialogueRetranslationHandler
-          .RetranslateVisibleTextAndPersistAsync()
-          .ConfigureAwait(false);
-      if (result.IsApplicable)
-      {
-        return result;
-      }
+    if (result.IsApplicable && result.Surface != null)
+    {
+      VisibleStorySurfaceDiagnosticsStore.SetRetranslationOutcome(
+          result.Surface.Value,
+          result.Success,
+          result.Message,
+          DateTime.UtcNow);
+    }
+
+    if (result.IsApplicable)
+    {
+      return result;
     }
 
     return new NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult(
         false,
         false,
-        "Dialogue",
-        "No visible Talk or BattleTalk line is currently available to retranslate.");
+        null,
+        Resources.TranslatorDebuggerVisibleStorySurfaceSectionTitle,
+        VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage());
+  }
+
+  /// <summary>
+  /// Opens the DB editor and preselects a requested table.
+  /// </summary>
+  /// <param name="tableName">The requested DB manager table name.</param>
+  private void OpenDbEditorForTable(string tableName)
+  {
+    if (this.dbEditorWindow == null)
+    {
+      return;
+    }
+
+    this.dbEditorWindow.OpenAndSelectTable(tableName);
   }
 
   /// <summary>

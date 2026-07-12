@@ -1244,10 +1244,10 @@
     <value>Translator Debugger and Metrics</value>
   </data>
   <data name="TranslatorDebuggerWindowDescription" xml:space="preserve">
-    <value>Aggregated runtime metrics for translator activity in this session.</value>
+    <value>Aggregated runtime metrics and latest visible story-surface provenance for this session.</value>
   </data>
   <data name="TranslatorDebuggerRetranslateVisibleDialogueAndPersist" xml:space="preserve">
-    <value>Retranslate Visible Dialogue And Persist</value>
+    <value>Retranslate Visible Story Text And Persist</value>
   </data>
   <data name="TranslatorDebuggerClearMetrics" xml:space="preserve">
     <value>Clear Metrics</value>
@@ -1256,7 +1256,7 @@
     <value>Clear Dialogue Sessions</value>
   </data>
   <data name="TranslatorDebuggerRetranslatingVisibleDialogue" xml:space="preserve">
-    <value>Retranslating the currently visible dialogue line...</value>
+    <value>Retranslating the currently visible story-facing text...</value>
   </data>
   <data name="TranslatorDebuggerNoMetricsRecorded" xml:space="preserve">
     <value>No translator metrics have been recorded in this session yet.</value>
@@ -1413,6 +1413,120 @@
   </data>
   <data name="TranslatorDebuggerNeverAttempted" xml:space="preserve">
     <value>Never attempted</value>
+  </data>
+  <data name="TranslatorDebuggerUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceSectionTitle" xml:space="preserve">
+    <value>Latest Visible Story Surface</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceDescription" xml:space="preserve">
+    <value>Most recent visible story-facing source and translated payload retained for debugger inspection.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoSnapshot" xml:space="preserve">
+    <value>No visible story-surface snapshot is currently retained.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceViewInDbManager" xml:space="preserve">
+    <value>View In DB Manager</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoColumns" xml:space="preserve">
+    <value>No visible story-surface fields are available to display.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldColumn" xml:space="preserve">
+    <value>Field</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceValueColumn" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldSurface" xml:space="preserve">
+    <value>Surface</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldProvenance" xml:space="preserve">
+    <value>Provenance</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldDbTable" xml:space="preserve">
+    <value>DB table</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldEffectiveEngine" xml:space="preserve">
+    <value>Effective engine</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldRuntimeOnlyDialogueContext" xml:space="preserve">
+    <value>Runtime-only dialogue context</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldObservedUtc" xml:space="preserve">
+    <value>Observed (UTC)</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldOriginalSpeaker" xml:space="preserve">
+    <value>Original speaker</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldOriginalText" xml:space="preserve">
+    <value>Original text</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldOriginalOptions" xml:space="preserve">
+    <value>Original options</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedSpeaker" xml:space="preserve">
+    <value>Translated speaker</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedText" xml:space="preserve">
+    <value>Translated text</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedOptions" xml:space="preserve">
+    <value>Translated options</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldLastRetranslation" xml:space="preserve">
+    <value>Last retranslation</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameTalk" xml:space="preserve">
+    <value>Talk</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameBattleTalk" xml:space="preserve">
+    <value>BattleTalk</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameTalkSubtitle" xml:space="preserve">
+    <value>TalkSubtitle</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameTextGimmickHint" xml:space="preserve">
+    <value>TextGimmickHint</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceProvenanceDbReuse" xml:space="preserve">
+    <value>DB reuse</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation" xml:space="preserve">
+    <value>Fresh live translation</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslationRuntimeOnlyContext" xml:space="preserve">
+    <value>Fresh live translation (runtime-only dialogue context)</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoVisibleText" xml:space="preserve">
+    <value>No visible {0} text is available to retranslate.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoUsableTranslation" xml:space="preserve">
+    <value>The visible {0} text did not produce a usable translated result.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfacePersistenceFailed" xml:space="preserve">
+    <value>The visible {0} text was refreshed, but persistence failed: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfacePersistedButVisibleChanged" xml:space="preserve">
+    <value>The refreshed {0} text was persisted, but the visible content changed before it could be applied.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceRetranslatedAndPersisted" xml:space="preserve">
+    <value>The visible {0} text was retranslated and persisted.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceRetranslationFailed" xml:space="preserve">
+    <value>Retranslating the visible {0} text failed before a usable result could be applied.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoVisibleSurfaceAvailable" xml:space="preserve">
+    <value>No visible story-facing text is currently available to retranslate.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceUnexpectedFailure" xml:space="preserve">
+    <value>Visible story-surface retranslation failed unexpectedly before a result could be reported.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceCanceled" xml:space="preserve">
+    <value>Visible story-surface retranslation was canceled before completion.</value>
   </data>
   <data name="GeminiModelTooltipPro" xml:space="preserve">
     <value>🔷 Legacy Gemini Pro model (default)</value>

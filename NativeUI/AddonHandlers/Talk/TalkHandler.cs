@@ -110,13 +110,16 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   /// <inheritdoc />
   public async Task<VisibleDialogueRetranslationResult> RetranslateVisibleTextAndPersistAsync()
   {
+    const VisibleStorySurfaceKind surface = VisibleStorySurfaceKind.Talk;
+    var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
     if (!this.TryCaptureCurrentTalkSource(out var originalName, out var originalText))
     {
       return new VisibleDialogueRetranslationResult(
           false,
           false,
-          TalkAddonName,
-          "No visible Talk dialogue line is available to retranslate.");
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
     }
 
     int requestId;
@@ -169,8 +172,9 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         return new VisibleDialogueRetranslationResult(
             true,
             false,
-            TalkAddonName,
-            "Talk retranslation did not produce a usable translated result.");
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoUsableTranslationMessage(surface));
       }
 
       var translatedTalkData = new TalkMessage(
@@ -212,6 +216,14 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
       if (!sourceChangedBeforeApply)
       {
+        this.RecordDiagnosticsSnapshot(
+            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+            originalName,
+            originalText,
+            translatedName,
+            translatedText,
+            usedRuntimeOnlyDialogueContext: false,
+            dialogueTranslationEngine);
         this.PublishOverlay(
             originalName,
             originalText,
@@ -224,8 +236,11 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         return new VisibleDialogueRetranslationResult(
             true,
             false,
-            TalkAddonName,
-            $"Talk retranslation updated the live line, but persistence failed: {persistenceResult}");
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistenceFailedMessage(
+                surface,
+                persistenceResult));
       }
 
       if (sourceChangedBeforeApply)
@@ -233,15 +248,18 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         return new VisibleDialogueRetranslationResult(
             true,
             true,
-            TalkAddonName,
-            "Talk retranslation was persisted, but the visible line changed before the refreshed text could be applied.");
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(
+                surface));
       }
 
       return new VisibleDialogueRetranslationResult(
           true,
           true,
-          TalkAddonName,
-          "Talk visible dialogue was retranslated and persisted.");
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(surface));
     }
     catch (Exception ex)
     {
@@ -258,8 +276,9 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       return new VisibleDialogueRetranslationResult(
           true,
           false,
-          TalkAddonName,
-          "Talk retranslation failed before a usable result could be applied.");
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslationFailedMessage(surface));
     }
   }
 
@@ -523,6 +542,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       this.translationInFlight = false;
     }
 
+    VisibleStorySurfaceDiagnosticsStore.Clear(VisibleStorySurfaceKind.Talk);
     this.nativeTalkTextNodeStateCaptured = false;
     this.nativeTalkTextNodeStateDirty = false;
     this.nativeTalkTextNodeStateCapturedForSourceText = string.Empty;
@@ -928,7 +948,20 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       this.translationInFlight = false;
     }
 
-    return !string.IsNullOrWhiteSpace(translatedText);
+    if (string.IsNullOrWhiteSpace(translatedText))
+    {
+      return false;
+    }
+
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.DbReuse,
+        originalName,
+        originalText,
+        translatedName,
+        translatedText,
+        usedRuntimeOnlyDialogueContext: false,
+        this.GetDialogueTranslationEngineId());
+    return true;
   }
 
   /// <summary>
@@ -951,6 +984,11 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
       string translatedName;
       string translatedText;
+      VisibleStorySurfaceProvenanceKind provenance;
+      bool usedRuntimeOnlyDialogueContext = false;
+      var dialogueTranslationEngine =
+          this.translationService.GetEffectiveTranslationEngineId(
+              TranslationSurfaceGroup.Dialogue);
 
       if (foundTalkMessage != null)
       {
@@ -958,6 +996,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
             ? foundTalkMessage.TranslatedSenderName ?? string.Empty
             : string.Empty;
         translatedText = foundTalkMessage.TranslatedTalkMessage ?? string.Empty;
+        provenance = VisibleStorySurfaceProvenanceKind.DbReuse;
       }
       else
       {
@@ -972,6 +1011,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
             this.translationService.WillUseDialogueContext(
                 dialogueContext,
                 TranslationSurfaceGroup.Dialogue);
+        usedRuntimeOnlyDialogueContext = usesRuntimeOnlyDialogueContext;
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
@@ -997,12 +1037,10 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
               : string.Empty;
           translatedText =
               existingTranslatedTalkMessage.TranslatedTalkMessage ?? string.Empty;
+          provenance = VisibleStorySurfaceProvenanceKind.DbReuse;
         }
         else if (!usesRuntimeOnlyDialogueContext)
         {
-          var dialogueTranslationEngine =
-              this.translationService.GetEffectiveTranslationEngineId(
-                  TranslationSurfaceGroup.Dialogue);
           var translatedTalkData = new TalkMessage(
               originalName,
               originalText,
@@ -1017,6 +1055,13 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
               DateTime.Now);
 
           await this.insertTalkMessageAsync(translatedTalkData);
+          provenance = VisibleStorySurfaceProvenanceKind.FreshLiveTranslation;
+        }
+        else
+        {
+          provenance =
+              VisibleStorySurfaceProvenanceKind
+                  .FreshLiveTranslationRuntimeOnlyDialogueContext;
         }
       }
 
@@ -1036,6 +1081,14 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
       if (!string.IsNullOrWhiteSpace(translatedText))
       {
+        this.RecordDiagnosticsSnapshot(
+            provenance,
+            originalName,
+            originalText,
+            translatedName,
+            translatedText,
+            usedRuntimeOnlyDialogueContext,
+            dialogueTranslationEngine);
         this.PublishOverlay(
             originalName,
             originalText,
@@ -1059,6 +1112,57 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
       PluginRuntimeLog.Error($"[{TalkAddonName}] Error resolving Talk translation: {ex}");
     }
+  }
+
+  /// <summary>
+  ///     Records the latest visible Talk provenance snapshot for the debugger.
+  /// </summary>
+  /// <param name="provenance">The provenance label kind to expose.</param>
+  /// <param name="originalName">The original speaker name.</param>
+  /// <param name="originalText">The original Talk text.</param>
+  /// <param name="translatedName">The translated speaker name.</param>
+  /// <param name="translatedText">The translated Talk text.</param>
+  /// <param name="usedRuntimeOnlyDialogueContext">
+  /// Whether runtime-only dialogue context influenced the live translation.
+  /// </param>
+  /// <param name="effectiveTranslationEngineId">
+  /// The effective dialogue translation engine identifier.
+  /// </param>
+  private void RecordDiagnosticsSnapshot(
+      VisibleStorySurfaceProvenanceKind provenance,
+      string originalName,
+      string originalText,
+      string translatedName,
+      string translatedText,
+      bool usedRuntimeOnlyDialogueContext,
+      int effectiveTranslationEngineId)
+  {
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.Talk,
+            provenance,
+            VisibleStorySurfaceTableMap.Resolve(VisibleStorySurfaceKind.Talk),
+            originalName,
+            originalText,
+            string.Empty,
+            translatedName,
+            translatedText,
+            string.Empty,
+            usedRuntimeOnlyDialogueContext,
+            effectiveTranslationEngineId,
+            DateTime.UtcNow,
+            null,
+            null));
+  }
+
+  /// <summary>
+  ///     Resolves the effective dialogue translation engine identifier.
+  /// </summary>
+  /// <returns>The effective dialogue translation engine identifier.</returns>
+  private int GetDialogueTranslationEngineId()
+  {
+    return this.translationService.GetEffectiveTranslationEngineId(
+        TranslationSurfaceGroup.Dialogue);
   }
 
   /// <summary>
