@@ -21,6 +21,8 @@ The approved next slice is therefore a diagnostics-first follow-up:
 - extend explicit `Retranslate Visible ... And Persist` support to every
   supported story-facing surface in this slice
 - add a non-destructive `View In DB Manager` handoff from the debugger
+- extract reusable read-only inspection display components from `DBManagerUI`
+  so both the debugger and DB manager can use the same presentation layer
 - cover:
   - `Talk`
   - `BattleTalk`
@@ -79,7 +81,9 @@ Current limitation:
    story-facing surfaces in this slice.
 4. Hand the operator off to the existing DB manager without adding destructive
    controls to the debugger.
-5. Keep the change narrow and safe for the published branch line.
+5. Reuse one shared read-only display layer across debugger and DB manager
+   while keeping data providers context-specific.
+6. Keep the change narrow and safe for the published branch line.
 
 ## Non-Goals
 
@@ -89,6 +93,7 @@ Current limitation:
 - no change to runtime-only dialogue-context persistence rules
 - no latency optimization work for `#176`
 - no metadata/glossary expansion work for `#148`
+- no attempt to make the entire DB manager generic or context-free
 
 ## Options Considered
 
@@ -306,7 +311,56 @@ First-pass limit:
 - no auto-delete
 - no mutation from the debugger itself
 
-### 8. Broaden the runtime retranslate contract
+### 8. Extract reusable read-only inspection UI components
+
+The existing DB manager already has useful display-oriented pieces, but they
+are still too tied to EF metadata and DB-editor workflow to drop directly into
+the debugger.
+
+For this slice, extract the read-only presentation layer so both contexts can
+reuse it while keeping their own data providers.
+
+Recommended boundary:
+
+- shared reusable UI:
+  - read-only inspection table
+  - read-only row or field-value presenter
+  - shared cell rendering behavior:
+    - wrap
+    - truncation
+    - tooltip for long values
+    - null or blob formatting when applicable
+- DB-manager-specific:
+  - EF metadata discovery
+  - `DbSet` access
+  - paging/export/delete toolbar behavior
+  - edit modal and CRUD actions
+- debugger-specific:
+  - visible story-surface diagnostics snapshot
+  - provenance labels
+  - retranslate action
+  - DB-manager handoff action
+
+Data-provider direction:
+
+- `DBEditorWindow` should continue to provide DB rows and EF-derived metadata
+  into the shared display structures
+- `/eglotranslatordebugger` should provide visible runtime diagnostics and any
+  optional persisted-row preview into the same shared display structures
+- the shared display layer should not require EF `IProperty` metadata in order
+  to render debugger content
+
+Smallest acceptable shared structures:
+
+- one column descriptor type
+- one row or item descriptor type
+- one cell renderer path for long text and wrapped text
+- optional row action callback support
+
+This keeps the component layer agnostic enough for reuse without forcing the
+debugger to pretend it is browsing EF entities.
+
+### 9. Broaden the runtime retranslate contract
 
 The current runtime contract is centered on
 `IVisibleDialogueRetranslationHandler` and
@@ -328,7 +382,7 @@ Smallest acceptable implementation direction:
 - update the plugin-runtime dispatcher so the debugger action can probe the
   expanded handler set, not only `Talk` and `BattleTalk`
 
-### 9. Keep failure behavior simple
+### 10. Keep failure behavior simple
 
 If no visible story-surface snapshot is available, the debugger should say so
 plainly instead of inferring anything from aggregate metrics.
@@ -349,7 +403,9 @@ Only show what the handlers actually observed while resolving the visible line.
    for the currently applicable supported surface and records the outcome.
 6. When requested, the debugger opens `/eglodbmanager` against the relevant
    table for the current snapshot.
-7. The explicit retranslate action updates the last retranslate result in the
+7. The debugger and DB manager both render through the shared read-only
+   inspection display layer, while each context supplies its own data model.
+8. The explicit retranslate action updates the last retranslate result in the
    same in-memory state for every supported surface.
 
 ## Files Expected To Change
@@ -364,12 +420,16 @@ Smallest expected touch set:
 - `NativeUI/AddonHandlers/Talk/IVisibleDialogueRetranslationHandler.cs`
 - `PluginUI/TranslatorMetricsWindow.cs`
 - `PluginUI/PluginRuntimeUi.cs`
+- `DBManagerUI/Components/DbTableView.cs`
 - `DBManagerUI/DBEditorWindow.cs`
 
 Possible new helper file if needed:
 
-- one small runtime-only visible dialogue diagnostics store under an existing
+- one small runtime-only visible story-surface diagnostics store under an
+  existing
   runtime or translator-adjacent namespace
+- one or more shared read-only inspection UI component files extracted from the
+  current DB-manager display path
 
 Possible small plugin-runtime touch:
 
@@ -410,6 +470,17 @@ Mitigation:
 
 - add observation-only state
 - do not alter lookup order, translation routing, or persistence rules
+
+### Risk 4: Over-coupling the debugger to EF-oriented display assumptions
+
+If the shared UI layer still assumes EF metadata or DB-editor workflow, the
+debugger will inherit the wrong abstractions.
+
+Mitigation:
+
+- extract only read-only presentation primitives
+- keep EF metadata and CRUD flows outside the shared layer
+- let each caller provide its own display model
 
 ## Validation
 
@@ -469,3 +540,5 @@ This slice is successful when:
 - the explicit visible retranslate-and-persist workflow works consistently
   across every covered story-facing surface without changing DB-first rules for
   the broader plugin
+- the debugger and DB manager share read-only display primitives while their
+  data providers, EF access, and CRUD behaviors remain separate
